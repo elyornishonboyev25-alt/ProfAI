@@ -1,15 +1,19 @@
-// Free, key-less transcript engine that actually defeats YouTube's anti-bot wall.
+// Free, key-less transcript engine that defeats YouTube's anti-bot wall.
 //
-// The trick: YouTube now gates both the player API and the caption (timedtext)
-// endpoint behind a BotGuard proof-of-origin token (poToken). We mint these
-// locally with bgutils-js + jsdom — no API key, no cookie:
-//   • a SESSION pot bound to visitorData  -> unlocks player metadata (getInfo)
-//   • a CONTENT pot bound to the videoId  -> unlocks the caption text itself
-// The caption URL is then fetched as `...&fmt=json3&c=WEB&pot=<contentPot>` with
-// the visitor id header. This works from datacenter IPs (verified), so it works
-// on a normal server without any setup.
+// YouTube gates the player API and the caption (timedtext) endpoint behind a
+// BotGuard proof-of-origin token (poToken). We mint these locally with
+// bgutils-js + jsdom — no API key, no cookie:
+//   • a SESSION pot bound to visitorData -> unlocks player metadata (getInfo)
+//   • a CONTENT pot bound to the videoId -> unlocks the caption text itself
+//
+// Reliability detail: minting a token the naive way runs a fresh BotGuard
+// challenge + integrity-token round-trip EVERY time, which YouTube rate-limits
+// quickly ("works, then stops"). Instead we build ONE WebPoMinter, cache it for
+// its TTL (hours), and mint every token (session + each video's content pot)
+// from it with NO extra network calls. Sessions and minters self-heal on
+// failure, so a transient hiccup never sticks.
 import { Innertube } from 'youtubei.js'
-import { BG } from 'bgutils-js'
+import { BG, buildURL, getHeaders } from 'bgutils-js'
 import { JSDOM } from 'jsdom'
 
 export type InnertubeCue = { start: number; end: number; text: string }
@@ -29,8 +33,6 @@ const REQUEST_KEY = 'O43z0dpjhgX20SCx4KAo'
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
-// BotGuard needs a DOM. We install jsdom globals once; nothing else server-side
-// touches window/document, so this is safe.
 let domReady = false
 function ensureDom() {
   if (domReady) return
@@ -44,9 +46,74 @@ function ensureDom() {
   domReady = true
 }
 
-/** Mint a poToken bound to `identifier` (visitorData for the session, videoId for
- *  content). Returns null if BotGuard is unavailable on this host. */
-async function mintPoToken(identifier: string): Promise<string | null> {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/* ── poToken minter (cached, reused for every token) ─────────────────────── */
+
+type Minter = { mintAsWebsafeString: (identifier: string) => Promise<string> }
+let minterCache: { minter: Minter; expiresAt: number } | null = null
+let minterInflight: Promise<Minter | null> | null = null
+
+async function buildMinter(): Promise<{ minter: Minter; ttlSec: number } | null> {
+  ensureDom()
+  const bgConfig = {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
+    globalObj: globalThis,
+    identifier: '',
+    requestKey: REQUEST_KEY,
+  }
+  const challenge = await BG.Challenge.create(bgConfig as never)
+  if (!challenge) return null
+  const interpreter = challenge.interpreterJavascript?.privateDoNotAccessOrElseSafeScriptWrappedValue
+  if (interpreter) {
+    // Runs YouTube's own BotGuard VM. eslint-disable-next-line @typescript-eslint/no-implied-eval
+    new Function(interpreter)()
+  }
+  const botguard = await (BG as any).BotGuardClient.create({
+    program: challenge.program,
+    globalName: challenge.globalName,
+    globalObj: globalThis,
+  })
+  const webPoSignalOutput: unknown[] = []
+  const botguardResponse = await botguard.snapshot({ webPoSignalOutput })
+  const integrityRes = await fetch(buildURL('GenerateIT', false), {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify([REQUEST_KEY, botguardResponse]),
+  })
+  const integrityJson: any = await integrityRes.json()
+  const [integrityToken, estimatedTtlSecs] = integrityJson
+  if (!integrityToken) return null
+  const minter = (await (BG as any).WebPoMinter.create(
+    { integrityToken, estimatedTtlSecs },
+    webPoSignalOutput,
+  )) as Minter
+  return { minter, ttlSec: Number(estimatedTtlSecs) || 3600 }
+}
+
+async function getMinter(force = false): Promise<Minter | null> {
+  if (!force && minterCache && Date.now() < minterCache.expiresAt) return minterCache.minter
+  if (minterInflight) return minterInflight
+  minterInflight = (async () => {
+    try {
+      const built = await buildMinter()
+      if (!built) return null
+      const ttlMs = Math.min(built.ttlSec * 1000, 6 * 60 * 60 * 1000)
+      minterCache = { minter: built.minter, expiresAt: Date.now() + ttlMs - 60_000 }
+      return built.minter
+    } catch (e) {
+      console.warn('[shadowing] poToken minter build failed:', (e as Error)?.message)
+      return null
+    } finally {
+      minterInflight = null
+    }
+  })()
+  return minterInflight
+}
+
+/** Standalone single-shot mint (heavier) used only if the cached minter path is
+ *  unavailable, so the engine still works in a degraded state. */
+async function mintStandalone(identifier: string): Promise<string | null> {
   try {
     ensureDom()
     const bgConfig = {
@@ -58,49 +125,68 @@ async function mintPoToken(identifier: string): Promise<string | null> {
     const challenge = await BG.Challenge.create(bgConfig as never)
     if (!challenge) return null
     const interpreter = challenge.interpreterJavascript?.privateDoNotAccessOrElseSafeScriptWrappedValue
-    if (interpreter) {
-      // Runs YouTube's own BotGuard VM to mint the token.
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      new Function(interpreter)()
-    }
+    if (interpreter) new Function(interpreter)()
     const result = await BG.PoToken.generate({
       program: challenge.program,
       globalName: challenge.globalName,
       bgConfig: bgConfig as never,
     })
     return result?.poToken ?? null
-  } catch (e) {
-    console.warn('[shadowing] poToken mint failed:', (e as Error)?.message)
+  } catch {
     return null
   }
 }
 
-const SESSION_TTL_MS = 5 * 60 * 60 * 1000
-let cached: { yt: Innertube; visitorData: string; ts: number } | null = null
-let inflight: Promise<{ yt: Innertube; visitorData: string } | null> | null = null
+async function mintToken(identifier: string, force = false): Promise<string | null> {
+  const minter = await getMinter(force)
+  if (minter) {
+    try {
+      return await minter.mintAsWebsafeString(identifier)
+    } catch {
+      // Minter went stale mid-use — rebuild once and retry.
+      const fresh = await getMinter(true)
+      if (fresh) {
+        try {
+          return await fresh.mintAsWebsafeString(identifier)
+        } catch {
+          /* fall through to standalone */
+        }
+      }
+    }
+  }
+  return mintStandalone(identifier)
+}
 
-async function getSession(): Promise<{ yt: Innertube; visitorData: string } | null> {
-  if (cached && Date.now() - cached.ts < SESSION_TTL_MS) return cached
-  if (inflight) return inflight
-  inflight = (async () => {
+/* ── InnerTube session (cached) ──────────────────────────────────────────── */
+
+const SESSION_TTL_MS = 5 * 60 * 60 * 1000
+let sessionCache: { yt: Innertube; visitorData: string; expiresAt: number } | null = null
+let sessionInflight: Promise<{ yt: Innertube; visitorData: string } | null> | null = null
+
+async function getSession(force = false): Promise<{ yt: Innertube; visitorData: string } | null> {
+  if (!force && sessionCache && Date.now() < sessionCache.expiresAt) return sessionCache
+  if (sessionInflight) return sessionInflight
+  sessionInflight = (async () => {
     try {
       const tmp = await Innertube.create({ retrieve_player: false })
       const visitorData = tmp.session.context.client.visitorData as string
       if (!visitorData) return null
-      const sessionPot = await mintPoToken(visitorData)
+      const sessionPot = await mintToken(visitorData)
       if (!sessionPot) return null
       const yt = await Innertube.create({ po_token: sessionPot, visitor_data: visitorData })
-      cached = { yt, visitorData, ts: Date.now() }
+      sessionCache = { yt, visitorData, expiresAt: Date.now() + SESSION_TTL_MS }
       return { yt, visitorData }
     } catch (e) {
       console.warn('[shadowing] InnerTube session init failed:', (e as Error)?.message)
       return null
     } finally {
-      inflight = null
+      sessionInflight = null
     }
   })()
-  return inflight
+  return sessionInflight
 }
+
+/* ── caption parsing ─────────────────────────────────────────────────────── */
 
 function decode(input: string): string {
   return input
@@ -140,45 +226,59 @@ function bestThumb(basic: any, videoId: string): string | null {
 }
 
 async function fetchCaptionText(baseUrl: string, videoId: string, visitorData: string): Promise<InnertubeCue[]> {
-  const contentPot = await mintPoToken(videoId)
-  const headers: Record<string, string> = { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en', 'X-Goog-Visitor-Id': visitorData }
-  // The content-pot form is the one that returns text; the others are harmless
-  // fallbacks for hosts that behave differently.
-  const urls = [
-    contentPot ? `${baseUrl}&fmt=json3&c=WEB&pot=${contentPot}` : '',
-    `${baseUrl}&fmt=json3`,
-  ].filter(Boolean)
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { headers })
-      const txt = await res.text()
-      if (txt && txt.length > 10) {
-        const cues = parseJson3(txt)
-        if (cues.length) return cues
+  const headers: Record<string, string> = {
+    'User-Agent': BROWSER_UA,
+    'Accept-Language': 'en',
+    'X-Goog-Visitor-Id': visitorData,
+  }
+  // Two attempts: the second forces a fresh content pot in case the first was
+  // stale or momentarily rate-limited.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const contentPot = await mintToken(videoId, attempt === 1)
+    const urls = [
+      contentPot ? `${baseUrl}&fmt=json3&c=WEB&pot=${contentPot}` : '',
+      `${baseUrl}&fmt=json3`,
+    ].filter(Boolean)
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { headers })
+        const txt = await res.text()
+        if (txt && txt.length > 10) {
+          const cues = parseJson3(txt)
+          if (cues.length) return cues
+        }
+      } catch {
+        // try the next form
       }
-    } catch {
-      // try the next form
     }
+    if (attempt === 0) await sleep(600)
   }
   return []
 }
 
+/* ── public entry ────────────────────────────────────────────────────────── */
+
 /** Reliable metadata + caption text via the poToken path. Never throws. */
 export async function fetchViaInnertube(videoId: string): Promise<InnertubeResult | null> {
-  const session = await getSession()
+  let session = await getSession()
   if (!session) {
     console.warn('[shadowing] InnerTube session unavailable (poToken/BotGuard could not start)')
     return null
   }
-  const { yt, visitorData } = session
 
   let info: any
   try {
-    info = await yt.getInfo(videoId)
-  } catch (e) {
-    console.warn('[shadowing] getInfo failed for', videoId, '-', (e as Error)?.message)
-    cached = null // token may have expired; force a fresh one next time
-    return null
+    info = await session.yt.getInfo(videoId)
+  } catch {
+    // Session/token may be stale — refresh once and retry.
+    session = await getSession(true)
+    if (!session) return null
+    try {
+      info = await session.yt.getInfo(videoId)
+    } catch (e) {
+      console.warn('[shadowing] getInfo failed for', videoId, '-', (e as Error)?.message)
+      return null
+    }
   }
 
   const basic = info?.basic_info ?? {}
@@ -194,9 +294,8 @@ export async function fetchViaInnertube(videoId: string): Promise<InnertubeResul
   if (en) {
     captionKind = en.kind === 'asr' ? 'auto' : 'manual'
     language = en.language_code || 'en'
-    cues = await fetchCaptionText(en.base_url as string, videoId, visitorData)
+    cues = await fetchCaptionText(en.base_url as string, videoId, session.visitorData)
 
-    // Native transcript panel as a last resort.
     if (cues.length === 0) {
       try {
         const tr: any = await info.getTranscript()

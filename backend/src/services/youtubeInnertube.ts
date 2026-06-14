@@ -1,9 +1,13 @@
-// Strongest free transcript path: youtubei.js driven by a BotGuard proof-of-origin
-// token (poToken) generated locally with bgutils-js + jsdom. The poToken defeats
-// YouTube's "Sign in to confirm you're not a bot" wall, which makes video
-// metadata + caption-track discovery reliable from a server, and lets us pull the
-// caption text on servers where YouTube allows it. No API key and no cookie
-// required. The token is cached and reused for hours.
+// Free, key-less transcript engine that actually defeats YouTube's anti-bot wall.
+//
+// The trick: YouTube now gates both the player API and the caption (timedtext)
+// endpoint behind a BotGuard proof-of-origin token (poToken). We mint these
+// locally with bgutils-js + jsdom — no API key, no cookie:
+//   • a SESSION pot bound to visitorData  -> unlocks player metadata (getInfo)
+//   • a CONTENT pot bound to the videoId  -> unlocks the caption text itself
+// The caption URL is then fetched as `...&fmt=json3&c=WEB&pot=<contentPot>` with
+// the visitor id header. This works from datacenter IPs (verified), so it works
+// on a normal server without any setup.
 import { Innertube } from 'youtubei.js'
 import { BG } from 'bgutils-js'
 import { JSDOM } from 'jsdom'
@@ -21,8 +25,12 @@ export type InnertubeResult = {
   cues: InnertubeCue[]
 }
 
-// BotGuard needs a DOM. We install jsdom globals once; nothing else in the API
-// touches window/document, so this is safe for the Node process.
+const REQUEST_KEY = 'O43z0dpjhgX20SCx4KAo'
+const BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+
+// BotGuard needs a DOM. We install jsdom globals once; nothing else server-side
+// touches window/document, so this is safe.
 let domReady = false
 function ensureDom() {
   if (domReady) return
@@ -36,27 +44,23 @@ function ensureDom() {
   domReady = true
 }
 
-const POT_TTL_MS = 5 * 60 * 60 * 1000
-let cached: { yt: Innertube; ts: number } | null = null
-let inflight: Promise<Innertube | null> | null = null
-
-async function generatePoToken(): Promise<{ pot: string; visitorData: string } | null> {
+/** Mint a poToken bound to `identifier` (visitorData for the session, videoId for
+ *  content). Returns null if BotGuard is unavailable on this host. */
+async function mintPoToken(identifier: string): Promise<string | null> {
   try {
-    const tmp = await Innertube.create({ retrieve_player: false })
-    const visitorData = tmp.session.context.client.visitorData as string
-    if (!visitorData) return null
     ensureDom()
     const bgConfig = {
       fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
       globalObj: globalThis,
-      identifier: visitorData,
-      requestKey: 'O43z0dpjhgX20SCx4KAo',
+      identifier,
+      requestKey: REQUEST_KEY,
     }
     const challenge = await BG.Challenge.create(bgConfig as never)
     if (!challenge) return null
     const interpreter = challenge.interpreterJavascript?.privateDoNotAccessOrElseSafeScriptWrappedValue
     if (interpreter) {
-      // Runs YouTube's own BotGuard VM to mint the token. eslint-disable-next-line @typescript-eslint/no-implied-eval
+      // Runs YouTube's own BotGuard VM to mint the token.
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       new Function(interpreter)()
     }
     const result = await BG.PoToken.generate({
@@ -64,23 +68,29 @@ async function generatePoToken(): Promise<{ pot: string; visitorData: string } |
       globalName: challenge.globalName,
       bgConfig: bgConfig as never,
     })
-    if (!result?.poToken) return null
-    return { pot: result.poToken, visitorData }
+    return result?.poToken ?? null
   } catch {
     return null
   }
 }
 
-async function getClient(): Promise<Innertube | null> {
-  if (cached && Date.now() - cached.ts < POT_TTL_MS) return cached.yt
+const SESSION_TTL_MS = 5 * 60 * 60 * 1000
+let cached: { yt: Innertube; visitorData: string; ts: number } | null = null
+let inflight: Promise<{ yt: Innertube; visitorData: string } | null> | null = null
+
+async function getSession(): Promise<{ yt: Innertube; visitorData: string } | null> {
+  if (cached && Date.now() - cached.ts < SESSION_TTL_MS) return cached
   if (inflight) return inflight
   inflight = (async () => {
     try {
-      const tokens = await generatePoToken()
-      if (!tokens) return null
-      const yt = await Innertube.create({ po_token: tokens.pot, visitor_data: tokens.visitorData })
-      cached = { yt, ts: Date.now() }
-      return yt
+      const tmp = await Innertube.create({ retrieve_player: false })
+      const visitorData = tmp.session.context.client.visitorData as string
+      if (!visitorData) return null
+      const sessionPot = await mintPoToken(visitorData)
+      if (!sessionPot) return null
+      const yt = await Innertube.create({ po_token: sessionPot, visitor_data: visitorData })
+      cached = { yt, visitorData, ts: Date.now() }
+      return { yt, visitorData }
     } catch {
       return null
     } finally {
@@ -127,11 +137,35 @@ function bestThumb(basic: any, videoId: string): string | null {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
 }
 
-/** Returns reliable metadata + (where YouTube allows) the caption text, or null
- *  if the bot-token path is unavailable on this server. Never throws. */
+async function fetchCaptionText(baseUrl: string, videoId: string, visitorData: string): Promise<InnertubeCue[]> {
+  const contentPot = await mintPoToken(videoId)
+  const headers: Record<string, string> = { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en', 'X-Goog-Visitor-Id': visitorData }
+  // The content-pot form is the one that returns text; the others are harmless
+  // fallbacks for hosts that behave differently.
+  const urls = [
+    contentPot ? `${baseUrl}&fmt=json3&c=WEB&pot=${contentPot}` : '',
+    `${baseUrl}&fmt=json3`,
+  ].filter(Boolean)
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { headers })
+      const txt = await res.text()
+      if (txt && txt.length > 10) {
+        const cues = parseJson3(txt)
+        if (cues.length) return cues
+      }
+    } catch {
+      // try the next form
+    }
+  }
+  return []
+}
+
+/** Reliable metadata + caption text via the poToken path. Never throws. */
 export async function fetchViaInnertube(videoId: string): Promise<InnertubeResult | null> {
-  const yt = await getClient()
-  if (!yt) return null
+  const session = await getSession()
+  if (!session) return null
+  const { yt, visitorData } = session
 
   let info: any
   try {
@@ -154,26 +188,7 @@ export async function fetchViaInnertube(videoId: string): Promise<InnertubeResul
   if (en) {
     captionKind = en.kind === 'asr' ? 'auto' : 'manual'
     language = en.language_code || 'en'
-
-    const sessionFetch =
-      ((yt.session as any)?.http?.fetch_function as ((u: string, o?: RequestInit) => Promise<Response>) | undefined) ??
-      ((u: string, o?: RequestInit) => fetch(u, o))
-
-    for (const url of [`${en.base_url}&fmt=json3`, en.base_url as string]) {
-      try {
-        const res = await sessionFetch(url, { method: 'GET' })
-        const txt = await res.text()
-        if (txt && txt.length > 10) {
-          const parsed = parseJson3(txt)
-          if (parsed.length) {
-            cues = parsed
-            break
-          }
-        }
-      } catch {
-        // try the next URL form
-      }
-    }
+    cues = await fetchCaptionText(en.base_url as string, videoId, visitorData)
 
     // Native transcript panel as a last resort.
     if (cues.length === 0) {

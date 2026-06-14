@@ -42,6 +42,7 @@ const Community = lazy(() => import('@/pages/Community'))
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'))
 const Mock = lazy(() => import('@/pages/Mock'))
 const MockIELTS = lazy(() => import('@/pages/MockIELTS'))
+const MockIELTSRun = lazy(() => import('@/pages/MockIELTSRun'))
 const MockSAT = lazy(() => import('@/pages/MockSAT'))
 const TestInterface = lazy(() => import('@/pages/TestInterface'))
 const Results = lazy(() => import('@/pages/Results'))
@@ -280,6 +281,16 @@ function App() {
                           <PremiumRoute showGuestBanner>
                             <AnimatedRoute>
                               <MockIELTS />
+                            </AnimatedRoute>
+                          </PremiumRoute>
+                        }
+                      />
+                      <Route
+                        path="/mock/ielts/:mockId"
+                        element={
+                          <PremiumRoute showGuestBanner>
+                            <AnimatedRoute>
+                              <MockIELTSRun />
                             </AnimatedRoute>
                           </PremiumRoute>
                         }

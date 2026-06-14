@@ -780,6 +780,107 @@
   cursor: pointer;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Cinematic podcast player (src/pages/Podcast.tsx)
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* The YouTube iframe is injected into .podcast-stage — force it to fill the
+   stage and never react to pointer/branding hover (interaction is handled by
+   our own overlay so the YouTube channel/title/logo never surfaces). */
+.podcast-stage iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Native fullscreen: the shell becomes the whole screen, video centred. */
+.podcast-shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.podcast-shell:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  background: #000;
+}
+.podcast-shell:fullscreen .podcast-stage {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  max-height: 100vh;
+}
+.podcast-shell:-webkit-full-screen .podcast-stage {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+/* Volume slider inside the control bar */
+.podcast-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  outline: none;
+}
+.podcast-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.podcast-volume::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border: 0;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* Thin scrollbar for the transcript panel */
+.pod-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.pod-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+.pod-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* "Now playing" mini equaliser bars */
+.pod-eq-bar {
+  animation: podEq 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+@keyframes podEq {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 .day1-reading-pane {
   background:
     radial-gradient(circle at 7% 0%, rgba(255, 228, 230, 0.58), transparent 30%),

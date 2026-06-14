@@ -1165,20 +1165,27 @@ export default function Podcast() {
           ) : null}
         </AnimatePresence>
 
-        {/* Center play pulse when paused mid-way */}
+        {/* Paused cover — opaque so YouTube's pause chrome (title, channel,
+            logo, "More videos") never shows while paused. */}
         <AnimatePresence>
           {started && !playing && !ended ? (
             <motion.button
               type="button"
               onClick={togglePlay}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: minimalMotion ? 0 : 0.18 }}
-              className="absolute left-1/2 top-1/2 z-30 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: minimalMotion ? 0 : 0.2 }}
+              className="group absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-6 text-center"
               aria-label="Play"
             >
-              <Play className="h-7 w-7 translate-x-0.5" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-indigo-200">
+                <Pause className="h-3 w-3" /> Paused
+              </span>
+              <p className="max-w-xl text-base font-semibold leading-7 text-white sm:text-lg">{episode.title}</p>
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-[0_12px_30px_rgba(79,70,229,0.55)] transition group-hover:scale-105">
+                <Play className="h-7 w-7 translate-x-0.5" />
+              </span>
             </motion.button>
           ) : null}
         </AnimatePresence>

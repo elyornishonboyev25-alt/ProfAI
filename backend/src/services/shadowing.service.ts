@@ -552,6 +552,7 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
     fetchOEmbed(youtubeId),
     fetchViaInnertube(youtubeId).catch(() => null),
   ])
+  const engineRan = innertube !== null
 
   let cues: Cue[] = []
   let captionKind: 'manual' | 'auto' = 'auto'
@@ -600,6 +601,15 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
       throw new ShadowingError(
         'YouTube is blocking caption downloads from this server right now. Setting TRANSCRIPT_API_URL + TRANSCRIPT_API_KEY makes it 100% reliable, or try again shortly.',
         502,
+      )
+    }
+    if (!engineRan) {
+      // The poToken/BotGuard engine never started — almost always a stale
+      // deployment (missing youtubei.js/bgutils/jsdom deps or old code) or a
+      // server that just booted. This is NOT a problem with the video itself.
+      throw new ShadowingError(
+        "The shadowing engine isn't running on the server yet. If you just deployed, wait a minute and retry; otherwise the backend needs a redeploy + 'npm install' with the latest code.",
+        503,
       )
     }
     throw new ShadowingError(

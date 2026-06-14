@@ -69,7 +69,8 @@ async function mintPoToken(identifier: string): Promise<string | null> {
       bgConfig: bgConfig as never,
     })
     return result?.poToken ?? null
-  } catch {
+  } catch (e) {
+    console.warn('[shadowing] poToken mint failed:', (e as Error)?.message)
     return null
   }
 }
@@ -91,7 +92,8 @@ async function getSession(): Promise<{ yt: Innertube; visitorData: string } | nu
       const yt = await Innertube.create({ po_token: sessionPot, visitor_data: visitorData })
       cached = { yt, visitorData, ts: Date.now() }
       return { yt, visitorData }
-    } catch {
+    } catch (e) {
+      console.warn('[shadowing] InnerTube session init failed:', (e as Error)?.message)
       return null
     } finally {
       inflight = null
@@ -164,13 +166,17 @@ async function fetchCaptionText(baseUrl: string, videoId: string, visitorData: s
 /** Reliable metadata + caption text via the poToken path. Never throws. */
 export async function fetchViaInnertube(videoId: string): Promise<InnertubeResult | null> {
   const session = await getSession()
-  if (!session) return null
+  if (!session) {
+    console.warn('[shadowing] InnerTube session unavailable (poToken/BotGuard could not start)')
+    return null
+  }
   const { yt, visitorData } = session
 
   let info: any
   try {
     info = await yt.getInfo(videoId)
-  } catch {
+  } catch (e) {
+    console.warn('[shadowing] getInfo failed for', videoId, '-', (e as Error)?.message)
     cached = null // token may have expired; force a fresh one next time
     return null
   }

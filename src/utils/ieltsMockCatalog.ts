@@ -130,3 +130,51 @@ export function formatMockDuration(totalMinutes: number): string {
   if (minutes === 0) return `${hours}h`
   return `${hours}h ${minutes}m`
 }
+
+// ---- Per-mock completion progress (single source of truth) -----------------
+// Written ONLY by the section runners when a section is genuinely finished
+// (Reading/Listening on submit, Speaking when the examiner evaluation saves) —
+// never by a manual toggle. The dashboard reads this to mark sections done and
+// to gate the official exam sequence: a section unlocks only after every
+// earlier *available* section is complete.
+
+export const FULL_MOCK_PROGRESS_STORAGE_KEY = 'smarttest:full-mock-progress:v1'
+export const FULL_MOCK_PROGRESS_EVENT = 'smarttest:full-mock-progress'
+
+type FullMockProgressStore = Record<string, string[]>
+
+function isMockSectionKey(value: unknown): value is MockSectionKey {
+  return value === 'listening' || value === 'reading' || value === 'writing' || value === 'speaking'
+}
+
+function readProgressStore(): FullMockProgressStore {
+  if (typeof window === 'undefined') return {}
+  try {
+    const cached = window.localStorage.getItem(FULL_MOCK_PROGRESS_STORAGE_KEY)
+    const parsed = cached ? (JSON.parse(cached) as unknown) : null
+    if (!parsed || typeof parsed !== 'object') return {}
+    return parsed as FullMockProgressStore
+  } catch {
+    return {}
+  }
+}
+
+function writeProgressStore(store: FullMockProgressStore): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(FULL_MOCK_PROGRESS_STORAGE_KEY, JSON.stringify(store))
+  window.dispatchEvent(new CustomEvent(FULL_MOCK_PROGRESS_EVENT))
+}
+
+export function getFullMockCompletedSections(mockId: string): MockSectionKey[] {
+  return (readProgressStore()[mockId] ?? []).filter(isMockSectionKey)
+}
+
+/** Mark a section finished. Idempotent; only the runners should call this. */
+export function markFullMockSectionComplete(mockId: string, section: MockSectionKey): void {
+  if (!/^full-mock-\d{1,2}$/.test(mockId)) return
+  const store = readProgressStore()
+  const current = new Set((store[mockId] ?? []).filter(isMockSectionKey))
+  if (current.has(section)) return
+  current.add(section)
+  writeProgressStore({ ...store, [mockId]: Array.from(current) })
+}

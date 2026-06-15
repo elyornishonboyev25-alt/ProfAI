@@ -3,13 +3,13 @@ import {
   ArrowLeft,
   BookOpen,
   CheckCircle2,
-  Circle,
   Clock3,
   Headphones,
   Lock,
   Mic2,
   PenSquare,
   PlayCircle,
+  RotateCcw,
   Sparkles,
   Trophy,
   type LucideIcon,
@@ -18,8 +18,12 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Reveal } from '@/components/fx'
 import {
   formatMockDuration,
+  FULL_MOCK_PROGRESS_EVENT,
   getFullMockById,
+  getFullMockCompletedSections,
   MOCK_SECTION_COUNT,
+  type FullMockEntry,
+  type MockSection,
   type MockSectionKey,
 } from '@/utils/ieltsMockCatalog'
 
@@ -30,20 +34,26 @@ const SECTION_ICONS: Record<MockSectionKey, LucideIcon> = {
   speaking: Mic2,
 }
 
-const PROGRESS_STORAGE_KEY = 'smarttest:full-mock-progress:v1'
+type SectionStatus = 'completed' | 'current' | 'locked' | 'coming-soon'
 
-type ProgressStore = Record<string, string[]>
+// Official IELTS exam order is enforced: a section unlocks only after every
+// earlier section that actually has content is finished. Coming-soon sections
+// have no test to run, so they neither unlock nor block the chain.
+function resolveStatus(
+  sections: MockSection[],
+  index: number,
+  completed: Set<MockSectionKey>,
+): SectionStatus {
+  const section = sections[index]
+  if (!section.available) return 'coming-soon'
+  if (completed.has(section.key)) return 'completed'
 
-function readProgress(): ProgressStore {
-  if (typeof window === 'undefined') return {}
-  try {
-    const cached = window.localStorage.getItem(PROGRESS_STORAGE_KEY)
-    const parsed = cached ? (JSON.parse(cached) as unknown) : null
-    if (!parsed || typeof parsed !== 'object') return {}
-    return parsed as ProgressStore
-  } catch {
-    return {}
-  }
+  const earlierAvailableDone = sections
+    .slice(0, index)
+    .filter((earlier) => earlier.available)
+    .every((earlier) => completed.has(earlier.key))
+
+  return earlierAvailableDone ? 'current' : 'locked'
 }
 
 export default function MockIELTSRun() {
@@ -52,45 +62,60 @@ export default function MockIELTSRun() {
   const { mockId } = useParams<{ mockId: string }>()
   const from = (location.state as { from?: string } | null)?.from
 
-  const mock = useMemo(() => (mockId ? getFullMockById(mockId) : null), [mockId])
+  const mock = useMemo<FullMockEntry | null>(() => (mockId ? getFullMockById(mockId) : null), [mockId])
 
-  const [progressStore, setProgressStore] = useState<ProgressStore>(() => readProgress())
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progressStore))
-  }, [progressStore])
-
-  const completedSections = useMemo(
-    () => new Set(mockId ? progressStore[mockId] ?? [] : []),
-    [mockId, progressStore],
+  const [completedKeys, setCompletedKeys] = useState<MockSectionKey[]>(() =>
+    mockId ? getFullMockCompletedSections(mockId) : [],
   )
 
-  const toggleSectionDone = useCallback(
-    (sectionKey: string) => {
-      if (!mockId) return
-      setProgressStore((previous) => {
-        const current = new Set(previous[mockId] ?? [])
-        if (current.has(sectionKey)) {
-          current.delete(sectionKey)
-        } else {
-          current.add(sectionKey)
-        }
-        return { ...previous, [mockId]: Array.from(current) }
+  // Completion is written by the section runners themselves (on submit / when
+  // the examiner grade saves). Re-read whenever that happens, or when the user
+  // returns to this tab after finishing a section elsewhere.
+  const refreshProgress = useCallback(() => {
+    setCompletedKeys(mockId ? getFullMockCompletedSections(mockId) : [])
+  }, [mockId])
+
+  useEffect(() => {
+    refreshProgress()
+    window.addEventListener(FULL_MOCK_PROGRESS_EVENT, refreshProgress)
+    window.addEventListener('storage', refreshProgress)
+    window.addEventListener('focus', refreshProgress)
+    document.addEventListener('visibilitychange', refreshProgress)
+    return () => {
+      window.removeEventListener(FULL_MOCK_PROGRESS_EVENT, refreshProgress)
+      window.removeEventListener('storage', refreshProgress)
+      window.removeEventListener('focus', refreshProgress)
+      document.removeEventListener('visibilitychange', refreshProgress)
+    }
+  }, [refreshProgress])
+
+  const completedSet = useMemo(() => new Set(completedKeys), [completedKeys])
+
+  const launchSection = useCallback(
+    (section: MockSection) => {
+      if (!section.launchPath || !mock) return
+      navigate(section.launchPath, {
+        state: {
+          entry: 'mock-ielts',
+          from: from ?? 'mock',
+          mock: { id: mock.id, section: section.key },
+          launchPreset: { mode: 'simulation' },
+        },
       })
     },
-    [mockId],
+    [from, mock, navigate],
   )
 
   if (!mock) {
     return <Navigate to="/mock/ielts" replace />
   }
 
-  const liveDone = mock.sections.filter(
-    (section) => section.available && completedSections.has(section.key),
-  ).length
+  const liveDone = mock.sections.filter((section) => section.available && completedSet.has(section.key)).length
   const allSectionsDone = mock.fullyReady && liveDone === MOCK_SECTION_COUNT
   const progressPercent = mock.readyCount === 0 ? 0 : Math.round((liveDone / mock.readyCount) * 100)
+  const nextSection = mock.sections.find(
+    (section, index) => resolveStatus(mock.sections, index, completedSet) === 'current',
+  )
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
@@ -121,8 +146,8 @@ export default function MockIELTSRun() {
                   IELTS <span className="arena-title-accent-red">Full Mock {mock.index}</span>
                 </h1>
                 <p className="premium-section-subtitle max-w-3xl">
-                  Run the four sections in official order. Each section opens its real exam runner; mark it done to track
-                  your progress through this mock.
+                  Sit the four sections in official exam order. Each section opens straight into exam mode and is marked
+                  done automatically once you finish it — the next section unlocks only then.
                 </p>
               </div>
 
@@ -146,18 +171,30 @@ export default function MockIELTSRun() {
 
         <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
           <div className="space-y-3">
-            {mock.sections.map((section) => {
+            {mock.sections.map((section, index) => {
               const Icon = SECTION_ICONS[section.key]
-              const isDone = section.available && completedSections.has(section.key)
+              const status = resolveStatus(mock.sections, index, completedSet)
+              const isDone = status === 'completed'
+              const isCurrent = status === 'current'
+              const isLocked = status === 'locked'
+
               return (
                 <article
                   key={section.key}
-                  className={`surface-card flex flex-wrap items-center gap-4 p-5 ${
-                    isDone ? 'ring-1 ring-emerald-200' : ''
-                  }`}
+                  className={`surface-card flex flex-wrap items-center gap-4 p-5 transition ${
+                    isDone ? 'ring-1 ring-emerald-200' : isCurrent ? 'ring-1 ring-red-200' : ''
+                  } ${isLocked ? 'opacity-60' : ''}`}
                 >
-                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 text-red-700">
-                    <Icon className="h-6 w-6" />
+                  <span
+                    className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-base font-black ${
+                      isDone
+                        ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+                        : isLocked
+                          ? 'border-slate-200 bg-slate-100 text-slate-400'
+                          : 'border-red-200 bg-red-50 text-red-700'
+                    }`}
+                  >
+                    {isDone ? <CheckCircle2 className="h-6 w-6" /> : isLocked ? <Lock className="h-5 w-5" /> : <Icon className="h-6 w-6" />}
                   </span>
 
                   <div className="min-w-0 flex-1">
@@ -166,20 +203,23 @@ export default function MockIELTSRun() {
                         Section {section.order}
                       </span>
                       <h2 className="text-xl font-black text-slate-900">{section.title}</h2>
-                      {section.available ? (
+                      {isDone ? (
                         <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-700">
-                          Live
+                          Done
+                        </span>
+                      ) : isCurrent ? (
+                        <span className="rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-red-700">
+                          Up next
+                        </span>
+                      ) : section.available ? (
+                        <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                          Locked
                         </span>
                       ) : (
                         <span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
                           Coming soon
                         </span>
                       )}
-                      {isDone ? (
-                        <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-700">
-                          Done
-                        </span>
-                      ) : null}
                     </div>
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       <span className="inline-flex items-center gap-1">
@@ -192,34 +232,29 @@ export default function MockIELTSRun() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {section.available ? (
+                    {isDone ? (
                       <button
                         type="button"
-                        onClick={() => toggleSectionDone(section.key)}
-                        aria-label={isDone ? 'Mark as not done' : 'Mark as done'}
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-                          isDone
-                            ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
-                            : 'border-slate-200 bg-white text-slate-400 hover:border-emerald-300 hover:text-emerald-700'
-                        }`}
+                        onClick={() => launchSection(section)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                       >
-                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+                        <RotateCcw className="h-4 w-4" />
+                        Retake
                       </button>
-                    ) : null}
-
-                    {section.available && section.launchPath ? (
+                    ) : isCurrent ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          navigate(section.launchPath as string, {
-                            state: { entry: 'mock-ielts', from: from ?? 'mock' },
-                          })
-                        }
+                        onClick={() => launchSection(section)}
                         className="arena-primary-btn cta-sheen inline-flex items-center gap-2"
                       >
                         <PlayCircle className="h-4 w-4" />
-                        {isDone ? 'Retake' : 'Start'}
+                        Start
                       </button>
+                    ) : isLocked ? (
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-bold text-slate-400">
+                        <Lock className="h-4 w-4" />
+                        Locked
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-100 px-4 py-2 text-sm font-bold text-amber-800">
                         <Lock className="h-4 w-4" />
@@ -245,9 +280,9 @@ export default function MockIELTSRun() {
               <p className="mt-1 text-sm text-slate-500">
                 {mock.readyCount === 0
                   ? 'No sections are live for this mock yet.'
-                  : liveDone === mock.readyCount
-                    ? 'You have finished every live section of this mock.'
-                    : `${mock.readyCount - liveDone} live section${mock.readyCount - liveDone === 1 ? '' : 's'} left to mark done.`}
+                  : nextSection
+                    ? `Up next: ${nextSection.title}. Finish it to unlock the next section.`
+                    : 'You have finished every live section of this mock.'}
               </p>
             </article>
 
@@ -262,8 +297,8 @@ export default function MockIELTSRun() {
                 </p>
               ) : (
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Finish all four live sections to unlock a combined IELTS band (Reading &amp; Listening auto-scored,
-                  Writing &amp; Speaking graded by the AI examiner).
+                  Finish all four live sections in order to unlock a combined IELTS band (Reading &amp; Listening
+                  auto-scored, Writing &amp; Speaking graded by the AI examiner).
                 </p>
               )}
               <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-500">

@@ -1139,6 +1139,11 @@ export default function IELTSReadingInterface({
 
   useEffect(() => () => {
     if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
+    // StrictMode (dev) runs a simulated unmount that clears the launch timer
+    // above; without resetting this guard the remount would not re-apply the
+    // preset, leaving the "begin shortly" overlay stuck. Resetting lets the
+    // auto-start re-run cleanly.
+    launchPresetAppliedRef.current = false
   }, [])
 
   useEffect(() => {

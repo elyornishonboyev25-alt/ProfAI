@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -33,6 +33,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
+import { markFullMockSectionComplete } from '@/utils/ieltsMockCatalog'
 
 // Single test runner. There are 3 launch modes (Part 1, Part 2 cue card, Part 3)
 // for the daily roadmap, and a 4th "full mock" that delegates to the live
@@ -91,7 +92,9 @@ function questionsForDay(day: SpeakingDayEntry): QuestionItem[] {
 
 export default function IELTSSpeakingTest() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { id } = useParams<{ id: string }>()
+  const mockContext = (location.state as { mock?: { id: string; section: string } } | null)?.mock
   const user = useAuthStore((state: AuthState) => state.user)
   const addSession = useSpeakingStore((s) => s.addSession)
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
@@ -155,6 +158,11 @@ export default function IELTSSpeakingTest() {
             mode: 'full_mock',
             source: 'ielts-speaking-mock',
           })
+          // When launched from a Full Mock, mark the Speaking section done only
+          // now — i.e. once the examiner grade is in.
+          if (mockContext?.id) {
+            markFullMockSectionComplete(mockContext.id, 'speaking')
+          }
         }}
       />
     )

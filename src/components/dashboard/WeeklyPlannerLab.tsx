@@ -27,7 +27,6 @@ import {
   addCustomTaskToDay,
   ensureRollingWeek,
   generateWeeklyPlan,
-  isTaskCompleted,
   loadActivityLog,
   loadOnboardingProfile,
   loadWeeklyPlan,
@@ -35,7 +34,6 @@ import {
   saveWeeklyPlan,
   taskAutoCompleted,
   toggleCustomTask,
-  toggleGeneratedTask,
   type ActivityKey,
   type ExamTarget,
   type OnboardingProfile,
@@ -270,7 +268,7 @@ export default function WeeklyPlannerLab() {
 
   const generatedCompletedCount = useMemo(() => {
     if (!selectedDay) return 0
-    return selectedDay.generatedTasks.filter((t) => isTaskCompleted(t, selectedDay.dateISO, activityLog)).length
+    return selectedDay.generatedTasks.filter((t) => taskAutoCompleted(t, selectedDay.dateISO, activityLog)).length
   }, [activityLog, selectedDay])
 
   const resolvedDays = useCustomDays ? Math.max(1, Number(customDays) || 1) : daysToExam
@@ -347,13 +345,6 @@ export default function WeeklyPlannerLab() {
   const toggleCustom = (dayId: string, taskId: string) => {
     if (!plan) return
     const nextPlan = toggleCustomTask(plan, dayId, taskId)
-    setPlan(nextPlan)
-    saveWeeklyPlan(nextPlan, user?.id)
-  }
-
-  const toggleGenerated = (dayId: string, taskId: string) => {
-    if (!plan) return
-    const nextPlan = toggleGeneratedTask(plan, dayId, taskId)
     setPlan(nextPlan)
     saveWeeklyPlan(nextPlan, user?.id)
   }
@@ -1032,7 +1023,7 @@ export default function WeeklyPlannerLab() {
             <aside className="space-y-2">
               {plan.days.map((day) => {
                 const selected = selectedDay?.id === day.id
-                const dayCompleted = day.generatedTasks.filter((t) => isTaskCompleted(t, day.dateISO, activityLog)).length
+                const dayCompleted = day.generatedTasks.filter((t) => taskAutoCompleted(t, day.dateISO, activityLog)).length
                 return (
                   <button
                     key={day.id}
@@ -1075,84 +1066,125 @@ export default function WeeklyPlannerLab() {
 
                   <div className="space-y-2.5">
                     {selectedDay.generatedTasks.map((task, taskIndex) => {
-                      const autoCompleted = taskAutoCompleted(task, selectedDay.dateISO, activityLog)
-                      const completed = isTaskCompleted(task, selectedDay.dateISO, activityLog)
+                      const completed = taskAutoCompleted(task, selectedDay.dateISO, activityLog)
                       return (
                         <motion.div
                           key={task.id}
                           layout
-                          initial={{ opacity: 0, y: 8 }}
+                          initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: taskIndex * 0.04, duration: 0.18 }}
-                          className={`group relative overflow-hidden rounded-xl border transition-all duration-200 ${
+                          transition={{ delay: taskIndex * 0.05, duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                          className={`group relative overflow-hidden rounded-xl border transition-all duration-300 ${
                             completed
-                              ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/80 to-white shadow-sm'
-                              : 'border-slate-200 bg-white hover:border-red-100 hover:shadow-md'
+                              ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-white shadow-[0_2px_14px_rgba(16,185,129,0.12)]'
+                              : 'border-slate-200 bg-white hover:border-red-100 hover:shadow-[0_4px_18px_rgba(220,38,38,0.08)]'
                           }`}
                         >
-                          {completed && (
-                            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-gradient-to-b from-emerald-400 to-emerald-600" />
-                          )}
-                          {!completed && (
-                            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-gradient-to-b from-slate-200 to-slate-300 group-hover:from-red-300 group-hover:to-rose-400 transition-all duration-200" />
-                          )}
+                          {/* Left accent bar */}
+                          <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl transition-all duration-500 ${
+                            completed
+                              ? 'bg-gradient-to-b from-emerald-400 to-emerald-600'
+                              : 'bg-gradient-to-b from-slate-200 to-slate-300 group-hover:from-red-300 group-hover:to-rose-400'
+                          }`} />
+
+                          {/* Completion shimmer overlay */}
+                          <AnimatePresence>
+                            {completed && (
+                              <motion.div
+                                key="shimmer"
+                                initial={{ x: '-100%', opacity: 0.6 }}
+                                animate={{ x: '200%', opacity: 0 }}
+                                transition={{ duration: 0.65, ease: 'easeOut' }}
+                                className="pointer-events-none absolute inset-0 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-emerald-200/60 to-transparent"
+                              />
+                            )}
+                          </AnimatePresence>
+
                           <div className="flex items-center gap-3 pl-5 pr-4 py-3.5">
-                            {/* Checkbox */}
-                            <button
-                              type="button"
-                              onClick={() => !autoCompleted && toggleGenerated(selectedDay.id, task.id)}
-                              title={autoCompleted ? 'Auto-completed from activity tracking' : task.manuallyCompleted ? 'Click to unmark' : 'Click to mark as done'}
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 ${
-                                completed
-                                  ? 'border-emerald-500 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]'
-                                  : 'border-slate-300 hover:border-red-400 hover:bg-red-50 cursor-pointer'
-                              } ${autoCompleted ? 'cursor-default' : ''}`}
-                            >
-                              {completed && (
-                                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 12 12">
-                                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              )}
-                            </button>
+                            {/* Status indicator (read-only circle) */}
+                            <div className={`relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                              completed
+                                ? 'border-emerald-500 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]'
+                                : 'border-slate-300 bg-slate-50'
+                            }`}>
+                              <AnimatePresence>
+                                {completed && (
+                                  <motion.svg
+                                    key="check"
+                                    initial={{ scale: 0, opacity: 0, rotate: -30 }}
+                                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.05 }}
+                                    className="h-2.5 w-2.5 text-white"
+                                    fill="none"
+                                    viewBox="0 0 12 12"
+                                  >
+                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </motion.svg>
+                                )}
+                              </AnimatePresence>
+                            </div>
 
                             {/* Task info */}
                             <div className="min-w-0 flex-1">
-                              <p className={`text-sm font-semibold leading-snug transition-all ${
-                                completed ? 'text-slate-400 line-through' : 'text-slate-900'
+                              <p className={`text-sm font-semibold leading-snug transition-all duration-300 ${
+                                completed ? 'text-slate-400 line-through decoration-emerald-400' : 'text-slate-900'
                               }`}>
                                 {task.title}
                               </p>
-                              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <div className="mt-0.5 flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1 text-xs text-slate-500">
                                   <Clock3 className="h-3 w-3" />
                                   {task.durationMinutes} min
                                 </span>
-                                {autoCompleted && (
-                                  <span className="text-[10px] font-bold text-emerald-600">· Auto-tracked ✓</span>
-                                )}
-                                {task.manuallyCompleted && !autoCompleted && (
-                                  <span className="text-[10px] font-bold text-emerald-600">· Manually marked ✓</span>
-                                )}
+                                <AnimatePresence>
+                                  {completed && (
+                                    <motion.span
+                                      key="tracked"
+                                      initial={{ opacity: 0, x: -6 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      exit={{ opacity: 0, x: -6 }}
+                                      transition={{ duration: 0.2 }}
+                                      className="text-[10px] font-bold text-emerald-600"
+                                    >
+                                      · Activity tracked ✓
+                                    </motion.span>
+                                  )}
+                                </AnimatePresence>
                               </div>
                             </div>
 
-                            {/* Right: completed badge or start button */}
-                            {completed ? (
-                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Done
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => navigate(ACTIVITY_ROUTE[task.activityKey])}
-                                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition-all duration-150 hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-600 hover:border-transparent hover:text-white hover:shadow-[0_4px_12px_rgba(220,38,38,0.28)]"
-                              >
-                                {ACTIVITY_ICON[task.activityKey]}
-                                Start
-                                <ExternalLink className="h-3 w-3 opacity-70" />
-                              </button>
-                            )}
+                            {/* Right: Done badge or Start button */}
+                            <AnimatePresence mode="wait">
+                              {completed ? (
+                                <motion.span
+                                  key="done-badge"
+                                  initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
+                                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                  exit={{ scale: 0.4, opacity: 0 }}
+                                  transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Done
+                                </motion.span>
+                              ) : (
+                                <motion.button
+                                  key="start-btn"
+                                  initial={{ scale: 0.85, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.85, opacity: 0 }}
+                                  transition={{ duration: 0.18 }}
+                                  type="button"
+                                  onClick={() => navigate(ACTIVITY_ROUTE[task.activityKey])}
+                                  className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition-all duration-150 hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-600 hover:border-transparent hover:text-white hover:shadow-[0_4px_14px_rgba(220,38,38,0.3)] active:scale-95"
+                                >
+                                  {ACTIVITY_ICON[task.activityKey]}
+                                  Start
+                                  <ExternalLink className="h-3 w-3 opacity-70" />
+                                </motion.button>
+                              )}
+                            </AnimatePresence>
                           </div>
                         </motion.div>
                       )

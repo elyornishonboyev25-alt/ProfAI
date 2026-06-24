@@ -11,8 +11,11 @@ import {
   ChevronRight,
   ClipboardPlus,
   Clock3,
+  ExternalLink,
+  Headphones,
   LogIn,
-  Lock,
+  Mic,
+  PenLine,
   Sparkles,
   Trophy,
   User,
@@ -24,6 +27,7 @@ import {
   addCustomTaskToDay,
   ensureRollingWeek,
   generateWeeklyPlan,
+  isTaskCompleted,
   loadActivityLog,
   loadOnboardingProfile,
   loadWeeklyPlan,
@@ -31,6 +35,8 @@ import {
   saveWeeklyPlan,
   taskAutoCompleted,
   toggleCustomTask,
+  toggleGeneratedTask,
+  type ActivityKey,
   type ExamTarget,
   type OnboardingProfile,
   type WeeklyPlan,
@@ -90,6 +96,28 @@ const DAY_PRESETS = [
 ]
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
+
+const ACTIVITY_ROUTE: Record<ActivityKey, string> = {
+  'ielts-reading': '/ielts/reading',
+  'ielts-listening': '/ielts/listening',
+  'ielts-writing': '/ielts/writing',
+  'ielts-speaking': '/speaking-community',
+  'sat-math': '/sat/math',
+  'sat-rw': '/sat/reading-writing',
+  'vocabulary': '/vocabulary',
+  'mock': '/mock',
+}
+
+const ACTIVITY_ICON: Record<ActivityKey, React.ReactNode> = {
+  'ielts-reading': <BookOpen className="h-3.5 w-3.5" />,
+  'ielts-listening': <Headphones className="h-3.5 w-3.5" />,
+  'ielts-writing': <PenLine className="h-3.5 w-3.5" />,
+  'ielts-speaking': <Mic className="h-3.5 w-3.5" />,
+  'sat-math': <Calculator className="h-3.5 w-3.5" />,
+  'sat-rw': <BookOpen className="h-3.5 w-3.5" />,
+  'vocabulary': <BookOpen className="h-3.5 w-3.5" />,
+  'mock': <Trophy className="h-3.5 w-3.5" />,
+}
 
 const STEP_LABELS = ['Profile', 'Timeline', 'Generate']
 
@@ -242,7 +270,7 @@ export default function WeeklyPlannerLab() {
 
   const generatedCompletedCount = useMemo(() => {
     if (!selectedDay) return 0
-    return selectedDay.generatedTasks.filter((t) => taskAutoCompleted(t, selectedDay.dateISO, activityLog)).length
+    return selectedDay.generatedTasks.filter((t) => isTaskCompleted(t, selectedDay.dateISO, activityLog)).length
   }, [activityLog, selectedDay])
 
   const resolvedDays = useCustomDays ? Math.max(1, Number(customDays) || 1) : daysToExam
@@ -319,6 +347,13 @@ export default function WeeklyPlannerLab() {
   const toggleCustom = (dayId: string, taskId: string) => {
     if (!plan) return
     const nextPlan = toggleCustomTask(plan, dayId, taskId)
+    setPlan(nextPlan)
+    saveWeeklyPlan(nextPlan, user?.id)
+  }
+
+  const toggleGenerated = (dayId: string, taskId: string) => {
+    if (!plan) return
+    const nextPlan = toggleGeneratedTask(plan, dayId, taskId)
     setPlan(nextPlan)
     saveWeeklyPlan(nextPlan, user?.id)
   }
@@ -997,7 +1032,7 @@ export default function WeeklyPlannerLab() {
             <aside className="space-y-2">
               {plan.days.map((day) => {
                 const selected = selectedDay?.id === day.id
-                const dayCompleted = day.generatedTasks.filter((t) => taskAutoCompleted(t, day.dateISO, activityLog)).length
+                const dayCompleted = day.generatedTasks.filter((t) => isTaskCompleted(t, day.dateISO, activityLog)).length
                 return (
                   <button
                     key={day.id}
@@ -1028,42 +1063,95 @@ export default function WeeklyPlannerLab() {
                 <>
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-xl font-black text-slate-900">{selectedDay.weekdayLabel} Plan</h3>
-                    <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                      Auto complete: {generatedCompletedCount}/{selectedDay.generatedTasks.length}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1">
+                        <span className="text-xs font-bold text-red-700">{generatedCompletedCount}</span>
+                        <span className="text-xs text-red-500">/</span>
+                        <span className="text-xs font-semibold text-red-600">{selectedDay.generatedTasks.length}</span>
+                        <span className="text-xs font-semibold text-red-600">completed</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2.5">
-                    {selectedDay.generatedTasks.map((task) => {
-                      const completed = taskAutoCompleted(task, selectedDay.dateISO, activityLog)
+                    {selectedDay.generatedTasks.map((task, taskIndex) => {
+                      const autoCompleted = taskAutoCompleted(task, selectedDay.dateISO, activityLog)
+                      const completed = isTaskCompleted(task, selectedDay.dateISO, activityLog)
                       return (
                         <motion.div
                           key={task.id}
                           layout
-                          className={`rounded-xl border px-4 py-3.5 transition-colors ${
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: taskIndex * 0.04, duration: 0.18 }}
+                          className={`group relative overflow-hidden rounded-xl border transition-all duration-200 ${
                             completed
-                              ? 'border-emerald-200 bg-emerald-50/60'
-                              : 'border-slate-200 bg-slate-50/60'
+                              ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/80 to-white shadow-sm'
+                              : 'border-slate-200 bg-white hover:border-red-100 hover:shadow-md'
                           }`}
                         >
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900">{task.title}</p>
-                              <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
-                                <Clock3 className="h-3.5 w-3.5" />
-                                {task.durationMinutes} min planned · {task.requiredMinutes} min required
+                          {completed && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-gradient-to-b from-emerald-400 to-emerald-600" />
+                          )}
+                          {!completed && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-gradient-to-b from-slate-200 to-slate-300 group-hover:from-red-300 group-hover:to-rose-400 transition-all duration-200" />
+                          )}
+                          <div className="flex items-center gap-3 pl-5 pr-4 py-3.5">
+                            {/* Checkbox */}
+                            <button
+                              type="button"
+                              onClick={() => !autoCompleted && toggleGenerated(selectedDay.id, task.id)}
+                              title={autoCompleted ? 'Auto-completed from activity tracking' : task.manuallyCompleted ? 'Click to unmark' : 'Click to mark as done'}
+                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 ${
+                                completed
+                                  ? 'border-emerald-500 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]'
+                                  : 'border-slate-300 hover:border-red-400 hover:bg-red-50 cursor-pointer'
+                              } ${autoCompleted ? 'cursor-default' : ''}`}
+                            >
+                              {completed && (
+                                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </button>
+
+                            {/* Task info */}
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm font-semibold leading-snug transition-all ${
+                                completed ? 'text-slate-400 line-through' : 'text-slate-900'
+                              }`}>
+                                {task.title}
                               </p>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                  <Clock3 className="h-3 w-3" />
+                                  {task.durationMinutes} min
+                                </span>
+                                {autoCompleted && (
+                                  <span className="text-[10px] font-bold text-emerald-600">· Auto-tracked ✓</span>
+                                )}
+                                {task.manuallyCompleted && !autoCompleted && (
+                                  <span className="text-[10px] font-bold text-emerald-600">· Manually marked ✓</span>
+                                )}
+                              </div>
                             </div>
+
+                            {/* Right: completed badge or start button */}
                             {completed ? (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                Auto Completed
+                                Done
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-500">
-                                <Lock className="h-3.5 w-3.5" />
-                                System Controlled
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() => navigate(ACTIVITY_ROUTE[task.activityKey])}
+                                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition-all duration-150 hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-600 hover:border-transparent hover:text-white hover:shadow-[0_4px_12px_rgba(220,38,38,0.28)]"
+                              >
+                                {ACTIVITY_ICON[task.activityKey]}
+                                Start
+                                <ExternalLink className="h-3 w-3 opacity-70" />
+                              </button>
                             )}
                           </div>
                         </motion.div>

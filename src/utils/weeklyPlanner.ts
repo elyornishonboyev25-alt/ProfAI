@@ -26,6 +26,7 @@ export type GeneratedTask = {
   activityKey: ActivityKey
   requiredMinutes: number
   generated: true
+  manuallyCompleted?: boolean
 }
 
 export type CustomTask = {
@@ -452,6 +453,27 @@ export function taskAutoCompleted(task: GeneratedTask, dayDateISO: string, log: 
   const dayEntry = log[dayDateISO]
   const spent = dayEntry?.[task.activityKey] ?? 0
   return spent >= task.requiredMinutes
+}
+
+export function isTaskCompleted(task: GeneratedTask, dayDateISO: string, log: ActivityLog): boolean {
+  return task.manuallyCompleted === true || taskAutoCompleted(task, dayDateISO, log)
+}
+
+export function toggleGeneratedTask(plan: WeeklyPlan, dayId: string, taskId: string): WeeklyPlan {
+  return {
+    ...plan,
+    updatedAt: new Date().toISOString(),
+    days: plan.days.map((day) => {
+      if (day.id !== dayId) return day
+      return {
+        ...day,
+        generatedTasks: day.generatedTasks.map((task) => {
+          if (task.id !== taskId) return task
+          return { ...task, manuallyCompleted: !task.manuallyCompleted }
+        }),
+      }
+    }),
+  }
 }
 
 export function routeToActivityKey(pathname: string): ActivityKey | null {

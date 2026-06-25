@@ -125,39 +125,28 @@ function App() {
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
 
+  // Distraction-free "focus" screens render WITHOUT the app shell (no sidebar /
+  // topbar): auth, onboarding, the immersive Vocabulary arena, and any active
+  // test / exam / mock-run / timed-test / results screen. Everything else gets
+  // the unified shell (persistent Sidebar + TopBar).
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const isLanding = pathname === '/' || pathname === '/dashboard' || pathname === '/about'
+  const isOnboarding = pathname === '/onboarding'
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
-  const isProfileStandalone = pathname === '/profile'
-  const isStandaloneMode = pathname === '/account'
-  const isTrackMode =
-    isStandaloneMode ||
-    pathname.startsWith('/mock') ||
-    pathname === '/speaking-community' ||
-    pathname.startsWith('/speaker/') ||
-    pathname === '/community' ||
-    pathname.startsWith('/u/') ||
-    pathname.startsWith('/sat') ||
-    pathname.startsWith('/ielts') ||
-    pathname === '/writing-lab' ||
-    pathname === '/speaking-lab' ||
-    pathname === '/shadowing-lab' ||
-    pathname === '/podcast' ||
-    pathname === '/onboarding' ||
-    pathname.startsWith('/articles') ||
-    pathname.startsWith('/admission')
   const isCustomTestMode = /^\/tests\/[^/]+\/attempt$/.test(pathname)
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
-  const isTestMode = isCustomTestMode || isClassicTestMode
+  const isMockRun = /^\/mock\/ielts\/[^/]+$/.test(pathname)
+  const isIeltsTimedTest = /^\/ielts\/(writing|speaking)\/test\//.test(pathname)
 
-  const showTopNavigation = !isAuthPage && isLanding
-  const showSidebar =
-    !isAuthPage &&
-    !isLanding &&
-    !isTestMode &&
-    !isVocabularyMode &&
-    !isTrackMode &&
-    !isProfileStandalone
+  const isFocusMode =
+    isAuthPage ||
+    isOnboarding ||
+    isVocabularyMode ||
+    isCustomTestMode ||
+    isClassicTestMode ||
+    isMockRun ||
+    isIeltsTimedTest
+
+  const showShell = !isFocusMode
 
   useEffect(() => {
     const connection = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
@@ -217,35 +206,17 @@ function App() {
       <WordLookupLayer />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        {showTopNavigation && <TopNavigation />}
+        {showShell && <TopNavigation withSidebar />}
 
         <div className="flex flex-1">
-          {showSidebar && <Sidebar />}
+          {showShell && <Sidebar />}
 
           <main
             className={`w-full flex-1 transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              showSidebar ? 'lg:ml-64' : 'ml-0'
+              showShell ? 'lg:ml-64 lg:pt-20' : 'ml-0'
             }`}
           >
-            <div
-              className={`flex min-h-full flex-col ${
-                isTestMode
-                  ? location.pathname.startsWith('/results/')
-                    ? 'min-h-screen overflow-y-auto'
-                    : 'min-h-[calc(100vh-80px)]'
-                  : isVocabularyMode
-                    ? 'min-h-screen'
-                    : isProfileStandalone
-                      ? 'min-h-screen'
-                    : isTrackMode
-                      ? 'min-h-screen'
-                    : showSidebar
-                      ? 'min-h-screen p-4 lg:p-8'
-                      : showTopNavigation
-                        ? 'min-h-[calc(100vh-80px)]'
-                        : 'min-h-screen'
-              }`}
-            >
+            <div className={`flex min-h-full flex-col ${showShell ? 'min-h-screen p-4 lg:p-8' : 'min-h-screen'}`}>
               <ErrorBoundary>
                 <Suspense fallback={<RouteLoader />}>
                   <AnimatePresence mode="wait" initial={false}>
@@ -637,7 +608,7 @@ function App() {
                 </Suspense>
               </ErrorBoundary>
 
-              {!isAuthPage && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && (
+              {showShell && (
                 <div className="mt-14">
                   <Footer />
                 </div>

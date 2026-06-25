@@ -212,6 +212,7 @@ export default function Dashboard() {
   const user = useAuthStore((state: AuthState) => state.user)
   const { reducedMotion, minimalMotion } = useMotionPreferences()
   const accentFullText = 'Top Universities Abroad'
+  const firstName = user?.fullName?.trim().split(/\s+/)[0] || user?.nickname || ''
 
   const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
     async () => {
@@ -252,7 +253,7 @@ export default function Dashboard() {
           <div>
             <span className="premium-top-chip inline-flex items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
-              Study Abroad, Powered by AI
+              {user ? 'Your study hub' : 'Study Abroad, Powered by AI'}
             </span>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-[#111827] sm:text-5xl">
               <motion.span
@@ -261,7 +262,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                 transition={reducedMotion ? { duration: 0.01 } : { duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
               >
-                Your Launchpad to
+                {user ? 'Welcome back,' : 'Your Launchpad to'}
               </motion.span>
               <motion.span
                 initial={reducedMotion ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
@@ -269,11 +270,13 @@ export default function Dashboard() {
                 transition={reducedMotion ? { duration: 0.01 } : { duration: 1.2, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 className="text-gradient-red dashboard-accent-reveal mt-2 inline-block will-change-transform"
               >
-                {accentFullText}
+                {user ? firstName || 'Champion' : accentFullText}
               </motion.span>
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#475569]">
-              Everything you need to study abroad in one place — SAT &amp; IELTS prep, English skills, university research and step-by-step admission guidance, with an AI coach that builds your personal roadmap.
+              {user
+                ? 'Pick up where you left off — your AI coach, daily streak and target-score roadmap are ready whenever you are.'
+                : 'Everything you need to study abroad in one place — SAT & IELTS prep, English skills, university research and step-by-step admission guidance, with an AI coach that builds your personal roadmap.'}
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">

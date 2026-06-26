@@ -1,105 +1,68 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import {
   ArrowRight,
+  ArrowUpRight,
+  BarChart3,
   BookOpen,
+  Bot,
   CheckCircle2,
-  Clock3,
+  ChevronRight,
+  Flame,
+  Globe2,
+  GraduationCap,
   Headphones,
-  History,
+  Languages,
   Loader2,
-  MapPin,
   Menu,
   Mic2,
   PenSquare,
+  Play,
   Quote,
+  Radio,
   Sparkles,
   Star,
   Target,
+  Trophy,
+  Waves,
   X,
+  Zap,
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { CountUp } from '@/components/fx'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
 
 /* ──────────────────────────────────────────────────────────────────────────
-   ProfAI — public marketing landing (guests only). Mirrors the polish of a
-   top-tier prep landing: animated hero with floating university badges, a
-   live mock mockup, a feature route, and a community review wall that anyone
-   can post to. Built with framer-motion; respects reduced-motion.
+   ProfAI — public marketing landing (guests only). An original, feature-rich
+   premium landing: a layered live-product hero, animated stat band, a bento
+   grid that shows off every study tool, an interactive track switcher, the
+   route, a community review wall anyone can post to, and a closing CTA.
+   Built with framer-motion; honours reduced-motion throughout.
    ────────────────────────────────────────────────────────────────────────── */
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
 const NAV_LINKS = [
-  { label: 'Results', target: 'results' },
-  { label: 'Platform', target: 'platform' },
-  { label: 'Route', target: 'route' },
+  { label: 'Features', target: 'features' },
+  { label: 'Tracks', target: 'tracks' },
+  { label: 'How it works', target: 'route' },
   { label: 'Reviews', target: 'reviews' },
 ] as const
 
-const UNIVERSITIES = [
-  { name: 'MIT', color: '#8A1A2B', pos: 'left-[8%] top-[6%]', rotate: -8, depth: 26 },
-  { name: 'Columbia', color: '#1D4F91', pos: 'right-[6%] top-[2%]', rotate: 7, depth: 36 },
-  { name: 'Harvard', color: '#A41034', pos: 'left-[2%] top-[40%]', rotate: -6, depth: 44 },
-  { name: 'Stanford', color: '#8C1515', pos: 'right-[1%] top-[38%]', rotate: 8, depth: 30 },
-  { name: 'Yale', color: '#0F4D92', pos: 'left-[14%] bottom-[6%]', rotate: -5, depth: 38 },
-  { name: 'Oxford', color: '#002147', pos: 'right-[12%] bottom-[4%]', rotate: 6, depth: 48 },
+const STATS = [
+  { value: 30, suffix: '+', label: 'Full timed mocks' },
+  { value: 10000, suffix: '+', label: 'Practice items' },
+  { value: 12, suffix: '', label: 'Study tools in one app' },
+  { value: 4, suffix: '', label: 'Skills, one roadmap' },
 ] as const
 
-const TARGETS = ['9.0', '1600', '8.5', '1540'] as const
+type ExamOption = ReviewExam
+const EXAM_OPTIONS: ExamOption[] = ['IELTS', 'SAT', 'General']
 
-const FEATURES = [
-  {
-    eyebrow: 'Full mocks',
-    title: 'Walk in already knowing the rhythm',
-    body: 'Timed Listening, Reading, Writing and Speaking — followed by a clear review path, not a raw score.',
-    icon: Target,
-  },
-  {
-    eyebrow: '10,000+ items',
-    title: 'Practice what costs band points',
-    body: 'Filter by skill, question type, difficulty and the exact patterns you keep missing.',
-    icon: BookOpen,
-  },
-  {
-    eyebrow: 'Writing AI',
-    title: 'Get rubric feedback in minutes',
-    body: 'Task Response, Coherence, Lexical and Grammar scored on the band rubric. No guessing what to fix.',
-    icon: PenSquare,
-  },
-  {
-    eyebrow: 'Vocab',
-    title: 'Keep weak words in rotation',
-    body: 'Missed words return on a spaced schedule until they stop slowing your reading down.',
-    icon: Sparkles,
-  },
-  {
-    eyebrow: 'History',
-    title: 'Watch the band move',
-    body: 'Mocks, practice and rubric scores stay in one timeline, so your trend is always obvious.',
-    icon: History,
-  },
-] as const
+const EXAM_OPTIONS_NAV = EXAM_OPTIONS
 
-const STEPS = [
-  { n: '01', title: 'Take a full mock', body: 'Set a clean baseline across all four skills under real timing.' },
-  { n: '02', title: 'Open the map', body: 'See which skill — and which sub-skill — is costing you the most band points.' },
-  { n: '03', title: 'Practice the gaps', body: 'Train on the exact question types you missed, not random sets.' },
-  { n: '04', title: 'Replay weak vocab', body: 'Keep slow words in rotation until your reading speed catches up.' },
-] as const
-
-const SKILL_CARDS = [
-  { label: 'Listening', icon: Headphones, pos: 'left-[2%] top-[8%]', delay: 0 },
-  { label: 'Reading', icon: BookOpen, pos: 'right-[4%] top-[0%]', delay: 0.4 },
-  { label: 'Writing', icon: PenSquare, pos: 'left-[10%] bottom-[6%]', delay: 0.8 },
-  { label: 'Speaking', icon: Mic2, pos: 'right-[8%] bottom-[12%]', delay: 1.2 },
-] as const
-
-const EXAM_OPTIONS: ReviewExam[] = ['IELTS', 'SAT', 'General']
-
-/* ── small helpers ─────────────────────────────────────────────────────── */
+/* ── helpers ───────────────────────────────────────────────────────────── */
 
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -116,147 +79,346 @@ function initials(name: string) {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 26 },
-  show: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: EASE, delay: i * 0.08 },
-  }),
+  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE, delay: i * 0.07 } }),
 }
 
 function SectionTag({ children }: { children: ReactNode }) {
-  return (
-    <span className="text-[11px] font-black uppercase tracking-[0.28em] text-red-600">{children}</span>
-  )
+  return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-red-600">{children}</span>
 }
 
-/* ── Hero university badge ─────────────────────────────────────────────── */
+/* ── Hero: floating live-product cards ─────────────────────────────────── */
 
-function UniBadge({
-  name,
-  color,
-  pos,
-  rotate,
+function FloatCard({
+  className,
   depth,
   y,
   reduce,
+  delay,
+  children,
 }: {
-  name: string
-  color: string
-  pos: string
-  rotate: number
+  className?: string
   depth: number
   y: MotionValue<number>
   reduce: boolean
+  delay: number
+  children: ReactNode
 }) {
   return (
     <motion.div
-      className={`absolute ${pos} z-10 hidden sm:block`}
+      className={`absolute ${className}`}
       style={reduce ? undefined : { y }}
-      initial={{ opacity: 0, scale: 0.6, rotate }}
-      animate={{ opacity: 1, scale: 1, rotate }}
-      transition={{ duration: 0.7, ease: EASE, delay: 0.2 + depth / 120 }}
+      initial={{ opacity: 0, scale: 0.85, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: EASE, delay }}
     >
       <motion.div
         animate={reduce ? undefined : { y: [0, -10, 0] }}
-        transition={{ duration: 4 + depth / 16, repeat: Infinity, ease: 'easeInOut' }}
-        className="rounded-2xl border border-black/5 bg-white px-4 py-2.5 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
-        style={{ boxShadow: `0 18px 40px rgba(15,23,42,0.14), inset 0 0 0 1px ${color}14` }}
+        transition={{ duration: 4 + depth, repeat: Infinity, ease: 'easeInOut' }}
+        className="rounded-2xl border border-black/5 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.14)] backdrop-blur"
       >
-        <span className="text-lg font-black tracking-tight" style={{ color }}>
-          {name}
-        </span>
+        {children}
       </motion.div>
     </motion.div>
   )
 }
 
-/* ── Animated mock mockup (right side of the platform section) ─────────── */
-
-function MockMockup() {
-  const reduce = useReducedMotion()
+function HeroVisual({ y, reduce }: { y: MotionValue<number>; reduce: boolean }) {
   return (
-    <div className="relative w-full">
-      <div className="overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-[0_40px_90px_rgba(15,23,42,0.14)]">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-          <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-            <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-            <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-            IELTS · Reading · Passage 2
-          </p>
-          <span className="rounded-md bg-red-500 px-2 py-0.5 text-[11px] font-black text-white">18:42</span>
-        </div>
+    <div className="relative mx-auto h-[440px] w-full max-w-[520px]">
+      {/* glow */}
+      <div className="pointer-events-none absolute inset-6 rounded-[40px] bg-gradient-to-br from-red-300/30 via-rose-200/20 to-amber-100/10 blur-3xl" />
 
-        <div className="grid gap-5 p-5 sm:grid-cols-2">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Passage</p>
-            <p className="mt-2 text-[13px] leading-6 text-slate-600">
-              The migration patterns of arctic terns have long puzzled ornithologists. These small seabirds
-              travel from pole to pole each year, covering distances no other vertebrate matches.{' '}
-              <span className="rounded bg-red-100/80 px-0.5 text-slate-800">
-                the birds use atmospheric pressure systems to conserve energy
-              </span>
-              , adding thousands of kilometres to the trip.
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Question 14</p>
-            <p className="mt-2 text-[13px] font-bold leading-5 text-slate-800">
-              Arctic terns extend their migration distance because they:
-            </p>
-            <div className="mt-3 space-y-2">
-              {[
-                { k: 'A', t: 'follow ocean currents', on: false },
-                { k: 'B', t: 'use pressure systems to save energy', on: true },
-                { k: 'C', t: 'avoid predator territories', on: false },
-                { k: 'D', t: 'rely on celestial cues alone', on: false },
-              ].map((opt) => (
-                <motion.div
-                  key={opt.k}
-                  initial={false}
-                  animate={
-                    opt.on && !reduce
-                      ? { borderColor: ['#FECACA', '#EF4444', '#FECACA'] }
-                      : {}
-                  }
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                  className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-[12px] font-semibold ${
-                    opt.on
-                      ? 'border-red-300 bg-red-50 text-red-700'
-                      : 'border-slate-200 bg-white text-slate-500'
-                  }`}
-                >
-                  <span
-                    className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                      opt.on ? 'border-red-500' : 'border-slate-300'
-                    }`}
-                  >
-                    {opt.on && <span className="h-2 w-2 rounded-full bg-red-500" />}
-                  </span>
-                  {opt.t}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-red-600">
-            <MapPin className="h-3.5 w-3.5" /> 14 of 40
+      {/* AI coach reply — the anchor card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+        className="absolute left-1/2 top-10 w-[300px] -translate-x-1/2 rounded-3xl border border-black/5 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.16)]"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white">
+            <Bot className="h-4.5 w-4.5" />
           </span>
-          <span className="text-[11px] font-medium text-slate-400">Auto-saved</span>
+          <div>
+            <p className="text-[13px] font-black text-slate-900">AI Study Coach</p>
+            <p className="flex items-center gap-1 text-[10px] font-bold text-green-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> analysing your last mock
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="mt-3 space-y-2">
+          <p className="rounded-2xl rounded-tl-sm bg-slate-100 px-3 py-2 text-[12px] leading-5 text-slate-700">
+            Your Reading dipped on True / False / Not Given. Let's drill it for 12 minutes.
+          </p>
+          <div className="flex items-center gap-2">
+            <button className="rounded-xl bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white">Start drill</button>
+            <span className="text-[11px] font-semibold text-slate-400">+40 XP</span>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* soft glow */}
-      <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-gradient-to-br from-red-200/30 to-rose-100/20 blur-3xl" />
+      {/* Band progress card */}
+      <FloatCard className="-left-2 top-2 w-[190px]" depth={1.4} y={y} reduce={reduce} delay={0.28}>
+        <div className="p-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Overall band</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-slate-900">
+            6.0 <span className="text-slate-300">→</span> <span className="text-red-600">7.5</span>
+          </p>
+          <div className="mt-3 flex items-end gap-1.5">
+            {[40, 55, 48, 70, 65, 88].map((h, i) => (
+              <motion.span
+                key={i}
+                initial={{ height: 4 }}
+                animate={{ height: h * 0.5 }}
+                transition={{ duration: 0.8, delay: 0.5 + i * 0.08, ease: EASE }}
+                className="w-3 rounded-md bg-gradient-to-t from-red-500 to-rose-400"
+                style={{ height: h * 0.5 }}
+              />
+            ))}
+          </div>
+        </div>
+      </FloatCard>
+
+      {/* Mock timer card */}
+      <FloatCard className="-right-3 top-24 w-[200px]" depth={2.1} y={y} reduce={reduce} delay={0.42}>
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Reading · P2</p>
+            <span className="rounded-md bg-red-500 px-1.5 py-0.5 text-[10px] font-black text-white">18:42</span>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {['Q12 ✓', 'Q13 ✓', 'Q14 …'].map((q, i) => (
+              <div
+                key={q}
+                className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                  i < 2 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                }`}
+              >
+                {q}
+              </div>
+            ))}
+          </div>
+        </div>
+      </FloatCard>
+
+      {/* Streak / XP card */}
+      <FloatCard className="bottom-6 left-6 w-[210px]" depth={1.1} y={y} reduce={reduce} delay={0.56}>
+        <div className="flex items-center gap-3 p-4">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+            <Flame className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-lg font-black tracking-tight text-slate-900">12-day streak</p>
+            <p className="text-[11px] font-bold text-slate-400">Level 7 · 3,240 XP</p>
+          </div>
+        </div>
+      </FloatCard>
+
+      {/* Speaking live pill */}
+      <FloatCard className="-right-1 bottom-20 w-[170px]" depth={2.6} y={y} reduce={reduce} delay={0.7}>
+        <div className="flex items-center gap-2.5 p-3.5">
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white">
+            <Mic2 className="h-4 w-4" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-red-500/40" />
+          </span>
+          <div>
+            <p className="text-[12px] font-black text-slate-900">Live partner</p>
+            <p className="text-[10px] font-bold text-green-600">8 online now</p>
+          </div>
+        </div>
+      </FloatCard>
     </div>
   )
 }
 
-/* ── Star rating input ─────────────────────────────────────────────────── */
+/* ── Bento feature data ────────────────────────────────────────────────── */
+
+type Feature = {
+  title: string
+  body: string
+  icon: ComponentType<{ className?: string }>
+  route: string
+  span: string
+  visual?: ReactNode
+  tone?: 'red' | 'dark'
+}
+
+function RubricVisual() {
+  const rows = [
+    ['Task Response', 78],
+    ['Coherence', 64],
+    ['Lexical', 85],
+    ['Grammar', 70],
+  ] as const
+  return (
+    <div className="mt-4 space-y-2.5">
+      {rows.map(([label, w], i) => (
+        <div key={label}>
+          <div className="flex justify-between text-[11px] font-bold text-slate-500">
+            <span>{label}</span>
+            <span className="text-slate-400">{(w / 100 * 9).toFixed(1)}</span>
+          </div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: `${w}%` }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: i * 0.1, ease: EASE }}
+              className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-400"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const WAVE_BARS = [0.5, 0.8, 0.4, 1, 0.6, 0.9, 0.45, 0.75, 0.55, 1, 0.5, 0.85, 0.6, 0.95, 0.4, 0.7, 0.5, 0.9]
+
+function WaveVisual() {
+  const reduce = !!useReducedMotion()
+  return (
+    <div className="mt-5 flex h-12 items-center gap-1">
+      {WAVE_BARS.map((peak, i) => (
+        <motion.span
+          key={i}
+          animate={reduce ? undefined : { scaleY: [0.3, peak, 0.3] }}
+          transition={{ duration: 1.2 + (i % 5) * 0.18, repeat: Infinity, ease: 'easeInOut', delay: i * 0.05 }}
+          className="h-full w-1 flex-1 rounded-full bg-gradient-to-t from-red-500/70 to-rose-400/70"
+          style={{ transformOrigin: 'center', transform: `scaleY(${peak})` }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const FEATURES: Feature[] = [
+  {
+    title: 'AI Study Coach',
+    body: 'A personal roadmap that reads every mock, finds your weakest sub-skill and hands you the exact next task — never random practice.',
+    icon: Bot,
+    route: '/register',
+    span: 'lg:col-span-2 lg:row-span-2',
+    tone: 'dark',
+  },
+  {
+    title: 'Mock Arena',
+    body: '30+ full, exam-mode IELTS & SAT simulations with enforced section order and auto-submit.',
+    icon: Target,
+    route: '/mock/ielts',
+    span: 'lg:col-span-1',
+  },
+  {
+    title: 'Writing AI',
+    body: 'Task 1 & 2 scored on the real band rubric in minutes — with line-level fixes.',
+    icon: PenSquare,
+    route: '/ielts/writing',
+    span: 'lg:col-span-1',
+    visual: <RubricVisual />,
+  },
+  {
+    title: 'Speaking Community',
+    body: 'Voice-only partner practice over live WebRTC, plus an AI examiner that scores fluency.',
+    icon: Mic2,
+    route: '/speaking-community',
+    span: 'lg:col-span-1',
+  },
+  {
+    title: 'Shadowing Lab',
+    body: 'Paste any English YouTube link — we split it into lines you can loop, slow down and record.',
+    icon: Waves,
+    route: '/shadowing-lab',
+    span: 'lg:col-span-1',
+    visual: <WaveVisual />,
+  },
+  {
+    title: 'Vocabulary Arena',
+    body: 'Missed words return on a spaced schedule until they stop slowing your reading.',
+    icon: Sparkles,
+    route: '/vocabulary',
+    span: 'lg:col-span-1',
+  },
+  {
+    title: 'Reading Library & Podcasts',
+    body: 'A curated reader with Ask-AI vocab help and subtitled English podcasts with A-B loop.',
+    icon: Headphones,
+    route: '/articles',
+    span: 'lg:col-span-1',
+  },
+  {
+    title: 'Admission Hub',
+    body: '30+ study-abroad lessons and a QS university explorer to plan your application end to end.',
+    icon: Globe2,
+    route: '/admission',
+    span: 'lg:col-span-2',
+  },
+]
+
+/* ── Tracks data (interactive switcher) ────────────────────────────────── */
+
+const TRACKS = [
+  {
+    id: 'IELTS',
+    label: 'IELTS',
+    icon: GraduationCap,
+    blurb: 'Academic & General Training — every skill, full mocks and band-rubric feedback.',
+    route: '/ielts',
+    items: [
+      { icon: BookOpen, name: 'Reading', note: 'Passage strategy & inference control' },
+      { icon: Headphones, name: 'Listening', note: 'Audio flow & distractor filtering' },
+      { icon: PenSquare, name: 'Writing', note: 'Task 1 + 2 with AI rubric scoring' },
+      { icon: Mic2, name: 'Speaking', note: 'Part-by-part with fluency insights' },
+    ],
+  },
+  {
+    id: 'SAT',
+    label: 'SAT',
+    icon: Target,
+    blurb: 'Digital-SAT style Math and Reading/Writing with timing blocks and a built-in calculator.',
+    route: '/sat',
+    items: [
+      { icon: BarChart3, name: 'Math', note: 'Algebra, problem solving & speed blocks' },
+      { icon: BookOpen, name: 'Reading/Writing', note: 'Evidence pairing & revision logic' },
+      { icon: Zap, name: 'Calculator', note: 'Built-in graphing tool' },
+      { icon: Trophy, name: 'Full mock', note: 'Adaptive, exam-mode simulation' },
+    ],
+  },
+  {
+    id: 'English',
+    label: 'English Skills',
+    icon: Languages,
+    blurb: 'Build real fluency between mocks — shadowing, podcasts, reading and spaced vocab.',
+    route: '/articles',
+    items: [
+      { icon: Waves, name: 'Shadowing Lab', note: 'YouTube → line-by-line practice' },
+      { icon: Radio, name: 'Podcasts', note: 'Captions, speed control, A-B loop' },
+      { icon: BookOpen, name: 'Reading Library', note: 'Pro reader + Ask-AI vocab' },
+      { icon: Sparkles, name: 'Vocabulary', note: 'Spaced repetition that sticks' },
+    ],
+  },
+  {
+    id: 'Admission',
+    label: 'Study Abroad',
+    icon: Globe2,
+    blurb: 'Turn your scores into offers — lessons, university research and an application roadmap.',
+    route: '/admission',
+    items: [
+      { icon: GraduationCap, name: 'Lessons', note: '30+ study-abroad guides' },
+      { icon: Globe2, name: 'Universities', note: 'QS rankings explorer' },
+      { icon: Target, name: 'Roadmap', note: 'Step-by-step admission plan' },
+      { icon: Trophy, name: 'Scholarships', note: 'Funding & application tips' },
+    ],
+  },
+] as const
+
+const STEPS = [
+  { n: '01', title: 'Take a full mock', body: 'Set a clean baseline across all four skills under real exam timing.', icon: Target },
+  { n: '02', title: 'Open your skill map', body: 'See exactly which sub-skill is costing you the most band points.', icon: BarChart3 },
+  { n: '03', title: 'Train the gaps', body: 'The AI coach assigns the precise tasks and words you keep missing.', icon: Bot },
+  { n: '04', title: 'Watch the band move', body: 'Mocks, practice and rubric scores stay in one timeline you can trust.', icon: Trophy },
+] as const
+
+/* ── Star input ────────────────────────────────────────────────────────── */
 
 function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hover, setHover] = useState(0)
@@ -273,9 +435,7 @@ function StarInput({ value, onChange }: { value: number; onChange: (n: number) =
             aria-label={`${n} star${n > 1 ? 's' : ''}`}
             className="p-0.5 transition-transform hover:scale-110"
           >
-            <Star
-              className={`h-6 w-6 ${active ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-300'}`}
-            />
+            <Star className={`h-6 w-6 ${active ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-300'}`} />
           </button>
         )
       })}
@@ -300,9 +460,7 @@ function ReviewCard({ review }: { review: LandingReview }) {
             <span className="rounded-md bg-red-500 px-2 py-0.5 text-white">{review.bandAfter}</span>
           </div>
         ) : (
-          <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-black text-red-600">
-            {review.exam}
-          </span>
+          <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-black text-red-600">{review.exam}</span>
         )}
         <Quote className="h-5 w-5 text-red-200" />
       </div>
@@ -336,15 +494,15 @@ function ReviewCard({ review }: { review: LandingReview }) {
 
 export default function Landing() {
   const navigate = useNavigate()
-  const reduce = useReducedMotion()
+  const reduce = !!useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const badgeShift = useTransform(scrollYProgress, [0, 1], [0, -80])
+  const floatY = useTransform(scrollYProgress, [0, 1], [0, -70])
 
   const [scrolled, setScrolled] = useState(false)
   const [mobileNav, setMobileNav] = useState(false)
-  const [targetIdx, setTargetIdx] = useState(0)
+  const [activeTrack, setActiveTrack] = useState<(typeof TRACKS)[number]['id']>('IELTS')
 
   // Reviews
   const [reviews, setReviews] = useState<LandingReview[]>([])
@@ -354,7 +512,7 @@ export default function Landing() {
   const [justSubmitted, setJustSubmitted] = useState(false)
   const [form, setForm] = useState({
     name: '',
-    exam: 'IELTS' as ReviewExam,
+    exam: 'IELTS' as ExamOption,
     rating: 5,
     bandBefore: '',
     bandAfter: '',
@@ -367,12 +525,6 @@ export default function Landing() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  useEffect(() => {
-    if (reduce) return
-    const id = window.setInterval(() => setTargetIdx((i) => (i + 1) % TARGETS.length), 2600)
-    return () => window.clearInterval(id)
-  }, [reduce])
 
   useEffect(() => {
     let alive = true
@@ -423,15 +575,17 @@ export default function Landing() {
     scrollToId(target)
   }
 
+  const track = TRACKS.find((t) => t.id === activeTrack)!
+
   return (
-    <div className="min-h-screen w-full bg-[#FBF7F1] text-slate-900">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#FBF7F1] text-slate-900">
       {/* ── Nav ─────────────────────────────────────────────────────── */}
       <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-4">
         <div
           className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-2.5 transition-all duration-300 sm:px-6 ${
             scrolled
               ? 'border border-black/5 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl'
-              : 'border border-transparent bg-white/50 backdrop-blur-md'
+              : 'border border-transparent bg-white/40 backdrop-blur-md'
           }`}
         >
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2">
@@ -464,14 +618,10 @@ export default function Landing() {
               onClick={() => navigate('/register')}
               className="group inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-[0_8px_20px_rgba(220,38,38,0.32)] transition hover:bg-red-700"
             >
-              Start
+              Start free
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
-            <button
-              onClick={() => setMobileNav((v) => !v)}
-              className="ml-1 rounded-lg p-1.5 text-slate-700 md:hidden"
-              aria-label="Menu"
-            >
+            <button onClick={() => setMobileNav((v) => !v)} className="ml-1 rounded-lg p-1.5 text-slate-700 md:hidden" aria-label="Menu">
               {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
@@ -500,225 +650,189 @@ export default function Landing() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative overflow-hidden px-4 pb-16 pt-28 sm:pt-36">
-        <div className="pointer-events-none absolute left-1/2 top-24 h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-gradient-to-br from-red-200/40 via-rose-100/30 to-transparent blur-[90px]" />
+      <section ref={heroRef} className="relative px-4 pb-12 pt-28 sm:pt-36">
+        <div className="pointer-events-none absolute -top-10 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(239,68,68,0.16),transparent)] blur-2xl" />
 
-        <div className="relative mx-auto max-w-5xl">
-          {/* Floating university badges + giant target */}
-          <div className="relative mx-auto h-[330px] max-w-3xl sm:h-[360px]">
-            {UNIVERSITIES.map((u) => (
-              <UniBadge key={u.name} {...u} y={badgeShift} reduce={!!reduce} />
-            ))}
-
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: EASE }}
-                className="relative"
-              >
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={TARGETS[targetIdx]}
-                    initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
-                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, y: -24, filter: 'blur(8px)' }}
-                    transition={{ duration: 0.5, ease: EASE }}
-                    className="block bg-gradient-to-b from-slate-900 to-slate-700 bg-clip-text text-[120px] font-black leading-none tracking-tighter text-transparent sm:text-[180px]"
-                  >
-                    {TARGETS[targetIdx]}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-1 text-[11px] font-black uppercase tracking-[0.32em] text-slate-400"
-              >
-                Your target. Your destination.
-              </motion.p>
-            </div>
-          </div>
-
-          {/* Headline */}
-          <div className="mx-auto mt-8 max-w-3xl text-center">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+          {/* copy */}
+          <div className="text-center lg:text-left">
             <motion.span
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: EASE }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-600 shadow-sm"
+              className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600 shadow-sm"
             >
-              <Sparkles className="h-3.5 w-3.5" /> Study abroad, powered by AI
+              <Sparkles className="h-3.5 w-3.5" /> Your AI-powered path to studying abroad
             </motion.span>
 
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.08, ease: EASE }}
-              className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl"
+              transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
+              className="mt-5 text-[2.6rem] font-black leading-[1.04] tracking-tight sm:text-6xl"
             >
-              Reach your <span className="text-red-600">target band.</span>
+              One app from
+              <br />
+              first mock to
+              <br />
+              <span className="bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">acceptance letter.</span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.16, ease: EASE }}
-              className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500 sm:text-lg"
+              transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
+              className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
             >
-              Full IELTS &amp; SAT mocks, focused practice, writing AI feedback and vocab — in one prep route
-              that takes you from baseline to acceptance letter.
+              IELTS &amp; SAT mocks, an AI coach that builds your roadmap, writing &amp; speaking feedback, live
+              partners, shadowing, vocab and university research — connected to the band you're chasing.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.24, ease: EASE }}
-              className="mt-7 flex flex-wrap items-center justify-center gap-3"
+              transition={{ duration: 0.7, delay: 0.22, ease: EASE }}
+              className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
             >
               <button
                 onClick={() => navigate('/register')}
                 className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.36)] transition hover:-translate-y-0.5 hover:bg-red-700"
               >
-                Start preparation
+                Start free
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
               <button
-                onClick={() => scrollToId('platform')}
+                onClick={() => scrollToId('features')}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300"
               >
-                See the platform
+                <Play className="h-4 w-4 text-red-500" /> Explore the platform
               </button>
             </motion.div>
-          </div>
-        </div>
-      </section>
 
-      {/* ── Trust strip ─────────────────────────────────────────────── */}
-      <section className="border-y border-black/5 bg-white/60 px-4 py-10">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-center text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">
-            Built for serious IELTS &amp; SAT preparation
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
-            {['Cambridge', 'College Board', 'IDP · IELTS', 'British Council'].map((b) => (
-              <span key={b} className="text-lg font-black tracking-tight text-slate-300 transition-colors hover:text-slate-400">
-                {b}
-              </span>
-            ))}
-          </div>
-          <p className="mx-auto mt-5 max-w-2xl text-center text-[11px] leading-5 text-slate-400">
-            ProfAI is independent and not endorsed by Cambridge Assessment, College Board, IDP or the British
-            Council. Names are used for clarity only.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Platform / mock showcase ────────────────────────────────── */}
-      <section id="platform" className="scroll-mt-24 px-4 py-20 sm:py-28">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.15fr]">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-12% 0px' }}
-            variants={fadeUp}
-          >
-            <SectionTag>Practice engine</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              Mock, map,
-              <br />
-              train.
-            </h2>
-            <p className="mt-4 max-w-md text-base leading-7 text-slate-500">
-              Start with a timed mock. ProfAI shows you what to fix next — a targeted task, not random practice.
-            </p>
-
-            <div className="mt-7 space-y-5">
-              {[
-                ['Timed mocks', 'Full IELTS Academic, General Training and SAT.'],
-                ['Skill map', 'Sub-skills, pacing and band-rubric gaps.'],
-                ['Next task', 'A precise task after each mock — never random.'],
-              ].map(([t, d]) => (
-                <div key={t} className="flex gap-3 border-t border-slate-200 pt-4">
-                  <span className="font-black text-slate-900">{t}</span>
-                  <span className="text-sm leading-6 text-slate-500">{d}</span>
+            {/* social proof row */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-7 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
+            >
+              <div className="flex -space-x-2">
+                {['NN', 'SS', 'SR', 'DT'].map((t, i) => (
+                  <span
+                    key={t}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#FBF7F1] bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-black text-white"
+                    style={{ zIndex: 10 - i }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <div>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </motion.div>
+                <p className="text-[12px] font-semibold text-slate-500">Loved by students reaching 7.5+ &amp; 1500+</p>
+              </div>
+            </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30, rotateX: 8 }}
-            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-            viewport={{ once: true, margin: '-12% 0px' }}
-            transition={{ duration: 0.8, ease: EASE }}
-            style={{ perspective: 1000 }}
-          >
-            <MockMockup />
-          </motion.div>
+          {/* live visual */}
+          <div className="hidden lg:block">
+            <HeroVisual y={floatY} reduce={reduce} />
+          </div>
         </div>
       </section>
 
-      {/* ── Feature route list ──────────────────────────────────────── */}
-      <section id="results" className="scroll-mt-24 bg-white/60 px-4 py-20 sm:py-28">
-        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+      {/* ── Stat band ───────────────────────────────────────────────── */}
+      <section className="px-4 py-10">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.05)] sm:grid-cols-4">
+          {STATS.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }}
+              className="text-center"
+            >
+              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+                <CountUp value={s.value} suffix={s.suffix} />
+              </p>
+              <p className="mt-1 text-[12px] font-semibold text-slate-500">{s.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Bento features ──────────────────────────────────────────── */}
+      <section id="features" className="scroll-mt-24 px-4 py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl">
           <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeUp}
+            className="mx-auto max-w-2xl text-center"
           >
-            <SectionTag>What students use next</SectionTag>
+            <SectionTag>Everything in one place</SectionTag>
             <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              One mock
-              <br />
-              becomes a route.
+              Not a question bank. A whole prep team.
             </h2>
-            <p className="mt-4 max-w-sm text-base leading-7 text-slate-500">
-              Question bank, writing AI, vocab and review all stay connected to the band you are chasing.
+            <p className="mt-4 text-base leading-7 text-slate-500">
+              Twelve study tools that talk to each other — so every mock, drill and word pushes the same band upward.
             </p>
-            <div className="mt-7 inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${i < Math.round(ratingAvg) ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-200'}`}
-                  />
-                ))}
-              </div>
-              <div>
-                <p className="text-sm font-black text-slate-900">{ratingAvg.toFixed(1)} / 5.0</p>
-                <p className="text-[11px] text-slate-400">{reviews.length}+ student reviews</p>
-              </div>
-            </div>
           </motion.div>
 
           <motion.div
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: '-10% 0px' }}
-            variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-            className="divide-y divide-slate-200"
+            viewport={{ once: true, margin: '-8% 0px' }}
+            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+            className="mt-12 grid auto-rows-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             {FEATURES.map((f) => {
               const Icon = f.icon
+              const dark = f.tone === 'dark'
               return (
                 <motion.button
                   key={f.title}
                   variants={fadeUp}
-                  onClick={() => navigate('/register')}
-                  className="group flex w-full items-start gap-4 py-5 text-left"
+                  onClick={() => navigate(f.route)}
+                  className={`group relative flex flex-col overflow-hidden rounded-3xl border p-6 text-left transition ${f.span} ${
+                    dark
+                      ? 'border-white/10 bg-slate-900 text-white shadow-[0_30px_70px_rgba(15,23,42,0.3)]'
+                      : 'border-black/5 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(220,38,38,0.12)]'
+                  }`}
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition group-hover:bg-red-600 group-hover:text-white">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-600">{f.eyebrow}</p>
-                    <p className="mt-0.5 text-lg font-black tracking-tight text-slate-900">{f.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{f.body}</p>
+                  {dark && (
+                    <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-red-600/40 blur-3xl" />
+                  )}
+                  <div className="relative flex items-center justify-between">
+                    <span
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                        dark ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white'
+                      } transition`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <ArrowUpRight
+                      className={`h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
+                        dark ? 'text-white/40' : 'text-slate-300'
+                      }`}
+                    />
                   </div>
-                  <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-red-500" />
+                  <h3 className={`relative mt-4 text-lg font-black tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}>
+                    {f.title}
+                  </h3>
+                  <p className={`relative mt-1.5 text-sm leading-6 ${dark ? 'text-slate-300' : 'text-slate-500'}`}>{f.body}</p>
+                  {f.visual}
+                  {dark && (
+                    <div className="relative mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-red-300">
+                      Meet your coach <ChevronRight className="h-4 w-4" />
+                    </div>
+                  )}
                 </motion.button>
               )
             })}
@@ -726,99 +840,138 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Route steps ─────────────────────────────────────────────── */}
-      <section id="route" className="scroll-mt-24 px-4 py-20 sm:py-28">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
-          {/* floating skill cards */}
-          <div className="relative order-2 h-[360px] lg:order-1">
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-red-200/40 to-rose-100/20 blur-3xl" />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, ease: EASE }}
-                className="flex h-24 w-24 flex-col items-center justify-center rounded-3xl bg-red-600 text-white shadow-[0_20px_44px_rgba(220,38,38,0.4)]"
-              >
-                <Target className="h-7 w-7" />
-                <span className="mt-1 text-xs font-black">Band 8.0</span>
-              </motion.div>
-            </div>
-            {SKILL_CARDS.map((c) => {
-              const Icon = c.icon
+      {/* ── Tracks (interactive) ────────────────────────────────────── */}
+      <section id="tracks" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <SectionTag>Choose your goal</SectionTag>
+            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Built for the test you're taking.</h2>
+          </div>
+
+          {/* tabs */}
+          <div className="mt-9 flex flex-wrap justify-center gap-2">
+            {TRACKS.map((t) => {
+              const Icon = t.icon
+              const active = t.id === activeTrack
               return (
-                <motion.div
-                  key={c.label}
-                  className={`absolute ${c.pos}`}
-                  initial={{ opacity: 0, scale: 0.6 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, ease: EASE, delay: c.delay * 0.3 }}
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTrack(t.id)}
+                  className={`inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition ${
+                    active
+                      ? 'border-red-300 bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.28)]'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  }`}
                 >
-                  <motion.div
-                    animate={reduce ? undefined : { y: [0, -12, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: c.delay }}
-                    className="flex flex-col items-center gap-1.5 rounded-2xl border border-black/5 bg-white px-5 py-3.5 shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="text-xs font-black text-slate-700">{c.label}</span>
-                  </motion.div>
-                </motion.div>
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
               )
             })}
           </div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-10% 0px' }}
-            variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-            className="order-1 lg:order-2"
-          >
-            <motion.div variants={fadeUp}>
-              <SectionTag>Your route</SectionTag>
-              <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-                Know what
-                <br />
-                to practice.
-              </h2>
-              <p className="mt-4 max-w-md text-base leading-7 text-slate-500">
-                ProfAI turns mock results, missed questions and vocab gaps into focused practice across all four
-                skills.
-              </p>
+          {/* panel — remounts on track change via React key to replay the entrance */}
+          <div className="mt-8">
+            <motion.div
+              key={track.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+              className="grid gap-4 rounded-3xl border border-black/5 bg-white p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8 lg:grid-cols-[1fr_1.4fr] lg:items-center"
+            >
+              <div>
+                <p className="text-2xl font-black tracking-tight text-slate-900">{track.label}</p>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{track.blurb}</p>
+                <button
+                  onClick={() => navigate(track.route)}
+                  className="group mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+                >
+                  Open {track.label}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {track.items.map((it) => {
+                  const Icon = it.icon
+                  return (
+                    <div
+                      key={it.name}
+                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-red-100 hover:bg-white"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-black text-slate-900">{it.name}</p>
+                        <p className="mt-0.5 text-[12px] leading-5 text-slate-500">{it.note}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
 
-            <div className="mt-8 space-y-1">
-              {STEPS.map((s) => (
+      {/* ── How it works ────────────────────────────────────────────── */}
+      <section id="route" className="scroll-mt-24 px-4 py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <SectionTag>Your route</SectionTag>
+            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
+              From baseline to target — in four moves.
+            </h2>
+          </div>
+
+          <div className="relative mt-12 grid gap-4 lg:grid-cols-4">
+            <div className="pointer-events-none absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-red-200 to-transparent lg:block" />
+            {STEPS.map((s, i) => {
+              const Icon = s.icon
+              return (
                 <motion.div
                   key={s.n}
-                  variants={fadeUp}
-                  className="flex gap-4 border-t border-slate-200 py-4"
+                  initial={{ opacity: 0, y: 22 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: i * 0.12, ease: EASE }}
+                  className="relative rounded-3xl border border-black/5 bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
                 >
-                  <span className="text-sm font-black text-red-600">{s.n}</span>
-                  <div>
-                    <p className="font-black text-slate-900">{s.title}</p>
-                    <p className="mt-0.5 text-sm leading-6 text-slate-500">{s.body}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="text-3xl font-black text-slate-100">{s.n}</span>
                   </div>
+                  <h3 className="mt-4 text-lg font-black tracking-tight text-slate-900">{s.title}</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-500">{s.body}</p>
                 </motion.div>
-              ))}
-            </div>
-          </motion.div>
+              )
+            })}
+          </div>
         </div>
       </section>
 
       {/* ── Reviews wall ────────────────────────────────────────────── */}
-      <section id="reviews" className="scroll-mt-24 bg-white/60 px-4 py-20 sm:py-28">
+      <section id="reviews" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <SectionTag>Student proof</SectionTag>
               <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Bands moving up.</h2>
-              <p className="mt-3 max-w-md text-base leading-7 text-slate-500">
-                Real stories from students on the route. Add yours — it shows up here for everyone.
-              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${i < Math.round(ratingAvg) ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-200'}`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm font-bold text-slate-500">
+                  {ratingAvg.toFixed(1)} / 5.0 · {reviews.length}+ reviews
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setFormOpen((v) => !v)}
@@ -862,7 +1015,7 @@ export default function Landing() {
                       <div>
                         <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Exam</label>
                         <div className="mt-1.5 flex gap-2">
-                          {EXAM_OPTIONS.map((ex) => (
+                          {EXAM_OPTIONS_NAV.map((ex) => (
                             <button
                               key={ex}
                               type="button"
@@ -881,9 +1034,7 @@ export default function Landing() {
 
                       <div className="flex items-end gap-3">
                         <div className="flex-1">
-                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">
-                            Band before
-                          </label>
+                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Band before</label>
                           <input
                             value={form.bandBefore}
                             onChange={(e) => setForm((f) => ({ ...f, bandBefore: e.target.value }))}
@@ -894,9 +1045,7 @@ export default function Landing() {
                         </div>
                         <ArrowRight className="mb-3 h-4 w-4 shrink-0 text-slate-300" />
                         <div className="flex-1">
-                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">
-                            Band after
-                          </label>
+                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Band after</label>
                           <input
                             value={form.bandAfter}
                             onChange={(e) => setForm((f) => ({ ...f, bandAfter: e.target.value }))}
@@ -915,13 +1064,11 @@ export default function Landing() {
                       </div>
 
                       <div className="sm:col-span-2">
-                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">
-                          Your story
-                        </label>
+                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Your story</label>
                         <textarea
                           value={form.text}
                           onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
-                          placeholder="What changed for you? How did the mocks and route help?"
+                          placeholder="What changed for you? How did the mocks, AI coach and route help?"
                           rows={4}
                           maxLength={600}
                           className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
@@ -977,73 +1124,42 @@ export default function Landing() {
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────── */}
-      <section className="px-4 pb-20 sm:pb-28">
+      <section className="px-4 py-16 sm:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10% 0px' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-slate-900 px-8 py-14 sm:px-14 sm:py-20"
+          className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-slate-900 px-8 py-14 text-center sm:px-14 sm:py-20"
         >
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-600/30 blur-3xl" />
-          <div className="relative grid items-center gap-10 lg:grid-cols-2">
-            <div>
-              <h2 className="text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
-                Take one mock.
-                <br />
-                See what costs band points.
-              </h2>
-              <p className="mt-4 max-w-md text-base leading-7 text-slate-300">
-                No guesswork. Just a clear route from your first baseline to your target band.
-              </p>
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-rose-500/20 blur-3xl" />
+          <div className="relative mx-auto max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-300">
+              <Sparkles className="h-3.5 w-3.5" /> Start free — no card required
+            </span>
+            <h2 className="mt-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
+              Take one mock today.
+              <br />
+              See your band move by next week.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-base leading-7 text-slate-300">
+              Set your baseline, let the AI coach map your route, and train only what costs you band points.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => navigate('/register')}
-                className="group mt-7 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.4)] transition hover:-translate-y-0.5 hover:bg-red-700"
+                className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.4)] transition hover:-translate-y-0.5 hover:bg-red-700"
               >
-                Start preparation
+                Create free account
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
-            </div>
-
-            {/* route illustration */}
-            <div className="relative hidden h-48 lg:block">
-              <svg viewBox="0 0 400 180" className="h-full w-full" fill="none">
-                <motion.path
-                  d="M30 150 C 110 150, 110 60, 200 70 S 300 150, 370 40"
-                  stroke="#ef4444"
-                  strokeWidth="3"
-                  strokeDasharray="6 8"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  whileInView={{ pathLength: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.6, ease: EASE }}
-                />
-                {[
-                  { x: 30, y: 150, label: 'Mock' },
-                  { x: 200, y: 70, label: 'Review' },
-                  { x: 290, y: 120, label: 'Practice' },
-                  { x: 370, y: 40, label: 'Band 8.0' },
-                ].map((p, i) => (
-                  <g key={p.label}>
-                    <motion.circle
-                      cx={p.x}
-                      cy={p.y}
-                      r="8"
-                      fill="#0f172a"
-                      stroke="#ef4444"
-                      strokeWidth="3"
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.3 + i * 0.3, type: 'spring', stiffness: 300 }}
-                    />
-                    <text x={p.x + 12} y={p.y + 4} fill="#cbd5e1" fontSize="12" fontWeight="700">
-                      {p.label}
-                    </text>
-                  </g>
-                ))}
-              </svg>
+              <button
+                onClick={() => navigate('/login')}
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/5"
+              >
+                I already have an account
+              </button>
             </div>
           </div>
         </motion.div>
@@ -1051,20 +1167,21 @@ export default function Landing() {
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
       <footer className="border-t border-black/5 px-4 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandMark size={28} />
             <span className="font-black tracking-tight">
               Prof<span className="text-red-600">AI</span>
             </span>
           </div>
-          <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
-            <Clock3 className="h-3.5 w-3.5" />
-            Independent prep platform · {new Date().getFullYear()}
-          </p>
-          <button onClick={() => navigate('/register')} className="text-sm font-bold text-red-600 hover:text-red-700">
-            Start preparation →
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {NAV_LINKS.map((l) => (
+              <button key={l.target} onClick={() => go(l.target)} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-400">Independent prep platform · {new Date().getFullYear()}</p>
         </div>
       </footer>
     </div>

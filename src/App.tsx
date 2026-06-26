@@ -23,6 +23,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Landing = lazy(() => import('@/pages/Landing'))
 const Tests = lazy(() => import('@/pages/Tests'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
@@ -127,6 +128,9 @@ function App() {
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
   const isLanding = pathname === '/' || pathname === '/dashboard' || pathname === '/about'
+  // Guests at the root get the full-bleed marketing landing (its own nav + footer),
+  // so the global top-nav and footer chrome are suppressed there.
+  const isGuestLanding = pathname === '/' && !user
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'
@@ -150,7 +154,7 @@ function App() {
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
-  const showTopNavigation = !isAuthPage && isLanding
+  const showTopNavigation = !isAuthPage && isLanding && !isGuestLanding
   const showSidebar =
     !isAuthPage &&
     !isLanding &&
@@ -250,7 +254,7 @@ function App() {
                 <Suspense fallback={<RouteLoader />}>
                   <AnimatePresence mode="wait" initial={false}>
                     <Routes location={location} key={location.pathname}>
-                      <Route path="/" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/dashboard" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
                       <Route path="/about" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
                       <Route path="/tests" element={<AnimatedRoute><Tests /></AnimatedRoute>} />
@@ -637,7 +641,7 @@ function App() {
                 </Suspense>
               </ErrorBoundary>
 
-              {!isAuthPage && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && (
+              {!isAuthPage && !isGuestLanding && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && (
                 <div className="mt-14">
                   <Footer />
                 </div>

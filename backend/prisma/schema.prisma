@@ -641,3 +641,20 @@ model ShadowingSegment {
   @@unique([videoId, orderIndex])
   @@index([videoId, orderIndex])
 }
+
+// Public landing-page testimonial / review. Visitors (no account required)
+// can submit a short success story; the marketing landing renders the latest
+// approved entries so prospective students see real, shared social proof.
+model Review {
+  id         String   @id @default(cuid())
+  name       String
+  exam       String   @default("IELTS") // IELTS | SAT | General
+  rating     Int      @default(5)        // 1..5 stars
+  bandBefore String?                     // e.g. "5.5" or SAT "1100"
+  bandAfter  String?                     // e.g. "7.5" or SAT "1450"
+  text       String
+  approved   Boolean  @default(true)     // moderation flag; hidden when false
+  createdAt  DateTime @default(now())
+
+  @@index([approved, createdAt])
+}

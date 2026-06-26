@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LogOut, Menu, UserRound, Zap } from 'lucide-react'
 import Button from '../Button'
+import { cn } from '../ui/utils'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { apiClient } from '@/lib/apiClient'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
@@ -181,53 +182,33 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
           />
         </button>
 
-        <div className="hidden items-center gap-2 rounded-2xl border border-red-300/75 bg-white/95 p-1.5 text-sm font-semibold text-slate-700 shadow-[0_10px_26px_rgba(15,23,42,0.09)] lg:flex">
-          <button
-            onClick={() => handleNavigate('/dashboard')}
-            className={`rounded-xl px-3 py-2 transition-colors ${
-              isActive('/dashboard')
-                ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 shadow-[0_8px_16px_rgba(185,28,28,0.16)]'
-                : 'text-slate-700 hover:bg-red-50 hover:text-red-800'
-            }`}
-          >
-            Home
-          </button>
-          <button
-            onClick={() => handleNavigate('/tests')}
-            className={`rounded-xl px-3 py-2 transition-colors ${
-              isActive('/tests')
-                ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 shadow-[0_8px_16px_rgba(185,28,28,0.16)]'
-                : 'text-slate-700 hover:bg-red-50 hover:text-red-800'
-            }`}
-          >
-            Tests
-          </button>
-          <button
-            onClick={openMockFromLanding}
-            className={`rounded-xl px-3 py-2 transition-colors ${
-              isActive('/mock')
-                ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 shadow-[0_8px_16px_rgba(185,28,28,0.16)]'
-                : 'text-slate-700 hover:bg-red-50 hover:text-red-800'
-            }`}
-          >
-            Mock
-          </button>
-          <button
-            onClick={() => handleNavigate('/leaderboard')}
-            className={`rounded-xl px-3 py-2 transition-colors ${
-              isActive('/leaderboard')
-                ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 shadow-[0_8px_16px_rgba(185,28,28,0.16)]'
-                : 'text-slate-700 hover:bg-red-50 hover:text-red-800'
-            }`}
-          >
-            Leaderboard
-          </button>
-          <button
-            onClick={() => goToSection('about')}
-            className="rounded-xl px-3 py-2 text-slate-700 transition-colors hover:bg-red-50 hover:text-red-800"
-          >
-            About
-          </button>
+        <div className="hidden items-center gap-1 rounded-2xl border border-red-200/70 bg-white/95 p-1 text-sm font-semibold shadow-[0_8px_22px_rgba(15,23,42,0.07)] lg:flex">
+          {[
+            { label: 'Home', onClick: () => handleNavigate('/dashboard'), active: isActive('/dashboard') },
+            { label: 'Tests', onClick: () => handleNavigate('/tests'), active: isActive('/tests') },
+            { label: 'Mock', onClick: openMockFromLanding, active: isActive('/mock') },
+            { label: 'Leaderboard', onClick: () => handleNavigate('/leaderboard'), active: isActive('/leaderboard') },
+            { label: 'About', onClick: () => goToSection('about'), active: false },
+          ].map((link) => (
+            <button
+              key={link.label}
+              onClick={link.onClick}
+              aria-current={link.active ? 'page' : undefined}
+              className={cn(
+                'relative rounded-xl px-3.5 py-2 transition-colors',
+                link.active ? 'text-red-800' : 'text-slate-600 hover:text-red-700',
+              )}
+            >
+              {link.active ? (
+                <motion.span
+                  layoutId="topnav-active"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-100 to-rose-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                />
+              ) : null}
+              <span className="relative z-10">{link.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">

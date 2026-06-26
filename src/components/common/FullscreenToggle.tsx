@@ -13,7 +13,7 @@ export default function FullscreenToggle() {
   if (!supported) return null
 
   return (
-    <div className="pointer-events-none fixed bottom-4 left-4 z-[120] print:hidden">
+    <div className="pointer-events-none fixed bottom-4 right-[5.25rem] z-[120] print:hidden sm:bottom-6 sm:right-[5.75rem]">
       <button
         type="button"
         onClick={toggle}

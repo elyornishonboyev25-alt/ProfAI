@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LogOut, Menu, UserRound, Zap } from 'lucide-react'
+import { BookOpen, ChevronDown, GraduationCap, Languages, Library, LogOut, Menu, UserRound, Zap } from 'lucide-react'
 import Button from '../Button'
 import { cn } from '../ui/utils'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -43,19 +43,16 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
     setMobileOpen(false)
   }
 
-  const goToSection = (sectionId: string) => {
-    setMobileOpen(false)
-
-    if (!onLanding) {
-      navigate('/dashboard')
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 120)
-      return
-    }
-
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  // The exam tracks live behind a "Prep" dropdown so the bar stays clean while
+  // still giving one-click access to every prep path from the dashboard.
+  const prepItems = [
+    { label: 'IELTS Prep', path: '/ielts', icon: BookOpen },
+    { label: 'SAT Prep', path: '/sat', icon: GraduationCap },
+    { label: 'TOEFL Prep', path: '/toefl', icon: Languages },
+    { label: 'Test Library', path: '/tests', icon: Library },
+  ] as const
+  const prepActive = ['/ielts', '/sat', '/toefl', '/tests'].some((p) => location.pathname.startsWith(p))
+  const [prepOpen, setPrepOpen] = useState(false)
 
   const requestSignOut = () => {
     setMobileOpen(false)
@@ -183,32 +180,71 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
         </button>
 
         <div className="hidden items-center gap-1 rounded-2xl border border-red-200/70 bg-white/95 p-1 text-sm font-semibold shadow-[0_8px_22px_rgba(15,23,42,0.07)] lg:flex">
-          {[
-            { label: 'Home', onClick: () => handleNavigate('/dashboard'), active: isActive('/dashboard') },
-            { label: 'Tests', onClick: () => handleNavigate('/tests'), active: isActive('/tests') },
-            { label: 'Mock', onClick: openMockFromLanding, active: isActive('/mock') },
-            { label: 'Leaderboard', onClick: () => handleNavigate('/leaderboard'), active: isActive('/leaderboard') },
-            { label: 'About', onClick: () => goToSection('about'), active: false },
-          ].map((link) => (
+          <TopLink label="Home" active={isActive('/dashboard')} onClick={() => handleNavigate('/dashboard')} />
+
+          {/* Prep dropdown — groups the exam tracks */}
+          <div className="relative" onMouseEnter={() => setPrepOpen(true)} onMouseLeave={() => setPrepOpen(false)}>
             <button
-              key={link.label}
-              onClick={link.onClick}
-              aria-current={link.active ? 'page' : undefined}
+              onClick={() => setPrepOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={prepOpen}
               className={cn(
-                'relative rounded-xl px-3.5 py-2 transition-colors',
-                link.active ? 'text-red-800' : 'text-slate-600 hover:text-red-700',
+                'relative flex items-center gap-1 rounded-xl px-3.5 py-2 transition-colors',
+                prepActive ? 'text-red-800' : 'text-slate-600 hover:text-red-700',
               )}
             >
-              {link.active ? (
+              {prepActive ? (
                 <motion.span
                   layoutId="topnav-active"
                   className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-100 to-rose-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 />
               ) : null}
-              <span className="relative z-10">{link.label}</span>
+              <span className="relative z-10">Prep</span>
+              <ChevronDown className={cn('relative z-10 h-3.5 w-3.5 transition-transform', prepOpen && 'rotate-180')} />
             </button>
-          ))}
+
+            <AnimatePresence>
+              {prepOpen ? (
+                <motion.div
+                  initial={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
+                  animate={minimalMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                  exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  role="menu"
+                  className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-red-100 bg-white/98 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                >
+                  {prepItems.map((item) => {
+                    const Icon = item.icon
+                    const active = location.pathname.startsWith(item.path)
+                    return (
+                      <button
+                        key={item.path}
+                        role="menuitem"
+                        onClick={() => {
+                          handleNavigate(item.path)
+                          setPrepOpen(false)
+                        }}
+                        className={cn(
+                          'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-bold transition',
+                          active ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-red-50/70 hover:text-red-700',
+                        )}
+                      >
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-red-500">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        {item.label}
+                      </button>
+                    )
+                  })}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+
+          <TopLink label="Mock" active={isActive('/mock')} onClick={openMockFromLanding} />
+          <TopLink label="Leaderboard" active={isActive('/leaderboard')} onClick={() => handleNavigate('/leaderboard')} />
+          <TopLink label="Community" active={isActive('/community')} onClick={() => handleNavigate('/community')} />
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
@@ -284,11 +320,29 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   </span>
                 ) : null}
               </div>
-              <div className="flex flex-col gap-2 text-sm">
-                <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/dashboard')}>Home</button>
-                <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/tests')}>Tests</button>
-                <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={openMockFromLanding}>Mock</button>
-                <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/leaderboard')}>Leaderboard</button>
+              <div className="flex flex-col gap-1 text-sm">
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/dashboard')}>Home</button>
+
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-400">Prep</p>
+                {prepItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.path}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-800"
+                      onClick={() => handleNavigate(item.path)}
+                    >
+                      <Icon className="h-4 w-4 text-red-500" /> {item.label}
+                    </button>
+                  )
+                })}
+
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-400">More</p>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={openMockFromLanding}>Mock Arena</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/leaderboard')}>Leaderboard</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/community')}>Community</button>
+
+                <div className="my-1.5 h-px bg-red-100" />
                 {!user ? (
                   <>
                     <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/login')}>Sign In</button>
@@ -312,5 +366,28 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
       </AnimatePresence>
       {signOutConfirmDialog}
     </motion.nav>
+  )
+}
+
+/** A single top-bar link with a shared animated active indicator (layoutId). */
+function TopLink({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'relative rounded-xl px-3.5 py-2 transition-colors',
+        active ? 'text-red-800' : 'text-slate-600 hover:text-red-700',
+      )}
+    >
+      {active ? (
+        <motion.span
+          layoutId="topnav-active"
+          className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-100 to-rose-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        />
+      ) : null}
+      <span className="relative z-10">{label}</span>
+    </button>
   )
 }

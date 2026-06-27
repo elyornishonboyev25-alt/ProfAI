@@ -6,6 +6,12 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
 import { chatWithAssistant, type GeminiChatAction } from '@/services/geminiAI'
+import {
+  buildStudySnapshot,
+  describeStudySnapshot,
+  resolveStudyTest,
+  type StudySnapshot,
+} from '@/services/ai/studyContext'
 import type { AiContextMode, AiPreferences, ChatLocale } from '@/types/platform'
 
 type ChatWindowVariant = 'floating' | 'panel' | 'analysis'
@@ -16,19 +22,35 @@ type AIChatWindowProps = {
   contextMode?: AiContextMode
 }
 
-const QUICK_CHIPS: Record<'default' | 'analysis', string[]> = {
-  default: [
-    'Open Writing Day 1 for 20 min',
-    'Open IELTS Writing tests',
-    'Give me a Task 2 tip',
-    'Open my mistakes',
-  ],
-  analysis: [
-    'Open Writing Day 1 with timer',
-    'How do I improve coherence?',
-    'Open IELTS Reading tests',
-    'What is a good band 7 essay structure?',
-  ],
+const QUICK_CHIPS: Record<ChatLocale, { default: string[]; analysis: string[] }> = {
+  uz: {
+    default: [
+      "Ishlamagan reading testimni och",
+      'Listening test 2 ni 20 daqiqaga och',
+      'Band 7 essay tuzilishini tushuntir',
+      "Xatolarimni ko'rsat",
+    ],
+    analysis: [
+      'Writing Day 1 ni timer bilan och',
+      'Coherence ni qanday yaxshilayman?',
+      'Yangi listening testni boshla',
+      'Bugun nimadan boshlasam?',
+    ],
+  },
+  en: {
+    default: [
+      "Open a reading test I haven't done",
+      'Open listening test 2 for 20 min',
+      'Explain a band 7 essay structure',
+      'Show my mistakes',
+    ],
+    analysis: [
+      'Open Writing Day 1 with timer',
+      'How do I improve coherence?',
+      'Start a new listening test',
+      'What should I start with today?',
+    ],
+  },
 }
 
 function createId() {
@@ -90,12 +112,13 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
   const isAnalysis = variant === 'analysis'
 
   const welcomeMessage = useMemo(() => {
-    const greeting = preferredName ? `Hi ${preferredName}! ` : 'Hi! '
+    const greeting = preferredName ? `Salom, ${preferredName}! ` : 'Salom! '
+    const greetingEn = preferredName ? `Hi ${preferredName}! ` : 'Hi! '
     return createMessage(
       'assistant',
       preferredLocale === 'uz'
-        ? `${greeting}Men sizning shaxsiy o'qish yordamchingizman 📚 IELTS va SAT bo'yicha savollarga javob beraman, testlarni ochaman va writing bo'yicha maslahat beraman. Nimadan boshlaymiz?`
-        : `${greeting}I'm your personal study buddy 📚 I can answer IELTS/SAT questions, open tests for you, and share writing tips. What shall we work on?`,
+        ? `${greeting}Men ProfAI — shaxsiy o'qituvchingizman 📚 Istalgan reading yoki listening testni (hatto "ishlamaganini") vaqt bilan ochib beraman, savollaringizga muloyim tushuntiraman va birga o'rganamiz. Qaysi tilda yozsangiz, o'sha tilda javob beraman. Nimadan boshlaymiz?`
+        : `${greetingEn}I'm ProfAI — your personal tutor 📚 I can open any reading or listening test for you (even one you haven't done) with a timer, explain anything kindly, and study right alongside you. I reply in whatever language you write in. What shall we start with?`,
     )
   }, [preferredLocale, preferredName])
 
@@ -127,7 +150,7 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [viewMessages, isSending])
 
-  const dispatchAction = (action: GeminiChatAction) => {
+  const dispatchAction = (action: GeminiChatAction, snapshot?: StudySnapshot) => {
     if (action.type === 'navigate' && action.target) {
       navigate(action.target)
       return
@@ -140,6 +163,38 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
           timerEnabled: action.payload.timerEnabled ?? true,
           durationMinutes: action.payload.durationMinutes,
         },
+      })
+      return
+    }
+
+    if (action.type === 'start_mock') {
+      navigate(action.payload?.mock === 'sat' ? '/mock/sat' : '/mock/ielts')
+      return
+    }
+
+    if (action.type === 'open_test' && action.payload?.track) {
+      const snap = snapshot ?? buildStudySnapshot(user?.id ?? null)
+      const track = action.payload.track
+      const entry = resolveStudyTest(snap, track, {
+        testId: action.payload.testId,
+        ordinal: action.payload.ordinal,
+        unfinished: action.payload.unfinished,
+      })
+
+      // If we can't resolve the exact test, fall back to the catalog so the learner
+      // still lands somewhere useful instead of a dead end.
+      if (!entry) {
+        navigate(`/ielts/${track}/tests`, { state: { entry: 'ielts-catalog' } })
+        return
+      }
+
+      const timerEnabled = action.payload.timerEnabled ?? false
+      const launchPreset = timerEnabled
+        ? { mode: 'simulation' as const, durationMinutes: action.payload.durationMinutes }
+        : { mode: 'practice' as const }
+
+      navigate(`/test/${track}/${entry.testId}`, {
+        state: { entry: 'ielts-catalog', launchPreset },
       })
     }
   }
@@ -160,18 +215,27 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
       .slice(-10)
       .map((message) => ({ role: message.role, content: message.content }))
 
+    // Locale here only styles UI strings; the AI itself detects and mirrors the
+    // learner's language (Uzbek/Russian/English) on every turn from the prompt.
     const currentLocale = detectLocaleFromMessage(trimmed, preferredLocale)
     setPreferredLocale(currentLocale)
 
+    // Snapshot of the learner's real progress so the AI can teach + pick the right
+    // test (e.g. "a reading test I haven't done"). Built once and reused for dispatch.
+    const snapshot = buildStudySnapshot(user?.id ?? null)
+
     try {
-      const response = await chatWithAssistant(trimmed, history, currentLocale, location.pathname)
+      const response = await chatWithAssistant(trimmed, history, location.pathname, {
+        studyContext: describeStudySnapshot(snapshot),
+        learnerName: preferredName,
+      })
       pushMessage(createMessage('assistant', response.reply))
 
       // Give the reply a beat to render before navigating away.
       if (response.actions.length > 0) {
         window.setTimeout(() => {
           for (const action of response.actions) {
-            dispatchAction(action)
+            dispatchAction(action, snapshot)
           }
         }, 600)
       }
@@ -233,7 +297,8 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
     )
   }
 
-  const quickChips = isAnalysis ? QUICK_CHIPS.analysis : QUICK_CHIPS.default
+  const quickChips =
+    (QUICK_CHIPS[preferredLocale] ?? QUICK_CHIPS.en)[isAnalysis ? 'analysis' : 'default']
 
   // Analysis variant keeps the immersive dark theme; floating + panel use the site's
   // light red/white premium look so the assistant matches the rest of the product.

@@ -14,6 +14,7 @@ import {
 import { composeScreenContext } from '@/services/ai/screenCapture'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
 import { useSpeechRecognition, speak, cancelSpeech, isSpeechSynthesisSupported } from '@/lib/speech'
+import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
 
 function createId() {
@@ -90,6 +91,10 @@ export function useAiTutor() {
   // When true, the final transcript is auto-sent + spoken when listening stops.
   const voiceTurnRef = useRef(false)
   const levelTimerRef = useRef<number | null>(null)
+  // Real microphone metering + hands-free silence detection.
+  const meterRef = useRef<MicMeter | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const autoStopRef = useRef<(() => void) | null>(null)
 
   // Load the learner's preferred language + name once.
   useEffect(() => {
@@ -127,7 +132,54 @@ export function useAiTutor() {
     setVoiceLevel(0)
   }, [setVoiceLevel])
 
-  useEffect(() => () => stopLevelPulse(), [stopLevelPulse])
+  // Real mic metering: drives the orb from the learner's actual voice and auto-stops
+  // the turn after a short silence (hands-free). Returns false if the mic is unavailable
+  // so the caller can fall back to the synthetic pulse.
+  const stopListeningMeter = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+    if (meterRef.current) {
+      meterRef.current.stop()
+      meterRef.current = null
+    }
+  }, [])
+
+  const startListeningMeter = useCallback(async () => {
+    try {
+      const meter = await createMicMeter()
+      meterRef.current = meter
+      let spoke = false
+      let lastLoud = Date.now()
+      const tick = () => {
+        if (!meterRef.current) return
+        const level = meterRef.current.getLevel()
+        setVoiceLevel(level)
+        if (level > 0.14) {
+          spoke = true
+          lastLoud = Date.now()
+        }
+        if (spoke && Date.now() - lastLoud > 1700) {
+          autoStopRef.current?.()
+          return
+        }
+        rafRef.current = requestAnimationFrame(tick)
+      }
+      rafRef.current = requestAnimationFrame(tick)
+      return true
+    } catch {
+      return false
+    }
+  }, [setVoiceLevel])
+
+  useEffect(
+    () => () => {
+      stopLevelPulse()
+      stopListeningMeter()
+    },
+    [stopLevelPulse, stopListeningMeter],
+  )
 
   const dispatchAction = useCallback(
     (action: GeminiChatAction, snapshot?: StudySnapshot) => {
@@ -256,14 +308,19 @@ export function useAiTutor() {
     recognition.reset()
     voiceTurnRef.current = true
     setVoiceState('listening')
-    startLevelPulse()
     recognition.start()
-  }, [recognition, setVoiceState, startLevelPulse, stopLevelPulse])
+    // Prefer real mic amplitude; fall back to a synthetic pulse if denied.
+    void startListeningMeter().then((ok) => {
+      if (!ok) startLevelPulse()
+    })
+  }, [recognition, setVoiceState, startListeningMeter, startLevelPulse, stopLevelPulse])
 
   const stopVoice = useCallback(() => {
     recognition.stop()
+    stopListeningMeter()
     stopLevelPulse()
-    const transcript = recognition.finalTranscript.trim()
+    // Final words may still be in the interim buffer at the moment of stopping.
+    const transcript = (recognition.finalTranscript || recognition.interimTranscript).trim()
     if (voiceTurnRef.current && transcript) {
       voiceTurnRef.current = false
       void send({ text: transcript, speak: true })
@@ -271,7 +328,12 @@ export function useAiTutor() {
       voiceTurnRef.current = false
       setVoiceState('idle')
     }
-  }, [recognition, send, setVoiceState, stopLevelPulse])
+  }, [recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
+
+  // Keep the silence-detector pointed at the latest stopVoice.
+  useEffect(() => {
+    autoStopRef.current = stopVoice
+  }, [stopVoice])
 
   const stopSpeaking = useCallback(() => {
     cancelSpeech()
@@ -300,10 +362,11 @@ export function useAiTutor() {
   const clear = useCallback(() => {
     cancelSpeech()
     stopLevelPulse()
+    stopListeningMeter()
     setVoiceState('idle')
     setImages([])
     clearMessages()
-  }, [clearMessages, setVoiceState, stopLevelPulse])
+  }, [clearMessages, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   return {
     user,

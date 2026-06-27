@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { AiReportResponse } from '@/types/platform'
 
 export type AiAssistantMessageRole = 'user' | 'assistant'
@@ -45,33 +46,42 @@ type AiAssistantState = {
   setReportSnapshot: (report: AiReportResponse | null) => void
 }
 
-export const useAiAssistantStore = create<AiAssistantState>((set) => ({
-  isOpen: false,
-  isSending: false,
-  error: null,
-  messages: [],
-  reportSnapshot: null,
-  reportUpdatedAt: null,
-  talkOpen: false,
-  voiceState: 'idle',
-  voiceLevel: 0,
-  open: () => set({ isOpen: true }),
-  close: () => set({ isOpen: false }),
-  toggle: () => set((state) => ({ isOpen: !state.isOpen })),
-  openTalk: () => set({ talkOpen: true, isOpen: false }),
-  closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
-  setVoiceState: (state: AiVoiceState) => set({ voiceState: state }),
-  setVoiceLevel: (level: number) => set({ voiceLevel: Math.max(0, Math.min(1, level)) }),
-  setSending: (value: boolean) => set({ isSending: value }),
-  setError: (value: string | null) => set({ error: value }),
-  pushMessage: (message: AiAssistantMessage) =>
-    set((state) => ({
-      messages: [...state.messages, message].slice(-40),
-    })),
-  clearMessages: () => set({ messages: [], error: null }),
-  setReportSnapshot: (report: AiReportResponse | null) =>
-    set({
-      reportSnapshot: report,
-      reportUpdatedAt: report ? new Date().toISOString() : null,
+export const useAiAssistantStore = create<AiAssistantState>()(
+  persist(
+    (set) => ({
+      isOpen: false,
+      isSending: false,
+      error: null,
+      messages: [],
+      reportSnapshot: null,
+      reportUpdatedAt: null,
+      talkOpen: false,
+      voiceState: 'idle',
+      voiceLevel: 0,
+      open: () => set({ isOpen: true }),
+      close: () => set({ isOpen: false }),
+      toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+      openTalk: () => set({ talkOpen: true, isOpen: false }),
+      closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
+      setVoiceState: (state: AiVoiceState) => set({ voiceState: state }),
+      setVoiceLevel: (level: number) => set({ voiceLevel: Math.max(0, Math.min(1, level)) }),
+      setSending: (value: boolean) => set({ isSending: value }),
+      setError: (value: string | null) => set({ error: value }),
+      pushMessage: (message: AiAssistantMessage) =>
+        set((state) => ({
+          messages: [...state.messages, message].slice(-40),
+        })),
+      clearMessages: () => set({ messages: [], error: null }),
+      setReportSnapshot: (report: AiReportResponse | null) =>
+        set({
+          reportSnapshot: report,
+          reportUpdatedAt: report ? new Date().toISOString() : null,
+        }),
     }),
-}))
+    {
+      name: 'profai-ai-chat',
+      // Only the conversation is worth persisting; transient UI/voice state resets.
+      partialize: (state) => ({ messages: state.messages }),
+    },
+  ),
+)

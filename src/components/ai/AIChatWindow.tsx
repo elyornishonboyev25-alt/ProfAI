@@ -1,7 +1,7 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { AudioLines, ImagePlus, Maximize2, Mic, Send, Sparkles, Square, Trash2, X } from 'lucide-react'
+import { AudioLines, Check, Copy, ImagePlus, Maximize2, Mic, Send, Sparkles, Square, Trash2, X } from 'lucide-react'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
@@ -12,6 +12,37 @@ type ChatWindowVariant = 'floating' | 'page' | 'analysis'
 type AIChatWindowProps = {
   variant?: ChatWindowVariant
   onClose?: () => void
+}
+
+// Render **bold** and preserve line breaks — without unsafe HTML injection.
+function renderRich(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={index}>{part.slice(2, -2)}</strong>
+    ) : (
+      <span key={index}>{part}</span>
+    ),
+  )
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigator.clipboard?.writeText(text).then(() => {
+          setCopied(true)
+          window.setTimeout(() => setCopied(false), 1400)
+        })
+      }}
+      className="absolute -bottom-2.5 right-2 inline-flex items-center gap-1 rounded-full border border-red-100 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500 opacity-0 shadow-sm transition group-hover:opacity-100 hover:text-red-600"
+      aria-label="Copy message"
+    >
+      {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
 }
 
 const QUICK_CHIPS: Record<ChatLocale, string[]> = {
@@ -81,9 +112,48 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, isSending])
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const [dragging, setDragging] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+  }
+
+  const doSend = (text?: string) => {
+    void send(text ? { text } : undefined)
+    resetTextareaHeight()
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter sends; Shift+Enter inserts a newline (professional chat behaviour).
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      doSend()
+    }
+  }
+
+  const autoGrow = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+  }
+
+  const onPaste = (event: React.ClipboardEvent) => {
+    const files = Array.from(event.clipboardData?.items ?? [])
+      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null)
+    if (files.length > 0) {
+      event.preventDefault()
+      void addImages(files)
+    }
+  }
+
+  const onDrop = (event: React.DragEvent) => {
     event.preventDefault()
-    void send()
+    setDragging(false)
+    if (event.dataTransfer?.files?.length) void addImages(event.dataTransfer.files)
   }
 
   const onPickImages = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,12 +185,36 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
   return (
     <section
-      className={`flex flex-col overflow-hidden border bg-white text-slate-900 ${
+      onDragOver={(event) => {
+        event.preventDefault()
+        if (!dragging) setDragging(true)
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget === event.target) setDragging(false)
+      }}
+      onDrop={onDrop}
+      className={`relative flex flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
           ? 'h-full rounded-[1.6rem] border-red-100 shadow-[0_30px_70px_-30px_rgba(239,68,68,0.45)]'
           : 'rounded-[1.4rem] border-red-100 shadow-[0_24px_55px_-20px_rgba(239,68,68,0.4)]'
       }`}
     >
+      <AnimatePresence>
+        {dragging ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-red-400 bg-red-50/90 backdrop-blur-sm"
+          >
+            <ImagePlus className="h-8 w-8 text-red-500" />
+            <p className="text-sm font-bold text-red-700">
+              {preferredLocale === 'uz' ? 'Rasmni shu yerga tashlang' : 'Drop your image here'}
+            </p>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       {/* Header with the live orb */}
       <header className="relative flex items-center justify-between gap-2 border-b border-red-100 bg-gradient-to-r from-red-50 via-rose-50/60 to-white px-4 py-3">
         <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/70 to-transparent" />
@@ -199,9 +293,12 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         ) : (
           <div className="space-y-3">
             {messages.map((message) => (
-              <article
+              <motion.article
                 key={message.id}
-                className={`max-w-[88%] rounded-2xl border px-3.5 py-2.5 text-sm leading-6 ${
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className={`group relative max-w-[88%] whitespace-pre-wrap rounded-2xl border px-3.5 py-2.5 text-sm leading-6 ${
                   message.role === 'assistant'
                     ? 'border-red-100 bg-white text-slate-800 shadow-sm'
                     : 'ml-auto border-transparent bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-md shadow-red-500/20'
@@ -219,8 +316,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     ))}
                   </div>
                 ) : null}
-                {message.content}
-              </article>
+                {renderRich(message.content)}
+                {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
+              </motion.article>
             ))}
             {isSending ? (
               <div className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">
@@ -241,7 +339,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             <button
               key={chip}
               type="button"
-              onClick={() => void send({ text: chip })}
+              onClick={() => doSend(chip)}
               disabled={isSending}
               className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
             >
@@ -283,7 +381,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           ) : null}
         </AnimatePresence>
 
-        <form onSubmit={onSubmit} className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
           <button
             type="button"
@@ -295,15 +393,22 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             <ImagePlus className="h-4 w-4" />
           </button>
 
-          <input
+          <textarea
+            ref={textareaRef}
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
+            rows={1}
+            onChange={(event) => {
+              setDraft(event.target.value)
+              autoGrow()
+            }}
+            onKeyDown={onKeyDown}
+            onPaste={onPaste}
             placeholder={
               preferredLocale === 'uz'
-                ? 'Yozing yoki mikrofonni bosing…'
-                : 'Type or tap the mic…'
+                ? 'Yozing, rasm tashlang yoki mikrofonni bosing…'
+                : 'Type, paste an image, or tap the mic…'
             }
-            className="h-10 flex-1 rounded-xl border border-red-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200"
+            className="max-h-[140px] min-h-[40px] flex-1 resize-none rounded-xl border border-red-200 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200"
             disabled={isSending}
           />
 
@@ -330,14 +435,15 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           ) : null}
 
           <button
-            type="submit"
+            type="button"
+            onClick={() => doSend()}
             disabled={isSending || (!draft.trim() && images.length === 0)}
             className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />
           </button>
-        </form>
+        </div>
 
         {error ? (
           <p className="mt-2 text-xs font-medium text-red-600" role="status" aria-live="polite">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Mic, Minimize2, Square, X } from 'lucide-react'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
@@ -25,6 +25,20 @@ export function TalkOverlay() {
   useEffect(() => {
     if (talkOpen) setDocked(false)
   }, [talkOpen])
+
+  // Hands-free conversation: auto-listen when the overlay opens and again each time the
+  // tutor finishes speaking — so it's a natural back-and-forth, no button pressing.
+  const prevVoiceState = useRef(voiceState)
+  useEffect(() => {
+    const prev = prevVoiceState.current
+    prevVoiceState.current = voiceState
+    if (!talkOpen || docked || !voiceSupported) return
+    // Start only when idle and we did NOT just stop listening/thinking (avoids loops).
+    if (voiceState === 'idle' && prev !== 'listening' && prev !== 'thinking') {
+      const timer = window.setTimeout(() => startVoice(), 500)
+      return () => window.clearTimeout(timer)
+    }
+  }, [voiceState, talkOpen, docked, voiceSupported, startVoice])
 
   if (!talkOpen || !hasPremium) return null
 

@@ -13,6 +13,7 @@ import { ToastViewport } from '@/components/common/ToastViewport'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import RegisterModal from '@/components/auth/RegisterModal'
 import FloatingAIAssistant from '@/components/ai/FloatingAIAssistant'
+import TalkOverlay from '@/components/ai/TalkOverlay'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
@@ -72,6 +73,7 @@ const AdmissionLessons = lazy(() => import('@/pages/AdmissionLessons'))
 const AdmissionLesson = lazy(() => import('@/pages/AdmissionLesson'))
 const AdmissionUniversities = lazy(() => import('@/pages/AdmissionUniversities'))
 const AdmissionUniversity = lazy(() => import('@/pages/AdmissionUniversity'))
+const AITutor = lazy(() => import('@/pages/AITutor'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const prefetchHighTrafficRoutes = () =>
@@ -220,6 +222,7 @@ function App() {
       <NicknameGate />
       <AchievementCelebration />
       <FloatingAIAssistant />
+      <TalkOverlay />
       <FullscreenToggle />
       <WordLookupLayer />
 
@@ -627,6 +630,16 @@ function App() {
                       <Route path="/admission/lessons/:slug" element={<AnimatedRoute><AdmissionLesson /></AnimatedRoute>} />
                       <Route path="/admission/universities" element={<AnimatedRoute><AdmissionUniversities /></AnimatedRoute>} />
                       <Route path="/admission/universities/:slug" element={<AnimatedRoute><AdmissionUniversity /></AnimatedRoute>} />
+                      <Route
+                        path="/ai-tutor"
+                        element={
+                          <ProtectedRoute>
+                            <AnimatedRoute>
+                              <AITutor />
+                            </AnimatedRoute>
+                          </ProtectedRoute>
+                        }
+                      />
                       <Route path="/premium" element={<AnimatedRoute><Premium /></AnimatedRoute>} />
                       <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
                       <Route path="/register" element={<AnimatedRoute><Register /></AnimatedRoute>} />

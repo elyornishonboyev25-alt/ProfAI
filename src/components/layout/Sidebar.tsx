@@ -46,6 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
     heading: 'Main',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
+      { id: 'ai-tutor', label: 'AI Tutor', icon: Sparkles, path: '/ai-tutor' },
       { id: 'tests', label: 'Test Library', icon: Library, path: '/tests' },
       { id: 'mock', label: 'Mock Arena', icon: Target, path: '/mock' },
       { id: 'profile', label: 'Performance', icon: BarChart3, path: '/profile' },

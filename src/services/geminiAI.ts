@@ -168,17 +168,18 @@ type AssistantPromptContext = {
   studyContext?: string
   learnerName?: string | null
   screenContext?: string
+  hasImages?: boolean
 }
 
 function buildAssistantSystemPrompt(pathname: string, context: AssistantPromptContext = {}): string {
-  const { studyContext, learnerName, screenContext } = context
+  const { studyContext, learnerName, screenContext, hasImages } = context
   const greetingName = learnerName ? learnerName : null
 
   return `You are ProfAI — a warm, brilliant, and genuinely caring personal study-abroad tutor. You are NOT a robotic chatbot; you are the kind of mentor a student instantly loves: patient, encouraging, human, and a little playful. You celebrate small wins, you never make the learner feel stupid, and you make hard things feel easy.${greetingName ? ` The learner's name is ${greetingName} — use it naturally and warmly, but don't overuse it.` : ''}
 
 WHO YOU ARE:
 - A real teacher. When a student asks you to explain something (grammar, a word, an essay structure, a reading strategy, a math concept), you explain it beautifully: simple first, then a clear example, then a tiny check or tip. You teach WITH them, like sitting side by side — not at them.
-- You can SEE what the learner currently has on their screen (the reading passage, the question, an article, a lesson, or text they highlighted). When they say "explain this", "what does it say here", "bu yerda nima deyilgan?", "это что значит?", look at the on-screen content provided below and explain THAT exact thing — quote the relevant phrase so they know you're with them. Never say you can't see their screen.
+- You can SEE what the learner currently has on their screen (the reading passage, the question, an article, a lesson, or text they highlighted). When they say "explain this", "what does it say here", "bu yerda nima deyilgan?", "это что значит?", look at the on-screen content provided below and explain THAT exact thing — quote the relevant phrase so they know you're with them. Never say you can't see their screen.${hasImages ? '\n- The learner has ATTACHED one or more images (often a screenshot of a question or text). Read them carefully and base your answer on what they show — describe what you see, solve it, or explain it as a tutor would.' : ''}
 - ProfAI's mission: help students reach top universities abroad. Your world is study-abroad: admissions, scholarships, choosing universities, and the prep that gets them there — IELTS, SAT, English, vocabulary, grammar, writing, speaking, reading, listening and exam strategy.
 - If asked something truly unrelated (politics, gossip, etc.), gently and kindly steer back: you are their study companion.
 
@@ -242,20 +243,32 @@ SAFETY:
 - Always be kind and encouraging about their progress, however small.`
 }
 
+// Turn a data URL ("data:image/png;base64,AAAA…") into a Gemini inlineData part.
+function dataUrlToInlinePart(dataUrl: string): { inlineData: { mimeType: string; data: string } } | null {
+  const match = /^data:([^;]+);base64,(.*)$/.exec(dataUrl)
+  if (!match) return null
+  return { inlineData: { mimeType: match[1], data: match[2] } }
+}
+
 export async function callGeminiAPI(
   systemPrompt: string,
   userMessage: string,
   maxOutputTokens = 2048,
+  images: string[] = [],
 ): Promise<string> {
   if (MODEL_KEY_COMBOS.length === 0) {
     throw new Error('AI is not configured yet. Add VITE_GEMINI_API_KEY to your environment and restart.')
   }
 
+  const imageParts = images
+    .map(dataUrlToInlinePart)
+    .filter((part): part is { inlineData: { mimeType: string; data: string } } => part !== null)
+
   const body = {
     contents: [
       {
         role: 'user',
-        parts: [{ text: userMessage }],
+        parts: [{ text: userMessage }, ...imageParts],
       },
     ],
     systemInstruction: {
@@ -409,6 +422,8 @@ export type ChatAssistantOptions = {
   studyContext?: string
   learnerName?: string | null
   screenContext?: string
+  /** Image attachments (data URLs) the learner sent — e.g. a screenshot. */
+  images?: string[]
 }
 
 export async function chatWithAssistant(
@@ -417,10 +432,12 @@ export async function chatWithAssistant(
   pathname: string,
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
+  const hasImages = Array.isArray(options.images) && options.images.length > 0
   const systemPrompt = buildAssistantSystemPrompt(pathname, {
     studyContext: options.studyContext,
     learnerName: options.learnerName,
     screenContext: options.screenContext,
+    hasImages,
   })
 
   const historyContext = history
@@ -428,11 +445,12 @@ export async function chatWithAssistant(
     .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
     .join('\n')
 
+  const messageBody = message.trim() || (hasImages ? '(The learner sent image(s) with no caption — look at them and help.)' : '')
   const fullMessage = historyContext
-    ? `Previous conversation:\n${historyContext}\n\nUser: ${message}\n\nRespond with JSON only, replying in the language of the user's latest message.`
-    : `User: ${message}\n\nRespond with JSON only, replying in the language of the user's latest message.`
+    ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
+    : `User: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
 
-  const raw = await callGeminiAPI(systemPrompt, fullMessage)
+  const raw = await callGeminiAPI(systemPrompt, fullMessage, 2048, options.images ?? [])
   const jsonStr = extractJSON(raw)
 
   try {

@@ -609,7 +609,7 @@ export default function AiCoach() {
                   <Bot className="h-4 w-4 text-rose-300" />
                   Study Chat
                 </div>
-                <AIChatWindow variant="analysis" contextMode="analysis" />
+                <AIChatWindow variant="analysis" />
               </motion.article>
 
               <div className="space-y-6">

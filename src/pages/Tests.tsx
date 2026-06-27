@@ -10,7 +10,7 @@ type TrackCard = {
   detail: string
   path: string
   icon: ComponentType<SVGProps<SVGSVGElement>>
-  tone: 'red' | 'blue' | 'rose' | 'amber'
+  tone: 'red' | 'blue' | 'rose' | 'amber' | 'teal'
   chips: string[]
 }
 
@@ -34,6 +34,16 @@ const trackCards: TrackCard[] = [
     icon: Calculator,
     tone: 'blue',
     chips: ['2 sections', 'adaptive mode', 'separate workspace'],
+  },
+  {
+    id: 'toefl',
+    title: 'TOEFL Arena',
+    subtitle: 'Reading · Listening · Speaking · Writing',
+    detail: 'Take full TOEFL iBT practice tests — Reading and Listening scored instantly out of 30, plus timed Speaking and Writing.',
+    path: '/toefl',
+    icon: BookOpen,
+    tone: 'teal',
+    chips: ['full tests', 'auto-scored', '0–120'],
   },
   {
     id: 'writing',
@@ -67,6 +77,9 @@ function toneClass(tone: TrackCard['tone']) {
   if (tone === 'amber') {
     return 'border-orange-200 bg-gradient-to-br from-white via-amber-50 to-orange-100/70 shadow-[0_18px_36px_rgba(217,119,6,0.16)]'
   }
+  if (tone === 'teal') {
+    return 'border-teal-200 bg-gradient-to-br from-white via-teal-50 to-cyan-100/70 shadow-[0_18px_36px_rgba(13,148,136,0.16)]'
+  }
   return 'border-red-200 bg-gradient-to-br from-white via-red-50 to-rose-100/70 shadow-[0_18px_36px_rgba(220,38,38,0.16)]'
 }
 
@@ -74,6 +87,7 @@ function iconToneClass(tone: TrackCard['tone']) {
   if (tone === 'blue') return 'border-blue-200 text-blue-700'
   if (tone === 'rose') return 'border-rose-200 text-rose-700'
   if (tone === 'amber') return 'border-orange-200 text-orange-700'
+  if (tone === 'teal') return 'border-teal-200 text-teal-700'
   return 'border-red-200 text-red-700'
 }
 
@@ -81,6 +95,7 @@ function linkToneClass(tone: TrackCard['tone']) {
   if (tone === 'blue') return 'text-blue-700'
   if (tone === 'rose') return 'text-rose-700'
   if (tone === 'amber') return 'text-orange-700'
+  if (tone === 'teal') return 'text-teal-700'
   return 'text-red-700'
 }
 

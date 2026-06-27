@@ -384,6 +384,19 @@ const TRACKS = [
     ],
   },
   {
+    id: 'TOEFL',
+    label: 'TOEFL',
+    icon: BookOpen,
+    blurb: 'Full TOEFL iBT practice tests — Reading & Listening scored instantly out of 30, plus timed Speaking and Writing.',
+    route: '/toefl',
+    items: [
+      { icon: BookOpen, name: 'Reading', note: 'Academic passages, auto-scored' },
+      { icon: Headphones, name: 'Listening', note: 'Lectures with note-taking' },
+      { icon: Mic2, name: 'Speaking', note: '4 timed tasks with prep timers' },
+      { icon: PenSquare, name: 'Writing', note: 'Integrated + academic discussion' },
+    ],
+  },
+  {
     id: 'English',
     label: 'English Skills',
     icon: Languages,
@@ -684,7 +697,7 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
               className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
             >
-              IELTS &amp; SAT mocks, an AI coach that builds your roadmap, writing &amp; speaking feedback, live
+              IELTS, SAT &amp; TOEFL practice, an AI coach that builds your roadmap, writing &amp; speaking feedback, live
               partners, shadowing, vocab and university research — connected to the band you're chasing.
             </motion.p>
 

@@ -12,6 +12,7 @@ import {
   Headset,
   Home,
   Landmark,
+  Languages,
   Library,
   Sparkles,
   Target,
@@ -57,6 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ielts', label: 'IELTS Prep', icon: BookOpen, path: '/ielts' },
       { id: 'sat', label: 'SAT Prep', icon: GraduationCap, path: '/sat' },
+      { id: 'toefl', label: 'TOEFL Prep', icon: Languages, path: '/toefl' },
       { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked, path: '/vocabulary' },
       { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
@@ -126,7 +128,7 @@ export function Sidebar() {
         </button>
 
         {/* Navigation */}
-        <nav className="no-scrollbar mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto pr-0.5">
+        <nav className="no-scrollbar mt-3 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5">
           {NAV_GROUPS.map((group) => (
             <div key={group.heading}>
               <p className="mb-1 px-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-red-400/90">
@@ -144,7 +146,7 @@ export function Sidebar() {
                       onClick={() => handleNavigate(item.path)}
                       aria-current={active ? 'page' : undefined}
                       className={cn(
-                        'group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-semibold transition-colors',
+                        'group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold transition-colors',
                         active
                           ? 'bg-gradient-to-r from-red-100 to-rose-100/70 text-red-800'
                           : 'text-slate-600 hover:bg-red-50/70 hover:text-slate-900',

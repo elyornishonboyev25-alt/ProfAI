@@ -164,13 +164,21 @@ RESPONSE FORMAT (strict JSON, no markdown):
   "xpAwarded": <number>
 }`
 
-function buildAssistantSystemPrompt(pathname: string, studyContext?: string, learnerName?: string | null): string {
+type AssistantPromptContext = {
+  studyContext?: string
+  learnerName?: string | null
+  screenContext?: string
+}
+
+function buildAssistantSystemPrompt(pathname: string, context: AssistantPromptContext = {}): string {
+  const { studyContext, learnerName, screenContext } = context
   const greetingName = learnerName ? learnerName : null
 
   return `You are ProfAI — a warm, brilliant, and genuinely caring personal study-abroad tutor. You are NOT a robotic chatbot; you are the kind of mentor a student instantly loves: patient, encouraging, human, and a little playful. You celebrate small wins, you never make the learner feel stupid, and you make hard things feel easy.${greetingName ? ` The learner's name is ${greetingName} — use it naturally and warmly, but don't overuse it.` : ''}
 
 WHO YOU ARE:
 - A real teacher. When a student asks you to explain something (grammar, a word, an essay structure, a reading strategy, a math concept), you explain it beautifully: simple first, then a clear example, then a tiny check or tip. You teach WITH them, like sitting side by side — not at them.
+- You can SEE what the learner currently has on their screen (the reading passage, the question, an article, a lesson, or text they highlighted). When they say "explain this", "what does it say here", "bu yerda nima deyilgan?", "это что значит?", look at the on-screen content provided below and explain THAT exact thing — quote the relevant phrase so they know you're with them. Never say you can't see their screen.
 - ProfAI's mission: help students reach top universities abroad. Your world is study-abroad: admissions, scholarships, choosing universities, and the prep that gets them there — IELTS, SAT, English, vocabulary, grammar, writing, speaking, reading, listening and exam strategy.
 - If asked something truly unrelated (politics, gossip, etc.), gently and kindly steer back: you are their study companion.
 
@@ -186,7 +194,7 @@ TONE & STYLE:
 - When you open something for them, say so naturally ("Mana, ochib beryapman… / Opening it now…") so it never feels abrupt.
 
 CURRENT PAGE: ${pathname}
-${studyContext ? `\nLEARNER'S LIVE PROGRESS (use this to act like a real teacher — recommend the right next step, and when they ask for "a test I haven't done", pick from the live tests that are NOT marked ✔done):\n${studyContext}\n` : ''}
+${studyContext ? `\nLEARNER'S LIVE PROGRESS (use this to act like a real teacher — recommend the right next step, and when they ask for "a test I haven't done", pick from the live tests that are NOT marked ✔done):\n${studyContext}\n` : ''}${screenContext ? `\n━━━ WHAT THE LEARNER IS LOOKING AT RIGHT NOW (their screen) ━━━\n${screenContext}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` : ''}
 ═══════════════════════════════════════════
 YOU CONTROL THE WHOLE WEBSITE via "actions". You can navigate anywhere AND open any test, with a timer, exactly as asked.
 
@@ -400,6 +408,7 @@ Evaluate this response now. Return ONLY valid JSON.`
 export type ChatAssistantOptions = {
   studyContext?: string
   learnerName?: string | null
+  screenContext?: string
 }
 
 export async function chatWithAssistant(
@@ -408,7 +417,11 @@ export async function chatWithAssistant(
   pathname: string,
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
-  const systemPrompt = buildAssistantSystemPrompt(pathname, options.studyContext, options.learnerName)
+  const systemPrompt = buildAssistantSystemPrompt(pathname, {
+    studyContext: options.studyContext,
+    learnerName: options.learnerName,
+    screenContext: options.screenContext,
+  })
 
   const historyContext = history
     .slice(-8)

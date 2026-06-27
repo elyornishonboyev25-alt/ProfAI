@@ -12,6 +12,7 @@ import {
   resolveStudyTest,
   type StudySnapshot,
 } from '@/services/ai/studyContext'
+import { composeScreenContext } from '@/services/ai/screenCapture'
 import type { AiContextMode, AiPreferences, ChatLocale } from '@/types/platform'
 
 type ChatWindowVariant = 'floating' | 'panel' | 'analysis'
@@ -25,9 +26,9 @@ type AIChatWindowProps = {
 const QUICK_CHIPS: Record<ChatLocale, { default: string[]; analysis: string[] }> = {
   uz: {
     default: [
-      "Ishlamagan reading testimni och",
+      'Shu sahifada nima deyilganini tushuntir',
+      'Ishlamagan reading testimni och',
       'Listening test 2 ni 20 daqiqaga och',
-      'Band 7 essay tuzilishini tushuntir',
       "Xatolarimni ko'rsat",
     ],
     analysis: [
@@ -39,9 +40,9 @@ const QUICK_CHIPS: Record<ChatLocale, { default: string[]; analysis: string[] }>
   },
   en: {
     default: [
+      "Explain what's on my screen",
       "Open a reading test I haven't done",
       'Open listening test 2 for 20 min',
-      'Explain a band 7 essay structure',
       'Show my mistakes',
     ],
     analysis: [
@@ -117,8 +118,8 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
     return createMessage(
       'assistant',
       preferredLocale === 'uz'
-        ? `${greeting}Men ProfAI — shaxsiy o'qituvchingizman 📚 Istalgan reading yoki listening testni (hatto "ishlamaganini") vaqt bilan ochib beraman, savollaringizga muloyim tushuntiraman va birga o'rganamiz. Qaysi tilda yozsangiz, o'sha tilda javob beraman. Nimadan boshlaymiz?`
-        : `${greetingEn}I'm ProfAI — your personal tutor 📚 I can open any reading or listening test for you (even one you haven't done) with a timer, explain anything kindly, and study right alongside you. I reply in whatever language you write in. What shall we start with?`,
+        ? `${greeting}Men ProfAI — shaxsiy o'qituvchingizman 📚 Ekraningizda nimani ko'rsangiz, men ham ko'rib turaman — biror joyni belgilab "shuni tushuntir" desangiz, o'sha matnga qarab tushuntiraman. Istalgan testni vaqt bilan ochaman va siz qaysi tilda yozsangiz, o'sha tilda javob beraman. Nimadan boshlaymiz?`
+        : `${greetingEn}I'm ProfAI — your personal tutor 📚 I can see what's on your screen — highlight anything and say "explain this", and I'll explain that exact text. I open any test with a timer, and I reply in whatever language you write in. What shall we start with?`,
     )
   }, [preferredLocale, preferredName])
 
@@ -224,10 +225,15 @@ export function AIChatWindow({ variant = 'panel', onClose }: AIChatWindowProps) 
     // test (e.g. "a reading test I haven't done"). Built once and reused for dispatch.
     const snapshot = buildStudySnapshot(user?.id ?? null)
 
+    // "AI sees what you see" — capture the on-screen text + any highlighted selection
+    // now (before focus/state changes can clear it) so "explain this" works.
+    const screenContext = composeScreenContext(trimmed, location.pathname)
+
     try {
       const response = await chatWithAssistant(trimmed, history, location.pathname, {
         studyContext: describeStudySnapshot(snapshot),
         learnerName: preferredName,
+        screenContext,
       })
       pushMessage(createMessage('assistant', response.reply))
 

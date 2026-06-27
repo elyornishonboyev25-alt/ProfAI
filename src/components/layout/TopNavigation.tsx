@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -53,6 +53,24 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
   ] as const
   const prepActive = ['/ielts', '/sat', '/toefl', '/tests'].some((p) => location.pathname.startsWith(p))
   const [prepOpen, setPrepOpen] = useState(false)
+  const prepRef = useRef<HTMLDivElement>(null)
+
+  // Click-to-open dropdown: close it on an outside click or the Escape key.
+  useEffect(() => {
+    if (!prepOpen) return
+    const onPointer = (e: PointerEvent) => {
+      if (prepRef.current && !prepRef.current.contains(e.target as Node)) setPrepOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPrepOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [prepOpen])
 
   const requestSignOut = () => {
     setMobileOpen(false)
@@ -183,7 +201,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
           <TopLink label="Home" active={isActive('/dashboard')} onClick={() => handleNavigate('/dashboard')} />
 
           {/* Prep dropdown — groups the exam tracks */}
-          <div className="relative" onMouseEnter={() => setPrepOpen(true)} onMouseLeave={() => setPrepOpen(false)}>
+          <div ref={prepRef} className="relative">
             <button
               onClick={() => setPrepOpen((o) => !o)}
               aria-haspopup="menu"
@@ -204,12 +222,10 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
               <ChevronDown className={cn('relative z-10 h-3.5 w-3.5 transition-transform', prepOpen && 'rotate-180')} />
             </button>
 
-            <AnimatePresence>
-              {prepOpen ? (
+            {prepOpen ? (
                 <motion.div
                   initial={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
-                  animate={minimalMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                  exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   role="menu"
                   className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-red-100 bg-white/98 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
@@ -238,8 +254,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                     )
                   })}
                 </motion.div>
-              ) : null}
-            </AnimatePresence>
+            ) : null}
           </div>
 
           <TopLink label="Mock" active={isActive('/mock')} onClick={openMockFromLanding} />

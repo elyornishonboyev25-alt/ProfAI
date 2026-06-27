@@ -40,6 +40,22 @@ export function TalkOverlay() {
     }
   }, [voiceState, talkOpen, docked, voiceSupported, startVoice])
 
+  // When the immersive view is up: Escape minimizes to the corner, and the page
+  // behind it is locked from scrolling.
+  useEffect(() => {
+    if (!talkOpen || docked) return
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setDocked(true)
+    }
+    document.addEventListener('keydown', onKey)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [talkOpen, docked])
+
   if (!talkOpen || !hasPremium) return null
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? ''

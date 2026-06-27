@@ -8,6 +8,7 @@ import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
 import AIChatWindow from '@/components/ai/AIChatWindow'
+import VoiceOrb from '@/components/ai/VoiceOrb'
 
 const ATTEMPT_SUBMITTED_EVENT = 'smarttest:attempt-submitted'
 
@@ -41,6 +42,9 @@ export function FloatingAIAssistant() {
   const open = useAiAssistantStore((state) => state.open)
   const close = useAiAssistantStore((state) => state.close)
   const setReportSnapshot = useAiAssistantStore((state) => state.setReportSnapshot)
+  const talkOpen = useAiAssistantStore((state) => state.talkOpen)
+  const voiceState = useAiAssistantStore((state) => state.voiceState)
+  const voiceLevel = useAiAssistantStore((state) => state.voiceLevel)
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   const isAiAnalysisStandalone = location.pathname === '/ai-coach' || location.pathname === '/profile'
@@ -89,7 +93,10 @@ export function FloatingAIAssistant() {
     }
   }, [isAuthPage, refreshContext])
 
-  if (isAuthPage || isAiAnalysisStandalone || assistantBlocked) return null
+  // While the immersive talk overlay is up it owns the corner, so hide the launcher.
+  if (isAuthPage || isAiAnalysisStandalone || assistantBlocked || talkOpen) return null
+
+  const showOrbLauncher = !isLegacyTestMode && !isOpen && hasPremium
 
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-[120] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
@@ -119,24 +126,25 @@ export function FloatingAIAssistant() {
           }
           open()
         }}
-        aria-label="Open AI study buddy"
+        aria-label={isOpen ? 'Close AI tutor' : 'Open ProfAI tutor'}
         className={`pointer-events-auto group relative inline-flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[0_18px_38px_rgba(220,38,38,0.4)] ${
-          isLegacyTestMode
-            ? 'border-slate-700 bg-slate-900 text-slate-200'
-            : 'border-red-300/60 bg-gradient-to-br from-red-500 via-rose-500 to-red-600 text-white'
+          showOrbLauncher
+            ? 'border-red-200/70 bg-white'
+            : isLegacyTestMode
+              ? 'border-slate-700 bg-slate-900 text-slate-200'
+              : 'border-red-300/60 bg-gradient-to-br from-red-500 via-rose-500 to-red-600 text-white'
         }`}
       >
-        {!isLegacyTestMode && !isOpen ? (
-          <span className="absolute inset-0 rounded-2xl bg-rose-500/50 animate-ping opacity-60" />
-        ) : null}
-        <span className="relative">
-          {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
-        </span>
+        {showOrbLauncher ? (
+          <VoiceOrb state={voiceState} level={voiceLevel} size={52} />
+        ) : (
+          <span className="relative">{isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}</span>
+        )}
         {!hasPremium && !assistantBlocked ? (
           <span className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-slate-100">
             <Lock className="h-2.5 w-2.5" />
           </span>
-        ) : !isOpen ? (
+        ) : !isOpen && !showOrbLauncher ? (
           <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-emerald-400">
             <Sparkles className="h-2 w-2 text-white" />
           </span>

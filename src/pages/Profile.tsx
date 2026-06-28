@@ -33,7 +33,7 @@ import {
 } from 'recharts'
 import { apiClient } from '@/lib/apiClient'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import type { ProfileOverview } from '@/types/platform'
+import type { AuthUser, ProfileOverview } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
@@ -154,6 +154,38 @@ const guestProfilePreview: ProfileOverview = {
   recentAttempts: [],
 }
 
+// When the live /profile/overview call is unavailable (e.g. it's Premium-gated
+// or the user simply has no attempts yet), fall back to a complete overview
+// built from the signed-in user so the page always renders — real XP, level and
+// streak up top, with zeroed analytics that show friendly empty states.
+function buildProfileFallback(user: AuthUser | null): ProfileOverview {
+  if (!user) return guestProfilePreview
+  const xp = Math.max(0, user.xp ?? 0)
+  const level = Math.max(1, user.level ?? 1)
+  const span = 200
+  const intoCurrent = xp % span
+  return {
+    ...guestProfilePreview,
+    profile: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      level,
+      xp,
+      currentStreak: user.currentStreak ?? 0,
+      longestStreak: user.currentStreak ?? 0,
+      memberSince: new Date().toISOString(),
+    },
+    levelProgress: {
+      currentLevelThreshold: level * span - span,
+      nextLevelThreshold: level * span,
+      xpIntoCurrent: intoCurrent,
+      levelSpan: span,
+      progressPercent: Math.round((intoCurrent / span) * 100),
+    },
+  }
+}
+
 const tickStyle = { fill: '#64748B', fontSize: 11 }
 const gridColor = '#FEE2E2'
 const tooltipStyle = {
@@ -164,15 +196,30 @@ const tooltipStyle = {
   fontWeight: 600,
 }
 
+function ChartEmpty({ label }: { label: string }) {
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+        <Activity className="h-5 w-5" />
+      </span>
+      <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
+      <p className="text-[11px] text-slate-400">Complete a test to see this fill in.</p>
+    </div>
+  )
+}
+
 export default function Profile() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const isGuestPreview = !user
-  const { data: fetchedData, loading, error } = useAsyncData<ProfileOverview | null>(
+  const { data: fetchedData, loading } = useAsyncData<ProfileOverview | null>(
     () => (user ? apiClient.get('/profile/overview') : Promise.resolve(null)),
     [user],
   )
-  const data = fetchedData ?? (isGuestPreview ? guestProfilePreview : null)
+  // Always resolve to a usable overview so the page never goes blank.
+  const data = fetchedData ?? buildProfileFallback(user)
+  const usingFallback = !fetchedData
+  const hasActivity = (data?.stats.totalAttempts ?? 0) > 0
 
   const xpToNext = useMemo(() => {
     if (!data) return 0
@@ -268,7 +315,7 @@ export default function Profile() {
                       Level <CountUp value={data.profile.level} />
                     </span>
                   </div>
-                  {data.competitive ? (
+                  {data.competitive && data.competitive.rank > 0 ? (
                     <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1.5">
                       <Trophy className="h-4 w-4 text-red-600" />
                       <span className="text-sm font-bold text-red-700">
@@ -318,12 +365,43 @@ export default function Profile() {
       </Reveal>
 
       {isGuestPreview ? (
-        <div className="mt-6 rounded-2xl border border-red-200/80 bg-[linear-gradient(120deg,rgba(254,226,226,0.76),rgba(255,255,255,0.92),rgba(255,228,230,0.8))] p-4 text-sm text-red-800 shadow-[0_10px_24px_rgba(220,38,38,0.1)]">
-          Preview mode is active. Register to see your real XP, ranking, and saved attempts.
-        </div>
-      ) : null}
-      {!isGuestPreview && error ? (
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <Reveal className="mt-6">
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
+            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-red-200/80 bg-gradient-to-r from-red-50 via-white to-rose-50 p-4 text-left shadow-[0_10px_24px_rgba(220,38,38,0.1)]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black text-slate-900">Preview mode</span>
+              <span className="block text-[12px] text-slate-500">Create an account to track real XP, ranking and saved attempts.</span>
+            </span>
+            <ArrowUpRight className="h-5 w-5 shrink-0 text-red-500" />
+          </button>
+        </Reveal>
+      ) : usingFallback && !loading ? (
+        <Reveal className="mt-6">
+          <button
+            type="button"
+            onClick={() => navigate('/premium')}
+            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-4 text-left shadow-[0_10px_24px_rgba(245,158,11,0.12)]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+              <BrainCircuit className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black text-slate-900">Live AI analytics are Premium</span>
+              <span className="block text-[12px] text-slate-500">
+                Your XP, level and streak are shown below. Unlock the AI skill matrix, ranking and insights with Premium.
+              </span>
+            </span>
+            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-bold text-white sm:inline-flex">
+              Go Premium <ArrowUpRight className="h-3.5 w-3.5" />
+            </span>
+          </button>
+        </Reveal>
       ) : null}
 
       {/* ── Hero metrics ────────────────────────────────────────── */}
@@ -387,7 +465,8 @@ export default function Profile() {
               <Skeleton className="mt-4 h-72 w-full rounded-2xl" />
             ) : data ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr]">
-                <div className="h-64">
+                <div className="relative h-64">
+                  {!hasActivity ? <ChartEmpty label="No skill data yet" /> : null}
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={data.skillAnalytics.radar}>
                       <PolarGrid stroke="#FECACA" />
@@ -493,7 +572,8 @@ export default function Profile() {
           {loading ? (
             <Skeleton className="mt-4 h-72 w-full rounded-2xl" />
           ) : data ? (
-            <div className="mt-4 h-72 w-full">
+            <div className="relative mt-4 h-72 w-full">
+              {!hasActivity ? <ChartEmpty label="No XP history yet" /> : null}
               <ResponsiveContainer>
                 <AreaChart data={data.skillAnalytics.xpMomentum} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <defs>
@@ -538,7 +618,8 @@ export default function Profile() {
             {loading ? (
               <Skeleton className="mt-4 h-64 w-full rounded-2xl" />
             ) : data ? (
-              <div className="mt-4 h-64 w-full">
+              <div className="relative mt-4 h-64 w-full">
+                {!hasActivity ? <ChartEmpty label="No activity this week" /> : null}
                 <ResponsiveContainer>
                   <BarChart data={data.weeklyActivity}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />

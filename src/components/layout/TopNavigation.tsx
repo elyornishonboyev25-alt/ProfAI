@@ -166,6 +166,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
       animate={{ y: 0, opacity: 1 }}
       exit={minimalMotion ? { opacity: 0 } : { y: -18, opacity: 0 }}
       transition={{ duration: minimalMotion ? 0.16 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+      style={{ overflow: 'visible' }}
       className={`app-panel relative z-50 h-20 backdrop-blur-xl ${
         withSidebar
           ? 'sticky top-0 border-b border-red-200/90 lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:border-b-0'

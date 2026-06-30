@@ -83,7 +83,12 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
 
   const ensureRecognition = useCallback((): SpeechRecognitionLike | null => {
     if (!supported) return null
-    if (recognitionRef.current) return recognitionRef.current
+    // Keep the language in sync — the learner may switch EN/UZ/RU between turns,
+    // and a stale recognizer language is the #1 cause of bad transcripts.
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = lang
+      return recognitionRef.current
+    }
 
     const Ctor = getRecognitionCtor()
     if (!Ctor) return null
@@ -213,6 +218,39 @@ if (isSpeechSynthesisSupported()) {
   window.speechSynthesis.onvoiceschanged = () => loadVoices()
 }
 
+export type SpeechLang = 'uz' | 'ru' | 'en'
+
+const BCP47: Record<SpeechLang, string> = { uz: 'uz-UZ', ru: 'ru-RU', en: 'en-US' }
+export const speechLangToBcp47 = (lang: SpeechLang): string => BCP47[lang]
+
+// Best-effort language detection from the reply text so TTS uses a matching voice
+// (English text → English voice, Russian → Russian, Uzbek → Uzbek/closest).
+const UZBEK_HINT =
+  /[ʻʼ‘’]|\b(men|sen|biz|siz|bu|shu|uchun|qil|qanday|kerak|rahmat|salom|tushuntir|yoki|lekin|bilan|bo['ʻ]l|yax|endi|ochib|test|savol)\b/i
+
+export function detectSpeechLang(text: string): SpeechLang {
+  if (/[Ѐ-ӿ]/.test(text)) return 'ru' // Cyrillic
+  if (UZBEK_HINT.test(text)) return 'uz'
+  return 'en'
+}
+
+// Pick the most natural installed voice for a language, with sensible fallbacks
+// (Uzbek TTS is rarely installed → fall back to Turkish/Russian, never English).
+export function pickVoiceForLang(lang: SpeechLang): SpeechSynthesisVoice | null {
+  const voices = cachedVoices.length ? cachedVoices : loadVoices()
+  if (voices.length === 0) return null
+  const byPrefix = (...prefixes: string[]) =>
+    voices.find((v) => prefixes.some((p) => v.lang?.toLowerCase().startsWith(p)))
+
+  if (lang === 'ru') return byPrefix('ru') ?? voices[0]
+  if (lang === 'uz') return byPrefix('uz', 'tr', 'ru') ?? voices[0]
+  return (
+    voices.find((v) => v.name.toLowerCase().includes('google us english')) ??
+    byPrefix('en-us', 'en-gb', 'en') ??
+    voices[0]
+  )
+}
+
 /** Prefer a natural English (UK first) voice for the examiner. */
 export function getExaminerVoice(): SpeechSynthesisVoice | null {
   const voices = cachedVoices.length ? cachedVoices : loadVoices()
@@ -234,6 +272,8 @@ export type SpeakOptions = {
   onEnd?: () => void
   rate?: number
   pitch?: number
+  /** Language of the text — selects a matching voice. Defaults to auto-detect. */
+  lang?: SpeechLang
 }
 
 /** Speak `text` aloud. Cancels any in-flight utterance first. Returns a stop fn. */
@@ -256,15 +296,17 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
     options.onEnd?.()
   }
 
+  const lang = options.lang ?? detectSpeechLang(text)
   const utterance = new SpeechSynthesisUtterance(text)
-  const voice = getExaminerVoice()
+  const voice = pickVoiceForLang(lang)
   if (voice) {
     utterance.voice = voice
     utterance.lang = voice.lang
   } else {
-    utterance.lang = 'en-GB'
+    utterance.lang = speechLangToBcp47(lang)
   }
-  utterance.rate = options.rate ?? 0.96
+  // A touch above 1.0 sounds natural and responsive (was sluggish at 0.96).
+  utterance.rate = options.rate ?? 1.04
   utterance.pitch = options.pitch ?? 1
   utterance.onstart = () => options.onStart?.()
   utterance.onend = finish
@@ -272,11 +314,12 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
 
   // Watchdog: some environments (headless, missing audio device) never fire
   // onend. Estimate the spoken duration and finish anyway so the flow never stalls.
-  const estimateMs = Math.min(22000, Math.max(3500, (text.length / 11) * 1000 + 1800))
+  const estimateMs = Math.min(22000, Math.max(3500, (text.length / 12) * 1000 + 1500))
   watchdog = window.setTimeout(finish, estimateMs)
 
-  // Chrome occasionally needs a tick after cancel() before speak() takes.
-  window.setTimeout(() => synth.speak(utterance), 60)
+  // Chrome needs a brief tick after cancel() before speak() takes — keep it minimal
+  // so speech starts almost immediately (the long pause was perceived latency).
+  window.setTimeout(() => synth.speak(utterance), 15)
 
   return () => {
     finished = true

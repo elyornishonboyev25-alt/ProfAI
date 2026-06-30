@@ -19,7 +19,14 @@ export function TalkOverlay() {
   const {
     hasPremium, messages, voiceState, voiceLevel, voiceSupported,
     isListening, interimTranscript, startVoice, stopVoice, preferredLocale,
+    voiceLang, setVoiceLang,
   } = tutor
+
+  const VOICE_LANGS = [
+    { id: 'en', label: 'English' },
+    { id: 'uz', label: "O'zbek" },
+    { id: 'ru', label: 'Русский' },
+  ] as const
 
   // Reset to expanded each time it is opened fresh.
   useEffect(() => {
@@ -173,6 +180,26 @@ export function TalkOverlay() {
               </p>
             )}
           </div>
+
+          {/* Language switcher */}
+          {voiceSupported ? (
+            <div className="mt-8 flex items-center gap-2">
+              {VOICE_LANGS.map((lang) => (
+                <button
+                  key={lang.id}
+                  type="button"
+                  onClick={() => setVoiceLang(lang.id)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+                    voiceLang === lang.id
+                      ? 'border-white bg-white text-slate-900'
+                      : 'border-white/25 bg-white/10 text-white/80 hover:bg-white/20'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           {/* Big mic */}
           {voiceSupported ? (

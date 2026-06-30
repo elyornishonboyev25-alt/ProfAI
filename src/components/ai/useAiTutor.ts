@@ -13,7 +13,15 @@ import {
 } from '@/services/ai/studyContext'
 import { composeScreenContext } from '@/services/ai/screenCapture'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
-import { useSpeechRecognition, speak, cancelSpeech, isSpeechSynthesisSupported } from '@/lib/speech'
+import {
+  useSpeechRecognition,
+  speak,
+  cancelSpeech,
+  isSpeechSynthesisSupported,
+  detectSpeechLang,
+  speechLangToBcp47,
+  type SpeechLang,
+} from '@/lib/speech'
 import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
 
@@ -59,8 +67,6 @@ function cleanForSpeech(text: string) {
     .trim()
 }
 
-const sttLangFor = (locale: ChatLocale) => (locale === 'uz' ? 'uz-UZ' : 'en-US')
-
 export type SendOptions = { text?: string; images?: string[]; speak?: boolean }
 
 export function useAiTutor() {
@@ -85,9 +91,12 @@ export function useAiTutor() {
   const [images, setImages] = useState<string[]>([])
   const [preferredLocale, setPreferredLocale] = useState<ChatLocale>('en')
   const [preferredName, setPreferredName] = useState<string | null>(null)
+  // The language the mic listens in AND the voice replies in. The user can switch it
+  // (EN/UZ/RU), and it auto-adapts to the language the tutor just replied in.
+  const [voiceLang, setVoiceLang] = useState<SpeechLang>('en')
 
   const ttsSupported = isSpeechSynthesisSupported()
-  const recognition = useSpeechRecognition(sttLangFor(preferredLocale))
+  const recognition = useSpeechRecognition(speechLangToBcp47(voiceLang))
   // When true, the final transcript is auto-sent + spoken when listening stops.
   const voiceTurnRef = useRef(false)
   const levelTimerRef = useRef<number | null>(null)
@@ -104,7 +113,9 @@ export function useAiTutor() {
       .get<AiPreferences>('/profile/ai-preferences')
       .then((prefs) => {
         if (!mounted) return
-        setPreferredLocale(prefs.preferredLocale.toLowerCase().startsWith('uz') ? 'uz' : 'en')
+        const locale = prefs.preferredLocale.toLowerCase().startsWith('uz') ? 'uz' : 'en'
+        setPreferredLocale(locale)
+        setVoiceLang(locale)
         if (prefs.preferredName) setPreferredName(prefs.preferredName)
       })
       .catch(() => {})
@@ -258,11 +269,17 @@ export function useAiTutor() {
         })
         pushMessage(createMessage('assistant', response.reply))
 
+        // Match the spoken voice + the next listen to the language the tutor actually
+        // replied in (the model mirrors the learner), so the conversation auto-adapts.
+        const replyLang = detectSpeechLang(response.reply)
+        setVoiceLang(replyLang)
+
         // Speak the reply back in voice / talk turns; otherwise return to idle.
         if (options.speak && ttsSupported && response.reply.trim()) {
           setVoiceState('speaking')
           startLevelPulse()
           speak(cleanForSpeech(response.reply), {
+            lang: replyLang,
             onEnd: () => {
               stopLevelPulse()
               setVoiceState('idle')
@@ -386,6 +403,8 @@ export function useAiTutor() {
     // voice
     voiceState,
     voiceLevel,
+    voiceLang,
+    setVoiceLang,
     voiceSupported: recognition.supported,
     ttsSupported,
     isListening: recognition.listening,

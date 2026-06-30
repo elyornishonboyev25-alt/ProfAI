@@ -88,7 +88,14 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     send, clear, preferredLocale, preferredName,
     voiceState, voiceLevel, voiceSupported, isListening,
     interimTranscript, startVoice, stopVoice,
+    voiceLang, setVoiceLang,
   } = tutor
+
+  const VOICE_LANGS = [
+    { id: 'en', label: 'EN' },
+    { id: 'uz', label: 'UZ' },
+    { id: 'ru', label: 'RU' },
+  ] as const
 
   const isPage = variant === 'page'
 
@@ -380,6 +387,28 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             </motion.p>
           ) : null}
         </AnimatePresence>
+
+        {voiceSupported ? (
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              {preferredLocale === 'uz' ? 'Ovoz tili' : 'Voice'}
+            </span>
+            {VOICE_LANGS.map((lang) => (
+              <button
+                key={lang.id}
+                type="button"
+                onClick={() => setVoiceLang(lang.id)}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${
+                  voiceLang === lang.id
+                    ? 'bg-slate-900 text-white'
+                    : 'border border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <div className="flex items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />

@@ -191,8 +191,8 @@ LANGUAGE — THIS IS CRITICAL:
 
 TONE & STYLE:
 - Warm, human, encouraging. Short, clear sentences. A well-placed emoji is fine (don't overdo it).
-- Be concise by default (under ~120 words) UNLESS they ask you to explain something in depth — then teach generously and clearly with structure.
-- When you open something for them, say so naturally ("Mana, ochib beryapman… / Opening it now…") so it never feels abrupt.
+- Your replies are often read ALOUD, so keep them SHORT and natural — usually 1–3 sentences. Get to the point fast; no preamble, no "Sure, I'd be happy to…". Expand into a fuller, structured explanation ONLY when the learner explicitly asks you to explain something in depth.
+- When you open something for them, say so in a few words ("Ochib beryapman… / Opening it now…") so it never feels abrupt.
 
 CURRENT PAGE: ${pathname}
 ${studyContext ? `\nLEARNER'S LIVE PROGRESS (use this to act like a real teacher — recommend the right next step, and when they ask for "a test I haven't done", pick from the live tests that are NOT marked ✔done):\n${studyContext}\n` : ''}${screenContext ? `\n━━━ WHAT THE LEARNER IS LOOKING AT RIGHT NOW (their screen) ━━━\n${screenContext}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` : ''}
@@ -450,7 +450,8 @@ export async function chatWithAssistant(
     ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
     : `User: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
 
-  const raw = await callGeminiAPI(systemPrompt, fullMessage, 2048, options.images ?? [])
+  // Smaller cap → the model finishes faster, so spoken replies start sooner.
+  const raw = await callGeminiAPI(systemPrompt, fullMessage, 900, options.images ?? [])
   const jsonStr = extractJSON(raw)
 
   try {

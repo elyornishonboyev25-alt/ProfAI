@@ -247,7 +247,7 @@ export default function Results() {
     <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(155deg,#fff_0%,#fff8f8_55%,#fffdfc_100%)]">
       <AnimatedBackground />
       <div className="relative z-10">
-        <header className="sticky top-0 z-20 border-b border-red-100 bg-white/92 backdrop-blur-md">
+        <header className="sticky top-0 z-20 border-b border-red-100 bg-white/90 backdrop-blur-md">
           <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
             <div className="flex items-center gap-3">
               <button

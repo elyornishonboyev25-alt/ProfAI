@@ -229,7 +229,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   role="menu"
-                  className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-red-100 bg-white/98 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                  className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-red-100 bg-white/95 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
                 >
                   {prepItems.map((item) => {
                     const Icon = item.icon

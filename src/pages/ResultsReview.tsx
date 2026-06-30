@@ -161,7 +161,7 @@ export default function ResultsReview() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(155deg,#fff_0%,#fff8f8_56%,#fffdfb_100%)]">
-      <header className="sticky top-0 z-30 border-b border-red-100 bg-white/94 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-red-100 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center gap-2">
             <button type="button"

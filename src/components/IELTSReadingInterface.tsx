@@ -2682,7 +2682,7 @@ export default function IELTSReadingInterface({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed z-[100] flex items-center gap-2 rounded-2xl border border-red-100 bg-white/98 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
+            className="fixed z-[100] flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
             style={{
               top: selectionRect.top - 55,
               left: Math.max(10, Math.min(window.innerWidth - 250, selectionRect.left + (selectionRect.width / 2) - 120))

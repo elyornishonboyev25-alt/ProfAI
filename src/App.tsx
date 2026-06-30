@@ -30,8 +30,6 @@ const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
-const TOEFL = lazy(() => import('@/pages/TOEFL'))
-const TOEFLTest = lazy(() => import('@/pages/TOEFLTest'))
 const IELTSSection = lazy(() => import('@/pages/IELTSSection'))
 const IELTSSectionTests = lazy(() => import('@/pages/IELTSSectionTests'))
 const Vocabulary = lazy(() => import('@/pages/Vocabulary'))
@@ -147,7 +145,6 @@ function App() {
     pathname.startsWith('/u/') ||
     pathname.startsWith('/sat') ||
     pathname.startsWith('/ielts') ||
-    pathname.startsWith('/toefl') ||
     pathname === '/writing-lab' ||
     pathname === '/speaking-lab' ||
     pathname === '/shadowing-lab' ||
@@ -319,8 +316,6 @@ function App() {
                       <Route path="/sat/:section" element={<AnimatedRoute><SATSection /></AnimatedRoute>} />
                       <Route path="/sat/calculator" element={<AnimatedRoute><SATCalculator /></AnimatedRoute>} />
                       <Route path="/ielts" element={<AnimatedRoute><IELTS /></AnimatedRoute>} />
-                      <Route path="/toefl" element={<AnimatedRoute><TOEFL /></AnimatedRoute>} />
-                      <Route path="/toefl/test/:id" element={<AnimatedRoute><TOEFLTest /></AnimatedRoute>} />
                       <Route path="/ielts/writing/tests" element={<AnimatedRoute><IELTSWritingTests /></AnimatedRoute>} />
                       <Route path="/ielts/speaking/tests" element={<AnimatedRoute><IELTSSpeakingTests /></AnimatedRoute>} />
                       <Route path="/ielts/speaking/test/:id" element={<AnimatedRoute><IELTSSpeakingTest /></AnimatedRoute>} />

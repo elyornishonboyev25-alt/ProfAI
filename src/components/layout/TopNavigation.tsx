@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookOpen, ChevronDown, GraduationCap, Languages, Library, LogOut, Menu, UserRound, Zap } from 'lucide-react'
+import { BookOpen, ChevronDown, GraduationCap, Library, LogOut, Menu, UserRound, Zap } from 'lucide-react'
 import Button from '../Button'
 import { cn } from '../ui/utils'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -48,10 +48,9 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
   const prepItems = [
     { label: 'IELTS Prep', path: '/ielts', icon: BookOpen },
     { label: 'SAT Prep', path: '/sat', icon: GraduationCap },
-    { label: 'TOEFL Prep', path: '/toefl', icon: Languages },
     { label: 'Test Library', path: '/tests', icon: Library },
   ] as const
-  const prepActive = ['/ielts', '/sat', '/toefl', '/tests'].some((p) => location.pathname.startsWith(p))
+  const prepActive = ['/ielts', '/sat', '/tests'].some((p) => location.pathname.startsWith(p))
   const [prepOpen, setPrepOpen] = useState(false)
   const prepRef = useRef<HTMLDivElement>(null)
 

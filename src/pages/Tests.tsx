@@ -36,16 +36,6 @@ const trackCards: TrackCard[] = [
     chips: ['2 sections', 'adaptive mode', 'separate workspace'],
   },
   {
-    id: 'toefl',
-    title: 'TOEFL Arena',
-    subtitle: 'Reading · Listening · Speaking · Writing',
-    detail: 'Take full TOEFL iBT practice tests — Reading and Listening scored instantly out of 30, plus timed Speaking and Writing.',
-    path: '/toefl',
-    icon: BookOpen,
-    tone: 'teal',
-    chips: ['full tests', 'auto-scored', '0–120'],
-  },
-  {
     id: 'writing',
     title: 'Writing Studio',
     subtitle: 'Shared with IELTS Writing',

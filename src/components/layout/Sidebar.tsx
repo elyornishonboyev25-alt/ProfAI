@@ -12,7 +12,6 @@ import {
   Headset,
   Home,
   Landmark,
-  Languages,
   Library,
   Sparkles,
   Target,
@@ -59,7 +58,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ielts', label: 'IELTS Prep', icon: BookOpen, path: '/ielts' },
       { id: 'sat', label: 'SAT Prep', icon: GraduationCap, path: '/sat' },
-      { id: 'toefl', label: 'TOEFL Prep', icon: Languages, path: '/toefl' },
       { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked, path: '/vocabulary' },
       { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },

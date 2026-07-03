@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { TopNavigation } from '@/components/layout/TopNavigation'
+import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
@@ -157,6 +158,8 @@ function App() {
   const isTestMode = isCustomTestMode || isClassicTestMode
 
   const showTopNavigation = !isAuthPage && isLanding && !isGuestLanding
+  // Thumb navigation on phones — kept away from exams, auth and the guest landing.
+  const showMobileNav = Boolean(user) && !isAuthPage && !isTestMode && !isGuestLanding && pathname !== '/onboarding'
   const showSidebar =
     !isAuthPage &&
     !isLanding &&
@@ -659,10 +662,12 @@ function App() {
                   <Footer />
                 </div>
               )}
+              {showMobileNav ? <div className="h-20 md:hidden" aria-hidden /> : null}
             </div>
           </main>
         </div>
       </div>
+      {showMobileNav ? <MobileBottomNav /> : null}
     </div>
   )
 }

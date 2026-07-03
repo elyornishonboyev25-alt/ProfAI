@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { TopNavigation } from '@/components/layout/TopNavigation'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
+import { Skeleton } from '@/components/common/Skeleton'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
@@ -97,9 +98,9 @@ function toDateISO(date: Date) {
 function RouteLoader() {
   return (
     <div className="p-8">
-      <div className="h-10 w-56 animate-pulse rounded-xl bg-slate-200/70" />
-      <div className="mt-3 h-5 w-72 animate-pulse rounded-xl bg-slate-200/70" />
-      <div className="mt-6 h-72 w-full animate-pulse rounded-2xl bg-slate-200/70" />
+      <Skeleton className="h-10 w-56" />
+      <Skeleton className="mt-3 h-5 w-72" />
+      <Skeleton className="mt-6 h-72 w-full rounded-2xl" />
     </div>
   )
 }

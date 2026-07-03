@@ -12,6 +12,7 @@ import { setFlashToast } from '@/utils/authFlash'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { CrownBadge } from '@/components/fx'
+import NotificationsBell from '@/components/layout/NotificationsBell'
 
 export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }) {
   const navigate = useNavigate()
@@ -270,6 +271,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
               {xpValue} XP
             </div>
           ) : null}
+          <NotificationsBell />
 
           {!user ? (
             <>

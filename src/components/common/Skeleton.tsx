@@ -1,5 +1,10 @@
 ﻿export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-slate-200/70 ${className}`} aria-hidden="true" />
+  return (
+    <div className={`relative overflow-hidden rounded-xl bg-slate-200/70 ${className}`} aria-hidden="true">
+      {/* soft red shimmer sweep (concept: 34-Splash-Loading) */}
+      <span className="fx-shimmer absolute inset-0 opacity-60" />
+    </div>
+  )
 }
 
 export function MetricSkeletonGrid() {

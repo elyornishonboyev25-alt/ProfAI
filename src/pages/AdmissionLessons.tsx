@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Clock3, GraduationCap } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
 import { AmbientBackdrop, CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import LucideIcon from '@/components/admission/LucideIcon'
 import { getLessonsByPhase, lessonPhases, LESSON_COUNT, totalLessonMinutes } from '@/data/admission'
+import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
 
 const LEVEL_TONE: Record<string, string> = {
   Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -13,6 +15,8 @@ const LEVEL_TONE: Record<string, string> = {
 export default function AdmissionLessons() {
   const navigate = useNavigate()
   const studyHours = Math.round(totalLessonMinutes / 60)
+  const [completed, setCompleted] = useState<Set<string>>(() => getCompletedLessons())
+  useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
   return (
     <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
@@ -70,6 +74,7 @@ export default function AdmissionLessons() {
         {/* Phases */}
         {lessonPhases.map((phase, phaseIndex) => {
           const phaseLessons = getLessonsByPhase(phase.id)
+          const phaseDone = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length
           return (
             <Reveal key={phase.id} delay={0.03}>
               <section>
@@ -86,13 +91,26 @@ export default function AdmissionLessons() {
                     <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
                       <LucideIcon name={phase.icon} className="h-7 w-7" />
                     </span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
                         Phase {phaseIndex + 1} · {phaseLessons.length} lessons
                       </p>
                       <h2 className="text-xl font-black tracking-tight sm:text-2xl">{phase.title}</h2>
                       <p className="mt-0.5 text-[13px] font-medium text-white/80">{phase.subtitle}</p>
                     </div>
+                    {phaseDone > 0 ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-black backdrop-blur">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {phaseDone}/{phaseLessons.length}
+                      </span>
+                    ) : null}
+                  </div>
+                  {/* phase progress line (concept: 23-StudyAbroad-Lessons) */}
+                  <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/20">
+                    <div
+                      className="h-full rounded-full bg-white/90 transition-[width] duration-700"
+                      style={{ width: `${phaseLessons.length ? (phaseDone / phaseLessons.length) * 100 : 0}%` }}
+                    />
                   </div>
                 </div>
 
@@ -108,9 +126,9 @@ export default function AdmissionLessons() {
                         <div className="flex items-center justify-between">
                           <span
                             className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm"
-                            style={{ background: phase.gradient }}
+                            style={{ background: completed.has(lesson.slug) ? 'linear-gradient(135deg,#10b981,#059669)' : phase.gradient }}
                           >
-                            <LucideIcon name={lesson.icon} className="h-5 w-5" />
+                            {completed.has(lesson.slug) ? <CheckCircle2 className="h-5 w-5" /> : <LucideIcon name={lesson.icon} className="h-5 w-5" />}
                           </span>
                           <span className="text-2xl font-black text-slate-100 transition group-hover:text-slate-200">
                             {String(lesson.order).padStart(2, '0')}

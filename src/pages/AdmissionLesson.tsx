@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Lightbulb, Target } from 'lucide-react'
-import { AmbientBackdrop, Reveal } from '@/components/fx'
+import { AmbientBackdrop, Burst, Reveal } from '@/components/fx'
+import { isLessonCompleted, toggleLessonCompleted } from '@/utils/admissionProgressStore'
 import LucideIcon from '@/components/admission/LucideIcon'
 import { getAdjacentLessons, getLessonBySlug, getPhaseById } from '@/data/admission'
 import type { LessonBlock } from '@/data/admission'
@@ -62,10 +63,22 @@ export default function AdmissionLesson() {
   const phase = lesson ? getPhaseById(lesson.phaseId) : undefined
   const { prev, next } = slug ? getAdjacentLessons(slug) : {}
 
+  const [completed, setCompleted] = useState(() => (slug ? isLessonCompleted(slug) : false))
+  const [justCompleted, setJustCompleted] = useState(false)
+
   // Reset scroll when moving between lessons.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
+    setCompleted(slug ? isLessonCompleted(slug) : false)
+    setJustCompleted(false)
   }, [slug])
+
+  const handleToggleComplete = () => {
+    if (!slug) return
+    const nowCompleted = toggleLessonCompleted(slug)
+    setCompleted(nowCompleted)
+    setJustCompleted(nowCompleted)
+  }
 
   if (!lesson || !phase) {
     return (
@@ -173,6 +186,40 @@ export default function AdmissionLesson() {
               </div>
             </div>
           </article>
+        </Reveal>
+
+        {/* Mark complete (concept: 23-StudyAbroad-Lessons path nodes) */}
+        <Reveal delay={0.02}>
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4">
+            <Burst count={20} play={justCompleted} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                    completed ? 'bg-emerald-500 text-white shadow-[0_8px_18px_rgba(16,185,129,0.35)]' : 'bg-slate-100 text-slate-400'
+                  }`}
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-black text-slate-900">{completed ? 'Lesson completed' : 'Finished this lesson?'}</p>
+                  <p className="text-[12px] text-slate-500">
+                    {completed ? 'It now counts toward your roadmap progress.' : 'Mark it to track your roadmap progress.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleComplete}
+                className={`interactive-lift rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  completed
+                    ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    : 'cta-sheen bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]'
+                }`}
+              >
+                {completed ? 'Completed ✓' : 'Mark as complete'}
+              </button>
+            </div>
+          </div>
         </Reveal>
 
         {/* Prev / Next */}

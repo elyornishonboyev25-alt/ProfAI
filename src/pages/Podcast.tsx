@@ -1438,8 +1438,10 @@ export default function Podcast() {
                 {PODCAST_EPISODES.map((item) => (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
-                      item.id === episode.id ? 'border-indigo-400/50 bg-indigo-500/15' : 'border-white/10 bg-white/[0.03]'
+                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-200 ${
+                      item.id === episode.id
+                        ? 'border-indigo-400/50 bg-indigo-500/15'
+                        : 'border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-indigo-400/30 hover:bg-white/[0.07]'
                     }`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white">

@@ -1065,8 +1065,10 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
                 <button
                   type="button"
                   onClick={stopRecording}
-                  className="inline-flex items-center gap-2 rounded-xl border border-rose-400 bg-rose-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-600"
+                  className="relative inline-flex items-center gap-2 rounded-xl border border-rose-400 bg-rose-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-600"
                 >
+                  <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-xl bg-rose-400/50 [animation-duration:1.4s]" />
+                  <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-white" />
                   <Square className="h-3.5 w-3.5 fill-current" />
                   Stop · recording…
                 </button>

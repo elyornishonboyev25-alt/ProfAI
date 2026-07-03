@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import { getArticleBySlug, articleWordCount } from '@/data/articles'
+import { saveArticleProgress } from '@/utils/articleProgressStore'
 import type { ArticleBlock } from '@/data/articles'
 import ArticleCover from '@/components/articles/ArticleCover'
 import WordLookupModal from '@/components/vocab/WordLookupModal'
@@ -146,7 +147,7 @@ export default function ArticleReader() {
     return subscribeReader(sync)
   }, [slug])
 
-  // Reading progress bar.
+  // Reading progress bar (also persisted so the library can show progress rings).
   useEffect(() => {
     const onScroll = () => {
       const el = bodyRef.current
@@ -154,7 +155,9 @@ export default function ArticleReader() {
       const rect = el.getBoundingClientRect()
       const total = el.offsetHeight - window.innerHeight
       const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1))
-      setProgress(total > 0 ? (scrolled / total) * 100 : 0)
+      const pct = total > 0 ? (scrolled / total) * 100 : 0
+      setProgress(pct)
+      if (slug) saveArticleProgress(slug, pct)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, BookOpen, Clock3, Search, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, Search, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { AmbientBackdrop, CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { AmbientBackdrop, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 import ArticleCover from '@/components/articles/ArticleCover'
 import { articles, articleCategories, ARTICLE_LIBRARY_TARGET, articleWordCount } from '@/data/articles'
 import type { ArticleCategory } from '@/data/articles'
+import { getArticleProgressMap } from '@/utils/articleProgressStore'
 
 type Filter = ArticleCategory | 'All'
 
@@ -12,6 +13,8 @@ export default function Articles() {
   const navigate = useNavigate()
   const [active, setActive] = useState<Filter>('All')
   const [query, setQuery] = useState('')
+  // Reading progress per slug (written by the reader as you scroll).
+  const progressMap = useMemo(() => getArticleProgressMap(), [])
 
   // Only show category chips that actually have at least one article, plus "All".
   const availableCategories = useMemo<Filter[]>(() => {
@@ -123,7 +126,10 @@ export default function Articles() {
           </div>
         ) : (
           <Stagger key={`${active}-${query}`} className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((article) => (
+            {filtered.map((article) => {
+              const readPct = progressMap[article.slug] ?? 0
+              const isRead = readPct >= 90
+              return (
               <StaggerItem key={article.id} className="h-full">
                 <Tilt3D className="h-full rounded-[1.5rem]" max={5}>
                   <button
@@ -140,6 +146,19 @@ export default function Articles() {
                           <Clock3 className="h-3 w-3" />
                           {article.readMinutes} min
                         </span>
+                        {/* Reading progress (concept: 21-Reading-Catalog) */}
+                        {isRead ? (
+                          <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Read
+                          </span>
+                        ) : readPct > 0 ? (
+                          <span className="ml-auto">
+                            <ProgressRing value={readPct} size={26} stroke={3.5}>
+                              <span className="text-[8px] font-black text-red-600">{readPct}</span>
+                            </ProgressRing>
+                          </span>
+                        ) : null}
                       </div>
                       <h2 className="mt-3 text-lg font-black leading-snug tracking-tight text-slate-900 line-clamp-2">
                         {article.title}
@@ -151,7 +170,7 @@ export default function Articles() {
                           {articleWordCount(article).toLocaleString()} words · {article.vocabulary.length} vocab
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 transition group-hover:gap-2">
-                          Read
+                          {isRead ? 'Read again' : readPct > 0 ? 'Continue' : 'Read'}
                           <ArrowRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
@@ -159,7 +178,8 @@ export default function Articles() {
                   </button>
                 </Tilt3D>
               </StaggerItem>
-            ))}
+              )
+            })}
           </Stagger>
         )}
       </div>

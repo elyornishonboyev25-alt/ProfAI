@@ -21,6 +21,7 @@ import {
   Volume2,
   X,
 } from 'lucide-react'
+import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
@@ -542,6 +543,7 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
   const [picked, setPicked] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
   const [score, setScore] = useState(0)
+  const [combo, setCombo] = useState(0)
   const [finished, setFinished] = useState(false)
   const { isSupported, speakingText, speak, stop } = usePronunciation()
 
@@ -559,7 +561,7 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
     if (locked) return
     setPicked(opt)
     setLocked(true)
-    if (opt === current.definition) { setScore((s) => s + 1); playCorrect() } else playWrong()
+    if (opt === current.definition) { setScore((s) => s + 1); setCombo((c) => c + 1); playCorrect() } else { setCombo(0); playWrong() }
   }
   const next = () => {
     if (index === questions.length - 1) { setFinished(true); playWin(); return }
@@ -570,7 +572,8 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
     return (
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-2xl rounded-2xl border border-red-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-red-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+        <Burst count={24} play={pct >= 70} />
         <ScoreRing pct={pct} />
         <h3 className="mt-4 text-3xl font-black text-slate-900">{pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practising'}</h3>
         <p className="mt-1 text-lg text-slate-600">You scored <span className="font-bold text-red-600">{score}</span> / {questions.length}</p>
@@ -586,6 +589,20 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
       </div>
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-xl font-bold text-slate-900">What does <span className="text-red-600">“{current.term}”</span> mean?</h3>
+        <AnimatePresence>
+          {combo >= 2 ? (
+            <motion.span
+              key={combo}
+              initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 16 }}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-1 text-xs font-black text-amber-700 shadow-[0_6px_14px_rgba(245,158,11,0.25)]"
+            >
+              🔥 x{combo} combo
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
         {isSupported ? (
           <button onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}

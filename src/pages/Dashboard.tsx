@@ -29,6 +29,7 @@ import type { DashboardOverview } from '@/types/platform'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import WeeklyPlannerLab from '@/components/dashboard/WeeklyPlannerLab'
 import DailyPlanner from '@/components/dashboard/DailyPlanner'
+import TargetBandCard from '@/components/dashboard/TargetBandCard'
 import { MetricSkeletonGrid, Skeleton } from '@/components/common/Skeleton'
 import { BrandIcon, CountUp, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 
@@ -341,6 +342,13 @@ export default function Dashboard() {
           </Stagger>
         ) : null}
       </section>
+
+      {/* ── Target band hero strip ────────────────────────────── */}
+      {data ? (
+        <section className="mt-8">
+          <TargetBandCard metrics={data.metrics} weeklyProgress={data.weeklyProgress} />
+        </section>
+      ) : null}
 
       {/* ── Main grid: left sidebar + right content ───────────── */}
       <section className="mt-8 grid gap-6 lg:grid-cols-10">

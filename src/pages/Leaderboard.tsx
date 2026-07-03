@@ -17,7 +17,9 @@ import type { LeaderboardResponse, LeaderboardRow, TestCategory } from '@/types/
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
-import { CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { motion } from 'framer-motion'
+import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 
 type PeriodValue = 'today' | 'week' | 'month'
 
@@ -101,6 +103,7 @@ function podiumTheme(rank: number) {
 
 export default function Leaderboard() {
   const user = useAuthStore((state: AuthState) => state.user)
+  const { minimalMotion } = useMotionPreferences()
 
   const [period, setPeriod] = useState<PeriodValue>('week')
   const [category, setCategory] = useState<TestCategory | 'ALL'>('ALL')
@@ -281,7 +284,7 @@ export default function Leaderboard() {
           </div>
         ) : (
           <div className="grid items-end gap-4 lg:grid-cols-3">
-            {visualPodium.map((row) => {
+            {visualPodium.map((row, podiumIndex) => {
               if (!row) return null
               const theme = podiumTheme(row.rank)
               const movement = getMovement(row)
@@ -289,14 +292,25 @@ export default function Leaderboard() {
               const isFirst = row.rank === 1
 
               return (
-                <Tilt3D
+                <motion.div
                   key={row.userId}
+                  initial={minimalMotion ? false : { opacity: 0, y: 48 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-10% 0px' }}
+                  transition={
+                    minimalMotion
+                      ? { duration: 0.1 }
+                      : { type: 'spring', stiffness: 220, damping: 24, delay: (isFirst ? 0.2 : 0) + podiumIndex * 0.08 }
+                  }
+                >
+                <Tilt3D
                   className={`rounded-3xl ${isFirst ? 'lg:-translate-y-3' : ''}`}
                   max={5}
                 >
                   <article
                     className={`fx-medal-shine relative overflow-hidden rounded-3xl border bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} ${theme.cardShadow} p-5`}
                   >
+                    {isFirst ? <Burst count={20} play={!minimalMotion} /> : null}
                     {/* Rank ribbon */}
                     <div className="flex items-center justify-between">
                       <span className={`inline-flex items-center gap-1 rounded-full ${theme.labelBg} px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm`}>
@@ -363,6 +377,7 @@ export default function Leaderboard() {
                     ) : null}
                   </article>
                 </Tilt3D>
+                </motion.div>
               )
             })}
           </div>

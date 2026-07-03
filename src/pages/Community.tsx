@@ -97,9 +97,9 @@ export default function Community() {
                 <motion.button
                   whileHover={{ y: -3 }}
                   onClick={() => r.nickname && navigate(`/u/${r.nickname}`)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-200 hover:shadow-[0_12px_28px_rgba(220,38,38,0.12)]"
+                  className="group flex w-full items-center gap-3 rounded-2xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-200 hover:shadow-[0_12px_28px_rgba(220,38,38,0.12)]"
                 >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-lg font-black text-white">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-lg font-black text-white ring-2 ring-red-200/70 ring-offset-2 transition group-hover:ring-red-400/80">
                     {r.avatarUrl ? <img src={r.avatarUrl} alt="" className="h-full w-full object-cover" /> : initialsOf(r.nickname)}
                   </div>
                   <div className="min-w-0 flex-1">

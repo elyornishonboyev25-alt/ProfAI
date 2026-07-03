@@ -216,6 +216,12 @@ export default function Premium() {
                     : 'border-red-100/80 bg-white/95 shadow-[0_18px_44px_rgba(15,23,42,0.08)]'
                 }`}
               >
+                {plan.highlighted ? (
+                  <span
+                    aria-hidden
+                    className="fx-glow-breath pointer-events-none absolute -inset-[2px] -z-10 rounded-[1.7rem] bg-gradient-to-br from-red-400/50 via-rose-300/30 to-red-400/50 blur-md"
+                  />
+                ) : null}
                 {plan.badge ? (
                   <span
                     className={`absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r ${plan.accent} px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-lg`}

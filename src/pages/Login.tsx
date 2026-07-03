@@ -11,6 +11,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import { takeFlashToast } from '@/utils/authFlash'
 
 const loginSchema = z.object({
@@ -172,8 +173,12 @@ export default function Login() {
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: minimalMotion ? 0.14 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-[410px]"
+        className="relative grid w-full max-w-[410px] lg:max-w-4xl lg:grid-cols-2 lg:gap-6"
       >
+        {/* Aspirational showcase (desktop only) — concept 11-Login-Desktop */}
+        <AuthShowcasePanel quote="Your journey abroad starts here" />
+
+        <div className="relative">
         {/* Soft glow halo behind the card */}
         <div className="pointer-events-none absolute -inset-[1.5px] -z-10 rounded-[1.95rem] bg-gradient-to-br from-red-300/45 via-rose-200/25 to-orange-200/40 blur-md" />
 
@@ -347,6 +352,7 @@ export default function Login() {
               Create one now
             </Link>
           </p>
+        </div>
         </div>
       </motion.div>
     </div>

@@ -146,8 +146,8 @@ export default function Register() {
         className="panel-surface relative grid w-full max-w-5xl overflow-hidden rounded-[2.2rem] border border-red-100/90 bg-white/95 shadow-[0_30px_90px_rgba(127,29,29,0.18)] lg:grid-cols-[0.92fr_1.08fr]"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
-        <div className="relative hidden min-h-[520px] overflow-hidden bg-gradient-to-br from-red-600 via-rose-600 to-red-800 p-8 text-white lg:block">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.26),transparent_32%),radial-gradient(circle_at_82%_76%,rgba(255,255,255,0.18),transparent_36%)]" />
+        <div className="relative hidden min-h-[520px] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#3f0d12] p-8 text-white lg:block">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(220,38,38,0.28),transparent_36%),radial-gradient(circle_at_82%_76%,rgba(225,29,72,0.2),transparent_40%)]" />
           <motion.div
             initial={minimalMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ export default function Register() {
               <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight">
                 Your journey to a university abroad starts here.
               </h1>
-              <p className="mt-4 text-sm leading-7 text-red-50/90">
+              <p className="mt-4 text-sm leading-7 text-slate-300">
                 Join ProfAI and turn your study-abroad prep into a daily streak. Earn XP, unlock
                 achievements, and let your AI coach build the roadmap from SAT &amp; IELTS to your dream university.
               </p>

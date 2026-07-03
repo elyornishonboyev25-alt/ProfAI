@@ -364,9 +364,14 @@ export default function Onboarding() {
                             }`}
                           >
                             {selected ? (
-                              <div className="absolute right-3 top-3">
+                              <motion.div
+                                initial={minimalMotion ? false : { scale: 0, rotate: -90 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={minimalMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 18 }}
+                                className="absolute right-3 top-3"
+                              >
                                 <CheckCircle2 className="h-4 w-4 text-white/85" />
-                              </div>
+                              </motion.div>
                             ) : null}
                             <span className={`mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${selected ? 'bg-white/20' : 'bg-red-50'}`}>
                               <Icon className={`h-5 w-5 ${selected ? 'text-white' : 'text-red-600'}`} />

@@ -30,11 +30,13 @@ function MiniRing({ score, label }: { score: number; label: string }) {
       <div className="relative" style={{ width: svgSize, height: svgSize }}>
         <svg width={svgSize} height={svgSize} className="-rotate-90">
           <circle cx={r + stroke} cy={r + stroke} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
-          <circle
+          <motion.circle
             cx={r + stroke} cy={r + stroke} r={r} fill="none"
             stroke={color} strokeWidth={stroke}
             strokeDasharray={circumference}
-            strokeDashoffset={circumference - progress}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: circumference - progress }}
+            transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
             strokeLinecap="round"
           />
         </svg>

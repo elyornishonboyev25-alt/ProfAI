@@ -328,8 +328,17 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               </motion.article>
             ))}
             {isSending ? (
-              <div className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">
-                <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-red-100 bg-white px-3.5 py-2.5 text-xs text-red-600 shadow-sm">
+                <span className="flex items-center gap-1" aria-hidden>
+                  {[0, 1, 2].map((dot) => (
+                    <motion.span
+                      key={dot}
+                      className="h-1.5 w-1.5 rounded-full bg-red-500"
+                      animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 0.9, repeat: Infinity, delay: dot * 0.15, ease: 'easeInOut' }}
+                    />
+                  ))}
+                </span>
                 {preferredLocale === 'uz' ? 'O‘ylayapman…' : 'Thinking…'}
               </div>
             ) : null}

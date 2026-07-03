@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { AnimatedBackground } from '@/components/AnimatedBackground'
-import { Burst, CountUp, Reveal } from '@/components/fx'
+import { Burst, CountUp, ProgressRing, Reveal } from '@/components/fx'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import type {
@@ -312,12 +312,17 @@ export default function Results() {
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <div className="hero-metric-card">
-                <p className="hero-metric-label">Band</p>
-                <p className="hero-metric-value-sm">
-                  <CountUp value={effectiveBandScore} decimals={1} />
-                </p>
-                <p className="hero-metric-note">Estimated score</p>
+              {/* Certificate-style band ring (concept: 16-Mock-Result) */}
+              <div className="hero-metric-card flex flex-col items-center justify-center py-3">
+                <ProgressRing value={(Math.max(0, Math.min(9, effectiveBandScore)) / 9) * 100} size={104} stroke={10}>
+                  <div className="text-center">
+                    <p className="text-2xl font-black leading-none text-slate-900">
+                      <CountUp value={effectiveBandScore} decimals={1} />
+                    </p>
+                    <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-red-600">Band</p>
+                  </div>
+                </ProgressRing>
+                <p className="hero-metric-note mt-1.5">Estimated score</p>
               </div>
               <div className="hero-metric-card">
                 <p className="hero-metric-label">Accuracy</p>

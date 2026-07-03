@@ -134,6 +134,9 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                                                 : 'border-red-100 bg-white text-slate-500 hover:border-red-300'}
                                                     `}
                                                 >
+                                                    {isCurrent && (
+                                                        <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-full bg-red-400/40 [animation-duration:1.6s]" />
+                                                    )}
                                                     {questionNumber}
                                                     {isFlagged && (
                                                         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-white bg-amber-500" />

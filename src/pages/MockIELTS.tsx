@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   BookOpen,
@@ -19,6 +19,8 @@ import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import {
   formatMockDuration,
   getFullMockCatalog,
+  getFullMockCompletedSections,
+  FULL_MOCK_PROGRESS_EVENT,
   MOCK_SECTION_COUNT,
   type MockSectionKey,
 } from '@/utils/ieltsMockCatalog'
@@ -46,6 +48,18 @@ export default function MockIELTS() {
   const mocks = useMemo(() => getFullMockCatalog(), [])
   const liveMocks = useMemo(() => mocks.filter((mock) => mock.readyCount > 0).length, [mocks])
   const fullyReadyMocks = useMemo(() => mocks.filter((mock) => mock.fullyReady).length, [mocks])
+
+  // Per-mock user completion (localStorage-backed, updated live by the runners).
+  const [progressVersion, setProgressVersion] = useState(0)
+  useEffect(() => {
+    const bump = () => setProgressVersion((version) => version + 1)
+    window.addEventListener(FULL_MOCK_PROGRESS_EVENT, bump)
+    return () => window.removeEventListener(FULL_MOCK_PROGRESS_EVENT, bump)
+  }, [])
+  const completedByMock = useMemo(() => {
+    void progressVersion
+    return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
+  }, [mocks, progressVersion])
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
@@ -131,6 +145,10 @@ export default function MockIELTS() {
         <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {mocks.map((mock) => {
             const isLive = mock.readyCount > 0
+            const doneSections = completedByMock.get(mock.id) ?? new Set<MockSectionKey>()
+            const doneCount = doneSections.size
+            const inProgress = doneCount > 0 && doneCount < mock.readyCount
+            const finished = mock.readyCount > 0 && doneCount >= mock.readyCount
             return (
               <StaggerItem key={mock.id} className="h-full">
                 <Tilt3D className="h-full rounded-[1.6rem]" max={5}>
@@ -162,22 +180,46 @@ export default function MockIELTS() {
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {mock.sections.map((section) => {
                         const Icon = SECTION_ICONS[section.key]
+                        const done = doneSections.has(section.key)
                         return (
                           <span
                             key={section.key}
-                            title={`${section.title} — ${section.available ? 'Ready' : 'Coming soon'}`}
-                            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold ${
-                              section.available
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                : 'border-slate-200 bg-white text-slate-400'
+                            title={`${section.title} — ${done ? 'Completed by you' : section.available ? 'Ready' : 'Coming soon'}`}
+                            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold transition-colors ${
+                              done
+                                ? 'border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_10px_rgba(16,185,129,0.3)]'
+                                : section.available
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  : 'border-slate-200 bg-white text-slate-400'
                             }`}
                           >
-                            <Icon className="h-3.5 w-3.5" />
+                            {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                             {SECTION_SHORT[section.key]}
                           </span>
                         )
                       })}
                     </div>
+
+                    {/* Resume progress bar (concept: 15-Mock-Catalog) */}
+                    {inProgress ? (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-red-700">Resume · {doneCount}/{MOCK_SECTION_COUNT} done</span>
+                          <span className="text-slate-400">{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span>
+                        </div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#DC2626] to-[#E11D48] transition-[width] duration-700"
+                            style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : finished ? (
+                      <div className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Completed
+                      </div>
+                    ) : null}
 
                     <div className="mt-auto flex items-center justify-between pt-4">
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
@@ -185,7 +227,7 @@ export default function MockIELTS() {
                         {formatMockDuration(mock.totalMinutes)} session
                       </span>
                       <span className="inline-flex items-center gap-1 text-sm font-bold text-red-700 transition group-hover:translate-x-0.5">
-                        Open
+                        {inProgress ? 'Resume' : finished ? 'Review' : 'Open'}
                         <ChevronRight className="h-4 w-4" />
                       </span>
                     </div>

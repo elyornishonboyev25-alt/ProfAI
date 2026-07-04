@@ -18,7 +18,6 @@ import {
   Menu,
   Mic2,
   PenSquare,
-  Play,
   Quote,
   Radio,
   Sparkles,
@@ -469,8 +468,8 @@ export default function Landing() {
           }`}
         >
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="relative flex items-center gap-2.5">
-            <BrandMark size={38} />
-            <span className="text-xl font-black tracking-tight">
+            <BrandMark size={46} className="drop-shadow-[0_6px_12px_rgba(220,38,38,0.28)]" />
+            <span className="text-2xl font-black tracking-tight">
               Prof<span className="text-red-600">AI</span>
             </span>
           </button>
@@ -535,20 +534,11 @@ export default function Landing() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.02fr_1.05fr]">
           {/* copy */}
           <div className="text-center lg:text-left">
-            <motion.span
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE }}
-              className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600 shadow-sm"
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Your AI-powered path to studying abroad
-            </motion.span>
-
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
-              className="mt-6 text-[3rem] font-black leading-[0.98] tracking-[-0.02em] text-slate-900 sm:text-[5rem]"
+              className="text-[3rem] font-black leading-[0.98] tracking-[-0.02em] text-slate-900 sm:text-[5rem]"
             >
               Your Path to Top
               <br />
@@ -569,49 +559,15 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.22, ease: EASE }}
-              className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+              className="mt-8 flex justify-center lg:justify-start"
             >
               <button
                 onClick={() => navigate('/register')}
-                className="lg-btn-red group inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white transition hover:-translate-y-0.5"
+                className="lg-btn-red group inline-flex items-center gap-2 rounded-full px-11 py-5 text-lg font-bold text-white"
               >
                 <span className="relative">Start Free</span>
-                <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="relative h-5 w-5 transition-transform group-hover:translate-x-1" />
               </button>
-              <button
-                onClick={() => scrollToId('features')}
-                className="lg-glass inline-flex items-center gap-2 rounded-full px-7 py-4 text-base font-bold text-slate-700 transition hover:-translate-y-0.5"
-              >
-                <Play className="h-4 w-4 text-red-500" /> Explore the platform
-              </button>
-            </motion.div>
-
-            {/* social proof row */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mt-7 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
-            >
-              <div className="flex -space-x-2">
-                {['NN', 'SS', 'SR', 'DT'].map((t, i) => (
-                  <span
-                    key={t}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#FBF7F1] bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-black text-white"
-                    style={{ zIndex: 10 - i }}
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-[12px] font-semibold text-slate-500">Loved by students reaching 7.5+ &amp; 1500+</p>
-              </div>
             </motion.div>
           </div>
 

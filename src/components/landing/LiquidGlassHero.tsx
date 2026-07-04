@@ -3,120 +3,124 @@ import { BookOpen, Headphones, Mic2, PenSquare } from 'lucide-react'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-const SKILL_CARDS = [
-  { icon: Headphones, label: 'Listening', pos: '-left-3 top-[20%]', delay: 0.35, float: 4.4 },
-  { icon: PenSquare, label: 'Writing', pos: 'left-1 bottom-[16%]', delay: 0.55, float: 5.1 },
-  { icon: BookOpen, label: 'Reading', pos: '-right-3 top-[22%]', delay: 0.45, float: 4.8 },
-  { icon: Mic2, label: 'Speaking', pos: 'right-0 bottom-[14%]', delay: 0.65, float: 5.4 },
+// Four skill tiles hugging the panel edges. `edge` anchors to the panel's left
+// or right side; `v` is the vertical position within the panel.
+const SKILL_TILES = [
+  { icon: Headphones, label: 'Listening', edge: 'left', v: 'top-[14%]', delay: 0.35, float: 4.4 },
+  { icon: PenSquare, label: 'Writing', edge: 'left', v: 'bottom-[10%]', delay: 0.5, float: 5.1 },
+  { icon: BookOpen, label: 'Reading', edge: 'right', v: 'top-[16%]', delay: 0.45, float: 4.8 },
+  { icon: Mic2, label: 'Speaking', edge: 'right', v: 'bottom-[12%]', delay: 0.6, float: 5.4 },
 ] as const
 
-const ORBS = [
-  { className: 'left-[6%] top-[26%] h-10 w-10', delay: 0 },
-  { className: 'right-[2%] top-[16%] h-6 w-6', delay: 0.8 },
-  { className: 'left-[10%] bottom-[10%] h-9 w-9', delay: 1.4 },
-  { className: 'right-[8%] bottom-[14%] h-11 w-11', delay: 0.5 },
-  { className: 'right-[24%] top-[40%] h-4 w-4', delay: 1.1 },
+// Small red glow dots peeking around the tiles (concept: 3-Dashboard close-up).
+const GLOW_DOTS = [
+  { className: 'left-[3%] top-[30%] h-3 w-3', delay: 0 },
+  { className: 'left-[22%] top-[22%] h-2 w-2', delay: 0.7 },
+  { className: 'left-[-4%] bottom-[26%] h-9 w-9', delay: 1.3 },
+  { className: 'left-[26%] bottom-[20%] h-2.5 w-2.5', delay: 0.4 },
+  { className: 'right-[4%] top-[26%] h-2.5 w-2.5', delay: 1.0 },
+  { className: 'right-[24%] top-[40%] h-2 w-2', delay: 1.6 },
+  { className: 'right-[2%] bottom-[24%] h-3.5 w-3.5', delay: 0.9 },
+  { className: 'right-[-3%] top-[46%] h-7 w-7', delay: 1.9 },
 ] as const
 
 /**
- * The floating "Dashboard" band-score panel from the ProfAI landing concept —
- * a liquid-glass card with an animated 7.5 Overall Band ring, four drifting
- * frosted skill cards and soft red glow orbs. Decorative; honours reduced motion.
+ * The "Dashboard" band-score composition from the ProfAI landing concept — one
+ * tilted liquid-glass panel with an animated 7.5 Overall Band ring, and four
+ * frosted skill tiles hugging the panel's left/right edges (each with its own
+ * drop shadow so it hovers above the glass), plus small red glow dots.
+ * Decorative; honours reduced motion.
  */
 export default function LiquidGlassHero() {
   const reduce = !!useReducedMotion()
-  const R = 120
+  const R = 116
   const CIRC = 2 * Math.PI * R
   const target = 7.5
   const dash = CIRC * (target / 9)
 
   return (
-    <div className="relative mx-auto h-[500px] w-full max-w-[620px] [perspective:1400px]">
-      {/* floating red glow orbs */}
-      {!reduce &&
-        ORBS.map((orb, i) => (
+    <div className="relative mx-auto h-[440px] w-full max-w-[600px] [perspective:1600px]">
+      {/* the composition: panel is the positioning context so tiles hug its edges */}
+      <div className="absolute left-1/2 top-1/2 h-[330px] w-[430px] -translate-x-1/2 -translate-y-1/2">
+        {/* glow dots + spheres around the tiles */}
+        {GLOW_DOTS.map((dot, i) => (
           <motion.span
             key={i}
-            className={`lg-orb pointer-events-none absolute ${orb.className}`}
-            animate={{ y: [0, -14, 0], opacity: [0.5, 0.95, 0.5] }}
-            transition={{ duration: 5.5, delay: orb.delay, repeat: Infinity, ease: 'easeInOut' }}
+            className={`lg-orb pointer-events-none absolute ${dot.className}`}
+            animate={reduce ? undefined : { y: [0, -10, 0], opacity: [0.5, 0.95, 0.5] }}
+            transition={{ duration: 5, delay: dot.delay, repeat: Infinity, ease: 'easeInOut' }}
           />
         ))}
 
-      {/* main glass dashboard panel — large, tilted in 3D perspective, thick glass edge */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 26 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
-        className="lg-glass lg-glass-sheen absolute left-1/2 top-1/2 flex h-[366px] w-[470px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[34px] [transform:perspective(1200px)_rotateY(-8deg)_rotateX(2deg)]"
-      >
-        <p className="absolute left-7 top-6 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
+        {/* tilted glass panel */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
+          className="lg-glass lg-glass-sheen absolute inset-0 rounded-[30px] [transform:perspective(1400px)_rotateY(-9deg)_rotateX(3deg)]"
+        >
+          <p className="absolute left-6 top-5 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
 
-        {/* white circular glass disc behind the ring */}
-        <div
-          className="absolute h-[190px] w-[190px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle at 40% 32%, rgba(255,255,255,0.95), rgba(255,255,255,0.7))',
-            boxShadow: '0 10px 30px rgba(15,23,42,0.1), inset 0 1px 0 rgba(255,255,255,0.95)',
-          }}
-        />
+          {/* band ring + score, centred */}
+          <div className="absolute inset-0 grid place-items-center">
+            <svg viewBox="0 0 280 280" className="h-[238px] w-[238px] -rotate-90 drop-shadow-[0_10px_22px_rgba(220,38,38,0.2)]">
+              <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.16)" strokeWidth="17" />
+              <motion.circle
+                cx="140"
+                cy="140"
+                r={R}
+                fill="none"
+                stroke="url(#lg-band)"
+                strokeWidth="17"
+                strokeLinecap="round"
+                strokeDasharray={CIRC}
+                initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
+                animate={{ strokeDashoffset: CIRC - dash }}
+                transition={{ duration: reduce ? 0 : 1.4, delay: 0.5, ease: EASE }}
+              />
+              <defs>
+                <linearGradient id="lg-band" x1="1" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="50%" stopColor="#b91c1c" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="pointer-events-none absolute flex flex-col items-center">
+              <span className="text-[3.4rem] font-black leading-none tracking-tight text-slate-900">{target.toFixed(1)}</span>
+              <span className="mt-2 text-center text-sm font-semibold leading-tight text-slate-500">
+                Overall Band
+                <br />
+                Score
+              </span>
+            </div>
+          </div>
+        </motion.div>
 
-        {/* band ring */}
-        <svg viewBox="0 0 280 280" className="relative h-[252px] w-[252px] -rotate-90 drop-shadow-[0_12px_26px_rgba(220,38,38,0.22)]">
-          <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth="18" />
-          <motion.circle
-            cx="140"
-            cy="140"
-            r={R}
-            fill="none"
-            stroke="url(#lg-band)"
-            strokeWidth="18"
-            strokeLinecap="round"
-            strokeDasharray={CIRC}
-            initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
-            animate={{ strokeDashoffset: CIRC - dash }}
-            transition={{ duration: reduce ? 0 : 1.4, delay: 0.5, ease: EASE }}
-          />
-          <defs>
-            <linearGradient id="lg-band" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#7f1d1d" />
-              <stop offset="45%" stopColor="#b91c1c" />
-              <stop offset="100%" stopColor="#f43f5e" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-6xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
-          <span className="mt-1.5 text-center text-sm font-semibold leading-tight text-slate-500">
-            Overall Band
-            <br />
-            Score
-          </span>
-        </div>
-      </motion.div>
-
-      {/* floating frosted skill cards — larger, popped forward in 3D, own drop shadow */}
-      {SKILL_CARDS.map((card) => {
-        const Icon = card.icon
-        return (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: card.delay }}
-            className={`absolute ${card.pos} [transform-style:preserve-3d]`}
-          >
+        {/* skill tiles hugging the panel's left / right edges */}
+        {SKILL_TILES.map((tile) => {
+          const Icon = tile.icon
+          const anchor = tile.edge === 'left' ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'
+          return (
             <motion.div
-              animate={reduce ? undefined : { y: [0, -9, 0] }}
-              transition={{ duration: card.float, repeat: Infinity, ease: 'easeInOut' }}
-              className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[26px] [transform:translateZ(40px)] [box-shadow:0_16px_34px_rgba(15,23,42,0.16),0_2px_8px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              key={tile.label}
+              initial={{ opacity: 0, scale: 0.8, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: EASE, delay: tile.delay }}
+              className={`absolute z-10 ${anchor} ${tile.v}`}
             >
-              <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
-              <span className="text-[13px] font-bold text-slate-700">{card.label}</span>
+              <motion.div
+                animate={reduce ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: tile.float, repeat: Infinity, ease: 'easeInOut' }}
+                className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              >
+                <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
+                <span className="text-[13px] font-bold text-slate-700">{tile.label}</span>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -167,15 +171,15 @@ export function LiquidGlassHeroMobile() {
           </div>
         </div>
         <div className="mt-3 grid w-full grid-cols-2 gap-3">
-          {SKILL_CARDS.map((card) => {
-            const Icon = card.icon
+          {SKILL_TILES.map((tile) => {
+            const Icon = tile.icon
             return (
               <div
-                key={card.label}
+                key={tile.label}
                 className="lg-glass lg-glass-sheen flex items-center gap-2.5 rounded-2xl px-3 py-3"
               >
                 <Icon className="h-5 w-5 shrink-0 text-red-600" strokeWidth={1.8} />
-                <span className="text-sm font-bold text-slate-700">{card.label}</span>
+                <span className="text-sm font-bold text-slate-700">{tile.label}</span>
               </div>
             )
           })}

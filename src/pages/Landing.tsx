@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { CountUp } from '@/components/fx'
+import LiquidGlassHero from '@/components/landing/LiquidGlassHero'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -45,9 +46,15 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 const NAV_LINKS = [
   { label: 'Features', target: 'features' },
-  { label: 'Tracks', target: 'tracks' },
-  { label: 'How it works', target: 'route' },
-  { label: 'Reviews', target: 'reviews' },
+  { label: 'Pricing', target: 'tracks' },
+  { label: 'About', target: 'route' },
+  { label: 'Contact', target: 'reviews' },
+] as const
+
+const HERO_PILLS = [
+  { icon: 'file', label: '30 Full Mocks', target: 'features' },
+  { icon: 'pen', label: 'AI Writing Evaluation', target: 'features' },
+  { icon: 'globe', label: 'Live Speaking Partners', target: 'features' },
 ] as const
 
 const STATS = [
@@ -84,151 +91,6 @@ const fadeUp = {
 
 function SectionTag({ children }: { children: ReactNode }) {
   return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-red-600">{children}</span>
-}
-
-/* ── Hero: floating live-product cards ─────────────────────────────────── */
-
-function FloatCard({
-  className,
-  depth,
-  y,
-  reduce,
-  delay,
-  children,
-}: {
-  className?: string
-  depth: number
-  y: MotionValue<number>
-  reduce: boolean
-  delay: number
-  children: ReactNode
-}) {
-  return (
-    <motion.div
-      className={`absolute ${className}`}
-      style={reduce ? undefined : { y }}
-      initial={{ opacity: 0, scale: 0.85, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: EASE, delay }}
-    >
-      <motion.div
-        animate={reduce ? undefined : { y: [0, -10, 0] }}
-        transition={{ duration: 4 + depth, repeat: Infinity, ease: 'easeInOut' }}
-        className="rounded-2xl border border-black/5 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.14)] backdrop-blur"
-      >
-        {children}
-      </motion.div>
-    </motion.div>
-  )
-}
-
-function HeroVisual({ y, reduce }: { y: MotionValue<number>; reduce: boolean }) {
-  return (
-    <div className="relative mx-auto h-[440px] w-full max-w-[520px]">
-      {/* glow */}
-      <div className="pointer-events-none absolute inset-6 rounded-[40px] bg-gradient-to-br from-red-300/30 via-rose-200/20 to-amber-100/10 blur-3xl" />
-
-      {/* AI coach reply — the anchor card */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-        className="absolute left-1/2 top-10 w-[300px] -translate-x-1/2 rounded-3xl border border-black/5 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.16)]"
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white">
-            <Bot className="h-4.5 w-4.5" />
-          </span>
-          <div>
-            <p className="text-[13px] font-black text-slate-900">AI Study Coach</p>
-            <p className="flex items-center gap-1 text-[10px] font-bold text-green-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> analysing your last mock
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 space-y-2">
-          <p className="rounded-2xl rounded-tl-sm bg-slate-100 px-3 py-2 text-[12px] leading-5 text-slate-700">
-            Your Reading dipped on True / False / Not Given. Let's drill it for 12 minutes.
-          </p>
-          <div className="flex items-center gap-2">
-            <button className="rounded-xl bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white">Start drill</button>
-            <span className="text-[11px] font-semibold text-slate-400">+40 XP</span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Band progress card */}
-      <FloatCard className="-left-2 top-2 w-[190px]" depth={1.4} y={y} reduce={reduce} delay={0.28}>
-        <div className="p-4">
-          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Overall band</p>
-          <p className="mt-1 text-2xl font-black tracking-tight text-slate-900">
-            6.0 <span className="text-slate-300">→</span> <span className="text-red-600">7.5</span>
-          </p>
-          <div className="mt-3 flex items-end gap-1.5">
-            {[40, 55, 48, 70, 65, 88].map((h, i) => (
-              <motion.span
-                key={i}
-                initial={{ height: 4 }}
-                animate={{ height: h * 0.5 }}
-                transition={{ duration: 0.8, delay: 0.5 + i * 0.08, ease: EASE }}
-                className="w-3 rounded-md bg-gradient-to-t from-red-500 to-rose-400"
-                style={{ height: h * 0.5 }}
-              />
-            ))}
-          </div>
-        </div>
-      </FloatCard>
-
-      {/* Mock timer card */}
-      <FloatCard className="-right-3 top-24 w-[200px]" depth={2.1} y={y} reduce={reduce} delay={0.42}>
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Reading · P2</p>
-            <span className="rounded-md bg-red-500 px-1.5 py-0.5 text-[10px] font-black text-white">18:42</span>
-          </div>
-          <div className="mt-3 space-y-1.5">
-            {['Q12 ✓', 'Q13 ✓', 'Q14 …'].map((q, i) => (
-              <div
-                key={q}
-                className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
-                  i < 2 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-                }`}
-              >
-                {q}
-              </div>
-            ))}
-          </div>
-        </div>
-      </FloatCard>
-
-      {/* Streak / XP card */}
-      <FloatCard className="bottom-6 left-6 w-[210px]" depth={1.1} y={y} reduce={reduce} delay={0.56}>
-        <div className="flex items-center gap-3 p-4">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
-            <Flame className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-lg font-black tracking-tight text-slate-900">12-day streak</p>
-            <p className="text-[11px] font-bold text-slate-400">Level 7 · 3,240 XP</p>
-          </div>
-        </div>
-      </FloatCard>
-
-      {/* Speaking live pill */}
-      <FloatCard className="-right-1 bottom-20 w-[170px]" depth={2.6} y={y} reduce={reduce} delay={0.7}>
-        <div className="flex items-center gap-2.5 p-3.5">
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white">
-            <Mic2 className="h-4 w-4" />
-            <span className="absolute inset-0 animate-ping rounded-full bg-red-500/40" />
-          </span>
-          <div>
-            <p className="text-[12px] font-black text-slate-900">Live partner</p>
-            <p className="text-[10px] font-bold text-green-600">8 online now</p>
-          </div>
-        </div>
-      </FloatCard>
-    </div>
-  )
 }
 
 /* ── Bento feature data ────────────────────────────────────────────────── */
@@ -494,11 +356,7 @@ function ReviewCard({ review }: { review: LandingReview }) {
 
 export default function Landing() {
   const navigate = useNavigate()
-  const reduce = !!useReducedMotion()
   const heroRef = useRef<HTMLDivElement>(null)
-
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const floatY = useTransform(scrollYProgress, [0, 1], [0, -70])
 
   const [scrolled, setScrolled] = useState(false)
   const [mobileNav, setMobileNav] = useState(false)
@@ -579,47 +437,42 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#FBF7F1] text-slate-900">
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
-      <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-4">
+      {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
+      <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
         <div
-          className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-2.5 transition-all duration-300 sm:px-6 ${
-            scrolled
-              ? 'border border-black/5 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl'
-              : 'border border-transparent bg-white/40 backdrop-blur-md'
+          className={`lg-glass lg-glass-sheen mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[22px] px-3 py-2.5 transition-all duration-300 sm:px-5 ${
+            scrolled ? 'shadow-[0_16px_40px_rgba(15,23,42,0.14)]' : ''
           }`}
         >
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2">
-            <BrandMark size={34} />
-            <span className="text-lg font-black tracking-tight">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="relative flex items-center gap-2.5">
+            <BrandMark size={38} />
+            <span className="text-xl font-black tracking-tight">
               Prof<span className="text-red-600">AI</span>
             </span>
           </button>
 
-          <nav className="hidden items-center gap-7 md:flex">
-            {NAV_LINKS.map((l) => (
+          <nav className="relative hidden items-center gap-1 md:flex">
+            {NAV_LINKS.map((l, i) => (
               <button
                 key={l.target}
                 onClick={() => go(l.target)}
-                className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
+                className={`rounded-full px-4 py-2 text-[15px] font-semibold transition ${
+                  i === 0
+                    ? 'bg-white/70 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_rgba(15,23,42,0.06)]'
+                    : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
+                }`}
               >
                 {l.label}
               </button>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <button
               onClick={() => navigate('/login')}
-              className="hidden rounded-xl px-3 py-2 text-sm font-bold text-slate-600 transition hover:text-slate-900 sm:block"
+              className="lg-glass hidden rounded-full border-red-200/70 px-6 py-2.5 text-[15px] font-bold text-red-700 transition hover:text-red-800 sm:block"
             >
-              Sign in
-            </button>
-            <button
-              onClick={() => navigate('/register')}
-              className="group inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-[0_8px_20px_rgba(220,38,38,0.32)] transition hover:bg-red-700"
-            >
-              Start free
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              Login
             </button>
             <button onClick={() => setMobileNav((v) => !v)} className="ml-1 rounded-lg p-1.5 text-slate-700 md:hidden" aria-label="Menu">
               {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -669,13 +522,11 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
-              className="mt-5 text-[2.6rem] font-black leading-[1.04] tracking-tight sm:text-6xl"
+              className="mt-5 text-[2.9rem] font-black leading-[1.02] tracking-tight text-slate-900 sm:text-[4.3rem]"
             >
-              One app from
+              Your Path to Top
               <br />
-              first mock to
-              <br />
-              <span className="bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">acceptance letter.</span>
+              Universities
             </motion.h1>
 
             <motion.p
@@ -684,8 +535,8 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
               className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
             >
-              IELTS &amp; SAT practice, an AI coach that builds your roadmap, writing &amp; speaking feedback, live
-              partners, shadowing, vocab and university research — connected to the band you're chasing.
+              AI-powered SAT &amp; IELTS prep platform for studying abroad. Personalized learning, real-time
+              feedback, and guaranteed results.
             </motion.p>
 
             <motion.div
@@ -696,14 +547,14 @@ export default function Landing() {
             >
               <button
                 onClick={() => navigate('/register')}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.36)] transition hover:-translate-y-0.5 hover:bg-red-700"
+                className="lg-btn-red group inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white transition hover:-translate-y-0.5"
               >
-                Start free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span className="relative">Start Free</span>
+                <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
               <button
                 onClick={() => scrollToId('features')}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300"
+                className="lg-glass inline-flex items-center gap-2 rounded-full px-7 py-4 text-base font-bold text-slate-700 transition hover:-translate-y-0.5"
               >
                 <Play className="h-4 w-4 text-red-500" /> Explore the platform
               </button>
@@ -738,11 +589,35 @@ export default function Landing() {
             </motion.div>
           </div>
 
-          {/* live visual */}
+          {/* live visual — liquid glass band dashboard */}
           <div className="hidden lg:block">
-            <HeroVisual y={floatY} reduce={reduce} />
+            <LiquidGlassHero />
           </div>
         </div>
+
+        {/* feature pills (glass) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
+          className="relative mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-3"
+        >
+          {HERO_PILLS.map((pill) => {
+            const Icon = pill.icon === 'file' ? BookOpen : pill.icon === 'pen' ? PenSquare : Globe2
+            return (
+              <button
+                key={pill.label}
+                onClick={() => scrollToId(pill.target)}
+                className="lg-glass lg-glass-sheen group flex items-center gap-3 overflow-hidden rounded-full px-6 py-4 text-left transition hover:-translate-y-0.5"
+              >
+                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50/80 text-red-600 ring-1 ring-red-100">
+                  <Icon className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+                <span className="relative text-lg font-bold tracking-tight text-slate-800">{pill.label}</span>
+              </button>
+            )
+          })}
+        </motion.div>
       </section>
 
       {/* ── Stat band ───────────────────────────────────────────────── */}

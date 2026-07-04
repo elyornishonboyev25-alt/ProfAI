@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { CountUp } from '@/components/fx'
-import LiquidGlassHero from '@/components/landing/LiquidGlassHero'
+import LiquidGlassHero, { LiquidGlassHeroMobile } from '@/components/landing/LiquidGlassHero'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -56,6 +56,16 @@ const HERO_PILLS = [
   { icon: 'pen', label: 'AI Writing Evaluation', target: 'features' },
   { icon: 'globe', label: 'Live Speaking Partners', target: 'features' },
 ] as const
+
+// Ambient floating red spheres scattered behind/in front of the glass at varied depth.
+const LANDING_SPHERES: Array<{ style: CSSProperties; delay: number; dur: number }> = [
+  { style: { top: '14%', right: '6%', width: 26, height: 26, opacity: 0.75 }, delay: 0, dur: 8 },
+  { style: { top: '30%', right: '30%', width: 14, height: 14, opacity: 0.55 }, delay: 1.4, dur: 10 },
+  { style: { top: '46%', left: '3%', width: 44, height: 44, opacity: 0.4 }, delay: 0.6, dur: 11 },
+  { style: { bottom: '22%', right: '12%', width: 90, height: 90, opacity: 0.32 }, delay: 2.1, dur: 12 },
+  { style: { top: '62%', right: '4%', width: 18, height: 18, opacity: 0.6 }, delay: 1.1, dur: 9 },
+  { style: { top: '20%', left: '18%', width: 20, height: 20, opacity: 0.5 }, delay: 0.3, dur: 10.5 },
+]
 
 const STATS = [
   { value: 30, suffix: '+', label: 'Full timed mocks' },
@@ -436,11 +446,19 @@ export default function Landing() {
   const track = TRACKS.find((t) => t.id === activeTrack)!
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#eef1f6_0%,#f4f5f8_40%,#fbfbfd_100%)] text-slate-900">
-      {/* clean ambient wash — cool base with a soft warm glow top-right (matches the concept) */}
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(120deg,#eef2fb_0%,#f7f6f8_45%,#fdf3f3_100%)] text-slate-900">
+      {/* frosted ambient wash — white base, pale red top-right, faint cool blue left */}
       <div className="pointer-events-none fixed inset-0 -z-0">
-        <div className="absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(251,191,150,0.45),transparent)] blur-2xl" />
-        <div className="absolute -left-40 top-40 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(191,210,255,0.35),transparent)] blur-2xl" />
+        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-[radial-gradient(closest-side,rgba(252,165,165,0.5),transparent)] blur-2xl" />
+        <div className="absolute -left-48 top-32 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(191,210,255,0.4),transparent)] blur-2xl" />
+        {/* floating glossy red spheres at varying depths */}
+        {LANDING_SPHERES.map((s, i) => (
+          <span
+            key={i}
+            className="lg-orb lg-sphere-float absolute"
+            style={{ ...s.style, animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s` }}
+          />
+        ))}
       </div>
       <div className="relative z-10">
       {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
@@ -476,7 +494,11 @@ export default function Landing() {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => navigate('/login')}
-              className="lg-glass hidden rounded-full border-red-200/70 px-6 py-2.5 text-[15px] font-bold text-red-700 transition hover:text-red-800 sm:block"
+              className="lg-glass lg-hover hidden rounded-full px-7 py-2.5 text-[15px] font-bold text-red-600 sm:block"
+              style={{
+                border: '1.5px solid rgba(220,38,38,0.45)',
+                boxShadow: '0 0 0 4px rgba(220,38,38,0.06), 0 8px 22px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
+              }}
             >
               Login
             </button>
@@ -593,7 +615,12 @@ export default function Landing() {
             </motion.div>
           </div>
 
-          {/* live visual — liquid glass band dashboard */}
+          {/* mobile: dashboard drops below the text */}
+          <div className="lg:hidden">
+            <LiquidGlassHeroMobile />
+          </div>
+
+          {/* live visual — liquid glass band dashboard (desktop) */}
           <div className="hidden lg:block">
             <LiquidGlassHero />
           </div>
@@ -612,9 +639,16 @@ export default function Landing() {
               <button
                 key={pill.label}
                 onClick={() => scrollToId(pill.target)}
-                className="lg-glass lg-glass-sheen group flex items-center gap-3 overflow-hidden rounded-full px-6 py-4 text-left transition hover:-translate-y-0.5"
+                className="lg-glass lg-glass-sheen lg-hover group flex items-center gap-3.5 overflow-hidden rounded-full px-6 py-4 text-left"
               >
-                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50/80 text-red-600 ring-1 ring-red-100">
+                <span
+                  className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-red-600"
+                  style={{
+                    background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(254,226,226,0.85))',
+                    boxShadow: '0 4px 12px rgba(220,38,38,0.16), inset 0 1px 0 rgba(255,255,255,0.95)',
+                    border: '1px solid rgba(254,202,202,0.9)',
+                  }}
+                >
                   <Icon className="h-5 w-5" strokeWidth={1.8} />
                 </span>
                 <span className="relative text-lg font-bold tracking-tight text-slate-800">{pill.label}</span>

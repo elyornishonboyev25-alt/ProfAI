@@ -43,18 +43,27 @@ export default function LiquidGlassHero() {
           />
         ))}
 
-      {/* main glass dashboard panel — larger, tilted in 3D, glossier */}
+      {/* main glass dashboard panel — large, tilted in 3D perspective, thick glass edge */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 26 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
-        className="lg-glass lg-glass-sheen absolute left-1/2 top-1/2 flex h-[360px] w-[460px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[34px] [transform:rotateY(-14deg)_rotateX(4deg)_rotateZ(-2deg)]"
+        className="lg-glass lg-glass-sheen absolute left-1/2 top-1/2 flex h-[366px] w-[470px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[34px] [transform:perspective(1200px)_rotateY(-8deg)_rotateX(2deg)]"
       >
         <p className="absolute left-7 top-6 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
 
+        {/* white circular glass disc behind the ring */}
+        <div
+          className="absolute h-[190px] w-[190px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle at 40% 32%, rgba(255,255,255,0.95), rgba(255,255,255,0.7))',
+            boxShadow: '0 10px 30px rgba(15,23,42,0.1), inset 0 1px 0 rgba(255,255,255,0.95)',
+          }}
+        />
+
         {/* band ring */}
-        <svg viewBox="0 0 280 280" className="h-[248px] w-[248px] -rotate-90 drop-shadow-[0_10px_24px_rgba(220,38,38,0.18)]">
-          <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.16)" strokeWidth="18" />
+        <svg viewBox="0 0 280 280" className="relative h-[252px] w-[252px] -rotate-90 drop-shadow-[0_12px_26px_rgba(220,38,38,0.22)]">
+          <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth="18" />
           <motion.circle
             cx="140"
             cy="140"
@@ -70,9 +79,9 @@ export default function LiquidGlassHero() {
           />
           <defs>
             <linearGradient id="lg-band" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#1E293B" />
-              <stop offset="55%" stopColor="#9f1239" />
-              <stop offset="100%" stopColor="#DC2626" />
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="45%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#f43f5e" />
             </linearGradient>
           </defs>
         </svg>
@@ -86,7 +95,7 @@ export default function LiquidGlassHero() {
         </div>
       </motion.div>
 
-      {/* floating frosted skill cards — larger, popped forward in 3D */}
+      {/* floating frosted skill cards — larger, popped forward in 3D, own drop shadow */}
       {SKILL_CARDS.map((card) => {
         const Icon = card.icon
         return (
@@ -100,7 +109,7 @@ export default function LiquidGlassHero() {
             <motion.div
               animate={reduce ? undefined : { y: [0, -9, 0] }}
               transition={{ duration: card.float, repeat: Infinity, ease: 'easeInOut' }}
-              className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[26px] [transform:translateZ(40px)]"
+              className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[26px] [transform:translateZ(40px)] [box-shadow:0_16px_34px_rgba(15,23,42,0.16),0_2px_8px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)]"
             >
               <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
               <span className="text-[13px] font-bold text-slate-700">{card.label}</span>
@@ -108,6 +117,70 @@ export default function LiquidGlassHero() {
           </motion.div>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Compact stacked version for phones (concept: dashboard drops below the text,
+ * tiles reflow into a 2x2 grid). Rendered on < lg screens.
+ */
+export function LiquidGlassHeroMobile() {
+  const reduce = !!useReducedMotion()
+  const R = 120
+  const CIRC = 2 * Math.PI * R
+  const target = 7.5
+  const dash = CIRC * (target / 9)
+
+  return (
+    <div className="mx-auto mt-8 w-full max-w-sm">
+      <div className="lg-glass lg-glass-sheen relative flex flex-col items-center overflow-hidden rounded-[28px] p-6">
+        <p className="self-start text-lg font-black italic tracking-tight text-slate-800">Dashboard</p>
+        <div className="relative my-2 grid place-items-center">
+          <svg viewBox="0 0 280 280" className="h-44 w-44 -rotate-90">
+            <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth="18" />
+            <motion.circle
+              cx="140"
+              cy="140"
+              r={R}
+              fill="none"
+              stroke="url(#lg-band-m)"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeDasharray={CIRC}
+              initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
+              whileInView={{ strokeDashoffset: CIRC - dash }}
+              viewport={{ once: true }}
+              transition={{ duration: reduce ? 0 : 1.3, ease: EASE }}
+            />
+            <defs>
+              <linearGradient id="lg-band-m" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#7f1d1d" />
+                <stop offset="45%" stopColor="#b91c1c" />
+                <stop offset="100%" stopColor="#f43f5e" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute flex flex-col items-center">
+            <span className="text-4xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
+            <span className="text-center text-[11px] font-semibold leading-tight text-slate-500">Overall Band Score</span>
+          </div>
+        </div>
+        <div className="mt-3 grid w-full grid-cols-2 gap-3">
+          {SKILL_CARDS.map((card) => {
+            const Icon = card.icon
+            return (
+              <div
+                key={card.label}
+                className="lg-glass lg-glass-sheen flex items-center gap-2.5 rounded-2xl px-3 py-3"
+              >
+                <Icon className="h-5 w-5 shrink-0 text-red-600" strokeWidth={1.8} />
+                <span className="text-sm font-bold text-slate-700">{card.label}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

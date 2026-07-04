@@ -4,10 +4,10 @@ import { BookOpen, Headphones, Mic2, PenSquare } from 'lucide-react'
 const EASE = [0.22, 1, 0.36, 1] as const
 
 const SKILL_CARDS = [
-  { icon: Headphones, label: 'Listening', pos: 'left-0 top-[22%]', delay: 0.35, float: 4.4 },
-  { icon: PenSquare, label: 'Writing', pos: 'left-2 bottom-[20%]', delay: 0.55, float: 5.1 },
-  { icon: BookOpen, label: 'Reading', pos: 'right-0 top-[24%]', delay: 0.45, float: 4.8 },
-  { icon: Mic2, label: 'Speaking', pos: 'right-1 bottom-[18%]', delay: 0.65, float: 5.4 },
+  { icon: Headphones, label: 'Listening', pos: '-left-3 top-[20%]', delay: 0.35, float: 4.4 },
+  { icon: PenSquare, label: 'Writing', pos: 'left-1 bottom-[16%]', delay: 0.55, float: 5.1 },
+  { icon: BookOpen, label: 'Reading', pos: '-right-3 top-[22%]', delay: 0.45, float: 4.8 },
+  { icon: Mic2, label: 'Speaking', pos: 'right-0 bottom-[14%]', delay: 0.65, float: 5.4 },
 ] as const
 
 const ORBS = [
@@ -31,7 +31,7 @@ export default function LiquidGlassHero() {
   const dash = CIRC * (target / 9)
 
   return (
-    <div className="relative mx-auto h-[440px] w-full max-w-[560px]">
+    <div className="relative mx-auto h-[500px] w-full max-w-[620px] [perspective:1400px]">
       {/* floating red glow orbs */}
       {!reduce &&
         ORBS.map((orb, i) => (
@@ -43,25 +43,25 @@ export default function LiquidGlassHero() {
           />
         ))}
 
-      {/* main glass dashboard panel */}
+      {/* main glass dashboard panel — larger, tilted in 3D, glossier */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, rotate: -3, y: 26 }}
-        animate={{ opacity: 1, scale: 1, rotate: -2, y: 0 }}
+        initial={{ opacity: 0, scale: 0.9, y: 26 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
-        className="lg-glass lg-glass-sheen absolute left-1/2 top-1/2 flex h-[300px] w-[380px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[28px]"
+        className="lg-glass lg-glass-sheen absolute left-1/2 top-1/2 flex h-[360px] w-[460px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[34px] [transform:rotateY(-14deg)_rotateX(4deg)_rotateZ(-2deg)]"
       >
-        <p className="absolute left-6 top-5 text-lg font-black italic tracking-tight text-slate-800">Dashboard</p>
+        <p className="absolute left-7 top-6 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
 
         {/* band ring */}
-        <svg viewBox="0 0 280 280" className="h-[220px] w-[220px] -rotate-90">
-          <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="16" />
+        <svg viewBox="0 0 280 280" className="h-[248px] w-[248px] -rotate-90 drop-shadow-[0_10px_24px_rgba(220,38,38,0.18)]">
+          <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.16)" strokeWidth="18" />
           <motion.circle
             cx="140"
             cy="140"
             r={R}
             fill="none"
             stroke="url(#lg-band)"
-            strokeWidth="16"
+            strokeWidth="18"
             strokeLinecap="round"
             strokeDasharray={CIRC}
             initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
@@ -77,8 +77,8 @@ export default function LiquidGlassHero() {
           </defs>
         </svg>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
-          <span className="mt-1 text-center text-xs font-semibold leading-tight text-slate-500">
+          <span className="text-6xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
+          <span className="mt-1.5 text-center text-sm font-semibold leading-tight text-slate-500">
             Overall Band
             <br />
             Score
@@ -86,7 +86,7 @@ export default function LiquidGlassHero() {
         </div>
       </motion.div>
 
-      {/* floating frosted skill cards */}
+      {/* floating frosted skill cards — larger, popped forward in 3D */}
       {SKILL_CARDS.map((card) => {
         const Icon = card.icon
         return (
@@ -95,15 +95,15 @@ export default function LiquidGlassHero() {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: card.delay }}
-            className={`absolute ${card.pos}`}
+            className={`absolute ${card.pos} [transform-style:preserve-3d]`}
           >
             <motion.div
               animate={reduce ? undefined : { y: [0, -9, 0] }}
               transition={{ duration: card.float, repeat: Infinity, ease: 'easeInOut' }}
-              className="lg-glass lg-glass-sheen flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-3xl"
+              className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[26px] [transform:translateZ(40px)]"
             >
-              <Icon className="h-6 w-6 text-red-600" strokeWidth={1.8} />
-              <span className="text-xs font-bold text-slate-700">{card.label}</span>
+              <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
+              <span className="text-[13px] font-bold text-slate-700">{card.label}</span>
             </motion.div>
           </motion.div>
         )

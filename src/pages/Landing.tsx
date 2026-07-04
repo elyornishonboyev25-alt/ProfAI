@@ -436,11 +436,17 @@ export default function Landing() {
   const track = TRACKS.find((t) => t.id === activeTrack)!
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#FBF7F1] text-slate-900">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#eef1f6_0%,#f4f5f8_40%,#fbfbfd_100%)] text-slate-900">
+      {/* clean ambient wash — cool base with a soft warm glow top-right (matches the concept) */}
+      <div className="pointer-events-none fixed inset-0 -z-0">
+        <div className="absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(251,191,150,0.45),transparent)] blur-2xl" />
+        <div className="absolute -left-40 top-40 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(191,210,255,0.35),transparent)] blur-2xl" />
+      </div>
+      <div className="relative z-10">
       {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
       <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
         <div
-          className={`lg-glass lg-glass-sheen mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[22px] px-3 py-2.5 transition-all duration-300 sm:px-5 ${
+          className={`lg-glass lg-glass-sheen mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[28px] px-4 py-3 transition-all duration-300 sm:px-6 sm:py-3.5 ${
             scrolled ? 'shadow-[0_16px_40px_rgba(15,23,42,0.14)]' : ''
           }`}
         >
@@ -503,10 +509,8 @@ export default function Landing() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative px-4 pb-12 pt-28 sm:pt-36">
-        <div className="pointer-events-none absolute -top-10 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(239,68,68,0.16),transparent)] blur-2xl" />
-
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+      <section ref={heroRef} className="relative px-4 pb-12 pt-32 sm:pt-40">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.02fr_1.05fr]">
           {/* copy */}
           <div className="text-center lg:text-left">
             <motion.span
@@ -522,7 +526,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
-              className="mt-5 text-[2.9rem] font-black leading-[1.02] tracking-tight text-slate-900 sm:text-[4.3rem]"
+              className="mt-6 text-[3rem] font-black leading-[0.98] tracking-[-0.02em] text-slate-900 sm:text-[5rem]"
             >
               Your Path to Top
               <br />
@@ -1059,6 +1063,7 @@ export default function Landing() {
           <p className="text-[11px] text-slate-400">Independent prep platform · {new Date().getFullYear()}</p>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

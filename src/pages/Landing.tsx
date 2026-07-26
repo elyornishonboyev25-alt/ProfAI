@@ -4,7 +4,9 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
   ArrowUpRight,
+  Award,
   BarChart3,
+  BadgeCheck,
   BookOpen,
   Bot,
   CheckCircle2,
@@ -45,9 +47,9 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 const NAV_LINKS = [
   { label: 'Features', target: 'features' },
-  { label: 'Pricing', target: 'tracks' },
-  { label: 'About', target: 'route' },
-  { label: 'Contact', target: 'reviews' },
+  { label: 'Tracks', target: 'tracks' },
+  { label: 'How it works', target: 'route' },
+  { label: 'Success stories', target: 'reviews' },
 ] as const
 
 const HERO_PILLS = [
@@ -67,10 +69,19 @@ const LANDING_SPHERES: Array<{ style: CSSProperties; delay: number; dur: number 
 ]
 
 const STATS = [
-  { value: 30, suffix: '+', label: 'Full timed mocks' },
-  { value: 10000, suffix: '+', label: 'Practice items' },
-  { value: 12, suffix: '', label: 'Study tools in one app' },
-  { value: 4, suffix: '', label: 'Skills, one roadmap' },
+  { value: 30, suffix: '+', label: 'Full exam simulations' },
+  { value: 10000, suffix: '+', label: 'Adaptive practice items' },
+  { value: 12, suffix: '', label: 'AI-powered study tools' },
+  { value: 4, suffix: '', label: 'Skills in one roadmap' },
+] as const
+
+const UNIVERSITIES = [
+  { name: 'Harvard', mark: 'H', tone: 'from-[#9f1d35] to-[#6d1023]' },
+  { name: 'Stanford', mark: 'S', tone: 'from-[#a40b35] to-[#760021]' },
+  { name: 'MIT', mark: 'M', tone: 'from-[#ed1c24] to-[#a70f16]' },
+  { name: 'Oxford', mark: 'O', tone: 'from-[#102f5e] to-[#061d3e]' },
+  { name: 'Cambridge', mark: 'C', tone: 'from-[#9c1b32] to-[#54101f]' },
+  { name: 'Yale', mark: 'Y', tone: 'from-[#184b8a] to-[#0a2f62]' },
 ] as const
 
 type ExamOption = ReviewExam
@@ -99,7 +110,88 @@ const fadeUp = {
 }
 
 function SectionTag({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-red-600">{children}</span>
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50/80 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-red-600">
+      <Sparkles className="h-3 w-3" />
+      {children}
+    </span>
+  )
+}
+
+function UniversityProof() {
+  return (
+    <section className="relative px-4 pb-6 pt-4 sm:pb-10">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-slate-200/70 bg-white/85 shadow-[0_24px_70px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+        <div className="grid border-b border-slate-100 md:grid-cols-[0.9fr_1.35fr]">
+          <div className="relative overflow-hidden bg-slate-950 px-6 py-8 text-white sm:px-9">
+            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-red-600/25 blur-3xl" />
+            <div className="relative">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-300">Ambitious goals. One system.</p>
+              <h2 className="mt-2 max-w-sm text-2xl font-black leading-tight tracking-[-0.03em] sm:text-3xl">
+                From target score to dream campus.
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-slate-400">
+                Prep, performance analytics and admissions planning — connected in one intelligent journey.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-3">
+            {[
+              { icon: Award, eyebrow: 'IELTS target', value: '9.0', note: 'Band-level skill coaching' },
+              { icon: Target, eyebrow: 'SAT target', value: '1600', note: 'Digital SAT practice path' },
+              { icon: GraduationCap, eyebrow: 'Admissions', value: 'Top 50', note: 'University research tools' },
+            ].map((item, index) => {
+              const Icon = item.icon
+              return (
+                <div
+                  key={item.eyebrow}
+                  className={`group relative px-6 py-7 transition hover:bg-red-50/45 ${
+                    index ? 'border-t border-slate-100 sm:border-l sm:border-t-0' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{item.eyebrow}</p>
+                      <p className="mt-1 text-4xl font-black tracking-[-0.05em] text-slate-950">{item.value}</p>
+                    </div>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition group-hover:bg-red-600 group-hover:text-white">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                  </div>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-slate-500">{item.note}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="px-5 py-6 sm:px-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Explore universities worldwide</p>
+              <p className="mt-1 text-sm font-semibold text-slate-600">Build a smarter shortlist with rankings, fit and admission insights.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-x-5 gap-y-4 sm:grid-cols-6">
+              {UNIVERSITIES.map((university) => (
+                <div key={university.name} className="group flex items-center gap-2.5">
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${university.tone} text-xs font-black text-white shadow-[0_8px_20px_rgba(15,23,42,0.14)] transition-transform group-hover:-translate-y-0.5`}
+                  >
+                    {university.mark}
+                  </span>
+                  <span className="hidden text-xs font-black tracking-tight text-slate-700 xl:block">{university.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="mx-auto mt-3 max-w-6xl text-right text-[9px] font-medium text-slate-400">
+        University names are shown for research and goal-setting purposes. ProfAI is an independent platform.
+      </p>
+    </section>
+  )
 }
 
 /* ── Bento feature data ────────────────────────────────────────────────── */
@@ -163,6 +255,43 @@ function WaveVisual() {
   )
 }
 
+function CoachPlanVisual() {
+  const tasks = [
+    { label: 'Coherence drill', meta: '12 min', done: true },
+    { label: 'Listening mock · Part 3', meta: '24 min', done: false },
+    { label: 'Academic word set', meta: '18 words', done: false },
+  ] as const
+
+  return (
+    <div className="relative mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.055] p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-red-300">Today’s roadmap</p>
+          <p className="mt-1 text-sm font-black text-white">3 focused tasks · 54 min</p>
+        </div>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white">
+          <Flame className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="mt-4 space-y-2">
+        {tasks.map((task, index) => (
+          <div key={task.label} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.055] px-3 py-2.5">
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                task.done ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-slate-400'
+              }`}
+            >
+              {task.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <span className="text-[9px] font-black">0{index + 1}</span>}
+            </span>
+            <p className="min-w-0 flex-1 truncate text-[11px] font-bold text-slate-200">{task.label}</p>
+            <span className="text-[9px] font-bold text-slate-500">{task.meta}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const FEATURES: Feature[] = [
   {
     title: 'AI Study Coach',
@@ -171,6 +300,7 @@ const FEATURES: Feature[] = [
     route: '/register',
     span: 'lg:col-span-2 lg:row-span-2',
     tone: 'dark',
+    visual: <CoachPlanVisual />,
   },
   {
     title: 'Mock Arena',
@@ -321,7 +451,7 @@ function ReviewCard({ review }: { review: LandingReview }) {
   return (
     <motion.article
       variants={fadeUp}
-      className="flex h-full flex-col rounded-2xl border border-black/5 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.06)]"
+      className="group flex h-full flex-col rounded-[26px] border border-slate-200/70 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.055)] transition duration-300 hover:-translate-y-1 hover:border-red-100 hover:shadow-[0_22px_48px_rgba(220,38,38,0.09)]"
     >
       <div className="flex items-center justify-between">
         {hasBand ? (
@@ -337,7 +467,7 @@ function ReviewCard({ review }: { review: LandingReview }) {
       </div>
 
       <div className="mt-3 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-sm font-black text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-sm font-black text-white shadow-[0_8px_18px_rgba(220,38,38,0.2)]">
           {initials(review.name) || 'A'}
         </span>
         <div>
@@ -445,45 +575,33 @@ export default function Landing() {
   const track = TRACKS.find((t) => t.id === activeTrack)!
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(120deg,#eef2fb_0%,#f7f6f8_45%,#fdf3f3_100%)] text-slate-900">
-      {/* frosted ambient wash — white base, pale red top-right, faint cool blue left */}
-      <div className="pointer-events-none fixed inset-0 -z-0">
-        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-[radial-gradient(closest-side,rgba(252,165,165,0.5),transparent)] blur-2xl" />
-        <div className="absolute -left-48 top-32 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(191,210,255,0.4),transparent)] blur-2xl" />
-        {/* floating glossy red spheres at varying depths */}
-        {LANDING_SPHERES.map((s, i) => (
-          <span
-            key={i}
-            className="lg-orb lg-sphere-float absolute"
-            style={{ ...s.style, animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s` }}
-          />
-        ))}
+    <div className="landing-premium relative min-h-screen w-full overflow-x-hidden bg-[#fbfaf8] text-slate-900">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-[-12rem] top-[-8rem] h-[34rem] w-[34rem] rounded-full bg-blue-100/50 blur-[110px]" />
+        <div className="absolute right-[-10rem] top-24 h-[38rem] w-[38rem] rounded-full bg-red-100/65 blur-[120px]" />
+        <div className="landing-grid absolute inset-0 opacity-35" />
       </div>
       <div className="relative z-10">
-      {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
+      {/* ── Navigation ──────────────────────────────────────────────── */}
       <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
         <div
-          className={`lg-glass lg-glass-sheen mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[28px] px-4 py-3 transition-all duration-300 sm:px-6 sm:py-3.5 ${
-            scrolled ? 'shadow-[0_16px_40px_rgba(15,23,42,0.14)]' : ''
+          className={`mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[24px] border border-white/80 bg-white/85 px-4 py-2.5 backdrop-blur-2xl transition-all duration-300 sm:px-5 ${
+            scrolled ? 'shadow-[0_16px_50px_rgba(15,23,42,0.12)]' : 'shadow-[0_10px_35px_rgba(15,23,42,0.06)]'
           }`}
         >
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="relative flex items-center gap-2.5">
-            <BrandMark size={46} className="drop-shadow-[0_6px_12px_rgba(220,38,38,0.28)]" />
-            <span className="text-2xl font-black tracking-tight">
+            <BrandMark size={39} className="drop-shadow-[0_6px_12px_rgba(220,38,38,0.22)]" />
+            <span className="text-xl font-black tracking-[-0.04em]">
               Prof<span className="text-red-600">AI</span>
             </span>
           </button>
 
           <nav className="relative hidden items-center gap-1 md:flex">
-            {NAV_LINKS.map((l, i) => (
+            {NAV_LINKS.map((l) => (
               <button
                 key={l.target}
                 onClick={() => go(l.target)}
-                className={`rounded-full px-4 py-2 text-[15px] font-semibold transition ${
-                  i === 0
-                    ? 'bg-white/70 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_rgba(15,23,42,0.06)]'
-                    : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
-                }`}
+                className="rounded-full px-3.5 py-2 text-[13px] font-bold text-slate-500 transition hover:bg-slate-100/80 hover:text-slate-950"
               >
                 {l.label}
               </button>
@@ -493,13 +611,15 @@ export default function Landing() {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => navigate('/login')}
-              className="lg-glass lg-hover hidden rounded-full px-7 py-2.5 text-[15px] font-bold text-red-600 sm:block"
-              style={{
-                border: '1.5px solid rgba(220,38,38,0.45)',
-                boxShadow: '0 0 0 4px rgba(220,38,38,0.06), 0 8px 22px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
-              }}
+              className="hidden rounded-xl px-4 py-2.5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 sm:block"
             >
-              Login
+              Sign in
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="hidden items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-[13px] font-black text-white shadow-[0_10px_26px_rgba(220,38,38,0.26)] transition hover:-translate-y-0.5 hover:bg-red-700 sm:inline-flex"
+            >
+              Start free <ArrowRight className="h-3.5 w-3.5" />
             </button>
             <button onClick={() => setMobileNav((v) => !v)} className="ml-1 rounded-lg p-1.5 text-slate-700 md:hidden" aria-label="Menu">
               {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -530,44 +650,72 @@ export default function Landing() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative px-4 pb-12 pt-32 sm:pt-40">
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.02fr_1.05fr]">
+      <section ref={heroRef} className="relative px-4 pb-8 pt-28 sm:pt-36">
+        <div className="relative mx-auto grid min-h-[610px] max-w-6xl items-center gap-10 lg:grid-cols-[0.94fr_1.06fr]">
           {/* copy */}
           <div className="text-center lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: EASE }}
+              className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/85 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600 shadow-[0_8px_28px_rgba(220,38,38,0.08)]"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              AI-powered exam & admissions platform
+            </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
-              className="text-[3rem] font-black leading-[0.98] tracking-[-0.02em] text-slate-900 sm:text-[5rem]"
+              className="mt-6 text-[3.35rem] font-black leading-[0.92] tracking-[-0.065em] text-slate-950 sm:text-[5rem] lg:text-[4.7rem]"
             >
-              Your Path to Top
-              <br />
-              Universities
+              Your highest score.
+              <span className="mt-2 block bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 bg-clip-text text-transparent">
+                Your best future.
+              </span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
-              className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
+              className="mx-auto mt-6 max-w-xl text-[15px] font-medium leading-7 text-slate-500 lg:mx-0 sm:text-lg sm:leading-8"
             >
-              AI-powered SAT &amp; IELTS prep platform for studying abroad. Personalized learning, real-time
-              feedback, and guaranteed results.
+              Master IELTS and SAT with an AI coach that turns every mock into a personalized roadmap — then research
+              the universities where your score can take you.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.22, ease: EASE }}
-              className="mt-8 flex justify-center lg:justify-start"
+              className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
             >
               <button
                 onClick={() => navigate('/register')}
-                className="lg-btn-red group inline-flex items-center gap-2 rounded-full px-11 py-5 text-lg font-bold text-white"
+                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-7 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(220,38,38,0.3)] transition hover:-translate-y-0.5 hover:bg-red-700"
               >
-                <span className="relative">Start Free</span>
-                <ArrowRight className="relative h-5 w-5 transition-transform group-hover:translate-x-1" />
+                Start learning free
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
+              <button
+                onClick={() => scrollToId('features')}
+                className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-7 py-4 text-sm font-black text-slate-800 shadow-[0_10px_25px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
+              >
+                Explore the platform
+                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.32, ease: EASE }}
+              className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs font-bold text-slate-500 lg:justify-start"
+            >
+              <span className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-emerald-500" /> No card required</span>
+              <span className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-emerald-500" /> Instant score analysis</span>
+              <span className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-emerald-500" /> Study at your pace</span>
             </motion.div>
           </div>
 
@@ -582,12 +730,12 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* feature pills (glass) */}
+        {/* feature pills */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
-          className="relative mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-3"
+          className="relative mx-auto mt-6 grid max-w-6xl gap-3 sm:grid-cols-3"
         >
           {HERO_PILLS.map((pill) => {
             const Icon = pill.icon === 'file' ? BookOpen : pill.icon === 'pen' ? PenSquare : Globe2
@@ -595,19 +743,19 @@ export default function Landing() {
               <button
                 key={pill.label}
                 onClick={() => scrollToId(pill.target)}
-                className="lg-glass lg-glass-sheen lg-hover group flex items-center gap-3.5 overflow-hidden rounded-full px-6 py-4 text-left"
+                className="group flex items-center gap-3.5 overflow-hidden rounded-2xl border border-white/80 bg-white/75 px-5 py-4 text-left shadow-[0_14px_35px_rgba(15,23,42,0.06)] backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_20px_44px_rgba(220,38,38,0.1)]"
               >
                 <span
                   className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-red-600"
                   style={{
-                    background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(254,226,226,0.85))',
-                    boxShadow: '0 4px 12px rgba(220,38,38,0.16), inset 0 1px 0 rgba(255,255,255,0.95)',
-                    border: '1px solid rgba(254,202,202,0.9)',
+                    background: 'linear-gradient(145deg, rgba(254,242,242,1), rgba(255,255,255,1))',
+                    boxShadow: '0 8px 18px rgba(220,38,38,0.12)',
+                    border: '1px solid rgba(254,202,202,0.75)',
                   }}
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.8} />
                 </span>
-                <span className="relative text-lg font-bold tracking-tight text-slate-800">{pill.label}</span>
+                <span className="relative text-sm font-black tracking-tight text-slate-800 sm:text-base">{pill.label}</span>
               </button>
             )
           })}
@@ -615,8 +763,8 @@ export default function Landing() {
       </section>
 
       {/* ── Stat band ───────────────────────────────────────────────── */}
-      <section className="px-4 py-10">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.05)] sm:grid-cols-4">
+      <section className="relative z-10 px-4 py-8">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.06)] sm:grid-cols-4">
           {STATS.map((s, i) => (
             <motion.div
               key={s.label}
@@ -624,33 +772,37 @@ export default function Landing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }}
-              className="text-center"
+              className={`px-4 py-6 text-center sm:py-7 ${i % 2 ? 'border-l border-slate-100' : ''} ${i > 1 ? 'border-t border-slate-100 sm:border-t-0' : ''} ${i > 0 ? 'sm:border-l sm:border-slate-100' : ''}`}
             >
-              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              <p className="text-3xl font-black tracking-[-0.05em] text-slate-950 sm:text-4xl">
                 <CountUp value={s.value} suffix={s.suffix} />
               </p>
-              <p className="mt-1 text-[12px] font-semibold text-slate-500">{s.label}</p>
+              <p className="mt-1.5 text-[11px] font-bold leading-5 text-slate-500">{s.label}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
+      <UniversityProof />
+
       {/* ── Bento features ──────────────────────────────────────────── */}
-      <section id="features" className="scroll-mt-24 px-4 py-16 sm:py-24">
+      <section id="features" className="relative scroll-mt-24 px-4 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="mx-auto max-w-2xl text-center"
+            className="mx-auto max-w-3xl text-center"
           >
             <SectionTag>Everything in one place</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              Not a question bank. A whole prep team.
+            <h2 className="mt-5 text-3xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl">
+              Your entire prep team,
+              <span className="block text-red-600">inside one intelligent platform.</span>
             </h2>
-            <p className="mt-4 text-base leading-7 text-slate-500">
-              Twelve study tools that talk to each other — so every mock, drill and word pushes the same band upward.
+            <p className="mx-auto mt-5 max-w-2xl text-base font-medium leading-7 text-slate-500">
+              Every mock, drill, correction and vocabulary session feeds one shared roadmap — so your effort compounds
+              instead of getting lost across disconnected tools.
             </p>
           </motion.div>
 
@@ -659,7 +811,7 @@ export default function Landing() {
             whileInView="show"
             viewport={{ once: true, margin: '-8% 0px' }}
             variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-            className="mt-12 grid auto-rows-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-14 grid gap-4 sm:grid-cols-2 lg:auto-rows-[250px] lg:grid-cols-4"
           >
             {FEATURES.map((f) => {
               const Icon = f.icon
@@ -669,10 +821,10 @@ export default function Landing() {
                   key={f.title}
                   variants={fadeUp}
                   onClick={() => navigate(f.route)}
-                  className={`group relative flex flex-col overflow-hidden rounded-3xl border p-6 text-left transition ${f.span} ${
+                  className={`group relative flex flex-col overflow-hidden rounded-[28px] border p-6 text-left transition duration-300 ${f.span} ${
                     dark
-                      ? 'border-white/10 bg-slate-900 text-white shadow-[0_30px_70px_rgba(15,23,42,0.3)]'
-                      : 'border-black/5 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(220,38,38,0.12)]'
+                      ? 'border-white/10 bg-slate-950 text-white shadow-[0_32px_80px_rgba(15,23,42,0.28)]'
+                      : 'border-slate-200/70 bg-white/90 shadow-[0_16px_38px_rgba(15,23,42,0.055)] hover:-translate-y-1.5 hover:border-red-100 hover:shadow-[0_24px_55px_rgba(220,38,38,0.1)]'
                   }`}
                 >
                   {dark && (
@@ -680,7 +832,7 @@ export default function Landing() {
                   )}
                   <div className="relative flex items-center justify-between">
                     <span
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
                         dark ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white'
                       } transition`}
                     >
@@ -692,7 +844,7 @@ export default function Landing() {
                       }`}
                     />
                   </div>
-                  <h3 className={`relative mt-4 text-lg font-black tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}>
+                  <h3 className={`relative mt-5 text-lg font-black tracking-[-0.025em] ${dark ? 'text-white' : 'text-slate-950'}`}>
                     {f.title}
                   </h3>
                   <p className={`relative mt-1.5 text-sm leading-6 ${dark ? 'text-slate-300' : 'text-slate-500'}`}>{f.body}</p>
@@ -710,15 +862,22 @@ export default function Landing() {
       </section>
 
       {/* ── Tracks (interactive) ────────────────────────────────────── */}
-      <section id="tracks" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
+      <section id="tracks" className="relative scroll-mt-24 overflow-hidden bg-slate-950 px-4 py-20 sm:py-28">
+        <div className="pointer-events-none absolute -left-32 top-12 h-80 w-80 rounded-full bg-red-600/15 blur-[100px]" />
+        <div className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-blue-600/10 blur-[110px]" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
             <SectionTag>Choose your goal</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Built for the test you're taking.</h2>
+            <h2 className="mt-5 text-3xl font-black leading-[1.03] tracking-[-0.045em] text-white sm:text-5xl">
+              One destination. A roadmap made for you.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-400">
+              Switch between focused tracks while your progress, weak points and study history stay connected.
+            </p>
           </div>
 
           {/* tabs */}
-          <div className="mt-9 flex flex-wrap justify-center gap-2">
+          <div className="mt-10 flex flex-wrap justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2 sm:mx-auto sm:w-fit">
             {TRACKS.map((t) => {
               const Icon = t.icon
               const active = t.id === activeTrack
@@ -728,8 +887,8 @@ export default function Landing() {
                   onClick={() => setActiveTrack(t.id)}
                   className={`inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition ${
                     active
-                      ? 'border-red-300 bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.28)]'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                      ? 'border-red-500 bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.3)]'
+                      : 'border-transparent bg-transparent text-slate-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -746,14 +905,14 @@ export default function Landing() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE }}
-              className="grid gap-4 rounded-3xl border border-black/5 bg-white p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8 lg:grid-cols-[1fr_1.4fr] lg:items-center"
+              className="grid gap-7 rounded-[32px] border border-white/10 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.3)] sm:p-9 lg:grid-cols-[0.85fr_1.4fr] lg:items-center"
             >
               <div>
-                <p className="text-2xl font-black tracking-tight text-slate-900">{track.label}</p>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{track.blurb}</p>
+                <p className="text-3xl font-black tracking-[-0.04em] text-slate-950">{track.label}</p>
+                <p className="mt-3 max-w-sm text-sm font-medium leading-6 text-slate-500">{track.blurb}</p>
                 <button
                   onClick={() => navigate(track.route)}
-                  className="group mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+                    className="group mt-6 inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,0.24)] transition hover:-translate-y-0.5 hover:bg-red-700"
                 >
                   Open {track.label}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -765,7 +924,7 @@ export default function Landing() {
                   return (
                     <div
                       key={it.name}
-                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-red-100 hover:bg-white"
+                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 transition hover:-translate-y-0.5 hover:border-red-100 hover:bg-white hover:shadow-[0_12px_28px_rgba(220,38,38,0.07)]"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
                         <Icon className="h-4 w-4" />
@@ -784,16 +943,20 @@ export default function Landing() {
       </section>
 
       {/* ── How it works ────────────────────────────────────────────── */}
-      <section id="route" className="scroll-mt-24 px-4 py-16 sm:py-24">
+      <section id="route" className="scroll-mt-24 px-4 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-3xl text-center">
             <SectionTag>Your route</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              From baseline to target — in four moves.
+            <h2 className="mt-5 text-3xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl">
+              A clear path from first mock
+              <span className="block text-red-600">to your target score.</span>
             </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-500">
+              No guesswork and no random practice. Every step is chosen from your real performance data.
+            </p>
           </div>
 
-          <div className="relative mt-12 grid gap-4 lg:grid-cols-4">
+          <div className="relative mt-14 grid gap-4 lg:grid-cols-4">
             <div className="pointer-events-none absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-red-200 to-transparent lg:block" />
             {STEPS.map((s, i) => {
               const Icon = s.icon
@@ -804,13 +967,14 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.55, delay: i * 0.12, ease: EASE }}
-                  className="relative rounded-3xl border border-black/5 bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
+                  className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.055)] transition duration-300 hover:-translate-y-1 hover:border-red-100 hover:shadow-[0_22px_48px_rgba(220,38,38,0.09)]"
                 >
+                  <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-red-50 opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
                   <div className="flex items-center justify-between">
                     <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span className="text-3xl font-black text-slate-100">{s.n}</span>
+                    <span className="text-4xl font-black tracking-[-0.06em] text-slate-100">{s.n}</span>
                   </div>
                   <h3 className="mt-4 text-lg font-black tracking-tight text-slate-900">{s.title}</h3>
                   <p className="mt-1.5 text-sm leading-6 text-slate-500">{s.body}</p>
@@ -822,12 +986,14 @@ export default function Landing() {
       </section>
 
       {/* ── Reviews wall ────────────────────────────────────────────── */}
-      <section id="reviews" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
+      <section id="reviews" className="scroll-mt-24 border-y border-slate-100 bg-white/75 px-4 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <SectionTag>Student proof</SectionTag>
-              <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Bands moving up.</h2>
+              <h2 className="mt-5 text-3xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl">
+                Real progress. Shared by students.
+              </h2>
               <div className="mt-3 flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -844,7 +1010,7 @@ export default function Landing() {
             </div>
             <button
               onClick={() => setFormOpen((v) => !v)}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+              className="group inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-red-600"
             >
               {formOpen ? 'Close' : 'Leave a review'}
               {!formOpen && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />}
@@ -993,39 +1159,39 @@ export default function Landing() {
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────── */}
-      <section className="px-4 py-16 sm:py-24">
+      <section className="px-4 py-20 sm:py-28">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-10% 0px' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-slate-900 px-8 py-14 text-center sm:px-14 sm:py-20"
+          className="relative mx-auto max-w-6xl overflow-hidden rounded-[38px] bg-[linear-gradient(135deg,#080d18_0%,#111827_48%,#7f1d1d_145%)] px-8 py-14 text-center shadow-[0_38px_90px_rgba(15,23,42,0.25)] sm:px-14 sm:py-20"
         >
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-600/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-rose-500/20 blur-3xl" />
           <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-300">
-              <Sparkles className="h-3.5 w-3.5" /> Start free — no card required
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-red-300 backdrop-blur-xl">
+              <Sparkles className="h-3.5 w-3.5" /> Your next milestone starts here
             </span>
-            <h2 className="mt-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
-              Take one mock today.
+            <h2 className="mt-6 text-3xl font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-5xl">
+              Turn your target score
               <br />
-              See your band move by next week.
+              into a plan you can follow.
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-base leading-7 text-slate-300">
-              Set your baseline, let the AI coach map your route, and train only what costs you band points.
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-300">
+              Take a diagnostic mock, unlock your personal roadmap and start improving the skills that matter most.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => navigate('/register')}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.4)] transition hover:-translate-y-0.5 hover:bg-red-700"
+                className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-7 py-4 text-sm font-black text-white shadow-[0_14px_34px_rgba(220,38,38,0.4)] transition hover:-translate-y-0.5 hover:bg-red-700"
               >
                 Create free account
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/5"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-7 py-4 text-sm font-black text-white backdrop-blur-xl transition hover:bg-white/10"
               >
                 I already have an account
               </button>
@@ -1035,8 +1201,8 @@ export default function Landing() {
       </section>
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
-      <footer className="border-t border-black/5 px-4 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 sm:flex-row">
+      <footer className="border-t border-black/5 bg-white/50 px-4 py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandMark size={28} />
             <span className="font-black tracking-tight">
@@ -1050,7 +1216,7 @@ export default function Landing() {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-slate-400">Independent prep platform · {new Date().getFullYear()}</p>
+          <p className="text-[11px] font-medium text-slate-400">Independent exam & admissions platform · {new Date().getFullYear()}</p>
         </div>
       </footer>
       </div>

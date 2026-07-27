@@ -5,76 +5,6 @@
 @tailwind utilities;
 
 :root {
-  /* ProfAI V2 — code mirror of the Figma foundation tokens */
-  --profai-color-white: #ffffff;
-  --profai-color-black: #000000;
-  --profai-color-slate-50: #f8fafc;
-  --profai-color-slate-100: #f1f5f9;
-  --profai-color-slate-200: #e2e8f0;
-  --profai-color-slate-300: #cbd5e1;
-  --profai-color-slate-400: #94a3b8;
-  --profai-color-slate-500: #64748b;
-  --profai-color-slate-600: #475569;
-  --profai-color-slate-700: #334155;
-  --profai-color-slate-800: #1e293b;
-  --profai-color-slate-900: #0f172a;
-  --profai-color-slate-950: #020617;
-  --profai-color-red-50: #fef2f2;
-  --profai-color-red-100: #fee2e2;
-  --profai-color-red-200: #fecaca;
-  --profai-color-red-300: #fca5a5;
-  --profai-color-red-400: #f87171;
-  --profai-color-red-500: #ef4444;
-  --profai-color-red-600: #dc2626;
-  --profai-color-red-700: #b91c1c;
-  --profai-color-red-800: #991b1b;
-  --profai-color-red-900: #7f1d1d;
-  --profai-color-rose-500: #f43f5e;
-  --profai-color-amber-400: #fbbf24;
-  --profai-color-orange-400: #fb923c;
-  --profai-color-blue-50: #eff6ff;
-  --profai-color-blue-500: #3b82f6;
-  --profai-color-blue-600: #2563eb;
-  --profai-color-emerald-500: #10b981;
-  --profai-color-green-500: #22c55e;
-  --profai-color-glass-white-72: rgba(255, 255, 255, 0.72);
-
-  --profai-color-bg-canvas: #f8fafc;
-  --profai-color-bg-canvas-soft: #fff8f7;
-  --profai-color-bg-surface: #ffffff;
-  --profai-color-bg-surface-elevated: rgba(255, 255, 255, 0.88);
-  --profai-color-bg-glass: rgba(255, 255, 255, 0.58);
-  --profai-color-bg-brand: #dc2626;
-  --profai-color-bg-brand-strong: #b91c1c;
-  --profai-color-bg-sat: #2563eb;
-  --profai-color-text-primary: #0f172a;
-  --profai-color-text-secondary: #475569;
-  --profai-color-text-tertiary: #94a3b8;
-  --profai-color-text-inverse: #ffffff;
-  --profai-color-text-brand: #b91c1c;
-  --profai-color-text-sat: #2563eb;
-  --profai-color-border-subtle: rgba(255, 255, 255, 0.78);
-  --profai-color-border-default: rgba(203, 213, 225, 0.72);
-  --profai-color-border-brand: rgba(220, 38, 38, 0.28);
-  --profai-color-focus-ring: rgba(220, 38, 38, 0.28);
-
-  --profai-spacing-1: 0.25rem;
-  --profai-spacing-2: 0.5rem;
-  --profai-spacing-3: 0.75rem;
-  --profai-spacing-4: 1rem;
-  --profai-spacing-6: 1.5rem;
-  --profai-spacing-8: 2rem;
-  --profai-spacing-12: 3rem;
-  --profai-spacing-16: 4rem;
-  --profai-radius-sm: 0.5rem;
-  --profai-radius-md: 0.75rem;
-  --profai-radius-lg: 1rem;
-  --profai-radius-xl: 1.5rem;
-  --profai-radius-2xl: 2rem;
-  --profai-radius-full: 999px;
-  --profai-font-family-body: 'Plus Jakarta Sans', sans-serif;
-  --profai-font-family-display: 'Sora', 'Plus Jakarta Sans', sans-serif;
-
   --app-bg: #fffaf8;
   --app-bg-soft: #fff3ef;
   --app-text: #0f172a;
@@ -154,9 +84,7 @@
   /* ── Liquid Glass (Apple-style) — translucent frosted surfaces with a glossy
      top sheen and a soft inner light. Used by the ProfAI landing hero. ─────── */
   .lg-glass {
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.36)),
-      rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.45);
     border-top: 1.5px solid rgba(255, 255, 255, 0.8);
     border-left: 1.5px solid rgba(255, 255, 255, 0.6);
     border-right: 1px solid rgba(255, 255, 255, 0.3);
@@ -168,67 +96,6 @@
       0 12px 24px rgba(180, 60, 60, 0.06),
       inset 0 2px 4px rgba(255, 255, 255, 0.95),
       inset 0 -2px 6px rgba(255, 255, 255, 0.2);
-  }
-
-  .profai-glass-panel {
-    position: relative;
-    isolation: isolate;
-    border: 1px solid var(--profai-color-border-subtle);
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.42)),
-      var(--profai-color-bg-glass);
-    box-shadow:
-      0 30px 80px rgba(15, 23, 42, 0.11),
-      0 14px 36px rgba(220, 38, 38, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.96),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.38);
-    backdrop-filter: blur(30px) saturate(165%);
-    -webkit-backdrop-filter: blur(30px) saturate(165%);
-  }
-
-  .profai-glass-panel::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(118deg, rgba(255, 255, 255, 0.52), transparent 31%, transparent 68%, rgba(248, 113, 113, 0.05));
-  }
-
-  .profai-glossy-button {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.58);
-    color: white;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 36%),
-      linear-gradient(145deg, #f87171 0%, #ef4444 38%, #dc2626 67%, #991b1b 100%);
-    box-shadow:
-      0 18px 38px rgba(220, 38, 38, 0.34),
-      0 7px 16px rgba(127, 29, 29, 0.2),
-      inset 0 2px 2px rgba(255, 255, 255, 0.64),
-      inset 0 -4px 12px rgba(127, 29, 29, 0.42);
-  }
-
-  .profai-glossy-button::after {
-    content: '';
-    position: absolute;
-    inset: 3px 8% 52%;
-    z-index: -1;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.04));
-    filter: blur(0.5px);
-  }
-
-  .profai-glossy-button:hover {
-    transform: translateY(-2px) scale(1.015);
-    box-shadow:
-      0 24px 48px rgba(220, 38, 38, 0.42),
-      0 10px 22px rgba(127, 29, 29, 0.24),
-      inset 0 2px 2px rgba(255, 255, 255, 0.72),
-      inset 0 -4px 12px rgba(127, 29, 29, 0.44);
   }
   /* Glossy diagonal light sweep across the top of a glass surface */
   .lg-glass-sheen::before {

@@ -17,8 +17,8 @@ export default function Card({ children, className = '', hover = false, padding 
   return (
     <div
       className={`
-        profai-glass-panel rounded-2xl
-        ${hover ? 'transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_54px_rgba(220,38,38,0.12)]' : ''}
+        bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700
+        ${hover ? 'hover:shadow-md transition-shadow duration-200' : ''}
         ${paddingClasses[padding]}
         ${className}
       `}

@@ -84,18 +84,14 @@
   /* ── Liquid Glass (Apple-style) — translucent frosted surfaces with a glossy
      top sheen and a soft inner light. Used by the ProfAI landing hero. ─────── */
   .lg-glass {
-    background: rgba(255, 255, 255, 0.45);
-    border-top: 1.5px solid rgba(255, 255, 255, 0.8);
-    border-left: 1.5px solid rgba(255, 255, 255, 0.6);
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(32px) saturate(180%);
-    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
     box-shadow:
-      0 24px 48px rgba(15, 23, 42, 0.08),
-      0 12px 24px rgba(180, 60, 60, 0.06),
-      inset 0 2px 4px rgba(255, 255, 255, 0.95),
-      inset 0 -2px 6px rgba(255, 255, 255, 0.2);
+      0 8px 32px rgba(180, 60, 60, 0.1),
+      0 2px 8px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
   /* Glossy diagonal light sweep across the top of a glass surface */
   .lg-glass-sheen::before {
@@ -111,33 +107,31 @@
     transition: transform 260ms var(--app-ease-smooth), box-shadow 260ms var(--app-ease-smooth);
   }
   .lg-hover:hover {
-    transform: translateY(-4px) scale(1.01);
+    transform: translateY(-3px);
     box-shadow:
-      0 32px 64px rgba(180, 60, 60, 0.12),
-      0 12px 24px rgba(0, 0, 0, 0.08),
-      inset 0 2px 4px rgba(255, 255, 255, 0.95),
-      inset 0 -2px 6px rgba(255, 255, 255, 0.2);
+      0 18px 44px rgba(180, 60, 60, 0.16),
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
   /* Glossy 3D crimson capsule button — light red top → deep red bottom, glass streak */
   .lg-btn-red {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(180deg, #fca5a5 0%, #ef4444 30%, #dc2626 70%, #991b1b 100%);
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 42%, #dc2626 78%, #b91c1c 100%);
     box-shadow:
-      0 20px 40px rgba(220, 38, 38, 0.35),
-      0 8px 16px rgba(220, 38, 38, 0.25),
-      inset 0 2px 2px rgba(255, 255, 255, 0.8),
-      inset 0 -4px 12px rgba(127, 29, 29, 0.6);
+      0 16px 34px rgba(220, 38, 38, 0.42),
+      0 4px 10px rgba(220, 38, 38, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -3px 8px rgba(127, 29, 29, 0.45);
     transition: transform 220ms var(--app-ease-smooth), box-shadow 220ms var(--app-ease-smooth);
-    border: 1px solid rgba(255, 255, 255, 0.4);
   }
   .lg-btn-red:hover {
-    transform: scale(1.04) translateY(-2px);
+    transform: scale(1.035) translateY(-1px);
     box-shadow:
-      0 28px 56px rgba(220, 38, 38, 0.45),
-      0 12px 24px rgba(220, 38, 38, 0.35),
-      inset 0 2px 2px rgba(255, 255, 255, 0.9),
-      inset 0 -4px 12px rgba(127, 29, 29, 0.6);
+      0 22px 44px rgba(220, 38, 38, 0.5),
+      0 6px 14px rgba(220, 38, 38, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -3px 8px rgba(127, 29, 29, 0.45);
   }
   .lg-btn-red::before {
     content: '';
@@ -171,28 +165,6 @@
   66% {
     transform: translateY(10px) translateX(-8px);
   }
-}
-
-.landing-premium {
-  isolation: isolate;
-  background-image:
-    radial-gradient(circle at 12% 8%, rgba(219, 234, 254, 0.42), transparent 28%),
-    radial-gradient(circle at 88% 12%, rgba(254, 226, 226, 0.58), transparent 34%),
-    linear-gradient(180deg, #fbfaf8 0%, #fff 44%, #fbfaf8 100%);
-}
-
-.landing-grid {
-  background-image:
-    linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: linear-gradient(to bottom, black, transparent 72%);
-  -webkit-mask-image: linear-gradient(to bottom, black, transparent 72%);
-}
-
-.landing-premium ::selection {
-  color: #fff;
-  background: #dc2626;
 }
 
 @media (prefers-reduced-motion: reduce) {

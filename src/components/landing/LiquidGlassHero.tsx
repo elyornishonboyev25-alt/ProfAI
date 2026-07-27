@@ -1,268 +1,189 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import {
-  Award,
-  BarChart3,
-  BookOpen,
-  Bot,
-  CheckCircle2,
-  GraduationCap,
-  Headphones,
-  Mic2,
-  PenSquare,
-  Sparkles,
-  Target,
-  TrendingUp,
-} from 'lucide-react'
+import { BookOpen, Headphones, Mic2, PenSquare } from 'lucide-react'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-const SKILLS = [
-  { label: 'Reading', score: 88, icon: BookOpen },
-  { label: 'Listening', score: 94, icon: Headphones },
-  { label: 'Writing', score: 82, icon: PenSquare },
-  { label: 'Speaking', score: 86, icon: Mic2 },
+// Four skill tiles hugging the panel edges. `edge` anchors to the panel's left
+// or right side; `v` is the vertical position within the panel.
+const SKILL_TILES = [
+  { icon: Headphones, label: 'Listening', edge: 'left', v: 'top-[14%]', delay: 0.35, float: 4.4 },
+  { icon: PenSquare, label: 'Writing', edge: 'left', v: 'bottom-[10%]', delay: 0.5, float: 5.1 },
+  { icon: BookOpen, label: 'Reading', edge: 'right', v: 'top-[16%]', delay: 0.45, float: 4.8 },
+  { icon: Mic2, label: 'Speaking', edge: 'right', v: 'bottom-[12%]', delay: 0.6, float: 5.4 },
 ] as const
 
-function ScoreRing({ compact = false }: { compact?: boolean }) {
-  const reduce = !!useReducedMotion()
-  const radius = 52
-  const circumference = Math.PI * 2 * radius
-  const progress = circumference * (8.5 / 9)
+// Small red glow dots peeking around the tiles (concept: 3-Dashboard close-up).
+const GLOW_DOTS = [
+  { className: 'left-[3%] top-[30%] h-3 w-3', delay: 0 },
+  { className: 'left-[22%] top-[22%] h-2 w-2', delay: 0.7 },
+  { className: 'left-[-4%] bottom-[26%] h-9 w-9', delay: 1.3 },
+  { className: 'left-[26%] bottom-[20%] h-2.5 w-2.5', delay: 0.4 },
+  { className: 'right-[4%] top-[26%] h-2.5 w-2.5', delay: 1.0 },
+  { className: 'right-[24%] top-[40%] h-2 w-2', delay: 1.6 },
+  { className: 'right-[2%] bottom-[24%] h-3.5 w-3.5', delay: 0.9 },
+  { className: 'right-[-3%] top-[46%] h-7 w-7', delay: 1.9 },
+] as const
 
-  return (
-    <div className={`relative grid shrink-0 place-items-center ${compact ? 'h-32 w-32' : 'h-40 w-40'}`}>
-      <svg viewBox="0 0 128 128" className="absolute inset-0 h-full w-full -rotate-90">
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="10" />
-        <motion.circle
-          cx="64"
-          cy="64"
-          r={radius}
-          fill="none"
-          stroke="url(#hero-score-ring)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: reduce ? circumference - progress : circumference }}
-          animate={{ strokeDashoffset: circumference - progress }}
-          transition={{ duration: reduce ? 0 : 1.4, delay: 0.45, ease: EASE }}
-        />
-        <defs>
-          <linearGradient id="hero-score-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="55%" stopColor="#f43f5e" />
-            <stop offset="100%" stopColor="#fb923c" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="relative text-center">
-        <p className={`${compact ? 'text-3xl' : 'text-4xl'} font-black tracking-[-0.06em] text-slate-950`}>8.5</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Band score</p>
-      </div>
-    </div>
-  )
-}
-
-function SkillBars() {
-  const reduce = !!useReducedMotion()
-
-  return (
-    <div className="space-y-3">
-      {SKILLS.map((skill, index) => {
-        const Icon = skill.icon
-        return (
-          <div key={skill.label}>
-            <div className="mb-1.5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Icon className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-[10px] font-black text-slate-600">{skill.label}</span>
-              </div>
-              <span className="text-[10px] font-black text-slate-400">{skill.score}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400"
-                initial={{ width: reduce ? `${skill.score}%` : 0 }}
-                animate={{ width: `${skill.score}%` }}
-                transition={{ duration: reduce ? 0 : 0.9, delay: 0.65 + index * 0.08, ease: EASE }}
-              />
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
+/**
+ * The "Dashboard" band-score composition from the ProfAI landing concept — one
+ * tilted liquid-glass panel with an animated 7.5 Overall Band ring, and four
+ * frosted skill tiles hugging the panel's left/right edges (each with its own
+ * drop shadow so it hovers above the glass), plus small red glow dots.
+ * Decorative; honours reduced motion.
+ */
 export default function LiquidGlassHero() {
   const reduce = !!useReducedMotion()
+  const R = 116
+  const CIRC = 2 * Math.PI * R
+  const target = 7.5
+  const dash = CIRC * (target / 9)
 
   return (
-    <div className="relative mx-auto h-[570px] w-full max-w-[650px]">
-      <div className="absolute left-[8%] top-[6%] h-[84%] w-[84%] rounded-full bg-gradient-to-br from-red-200/80 via-rose-100/45 to-blue-100/60 blur-[60px]" />
-      <motion.div
-        animate={reduce ? undefined : { y: [0, -8, 0], rotate: [0, 1, 0] }}
-        transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-[7%] top-[9%] h-[460px] w-[86%] overflow-hidden rounded-[34px] border border-white/90 bg-white/88 shadow-[0_38px_100px_rgba(15,23,42,0.16)] backdrop-blur-2xl"
-      >
-        <div className="flex h-14 items-center justify-between border-b border-slate-100 px-5">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-600 text-white shadow-[0_7px_16px_rgba(220,38,38,0.25)]">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-xs font-black tracking-tight text-slate-900">Performance cockpit</p>
-              <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">AI analysis complete</p>
+    <div className="relative mx-auto h-[440px] w-full max-w-[600px] [perspective:1600px]">
+      {/* the composition: panel is the positioning context so tiles hug its edges */}
+      <div className="absolute left-1/2 top-1/2 h-[330px] w-[430px] -translate-x-1/2 -translate-y-1/2">
+        {/* glow dots + spheres around the tiles */}
+        {GLOW_DOTS.map((dot, i) => (
+          <motion.span
+            key={i}
+            className={`lg-orb pointer-events-none absolute ${dot.className}`}
+            animate={reduce ? undefined : { y: [0, -10, 0], opacity: [0.5, 0.95, 0.5] }}
+            transition={{ duration: 5, delay: dot.delay, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ))}
+
+        {/* tilted glass panel */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
+          className="lg-glass lg-glass-sheen absolute inset-0 rounded-[30px] [transform:perspective(1400px)_rotateY(-9deg)_rotateX(3deg)]"
+        >
+          <p className="absolute left-6 top-5 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
+
+          {/* band ring + score, centred */}
+          <div className="absolute inset-0 grid place-items-center">
+            <svg viewBox="0 0 280 280" className="h-[238px] w-[238px] -rotate-90 drop-shadow-[0_10px_22px_rgba(220,38,38,0.2)]">
+              <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.16)" strokeWidth="17" />
+              <motion.circle
+                cx="140"
+                cy="140"
+                r={R}
+                fill="none"
+                stroke="url(#lg-band)"
+                strokeWidth="17"
+                strokeLinecap="round"
+                strokeDasharray={CIRC}
+                initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
+                animate={{ strokeDashoffset: CIRC - dash }}
+                transition={{ duration: reduce ? 0 : 1.4, delay: 0.5, ease: EASE }}
+              />
+              <defs>
+                <linearGradient id="lg-band" x1="1" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="50%" stopColor="#b91c1c" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="pointer-events-none absolute flex flex-col items-center">
+              <span className="text-[3.4rem] font-black leading-none tracking-tight text-slate-900">{target.toFixed(1)}</span>
+              <span className="mt-2 text-center text-sm font-semibold leading-tight text-slate-500">
+                Overall Band
+                <br />
+                Score
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-black text-emerald-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live roadmap
-          </div>
-        </div>
+        </motion.div>
 
-        <div className="grid h-[calc(100%-3.5rem)] grid-cols-[4rem_1fr]">
-          <aside className="border-r border-slate-100 bg-slate-50/60 py-5">
-            <div className="flex flex-col items-center gap-4">
-              {[BarChart3, Target, BookOpen, GraduationCap].map((Icon, index) => (
-                <span
-                  key={index}
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                    index === 0 ? 'bg-red-600 text-white shadow-[0_8px_18px_rgba(220,38,38,0.24)]' : 'text-slate-400'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-              ))}
-            </div>
-          </aside>
-
-          <main className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Good morning, future scholar</p>
-                <h3 className="mt-1 text-xl font-black tracking-[-0.035em] text-slate-950">Your score is moving up.</h3>
-              </div>
-              <div className="flex items-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-2.5 py-2 text-[9px] font-black text-red-600">
-                <TrendingUp className="h-3.5 w-3.5" /> +1.5 band
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-[0.82fr_1.18fr] gap-3">
-              <div className="grid place-items-center rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                <ScoreRing />
-              </div>
-              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[10px] font-black text-slate-700">Skill readiness</p>
-                  <p className="text-[9px] font-bold text-slate-400">This week</p>
-                </div>
-                <SkillBars />
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              {[
-                { value: '9.0', label: 'IELTS goal', icon: Award },
-                { value: '1600', label: 'SAT goal', icon: Target },
-                { value: '24', label: 'Tasks done', icon: CheckCircle2 },
-              ].map((item) => {
-                const Icon = item.icon
-                return (
-                  <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
-                    <Icon className="h-4 w-4 text-red-500" />
-                    <p className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">{item.value}</p>
-                    <p className="text-[8px] font-bold uppercase tracking-wide text-slate-400">{item.label}</p>
-                  </div>
-                )
-              })}
-            </div>
-          </main>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 18, y: -10 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.65, ease: EASE }}
-        className="absolute right-0 top-[4%] w-52 rounded-2xl border border-white bg-white/92 p-4 shadow-[0_24px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl"
-      >
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
-            <GraduationCap className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">University fit</p>
-            <p className="text-base font-black text-slate-950">94% match</p>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2">
-          <span className="text-[9px] font-black text-emerald-700">Strong profile</span>
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: -18, y: 12 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
-        className="absolute bottom-[4%] left-0 w-56 rounded-2xl border border-white bg-slate-950 p-4 text-white shadow-[0_25px_60px_rgba(15,23,42,0.26)]"
-      >
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-600">
-            <Bot className="h-5 w-5" />
-          </span>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <p className="text-xs font-black">AI Study Coach</p>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </div>
-            <p className="mt-1 text-[9px] leading-4 text-slate-400">Your next best task is ready.</p>
-          </div>
-        </div>
-        <div className="mt-3 rounded-xl bg-white/7 px-3 py-2.5 text-[9px] font-bold text-slate-300">
-          Writing Task 2 · Coherence drill <span className="float-right text-red-300">12 min</span>
-        </div>
-      </motion.div>
+        {/* skill tiles hugging the panel's left / right edges */}
+        {SKILL_TILES.map((tile) => {
+          const Icon = tile.icon
+          const anchor = tile.edge === 'left' ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'
+          return (
+            <motion.div
+              key={tile.label}
+              initial={{ opacity: 0, scale: 0.8, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: EASE, delay: tile.delay }}
+              className={`absolute z-10 ${anchor} ${tile.v}`}
+            >
+              <motion.div
+                animate={reduce ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: tile.float, repeat: Infinity, ease: 'easeInOut' }}
+                className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              >
+                <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
+                <span className="text-[13px] font-bold text-slate-700">{tile.label}</span>
+              </motion.div>
+            </motion.div>
+          )
+        })}
+      </div>
     </div>
   )
 }
 
+/**
+ * Compact stacked version for phones (concept: dashboard drops below the text,
+ * tiles reflow into a 2x2 grid). Rendered on < lg screens.
+ */
 export function LiquidGlassHeroMobile() {
+  const reduce = !!useReducedMotion()
+  const R = 120
+  const CIRC = 2 * Math.PI * R
+  const target = 7.5
+  const dash = CIRC * (target / 9)
+
   return (
-    <div className="relative mx-auto mt-3 w-full max-w-md overflow-hidden rounded-[28px] border border-white bg-white/90 p-4 shadow-[0_28px_70px_rgba(15,23,42,0.13)] backdrop-blur-xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-xs font-black text-slate-900">Performance cockpit</p>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-600">Roadmap updated</p>
+    <div className="mx-auto mt-8 w-full max-w-sm">
+      <div className="lg-glass lg-glass-sheen relative flex flex-col items-center overflow-hidden rounded-[28px] p-6">
+        <p className="self-start text-lg font-black italic tracking-tight text-slate-800">Dashboard</p>
+        <div className="relative my-2 grid place-items-center">
+          <svg viewBox="0 0 280 280" className="h-44 w-44 -rotate-90">
+            <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth="18" />
+            <motion.circle
+              cx="140"
+              cy="140"
+              r={R}
+              fill="none"
+              stroke="url(#lg-band-m)"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeDasharray={CIRC}
+              initial={{ strokeDashoffset: reduce ? CIRC - dash : CIRC }}
+              whileInView={{ strokeDashoffset: CIRC - dash }}
+              viewport={{ once: true }}
+              transition={{ duration: reduce ? 0 : 1.3, ease: EASE }}
+            />
+            <defs>
+              <linearGradient id="lg-band-m" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#7f1d1d" />
+                <stop offset="45%" stopColor="#b91c1c" />
+                <stop offset="100%" stopColor="#f43f5e" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute flex flex-col items-center">
+            <span className="text-4xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
+            <span className="text-center text-[11px] font-semibold leading-tight text-slate-500">Overall Band Score</span>
           </div>
         </div>
-        <span className="rounded-full bg-red-50 px-2.5 py-1 text-[9px] font-black text-red-600">+1.5 band</span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-[0.82fr_1.18fr] gap-3">
-        <div className="grid place-items-center rounded-2xl bg-slate-50 p-2">
-          <ScoreRing compact />
+        <div className="mt-3 grid w-full grid-cols-2 gap-3">
+          {SKILL_TILES.map((tile) => {
+            const Icon = tile.icon
+            return (
+              <div
+                key={tile.label}
+                className="lg-glass lg-glass-sheen flex items-center gap-2.5 rounded-2xl px-3 py-3"
+              >
+                <Icon className="h-5 w-5 shrink-0 text-red-600" strokeWidth={1.8} />
+                <span className="text-sm font-bold text-slate-700">{tile.label}</span>
+              </div>
+            )
+          })}
         </div>
-        <div className="rounded-2xl border border-slate-100 p-3">
-          <p className="mb-3 text-[10px] font-black text-slate-700">Skill readiness</p>
-          <SkillBars />
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {[
-          ['IELTS', '9.0'],
-          ['SAT', '1600'],
-          ['UNIVERSITY', '94%'],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-xl bg-slate-950 px-3 py-3 text-white">
-            <p className="text-lg font-black tracking-tight">{value}</p>
-            <p className="mt-0.5 text-[7px] font-black uppercase tracking-wider text-slate-400">{label}</p>
-          </div>
-        ))}
       </div>
     </div>
   )

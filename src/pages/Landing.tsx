@@ -47,9 +47,9 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 const NAV_LINKS = [
   { label: 'Features', target: 'features' },
-  { label: 'Tracks', target: 'tracks' },
-  { label: 'How it works', target: 'route' },
-  { label: 'Success stories', target: 'reviews' },
+  { label: 'Pricing', target: 'pricing' },
+  { label: 'About', target: 'route' },
+  { label: 'Contact', target: 'reviews' },
 ] as const
 
 const HERO_PILLS = [
@@ -569,6 +569,10 @@ export default function Landing() {
 
   const go = (target: string) => {
     setMobileNav(false)
+    if (target === 'pricing') {
+      navigate('/premium')
+      return
+    }
     scrollToId(target)
   }
 
@@ -585,7 +589,7 @@ export default function Landing() {
       {/* ── Navigation ──────────────────────────────────────────────── */}
       <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
         <div
-          className={`mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[24px] border border-white/80 bg-white/85 px-4 py-2.5 backdrop-blur-2xl transition-all duration-300 sm:px-5 ${
+          className={`profai-glass-panel mx-auto flex max-w-7xl items-center justify-between overflow-hidden rounded-[28px] px-4 py-3 transition-all duration-300 sm:px-6 ${
             scrolled ? 'shadow-[0_16px_50px_rgba(15,23,42,0.12)]' : 'shadow-[0_10px_35px_rgba(15,23,42,0.06)]'
           }`}
         >
@@ -611,13 +615,13 @@ export default function Landing() {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => navigate('/login')}
-              className="hidden rounded-xl px-4 py-2.5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 sm:block"
+              className="hidden rounded-full border border-red-200/80 bg-white/55 px-5 py-2.5 text-[13px] font-black text-red-700 shadow-[0_10px_24px_rgba(220,38,38,0.1)] transition hover:-translate-y-0.5 hover:bg-red-50 sm:block"
             >
-              Sign in
+              Login
             </button>
             <button
               onClick={() => navigate('/register')}
-              className="hidden items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-[13px] font-black text-white shadow-[0_10px_26px_rgba(220,38,38,0.26)] transition hover:-translate-y-0.5 hover:bg-red-700 sm:inline-flex"
+              className="profai-glossy-button hidden items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-black sm:inline-flex"
             >
               Start free <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -651,6 +655,17 @@ export default function Landing() {
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
       <section ref={heroRef} className="relative px-4 pb-8 pt-28 sm:pt-36">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {LANDING_SPHERES.map((sphere, index) => (
+            <motion.span
+              key={index}
+              className="lg-orb absolute"
+              style={sphere.style}
+              animate={{ y: [0, -18, 8, 0], x: [0, 7, -5, 0], scale: [1, 1.08, 0.96, 1] }}
+              transition={{ duration: sphere.dur, delay: sphere.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
         <div className="relative mx-auto grid min-h-[610px] max-w-6xl items-center gap-10 lg:grid-cols-[0.94fr_1.06fr]">
           {/* copy */}
           <div className="text-center lg:text-left">
@@ -669,9 +684,9 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
               className="mt-6 text-[3.35rem] font-black leading-[0.92] tracking-[-0.065em] text-slate-950 sm:text-[5rem] lg:text-[4.7rem]"
             >
-              Your highest score.
-              <span className="mt-2 block bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 bg-clip-text text-transparent">
-                Your best future.
+              Your Path to Top
+              <span className="mt-2 block bg-gradient-to-r from-slate-950 via-slate-900 to-red-600 bg-clip-text text-transparent">
+                Universities
               </span>
             </motion.h1>
 
@@ -679,10 +694,21 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
-              className="mx-auto mt-6 max-w-xl text-[15px] font-medium leading-7 text-slate-500 lg:mx-0 sm:text-lg sm:leading-8"
+              aria-hidden="true"
+              className="hidden"
             >
               Master IELTS and SAT with an AI coach that turns every mock into a personalized roadmap — then research
               the universities where your score can take you.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
+              className="mx-auto mt-6 max-w-xl text-[15px] font-medium leading-7 text-slate-500 lg:mx-0 sm:text-lg sm:leading-8"
+            >
+              AI-powered SAT &amp; IELTS prep for studying abroad. Personalized learning, real-time feedback, and a
+              complete roadmap from your first mock to your university application.
             </motion.p>
 
             <motion.div
@@ -693,9 +719,9 @@ export default function Landing() {
             >
               <button
                 onClick={() => navigate('/register')}
-                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-7 py-4 text-sm font-black text-white shadow-[0_16px_34px_rgba(220,38,38,0.3)] transition hover:-translate-y-0.5 hover:bg-red-700"
+                className="profai-glossy-button group inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-black"
               >
-                Start learning free
+                Start Free
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
               <button

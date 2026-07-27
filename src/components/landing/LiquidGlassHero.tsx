@@ -27,7 +27,7 @@ function ScoreRing({ compact = false }: { compact?: boolean }) {
   const reduce = !!useReducedMotion()
   const radius = 52
   const circumference = Math.PI * 2 * radius
-  const progress = circumference * (8.5 / 9)
+  const progress = circumference * (7.5 / 9)
 
   return (
     <div className={`relative grid shrink-0 place-items-center ${compact ? 'h-32 w-32' : 'h-40 w-40'}`}>
@@ -55,8 +55,8 @@ function ScoreRing({ compact = false }: { compact?: boolean }) {
         </defs>
       </svg>
       <div className="relative text-center">
-        <p className={`${compact ? 'text-3xl' : 'text-4xl'} font-black tracking-[-0.06em] text-slate-950`}>8.5</p>
-        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Band score</p>
+        <p className={`${compact ? 'text-3xl' : 'text-4xl'} font-black tracking-[-0.06em] text-slate-950`}>7.5</p>
+        <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Overall band</p>
       </div>
     </div>
   )
@@ -102,7 +102,7 @@ export default function LiquidGlassHero() {
       <motion.div
         animate={reduce ? undefined : { y: [0, -8, 0], rotate: [0, 1, 0] }}
         transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-[7%] top-[9%] h-[460px] w-[86%] overflow-hidden rounded-[34px] border border-white/90 bg-white/88 shadow-[0_38px_100px_rgba(15,23,42,0.16)] backdrop-blur-2xl"
+        className="profai-glass-panel absolute left-[7%] top-[9%] h-[460px] w-[86%] overflow-hidden rounded-[34px]"
       >
         <div className="flex h-14 items-center justify-between border-b border-slate-100 px-5">
           <div className="flex items-center gap-2">

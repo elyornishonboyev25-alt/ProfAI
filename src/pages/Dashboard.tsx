@@ -30,6 +30,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import WeeklyPlannerLab from '@/components/dashboard/WeeklyPlannerLab'
 import DailyPlanner from '@/components/dashboard/DailyPlanner'
 import TargetBandCard from '@/components/dashboard/TargetBandCard'
+import DashboardCommandCenter from '@/components/dashboard/DashboardCommandCenter'
 import { MetricSkeletonGrid, Skeleton } from '@/components/common/Skeleton'
 import { BrandIcon, CountUp, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 
@@ -241,12 +242,24 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <DashboardCommandCenter
+        data={data}
+        loading={loading}
+        error={error}
+        displayName={user?.nickname || user?.fullName.split(/\s+/)[0] || 'Scholar'}
+        level={user?.level ?? 1}
+        xp={user?.xp ?? 0}
+        onNavigate={navigate}
+        onRetry={() => void refetch()}
+      />
+      <div className="hidden">
+
       {/* ── Hero ──────────────────────────────────────────────── */}
       <motion.section
         initial={minimalMotion ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={minimalMotion ? { duration: 0.15 } : { duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-        className="premium-hero relative overflow-hidden p-6 sm:p-8"
+        className="premium-hero relative mt-8 overflow-hidden p-6 sm:p-8"
       >
         <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-gradient-to-br from-red-300/15 to-rose-200/10 blur-3xl" />
         <div className="relative z-10 grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-center">
@@ -529,6 +542,8 @@ export default function Dashboard() {
       </section>
 
       {/* ── Weekly planner ────────────────────────────────────── */}
+      </div>
+
       <section className="mt-8">
         <WeeklyPlannerLab />
       </section>

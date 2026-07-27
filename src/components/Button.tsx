@@ -21,14 +21,14 @@ export default function Button({
   onClick,
   type = 'button'
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none'
+  const baseClasses = 'inline-flex min-h-11 items-center justify-center rounded-xl font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none'
 
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] text-white shadow-[0_10px_26px_rgba(239,68,68,0.38)] hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(239,68,68,0.48)] focus:ring-red-400',
-    secondary: 'border border-red-200 bg-red-50 text-red-700 shadow-sm hover:bg-red-100 focus:ring-red-300',
-    outline: 'border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:ring-red-300',
+    primary: 'profai-glossy-button text-white focus:ring-red-400',
+    secondary: 'border border-red-200/80 bg-red-50/80 text-red-700 shadow-[0_8px_20px_rgba(220,38,38,0.08)] hover:-translate-y-0.5 hover:bg-red-100 focus:ring-red-300',
+    outline: 'border border-red-200/90 bg-white/72 text-red-700 shadow-[0_8px_20px_rgba(15,23,42,0.05)] backdrop-blur-xl hover:-translate-y-0.5 hover:bg-red-50 focus:ring-red-300',
     ghost: 'text-slate-600 hover:bg-red-50 hover:text-red-700 focus:ring-red-300',
-    glass: 'border border-red-100 bg-white/90 text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.08)] backdrop-blur hover:bg-white'
+    glass: 'profai-glass-panel text-slate-700 hover:-translate-y-0.5 hover:bg-white/80'
   }
 
   const sizeClasses = {

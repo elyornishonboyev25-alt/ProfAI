@@ -135,12 +135,10 @@ export default function MockSAT() {
                       </div>
                       <h2 className="mt-3 text-2xl font-black text-slate-900">{satModule.title}</h2>
                       <p className="mt-2 text-sm leading-6 text-slate-600">{satModule.detail}</p>
-                      <button
-                        onClick={() => navigate(satModule.path, { state: { entry: 'mock-sat', from: from ?? 'tests' } })}
-                        className="arena-primary-btn-blue cta-sheen mt-4"
-                      >
-                        Start Module
-                      </button>
+                      <div className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Included in full mock
+                      </div>
                     </article>
                   </Tilt3D>
                 </StaggerItem>
@@ -185,10 +183,10 @@ export default function MockSAT() {
                 Start from SAT hub and run Reading/Writing then Math in official digital sequence.
               </p>
               <button
-                onClick={() => navigate('/sat', { state: { entry: 'mock-sat', from: from ?? 'tests' } })}
+                onClick={() => navigate('/sat')}
                 className="arena-primary-btn-blue cta-sheen mt-4"
               >
-                Launch Full SAT Mock
+                Choose from 30 Full Mocks
               </button>
               <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-500">
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />

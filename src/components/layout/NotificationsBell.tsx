@@ -101,7 +101,7 @@ export default function NotificationsBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 top-12 z-50 w-[21rem] overflow-hidden rounded-2xl border border-red-100 bg-white/98 shadow-[0_28px_70px_rgba(15,23,42,0.22)] backdrop-blur"
+            className="fixed right-4 top-20 z-[120] w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-[1.5rem] border border-red-100 bg-white/98 shadow-[0_32px_80px_rgba(15,23,42,0.25)] backdrop-blur-xl"
           >
             <div className="flex items-center justify-between border-b border-red-50 px-4 py-3">
               <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>

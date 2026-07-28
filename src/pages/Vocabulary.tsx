@@ -147,6 +147,12 @@ export default function Vocabulary() {
     return <Navigate to="/vocabulary" replace />
   }
 
+  // SAT Vocabulary now lives inside the unified SAT command center. The
+  // standalone vocabulary entry opens the IELTS track directly.
+  if (!trackParam) {
+    return <Navigate to="/vocabulary/ielts" replace />
+  }
+
   if (!routeTrack) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
@@ -542,4 +548,3 @@ export default function Vocabulary() {
     </div>
   )
 }
-

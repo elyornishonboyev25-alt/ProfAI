@@ -66,6 +66,19 @@ const DAY_PRESETS = [
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
+// College Board weekend dates for the 2026–27 international testing year.
+// Keeping the ISO value makes countdowns timezone-safe and easy to update.
+const SAT_TEST_DATES = [
+  { value: '2026-08-22', label: '22 Aug 2026' },
+  { value: '2026-09-12', label: '12 Sep 2026' },
+  { value: '2026-10-03', label: '3 Oct 2026' },
+  { value: '2026-11-07', label: '7 Nov 2026' },
+  { value: '2026-12-05', label: '5 Dec 2026' },
+  { value: '2027-03-06', label: '6 Mar 2027' },
+  { value: '2027-05-01', label: '1 May 2027' },
+  { value: '2027-06-05', label: '5 Jun 2027' },
+] as const
+
 const STEP_META: { id: StepId; label: string; eyebrow: string; title: string; hint: string }[] = [
   { id: 1, label: 'Profile', eyebrow: 'About you', title: 'What should we call you?', hint: 'Your name personalizes your dashboard and certificates.' },
   { id: 2, label: 'Goal', eyebrow: 'Your target', title: 'What are you preparing for?', hint: 'Pick the exam you want a tailored roadmap for.' },
@@ -114,6 +127,12 @@ export default function Onboarding() {
   const [customDays, setCustomDays] = useState('')
   const [useCustomDays, setUseCustomDays] = useState(false)
   const [dailyHours, setDailyHours] = useState(3)
+  const [ieltsExamDate, setIeltsExamDate] = useState('')
+  const [satExamDate, setSatExamDate] = useState<string>(SAT_TEST_DATES[0].value)
+  const [currentIeltsScore, setCurrentIeltsScore] = useState(6)
+  const [targetIeltsScore, setTargetIeltsScore] = useState(7.5)
+  const [currentSatScore, setCurrentSatScore] = useState(1050)
+  const [targetSatScore, setTargetSatScore] = useState(1450)
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
   const [messageIndex, setMessageIndex] = useState(0)
 
@@ -129,6 +148,12 @@ export default function Onboarding() {
       setTargetExam(existing.targetExam)
       setDaysToExam(existing.daysToExam)
       setDailyHours(existing.dailyHours)
+      setIeltsExamDate(existing.ieltsExamDate ?? '')
+      setSatExamDate(existing.satExamDate ?? SAT_TEST_DATES[0].value)
+      setCurrentIeltsScore(existing.currentIeltsScore ?? 6)
+      setTargetIeltsScore(existing.targetIeltsScore ?? 7.5)
+      setCurrentSatScore(existing.currentSatScore ?? 1050)
+      setTargetSatScore(existing.targetSatScore ?? 1450)
       return
     }
     const parts = (user?.fullName ?? '').trim().split(/\s+/)
@@ -154,7 +179,17 @@ export default function Onboarding() {
     return () => window.clearInterval(id)
   }, [stage])
 
-  const resolvedDays = useCustomDays ? Math.max(1, Number(customDays) || 1) : daysToExam
+  const selectedExamDate = targetExam === 'SAT' ? satExamDate : targetExam === 'IELTS' ? ieltsExamDate : [ieltsExamDate, satExamDate].filter(Boolean).sort()[0] ?? ''
+  const dateBasedDays = useMemo(() => {
+    if (!selectedExamDate) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const exam = new Date(`${selectedExamDate}T00:00:00`)
+    return Math.max(1, Math.ceil((exam.getTime() - today.getTime()) / 86400000))
+  }, [selectedExamDate])
+  const resolvedDays = useCustomDays
+    ? Math.max(1, Number(customDays) || 1)
+    : dateBasedDays ?? daysToExam
 
   const planIntensity = useMemo(
     () =>
@@ -168,7 +203,13 @@ export default function Onboarding() {
 
   const selectedExamCard = EXAM_CARDS.find((card) => card.key === targetExam)!
   const nameReady = firstName.trim().length > 0 && lastName.trim().length > 0
-  const canContinue = step === 1 ? nameReady : true
+  const examProfileReady =
+    targetExam === 'IELTS'
+      ? Boolean(ieltsExamDate) && targetIeltsScore >= currentIeltsScore
+      : targetExam === 'SAT'
+        ? Boolean(satExamDate) && targetSatScore >= currentSatScore
+        : Boolean(ieltsExamDate && satExamDate) && targetIeltsScore >= currentIeltsScore && targetSatScore >= currentSatScore
+  const canContinue = step === 1 ? nameReady : step === 3 ? examProfileReady : true
 
   const goTo = (next: StepId, dir: 'forward' | 'back') => {
     setDirection(dir)
@@ -195,6 +236,12 @@ export default function Onboarding() {
         targetExam,
         daysToExam: Math.max(1, resolvedDays),
         dailyHours: Math.max(3, dailyHours),
+        ieltsExamDate: targetExam === 'SAT' ? undefined : ieltsExamDate || undefined,
+        satExamDate: targetExam === 'IELTS' ? undefined : satExamDate || undefined,
+        currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore,
+        targetIeltsScore: targetExam === 'SAT' ? undefined : targetIeltsScore,
+        currentSatScore: targetExam === 'IELTS' ? undefined : currentSatScore,
+        targetSatScore: targetExam === 'IELTS' ? undefined : targetSatScore,
         createdAt: new Date().toISOString(),
       }
 
@@ -396,53 +443,96 @@ export default function Onboarding() {
 
                   {step === 3 ? (
                     <div>
-                      <p className="mb-3 text-xs font-black uppercase tracking-[0.1em] text-slate-500">How many days until your exam?</p>
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                        {DAY_PRESETS.map((preset) => {
-                          const active = !useCustomDays && daysToExam === preset.value
-                          return (
-                            <button
-                              key={preset.value}
-                              type="button"
-                              onClick={() => {
-                                setDaysToExam(preset.value)
-                                setUseCustomDays(false)
-                              }}
-                              className={`flex flex-col items-center rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                                active ? 'border-red-500 bg-red-600 shadow-[0_6px_16px_rgba(220,38,38,0.28)]' : 'border-slate-200 bg-white hover:border-red-200'
-                              }`}
-                            >
-                              <span className={`text-sm font-black ${active ? 'text-white' : 'text-slate-800'}`}>{preset.label}</span>
-                              <span className={`mt-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${active ? 'bg-white/25 text-white' : preset.badgeColor}`}>
-                                {preset.badge}
-                              </span>
-                            </button>
-                          )
-                        })}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {targetExam !== 'SAT' ? (
+                          <div className="rounded-2xl border border-red-100 bg-red-50/45 p-4">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="h-4 w-4 text-red-600" />
+                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700">IELTS profile</p>
+                            </div>
+                            <label className="mt-3 block">
+                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Booked exam date</span>
+                              <input
+                                type="date"
+                                min={new Date().toISOString().slice(0, 10)}
+                                value={ieltsExamDate}
+                                onChange={(event) => {
+                                  setIeltsExamDate(event.target.value)
+                                  setUseCustomDays(false)
+                                }}
+                                className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                              />
+                            </label>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                              <label>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current band</span>
+                                <input type="number" min={0} max={9} step={0.5} value={currentIeltsScore} onChange={(event) => setCurrentIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-red-300" />
+                              </label>
+                              <label>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Target band</span>
+                                <input type="number" min={0} max={9} step={0.5} value={targetIeltsScore} onChange={(event) => setTargetIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-red-300" />
+                              </label>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {targetExam !== 'IELTS' ? (
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50/45 p-4">
+                            <div className="flex items-center gap-2">
+                              <Calculator className="h-4 w-4 text-blue-600" />
+                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700">SAT profile</p>
+                            </div>
+                            <label className="mt-3 block">
+                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Official test date</span>
+                              <select
+                                value={satExamDate}
+                                onChange={(event) => {
+                                  setSatExamDate(event.target.value)
+                                  setUseCustomDays(false)
+                                }}
+                                className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                              >
+                                {SAT_TEST_DATES.map((date) => <option key={date.value} value={date.value}>{date.label}</option>)}
+                              </select>
+                            </label>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                              <label>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current score</span>
+                                <input type="number" min={400} max={1600} step={10} value={currentSatScore} onChange={(event) => setCurrentSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
+                              </label>
+                              <label>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Target score</span>
+                                <input type="number" min={400} max={1600} step={10} value={targetSatScore} onChange={(event) => setTargetSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
+                              </label>
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
 
-                      <div className="mt-3 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setUseCustomDays((value) => !value)}
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition ${useCustomDays ? 'border-red-500 bg-red-600' : 'border-slate-300 bg-white'}`}
-                        >
-                          {useCustomDays ? <CheckCircle2 className="h-3 w-3 text-white" /> : null}
-                        </button>
-                        <span className="text-xs font-semibold text-slate-600">Custom:</span>
-                        <input
-                          type="number"
-                          min={1}
-                          placeholder="e.g. 45"
-                          value={customDays}
-                          onFocus={() => setUseCustomDays(true)}
-                          onChange={(event) => {
-                            setCustomDays(event.target.value)
-                            setUseCustomDays(true)
-                          }}
-                          className="h-9 w-24 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                        />
-                        <span className="text-xs text-slate-500">days</span>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <CalendarRange className="h-4 w-4 text-red-500" />
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Study runway</p>
+                            <p className="text-sm font-black text-slate-800">{resolvedDays} days until the nearest exam</p>
+                          </div>
+                        </div>
+                        {!selectedExamDate ? (
+                          <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                            I have
+                            <input
+                              type="number"
+                              min={1}
+                              value={customDays || daysToExam}
+                              onChange={(event) => {
+                                setCustomDays(event.target.value)
+                                setUseCustomDays(true)
+                              }}
+                              className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-800 outline-none focus:border-red-300"
+                            />
+                            days
+                          </label>
+                        ) : null}
                       </div>
 
                       <p className="mb-3 mt-6 text-xs font-black uppercase tracking-[0.1em] text-slate-500">
@@ -483,11 +573,18 @@ export default function Onboarding() {
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Target exam</p>
                             <p className="mt-1 text-base font-black text-slate-900">{selectedExamCard.label}</p>
-                            <p className="text-[11px] text-slate-500">{selectedExamCard.subtitle}</p>
+                            <p className="text-[11px] text-slate-500">
+                              {targetExam === 'IELTS'
+                                ? `${currentIeltsScore} → ${targetIeltsScore} band`
+                                : targetExam === 'SAT'
+                                  ? `${currentSatScore} → ${targetSatScore} score`
+                                  : `IELTS ${currentIeltsScore} → ${targetIeltsScore} · SAT ${currentSatScore} → ${targetSatScore}`}
+                            </p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Days to exam</p>
                             <p className="mt-1 text-base font-black text-slate-900">{resolvedDays} days</p>
+                            {selectedExamDate ? <p className="text-[11px] font-semibold text-slate-500">{new Date(`${selectedExamDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p> : null}
                             <span className={`mt-1 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${planIntensity.color}`}>
                               {planIntensity.label} plan
                             </span>

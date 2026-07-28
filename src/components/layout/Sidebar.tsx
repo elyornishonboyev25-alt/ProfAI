@@ -15,7 +15,6 @@ import {
   Library,
   Sparkles,
   Target,
-  TriangleAlert,
   Trophy,
   UserRound,
   Users,
@@ -49,7 +48,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'tests', label: 'Test Library', icon: Library, path: '/tests' },
       { id: 'mock', label: 'Mock Arena', icon: Target, path: '/mock' },
       { id: 'profile', label: 'Performance', icon: BarChart3, path: '/profile' },
-      { id: 'analyze-mistakes', label: 'Analyze Mistakes', icon: TriangleAlert, path: '/analyze-mistakes' },
       { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     ],
   },
@@ -58,7 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ielts', label: 'IELTS Prep', icon: BookOpen, path: '/ielts' },
       { id: 'sat', label: 'SAT Prep', icon: GraduationCap, path: '/sat' },
-      { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked, path: '/vocabulary' },
+      { id: 'vocabulary', label: 'IELTS Vocabulary', icon: BookMarked, path: '/vocabulary/ielts' },
       { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
       { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
@@ -70,7 +68,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'community', label: 'Community', icon: Users, path: '/community' },
       { id: 'admission', label: 'Admission', icon: Landmark, path: '/admission' },
-      { id: 'account', label: 'My Profile', icon: UserRound, path: '/account' },
     ],
   },
 ]
@@ -81,6 +78,13 @@ export function Sidebar() {
   const { minimalMotion, allowHoverMotion } = useMotionPreferences()
   const user = useAuthStore((state: AuthState) => state.user)
   const premium = isPremiumUser(user)
+  const initials = (user?.fullName || 'Learner')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
 
   const handleNavigate = (path: string) => {
     if (path === '/mock') {
@@ -174,36 +178,52 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Premium CTA / status (pinned to the bottom) */}
-        {premium ? (
-          <div className="mt-3 flex shrink-0 items-center gap-2.5 rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2.5">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
-              <Crown className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[13px] font-black text-amber-800">Premium active</p>
-              <p className="truncate text-[10px] font-medium text-amber-600/90">All features unlocked</p>
-            </div>
-          </div>
-        ) : (
-          <motion.button
-            onClick={() => navigate('/premium')}
-            whileHover={allowHoverMotion ? { y: -2 } : undefined}
-            whileTap={allowHoverMotion ? { scale: 0.98 } : undefined}
-            className="cta-sheen interactive-lift mt-3 flex shrink-0 items-center gap-2.5 overflow-hidden rounded-xl border border-amber-300/60 bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-3 py-2.5 text-left shadow-[0_12px_24px_rgba(220,38,38,0.3)]"
-          >
-            <span className="relative z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-white shadow-inner backdrop-blur-sm">
-              <Crown className="h-4 w-4" />
-            </span>
-            <span className="relative z-10 min-w-0 flex-1">
-              <span className="flex items-center gap-1 text-[13px] font-black tracking-tight text-white">
-                Go Premium
-                <Sparkles className="h-3 w-3 text-amber-200" />
+        {/* Account is a stable bottom anchor instead of another scrolling item. */}
+        <div className="mt-3 shrink-0 border-t border-red-100 pt-3">
+          {!premium ? (
+            <button
+              type="button"
+              onClick={() => navigate('/premium')}
+              className="mb-2 flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-left text-[11px] font-bold text-amber-800 transition hover:bg-amber-100"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Crown className="h-3.5 w-3.5" />
+                Upgrade to Premium
               </span>
-              <span className="block truncate text-[10px] font-medium text-red-50/90">Unlock AI &amp; all features</span>
+              <Sparkles className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+
+          <motion.button
+            type="button"
+            onClick={() => navigate('/account')}
+            whileHover={allowHoverMotion ? { y: -1 } : undefined}
+            whileTap={allowHoverMotion ? { scale: 0.99 } : undefined}
+            aria-current={location.pathname.startsWith('/account') ? 'page' : undefined}
+            className={cn(
+              'group flex w-full items-center gap-2.5 rounded-2xl border p-2.5 text-left transition',
+              location.pathname.startsWith('/account')
+                ? 'border-red-200 bg-gradient-to-r from-red-100 to-rose-50 shadow-[0_10px_24px_rgba(220,38,38,0.12)]'
+                : 'border-slate-100 bg-white/80 hover:border-red-200 hover:bg-red-50/70',
+            )}
+          >
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-red-500 to-rose-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(220,38,38,0.25)]">
+              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
+              {premium ? (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white">
+                  <Crown className="h-2.5 w-2.5" />
+                </span>
+              ) : null}
             </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-black text-slate-900">{user?.fullName || 'My Profile'}</span>
+              <span className="block truncate text-[10px] font-semibold text-slate-500">
+                Level {user?.level ?? 1} · {(user?.xp ?? 0).toLocaleString('en-US')} XP
+              </span>
+            </span>
+            <UserRound className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-red-600" />
           </motion.button>
-        )}
+        </div>
       </div>
     </motion.aside>
   )

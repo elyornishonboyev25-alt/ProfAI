@@ -30,6 +30,7 @@ const Landing = lazy(() => import('@/pages/Landing'))
 const Tests = lazy(() => import('@/pages/Tests'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
+const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
 const IELTSSection = lazy(() => import('@/pages/IELTSSection'))
@@ -158,16 +159,18 @@ function App() {
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
-  const showTopNavigation = !isAuthPage && isLanding && !isGuestLanding
+  // Authenticated pages use one persistent workspace sidebar. The old dashboard
+  // top bar duplicated the same destinations and made the layout jump between
+  // sections, so it is intentionally kept only out of the app workspace.
+  const showTopNavigation = false
   // Thumb navigation on phones — kept away from exams, auth and the guest landing.
   const showMobileNav = Boolean(user) && !isAuthPage && !isTestMode && !isGuestLanding && pathname !== '/onboarding'
   const showSidebar =
+    Boolean(user) &&
     !isAuthPage &&
-    !isLanding &&
+    !isGuestLanding &&
     !isTestMode &&
-    !isVocabularyMode &&
-    !isTrackMode &&
-    !isProfileStandalone
+    pathname !== '/onboarding'
 
   useEffect(() => {
     const connection = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
@@ -244,17 +247,7 @@ function App() {
                   ? location.pathname.startsWith('/results/')
                     ? 'min-h-screen overflow-y-auto'
                     : 'min-h-[calc(100vh-80px)]'
-                  : isVocabularyMode
-                    ? 'min-h-screen'
-                    : isProfileStandalone
-                      ? 'min-h-screen'
-                    : isTrackMode
-                      ? 'min-h-screen'
-                    : showSidebar
-                      ? 'min-h-screen p-4 lg:p-8'
-                      : showTopNavigation
-                        ? 'min-h-[calc(100vh-80px)]'
-                        : 'min-h-screen'
+                  : 'min-h-screen'
               }`}
             >
               <ErrorBoundary>
@@ -317,6 +310,7 @@ function App() {
                         }
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
+                      <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route path="/sat/:section" element={<AnimatedRoute><SATSection /></AnimatedRoute>} />
                       <Route path="/sat/calculator" element={<AnimatedRoute><SATCalculator /></AnimatedRoute>} />
                       <Route path="/ielts" element={<AnimatedRoute><IELTS /></AnimatedRoute>} />

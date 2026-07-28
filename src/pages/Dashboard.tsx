@@ -1,666 +1,345 @@
-import { useEffect, useMemo, type ComponentProps } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import {
+  ArrowRight,
   Award,
   BarChart3,
-  Bot,
+  BookOpen,
+  CheckCircle2,
   Clock3,
-  Crown,
   Flame,
+  Headphones,
+  Medal,
+  Mic2,
+  PenSquare,
+  Settings,
   Sparkles,
   Target,
-  ArrowRight,
-  Zap,
-  BookOpen,
-  Calculator,
-  PenSquare,
-  Mic2,
   Trophy,
-  Headphones,
-  Star,
-  TrendingUp,
 } from 'lucide-react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { apiClient } from '@/lib/apiClient'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import NotificationsBell from '@/components/layout/NotificationsBell'
+import { Skeleton } from '@/components/common/Skeleton'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import type { DashboardOverview } from '@/types/platform'
+import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import WeeklyPlannerLab from '@/components/dashboard/WeeklyPlannerLab'
-import DailyPlanner from '@/components/dashboard/DailyPlanner'
-import TargetBandCard from '@/components/dashboard/TargetBandCard'
-import { MetricSkeletonGrid, Skeleton } from '@/components/common/Skeleton'
-import { BrandIcon, CountUp, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import type { DashboardOverview } from '@/types/platform'
+import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
-type BrandTone = 'red' | 'rose' | 'deep' | 'blue'
-
-const metricCardStyle = [
-  { title: 'Total Tests', icon: BarChart3, key: 'totalTests', tone: 'red' },
-  { title: 'Average Score', icon: Target, key: 'averageScore', tone: 'red' },
-  { title: 'Current Rank', icon: Award, key: 'currentRank', tone: 'red' },
-  { title: 'Current Streak', icon: Flame, key: 'currentStreak', tone: 'red' },
-] as const
-
-const focusSkills = [
-  { label: 'Reading', icon: BookOpen, path: '/ielts/reading' },
-  { label: 'Listening', icon: Headphones, path: '/ielts/listening' },
-  { label: 'Writing', icon: PenSquare, path: '/ielts/writing' },
-  { label: 'Speaking', icon: Mic2, path: '/ielts/speaking' },
-] as const
-
-const rightPanelSections = [
-  {
-    title: 'IELTS Reading',
-    description: 'Passage strategy, timing, and inference control.',
-    icon: BookOpen,
-    path: '/ielts/reading',
-    badge: 'IELTS',
-    badgeColor: 'border-red-200 bg-red-50 text-red-700',
-  },
-  {
-    title: 'IELTS Listening',
-    description: 'Audio flow, distractor filtering, and notes.',
-    icon: Headphones,
-    path: '/ielts/listening',
-    badge: 'IELTS',
-    badgeColor: 'border-red-200 bg-red-50 text-red-700',
-  },
-  {
-    title: 'IELTS Writing',
-    description: 'Task 1 and Task 2 structured writing studio.',
-    icon: PenSquare,
-    path: '/ielts/writing',
-    badge: 'IELTS',
-    badgeColor: 'border-red-200 bg-red-50 text-red-700',
-  },
-  {
-    title: 'IELTS Speaking',
-    description: 'Part-by-part speaking with fluency insights.',
-    icon: Mic2,
-    path: '/ielts/speaking',
-    badge: 'IELTS',
-    badgeColor: 'border-red-200 bg-red-50 text-red-700',
-  },
-  {
-    title: 'SAT Math',
-    description: 'Algebra, problem solving, and speed blocks.',
-    icon: Calculator,
-    path: '/sat/math',
-    badge: 'SAT',
-    badgeColor: 'border-blue-200 bg-blue-50 text-blue-700',
-  },
-  {
-    title: 'SAT Reading/Writing',
-    description: 'Evidence pairing, grammar, and revision logic.',
-    icon: GraduationCapIcon,
-    path: '/sat/reading-writing',
-    badge: 'SAT',
-    badgeColor: 'border-blue-200 bg-blue-50 text-blue-700',
-  },
-] as const
-
-const specialModules = [
-  { title: 'National Certificate', subtitle: 'Official-style mock mode', path: '/tests', icon: Trophy, tone: 'red' },
-  { title: 'Mock Arena', subtitle: 'IELTS + SAT full simulation', path: '/mock', icon: ShieldCheckIcon, tone: 'red' },
-  { title: 'Writing Studio', subtitle: 'Task 1 + Task 2 feedback', path: '/ielts/writing', icon: PenSquare, tone: 'red' },
-  { title: 'Speaking Studio', subtitle: 'Band estimate + pronunciation', path: '/ielts/speaking', icon: Mic2, tone: 'red' },
-  { title: 'Speaking Community', subtitle: 'Voice-only partner practice', path: '/speaking-community', icon: Headphones, tone: 'red' },
-] as const
-
-const trackLaunches = [
-  { title: 'IELTS Arena', subtitle: 'Reading, Listening, Writing, Speaking', path: '/ielts', icon: BookOpen, tone: 'red' },
-  { title: 'SAT Arena', subtitle: 'Math + Reading/Writing', path: '/sat', icon: Calculator, tone: 'blue' },
-  { title: 'Writing Studio', subtitle: 'Shared with IELTS Writing', path: '/ielts/writing', icon: PenSquare, tone: 'red' },
-  { title: 'Speaking Studio', subtitle: 'Shared with IELTS Speaking', path: '/ielts/speaking', icon: Mic2, tone: 'red' },
-] as const
-
-const aboutHighlights = [
-  { title: 'AI Study Coach', value: 'Smart', note: 'Personal roadmap, weak-point analysis, and instant feedback', icon: Bot, tone: 'red' },
-  { title: 'Gamified Learning', value: 'XP Level', note: 'Daily challenges, streaks, achievements, and leaderboards', icon: Flame, tone: 'red' },
-  { title: 'Deep Analytics', value: 'Insight', note: 'Skill trends, focus recommendations, and performance maps', icon: BarChart3, tone: 'red' },
-  { title: 'Target Scores', value: 'Results', note: 'Structured path to IELTS 6.5+ and SAT 1200+', icon: Target, tone: 'red' },
-] as const
-
-function MetricValue({ metricKey, value }: { metricKey: string; value: number | null }) {
-  if (value === null) return <>N/A</>
-  if (metricKey === 'averageScore') return <CountUp value={value} decimals={1} suffix="%" />
-  if (metricKey === 'currentRank') return <CountUp value={value} prefix="#" />
-  return <CountUp value={value} />
-}
-
-function TodayFocusCard({ onNavigate, level, xp }: { onNavigate: (path: string) => void; level: number; xp: number }) {
-  return (
-    <Tilt3D className="rounded-3xl" max={6} lift={6}>
-      <div className="relative overflow-hidden rounded-3xl border border-red-100/70 bg-white/95 p-5 shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/45 to-transparent" />
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-600">Today's Focus</p>
-            <p className="mt-1 text-base font-black tracking-tight text-slate-900">Jump back in</p>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-500">Pick a skill and keep your streak alive.</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-red-100/70 bg-gradient-to-br from-white to-red-50/60 px-2.5 py-1.5">
-            <XPGem size={34} />
-            <div className="leading-tight">
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Level {level}</p>
-              <p className="text-sm font-black text-slate-900">{xp.toLocaleString('en-US')} XP</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          {focusSkills.map((skill) => (
-            <button
-              key={skill.label}
-              onClick={() => onNavigate(skill.path)}
-              className="group flex items-center gap-2.5 rounded-2xl border border-red-100/70 bg-gradient-to-br from-white to-red-50/35 px-3 py-2.5 text-left transition hover:border-red-200 hover:shadow-[0_8px_18px_rgba(220,38,38,0.1)]"
-            >
-              <BrandIcon icon={skill.icon} size="sm" soft />
-              <span className="text-xs font-bold text-slate-700 transition-colors group-hover:text-red-700">{skill.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </Tilt3D>
-  )
-}
-
-const guestDashboardOverview: DashboardOverview = {
-  metrics: {
-    totalTests: 0,
-    averageScore: 0,
-    currentRank: null,
-    currentStreak: 0,
-  },
+const EMPTY_OVERVIEW: DashboardOverview = {
+  metrics: { totalTests: 0, averageScore: 0, currentRank: null, currentStreak: 0 },
   weeklyProgress: [
-    { date: '2026-04-11', label: 'Sat', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-12', label: 'Sun', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-13', label: 'Mon', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-14', label: 'Tue', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-15', label: 'Wed', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-16', label: 'Thu', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '2026-04-17', label: 'Fri', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Mon', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Tue', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Wed', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Thu', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Fri', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Sat', testsCompleted: 0, questionsAnswered: 0, active: false },
+    { date: '', label: 'Sun', testsCompleted: 0, questionsAnswered: 0, active: false },
   ],
   recommendedTests: [],
   activityTimeline: [],
   miniLeaderboard: [],
 }
 
-function GraduationCapIcon(props: ComponentProps<'svg'>) {
+const learningCards = [
+  { title: 'IELTS Reading', subtitle: 'Precision & timing', path: '/ielts/reading', icon: BookOpen, progress: 68 },
+  { title: 'Speaking Practice', subtitle: 'Fluency session', path: '/ielts/speaking', icon: Mic2, progress: 45 },
+  { title: 'SAT Full Mock', subtitle: 'Official simulation', path: '/sat', icon: CheckCircle2, progress: 20 },
+  { title: 'Advanced Vocabulary', subtitle: 'Daily word set', path: '/vocabulary/ielts', icon: Sparkles, progress: 80 },
+] as const
+
+function StatCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  note: string
+  icon: typeof Clock3
+}) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M22 10 12 5 2 10l10 5 10-5Z" />
-      <path d="M6 12v5c3 3 9 3 12 0v-5" />
-    </svg>
+    <article className="group rounded-[1.35rem] border border-white/80 bg-white/72 p-4 shadow-[0_12px_30px_rgba(71,85,105,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-[0_18px_38px_rgba(220,38,38,0.12)]">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600">
+        <Icon className="h-4.5 w-4.5" />
+      </span>
+      <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-1 text-[11px] font-semibold text-slate-500">{note}</p>
+    </article>
   )
 }
-
-function ShieldCheckIcon(props: ComponentProps<'svg'>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 3 5 6v6c0 5 3.5 8 7 9 3.5-1 7-4 7-9V6l-7-3Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  )
-}
-
-const MEDAL_STYLES = ['text-amber-500', 'text-slate-400', 'text-orange-600'] as const
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const { reducedMotion, minimalMotion } = useMotionPreferences()
-  const accentFullText = 'Top Universities Abroad'
+  const { minimalMotion } = useMotionPreferences()
+  const profile = loadOnboardingProfile(user?.id)
+  const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
 
-  const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
+  const { data, loading } = useAsyncData<DashboardOverview>(
     async () => {
       try {
-        return await apiClient.get('/dashboard/overview', { auth: !!user })
-      } catch (fetchError) {
-        if (!user) return guestDashboardOverview
-        throw fetchError
+        return await apiClient.get('/dashboard/overview', { auth: Boolean(user) })
+      } catch {
+        return EMPTY_OVERVIEW
       }
     },
-    [user],
+    [user?.id],
   )
 
-  const strongestDay = useMemo(() => {
-    if (!data?.weeklyProgress?.length) return null
-    return [...data.weeklyProgress].sort((left, right) => right.testsCompleted - left.testsCompleted)[0]
-  }, [data?.weeklyProgress])
+  const overview = data ?? EMPTY_OVERVIEW
+  const examLabel = profile?.targetExam === 'SAT' ? 'SAT' : 'IELTS'
+  const currentScore =
+    examLabel === 'SAT'
+      ? profile?.currentSatScore ?? 1050
+      : profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
+  const targetScore = examLabel === 'SAT' ? profile?.targetSatScore ?? 1450 : profile?.targetIeltsScore ?? 7.5
+  const targetProgress = Math.max(8, Math.min(100, Math.round((currentScore / targetScore) * 100)))
 
-  useEffect(() => {
-    if (location.pathname !== '/about') return
-    const timeoutId = window.setTimeout(() => {
-      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 120)
-    return () => window.clearTimeout(timeoutId)
-  }, [location.pathname])
+  const chartData = useMemo(
+    () =>
+      overview.weeklyProgress.map((day) => ({
+        ...day,
+        activity: Math.max(day.testsCompleted * 12, Math.min(40, day.questionsAnswered)),
+      })),
+    [overview.weeklyProgress],
+  )
+
+  const weeklyHours = useMemo(
+    () => (chartData.reduce((total, day) => total + day.activity, 0) / 10).toFixed(1),
+    [chartData],
+  )
+
+  const leaderboard = overview.miniLeaderboard.length
+    ? overview.miniLeaderboard.slice(0, 5)
+    : [
+        { rank: 1, fullName: firstName, totalXp: user?.xp ?? 0, accuracy: 0, rankTrend: 'same' as const, isCurrentUser: true },
+        { rank: 2, fullName: 'Amina', totalXp: 1280, accuracy: 91, rankTrend: 'up' as const, isCurrentUser: false },
+        { rank: 3, fullName: 'Daniel', totalXp: 1140, accuracy: 88, rankTrend: 'same' as const, isCurrentUser: false },
+      ]
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* ── Hero ──────────────────────────────────────────────── */}
-      <motion.section
-        initial={minimalMotion ? false : { opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={minimalMotion ? { duration: 0.15 } : { duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-        className="premium-hero relative overflow-hidden p-6 sm:p-8"
-      >
-        <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-gradient-to-br from-red-300/15 to-rose-200/10 blur-3xl" />
-        <div className="relative z-10 grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-center">
-          <div>
-            <span className="premium-top-chip inline-flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" />
-              Study Abroad, Powered by AI
-            </span>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#111827] sm:text-5xl">
-              <motion.span
-                className="block"
-                initial={reducedMotion ? false : { opacity: 0, y: 12, filter: 'blur(3px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={reducedMotion ? { duration: 0.01 } : { duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
-              >
-                Your Launchpad to
-              </motion.span>
-              <motion.span
-                initial={reducedMotion ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
-                animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
-                transition={reducedMotion ? { duration: 0.01 } : { duration: 1.2, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                className="text-gradient-red dashboard-accent-reveal mt-2 inline-block will-change-transform"
-              >
-                {accentFullText}
-              </motion.span>
-            </h1>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-[#475569]">
-              Everything you need to study abroad in one place — SAT &amp; IELTS prep, English skills, university research and step-by-step admission guidance, with an AI coach that builds your personal roadmap.
-            </p>
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#fff8f7_42%,#fff8ed_100%)] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red-400/18 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 h-96 w-96 rounded-full bg-sky-300/18 blur-3xl" />
+        <div className="absolute left-16 top-1/3 h-64 w-64 rounded-full bg-orange-200/22 blur-3xl" />
+        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:42px_42px]" />
+      </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate('/premium')}
-                className="interactive-lift inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 text-sm font-bold text-amber-700 shadow-sm transition hover:shadow-md"
-              >
-                <Crown className="h-4 w-4 text-amber-500" />
-                Go Premium
-              </button>
-              <button
-                onClick={() => navigate('/tests')}
-                className="cta-sheen interactive-lift inline-flex items-center rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(239,68,68,0.32)] hover:-translate-y-0.5"
-              >
-                Start Practicing
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </button>
+      <div className="relative mx-auto max-w-[94rem]">
+        <motion.header
+          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-[1.8rem] border border-white/80 bg-white/58 px-5 py-4 shadow-[0_18px_55px_rgba(51,65,85,0.09)] backdrop-blur-2xl sm:px-6"
+        >
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="relative h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-red-700 p-[4px] shadow-[0_10px_28px_rgba(220,38,38,0.3)]">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-sm font-black text-red-700">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (user?.fullName || 'PL').slice(0, 2).toUpperCase()
+                )}
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-[3px] border-white bg-emerald-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-red-500">Your learning cockpit</p>
+              <h1 className="truncate text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Welcome back, {firstName} <span aria-hidden>👋</span>
+              </h1>
+              <p className="mt-0.5 text-xs font-medium text-slate-500">One focused session today keeps your momentum moving.</p>
             </div>
           </div>
 
-          <Reveal delay={0.16} y={20} className="w-full">
-            <TodayFocusCard onNavigate={navigate} level={user?.level ?? 1} xp={user?.xp ?? 0} />
-          </Reveal>
-        </div>
-      </motion.section>
-
-      {/* ── Metric cards ──────────────────────────────────────── */}
-      <section className="mt-8">
-        {loading ? (
-          <MetricSkeletonGrid />
-        ) : error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <p>{error}</p>
-            <button className="mt-3 rounded-lg border border-red-300 px-3 py-1 text-xs" onClick={() => void refetch()}>
-              Retry
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-xl border border-red-100 bg-white/75 px-3 py-2 text-xs font-black text-red-700 sm:inline-flex">
+              <Flame className="mr-1.5 h-4 w-4" />
+              {overview.metrics.currentStreak || user?.currentStreak || 0} day streak
+            </span>
+            <NotificationsBell />
+            <button
+              type="button"
+              onClick={() => navigate('/account')}
+              aria-label="Profile settings"
+              className="rounded-xl border border-white bg-white/80 p-2 text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+            >
+              <Settings className="h-4 w-4" />
             </button>
           </div>
-        ) : data ? (
-          <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {metricCardStyle.map((metric) => {
-              const Icon = metric.icon
-              const metricValue = data.metrics[metric.key]
+        </motion.header>
 
-              return (
-                <StaggerItem key={metric.key} className="h-full">
-                  <Tilt3D className="h-full rounded-2xl" max={8}>
-                    <article className="group relative h-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_18px_40px_rgba(220,38,38,0.1)]">
-                      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{metric.title}</p>
-                        <BrandIcon icon={Icon} soft tone={metric.tone} />
-                      </div>
-                      <p className="mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
-                        <MetricValue metricKey={metric.key} value={metricValue} />
-                      </p>
-                      <div className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                        <span className="fx-pulse-dot h-1.5 w-1.5 rounded-full bg-red-400" />
-                        Live sync
-                      </div>
-                    </article>
-                  </Tilt3D>
-                </StaggerItem>
-              )
-            })}
-          </Stagger>
-        ) : null}
-      </section>
-
-      {/* ── Target band hero strip ────────────────────────────── */}
-      {data ? (
-        <section className="mt-8">
-          <TargetBandCard metrics={data.metrics} weeklyProgress={data.weeklyProgress} />
-        </section>
-      ) : null}
-
-      {/* ── Main grid: left sidebar + right content ───────────── */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-10">
-        {/* Left column */}
-        <div className="space-y-6 lg:col-span-3">
-          {/* Leaderboard */}
-          <Reveal className="panel-surface relative overflow-hidden p-5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/45 to-transparent" />
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BrandIcon icon={Trophy} size="sm" soft />
-                <h2 className="text-base font-black tracking-tight text-[#1F2937]">Leaderboard</h2>
+        <section className="mt-5 grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)_20rem]">
+          <motion.article
+            initial={minimalMotion ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="relative overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#e11d48] via-[#dc2626] to-[#991b1b] p-5 text-white shadow-[0_22px_55px_rgba(190,24,93,0.26)]"
+          >
+            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
+            <p className="relative text-[10px] font-black uppercase tracking-[0.17em] text-red-100">Your target</p>
+            <h2 className="relative mt-1 text-2xl font-black">{examLabel} {targetScore}</h2>
+            <div className="relative mx-auto mt-5 flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
+                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="8" />
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="41"
+                  fill="none"
+                  stroke="#fff"
+                  strokeLinecap="round"
+                  strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 41}`}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 41 }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 41 * (1 - targetProgress / 100) }}
+                  transition={{ duration: minimalMotion ? 0.1 : 1.1, ease: 'easeOut' }}
+                />
+              </svg>
+              <div className="relative text-center">
+                <p className="text-4xl font-black">{targetProgress}%</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-100">on track</p>
               </div>
-              <button onClick={() => navigate('/leaderboard')} className="text-[11px] font-bold text-red-600 hover:text-red-700">
-                View all
-              </button>
+            </div>
+            <div className="relative mt-5 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-xs">
+              <span className="text-red-100">Current</span>
+              <strong>{currentScore}</strong>
+            </div>
+            <button onClick={() => navigate(examLabel === 'SAT' ? '/sat' : '/ielts')} className="relative mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5">
+              Continue preparing <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </motion.article>
+
+          <div className="min-w-0 space-y-5">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard label="Study hours" value={`${weeklyHours}h`} note="This week" icon={Clock3} />
+              <StatCard label="Tests done" value={String(overview.metrics.totalTests)} note="All-time attempts" icon={CheckCircle2} />
+              <StatCard label="Average" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Across practice" icon={BarChart3} />
+              <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} />
             </div>
 
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-11 w-full" />
-                <Skeleton className="h-11 w-full" />
-                <Skeleton className="h-11 w-full" />
-              </div>
-            ) : data ? (
-              <div className="space-y-2">
-                {data.miniLeaderboard.slice(0, 5).map((row, idx) => (
-                  <div
-                    key={`${row.rank}-${row.fullName}`}
-                    className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
-                      row.isCurrentUser
-                        ? 'border-red-200 bg-gradient-to-r from-red-50 to-rose-50 shadow-[0_8px_18px_rgba(220,38,38,0.1)]'
-                        : 'border-slate-100 bg-white hover:border-red-100 hover:bg-red-50/30'
-                    }`}
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-black text-slate-600">
-                      {idx < 3 ? <Crown className={`h-4 w-4 ${MEDAL_STYLES[idx]}`} /> : `#${row.rank}`}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-[#1F2937]">{row.fullName}</p>
-                      <p className="text-[11px] font-medium text-[#64748B]">{Math.max(0, row.totalXp)} XP</p>
-                    </div>
-                    {row.isCurrentUser ? (
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">You</span>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </Reveal>
-
-          {/* Special Modules */}
-          <Reveal delay={0.08} className="panel-surface relative overflow-hidden p-5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/45 to-transparent" />
-            <div className="mb-4 flex items-center gap-2">
-              <BrandIcon icon={Zap} size="sm" soft />
-              <h2 className="text-base font-black tracking-tight text-[#1F2937]">Special Modules</h2>
-            </div>
-            <div className="space-y-2">
-              {specialModules.map((item) => (
-                <button
-                  key={item.title}
-                  onClick={() => navigate(item.path)}
-                  className="interactive-lift group flex w-full items-center justify-between rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-left transition hover:border-red-200 hover:shadow-[0_8px_20px_rgba(220,38,38,0.08)]"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <BrandIcon icon={item.icon} size="sm" soft tone={item.tone} />
-                    <div>
-                      <p className="text-sm font-bold text-[#1F2937]">{item.title}</p>
-                      <p className="text-[11px] text-[#64748B]">{item.subtitle}</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300 transition-colors group-hover:text-red-500" />
-                </button>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-
-        {/* Right column */}
-        <div className="lg:col-span-7">
-          {/* Core Sections */}
-          <Reveal delay={0.05} className="panel-surface relative overflow-hidden p-5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/45 to-transparent" />
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BrandIcon icon={Target} size="sm" soft />
-                <h2 className="text-base font-black tracking-tight text-[#1F2937]">Core Sections</h2>
-              </div>
-              <span className="rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
-                {rightPanelSections.length} sections
-              </span>
-            </div>
-
-            <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {rightPanelSections.map((section) => {
-                const Icon = section.icon
-                const tone: BrandTone = section.badge === 'SAT' ? 'blue' : 'red'
-                return (
-                  <StaggerItem key={section.title} className="h-full">
-                    <Tilt3D className="h-full rounded-2xl" max={7}>
-                      <button
-                        onClick={() => navigate(section.path)}
-                        className="group relative h-full w-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-red-200 hover:shadow-[0_16px_36px_rgba(220,38,38,0.12)]"
-                      >
-                        <div className="relative mb-3 flex items-center justify-between">
-                          <BrandIcon icon={Icon} soft tone={tone} />
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${section.badgeColor}`}>{section.badge}</span>
-                        </div>
-                        <h3 className="relative text-sm font-bold text-[#1F2937]">{section.title}</h3>
-                        <p className="relative mt-1 text-[12px] leading-5 text-[#64748B]">{section.description}</p>
-                      </button>
-                    </Tilt3D>
-                  </StaggerItem>
-                )
-              })}
-            </Stagger>
-          </Reveal>
-
-          {/* Weekly Progress Chart */}
-          <Reveal delay={0.1} className="panel-surface relative mt-6 overflow-hidden p-5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/45 to-transparent" />
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BrandIcon icon={TrendingUp} size="sm" soft />
+            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="text-base font-black tracking-tight text-[#1F2937]">Weekly Progress</h2>
-                  <p className="text-[11px] font-medium text-[#64748B]">7-day tests and activity</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Weekly activity</p>
+                  <h2 className="mt-1 text-lg font-black text-slate-950">Your study rhythm</h2>
                 </div>
+                <button onClick={() => navigate('/profile')} className="inline-flex items-center gap-1 text-xs font-black text-red-600 hover:text-red-700">
+                  Full performance <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
-              {strongestDay ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700">
-                  <Flame className="h-3 w-3" />
-                  Best: {strongestDay.label}
-                </span>
-              ) : null}
-            </div>
-
-            {loading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : data ? (
-              <>
-                <div className="h-64 w-full">
+              <div className="mt-3 h-52">
+                {loading ? (
+                  <Skeleton className="h-full w-full rounded-2xl" />
+                ) : (
                   <ResponsiveContainer>
-                    <BarChart data={data.weeklyProgress} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                      <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                      <Tooltip
-                        cursor={{ fill: 'rgba(220,38,38,0.06)' }}
-                        contentStyle={{
-                          borderRadius: 14,
-                          borderColor: '#FECACA',
-                          boxShadow: '0 14px 30px rgba(15,23,42,0.12)',
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}
-                      />
-                      <Bar dataKey="testsCompleted" radius={[10, 10, 4, 4]} fill="url(#weeklyGradientRed)" animationDuration={700} />
+                    <BarChart data={chartData} margin={{ top: 8, right: 2, left: -24, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="weeklyGradientRed" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="#EF4444" />
-                          <stop offset="100%" stopColor="#B91C1C" />
+                        <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ef4444" />
+                          <stop offset="100%" stopColor="#fda4af" />
                         </linearGradient>
                       </defs>
+                      <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="4 4" />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                      <Tooltip contentStyle={{ border: '1px solid #fecaca', borderRadius: 14, fontSize: 12 }} cursor={{ fill: 'rgba(248,113,113,.08)' }} />
+                      <Bar dataKey="activity" fill="url(#dashboardBars)" radius={[9, 9, 3, 3]} maxBarSize={42} />
                     </BarChart>
                   </ResponsiveContainer>
+                )}
+              </div>
+            </article>
+          </div>
+
+          <div className="space-y-5">
+            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Leaderboard</p>
+                  <h2 className="mt-1 text-lg font-black text-slate-950">Top learners</h2>
                 </div>
-                <p className="mt-3 text-sm text-[#64748B]">
-                  Most active day:{' '}
-                  <span className="font-bold text-[#1F2937]">
-                    {strongestDay?.label ?? 'N/A'} ({strongestDay?.testsCompleted ?? 0} tests)
-                  </span>
-                </p>
-              </>
-            ) : null}
-          </Reveal>
-        </div>
-      </section>
+                <Medal className="h-5 w-5 text-amber-500" />
+              </div>
+              <div className="mt-4 space-y-2">
+                {leaderboard.map((row) => (
+                  <button
+                    key={`${row.rank}-${row.fullName}`}
+                    onClick={() => navigate('/leaderboard')}
+                    className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition ${
+                      row.isCurrentUser ? 'border-red-200 bg-red-50/80' : 'border-slate-100 bg-white/65 hover:border-red-100'
+                    }`}
+                  >
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-black ${row.rank === 1 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {row.rank}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-black text-slate-800">{row.fullName}</span>
+                      <span className="block text-[10px] font-semibold text-slate-400">{row.totalXp.toLocaleString('en-US')} XP</span>
+                    </span>
+                    {row.isCurrentUser ? <span className="text-[9px] font-black uppercase text-red-600">You</span> : null}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => navigate('/leaderboard')} className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-xl border border-slate-100 bg-white/75 py-2 text-[11px] font-black text-slate-600 hover:border-red-200 hover:text-red-700">
+                View leaderboard <ArrowRight className="h-3 w-3" />
+              </button>
+            </article>
 
-      {/* ── Weekly planner ────────────────────────────────────── */}
-      <section className="mt-8">
-        <WeeklyPlannerLab />
-      </section>
-
-      {/* ── Daily planner (time-based tasks + reminders) ──────── */}
-      {user ? (
-        <section className="mt-8">
-          <DailyPlanner />
+            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600"><Award className="h-4 w-4" /></span>
+                <div>
+                  <p className="text-sm font-black text-slate-900">Next achievement</p>
+                  <p className="text-[10px] font-semibold text-slate-500">Complete 3 practice sessions</p>
+                </div>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                <motion.div initial={{ width: 0 }} animate={{ width: '66%' }} className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500" />
+              </div>
+              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">2 / 3 complete</p>
+            </article>
+          </div>
         </section>
-      ) : null}
 
-      {/* ── Track Launch Board + Recent Activity ──────────────── */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Reveal className="panel-surface relative overflow-hidden p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/45 to-transparent" />
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BrandIcon icon={Zap} size="sm" soft />
-              <h2 className="text-base font-black tracking-tight text-[#1F2937]">Track Launch Board</h2>
+        <section className="mt-5 rounded-[1.8rem] border border-white/80 bg-white/58 p-5 shadow-[0_18px_48px_rgba(51,65,85,0.08)] backdrop-blur-2xl">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Continue learning</p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">Pick up where you left off</h2>
             </div>
-            <button className="text-[11px] font-bold text-red-600 hover:text-red-700" onClick={() => navigate('/tests')}>
-              Open library
+            <button onClick={() => navigate('/tests')} className="inline-flex items-center gap-1 text-xs font-black text-red-600">
+              Test Library <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {trackLaunches.map((track) => (
-                <article
-                  key={track.title}
-                  className="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white p-3.5 transition hover:border-red-200 hover:shadow-[0_8px_20px_rgba(220,38,38,0.08)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <BrandIcon icon={track.icon} size="sm" soft tone={track.tone} />
-                    <div>
-                      <h3 className="text-sm font-bold text-[#1F2937]">{track.title}</h3>
-                      <p className="text-[11px] text-[#64748B]">{track.subtitle}</p>
-                    </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {learningCards.map((card) => {
+              const Icon = card.icon
+              return (
+                <button key={card.title} onClick={() => navigate(card.path)} className="group rounded-2xl border border-white bg-white/75 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-[0_14px_30px_rgba(220,38,38,0.1)]">
+                  <div className="flex items-start justify-between">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600"><Icon className="h-4 w-4" /></span>
+                    <span className="text-[10px] font-black text-red-600">{card.progress}%</span>
                   </div>
-                  <button
-                    className="interactive-lift rounded-lg bg-gradient-to-r from-[#DC2626] to-[#B91C1C] px-3.5 py-1.5 text-xs font-bold text-white shadow-[0_6px_14px_rgba(220,38,38,0.22)] transition hover:shadow-[0_10px_20px_rgba(220,38,38,0.32)]"
-                    onClick={() => navigate(track.path)}
-                  >
-                    Open
-                  </button>
-                </article>
-              ))}
-            </div>
-          )}
-        </Reveal>
-
-        <Reveal delay={0.08} className="panel-surface panel-recent-activity relative overflow-hidden p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-300/45 to-transparent" />
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BrandIcon icon={Clock3} size="sm" soft />
-              <h2 className="text-base font-black tracking-tight text-[#1F2937]">Recent Activity</h2>
-            </div>
+                  <h3 className="mt-3 text-sm font-black text-slate-900">{card.title}</h3>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{card.subtitle}</p>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-gradient-to-r from-red-700 via-red-500 to-rose-300" style={{ width: `${card.progress}%` }} />
+                  </div>
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
+                    Continue <ArrowRight className="h-3 w-3" />
+                  </span>
+                </button>
+              )
+            })}
           </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-            </div>
-          ) : data ? (
-            <ol className="space-y-2.5" aria-label="Recent activity timeline">
-              {data.activityTimeline.slice(0, 6).map((entry) => (
-                <li key={entry.id} className="rounded-xl border border-slate-100 bg-white px-3.5 py-3 transition hover:border-red-200 hover:shadow-sm">
-                  <p className="text-sm font-bold text-[#1F2937]">{entry.title}</p>
-                  <p className="mt-0.5 text-[12px] text-[#64748B]">{entry.description}</p>
-                  <p className="mt-1 text-[11px] font-medium text-slate-400">
-                    {new Date(entry.date).toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-        </Reveal>
-      </section>
-
-      {/* ── About ──────────────────────────────────────────────── */}
-      <section id="about" className="premium-hero relative mt-8 overflow-hidden p-6 sm:p-8">
-        <div className="pointer-events-none absolute -left-16 -top-16 h-52 w-52 rounded-full bg-red-300/12 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-rose-200/12 blur-3xl" />
-
-        <div className="relative flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-700 shadow-sm">
-              <Bot className="h-3 w-3" />
-              AI-powered platform
-            </span>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-900">About ProfAI</h2>
-            <p className="mt-2 max-w-4xl text-sm leading-7 text-slate-600 sm:text-base">
-              ProfAI is your all-in-one path to studying abroad. SAT &amp; IELTS prep, English skills,
-              university research and admission guidance — with AI coaching, daily streaks and a structured
-              roadmap that carries you from first practice to acceptance letter.
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-bold text-red-700 shadow-[0_8px_18px_rgba(220,38,38,0.12)]">
-            <Star className="h-3.5 w-3.5 text-amber-500" />
-            Platform v2
-          </span>
-        </div>
-
-        <Stagger className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {aboutHighlights.map((item) => (
-            <StaggerItem key={item.title} className="h-full">
-              <Tilt3D className="h-full rounded-2xl" max={7}>
-                <article className="group relative h-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_14px_28px_rgba(15,23,42,0.06)] transition hover:shadow-[0_18px_36px_rgba(220,38,38,0.12)]">
-                  <BrandIcon icon={item.icon} soft tone={item.tone} />
-                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-red-700">{item.title}</p>
-                  <p className="mt-1.5 text-2xl font-black leading-none text-slate-900">{item.value}</p>
-                  <p className="mt-2 text-[12px] leading-5 text-slate-600">{item.note}</p>
-                </article>
-              </Tilt3D>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

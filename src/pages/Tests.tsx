@@ -28,12 +28,12 @@ const trackCards: TrackCard[] = [
   {
     id: 'sat',
     title: 'SAT Arena',
-    subtitle: 'Math + Reading/Writing',
-    detail: 'Launch SAT in two focused sections with dedicated pages and section-specific analytics.',
+    subtitle: '30 complete Digital SAT mocks',
+    detail: 'One unified SAT command center with full mocks, SAT-only mistake analysis, vocabulary and exam countdown.',
     path: '/sat',
     icon: Calculator,
     tone: 'blue',
-    chips: ['2 sections', 'adaptive mode', 'separate workspace'],
+    chips: ['30 full mocks', 'combined exam', 'SAT analytics'],
   },
   {
     id: 'writing',

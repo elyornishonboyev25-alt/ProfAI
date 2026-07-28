@@ -83,7 +83,7 @@ export default function RegisterModal() {
       })
       reset()
       closeRegisterModal()
-      navigate('/dashboard', { replace: true })
+      navigate('/onboarding', { replace: true })
     } catch (error) {
       pushToast({
         type: 'error',
@@ -245,4 +245,3 @@ export default function RegisterModal() {
     </AnimatePresence>
   )
 }
-

@@ -168,14 +168,16 @@ export default function AnalyzeMistakes() {
   const attempts = useMemo(() => {
     const localReading = readingHistory.map(buildReadingAttempt)
     const localWriting = writingHistory.map(buildWritingAttempt)
-    const backendAttempts = (overview?.recentAttempts ?? []).map(buildBackendAttempt)
+    const backendAttempts = (overview?.recentAttempts ?? [])
+      .filter((entry) => entry.test.category !== 'SAT')
+      .map(buildBackendAttempt)
 
     return [...localReading, ...localWriting, ...backendAttempts]
       .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
   }, [overview?.recentAttempts, readingHistory, writingHistory])
 
   const localAttemptCount = readingHistory.length + writingHistory.length
-  const backendAttemptCount = overview?.recentAttempts.length ?? 0
+  const backendAttemptCount = (overview?.recentAttempts ?? []).filter((entry) => entry.test.category !== 'SAT').length
   const clearableAttemptCount = localAttemptCount + backendAttemptCount
 
   const openReview = (attempt: UnifiedAttempt) => {
@@ -257,10 +259,19 @@ export default function AnalyzeMistakes() {
         setWritingHistory([])
       }
 
-      const backendIds = (overview?.recentAttempts ?? []).map((entry) => entry.id)
+      const backendIds = (overview?.recentAttempts ?? [])
+        .filter((entry) => entry.test.category !== 'SAT')
+        .map((entry) => entry.id)
       if (backendIds.length > 0) {
         await Promise.all(backendIds.map((attemptId) => apiClient.delete(`/profile/attempts/${attemptId}`)))
-        setOverview((current) => (current ? { ...current, recentAttempts: [] } : current))
+        setOverview((current) =>
+          current
+            ? {
+                ...current,
+                recentAttempts: current.recentAttempts.filter((entry) => entry.test.category === 'SAT'),
+              }
+            : current,
+        )
       }
     } catch (clearError) {
       setError(clearError instanceof Error ? clearError.message : 'Failed to clear attempts')
@@ -347,14 +358,14 @@ export default function AnalyzeMistakes() {
             <div>
               <button
                 type="button"
-                onClick={() => navigate('/tests')}
+                onClick={() => navigate('/ielts')}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-red-700 hover:bg-red-50"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back To Test Library
+                Back To IELTS Prep
               </button>
               <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">Premium Lab</p>
-              <h1 className="mt-2 text-3xl font-black text-slate-900">Analyze Mistakes</h1>
+              <h1 className="mt-2 text-3xl font-black text-slate-900">Analyze IELTS Mistakes</h1>
               <p className="mt-1 text-sm text-slate-600">
                 Recent solved tests sorted by latest activity. Review IELTS Reading attempts and AI-evaluated Writing tasks in detail.
               </p>
@@ -462,4 +473,3 @@ export default function AnalyzeMistakes() {
     </>
   )
 }
-

@@ -1,6 +1,9 @@
-import { ArrowLeft, BookOpen, Headphones, Mic2, PenSquare } from 'lucide-react'
+import { ArrowLeft, BookOpen, BrainCircuit, Headphones, Mic2, PenSquare } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import ExamCountdown from '@/components/exam/ExamCountdown'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
 const sections = [
   {
@@ -36,6 +39,8 @@ const sections = [
 export default function IELTS() {
   const navigate = useNavigate()
   const location = useLocation()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const profile = loadOnboardingProfile(user?.id)
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const mockFrom = navigationState?.from ?? 'tests'
@@ -65,7 +70,7 @@ export default function IELTS() {
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    {fromMock ? 'Back to Mock IELTS' : 'Back'}
+                    {fromMock ? 'Back to Mock IELTS' : 'Back to Test Library'}
                   </button>
                   <span className="premium-top-chip">IELTS Master Track</span>
                 </div>
@@ -98,6 +103,16 @@ export default function IELTS() {
               </div>
             </div>
           </section>
+        </Reveal>
+
+        <Reveal delay={0.04}>
+          <ExamCountdown
+            exam="IELTS"
+            tone="red"
+            date={profile?.ieltsExamDate}
+            currentScore={profile?.currentIeltsScore}
+            targetScore={profile?.targetIeltsScore}
+          />
         </Reveal>
 
         <Stagger className="grid gap-5 md:grid-cols-2">
@@ -139,6 +154,27 @@ export default function IELTS() {
               </StaggerItem>
             )
           })}
+          <StaggerItem className="h-full">
+            <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
+              <button
+                onClick={() => navigate('/analyze-mistakes')}
+                className="interactive-lift group h-full w-full rounded-[1.8rem] border border-violet-200 bg-gradient-to-br from-white via-violet-50 to-rose-100/70 p-6 text-left shadow-[0_18px_36px_rgba(124,58,237,0.13)]"
+              >
+                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-semibold text-violet-700">
+                  <BrainCircuit className="h-3.5 w-3.5" />
+                  IELTS Review Lab
+                </div>
+                <h2 className="mt-4 text-3xl font-black text-slate-900">Analyze IELTS Mistakes</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-700">Review Reading and Writing errors, spot repeated patterns, and turn them into focused recovery practice.</p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className="rounded-full bg-white px-3 py-1 text-slate-700">IELTS only</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-slate-700">saved reviews</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-slate-700">AI feedback</span>
+                </div>
+                <p className="mt-6 text-sm font-semibold text-violet-700 transition group-hover:translate-x-1">Open mistake analysis -&gt;</p>
+              </button>
+            </Tilt3D>
+          </StaggerItem>
         </Stagger>
       </div>
     </div>

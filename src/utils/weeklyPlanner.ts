@@ -6,6 +6,12 @@ export type OnboardingProfile = {
   targetExam: ExamTarget
   daysToExam: number
   dailyHours: number
+  ieltsExamDate?: string
+  satExamDate?: string
+  currentIeltsScore?: number
+  targetIeltsScore?: number
+  currentSatScore?: number
+  targetSatScore?: number
   createdAt: string
 }
 

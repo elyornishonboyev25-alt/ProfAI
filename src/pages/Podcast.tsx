@@ -1225,11 +1225,11 @@ export default function Podcast() {
         <section className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_56px_rgba(2,6,23,0.5)] backdrop-blur sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/tests')}
               className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:bg-white/10"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Back
+              Back to Test Library
             </button>
             <span className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-indigo-200">
               <Headphones className="h-3.5 w-3.5" />

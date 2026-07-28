@@ -7,6 +7,7 @@ import {
   BookOpen,
   Calculator,
   CalendarRange,
+  Camera,
   CheckCircle2,
   Clock3,
   Flame,
@@ -15,12 +16,14 @@ import {
   Target,
   Trophy,
   User,
+  Upload,
 } from 'lucide-react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { setFlashToast } from '@/utils/authFlash'
-import { updateAccount } from '@/lib/profileApi'
+import { updateAccount, uploadAvatar } from '@/lib/profileApi'
+import { compressImageToDataUrl } from '@/utils/imageCompress'
 import {
   generateWeeklyPlan,
   loadOnboardingProfile,
@@ -65,6 +68,17 @@ const DAY_PRESETS = [
 ]
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
+
+const AVATAR_PRESETS = [
+  'aziza',
+  'kamron',
+  'dilnoza',
+  'sardor',
+  'malika',
+  'javohir',
+  'zarina',
+  'temur',
+] as const
 
 // College Board weekend dates for the 2026–27 international testing year.
 // Keeping the ISO value makes countdowns timezone-safe and easy to update.
@@ -116,6 +130,7 @@ const slideVariants = {
 export default function Onboarding() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const setUserAvatar = useAuthStore((state: AuthState) => state.setUserAvatar)
   const { minimalMotion } = useMotionPreferences()
 
   const [step, setStep] = useState<StepId>(1)
@@ -135,8 +150,40 @@ export default function Onboarding() {
   const [targetSatScore, setTargetSatScore] = useState(1450)
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
   const [messageIndex, setMessageIndex] = useState(0)
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? '')
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   const firstNameRef = useRef<HTMLInputElement>(null)
+
+  const saveAvatarFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    setAvatarUploading(true)
+    try {
+      const dataUrl = await compressImageToDataUrl(file, { size: 320, quality: 0.86 })
+      const result = await uploadAvatar(dataUrl)
+      const next = result.avatarUrl ?? dataUrl
+      setAvatarPreview(next)
+      setUserAvatar(next)
+    } catch {
+      const localUrl = URL.createObjectURL(file)
+      setAvatarPreview(localUrl)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  const choosePreset = async (name: string) => {
+    const src = `/assets/avatars/${name}.svg`
+    setAvatarPreview(src)
+    setUserAvatar(src)
+    try {
+      const response = await fetch(src)
+      const blob = await response.blob()
+      await saveAvatarFile(new File([blob], `${name}.svg`, { type: blob.type || 'image/svg+xml' }))
+    } catch {
+      // The local preset remains available even when the profile API is offline.
+    }
+  }
 
   // Prefill from an existing profile (if the learner is re-running setup) or the
   // account display name so the first step is never empty.
@@ -361,6 +408,64 @@ export default function Onboarding() {
                 >
                   {step === 1 ? (
                     <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2 rounded-[1.5rem] border border-red-100 bg-gradient-to-br from-white via-rose-50/60 to-red-50 p-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                          <div className="relative mx-auto shrink-0 sm:mx-0">
+                            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gradient-to-br from-red-500 to-rose-700 text-2xl font-black text-white shadow-[0_14px_30px_rgba(220,38,38,0.3)] ring-4 ring-red-200">
+                              {avatarPreview ? (
+                                <img src={avatarPreview} alt="Selected avatar" className="h-full w-full object-cover" />
+                              ) : (
+                                <User className="h-9 w-9" />
+                              )}
+                            </div>
+                            <span className="absolute bottom-1 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-white">
+                              <Camera className="h-3.5 w-3.5" />
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-black text-slate-900">Choose your avatar</p>
+                                <p className="text-[11px] text-slate-500">Pick a style or upload your own photo.</p>
+                              </div>
+                              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-[11px] font-black text-red-700 shadow-sm transition hover:bg-red-50">
+                                <Upload className="h-3.5 w-3.5" />
+                                {avatarUploading ? 'Saving…' : 'Upload photo'}
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp"
+                                  className="sr-only"
+                                  disabled={avatarUploading}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0]
+                                    if (file) void saveAvatarFile(file)
+                                    event.currentTarget.value = ''
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            <div className="mt-3 grid grid-cols-8 gap-1.5">
+                              {AVATAR_PRESETS.map((name) => {
+                                const src = `/assets/avatars/${name}.svg`
+                                const active = avatarPreview.includes(`/${name}.svg`)
+                                return (
+                                  <button
+                                    key={name}
+                                    type="button"
+                                    aria-label={`Choose ${name} avatar`}
+                                    onClick={() => void choosePreset(name)}
+                                    className={`aspect-square overflow-hidden rounded-full border-2 bg-white p-0.5 transition hover:-translate-y-0.5 ${
+                                      active ? 'border-red-500 shadow-[0_5px_14px_rgba(220,38,38,0.25)]' : 'border-white ring-1 ring-red-100'
+                                    }`}
+                                  >
+                                    <img src={src} alt="" className="h-full w-full rounded-full object-cover" />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">First name</span>
                         <div className="relative">

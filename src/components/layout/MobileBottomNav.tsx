@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Bot, Home, Target, UserRound, Users, type LucideIcon } from 'lucide-react'
+import { Bot, GraduationCap, Home, Target, UserRound, type LucideIcon } from 'lucide-react'
 
 const TABS: Array<{ key: string; label: string; icon: LucideIcon; path: string; match: (path: string) => boolean }> = [
   { key: 'home', label: 'Home', icon: Home, path: '/dashboard', match: (p) => p === '/' || p === '/dashboard' },
   { key: 'mock', label: 'Mock', icon: Target, path: '/mock', match: (p) => p.startsWith('/mock') },
   { key: 'ai', label: 'AI', icon: Bot, path: '/ai-tutor', match: (p) => p.startsWith('/ai-tutor') },
-  { key: 'community', label: 'Community', icon: Users, path: '/community', match: (p) => p.startsWith('/community') || p.startsWith('/u/') },
+  { key: 'admission', label: 'Abroad', icon: GraduationCap, path: '/admission', match: (p) => p.startsWith('/admission') },
   { key: 'profile', label: 'Profile', icon: UserRound, path: '/account', match: (p) => p.startsWith('/account') || p === '/profile' },
 ]
 

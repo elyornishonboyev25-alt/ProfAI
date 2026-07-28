@@ -49,9 +49,9 @@ export default function Community() {
         <Reveal>
           <section className="premium-hero p-6 sm:p-9">
             <div className="premium-top-controls">
-              <button onClick={() => navigate('/tests')} className="premium-back-btn">
+              <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Test Library
+                Back to Dashboard
               </button>
               <span className="premium-top-chip">
                 <Users className="h-3.5 w-3.5" />

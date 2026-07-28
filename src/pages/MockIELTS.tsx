@@ -51,6 +51,7 @@ export default function MockIELTS() {
 
   // Per-mock user completion (localStorage-backed, updated live by the runners).
   const [progressVersion, setProgressVersion] = useState(0)
+  const [filter, setFilter] = useState<'all' | 'available' | 'progress' | 'completed'>('all')
   useEffect(() => {
     const bump = () => setProgressVersion((version) => version + 1)
     window.addEventListener(FULL_MOCK_PROGRESS_EVENT, bump)
@@ -60,6 +61,17 @@ export default function MockIELTS() {
     void progressVersion
     return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
   }, [mocks, progressVersion])
+  const visibleMocks = useMemo(
+    () =>
+      mocks.filter((mock) => {
+        const done = completedByMock.get(mock.id)?.size ?? 0
+        if (filter === 'available') return mock.readyCount > 0
+        if (filter === 'progress') return done > 0 && done < mock.readyCount
+        if (filter === 'completed') return mock.readyCount > 0 && done >= mock.readyCount
+        return true
+      }),
+    [completedByMock, filter, mocks],
+  )
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
@@ -78,11 +90,11 @@ export default function MockIELTS() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/mock', { state: { from: from ?? 'home' } })}
+                    onClick={() => navigate('/dashboard')}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back
+                    Back to Dashboard
                   </button>
                   <span className="premium-top-chip">IELTS Mock Suite</span>
                   {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
@@ -142,8 +154,35 @@ export default function MockIELTS() {
           </section>
         </Reveal>
 
-        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {mocks.map((mock) => {
+        <Reveal>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-white/80 bg-white/75 p-3 shadow-[0_18px_38px_rgba(127,29,29,0.1)] backdrop-blur-xl">
+            <div className="flex flex-wrap gap-2">
+              {([
+                ['all', 'All 30'],
+                ['available', 'Available'],
+                ['progress', 'In progress'],
+                ['completed', 'Completed'],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  className={`rounded-full px-4 py-2 text-xs font-black transition ${
+                    filter === value
+                      ? 'cta-sheen bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_9px_20px_rgba(220,38,38,0.28)]'
+                      : 'border border-red-100 bg-white text-slate-600 hover:border-red-200 hover:text-red-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-slate-500">{visibleMocks.length} mock shown</p>
+          </div>
+        </Reveal>
+
+        <Stagger key={filter} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {visibleMocks.map((mock) => {
             const isLive = mock.readyCount > 0
             const doneSections = completedByMock.get(mock.id) ?? new Set<MockSectionKey>()
             const doneCount = doneSections.size

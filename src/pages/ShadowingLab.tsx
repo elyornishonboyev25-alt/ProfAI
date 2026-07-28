@@ -155,9 +155,9 @@ export default function ShadowingLab() {
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
-                  <button onClick={() => navigate('/tests')} className="premium-back-btn">
+                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Test Library
+                    Back to Dashboard
                   </button>
                   <span className="premium-top-chip">
                     <AudioLines className="h-3.5 w-3.5" />

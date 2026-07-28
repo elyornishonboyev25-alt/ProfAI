@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, type ReactNode } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { TopNavigation } from '@/components/layout/TopNavigation'
@@ -44,7 +44,6 @@ const WritingLab = lazy(() => import('@/pages/WritingLab'))
 const SpeakingLab = lazy(() => import('@/pages/SpeakingLab'))
 const SpeakingCommunity = lazy(() => import('@/pages/SpeakingCommunity'))
 const SpeakerProfile = lazy(() => import('@/pages/SpeakerProfile'))
-const Community = lazy(() => import('@/pages/Community'))
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'))
 const Mock = lazy(() => import('@/pages/Mock'))
 const MockIELTS = lazy(() => import('@/pages/MockIELTS'))
@@ -489,13 +488,7 @@ function App() {
                       />
                       <Route
                         path="/community"
-                        element={
-                          <ProtectedRoute>
-                            <AnimatedRoute>
-                              <Community />
-                            </AnimatedRoute>
-                          </ProtectedRoute>
-                        }
+                        element={<Navigate to="/dashboard" replace />}
                       />
                       <Route
                         path="/u/:nickname"

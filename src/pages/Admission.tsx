@@ -29,13 +29,19 @@ export default function Admission() {
       <div className="relative mx-auto w-full max-w-6xl space-y-7">
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
-          <section className="premium-hero p-6 sm:p-9">
+          <section className="premium-hero min-h-[29rem] p-6 sm:p-9">
+            <img
+              src="/assets/admission/campus-hero.webp"
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover object-center opacity-35"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.99)_0%,rgba(255,248,248,0.94)_52%,rgba(255,255,255,0.62)_100%)]" />
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
-                  <button onClick={() => navigate('/tests')} className="premium-back-btn">
+                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Test Library
+                    Back to Dashboard
                   </button>
                   <span className="premium-top-chip">
                     <Sparkles className="h-3.5 w-3.5" />
@@ -124,6 +130,7 @@ export default function Admission() {
                 onClick={() => navigate('/admission/lessons')}
                 className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-indigo-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(79,70,229,0.12)] transition hover:border-indigo-200 hover:shadow-[0_30px_70px_rgba(79,70,229,0.2)]"
               >
+                <img src="/assets/admission/student-library.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.08] transition duration-700 group-hover:scale-105 group-hover:opacity-[0.12]" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }}
@@ -183,6 +190,7 @@ export default function Admission() {
                 onClick={() => navigate('/admission/universities')}
                 className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-red-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(220,38,38,0.12)] transition hover:border-red-200 hover:shadow-[0_30px_70px_rgba(220,38,38,0.2)]"
               >
+                <img src="/assets/admission/international-students.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.08] transition duration-700 group-hover:scale-105 group-hover:opacity-[0.13]" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#ef4444,transparent 70%)' }}

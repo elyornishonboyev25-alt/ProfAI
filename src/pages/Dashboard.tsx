@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock3,
   Flame,
+  GraduationCap,
   Headphones,
   Medal,
   Mic2,
@@ -49,6 +50,7 @@ const learningCards = [
   { title: 'Speaking Practice', subtitle: 'Fluency session', path: '/ielts/speaking', icon: Mic2, progress: 45 },
   { title: 'SAT Full Mock', subtitle: 'Official simulation', path: '/sat', icon: CheckCircle2, progress: 20 },
   { title: 'Advanced Vocabulary', subtitle: 'Daily word set', path: '/vocabulary/ielts', icon: Sparkles, progress: 80 },
+  { title: 'Study Abroad Academy', subtitle: 'Lessons & universities', path: '/admission', icon: GraduationCap, progress: 27 },
 ] as const
 
 function StatCard({
@@ -317,7 +319,7 @@ export default function Dashboard() {
               Test Library <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {learningCards.map((card) => {
               const Icon = card.icon
               return (

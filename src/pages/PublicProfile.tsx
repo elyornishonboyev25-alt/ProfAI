@@ -37,7 +37,7 @@ function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => 
       </div>
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
         </button>
         {children}
       </div>
@@ -93,7 +93,7 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <Shell onBack={() => navigate(-1)}>
+      <Shell onBack={() => navigate('/dashboard')}>
         <div className="flex items-center justify-center py-16 text-slate-400">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
@@ -103,7 +103,7 @@ export default function PublicProfile() {
 
   if (error) {
     return (
-      <Shell onBack={() => navigate(-1)}>
+      <Shell onBack={() => navigate('/dashboard')}>
         {error.status === 403 ? (
           <Info icon={<Lock className="h-6 w-6" />} title="This profile is private" text="This learner has chosen to keep their profile hidden." />
         ) : (
@@ -120,7 +120,7 @@ export default function PublicProfile() {
   const initials = (p.nickname ?? 'U').slice(0, 2).toUpperCase()
 
   return (
-    <Shell onBack={() => navigate(-1)}>
+    <Shell onBack={() => navigate('/dashboard')}>
       {/* Identity hero */}
       <Reveal>
         <section className="premium-hero p-6 sm:p-8">
@@ -220,13 +220,15 @@ export default function PublicProfile() {
 
           {v.showUniversity && targetUniversity ? (
             <Reveal>
-              <article className="surface-card p-5">
-                <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-                  <GraduationCap className="h-4 w-4 text-red-600" /> Target university
+              <article className="surface-card min-h-[12rem] p-5">
+                <img src="/assets/admission/campus-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/45" />
+                <h3 className="relative inline-flex items-center gap-2 text-base font-black text-slate-900">
+                  <GraduationCap className="h-4 w-4 text-red-600" /> Dream university
                 </h3>
                 <button
                   onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)}
-                  className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 text-left transition hover:border-red-200"
+                  className="relative mt-7 flex w-full items-center justify-between gap-3 rounded-xl border border-white/80 bg-white/75 px-3 py-2.5 text-left shadow-lg backdrop-blur transition hover:border-red-200"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-slate-900">{targetUniversity.name}</p>

@@ -65,7 +65,7 @@ export default function SpeakingCommunity() {
               <div>
                 <button
                   type="button"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/dashboard')}
                   className="mb-4 inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white/85 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-red-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50 hover:shadow-[0_8px_18px_rgba(220,38,38,0.18)]"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" /> Back

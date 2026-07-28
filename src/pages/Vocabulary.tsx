@@ -140,7 +140,7 @@ export default function Vocabulary() {
   }
 
   const goBack = () => {
-    navigate('/tests')
+    navigate('/dashboard')
   }
 
   if (trackParam && !routeTrack) {

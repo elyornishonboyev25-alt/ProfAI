@@ -33,6 +33,27 @@ export const AnimatedBackground = memo(function AnimatedBackground() {
         transition={minimalMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
       />
 
+      <motion.div
+        className="glossy-orb left-[3%] top-[16%] h-20 w-20"
+        animate={minimalMotion ? undefined : { x: [0, 34, 8, 0], y: [0, -24, 18, 0], rotate: [0, 18, -8, 0] }}
+        transition={minimalMotion ? undefined : { duration: 13, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="glossy-orb glossy-orb-soft right-[4%] top-[12%] h-32 w-32"
+        animate={minimalMotion ? undefined : { x: [0, -28, 5, 0], y: [0, 22, -12, 0], rotate: [0, -16, 10, 0] }}
+        transition={minimalMotion ? undefined : { duration: 17, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="glossy-orb bottom-[8%] left-[9%] h-12 w-12"
+        animate={minimalMotion ? undefined : { x: [0, 18, -8, 0], y: [0, -30, 8, 0], scale: [1, 1.12, 0.96, 1] }}
+        transition={minimalMotion ? undefined : { duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="glossy-orb glossy-orb-soft bottom-[16%] right-[14%] h-16 w-16"
+        animate={minimalMotion ? undefined : { x: [0, -18, 12, 0], y: [0, -16, 20, 0], scale: [1, 0.94, 1.08, 1] }}
+        transition={minimalMotion ? undefined : { duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
       <div className="ambient-grid" />
     </div>
   )

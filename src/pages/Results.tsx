@@ -8,6 +8,7 @@ import {
   EyeOff,
   Home,
   RotateCcw,
+  Share2,
   Sparkles,
   Target,
   TriangleAlert,
@@ -356,6 +357,95 @@ export default function Results() {
           </section>
           </Reveal>
 
+          <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)]">
+            <Reveal>
+              <article className="surface-card p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Performance map</p>
+                    <h3 className="mt-1 text-2xl font-black text-slate-900">Your result, clearly explained</h3>
+                  </div>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                    {analysis.summary.accuracy >= 70 ? 'Strong attempt' : 'Growth opportunity'}
+                  </span>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-[16rem_1fr] sm:items-center">
+                  <div className="relative mx-auto aspect-square w-full max-w-[15rem]">
+                    <svg viewBox="0 0 220 220" className="h-full w-full overflow-visible" aria-label="Performance radar chart">
+                      {[42, 72, 102].map((radius) => (
+                        <polygon
+                          key={radius}
+                          points={`110,${110 - radius} ${110 + radius * 0.95},${110 - radius * 0.31} ${110 + radius * 0.59},${110 + radius * 0.81} ${110 - radius * 0.59},${110 + radius * 0.81} ${110 - radius * 0.95},${110 - radius * 0.31}`}
+                          fill="none"
+                          stroke="#fecaca"
+                          strokeWidth="1.5"
+                        />
+                      ))}
+                      <polygon
+                        points={`110,${110 - analysis.summary.accuracy} ${110 + Math.min(92, analysis.summary.correctAnswers * 3)},82 ${110 + Math.min(72, Math.max(32, 100 - result.timeSpent / 80))},168 ${110 - Math.min(72, Math.max(34, 100 - analysis.summary.skippedAnswers * 8))},168 ${110 - Math.min(92, effectiveBandScore * 10)},82`}
+                        fill="rgba(239,68,68,.28)"
+                        stroke="#dc2626"
+                        strokeWidth="3"
+                      />
+                      {['Accuracy', 'Correct', 'Pace', 'Complete', 'Band'].map((label, index) => {
+                        const positions = [[110, 7], [212, 80], [180, 215], [40, 215], [7, 80]]
+                        return <text key={label} x={positions[index][0]} y={positions[index][1]} textAnchor="middle" className="fill-slate-500 text-[10px] font-bold">{label}</text>
+                      })}
+                    </svg>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      ['Accuracy', `${analysis.summary.accuracy}%`, 'Overall precision'],
+                      ['Completion', `${Math.round(((analysis.summary.totalQuestions - analysis.summary.skippedAnswers) / Math.max(1, analysis.summary.totalQuestions)) * 100)}%`, 'Questions attempted'],
+                      ['Band estimate', effectiveBandScore.toFixed(1), 'IELTS scale'],
+                      ['Time', formatSpentTime(result.timeSpent), 'Total session'],
+                    ].map(([label, value, note]) => (
+                      <div key={label} className="rounded-2xl border border-red-100 bg-white/85 p-3 shadow-sm">
+                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-500">{label}</p>
+                        <p className="mt-1 text-xl font-black text-slate-900">{value}</p>
+                        <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+
+            <Reveal delay={0.05}>
+              <aside className="surface-card flex h-full flex-col p-5 sm:p-6">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 text-white shadow-[0_12px_26px_rgba(220,38,38,.3)]">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <h3 className="mt-3 text-xl font-black text-slate-900">AI recommendations</h3>
+                <div className="mt-4 flex-1 space-y-3">
+                  {[
+                    analysis.summary.skippedAnswers > 0
+                      ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
+                      : 'Keep your complete-answer discipline in the next mock.',
+                    analysis.summary.incorrectAnswers > 0
+                      ? `Review ${analysis.summary.incorrectAnswers} mistakes by question type and record the reason.`
+                      : 'Move to a harder passage while keeping the same pace.',
+                    effectiveBandScore < 7
+                      ? 'Schedule one timed Reading session and one vocabulary session this week.'
+                      : 'Protect this band with one full timed simulation this week.',
+                  ].map((recommendation, index) => (
+                    <div key={recommendation} className="flex gap-3 rounded-2xl border border-red-100 bg-red-50/55 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600 shadow-sm">{index + 1}</span>
+                      <p className="text-xs font-semibold leading-5 text-slate-600">{recommendation}</p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText(`${test.title}: IELTS band ${effectiveBandScore.toFixed(1)}`)}
+                  className="arena-primary-btn mt-4 justify-center py-2.5 text-sm"
+                >
+                  <Share2 className="mr-2 h-4 w-4" /> Share result
+                </button>
+              </aside>
+            </Reveal>
+          </section>
+
           <section className="mt-5 surface-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -473,6 +563,5 @@ export default function Results() {
     </div>
   )
 }
-
 
 

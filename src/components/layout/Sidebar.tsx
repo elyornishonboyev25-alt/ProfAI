@@ -11,13 +11,11 @@ import {
   Headphones,
   Headset,
   Home,
-  Landmark,
   Library,
   Sparkles,
   Target,
   Trophy,
   UserRound,
-  Users,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '../ui/utils'
@@ -61,13 +59,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
       { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
       { id: 'speaking-community', label: 'Speaking', icon: Headset, path: '/speaking-community' },
-    ],
-  },
-  {
-    heading: 'More',
-    items: [
-      { id: 'community', label: 'Community', icon: Users, path: '/community' },
-      { id: 'admission', label: 'Admission', icon: Landmark, path: '/admission' },
     ],
   },
 ]

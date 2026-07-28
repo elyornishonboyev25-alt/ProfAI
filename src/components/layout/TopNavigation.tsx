@@ -260,7 +260,6 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
 
           <TopLink label="Mock" active={isActive('/mock')} onClick={openMockFromLanding} />
           <TopLink label="Leaderboard" active={isActive('/leaderboard')} onClick={() => handleNavigate('/leaderboard')} />
-          <TopLink label="Community" active={isActive('/community')} onClick={() => handleNavigate('/community')} />
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
@@ -357,7 +356,6 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-400">More</p>
                 <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={openMockFromLanding}>Mock Arena</button>
                 <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/leaderboard')}>Leaderboard</button>
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-red-50 hover:text-red-800" onClick={() => handleNavigate('/community')}>Community</button>
 
                 <div className="my-1.5 h-px bg-red-100" />
                 {!user ? (

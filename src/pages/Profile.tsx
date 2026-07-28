@@ -291,7 +291,7 @@ export default function Profile() {
                 <div className="premium-top-controls">
                   <button
                     type="button"
-                    onClick={() => navigate('/tests')}
+                    onClick={() => navigate('/dashboard')}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-4 w-4" />
@@ -753,7 +753,7 @@ export default function Profile() {
               <p className="mt-1 text-xs text-slate-500">Complete a test to start earning XP and build your history.</p>
               <button
                 type="button"
-                onClick={() => navigate('/tests')}
+                onClick={() => navigate('/dashboard')}
                 className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]"
               >
                 Browse tests

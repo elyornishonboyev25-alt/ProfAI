@@ -84,17 +84,23 @@ export default function AdmissionUniversity() {
             className="relative overflow-hidden rounded-[2rem] border border-white/10 p-6 text-white shadow-[0_30px_70px_rgba(15,23,42,0.28)] sm:p-9"
             style={{ background: u.brand.gradient }}
           >
+            <img
+              src="/assets/admission/campus-hero.webp"
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-35 mix-blend-luminosity"
+            />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${accent}ee 0%, ${accent}c8 46%, rgba(15,23,42,0.62) 100%)` }} />
             <div
               className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
               style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
             />
             <div className="relative">
               <button
-                onClick={() => navigate('/admission/universities')}
+                onClick={() => navigate('/dashboard')}
                 className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to rankings
+                Back to Dashboard
               </button>
 
               <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">

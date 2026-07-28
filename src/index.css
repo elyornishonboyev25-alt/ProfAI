@@ -653,6 +653,36 @@
     background: rgba(254, 202, 202, 0.6);
   }
 
+  .glossy-orb {
+    position: absolute;
+    border-radius: 9999px;
+    opacity: 0.78;
+    background:
+      radial-gradient(circle at 28% 22%, rgba(255,255,255,0.98) 0 5%, rgba(255,214,214,0.96) 9%, transparent 24%),
+      radial-gradient(circle at 34% 30%, #fb7185 0%, #ef4444 34%, #be123c 68%, #7f1d1d 100%);
+    box-shadow:
+      inset -12px -15px 24px rgba(94, 15, 20, 0.34),
+      inset 8px 9px 18px rgba(255,255,255,0.38),
+      0 18px 42px rgba(190, 24, 93, 0.3),
+      0 0 48px rgba(248, 113, 113, 0.22);
+    will-change: transform;
+  }
+
+  .glossy-orb::after {
+    content: '';
+    position: absolute;
+    inset: 10% 17% 56% 22%;
+    border-radius: 9999px;
+    background: linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,255,255,0));
+    filter: blur(1px);
+    transform: rotate(-18deg);
+  }
+
+  .glossy-orb-soft {
+    opacity: 0.48;
+    filter: blur(0.35px);
+  }
+
   .section-title {
     @apply text-3xl font-bold tracking-tight text-[#0F172A] sm:text-4xl;
   }
@@ -729,6 +759,10 @@
   .ambient-orb {
     filter: blur(56px);
     opacity: 0.62;
+  }
+
+  .glossy-orb {
+    opacity: 0.46;
   }
 }
 

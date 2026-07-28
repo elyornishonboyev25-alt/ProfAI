@@ -95,14 +95,14 @@ export default function SpeakerProfile() {
   // ── Guards ────────────────────────────────────────────────────────────────
   if (!user) {
     return (
-      <Shell onBack={() => navigate(-1)}>
+      <Shell onBack={() => navigate('/dashboard')}>
         <Info text="Sign in to view speaker profiles." />
       </Shell>
     )
   }
   if (id === 'me' && !user.nickname) {
     return (
-      <Shell onBack={() => navigate(-1)}>
+      <Shell onBack={() => navigate('/dashboard')}>
         <div className="surface-card flex flex-col items-center p-10 text-center">
           <AtSign className="h-10 w-10 text-red-400" />
           <h2 className="mt-3 text-xl font-black text-slate-900">Choose a nickname first</h2>
@@ -111,14 +111,14 @@ export default function SpeakerProfile() {
       </Shell>
     )
   }
-  if (loading) return <Shell onBack={() => navigate(-1)}><Info text="Loading profile…" /></Shell>
-  if (error || !data) return <Shell onBack={() => navigate(-1)}><Info text={error ?? 'Profile not found.'} /></Shell>
+  if (loading) return <Shell onBack={() => navigate('/dashboard')}><Info text="Loading profile…" /></Shell>
+  if (error || !data) return <Shell onBack={() => navigate('/dashboard')}><Info text={error ?? 'Profile not found.'} /></Shell>
 
   const p = data.profile
   const percentile = p.rank && p.totalSpeakers ? Math.max(1, Math.round(100 - ((p.rank - 1) / p.totalSpeakers) * 100)) : null
 
   return (
-    <Shell onBack={() => navigate(-1)}>
+    <Shell onBack={() => navigate('/dashboard')}>
       {/* Identity hero */}
       <Reveal>
         <section className="premium-hero p-6 sm:p-8">
@@ -279,7 +279,7 @@ function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => 
       </div>
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
         </button>
         {children}
       </div>

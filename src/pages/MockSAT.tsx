@@ -113,10 +113,10 @@ export default function MockSAT() {
           />
           <button
             type="button"
-            onClick={() => navigate('/sat')}
+            onClick={() => navigate('/dashboard')}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600 shadow-sm hover:border-red-200 hover:text-red-600"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> SAT Arena
+            <ArrowLeft className="h-3.5 w-3.5" /> Dashboard
           </button>
         </header>
 

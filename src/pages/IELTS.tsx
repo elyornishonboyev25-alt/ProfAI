@@ -65,12 +65,12 @@ export default function IELTS() {
                     onClick={() =>
                       fromMock
                         ? navigate('/mock/ielts', { state: { from: mockFrom } })
-                        : navigate('/tests')
+                        : navigate('/dashboard')
                     }
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    {fromMock ? 'Back to Mock IELTS' : 'Back to Test Library'}
+                    {fromMock ? 'Back to Mock IELTS' : 'Back to Dashboard'}
                   </button>
                   <span className="premium-top-chip">IELTS Master Track</span>
                 </div>

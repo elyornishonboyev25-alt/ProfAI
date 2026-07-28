@@ -136,9 +136,9 @@ export default function Mock() {
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_28rem] xl:items-start">
               <div className="xl:pr-2">
                 <div className="premium-top-controls">
-                  <button onClick={() => navigate('/tests')} className="premium-back-btn">
+                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Test Library
+                    Back to Dashboard
                   </button>
                   <span className="premium-top-chip">
                     <Sparkles className="h-3.5 w-3.5" />

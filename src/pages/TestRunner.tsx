@@ -198,7 +198,7 @@ export default function TestRunner() {
       <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
           <p>{error ?? 'Unable to load this test.'}</p>
-          <button className="premium-back-btn mt-3" onClick={() => navigate('/tests')}>
+          <button className="premium-back-btn mt-3" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
@@ -351,4 +351,3 @@ export default function TestRunner() {
     </div>
   )
 }
-

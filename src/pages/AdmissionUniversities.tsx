@@ -33,9 +33,9 @@ export default function AdmissionUniversities() {
         <Reveal>
           <section className="premium-hero p-6 sm:p-9">
             <div className="premium-top-controls">
-              <button onClick={() => navigate('/admission')} className="premium-back-btn">
+              <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Admission
+                Back to Dashboard
               </button>
               <span className="premium-top-chip">
                 <Trophy className="h-3.5 w-3.5" />

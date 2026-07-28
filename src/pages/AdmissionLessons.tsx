@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
-import { AmbientBackdrop, CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
+import { AmbientBackdrop, CountUp, ProgressRing, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import LucideIcon from '@/components/admission/LucideIcon'
 import { getLessonsByPhase, lessonPhases, LESSON_COUNT, totalLessonMinutes } from '@/data/admission'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
@@ -28,9 +28,9 @@ export default function AdmissionLessons() {
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
-                  <button onClick={() => navigate('/admission')} className="premium-back-btn">
+                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Admission
+                    Back to Dashboard
                   </button>
                   <span className="premium-top-chip">
                     <GraduationCap className="h-3.5 w-3.5" />
@@ -61,10 +61,15 @@ export default function AdmissionLessons() {
                   </p>
                   <p className="hero-metric-note">Self-paced</p>
                 </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Level</p>
-                  <p className="hero-metric-value-sm hero-metric-value-compact">All levels</p>
-                  <p className="hero-metric-note">Beginner → Advanced</p>
+                <div className="hero-metric-card interactive-lift flex-row items-center gap-3">
+                  <ProgressRing value={(completed.size / LESSON_COUNT) * 100} size={68} stroke={7}>
+                    <span className="text-xs font-black text-slate-900">{Math.round((completed.size / LESSON_COUNT) * 100)}%</span>
+                  </ProgressRing>
+                  <div>
+                    <p className="hero-metric-label">Overall progress</p>
+                    <p className="mt-1 text-lg font-black text-slate-900">{completed.size}/{LESSON_COUNT}</p>
+                    <p className="text-[10px] font-semibold text-slate-500">Lessons completed</p>
+                  </div>
                 </div>
               </div>
             </div>

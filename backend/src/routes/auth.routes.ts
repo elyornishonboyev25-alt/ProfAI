@@ -62,6 +62,7 @@ function sanitizeUser(user: {
   currentStreak: number
   nickname?: string | null
   avatarUrl?: string | null
+  profile?: { onboardingCompletedAt: Date | null } | null
 }) {
   const premium = isPremiumUser({
     role: user.role,
@@ -79,6 +80,7 @@ function sanitizeUser(user: {
     currentStreak: user.currentStreak,
     nickname: user.nickname ?? null,
     avatarUrl: user.avatarUrl ?? null,
+    onboardingCompleted: Boolean(user.profile?.onboardingCompletedAt),
   }
 }
 
@@ -184,6 +186,7 @@ router.post(
         currentStreak: true,
         nickname: true,
         avatarUrl: true,
+        profile: { select: { onboardingCompletedAt: true } },
       },
     })
 
@@ -220,6 +223,7 @@ router.post(
         currentStreak: true,
         nickname: true,
         avatarUrl: true,
+        profile: { select: { onboardingCompletedAt: true } },
         passwordHash: true,
       },
     })
@@ -281,6 +285,7 @@ router.post(
         currentStreak: true,
         nickname: true,
         avatarUrl: true,
+        profile: { select: { onboardingCompletedAt: true } },
       },
     })
 
@@ -309,7 +314,8 @@ router.post(
           level: true,
           currentStreak: true,
           nickname: true,
-        avatarUrl: true,
+          avatarUrl: true,
+          profile: { select: { onboardingCompletedAt: true } },
         },
       }))
 
@@ -367,7 +373,8 @@ router.post(
             level: true,
             currentStreak: true,
             nickname: true,
-        avatarUrl: true,
+            avatarUrl: true,
+            profile: { select: { onboardingCompletedAt: true } },
           },
         },
       },
@@ -434,6 +441,7 @@ router.get(
         currentStreak: true,
         nickname: true,
         avatarUrl: true,
+        profile: { select: { onboardingCompletedAt: true } },
       },
     })
 

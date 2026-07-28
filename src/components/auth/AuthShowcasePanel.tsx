@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
-import { GraduationCap, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { BrandMark } from '@/components/brand/BrandLogo'
 
 const particles = [
   { left: '14%', top: '20%', size: 5, delay: 0 },
@@ -28,7 +29,13 @@ export default function AuthShowcasePanel({ quote = 'Your journey abroad starts 
   const { minimalMotion } = useMotionPreferences()
 
   return (
-    <div className="relative hidden overflow-hidden rounded-[1.85rem] bg-gradient-to-br from-slate-900 via-slate-900 to-[#3f0d12] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+    <div className="relative hidden overflow-hidden rounded-[1.85rem] bg-slate-950 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+      <img
+        src="/assets/auth/students-collaborating.webp"
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover opacity-55"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.32),rgba(15,23,42,0.95)_78%),linear-gradient(115deg,rgba(127,29,29,0.55),transparent_58%)]" />
       {/* glow orbs */}
       <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-red-600/25 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -right-12 h-64 w-64 rounded-full bg-rose-500/15 blur-3xl" />
@@ -60,8 +67,8 @@ export default function AuthShowcasePanel({ quote = 'Your journey abroad starts 
           className="relative"
         >
           <div className="pointer-events-none absolute inset-0 -z-10 scale-125 rounded-full bg-red-500/30 blur-2xl" />
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-[#DC2626] via-[#E11D48] to-[#B91C1C] shadow-[0_24px_50px_rgba(220,38,38,0.45)]">
-            <GraduationCap className="h-12 w-12" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/12 shadow-[0_24px_50px_rgba(220,38,38,0.45)] backdrop-blur-xl">
+            <BrandMark size={68} />
           </div>
         </motion.div>
 

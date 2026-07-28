@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
+import { Eye, EyeOff, Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
@@ -13,6 +13,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import { takeFlashToast } from '@/utils/authFlash'
+import type { AuthUser } from '@/types/platform'
 
 const loginSchema = z.object({
   email: z
@@ -25,16 +26,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 type AuthSessionPayload = {
-  user: {
-    id: string
-    fullName: string
-    email: string
-    role: 'USER' | 'ADMIN'
-    premium: boolean
-    xp: number
-    level: number
-    currentStreak: number
-  }
+  user: AuthUser
   accessToken: string
   refreshToken: string
 }
@@ -51,6 +43,7 @@ export default function Login() {
   const setSession = useAuthStore((state: AuthState) => state.setSession)
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const { minimalMotion } = useMotionPreferences()
+  const [showPassword, setShowPassword] = useState(false)
   // Set when sign-in fails because the email isn't registered yet — drives the
   // inline "create an account" call-to-action below. `email` is omitted for the
   // Google path (we don't decode the token client-side).
@@ -98,7 +91,7 @@ export default function Login() {
         title: 'Signed in successfully',
         message: 'Welcome back to ProfAI.',
       })
-      navigate(redirectPath, { replace: true })
+      navigate(payload.user.onboardingCompleted ? redirectPath : '/onboarding', { replace: true })
     } catch (error) {
       // Unregistered email → show an explicit "create account" call-to-action
       // instead of a generic error toast.
@@ -132,7 +125,7 @@ export default function Login() {
       // Full reload guarantees the persisted session is hydrated and the
       // destination route renders immediately (fixes the blank-until-refresh
       // behaviour after the Google popup closes).
-      window.location.assign(redirectPath)
+      window.location.assign(payload.user.onboardingCompleted ? redirectPath : '/onboarding')
     } catch (error) {
       // No account yet for this Google email — guide them to register instead
       // of silently creating one from the sign-in screen.
@@ -185,6 +178,18 @@ export default function Login() {
         <div className="panel-surface relative overflow-hidden rounded-[1.85rem] border border-red-100/90 bg-white/95 px-7 pb-7 pt-8 shadow-[0_30px_80px_rgba(127,29,29,0.2)]">
           {/* Top accent line */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
+
+          <div className="mb-6 grid grid-cols-2 rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 shadow-inner">
+            <span className="flex min-h-10 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.12)] ring-1 ring-red-100">
+              Sign in
+            </span>
+            <Link
+              to="/register"
+              className="flex min-h-10 items-center justify-center rounded-xl text-sm font-bold text-slate-600 transition hover:bg-white/75 hover:text-slate-950"
+            >
+              Create account
+            </Link>
+          </div>
 
           {/* Brand + heading */}
           <div className="mb-6 text-center">
@@ -288,12 +293,20 @@ export default function Login() {
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400 transition-colors group-focus-within:text-red-500" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  className="input h-11 rounded-xl border-red-100 bg-white/95 pl-11 text-sm font-medium shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
+                  className="input h-11 rounded-xl border-red-100 bg-white/95 pl-11 pr-11 text-sm font-medium shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
                   placeholder="Enter your password"
                   {...register('password')}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
               {errors.password ? <p className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</p> : null}
             </div>

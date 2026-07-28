@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, ArrowLeft, GraduationCap, Send, Sparkles } from 'lucide-react'
+import { Home, ArrowLeft, Send, MessageCircleWarning } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { BrandLockup, BrandMark } from '@/components/brand/BrandLogo'
 
 const paperPlanes = [
   { left: '12%', top: '18%', delay: 0, size: 22, rotate: -18 },
@@ -42,18 +43,16 @@ export default function NotFound() {
         transition={minimalMotion ? { duration: 0.14 } : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="premium-hero relative mx-auto flex max-w-2xl flex-col items-center p-10 text-center"
       >
-        <span className="premium-top-chip">
-          <Sparkles className="h-3.5 w-3.5" />
-          ProfAI
-        </span>
+        <BrandLockup subtitle="Your Path to Universities Abroad" />
 
         <motion.div
           initial={minimalMotion ? false : { opacity: 0, scale: 0.85, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={minimalMotion ? { duration: 0.14 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className={`mt-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-[#DC2626] via-[#EF4444] to-[#B91C1C] text-white shadow-[0_18px_38px_rgba(220,38,38,0.36)] ${minimalMotion ? '' : 'fx-float'}`}
+          className={`relative mt-6 flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/70 bg-gradient-to-br from-red-100 via-white to-rose-100 shadow-[0_24px_55px_rgba(220,38,38,0.28)] ${minimalMotion ? '' : 'fx-float'}`}
         >
-          <GraduationCap className="h-10 w-10 rotate-180" />
+          <span className="absolute inset-2 rounded-[1.5rem] bg-red-500/15 blur-xl" />
+          <BrandMark size={78} className="relative" />
         </motion.div>
 
         <motion.h1
@@ -84,6 +83,13 @@ export default function NotFound() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back
           </button>
+          <a
+            href="mailto:support@profai.uz?subject=ProfAI%20404%20report"
+            className="interactive-lift inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-red-200 hover:text-red-700"
+          >
+            <MessageCircleWarning className="mr-2 h-4 w-4" />
+            Report a problem
+          </a>
         </div>
       </motion.div>
     </div>

@@ -195,4 +195,60 @@ router.get(
   }),
 )
 
+router.get(
+  '/notifications',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const notifications = await prisma.notification.findMany({
+      where: { userId: req.user!.id },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        message: true,
+        metadata: true,
+        readAt: true,
+        createdAt: true,
+      },
+    })
+
+    return res.json({
+      notifications,
+      unreadCount: notifications.filter((notification) => !notification.readAt).length,
+    })
+  }),
+)
+
+router.patch(
+  '/notifications/read-all',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    await prisma.notification.updateMany({
+      where: { userId: req.user!.id, readAt: null },
+      data: { readAt: new Date() },
+    })
+    return res.json({ success: true })
+  }),
+)
+
+router.patch(
+  '/notifications/:notificationId/read',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const notification = await prisma.notification.findFirst({
+      where: { id: String(req.params.notificationId), userId: req.user!.id },
+      select: { id: true },
+    })
+    if (!notification) return res.status(404).json({ message: 'Notification not found.' })
+
+    await prisma.notification.update({
+      where: { id: notification.id },
+      data: { readAt: new Date() },
+    })
+    return res.json({ success: true })
+  }),
+)
+
 export default router

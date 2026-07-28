@@ -30,18 +30,27 @@ import {
 import { setNickname as apiSetNickname, checkNicknameAvailable } from '@/lib/speakingApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
 import { getUniversityBySlug } from '@/data/admission'
-import { CountUp, Reveal } from '@/components/fx'
+import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import BadgeShelf from '@/components/achievements/BadgeShelf'
 
 const NICKNAME_RE = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
 
 const EMPTY_PROFILE: AccountProfileFields = {
+  gender: null,
+  gradeLevel: null,
   phone: '',
   country: '',
   timezone: '',
   targetExam: 'BOTH',
   targetScore: '',
   examDate: '',
+  targetCountries: [],
+  currentIeltsScore: null,
+  targetIeltsScore: null,
+  currentSatScore: null,
+  targetSatScore: null,
+  dailyStudyHours: null,
+  onboardingCompletedAt: null,
   bio: '',
   fieldOfStudy: '',
   gpa: '',
@@ -178,12 +187,20 @@ export default function AccountProfile() {
     setSaving(true)
     try {
       const res = await updateAccount({
+        gender: form.gender,
+        gradeLevel: form.gradeLevel,
         phone: form.phone,
         country: form.country,
         timezone: form.timezone,
         targetExam: form.targetExam,
         targetScore: form.targetScore,
         examDate: form.examDate,
+        targetCountries: form.targetCountries,
+        currentIeltsScore: form.currentIeltsScore,
+        targetIeltsScore: form.targetIeltsScore,
+        currentSatScore: form.currentSatScore,
+        targetSatScore: form.targetSatScore,
+        dailyStudyHours: form.dailyStudyHours,
         bio: form.bio,
         fieldOfStudy: form.fieldOfStudy,
         gpa: form.gpa,
@@ -260,7 +277,11 @@ export default function AccountProfile() {
   const initials = (savedNickname || user?.fullName || 'U').slice(0, 2).toUpperCase()
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <AmbientBackdrop variant="red" />
+      <div className="pointer-events-none absolute -left-20 top-48 h-60 w-60 rounded-full bg-red-400/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
+      <div className="relative mx-auto w-full max-w-7xl">
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
 
       <Reveal>
@@ -280,7 +301,7 @@ export default function AccountProfile() {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(220,38,38,0.32)]">
+                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(239,68,68,0.82),0_20px_44px_rgba(220,38,38,0.34)]">
                   {avatarUrl ? <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" /> : initials}
                 </div>
                 <button
@@ -344,8 +365,24 @@ export default function AccountProfile() {
         </div>
       ) : (
         <>
+          <nav className="sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
+            {[
+              ['#identity', 'Profile'],
+              ['#targets', 'Study targets'],
+              ['#privacy', 'Privacy'],
+              ['#achievements', 'Achievements'],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                className="min-h-10 shrink-0 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
           {/* Nickname */}
-          <section className="mt-6 surface-card p-6">
+          <section id="identity" className="mt-6 scroll-mt-24 surface-card p-6">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
               <AtSign className="h-5 w-5 text-red-600" />
               Public nickname
@@ -381,7 +418,7 @@ export default function AccountProfile() {
           </section>
 
           {/* Personal + targets */}
-          <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <section id="targets" className="mt-6 scroll-mt-24 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="surface-card p-6">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <UserRound className="h-5 w-5 text-red-600" />
@@ -395,6 +432,18 @@ export default function AccountProfile() {
                 <label className="text-sm font-medium text-slate-700">
                   Country
                   <input value={form.country ?? ''} onChange={(e) => updateField('country', e.target.value)} className="input mt-1" placeholder="Country" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Grade level
+                  <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder="11th grade / Gap year" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Profile style
+                  <select value={form.gender ?? 'PREFER_NOT_TO_SAY'} onChange={(e) => updateField('gender', e.target.value)} className="input mt-1">
+                    <option value="FEMALE">Girl</option>
+                    <option value="MALE">Boy</option>
+                    <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                  </select>
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Target exam
@@ -411,6 +460,35 @@ export default function AccountProfile() {
                 <label className="text-sm font-medium text-slate-700">
                   Exam date
                   <input type="date" value={form.examDate ?? ''} onChange={(e) => updateField('examDate', e.target.value)} className="input mt-1" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Daily study hours
+                  <input type="number" min={1} max={12} value={form.dailyStudyHours ?? ''} onChange={(e) => updateField('dailyStudyHours', e.target.value ? Number(e.target.value) : null)} className="input mt-1" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Current IELTS
+                  <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="6.0" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Target IELTS
+                  <input type="number" min={0} max={9} step={0.5} value={form.targetIeltsScore ?? ''} onChange={(e) => updateField('targetIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="7.5" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Current SAT
+                  <input type="number" min={400} max={1600} step={10} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="1100" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Target SAT
+                  <input type="number" min={400} max={1600} step={10} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="1450" />
+                </label>
+                <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                  Target countries
+                  <input
+                    value={form.targetCountries.join(', ')}
+                    onChange={(e) => updateField('targetCountries', e.target.value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5))}
+                    className="input mt-1"
+                    placeholder="United States, United Kingdom, Canada"
+                  />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Field of study
@@ -443,7 +521,7 @@ export default function AccountProfile() {
 
             <div className="space-y-6">
               {/* Privacy */}
-              <article className="surface-card p-6">
+              <article id="privacy" className="scroll-mt-24 surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                   <ShieldCheck className="h-5 w-5 text-red-600" />
                   Privacy & visibility
@@ -483,7 +561,7 @@ export default function AccountProfile() {
           </section>
 
           {/* Badges */}
-          <section className="mt-6 surface-card p-6">
+          <section id="achievements" className="mt-6 scroll-mt-24 surface-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <Sparkles className="h-5 w-5 text-red-600" />
@@ -519,6 +597,7 @@ export default function AccountProfile() {
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }

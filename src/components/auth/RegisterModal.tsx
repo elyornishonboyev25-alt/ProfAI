@@ -10,6 +10,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useRegisterModalStore, type RegisterModalState } from '@/store/registerModalStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
+import type { AuthUser } from '@/types/platform'
 
 const registerSchema = z
   .object({
@@ -28,16 +29,7 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 type AuthSessionPayload = {
-  user: {
-    id: string
-    fullName: string
-    email: string
-    role: 'USER' | 'ADMIN'
-    premium: boolean
-    xp: number
-    level: number
-    currentStreak: number
-  }
+  user: AuthUser
   accessToken: string
   refreshToken: string
 }

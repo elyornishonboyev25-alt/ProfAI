@@ -1505,12 +1505,22 @@ const SKILL_TRACKS = [
 ] as const
 
 const accountUpdateSchema = z.object({
+  fullName: z.string().trim().min(2).max(120).optional(),
+  gender: z.enum(['FEMALE', 'MALE', 'PREFER_NOT_TO_SAY']).nullable().optional(),
+  gradeLevel: z.string().trim().max(40).nullable().optional(),
   phone: z.string().trim().max(40).nullable().optional(),
   country: z.string().trim().max(80).nullable().optional(),
   timezone: z.string().trim().max(80).nullable().optional(),
   targetExam: z.enum(EXAM_TARGETS).nullable().optional(),
   targetScore: z.string().trim().max(40).nullable().optional(),
   examDate: z.string().trim().max(40).nullable().optional(),
+  targetCountries: z.array(z.string().trim().min(2).max(80)).max(8).optional(),
+  currentIeltsScore: z.coerce.number().min(0).max(9).nullable().optional(),
+  targetIeltsScore: z.coerce.number().min(0).max(9).nullable().optional(),
+  currentSatScore: z.coerce.number().int().min(400).max(1600).nullable().optional(),
+  targetSatScore: z.coerce.number().int().min(400).max(1600).nullable().optional(),
+  dailyStudyHours: z.coerce.number().int().min(1).max(12).nullable().optional(),
+  onboardingCompletedAt: z.string().datetime().nullable().optional(),
   bio: z.string().trim().max(600).nullable().optional(),
   fieldOfStudy: z.string().trim().max(120).nullable().optional(),
   gpa: z.string().trim().max(20).nullable().optional(),
@@ -1525,12 +1535,21 @@ const accountUpdateSchema = z.object({
 })
 
 const PROFILE_DEFAULTS = {
+  gender: null,
+  gradeLevel: null,
   phone: null,
   country: null,
   timezone: null,
   targetExam: null,
   targetScore: null,
   examDate: null,
+  targetCountries: [],
+  currentIeltsScore: null,
+  targetIeltsScore: null,
+  currentSatScore: null,
+  targetSatScore: null,
+  dailyStudyHours: null,
+  onboardingCompletedAt: null,
   bio: null,
   fieldOfStudy: null,
   gpa: null,
@@ -1547,12 +1566,21 @@ const PROFILE_DEFAULTS = {
 function serializeProfile(profile: Record<string, any> | null) {
   if (!profile) return { ...PROFILE_DEFAULTS }
   return {
+    gender: profile.gender ?? null,
+    gradeLevel: profile.gradeLevel ?? null,
     phone: profile.phone ?? null,
     country: profile.country ?? null,
     timezone: profile.timezone ?? null,
     targetExam: profile.targetExam ?? null,
     targetScore: profile.targetScore ?? null,
     examDate: profile.examDate ?? null,
+    targetCountries: Array.isArray(profile.targetCountries) ? profile.targetCountries : [],
+    currentIeltsScore: profile.currentIeltsScore ?? null,
+    targetIeltsScore: profile.targetIeltsScore ?? null,
+    currentSatScore: profile.currentSatScore ?? null,
+    targetSatScore: profile.targetSatScore ?? null,
+    dailyStudyHours: profile.dailyStudyHours ?? null,
+    onboardingCompletedAt: profile.onboardingCompletedAt?.toISOString?.() ?? profile.onboardingCompletedAt ?? null,
     bio: profile.bio ?? null,
     fieldOfStudy: profile.fieldOfStudy ?? null,
     gpa: profile.gpa ?? null,
@@ -1602,13 +1630,22 @@ router.put(
   requireAuth,
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
-    const data = accountUpdateSchema.parse(req.body ?? {})
+    const { fullName, onboardingCompletedAt, ...profileData } = accountUpdateSchema.parse(req.body ?? {})
+    const data = {
+      ...profileData,
+      ...(onboardingCompletedAt !== undefined
+        ? { onboardingCompletedAt: onboardingCompletedAt ? new Date(onboardingCompletedAt) : null }
+        : {}),
+    }
+    if (fullName) {
+      await prisma.user.update({ where: { id: userId }, data: { fullName } })
+    }
     const profile = await prisma.userProfile.upsert({
       where: { userId },
       update: data,
       create: { userId, ...data },
     })
-    return res.json({ profile: serializeProfile(profile) })
+    return res.json({ fullName, profile: serializeProfile(profile) })
   }),
 )
 
@@ -1721,16 +1758,35 @@ router.delete(
   }),
 )
 
-const searchQuerySchema = z.object({ q: z.string().trim().min(1).max(40) })
+const searchQuerySchema = z.object({
+  q: z.string().trim().max(40).default(''),
+  targetExam: z.enum(['IELTS', 'SAT']).optional(),
+  country: z.string().trim().max(80).optional(),
+  online: z.coerce.boolean().optional(),
+})
 
 router.get(
   '/search',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { q } = searchQuerySchema.parse(req.query ?? {})
+    const { q, targetExam, country, online } = searchQuerySchema.parse(req.query ?? {})
+    const activeSince = new Date(Date.now() - 3 * 60 * 1000)
     const users = await prisma.user.findMany({
       where: {
-        nickname: { contains: q, mode: 'insensitive' },
+        id: { not: req.user!.id },
+        ...(q ? { nickname: { contains: q, mode: 'insensitive' as const } } : {}),
+        ...(online ? { lastActiveDate: { gte: activeSince } } : {}),
+        ...((targetExam || country)
+          ? {
+              profile: {
+                is: {
+                  isPublic: true,
+                  ...(targetExam ? { targetExam } : {}),
+                  ...(country ? { country: { equals: country, mode: 'insensitive' as const } } : {}),
+                },
+              },
+            }
+          : {}),
         OR: [{ profile: { is: null } }, { profile: { isPublic: true } }],
       },
       select: {
@@ -1739,6 +1795,15 @@ router.get(
         level: true,
         xp: true,
         currentStreak: true,
+        lastActiveDate: true,
+        profile: {
+          select: {
+            country: true,
+            targetExam: true,
+            targetScore: true,
+            targetUniversitySlug: true,
+          },
+        },
         _count: { select: { skillBadges: true } },
       },
       take: 24,
@@ -1752,6 +1817,11 @@ router.get(
         xp: u.xp,
         streak: u.currentStreak,
         badgeCount: u._count.skillBadges,
+        country: u.profile?.country ?? null,
+        targetExam: u.profile?.targetExam ?? null,
+        targetScore: u.profile?.targetScore ?? null,
+        targetUniversitySlug: u.profile?.targetUniversitySlug ?? null,
+        online: Boolean(u.lastActiveDate && u.lastActiveDate >= activeSince),
       })),
     })
   }),
@@ -1845,4 +1915,3 @@ router.get(
 )
 
 export default router
-

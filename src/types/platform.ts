@@ -13,6 +13,8 @@ export type AuthUser = {
   nickname?: string | null
   /** Profile photo as a (compressed) data URL or external URL. */
   avatarUrl?: string | null
+  /** Server-backed flag that makes the study-plan onboarding a one-time flow. */
+  onboardingCompleted: boolean
 }
 
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'OLYMPIAD'
@@ -608,4 +610,3 @@ export type FocusAnalyticsPayload = {
   }>
   smartSuggestion: string
 }
-

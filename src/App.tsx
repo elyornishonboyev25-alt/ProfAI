@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { TopNavigation } from '@/components/layout/TopNavigation'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
-import { Skeleton } from '@/components/common/Skeleton'
+import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
@@ -45,6 +45,7 @@ const SpeakingLab = lazy(() => import('@/pages/SpeakingLab'))
 const SpeakingCommunity = lazy(() => import('@/pages/SpeakingCommunity'))
 const SpeakerProfile = lazy(() => import('@/pages/SpeakerProfile'))
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'))
+const Community = lazy(() => import('@/pages/Community'))
 const Mock = lazy(() => import('@/pages/Mock'))
 const MockIELTS = lazy(() => import('@/pages/MockIELTS'))
 const MockIELTSRun = lazy(() => import('@/pages/MockIELTSRun'))
@@ -97,13 +98,7 @@ function toDateISO(date: Date) {
 }
 
 function RouteLoader() {
-  return (
-    <div className="p-8">
-      <Skeleton className="h-10 w-56" />
-      <Skeleton className="mt-3 h-5 w-72" />
-      <Skeleton className="mt-6 h-72 w-full rounded-2xl" />
-    </div>
-  )
+  return <BrandPageLoader />
 }
 
 function AnimatedRoute({ children }: { children: ReactNode }) {
@@ -221,6 +216,15 @@ function App() {
     }, 60000)
     return () => window.clearInterval(id)
   }, [user?.id])
+
+  // Onboarding is a required, server-backed one-time contract. Once completed,
+  // the flag travels with the account and this guard never interrupts the user again.
+  if (user && !user.onboardingCompleted && pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
+  if (user?.onboardingCompleted && pathname === '/onboarding') {
+    return <Navigate to="/dashboard" replace />
+  }
 
   return (
     <div className="app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100">
@@ -488,7 +492,13 @@ function App() {
                       />
                       <Route
                         path="/community"
-                        element={<Navigate to="/dashboard" replace />}
+                        element={
+                          <ProtectedRoute>
+                            <AnimatedRoute>
+                              <Community />
+                            </AnimatedRoute>
+                          </ProtectedRoute>
+                        }
                       />
                       <Route
                         path="/u/:nickname"

@@ -15,6 +15,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  Users,
   UserRound,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -59,6 +60,12 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
       { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
       { id: 'speaking-community', label: 'Speaking', icon: Headset, path: '/speaking-community' },
+    ],
+  },
+  {
+    heading: 'More',
+    items: [
+      { id: 'community', label: 'Community', icon: Users, path: '/community' },
     ],
   },
 ]

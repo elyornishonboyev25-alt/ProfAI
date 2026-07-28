@@ -12,6 +12,8 @@ export type AuthState = {
   updateUserProgress: (payload: { xp?: number; level?: number; currentStreak?: number }) => void
   setUserNickname: (nickname: string) => void
   setUserAvatar: (avatarUrl: string | null) => void
+  setUserFullName: (fullName: string) => void
+  setOnboardingCompleted: (completed: boolean) => void
   clearSession: () => void
   setHydrated: (value: boolean) => void
 }
@@ -54,6 +56,10 @@ export const useAuthStore = create<AuthState>()(
         set((state) => (state.user ? { user: { ...state.user, nickname } } : {})),
       setUserAvatar: (avatarUrl: string | null) =>
         set((state) => (state.user ? { user: { ...state.user, avatarUrl } } : {})),
+      setUserFullName: (fullName: string) =>
+        set((state) => (state.user ? { user: { ...state.user, fullName } } : {})),
+      setOnboardingCompleted: (completed: boolean) =>
+        set((state) => (state.user ? { user: { ...state.user, onboardingCompleted: completed } } : {})),
       clearSession: () =>
         set({
           user: null,
@@ -63,7 +69,9 @@ export const useAuthStore = create<AuthState>()(
       setHydrated: (value: boolean) => set({ hydrated: value }),
     }),
     {
-      name: 'smart-test-pro-auth',
+      // v2 intentionally invalidates old browser sessions once. This rolls every
+      // existing learner through the new login + one-time onboarding contract.
+      name: 'smart-test-pro-auth-v2',
       partialize: (state: AuthState) => ({
         user: state.user,
         accessToken: state.accessToken,
@@ -81,4 +89,3 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 )
-

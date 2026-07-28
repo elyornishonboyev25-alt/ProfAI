@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
+  ArrowLeft,
   BadgeCheck,
   Bot,
   CheckCircle2,
@@ -18,6 +19,7 @@ import {
   Star,
   Zap,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { BrandMark } from '@/components/brand/BrandLogo'
@@ -45,26 +47,26 @@ const PLANS: Plan[] = [
   {
     id: 'basic',
     name: 'Basic',
-    price: '$4.99',
+    price: '$3.99',
     period: '/month',
     tokens: '200,000 tokens',
-    tagline: 'Entry level — for new learners getting started.',
+    tagline: 'A focused starting plan for consistent self-study.',
     icon: Zap,
     accent: 'from-emerald-500 to-green-600',
     features: [
       '200K AI tokens every month',
       'AI Speaking & Writing practice',
       'Daily challenges & streaks',
-      'Full IELTS & SAT test library',
+      '5 full mock unlocks each month',
     ],
   },
   {
     id: 'standard',
     name: 'Standard',
-    price: '$12.99',
+    price: '$8.99',
     period: '/month',
     tokens: '1,000,000 tokens',
-    tagline: 'Most popular — the best balance for daily study.',
+    tagline: 'The best balance of practice, feedback and analytics.',
     icon: Rocket,
     accent: 'from-[#EF4444] via-[#DC2626] to-[#B91C1C]',
     badge: 'MOST POPULAR',
@@ -72,7 +74,8 @@ const PLANS: Plan[] = [
     features: [
       '1M AI tokens every month',
       'Everything in Basic',
-      'Weak-point analysis & smart roadmap',
+      'All 30 full mocks',
+      'IELTS + SAT weak-point analysis',
       'Priority feedback on mistakes',
       'Advanced progress statistics',
     ],
@@ -80,16 +83,16 @@ const PLANS: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '$24.99',
+    price: '$16.99',
     period: '/month',
     tokens: '3,000,000 tokens',
-    tagline: 'For serious students chasing top results.',
+    tagline: 'For ambitious learners targeting competitive scores.',
     icon: Gem,
     accent: 'from-violet-500 to-purple-700',
     features: [
       '3M AI tokens every month',
       'Everything in Standard',
-      'Personal day-by-day study plan',
+      'Adaptive day-by-day study plan',
       'University application roadmap',
       'Scholarship & portfolio tips',
     ],
@@ -97,10 +100,10 @@ const PLANS: Plan[] = [
   {
     id: 'unlimited',
     name: 'Unlimited',
-    price: '$49.99',
+    price: '$29.99',
     period: '/month',
     tokens: '8,000,000 tokens',
-    tagline: 'Pro feeling — priority AI with soft fair-usage limits.',
+    tagline: 'Maximum AI capacity and priority support for intensive prep.',
     icon: Crown,
     accent: 'from-amber-500 via-orange-500 to-red-600',
     badge: 'PREMIUM',
@@ -133,6 +136,7 @@ const PAYMENT_STEPS = [
 ]
 
 export default function Premium() {
+  const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [copied, setCopied] = useState(false)
@@ -159,6 +163,13 @@ export default function Premium() {
       </div>
 
       <div className="relative mx-auto w-full max-w-6xl">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-red-100 bg-white/85 px-4 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-red-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </button>
         {/* Hero */}
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 18 }}
@@ -168,7 +179,7 @@ export default function Premium() {
         >
           <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-red-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-700 shadow-[0_8px_20px_rgba(220,38,38,0.12)]">
             <Crown className="h-3.5 w-3.5 text-amber-500" />
-            SmarTest Premium
+            ProfAI Premium
           </span>
           <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1F2937] sm:text-5xl">
             Unlock your{' '}
@@ -177,9 +188,9 @@ export default function Premium() {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-[#6B7280]">
-            Turn studying into a game. Unlock unlimited AI coaching, smart roadmaps, weak-point analysis and the
-            momentum to reach <span className="font-bold text-red-600">IELTS 6.5+</span> and{' '}
-            <span className="font-bold text-red-600">SAT 1200+</span>.
+            Invest in adaptive feedback, mistake intelligence and a plan that changes with your progress—not access
+            to basic exam information. Built for targets up to <span className="font-bold text-red-600">IELTS 9.0</span>{' '}
+            and <span className="font-bold text-red-600">SAT 1600</span>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
@@ -261,7 +272,7 @@ export default function Premium() {
                 </ul>
 
                 <a
-                  href={`${TELEGRAM_URL}?text=${encodeURIComponent(`Salom! Men SmarTest ${plan.name} (${plan.price}/oy) premium tarifini sotib olmoqchiman.`)}`}
+                  href={`${TELEGRAM_URL}?text=${encodeURIComponent(`Salom! Men ProfAI ${plan.name} (${plan.price}/oy) premium tarifini sotib olmoqchiman.`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className={`interactive-lift mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
@@ -376,7 +387,7 @@ export default function Premium() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/65">Payment card</p>
                   <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-black tracking-wide">
                     <Crown className="h-4 w-4 text-amber-300" />
-                    SmarTest Premium
+                    ProfAI Premium
                   </p>
                 </div>
                 <BrandMark size={38} />

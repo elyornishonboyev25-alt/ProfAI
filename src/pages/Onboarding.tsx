@@ -12,6 +12,9 @@ import {
   Clock3,
   Flame,
   GraduationCap,
+  Globe2,
+  MapPin,
+  School,
   Sparkles,
   Target,
   Trophy,
@@ -33,7 +36,20 @@ import {
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
 
-type StepId = 1 | 2 | 3 | 4
+type StepId = 1 | 2 | 3 | 4 | 5 | 6
+
+type Gender = 'FEMALE' | 'MALE' | 'PREFER_NOT_TO_SAY'
+
+const GRADE_LEVELS = ['8th grade', '9th grade', '10th grade', '11th grade', '12th grade', 'Gap year', 'University'] as const
+
+const DESTINATIONS = [
+  { value: 'United States', flag: '🇺🇸' },
+  { value: 'United Kingdom', flag: '🇬🇧' },
+  { value: 'Canada', flag: '🇨🇦' },
+  { value: 'Australia', flag: '🇦🇺' },
+  { value: 'Germany', flag: '🇩🇪' },
+  { value: 'Singapore', flag: '🇸🇬' },
+] as const
 
 const EXAM_CARDS = [
   {
@@ -94,10 +110,12 @@ const SAT_TEST_DATES = [
 ] as const
 
 const STEP_META: { id: StepId; label: string; eyebrow: string; title: string; hint: string }[] = [
-  { id: 1, label: 'Profile', eyebrow: 'About you', title: 'What should we call you?', hint: 'Your name personalizes your dashboard and certificates.' },
-  { id: 2, label: 'Goal', eyebrow: 'Your target', title: 'What are you preparing for?', hint: 'Pick the exam you want a tailored roadmap for.' },
-  { id: 3, label: 'Timeline', eyebrow: 'Your schedule', title: 'Set your study pace', hint: 'We balance daily workload around your deadline and free time.' },
-  { id: 4, label: 'Review', eyebrow: 'Almost there', title: 'Review your study plan', hint: 'Confirm the details and we will generate your rolling 7-day plan.' },
+  { id: 1, label: 'Identity', eyebrow: 'About you', title: 'Create your learner identity', hint: 'Your name and avatar personalize your dashboard and certificates.' },
+  { id: 2, label: 'Background', eyebrow: 'Your context', title: 'Where are you starting from?', hint: 'Your country and grade help us make the plan realistic.' },
+  { id: 3, label: 'Goal', eyebrow: 'Your target', title: 'What are you preparing for?', hint: 'Pick the exam you want a tailored roadmap for.' },
+  { id: 4, label: 'Timeline', eyebrow: 'Your schedule', title: 'Set your scores and study pace', hint: 'We balance daily workload around your deadline and free time.' },
+  { id: 5, label: 'Destination', eyebrow: 'Study abroad', title: 'Where do you want to study?', hint: 'Choose target countries and the subject you want to pursue.' },
+  { id: 6, label: 'Review', eyebrow: 'Almost there', title: 'Review your study plan', hint: 'Confirm the details and we will generate your rolling 7-day plan.' },
 ]
 
 const PLAN_GENERATION_STEPS = [
@@ -131,12 +149,19 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const setUserAvatar = useAuthStore((state: AuthState) => state.setUserAvatar)
+  const setUserFullName = useAuthStore((state: AuthState) => state.setUserFullName)
+  const setOnboardingCompleted = useAuthStore((state: AuthState) => state.setOnboardingCompleted)
   const { minimalMotion } = useMotionPreferences()
 
   const [step, setStep] = useState<StepId>(1)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [gender, setGender] = useState<Gender>('PREFER_NOT_TO_SAY')
+  const [country, setCountry] = useState('Uzbekistan')
+  const [gradeLevel, setGradeLevel] = useState('11th grade')
+  const [targetCountries, setTargetCountries] = useState<string[]>(['United States'])
+  const [fieldOfStudy, setFieldOfStudy] = useState('')
   const [targetExam, setTargetExam] = useState<ExamTarget>('IELTS')
   const [daysToExam, setDaysToExam] = useState(60)
   const [customDays, setCustomDays] = useState('')
@@ -152,6 +177,7 @@ export default function Onboarding() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const firstNameRef = useRef<HTMLInputElement>(null)
 
@@ -192,6 +218,11 @@ export default function Onboarding() {
     if (existing) {
       setFirstName(existing.firstName)
       setLastName(existing.lastName)
+      setGender(existing.gender ?? 'PREFER_NOT_TO_SAY')
+      setCountry(existing.country ?? 'Uzbekistan')
+      setGradeLevel(existing.gradeLevel ?? '11th grade')
+      setTargetCountries(existing.targetCountries?.length ? existing.targetCountries : ['United States'])
+      setFieldOfStudy(existing.fieldOfStudy ?? '')
       setTargetExam(existing.targetExam)
       setDaysToExam(existing.daysToExam)
       setDailyHours(existing.dailyHours)
@@ -256,7 +287,18 @@ export default function Onboarding() {
       : targetExam === 'SAT'
         ? Boolean(satExamDate) && targetSatScore >= currentSatScore
         : Boolean(ieltsExamDate && satExamDate) && targetIeltsScore >= currentIeltsScore && targetSatScore >= currentSatScore
-  const canContinue = step === 1 ? nameReady : step === 3 ? examProfileReady : true
+  const backgroundReady = country.trim().length >= 2 && gradeLevel.trim().length > 0
+  const destinationReady = targetCountries.length > 0 && fieldOfStudy.trim().length >= 2
+  const canContinue =
+    step === 1
+      ? nameReady
+      : step === 2
+        ? backgroundReady
+        : step === 4
+          ? examProfileReady
+          : step === 5
+            ? destinationReady
+            : true
 
   const goTo = (next: StepId, dir: 'forward' | 'back') => {
     setDirection(dir)
@@ -264,7 +306,7 @@ export default function Onboarding() {
   }
 
   const handleContinue = () => {
-    if (step < 4) goTo((step + 1) as StepId, 'forward')
+    if (step < 6) goTo((step + 1) as StepId, 'forward')
   }
 
   const handleBack = () => {
@@ -274,12 +316,18 @@ export default function Onboarding() {
 
   const generatePlan = () => {
     if (!nameReady || stage !== 'idle') return
+    setSaveError('')
     setStage('generating')
 
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       const profile: OnboardingProfile = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        gender,
+        country: country.trim(),
+        gradeLevel,
+        targetCountries,
+        fieldOfStudy: fieldOfStudy.trim(),
         targetExam,
         daysToExam: Math.max(1, resolvedDays),
         dailyHours: Math.max(3, dailyHours),
@@ -296,9 +344,38 @@ export default function Onboarding() {
       saveOnboardingProfile(profile, user?.id)
       saveWeeklyPlan(plan, user?.id)
       saveToAccountProfile(profile.firstName, profile.lastName, targetExam)
+      setUserFullName(`${profile.firstName} ${profile.lastName}`.trim())
       // Persist the exam target to the permanent backend profile so it pre-fills
       // the profile page and survives across devices (best-effort).
-      void updateAccount({ targetExam }).catch(() => {})
+      try {
+        await updateAccount({
+          fullName: `${profile.firstName} ${profile.lastName}`.trim(),
+          gender,
+          country: country.trim(),
+          gradeLevel,
+          targetExam,
+          targetScore:
+            targetExam === 'IELTS'
+              ? `IELTS ${targetIeltsScore}`
+              : targetExam === 'SAT'
+                ? `SAT ${targetSatScore}`
+                : `IELTS ${targetIeltsScore} / SAT ${targetSatScore}`,
+          examDate: selectedExamDate || null,
+          targetCountries,
+          currentIeltsScore: targetExam === 'SAT' ? null : currentIeltsScore,
+          targetIeltsScore: targetExam === 'SAT' ? null : targetIeltsScore,
+          currentSatScore: targetExam === 'IELTS' ? null : currentSatScore,
+          targetSatScore: targetExam === 'IELTS' ? null : targetSatScore,
+          dailyStudyHours: dailyHours,
+          fieldOfStudy: fieldOfStudy.trim(),
+          onboardingCompletedAt: new Date().toISOString(),
+        })
+        setOnboardingCompleted(true)
+      } catch (requestError) {
+        setStage('idle')
+        setSaveError(requestError instanceof Error ? requestError.message : 'Your profile could not be saved. Please try again.')
+        return
+      }
 
       setStage('success')
       window.setTimeout(() => {
@@ -384,7 +461,19 @@ export default function Onboarding() {
             {/* Heading */}
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-50 to-rose-100 text-red-600">
-                {step === 1 ? <User className="h-5 w-5" /> : step === 2 ? <Target className="h-5 w-5" /> : step === 3 ? <CalendarRange className="h-5 w-5" /> : <GraduationCap className="h-5 w-5" />}
+                {step === 1 ? (
+                  <User className="h-5 w-5" />
+                ) : step === 2 ? (
+                  <MapPin className="h-5 w-5" />
+                ) : step === 3 ? (
+                  <Target className="h-5 w-5" />
+                ) : step === 4 ? (
+                  <CalendarRange className="h-5 w-5" />
+                ) : step === 5 ? (
+                  <Globe2 className="h-5 w-5" />
+                ) : (
+                  <GraduationCap className="h-5 w-5" />
+                )}
               </span>
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-600">{meta.eyebrow}</p>
@@ -480,6 +569,32 @@ export default function Onboarding() {
                           />
                         </div>
                       </label>
+                      <div className="sm:col-span-2">
+                        <span className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                          Avatar style
+                        </span>
+                        <div className="grid gap-2 sm:grid-cols-3">
+                          {([
+                            ['FEMALE', 'Girl', 'Personalizes avatar suggestions'],
+                            ['MALE', 'Boy', 'Personalizes avatar suggestions'],
+                            ['PREFER_NOT_TO_SAY', 'Prefer not to say', 'Keeps this private'],
+                          ] as const).map(([value, label, detail]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setGender(value)}
+                              className={`rounded-2xl border px-3 py-3 text-left transition ${
+                                gender === value
+                                  ? 'border-red-500 bg-red-50 shadow-[0_8px_20px_rgba(220,38,38,0.12)]'
+                                  : 'border-slate-200 bg-white hover:border-red-200'
+                              }`}
+                            >
+                              <span className={`text-sm font-black ${gender === value ? 'text-red-700' : 'text-slate-800'}`}>{label}</span>
+                              <span className="mt-0.5 block text-[10px] text-slate-500">{detail}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">Last name</span>
                         <input
@@ -500,6 +615,46 @@ export default function Onboarding() {
                   ) : null}
 
                   {step === 2 ? (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                          Country
+                        </span>
+                        <div className="relative">
+                          <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <input
+                            value={country}
+                            onChange={(event) => setCountry(event.target.value)}
+                            placeholder="Uzbekistan"
+                            className="h-12 w-full rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                          />
+                        </div>
+                      </label>
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                          Current grade
+                        </span>
+                        <div className="relative">
+                          <School className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <select
+                            value={gradeLevel}
+                            onChange={(event) => setGradeLevel(event.target.value)}
+                            className="h-12 w-full appearance-none rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                          >
+                            {GRADE_LEVELS.map((grade) => <option key={grade}>{grade}</option>)}
+                          </select>
+                        </div>
+                      </label>
+                      <div className="sm:col-span-2 rounded-[1.5rem] border border-red-100 bg-gradient-to-br from-white to-red-50/70 p-5">
+                        <p className="text-sm font-black text-slate-900">Why we ask this</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          Your school stage changes the balance between exam preparation, university research and application deadlines. This information stays private.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {step === 3 ? (
                     <div className="grid gap-3 sm:grid-cols-3">
                       {EXAM_CARDS.map((card) => {
                         const selected = targetExam === card.key
@@ -546,7 +701,7 @@ export default function Onboarding() {
                     </div>
                   ) : null}
 
-                  {step === 3 ? (
+                  {step === 4 ? (
                     <div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {targetExam !== 'SAT' ? (
@@ -666,7 +821,58 @@ export default function Onboarding() {
                     </div>
                   ) : null}
 
-                  {step === 4 ? (
+                  {step === 5 ? (
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-500">Target countries</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {DESTINATIONS.map((destination) => {
+                          const active = targetCountries.includes(destination.value)
+                          return (
+                            <button
+                              key={destination.value}
+                              type="button"
+                              onClick={() =>
+                                setTargetCountries((current) =>
+                                  active
+                                    ? current.filter((item) => item !== destination.value)
+                                    : current.length < 3
+                                      ? [...current, destination.value]
+                                      : current,
+                                )
+                              }
+                              className={`rounded-2xl border p-3 text-left transition ${
+                                active
+                                  ? 'border-red-500 bg-red-50 shadow-[0_8px_20px_rgba(220,38,38,0.12)]'
+                                  : 'border-slate-200 bg-white hover:border-red-200'
+                              }`}
+                            >
+                              <span className="text-xl">{destination.flag}</span>
+                              <span className={`mt-1 block text-xs font-black ${active ? 'text-red-700' : 'text-slate-800'}`}>
+                                {destination.value}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations.</p>
+                      <label className="mt-5 block">
+                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
+                          Intended field of study
+                        </span>
+                        <div className="relative">
+                          <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <input
+                            value={fieldOfStudy}
+                            onChange={(event) => setFieldOfStudy(event.target.value)}
+                            placeholder="Computer Science, Economics, Medicine..."
+                            className="h-12 w-full rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                          />
+                        </div>
+                      </label>
+                    </div>
+                  ) : null}
+
+                  {step === 6 ? (
                     <div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white shadow-sm">
                         <div className="h-1 w-full bg-gradient-to-r from-red-600 to-rose-500" />
@@ -674,6 +880,16 @@ export default function Onboarding() {
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Learner</p>
                             <p className="mt-1 text-base font-black text-slate-900">{firstName} {lastName}</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Background</p>
+                            <p className="mt-1 text-base font-black text-slate-900">{gradeLevel}</p>
+                            <p className="text-[11px] text-slate-500">{country}</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Study abroad goal</p>
+                            <p className="mt-1 text-base font-black text-slate-900">{fieldOfStudy}</p>
+                            <p className="line-clamp-1 text-[11px] text-slate-500">{targetCountries.join(' · ')}</p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Target exam</p>
@@ -721,7 +937,7 @@ export default function Onboarding() {
                 {step === 1 ? 'Exit' : 'Back'}
               </button>
 
-              {step < 4 ? (
+              {step < 6 ? (
                 <button
                   type="button"
                   onClick={handleContinue}
@@ -732,6 +948,7 @@ export default function Onboarding() {
                   <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
+                <div className="flex flex-col items-end">
                 <motion.button
                   type="button"
                   onClick={generatePlan}
@@ -743,6 +960,12 @@ export default function Onboarding() {
                   <Sparkles className="h-4 w-4" />
                   {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
                 </motion.button>
+                {saveError ? (
+                  <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-xs font-bold text-red-700">
+                    {saveError}
+                  </p>
+                ) : null}
+                </div>
               )}
             </div>
           </div>

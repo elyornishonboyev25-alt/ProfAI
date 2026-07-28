@@ -10,6 +10,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import type { AuthUser } from '@/types/platform'
 
 const registerSchema = z
   .object({
@@ -28,16 +29,7 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 type AuthSessionPayload = {
-  user: {
-    id: string
-    fullName: string
-    email: string
-    role: 'USER' | 'ADMIN'
-    premium: boolean
-    xp: number
-    level: number
-    currentStreak: number
-  }
+  user: AuthUser
   accessToken: string
   refreshToken: string
 }
@@ -109,7 +101,7 @@ export default function Register() {
       })
       // Full reload guarantees the persisted session is hydrated before the
       // dashboard renders (fixes the blank-until-refresh behaviour).
-      window.location.assign('/dashboard')
+      window.location.assign('/onboarding')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Google sign-up failed'
       pushToast({
@@ -146,8 +138,12 @@ export default function Register() {
         className="panel-surface relative grid w-full max-w-5xl overflow-hidden rounded-[2.2rem] border border-red-100/90 bg-white/95 shadow-[0_30px_90px_rgba(127,29,29,0.18)] lg:grid-cols-[0.92fr_1.08fr]"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
-        <div className="relative hidden min-h-[520px] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-[#3f0d12] p-8 text-white lg:block">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(220,38,38,0.28),transparent_36%),radial-gradient(circle_at_82%_76%,rgba(225,29,72,0.2),transparent_40%)]" />
+        <div
+          className="relative hidden min-h-[520px] overflow-hidden bg-slate-950 bg-cover bg-center p-8 text-white lg:block"
+          style={{ backgroundImage: "url('/assets/auth/students-collaborating.webp')" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/78 via-slate-950/68 to-red-950/92" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(220,38,38,0.3),transparent_36%),radial-gradient(circle_at_82%_76%,rgba(225,29,72,0.22),transparent_40%)]" />
           <motion.div
             initial={minimalMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -189,7 +185,7 @@ export default function Register() {
             </p>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-[#1F2937]">Create your account</h1>
             <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-              No name required. Use your Gmail address and set a secure password.
+              Start securely with Gmail. Your name, avatar and study goals are collected once in the guided setup.
             </p>
           </div>
 

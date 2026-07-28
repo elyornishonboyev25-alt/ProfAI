@@ -3,6 +3,11 @@ export type ExamTarget = 'IELTS' | 'SAT' | 'BOTH'
 export type OnboardingProfile = {
   firstName: string
   lastName: string
+  gender?: 'FEMALE' | 'MALE' | 'PREFER_NOT_TO_SAY'
+  country?: string
+  gradeLevel?: string
+  targetCountries?: string[]
+  fieldOfStudy?: string
   targetExam: ExamTarget
   daysToExam: number
   dailyHours: number

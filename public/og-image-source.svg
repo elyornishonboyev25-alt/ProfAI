@@ -1,0 +1,57 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="65" y1="30" x2="1150" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset=".5" stop-color="#FFF7F7"/>
+      <stop offset="1" stop-color="#FFF1EB"/>
+    </linearGradient>
+    <linearGradient id="red" x1="170" y1="115" x2="430" y2="408" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5A4D"/>
+      <stop offset=".55" stop-color="#EF3B35"/>
+      <stop offset="1" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="button" x1="680" y1="440" x2="1060" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#991B1B"/>
+      <stop offset=".5" stop-color="#EF4444"/>
+      <stop offset="1" stop-color="#FB7185"/>
+    </linearGradient>
+    <filter id="shadow" x="-60%" y="-60%" width="220%" height="240%">
+      <feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#991B1B" flood-opacity=".22"/>
+    </filter>
+    <filter id="blur"><feGaussianBlur stdDeviation="42"/></filter>
+  </defs>
+  <rect width="1200" height="630" rx="0" fill="url(#bg)"/>
+  <circle cx="1085" cy="80" r="118" fill="#EF4444" fill-opacity=".18" filter="url(#blur)"/>
+  <circle cx="80" cy="570" r="150" fill="#FB7185" fill-opacity=".15" filter="url(#blur)"/>
+  <circle cx="765" cy="590" r="100" fill="#FB923C" fill-opacity=".12" filter="url(#blur)"/>
+  <g opacity=".26">
+    <path d="M0 105H1200M0 210H1200M0 315H1200M0 420H1200M0 525H1200" stroke="#E2E8F0"/>
+    <path d="M120 0V630M240 0V630M360 0V630M480 0V630M600 0V630M720 0V630M840 0V630M960 0V630M1080 0V630" stroke="#E2E8F0"/>
+  </g>
+  <rect x="52" y="48" width="1096" height="534" rx="44" fill="white" fill-opacity=".68" stroke="white" stroke-width="2"/>
+  <g filter="url(#shadow)">
+    <path d="M297 134L482 217L297 300L112 217L297 134Z" fill="url(#red)" stroke="white" stroke-opacity=".64" stroke-width="3"/>
+    <path d="M193 252L297 300L401 252V337C401 373 355 400 297 400C239 400 193 373 193 337V252Z" fill="url(#red)"/>
+    <path d="M297 217C376 209 438 218 438 253V327" stroke="#7F1D1D" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="438" cy="343" r="22" fill="#EF4444" stroke="white" stroke-width="6"/>
+    <path d="M438 359L420 400H456L438 359Z" fill="#991B1B"/>
+    <g fill="white" fill-opacity=".88">
+      <path d="M199 204C213 190 239 189 250 199C258 208 248 219 237 223C225 228 225 243 237 249C222 256 196 244 190 226C187 217 190 211 199 204Z"/>
+      <path d="M274 178C287 170 306 173 310 184C313 193 302 199 307 208C313 218 301 227 290 222C274 215 265 195 274 178Z"/>
+      <path d="M329 175C362 163 402 168 416 183C426 194 410 206 393 209C379 211 378 222 391 229C365 237 326 224 318 203C314 192 318 181 329 175Z"/>
+      <path d="M301 229C318 224 334 235 333 251C332 268 319 285 305 287C292 288 284 277 288 264C291 253 279 247 285 238C288 233 294 230 301 229Z"/>
+    </g>
+  </g>
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="565" y="153" fill="#0F172A" font-size="58" font-weight="900" letter-spacing="-2">Prof<tspan fill="#DC2626">AI</tspan></text>
+    <rect x="565" y="180" width="194" height="36" rx="18" fill="#FEE2E2" stroke="#FECACA"/>
+    <text x="586" y="204" fill="#B91C1C" font-size="15" font-weight="800" letter-spacing="2">STUDY ABROAD OS</text>
+    <text x="565" y="280" fill="#0F172A" font-size="55" font-weight="900" letter-spacing="-2">Prepare. Prove.</text>
+    <text x="565" y="343" fill="#DC2626" font-size="55" font-weight="900" letter-spacing="-2">Get admitted.</text>
+    <text x="565" y="391" fill="#475569" font-size="23" font-weight="500">SAT · IELTS · English · Admissions</text>
+    <rect x="565" y="439" width="430" height="78" rx="24" fill="url(#button)" filter="url(#shadow)"/>
+    <text x="612" y="488" fill="white" font-size="24" font-weight="800">Your AI-powered roadmap</text>
+    <text x="1035" y="488" fill="white" font-size="30" font-weight="700">→</text>
+    <text x="565" y="552" fill="#64748B" font-size="17" font-weight="700">profai.uz</text>
+  </g>
+</svg>

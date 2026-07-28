@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Award, Bell, ChevronRight, Flame, Sparkles, X } from 'lucide-react'
+import { Award, Bell, CheckCheck, ChevronRight, Flame, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fetchBadges, type SkillBadgeRecord } from '@/lib/profileApi'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -17,6 +17,25 @@ const TRACK_LABELS: Record<string, string> = {
   SAT_ENGLISH: 'SAT English',
 }
 
+type NotificationItem = {
+  id: string
+  type: string
+  title: string
+  message: string
+  metadata: Record<string, unknown> | null
+  readAt: string | null
+  createdAt: string
+}
+
+function relativeTime(value: string) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60000))
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.round(hours / 24)}d ago`
+}
+
 /**
  * Bell button + slide-in notifications panel (concept: 31-Notifications-Streak).
  * Pulls the streak week from the existing dashboard overview endpoint and the
@@ -29,6 +48,7 @@ export default function NotificationsBell() {
   const [open, setOpen] = useState(false)
   const [week, setWeek] = useState<DashboardOverview['weeklyProgress']>([])
   const [badges, setBadges] = useState<SkillBadgeRecord[]>([])
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const panelRef = useRef<HTMLDivElement>(null)
 
   const streak = Math.max(0, user?.currentStreak ?? 0)
@@ -49,6 +69,12 @@ export default function NotificationsBell() {
           (a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime(),
         )
         setBadges(sorted.slice(0, 3))
+      })
+      .catch(() => {})
+    apiClient
+      .get<{ notifications: NotificationItem[] }>('/dashboard/notifications', { auth: true })
+      .then((payload) => {
+        if (!cancelled) setNotifications(payload.notifications ?? [])
       })
       .catch(() => {})
     return () => {
@@ -76,6 +102,25 @@ export default function NotificationsBell() {
   if (!user) return null
 
   const todayActive = week.length > 0 ? week[week.length - 1]?.active : false
+  const unreadCount = notifications.filter((notification) => !notification.readAt).length
+
+  const markAllRead = async () => {
+    setNotifications((current) =>
+      current.map((notification) => ({ ...notification, readAt: notification.readAt ?? new Date().toISOString() })),
+    )
+    await apiClient.patch('/dashboard/notifications/read-all', {}, { auth: true }).catch(() => {})
+  }
+
+  const markRead = async (notificationId: string) => {
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, readAt: notification.readAt ?? new Date().toISOString() }
+          : notification,
+      ),
+    )
+    await apiClient.patch(`/dashboard/notifications/${notificationId}/read`, {}, { auth: true }).catch(() => {})
+  }
 
   return (
     <div className="relative" ref={panelRef}>
@@ -86,7 +131,7 @@ export default function NotificationsBell() {
         className="interactive-lift relative rounded-xl border border-red-200 bg-white/90 p-2 text-slate-700 transition hover:bg-red-50 hover:text-red-700"
       >
         <Bell className="h-4 w-4" />
-        {streak > 0 && !todayActive ? (
+        {unreadCount > 0 || (streak > 0 && !todayActive) ? (
           <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -104,7 +149,20 @@ export default function NotificationsBell() {
             className="fixed right-4 top-20 z-[120] w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-[1.5rem] border border-red-100 bg-white/98 shadow-[0_32px_80px_rgba(15,23,42,0.25)] backdrop-blur-xl"
           >
             <div className="flex items-center justify-between border-b border-red-50 px-4 py-3">
-              <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>
+              <div>
+                <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>
+                <p className="text-[10px] font-bold text-slate-400">{unreadCount ? `${unreadCount} unread` : 'You are all caught up'}</p>
+              </div>
+              <div className="flex items-center gap-1">
+              {unreadCount ? (
+                <button
+                  onClick={() => void markAllRead()}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-black text-red-600 transition hover:bg-red-50"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  Mark all read
+                </button>
+              ) : null}
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close notifications"
@@ -112,6 +170,7 @@ export default function NotificationsBell() {
               >
                 <X className="h-4 w-4" />
               </button>
+              </div>
             </div>
 
             <div className="max-h-[26rem] space-y-3 overflow-y-auto p-4">
@@ -146,6 +205,35 @@ export default function NotificationsBell() {
                   </div>
                 ) : null}
               </div>
+
+              {notifications.length > 0 ? (
+                <div>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Latest updates</p>
+                  <div className="space-y-2">
+                    {notifications.slice(0, 5).map((notification) => (
+                      <button
+                        key={notification.id}
+                        onClick={() => void markRead(notification.id)}
+                        className={`relative flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
+                          notification.readAt
+                            ? 'border-slate-100 bg-white'
+                            : 'border-red-100 bg-gradient-to-r from-red-50/90 to-white'
+                        }`}
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                          <Bell className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-black text-slate-900">{notification.title}</span>
+                          <span className="mt-0.5 line-clamp-2 block text-[11px] leading-4 text-slate-500">{notification.message}</span>
+                          <span className="mt-1 block text-[9px] font-bold uppercase tracking-wide text-slate-400">{relativeTime(notification.createdAt)}</span>
+                        </span>
+                        {!notification.readAt ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-red-500" /> : null}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               {/* Latest badges */}
               {badges.length > 0 ? (

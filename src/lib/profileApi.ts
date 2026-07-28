@@ -15,12 +15,21 @@ export type SkillTrackKey =
 export type ExamTargetKey = 'IELTS' | 'SAT' | 'BOTH'
 
 export type AccountProfileFields = {
+  gender: string | null
+  gradeLevel: string | null
   phone: string | null
   country: string | null
   timezone: string | null
   targetExam: ExamTargetKey | null
   targetScore: string | null
   examDate: string | null
+  targetCountries: string[]
+  currentIeltsScore: number | null
+  targetIeltsScore: number | null
+  currentSatScore: number | null
+  targetSatScore: number | null
+  dailyStudyHours: number | null
+  onboardingCompletedAt: string | null
   bio: string | null
   fieldOfStudy: string | null
   gpa: string | null
@@ -64,6 +73,11 @@ export type LearnerSearchResult = {
   xp: number
   streak: number
   badgeCount: number
+  country: string | null
+  targetExam: 'IELTS' | 'SAT' | null
+  targetScore: number | null
+  targetUniversitySlug: string | null
+  online: boolean
 }
 
 export type PublicProfilePayload = {
@@ -116,9 +130,9 @@ export async function fetchAccount(): Promise<AccountResponse> {
 }
 
 export async function updateAccount(
-  patch: Partial<AccountProfileFields>,
-): Promise<{ profile: AccountProfileFields }> {
-  return apiClient.put<{ profile: AccountProfileFields }>('/profile/account', patch, { auth: true })
+  patch: Partial<AccountProfileFields> & { fullName?: string },
+): Promise<{ fullName?: string; profile: AccountProfileFields }> {
+  return apiClient.put<{ fullName?: string; profile: AccountProfileFields }>('/profile/account', patch, { auth: true })
 }
 
 export async function uploadAvatar(dataUrl: string): Promise<{ avatarUrl: string | null }> {
@@ -150,9 +164,17 @@ export async function deleteBadge(id: string): Promise<void> {
   await apiClient.delete(`/profile/badges/${encodeURIComponent(id)}`, { auth: true })
 }
 
-export async function searchLearners(q: string): Promise<LearnerSearchResult[]> {
+export async function searchLearners(
+  q = '',
+  filters: { targetExam?: 'IELTS' | 'SAT'; country?: string; online?: boolean } = {},
+): Promise<LearnerSearchResult[]> {
+  const params = new URLSearchParams()
+  if (q.trim()) params.set('q', q.trim())
+  if (filters.targetExam) params.set('targetExam', filters.targetExam)
+  if (filters.country) params.set('country', filters.country)
+  if (filters.online) params.set('online', 'true')
   const res = await apiClient.get<{ results: LearnerSearchResult[] }>(
-    `/profile/search?q=${encodeURIComponent(q)}`,
+    `/profile/search?${params.toString()}`,
     { auth: true },
   )
   return res.results ?? []

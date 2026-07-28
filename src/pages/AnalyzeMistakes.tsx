@@ -1,12 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Clock3, ExternalLink, Trash2, X } from 'lucide-react'
+import {
+  ArrowLeft,
+  BarChart3,
+  BrainCircuit,
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  Sparkles,
+  Target,
+  Trash2,
+  TriangleAlert,
+  X,
+  XCircle,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { ProfileOverview } from '@/types/platform'
-import { Reveal } from '@/components/fx'
+import { AmbientBackdrop, Reveal } from '@/components/fx'
 import {
   clearReadingAnalysisHistory,
   getReadingAnalysisHistory,
@@ -180,6 +193,38 @@ export default function AnalyzeMistakes() {
   const backendAttemptCount = (overview?.recentAttempts ?? []).filter((entry) => entry.test.category !== 'SAT').length
   const clearableAttemptCount = localAttemptCount + backendAttemptCount
 
+  const insights = useMemo(() => {
+    const averageAccuracy =
+      readingHistory.length > 0
+        ? readingHistory.reduce((total, entry) => total + entry.accuracy, 0) / readingHistory.length
+        : 0
+    const focusMap = new Map<string, { incorrect: number; accuracyTotal: number; count: number }>()
+    readingHistory.forEach((entry) => {
+      entry.focusAreas.forEach((area) => {
+        const current = focusMap.get(area.label) ?? { incorrect: 0, accuracyTotal: 0, count: 0 }
+        current.incorrect += area.incorrectAnswers
+        current.accuracyTotal += area.accuracy
+        current.count += 1
+        focusMap.set(area.label, current)
+      })
+    })
+    const focusAreas = [...focusMap.entries()]
+      .map(([label, value]) => ({
+        label,
+        incorrect: value.incorrect,
+        accuracy: value.count ? value.accuracyTotal / value.count : 0,
+      }))
+      .sort((a, b) => b.incorrect - a.incorrect)
+      .slice(0, 4)
+
+    return {
+      averageAccuracy,
+      weakest: focusAreas[0]?.label ?? 'Complete a Reading test',
+      focusAreas,
+      latestReading: readingHistory[0] ?? null,
+    }
+  }, [readingHistory])
+
   const openReview = (attempt: UnifiedAttempt) => {
     if (attempt.source === 'writing-local' && attempt.writingEntry) {
       setWritingModalEntry(attempt.writingEntry)
@@ -351,9 +396,13 @@ export default function AnalyzeMistakes() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+        <AmbientBackdrop variant="red" />
+        <div className="pointer-events-none absolute -left-16 top-52 h-64 w-64 rounded-full bg-red-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute right-[4%] top-16 h-52 w-52 rounded-full bg-orange-300/20 blur-3xl" />
+        <div className="relative mx-auto w-full max-w-7xl">
         <Reveal>
-        <section className="rounded-[2rem] border border-red-100 bg-white p-6 shadow-[0_24px_56px_rgba(220,38,38,0.12)] sm:p-8">
+        <section className="rounded-[2rem] border border-white/90 bg-white/78 p-6 shadow-[0_28px_75px_rgba(127,29,29,0.14)] backdrop-blur-2xl sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <button
@@ -364,10 +413,15 @@ export default function AnalyzeMistakes() {
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back To IELTS Prep
               </button>
-              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">Premium Lab</p>
-              <h1 className="mt-2 text-3xl font-black text-slate-900">Analyze IELTS Mistakes</h1>
-              <p className="mt-1 text-sm text-slate-600">
-                Recent solved tests sorted by latest activity. Review IELTS Reading attempts and AI-evaluated Writing tasks in detail.
+              <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600">
+                <BrainCircuit className="h-4 w-4" />
+                IELTS mistake intelligence
+              </p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
+                Analyze your <span className="text-red-600">mistakes.</span>
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Reading and Writing attempts only. See recurring weak points, open the exact review and turn errors into a focused practice plan.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -395,6 +449,130 @@ export default function AnalyzeMistakes() {
 
           {error ? (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+          ) : null}
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.6fr)]">
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <article className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50 to-white p-4">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg">
+                    <Target className="h-4 w-4" />
+                  </span>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Reading accuracy</p>
+                  <p className="mt-1 text-3xl font-black text-slate-950">{insights.averageAccuracy.toFixed(0)}%</p>
+                </article>
+                <article className="rounded-2xl border border-slate-200 bg-white/90 p-4">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white shadow-lg">
+                    <TriangleAlert className="h-4 w-4" />
+                  </span>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Weakest area</p>
+                  <p className="mt-1 line-clamp-2 text-base font-black text-slate-950">{insights.weakest}</p>
+                </article>
+                <article className="rounded-2xl border border-slate-200 bg-white/90 p-4">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </span>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saved attempts</p>
+                  <p className="mt-1 text-3xl font-black text-slate-950">{attempts.length}</p>
+                </article>
+              </div>
+
+              <article className="rounded-2xl border border-slate-200 bg-white/88 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-black text-slate-950">
+                      <BarChart3 className="h-4 w-4 text-red-600" />
+                      Accuracy by question type
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">Aggregated from your saved Reading reviews.</p>
+                  </div>
+                </div>
+                {insights.focusAreas.length ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {insights.focusAreas.map((area) => (
+                      <div key={area.label} className="rounded-xl border border-slate-100 bg-slate-50/75 p-3">
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <b className="truncate text-slate-800">{area.label}</b>
+                          <span className="font-black text-red-600">{area.accuracy.toFixed(0)}%</span>
+                        </div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.max(4, area.accuracy)}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-400"
+                          />
+                        </div>
+                        <p className="mt-1.5 text-[10px] font-bold text-slate-400">{area.incorrect} recurring errors</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">Finish an IELTS Reading test to unlock question-type analytics.</p>
+                )}
+              </article>
+            </div>
+
+            <aside className="rounded-2xl border border-red-100 bg-gradient-to-br from-slate-950 via-slate-900 to-red-950 p-5 text-white shadow-[0_22px_55px_rgba(15,23,42,0.22)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-200">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI study plan
+              </span>
+              <h2 className="mt-4 text-xl font-black">Your next best actions</h2>
+              <p className="mt-2 text-xs leading-5 text-slate-300">Recommendations come from the mistakes stored in this IELTS workspace.</p>
+              <div className="mt-4 space-y-2">
+                {(insights.focusAreas.length ? insights.focusAreas.slice(0, 3) : [{ label: 'Reading diagnostic', accuracy: 0, incorrect: 0 }]).map((area, index) => (
+                  <button
+                    key={area.label}
+                    onClick={() => navigate('/ielts/reading/tests')}
+                    className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-white/10 bg-white/8 px-3 text-left transition hover:bg-white/14"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/20 text-xs font-black text-red-200">{index + 1}</span>
+                    <span className="min-w-0">
+                      <b className="block truncate text-xs text-white">{area.label}</b>
+                      <small className="mt-0.5 block text-[10px] text-slate-400">Start targeted Reading practice</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => navigate('/ai-tutor')}
+                className="cta-sheen mt-4 min-h-11 w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-xs font-black text-white shadow-lg"
+              >
+                Build plan with ProfAI
+              </button>
+            </aside>
+          </div>
+
+          {insights.latestReading?.incorrectQuestions.length ? (
+            <section className="mt-5 rounded-2xl border border-slate-200 bg-white/88 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black text-slate-950">Latest Reading answer review</h2>
+                  <p className="mt-1 text-xs text-slate-500">{insights.latestReading.testTitle} · incorrect and skipped answers</p>
+                </div>
+                <button
+                  onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open full review
+                </button>
+              </div>
+              <div className="mt-4 space-y-2">
+                {insights.latestReading.incorrectQuestions.slice(0, 5).map((question) => (
+                  <div key={question.questionId} className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+                      <XCircle className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-black text-slate-900">Q{question.displayNumber}. {question.prompt}</p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-500">Part {question.partNumber} · {question.typeLabel}</p>
+                    </div>
+                    <span className="rounded-full border border-red-200 bg-white px-2.5 py-1 text-[10px] font-black text-red-700">Needs review</span>
+                  </div>
+                ))}
+              </div>
+            </section>
           ) : null}
 
           <div className="mt-5 space-y-2">
@@ -463,6 +641,7 @@ export default function AnalyzeMistakes() {
           </div>
         </section>
         </Reveal>
+        </div>
       </div>
 
       {typeof document !== 'undefined' && confirmModal ? createPortal(confirmModal, document.body) : confirmModal}

@@ -128,12 +128,21 @@ model User {
 model UserProfile {
   id                   String   @id @default(cuid())
   userId               String   @unique
+  gender               String?
+  gradeLevel           String?
   phone                String?
   country              String?
   timezone             String?
   targetExam           String?  // 'IELTS' | 'SAT' | 'BOTH'
   targetScore          String?
   examDate             String?
+  targetCountries      String[] @default([])
+  currentIeltsScore    Float?
+  targetIeltsScore     Float?
+  currentSatScore      Int?
+  targetSatScore       Int?
+  dailyStudyHours      Int?
+  onboardingCompletedAt DateTime?
   bio                  String?
   fieldOfStudy         String?
   gpa                  String?

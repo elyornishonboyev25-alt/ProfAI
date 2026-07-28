@@ -19,7 +19,7 @@ interface CountUpProps {
 export default function CountUp({ value, duration = 1.1, decimals = 0, prefix = '', suffix = '', className }: CountUpProps) {
   const { minimalMotion } = useMotionPreferences()
   const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-10% 0px' })
+  const inView = useInView(ref, { once: true, margin: '50px 0px 50px 0px' })
   const [display, setDisplay] = useState(minimalMotion ? value : 0)
 
   useEffect(() => {

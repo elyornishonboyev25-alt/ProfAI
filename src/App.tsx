@@ -32,6 +32,7 @@ const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
+const SATMockRun = lazy(() => import('@/pages/SATMockRun'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
 const IELTSSection = lazy(() => import('@/pages/IELTSSection'))
 const IELTSSectionTests = lazy(() => import('@/pages/IELTSSectionTests'))
@@ -155,7 +156,10 @@ function App() {
     pathname === '/onboarding' ||
     pathname.startsWith('/articles') ||
     pathname.startsWith('/admission')
-  const isCustomTestMode = /^\/tests\/[^/]+\/attempt$/.test(pathname)
+  const isCustomTestMode =
+    /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
+    pathname === '/mock/sat' ||
+    pathname === '/sat/mock/4/run'
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
@@ -163,14 +167,15 @@ function App() {
   // top bar duplicated the same destinations and made the layout jump between
   // sections, so it is intentionally kept only out of the app workspace.
   const showTopNavigation = false
-  // Thumb navigation on phones — kept away from exams, auth and the guest landing.
-  const showMobileNav = Boolean(user) && !isAuthPage && !isTestMode && !isGuestLanding && pathname !== '/onboarding'
+  const sidebarRoutes = new Set(['/dashboard', '/tests', '/ai-tutor'])
   const showSidebar =
     Boolean(user) &&
     !isAuthPage &&
     !isGuestLanding &&
     !isTestMode &&
-    pathname !== '/onboarding'
+    sidebarRoutes.has(pathname)
+  // Standalone prep/content screens expose their own Dashboard back action.
+  const showMobileNav = Boolean(user) && showSidebar
 
   useEffect(() => {
     const connection = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
@@ -225,16 +230,22 @@ function App() {
       <RegisterModal />
       <NicknameGate />
       <AchievementCelebration />
-      <FloatingAIAssistant />
-      <TalkOverlay />
-      <FullscreenToggle />
-      <WordLookupLayer />
+      {!isTestMode ? (
+        <>
+          <FloatingAIAssistant />
+          <TalkOverlay />
+          <FullscreenToggle />
+          <WordLookupLayer />
+        </>
+      ) : null}
 
       <div className="relative z-10 flex min-h-screen flex-col">
         {showTopNavigation && <TopNavigation />}
 
         <div className="flex flex-1">
-          {showSidebar && <Sidebar />}
+          <AnimatePresence initial={false}>
+            {showSidebar ? <Sidebar key="workspace-sidebar" /> : null}
+          </AnimatePresence>
 
           <main
             className={`w-full flex-1 transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -311,6 +322,14 @@ function App() {
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
+                      <Route
+                        path="/sat/mock/4/run"
+                        element={
+                          <PremiumRoute>
+                            <SATMockRun />
+                          </PremiumRoute>
+                        }
+                      />
                       <Route path="/sat/:section" element={<AnimatedRoute><SATSection /></AnimatedRoute>} />
                       <Route path="/sat/calculator" element={<AnimatedRoute><SATCalculator /></AnimatedRoute>} />
                       <Route path="/ielts" element={<AnimatedRoute><IELTS /></AnimatedRoute>} />

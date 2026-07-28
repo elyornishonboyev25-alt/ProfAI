@@ -23,7 +23,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
 const MOCK_COUNT = 30
-const LIVE_MOCKS = 3
+const LIVE_MOCKS = 1
 
 export default function SAT() {
   const navigate = useNavigate()
@@ -37,10 +37,12 @@ export default function SAT() {
     () =>
       Array.from({ length: MOCK_COUNT }, (_, index) => ({
         id: index + 1,
-        title: `Digital SAT Full Mock ${String(index + 1).padStart(2, '0')}`,
-        available: index < LIVE_MOCKS,
+        title: index + 1 === 4
+          ? 'College Board Practice Test 04'
+          : `Digital SAT Full Mock ${String(index + 1).padStart(2, '0')}`,
+        available: index + 1 === 4,
         completed: false,
-        difficulty: index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
+        difficulty: index + 1 === 4 ? 'Official' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
       })),
     [],
   )
@@ -68,7 +70,7 @@ export default function SAT() {
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(32rem,.9fr)] xl:items-center">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => navigate('/tests')} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-blue-700 shadow-sm hover:bg-blue-50">
+                <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-blue-700 shadow-sm hover:bg-blue-50">
                   <ArrowLeft className="h-3.5 w-3.5" /> Test Library
                 </button>
                 <span className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-blue-700">
@@ -82,8 +84,8 @@ export default function SAT() {
                 Math and Reading &amp; Writing are combined in every official-style mock. Practice, review SAT-only mistakes, and grow your vocabulary from one clear workspace.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <button onClick={() => navigate('/mock/sat', { state: { mockId: 1, from: '/sat' } })} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
-                  Start Full Mock 01 <ArrowRight className="h-3.5 w-3.5" />
+                <button onClick={() => navigate('/mock/sat', { state: { mockId: 4, from: '/sat' } })} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
+                  Start Practice Test 04 <ArrowRight className="h-3.5 w-3.5" />
                 </button>
                 <button onClick={() => navigate('/sat/mistakes')} className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-white px-4 py-2.5 text-xs font-black text-slate-700 shadow-sm hover:border-blue-300 hover:text-blue-700">
                   <FileSearch className="h-3.5 w-3.5" /> Analyze SAT mistakes
@@ -165,10 +167,14 @@ export default function SAT() {
                     </span>
                   </div>
                   <h3 className="mt-3 text-sm font-black text-slate-900">{mock.title}</h3>
-                  <p className="mt-1 text-[10px] font-semibold text-slate-500">{mock.difficulty} · 98 questions · 134 min</p>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                    {mock.difficulty} · {mock.id === 4 ? '120' : '98'} questions · 134 min
+                  </p>
                   <div className="mt-3 grid grid-cols-2 gap-1.5">
                     <span className="rounded-lg bg-white px-2 py-1 text-center text-[9px] font-bold text-slate-500">English + Math</span>
-                    <span className="rounded-lg bg-white px-2 py-1 text-center text-[9px] font-bold text-slate-500">Adaptive modules</span>
+                    <span className="rounded-lg bg-white px-2 py-1 text-center text-[9px] font-bold text-slate-500">
+                      {mock.id === 4 ? 'Official scoring' : 'Adaptive modules'}
+                    </span>
                   </div>
                   <button
                     type="button"

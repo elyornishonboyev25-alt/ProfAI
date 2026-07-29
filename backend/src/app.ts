@@ -59,6 +59,10 @@ app.use('/api/v1/planner', plannerRoutes)
 app.use('/api/v1/shadowing', shadowingRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)
 
+app.get('/googleea0efe504503609e.html', (_req, res) => {
+  res.type('html').send('google-site-verification: googleea0efe504503609e.html')
+})
+
 if (isProduction && fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath))
   app.get(/^\/(?!api\/).*/, (_req, res) => {

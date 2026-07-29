@@ -9,8 +9,10 @@
     <meta name="description" content="ProfAI: prepare for SAT and IELTS, improve English, research universities and build a step-by-step study-abroad application plan with AI." />
     <link rel="canonical" href="https://www.profai.uz/" />
     <meta name="theme-color" content="#DC2626" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="keywords" content="ProfAI, chet el universiteti, SAT tayyorgarlik, IELTS tayyorgarlik, xorijda talim, university abroad Uzbekistan, ingliz tili, AI coach" />
+    <meta name="application-name" content="ProfAI" />
+    <meta name="author" content="ProfAI" />
 
     <!-- Open Graph / Telegram / Facebook link preview -->
     <meta property="og:type" content="website" />
@@ -30,6 +32,50 @@
     <meta name="twitter:title" content="ProfAI — Prepare. Prove. Get Admitted." />
     <meta name="twitter:description" content="One AI-powered roadmap for SAT, IELTS, English skills and study-abroad admissions." />
     <meta name="twitter:image" content="https://www.profai.uz/og-image.png?v=20260729" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://www.profai.uz/#organization",
+            "name": "ProfAI",
+            "url": "https://www.profai.uz/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.profai.uz/logo.svg"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.profai.uz/#website",
+            "url": "https://www.profai.uz/",
+            "name": "ProfAI",
+            "alternateName": "ProfAI Uzbekistan",
+            "description": "AI-powered SAT, IELTS, English and study-abroad preparation platform.",
+            "publisher": {
+              "@id": "https://www.profai.uz/#organization"
+            },
+            "inLanguage": ["en", "uz"]
+          },
+          {
+            "@type": "EducationalOrganization",
+            "@id": "https://www.profai.uz/#education",
+            "name": "ProfAI",
+            "url": "https://www.profai.uz/",
+            "description": "SAT and IELTS preparation, English practice and study-abroad admissions planning with AI.",
+            "parentOrganization": {
+              "@id": "https://www.profai.uz/#organization"
+            },
+            "areaServed": {
+              "@type": "Country",
+              "name": "Uzbekistan"
+            }
+          }
+        ]
+      }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,8 +102,8 @@
       <div id="profai-boot" role="status" aria-label="Loading ProfAI">
         <div class="profai-boot-card">
           <img class="profai-boot-logo" src="/logo.svg" alt="" />
-          <p class="profai-boot-title">Preparing your ProfAI workspace</p>
-          <p class="profai-boot-copy">Syncing your plan, progress and next best action.</p>
+          <h1 class="profai-boot-title">ProfAI — SAT, IELTS and Study Abroad</h1>
+          <p class="profai-boot-copy">AI-powered exam preparation, English practice and university admissions planning.</p>
           <div class="profai-boot-track"><div class="profai-boot-bar"></div></div>
         </div>
       </div>

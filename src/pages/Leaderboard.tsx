@@ -20,6 +20,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { motion } from 'framer-motion'
 import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import PremiumSphereField from '@/components/fx/PremiumSphereField'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
 
@@ -172,7 +173,8 @@ export default function Leaderboard() {
   }, [podiumRows])
 
   return (
-    <div className="relative mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="premium-page-stage relative mx-auto min-h-screen w-full max-w-7xl overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <PremiumSphereField />
       {/* ── Hero ──────────────────────────────────────────────── */}
       <Reveal>
         <section className="relative overflow-hidden rounded-[2rem] border border-red-100 bg-[radial-gradient(circle_at_8%_12%,rgba(252,165,165,0.35),transparent_38%),radial-gradient(circle_at_90%_10%,rgba(251,113,133,0.25),transparent_42%),linear-gradient(150deg,#fff,#fff5f5)] p-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">

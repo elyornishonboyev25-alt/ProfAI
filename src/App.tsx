@@ -161,7 +161,9 @@ function App() {
   // top bar duplicated the same destinations and made the layout jump between
   // sections, so it is intentionally kept only out of the app workspace.
   const showTopNavigation = false
-  const sidebarRoutes = new Set(['/dashboard', '/tests', '/ai-tutor'])
+  // `/` renders the authenticated dashboard too. Keep it inside the same
+  // workspace shell so opening the site never flashes the standalone version.
+  const sidebarRoutes = new Set(['/', '/dashboard', '/tests', '/ai-tutor'])
   const showSidebar =
     Boolean(user) &&
     !isAuthPage &&

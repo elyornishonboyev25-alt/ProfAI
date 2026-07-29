@@ -34,12 +34,12 @@ export const AnimatedBackground = memo(function AnimatedBackground() {
       />
 
       <motion.div
-        className="glossy-orb left-[3%] top-[16%] h-20 w-20"
+        className="glossy-orb left-[2%] top-[13%] h-20 w-20"
         animate={minimalMotion ? undefined : { x: [0, 34, 8, 0], y: [0, -24, 18, 0], rotate: [0, 18, -8, 0] }}
         transition={minimalMotion ? undefined : { duration: 13, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb glossy-orb-soft right-[4%] top-[12%] h-32 w-32"
+        className="glossy-orb glossy-orb-soft right-[3%] top-[9%] h-36 w-36"
         animate={minimalMotion ? undefined : { x: [0, -28, 5, 0], y: [0, 22, -12, 0], rotate: [0, -16, 10, 0] }}
         transition={minimalMotion ? undefined : { duration: 17, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -52,6 +52,26 @@ export const AnimatedBackground = memo(function AnimatedBackground() {
         className="glossy-orb glossy-orb-soft bottom-[16%] right-[14%] h-16 w-16"
         animate={minimalMotion ? undefined : { x: [0, -18, 12, 0], y: [0, -16, 20, 0], scale: [1, 0.94, 1.08, 1] }}
         transition={minimalMotion ? undefined : { duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="glossy-orb left-[28%] top-[54%] hidden h-9 w-9 opacity-55 md:block"
+        animate={minimalMotion ? undefined : { x: [0, 24, -10, 0], y: [0, -28, 12, 0], scale: [1, 1.14, 0.95, 1] }}
+        transition={minimalMotion ? undefined : { duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="glossy-orb right-[31%] top-[38%] hidden h-12 w-12 opacity-45 lg:block"
+        animate={minimalMotion ? undefined : { x: [0, -18, 12, 0], y: [0, 20, -14, 0], rotate: [0, -12, 8, 0] }}
+        transition={minimalMotion ? undefined : { duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="ambient-orbit ambient-orbit-one hidden md:block"
+        animate={minimalMotion ? undefined : { rotate: [0, 360] }}
+        transition={minimalMotion ? undefined : { duration: 48, repeat: Infinity, ease: 'linear' }}
+      />
+      <motion.div
+        className="ambient-orbit ambient-orbit-two hidden lg:block"
+        animate={minimalMotion ? undefined : { rotate: [360, 0] }}
+        transition={minimalMotion ? undefined : { duration: 62, repeat: Infinity, ease: 'linear' }}
       />
 
       <div className="ambient-grid" />

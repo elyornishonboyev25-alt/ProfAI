@@ -22,6 +22,7 @@ import {
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
 import { Skeleton } from '@/components/common/Skeleton'
+import PremiumSphereField from '@/components/fx/PremiumSphereField'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
@@ -126,12 +127,13 @@ export default function Dashboard() {
       ]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#fff8f7_42%,#fff8ed_100%)] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+    <div className="premium-page-stage relative min-h-screen overflow-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <PremiumSphereField />
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red-400/18 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 h-96 w-96 rounded-full bg-sky-300/18 blur-3xl" />
-        <div className="absolute left-16 top-1/3 h-64 w-64 rounded-full bg-orange-200/22 blur-3xl" />
-        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:42px_42px]" />
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red-400/14 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 h-96 w-96 rounded-full bg-sky-300/12 blur-3xl" />
+        <div className="absolute left-16 top-1/3 h-64 w-64 rounded-full bg-orange-200/16 blur-3xl" />
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:42px_42px]" />
       </div>
 
       <div className="relative mx-auto max-w-[94rem]">

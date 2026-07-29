@@ -37,6 +37,7 @@ import type { AuthUser, ProfileOverview } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import PremiumSphereField from '@/components/fx/PremiumSphereField'
 
 function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
@@ -274,7 +275,8 @@ export default function Profile() {
   )
 
   return (
-    <div className="relative mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="premium-page-stage relative mx-auto min-h-screen w-full max-w-7xl overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <PremiumSphereField />
       <Reveal>
         <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
           <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-gradient-to-br from-amber-200/30 to-orange-300/15 blur-3xl" />

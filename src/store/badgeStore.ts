@@ -29,6 +29,7 @@ type BadgeState = {
   records: LocalBadgeRecord[]
   recordsForUser: (userId: string | null) => LocalBadgeRecord[]
   bestBand: (userId: string | null, track: SkillTrackKey) => number
+  clearForUser: (userId: string | null) => void
   awardIfEligible: (input: {
     userId: string | null
     track: SkillTrackKey
@@ -47,6 +48,7 @@ export const useBadgeStore = create<BadgeState>()(
         get()
           .records.filter((r) => r.userId === userId && r.track === track)
           .reduce((max, r) => Math.max(max, r.band), 0),
+      clearForUser: (userId) => set((state) => ({ records: state.records.filter((record) => record.userId !== userId) })),
       awardIfEligible: ({ userId, track, band, mode, source }) => {
         if (!isEligibleMode(mode)) return { celebrated: false, tier: null }
         const tier = tierForBand(band)

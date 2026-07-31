@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
@@ -144,55 +144,38 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden px-4 py-10">
-      {/* Ambient backdrop */}
-      <div className="pointer-events-none absolute inset-0">
-        <motion.div
-          initial={minimalMotion ? false : { opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute left-[12%] top-[12%] h-56 w-56 rounded-full bg-red-400/20 blur-3xl"
-        />
-        <motion.div
-          initial={minimalMotion ? false : { opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute bottom-[12%] right-[12%] h-64 w-64 rounded-full bg-orange-300/20 blur-3xl"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,113,113,0.045)_1px,transparent_1px),linear-gradient(180deg,rgba(248,113,113,0.045)_1px,transparent_1px)] bg-[size:42px_42px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_72%)]" />
-      </div>
-
+    <div className="workspace-page relative flex min-h-[calc(100dvh-80px)] items-center justify-center overflow-hidden px-4 py-8 sm:px-6 lg:py-10">
       <motion.div
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: minimalMotion ? 0.14 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="relative grid w-full max-w-[410px] lg:max-w-4xl lg:grid-cols-2 lg:gap-6"
+        className="relative grid w-full max-w-[430px] items-stretch lg:max-w-6xl lg:grid-cols-[1.08fr_.92fr] lg:gap-5"
       >
         {/* Aspirational showcase (desktop only) — concept 11-Login-Desktop */}
-        <AuthShowcasePanel quote="Your journey abroad starts here" />
+        <AuthShowcasePanel quote="Your university journey remembers where you stopped." />
 
-        <div className="relative">
+        <div className="relative flex">
         {/* Soft glow halo behind the card */}
         <div className="pointer-events-none absolute -inset-[1.5px] -z-10 rounded-[1.95rem] bg-gradient-to-br from-red-300/45 via-rose-200/25 to-orange-200/40 blur-md" />
 
-        <div className="panel-surface relative overflow-hidden rounded-[1.85rem] border border-red-100/90 bg-white/95 px-7 pb-7 pt-8 shadow-[0_30px_80px_rgba(127,29,29,0.2)]">
+        <div className="panel-surface relative flex w-full flex-col justify-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/84 px-6 py-7 shadow-[0_34px_90px_rgba(127,29,29,0.2)] backdrop-blur-3xl sm:px-8 lg:px-10 lg:py-9">
           {/* Top accent line */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
 
-          <div className="mb-6 grid grid-cols-2 rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 shadow-inner">
-            <span className="flex min-h-10 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.12)] ring-1 ring-red-100">
+          <div className="mb-7 grid grid-cols-2 rounded-2xl border border-slate-200/70 bg-slate-100/70 p-1.5 shadow-inner">
+            <span className="flex min-h-11 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.12)] ring-1 ring-red-100">
               Sign in
             </span>
             <Link
               to="/register"
-              className="flex min-h-10 items-center justify-center rounded-xl text-sm font-bold text-slate-600 transition hover:bg-white/75 hover:text-slate-950"
+              className="flex min-h-11 items-center justify-center rounded-xl text-sm font-bold text-slate-600 transition hover:bg-white/75 hover:text-slate-950"
             >
-              Create account
+              I&apos;m new here
             </Link>
           </div>
 
           {/* Brand + heading */}
-          <div className="mb-6 text-center">
+          <div className="mb-7 text-center">
             <div className="relative mx-auto inline-flex">
               <motion.span
                 aria-hidden
@@ -201,19 +184,21 @@ export default function Login() {
                 transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute inset-0 -z-10 rounded-2xl bg-red-500/25 blur-xl"
               />
-              <BrandMark size={52} className="shadow-[0_16px_30px_rgba(220,38,38,0.35)]" />
+              <span className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white bg-white/90 shadow-[0_18px_38px_rgba(220,38,38,.24)]">
+                <BrandMark size={50} />
+              </span>
             </div>
 
             <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-red-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-700">
               <Sparkles className="h-3 w-3" />
-              Your path to universities abroad
+              Your progress is ready
             </span>
 
-            <h1 className="mt-3 text-[1.65rem] font-black leading-tight tracking-tight text-[#1F2937]">
-              Welcome back
+            <h1 className="mt-3 text-[1.9rem] font-black leading-[1.08] tracking-[-0.035em] text-slate-950">
+              Pick up exactly where you left off.
             </h1>
-            <p className="mt-1.5 text-[13px] leading-5 text-[#6B7280]">
-              Continue your saved study plan, XP, and streak.
+            <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-slate-500">
+              Your plan, XP, streak and university roadmap are waiting inside.
             </p>
           </div>
 
@@ -277,7 +262,7 @@ export default function Login() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  className="input h-11 rounded-xl border-red-100 bg-white/95 pl-11 text-sm font-medium shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
+                  className="input h-12 rounded-2xl border-red-100 bg-white/95 pl-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
                   placeholder="name@gmail.com"
                   {...register('email')}
                 />
@@ -295,7 +280,7 @@ export default function Login() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  className="input h-11 rounded-xl border-red-100 bg-white/95 pl-11 pr-11 text-sm font-medium shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
+                  className="input h-12 rounded-2xl border-red-100 bg-white/95 pl-11 pr-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
                   placeholder="Enter your password"
                   {...register('password')}
                 />
@@ -316,7 +301,7 @@ export default function Login() {
               whileTap={minimalMotion ? undefined : { scale: 0.985 }}
               disabled={isSubmitting}
               type="submit"
-              className="interactive-lift cta-sheen mt-1 flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-4 text-sm font-bold text-white shadow-[0_14px_28px_rgba(220,38,38,0.34)] transition hover:shadow-[0_18px_36px_rgba(220,38,38,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="interactive-lift cta-sheen group mt-1 flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#B91C1C] via-[#EF3333] to-[#C5162E] px-4 text-sm font-black text-white shadow-[0_16px_32px_rgba(220,38,38,0.34)] transition hover:shadow-[0_20px_42px_rgba(220,38,38,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
@@ -324,7 +309,10 @@ export default function Login() {
                   Signing in...
                 </>
               ) : (
-                'Sign In'
+                <span className="inline-flex items-center gap-2">
+                  Enter my learning cockpit
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
               )}
             </motion.button>
           </form>
@@ -347,11 +335,11 @@ export default function Login() {
           </p>
 
           {/* Gamified trust chips */}
-          <div className="mt-5 flex items-center justify-center gap-2 border-t border-red-50 pt-4">
+          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-red-50 pt-4">
             {TRUST_CHIPS.map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full bg-red-50/70 px-2.5 py-1 text-[10.5px] font-bold text-red-700/90"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-red-100/80 bg-red-50/70 px-2 py-1 text-center text-[9.5px] font-bold text-red-700/90"
               >
                 <Icon className="h-3 w-3" />
                 {label}

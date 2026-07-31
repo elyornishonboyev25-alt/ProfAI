@@ -41,6 +41,11 @@ const logoutSchema = z.object({
   refreshToken: z.string().min(1),
 })
 
+const deleteAccountSchema = z.object({
+  email: z.string().email(),
+  confirmation: z.literal('DELETE'),
+})
+
 const googleAuthSchema = z.object({
   idToken: z.string().min(1),
   // When false (sign-in page) we refuse to create a brand-new account — the
@@ -420,6 +425,38 @@ router.post(
         revokedAt: new Date(),
       },
     })
+
+    return res.status(204).send()
+  }),
+)
+
+router.delete(
+  '/account',
+  authRateLimit,
+  requireAuth,
+  validateBody(deleteAccountSchema),
+  asyncHandler(async (req, res) => {
+    const { email, confirmation } = req.body
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { id: true, email: true },
+    })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User account was not found.' })
+    }
+
+    if (confirmation !== 'DELETE' || email.trim().toLowerCase() !== user.email.toLowerCase()) {
+      return res.status(400).json({
+        message: 'Account confirmation did not match.',
+        code: 'ACCOUNT_CONFIRMATION_MISMATCH',
+      })
+    }
+
+    // User-owned records cascade at the database layer. Shared resources such
+    // as authored tests and submitted shadowing videos retain their content and
+    // simply clear the author reference (onDelete: SetNull).
+    await prisma.user.delete({ where: { id: user.id } })
 
     return res.status(204).send()
   }),

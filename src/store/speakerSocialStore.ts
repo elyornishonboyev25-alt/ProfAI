@@ -23,6 +23,7 @@ type SpeakerSocialState = {
   ratings: Record<string, PeerRating[]>
   setNickname: (userId: string, nickname: string) => void
   addRating: (userId: string, rating: Omit<PeerRating, 'id' | 'date'>) => void
+  clearForUser: (userId: string) => void
 }
 
 export const useSpeakerSocialStore = create<SpeakerSocialState>()(
@@ -41,6 +42,14 @@ export const useSpeakerSocialStore = create<SpeakerSocialState>()(
           }
           const existing = state.ratings[userId] ?? []
           return { ratings: { ...state.ratings, [userId]: [full, ...existing].slice(0, 50) } }
+        }),
+      clearForUser: (userId) =>
+        set((state) => {
+          const nicknames = { ...state.nicknames }
+          const ratings = { ...state.ratings }
+          delete nicknames[userId]
+          delete ratings[userId]
+          return { nicknames, ratings }
         }),
     }),
     { name: 'smarttest-speaker-social-v1' },

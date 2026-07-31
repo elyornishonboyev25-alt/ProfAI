@@ -11,6 +11,7 @@ import {
   Lock,
   Mail,
   Save,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Target,
@@ -34,6 +35,9 @@ import { apiClient } from '@/lib/apiClient'
 import { getUniversityBySlug } from '@/data/admission'
 import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import BadgeShelf from '@/components/achievements/BadgeShelf'
+import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog'
+import { setFlashToast } from '@/utils/authFlash'
+import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 
 const NICKNAME_RE = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
 
@@ -119,6 +123,8 @@ export default function AccountProfile() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl ?? null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -294,6 +300,29 @@ export default function AccountProfile() {
     }
   }
 
+  const deleteAccount = async (payload: { email: string; confirmation: 'DELETE' }) => {
+    if (deletingAccount) return
+    setDeletingAccount(true)
+    try {
+      await apiClient.delete('/auth/account', { body: payload })
+      if (user?.id) purgeAccountClientData(user.id)
+      setFlashToast({
+        type: 'success',
+        title: 'Account deleted',
+        message: 'Your ProfAI account and personal learning data were permanently removed.',
+      })
+      clearSession()
+      window.location.replace('/login')
+    } catch (error) {
+      pushToast({
+        type: 'error',
+        title: 'Account was not deleted',
+        message: error instanceof Error ? error.message : 'Please verify the confirmation and try again.',
+      })
+      setDeletingAccount(false)
+    }
+  }
+
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <AmbientBackdrop variant="red" />
@@ -396,6 +425,7 @@ export default function AccountProfile() {
               ['#targets', 'Study targets'],
               ['#privacy', 'Privacy'],
               ['#achievements', 'Achievements'],
+              ['#danger', 'Account'],
             ].map(([href, label]) => (
               <a
                 key={href}
@@ -599,6 +629,34 @@ export default function AccountProfile() {
             </div>
           </section>
 
+          <section
+            id="danger"
+            className="relative mt-6 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-red-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,.9),rgba(254,242,242,.88))] p-5 shadow-[0_20px_48px_rgba(127,29,29,.1)] backdrop-blur-2xl sm:p-6"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-red-200/45 blur-3xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 text-red-700 ring-1 ring-red-200">
+                  <ShieldAlert className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600">Danger zone</p>
+                  <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">Permanently delete account</h2>
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
+                    Removes your profile, results, XP, saved vocabulary, AI history and every personal learning record. This action cannot be reversed.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteDialogOpen(true)}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-red-300 bg-white px-4 text-xs font-black text-red-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-400 hover:bg-red-50 hover:shadow-[0_12px_26px_rgba(185,28,28,.14)]"
+              >
+                <Trash2 className="h-4 w-4" /> Delete account
+              </button>
+            </div>
+          </section>
+
           <section className="mt-6 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/60 via-white to-emerald-50/50 px-4 py-3">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
               <Mail className="h-4 w-4" />
@@ -623,6 +681,13 @@ export default function AccountProfile() {
         </>
       )}
       </div>
+      <DeleteAccountDialog
+        open={deleteDialogOpen}
+        email={user?.email ?? ''}
+        deleting={deletingAccount}
+        onClose={() => !deletingAccount && setDeleteDialogOpen(false)}
+        onConfirm={(payload) => void deleteAccount(payload)}
+      />
     </div>
   )
 }

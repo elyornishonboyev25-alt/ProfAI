@@ -65,7 +65,8 @@ export type UseSpeechRecognitionResult = {
   finalTranscript: string
   error: string | null
   start: () => void
-  stop: () => void
+  /** Stops capture and resolves after the browser delivers its final words. */
+  stop: () => Promise<string>
   reset: () => void
 }
 
@@ -73,6 +74,8 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
   const supported = isSpeechRecognitionSupported()
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const finalRef = useRef('')
+  const interimRef = useRef('')
+  const pendingStopRef = useRef<((transcript: string) => void) | null>(null)
   // Set when the user asks to stop so the auto-restart loop knows to halt.
   const stoppingRef = useRef(false)
 
@@ -110,6 +113,7 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
         }
       }
       setFinalTranscript(finalRef.current)
+      interimRef.current = interim
       setInterimTranscript(interim)
     }
 
@@ -124,9 +128,16 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
         stoppingRef.current = true
         setListening(false)
       }
+      pendingStopRef.current?.(`${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim())
+      pendingStopRef.current = null
     }
 
     recognition.onend = () => {
+      const transcript = `${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim()
+      if (pendingStopRef.current) {
+        pendingStopRef.current(transcript)
+        pendingStopRef.current = null
+      }
       // Chrome ends recognition every ~minute; restart unless the user stopped.
       if (!stoppingRef.current) {
         try {
@@ -137,6 +148,7 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
         }
       }
       setListening(false)
+      interimRef.current = ''
       setInterimTranscript('')
     }
 
@@ -153,6 +165,7 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
     setError(null)
     stoppingRef.current = false
     finalRef.current = ''
+    interimRef.current = ''
     setFinalTranscript('')
     setInterimTranscript('')
     try {
@@ -164,22 +177,42 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
     }
   }, [ensureRecognition])
 
-  const stop = useCallback(() => {
+  const stop = useCallback((): Promise<string> => {
     stoppingRef.current = true
     const recognition = recognitionRef.current
-    if (recognition) {
+    const currentTranscript = () => `${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim()
+    if (!recognition) {
+      setListening(false)
+      return Promise.resolve(currentTranscript())
+    }
+    setListening(false)
+
+    // SpeechRecognition emits its last result after stop() in Chrome. Waiting for
+    // onend prevents the final phrase from being silently dropped.
+    return new Promise((resolve) => {
+      let settled = false
+      const finish = (transcript: string) => {
+        if (settled) return
+        settled = true
+        resolve(transcript)
+      }
+      pendingStopRef.current = finish
       try {
         recognition.stop()
       } catch {
-        // ignore
+        pendingStopRef.current = null
+        finish(currentTranscript())
       }
-    }
-    setListening(false)
-    setInterimTranscript('')
+      window.setTimeout(() => {
+        if (pendingStopRef.current === finish) pendingStopRef.current = null
+        finish(currentTranscript())
+      }, 1200)
+    })
   }, [])
 
   const reset = useCallback(() => {
     finalRef.current = ''
+    interimRef.current = ''
     setFinalTranscript('')
     setInterimTranscript('')
     setError(null)
@@ -196,6 +229,8 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
           // ignore
         }
       }
+      pendingStopRef.current?.(`${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim())
+      pendingStopRef.current = null
     }
   }, [])
 

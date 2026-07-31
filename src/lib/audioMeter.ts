@@ -14,11 +14,20 @@ export type MicMeter = {
 
 export async function createMicMeter(): Promise<MicMeter> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-  const AudioCtx: typeof AudioContext =
-    window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-  const ctx = new AudioCtx()
-  const source = ctx.createMediaStreamSource(stream)
-  const analyser = ctx.createAnalyser()
+  let ctx: AudioContext
+  let source: MediaStreamAudioSourceNode
+  let analyser: AnalyserNode
+  try {
+    const AudioCtx: typeof AudioContext =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    if (!AudioCtx) throw new DOMException('Web Audio is unavailable.', 'NotSupportedError')
+    ctx = new AudioCtx()
+    source = ctx.createMediaStreamSource(stream)
+    analyser = ctx.createAnalyser()
+  } catch (error) {
+    stream.getTracks().forEach((track) => track.stop())
+    throw error
+  }
   analyser.fftSize = 512
   analyser.smoothingTimeConstant = 0.82
   source.connect(analyser)

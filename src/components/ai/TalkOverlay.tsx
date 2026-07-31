@@ -19,8 +19,13 @@ export function TalkOverlay() {
   const {
     hasPremium, messages, voiceState, voiceLevel, voiceSupported,
     isListening, interimTranscript, startVoice, stopVoice, preferredLocale,
-    voiceLang, setVoiceLang,
+    voiceLang, setVoiceLang, voiceError, cancelVoice,
   } = tutor
+
+  const endTalk = () => {
+    cancelVoice()
+    closeTalk()
+  }
 
   const VOICE_LANGS = [
     { id: 'en', label: 'English' },
@@ -39,13 +44,13 @@ export function TalkOverlay() {
   useEffect(() => {
     const prev = prevVoiceState.current
     prevVoiceState.current = voiceState
-    if (!talkOpen || docked || !voiceSupported) return
+    if (!talkOpen || docked || !voiceSupported || voiceError) return
     // Start only when idle and we did NOT just stop listening/thinking (avoids loops).
     if (voiceState === 'idle' && prev !== 'listening' && prev !== 'thinking') {
       const timer = window.setTimeout(() => startVoice(), 500)
       return () => window.clearTimeout(timer)
     }
-  }, [voiceState, talkOpen, docked, voiceSupported, startVoice])
+  }, [voiceState, talkOpen, docked, voiceSupported, voiceError, startVoice])
 
   // When the immersive view is up: Escape minimizes to the corner, and the page
   // behind it is locked from scrolling.
@@ -100,12 +105,12 @@ export function TalkOverlay() {
           tabIndex={0}
           onClick={(event) => {
             event.stopPropagation()
-            closeTalk()
+            endTalk()
           }}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.stopPropagation()
-              closeTalk()
+              endTalk()
             }
           }}
           className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
@@ -140,7 +145,7 @@ export function TalkOverlay() {
           </button>
           <button
             type="button"
-            onClick={closeTalk}
+            onClick={endTalk}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
             aria-label="End voice"
           >
@@ -164,7 +169,9 @@ export function TalkOverlay() {
 
           {/* Live transcript / last exchange */}
           <div className="mt-4 min-h-[3.5rem] max-w-xl">
-            {isListening && interimTranscript ? (
+            {voiceError ? (
+              <p className="rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-sm leading-6 text-amber-100">{voiceError}</p>
+            ) : isListening && interimTranscript ? (
               <p className="text-base text-emerald-200">{interimTranscript}</p>
             ) : voiceState === 'speaking' && lastAssistant ? (
               <p className="line-clamp-3 text-base leading-7 text-slate-200">{lastAssistant}</p>

@@ -12,6 +12,8 @@ import {
   type StudySnapshot,
 } from '@/services/ai/studyContext'
 import { composeScreenContext } from '@/services/ai/screenCapture'
+import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
+import { getAiWorkspace } from '@/services/ai/workspaces'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
 import {
   useSpeechRecognition,
@@ -71,6 +73,26 @@ function cleanForSpeech(text: string) {
 
 export type SendOptions = { text?: string; images?: string[]; speak?: boolean }
 
+export type PendingAiAction = {
+  id: string
+  action: GeminiChatAction
+  label: string
+}
+
+function describeAction(action: GeminiChatAction, locale: ChatLocale): string {
+  const uz = locale === 'uz'
+  if (action.type === 'open_test') {
+    const track = action.payload?.track === 'listening' ? 'Listening' : 'Reading'
+    return uz ? `${track} testini ochish` : `Open ${track} test`
+  }
+  if (action.type === 'open_writing_test') return uz ? 'Writing testini ochish' : 'Open Writing test'
+  if (action.type === 'start_mock') {
+    const mock = action.payload?.mock?.toUpperCase() ?? 'IELTS'
+    return uz ? `${mock} mock imtihonini boshlash` : `Start ${mock} mock exam`
+  }
+  return uz ? 'Tavsiya qilingan sahifani ochish' : 'Open the suggested page'
+}
+
 export function useAiTutor() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -83,6 +105,7 @@ export function useAiTutor() {
   const error = useAiAssistantStore((s) => s.error)
   const voiceState = useAiAssistantStore((s) => s.voiceState)
   const voiceLevel = useAiAssistantStore((s) => s.voiceLevel)
+  const activeWorkspace = useAiAssistantStore((s) => s.activeWorkspace)
   const setSending = useAiAssistantStore((s) => s.setSending)
   const setError = useAiAssistantStore((s) => s.setError)
   const pushStoredMessage = useAiAssistantStore((s) => s.pushMessage)
@@ -97,6 +120,8 @@ export function useAiTutor() {
   // The language the mic listens in AND the voice replies in. The user can switch it
   // (EN/UZ/RU), and it auto-adapts to the language the tutor just replied in.
   const [voiceLang, setVoiceLang] = useState<SpeechLang>('en')
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [pendingActions, setPendingActions] = useState<PendingAiAction[]>([])
   const pushMessage = useCallback((message: AiAssistantMessage) => pushStoredMessage(ownerKey, message), [ownerKey, pushStoredMessage])
   const clearMessages = useCallback(() => clearStoredMessages(ownerKey), [clearStoredMessages, ownerKey])
 
@@ -109,6 +134,8 @@ export function useAiTutor() {
   const meterRef = useRef<MicMeter | null>(null)
   const rafRef = useRef<number | null>(null)
   const autoStopRef = useRef<(() => void) | null>(null)
+  const stoppingVoiceRef = useRef(false)
+  const workspace = getAiWorkspace(activeWorkspace)
 
   // Load the learner's preferred language + name once.
   useEffect(() => {
@@ -162,7 +189,7 @@ export function useAiTutor() {
     }
   }, [])
 
-  const startListeningMeter = useCallback(async () => {
+  const startListeningMeter = useCallback(async (): Promise<{ ok: true } | { ok: false; error: unknown }> => {
     try {
       const meter = await createMicMeter()
       meterRef.current = meter
@@ -183,9 +210,9 @@ export function useAiTutor() {
         rafRef.current = requestAnimationFrame(tick)
       }
       rafRef.current = requestAnimationFrame(tick)
-      return true
-    } catch {
-      return false
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, error }
     }
   }, [setVoiceLevel])
 
@@ -254,7 +281,7 @@ export function useAiTutor() {
       const userMessage = createMessage('user', text, outImages.length ? outImages : undefined)
       pushMessage(userMessage)
 
-      const history = [...messages, userMessage]
+      const history = messages
         .filter((m) => m.role === 'user' || m.role === 'assistant')
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
@@ -264,12 +291,15 @@ export function useAiTutor() {
 
       const snapshot = buildStudySnapshot(user?.id ?? null)
       const screenContext = composeScreenContext(text, location.pathname)
+      const siteKnowledge = describeRelevantSiteKnowledge(text)
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
           screenContext,
+          workspaceContext: `${workspace.title}: ${workspace.prompt}`,
+          siteKnowledge,
           images: outImages,
         })
         pushMessage(createMessage('assistant', response.reply))
@@ -294,11 +324,15 @@ export function useAiTutor() {
           setVoiceState('idle')
         }
 
-        if (response.actions.length > 0) {
-          window.setTimeout(() => {
-            for (const action of response.actions) dispatchAction(action, snapshot)
-          }, 600)
-        }
+        // Navigation and test launches always remain under the learner's control.
+        // The UI renders explicit Allow / Dismiss buttons beneath the answer.
+        setPendingActions(
+          response.actions.slice(0, 3).map((action) => ({
+            id: createId(),
+            action,
+            label: describeAction(action, currentLocale),
+          })),
+        )
       } catch (requestError) {
         const message = requestError instanceof Error ? requestError.message : 'Unable to process your request.'
         setError(message)
@@ -319,38 +353,83 @@ export function useAiTutor() {
     [
       draft, images, isSending, messages, preferredLocale, preferredName, location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      startLevelPulse, stopLevelPulse,
+      startLevelPulse, stopLevelPulse, workspace,
     ],
   )
 
   // ── Voice control ──────────────────────────────────────────────────────────
-  const startVoice = useCallback(() => {
+  const startVoice = useCallback(async () => {
     cancelSpeech()
     stopLevelPulse()
+    stopListeningMeter()
     recognition.reset()
+    setVoiceError(null)
+    stoppingVoiceRef.current = false
     voiceTurnRef.current = true
+    if (!recognition.supported) {
+      setVoiceError('Voice input requires Chrome or Edge with microphone access.')
+      voiceTurnRef.current = false
+      return
+    }
+
+    // Request real microphone access first. This gives us a reliable permission/device
+    // result instead of showing a listening animation while capture is actually blocked.
+    const meterResult = await startListeningMeter()
+    if (!meterResult.ok) {
+      const errorName = meterResult.error instanceof DOMException ? meterResult.error.name : ''
+      const uz = preferredLocale === 'uz'
+      const detail =
+        errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError'
+          ? (uz ? 'Mikrofon topilmadi. Qurilmani ulang va qayta urinib ko‘ring.' : 'No microphone was found. Connect one and try again.')
+          : errorName === 'NotReadableError' || errorName === 'TrackStartError'
+            ? (uz ? 'Mikrofon boshqa dastur tomonidan band. Uni yoping va qayta urinib ko‘ring.' : 'The microphone is busy in another app. Close it there and try again.')
+            : errorName === 'SecurityError' || !window.isSecureContext
+              ? (uz ? 'Mikrofon faqat HTTPS yoki localhost orqali ishlaydi.' : 'Microphone access requires HTTPS or localhost.')
+              : (uz
+                  ? 'Mikrofonga ruxsat bloklangan. Manzil satridagi qulf belgisidan Microphone → Allow ni tanlang.'
+                  : 'Microphone permission is blocked. Use the lock icon in the address bar and set Microphone to Allow.')
+      setVoiceError(detail)
+      voiceTurnRef.current = false
+      setVoiceState('idle')
+      return
+    }
+
     setVoiceState('listening')
     recognition.start()
-    // Prefer real mic amplitude; fall back to a synthetic pulse if denied.
-    void startListeningMeter().then((ok) => {
-      if (!ok) startLevelPulse()
-    })
-  }, [recognition, setVoiceState, startListeningMeter, startLevelPulse, stopLevelPulse])
+  }, [preferredLocale, recognition, setVoiceState, startListeningMeter, stopLevelPulse, stopListeningMeter])
 
-  const stopVoice = useCallback(() => {
-    recognition.stop()
+  const stopVoice = useCallback(async () => {
+    if (stoppingVoiceRef.current) return
+    stoppingVoiceRef.current = true
     stopListeningMeter()
     stopLevelPulse()
-    // Final words may still be in the interim buffer at the moment of stopping.
-    const transcript = (recognition.finalTranscript || recognition.interimTranscript).trim()
+    setVoiceState('thinking')
+    // Wait for SpeechRecognition.onend: Chrome emits the final phrase after stop().
+    const transcript = (await recognition.stop()).trim()
     if (voiceTurnRef.current && transcript) {
       voiceTurnRef.current = false
       void send({ text: transcript, speak: true })
     } else {
       voiceTurnRef.current = false
       setVoiceState('idle')
+      if (!recognition.error) {
+        setVoiceError(
+          preferredLocale === 'uz'
+            ? "Ovoz aniqlanmadi. Mikrofonga yaqinroq gapirib, yana urinib ko'ring."
+            : 'No speech was detected. Try again and speak a little closer to the microphone.',
+        )
+      }
     }
-  }, [recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
+    stoppingVoiceRef.current = false
+  }, [preferredLocale, recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
+
+  useEffect(() => {
+    if (!recognition.error) return
+    setVoiceError(recognition.error)
+    setVoiceState('idle')
+    stopListeningMeter()
+    stopLevelPulse()
+  }, [recognition.error, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   // Keep the silence-detector pointed at the latest stopVoice.
   useEffect(() => {
@@ -362,6 +441,16 @@ export function useAiTutor() {
     stopLevelPulse()
     setVoiceState('idle')
   }, [setVoiceState, stopLevelPulse])
+
+  const cancelVoice = useCallback(() => {
+    voiceTurnRef.current = false
+    stoppingVoiceRef.current = true
+    cancelSpeech()
+    stopListeningMeter()
+    stopLevelPulse()
+    void recognition.stop().catch(() => '')
+    setVoiceState('idle')
+  }, [recognition, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   // ── Images ─────────────────────────────────────────────────────────────────
   const addImages = useCallback(async (files: FileList | File[]) => {
@@ -387,8 +476,22 @@ export function useAiTutor() {
     stopListeningMeter()
     setVoiceState('idle')
     setImages([])
+    setPendingActions([])
+    setVoiceError(null)
     clearMessages()
   }, [clearMessages, setVoiceState, stopLevelPulse, stopListeningMeter])
+
+  const approveAction = useCallback((id: string) => {
+    setPendingActions((current) => {
+      const pending = current.find((item) => item.id === id)
+      if (pending) dispatchAction(pending.action)
+      return current.filter((item) => item.id !== id)
+    })
+  }, [dispatchAction])
+
+  const dismissAction = useCallback((id: string) => {
+    setPendingActions((current) => current.filter((item) => item.id !== id))
+  }, [])
 
   return {
     user,
@@ -405,18 +508,25 @@ export function useAiTutor() {
     clear,
     preferredLocale,
     preferredName,
+    activeWorkspace,
+    workspace,
+    pendingActions,
+    approveAction,
+    dismissAction,
     // voice
     voiceState,
     voiceLevel,
     voiceLang,
     setVoiceLang,
     voiceSupported: recognition.supported,
+    voiceError,
     ttsSupported,
     isListening: recognition.listening,
     interimTranscript: recognition.interimTranscript,
     startVoice,
     stopVoice,
     stopSpeaking,
+    cancelVoice,
   }
 }
 

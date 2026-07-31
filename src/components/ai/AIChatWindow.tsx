@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { AudioLines, Check, Copy, ImagePlus, Maximize2, Mic, Send, Sparkles, Square, Trash2, X } from 'lucide-react'
+import { ArrowRight, AudioLines, Check, Copy, ImagePlus, Maximize2, Mic, Send, ShieldCheck, Sparkles, Square, Trash2, X } from 'lucide-react'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
@@ -45,21 +45,6 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-const QUICK_CHIPS: Record<ChatLocale, string[]> = {
-  uz: [
-    'Shu sahifada nima deyilganini tushuntir',
-    'Ishlamagan reading testimni och',
-    'Listening test 2 ni 20 daqiqaga och',
-    "Xatolarimni ko'rsat",
-  ],
-  en: [
-    "Explain what's on my screen",
-    "Open a reading test I haven't done",
-    'Open listening test 2 for 20 min',
-    'Show my mistakes',
-  ],
-}
-
 const STATUS_TEXT: Record<ChatLocale, Record<string, string>> = {
   uz: {
     idle: 'Yordamga tayyor',
@@ -86,9 +71,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     user, hasPremium, messages, isSending, error,
     draft, setDraft, images, addImages, removeImage,
     send, clear, preferredLocale, preferredName,
+    workspace, pendingActions, approveAction, dismissAction,
     voiceState, voiceLevel, voiceSupported, isListening,
     interimTranscript, startVoice, stopVoice,
-    voiceLang, setVoiceLang,
+    voiceLang, setVoiceLang, voiceError,
   } = tutor
 
   const VOICE_LANGS = [
@@ -107,13 +93,13 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   const welcomeMessage = useMemo(() => {
     const name = preferredName ? `, ${preferredName}` : ''
     return preferredLocale === 'uz'
-      ? `Salom${name}! Men ProfAI — shaxsiy o'qituvchingizman. Ekraningizni ko'rib turaman, testlarni vaqt bilan ochaman, rasm/skrinshot yuborsangiz tushunaman va ovozli gaplashsak ham bo'ladi. Qaysi tilda yozsangiz, o'sha tilda javob beraman.`
-      : `Hi${name}! I'm ProfAI — your personal tutor. I can see your screen, open tests with a timer, understand screenshots you send, and talk with you by voice. I reply in whatever language you write in.`
+      ? `Salom${name}! Men ProfAI — shaxsiy o'qituvchingizman. Sahifadagi o'quv kontekstidan foydalanaman, testlarni vaqt bilan ochaman, rasm/skrinshotlarni tushunaman va ovozli gaplasha olaman. Qaysi tilda yozsangiz, o'sha tilda javob beraman.`
+      : `Hi${name}! I'm ProfAI — your personal tutor. I use the learning context from your current page, open timed tests, understand screenshots, and talk with you by voice. I reply in the language you use.`
   }, [preferredLocale, preferredName])
 
   const statusText =
     (STATUS_TEXT[preferredLocale] ?? STATUS_TEXT.en)[voiceState] ?? STATUS_TEXT.en.idle
-  const quickChips = QUICK_CHIPS[preferredLocale] ?? QUICK_CHIPS.en
+  const quickChips = workspace.starters[preferredLocale] ?? workspace.starters.en
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -200,10 +186,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         if (event.currentTarget === event.target) setDragging(false)
       }}
       onDrop={onDrop}
-      className={`relative flex flex-col overflow-hidden border bg-white text-slate-900 ${
+      className={`relative flex min-w-0 max-w-full flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
-          ? 'h-full rounded-[1.6rem] border-white/90 bg-white/72 shadow-[0_30px_70px_-30px_rgba(239,68,68,0.45)] backdrop-blur-2xl'
-          : 'rounded-[1.4rem] border-red-100 shadow-[0_24px_55px_-20px_rgba(239,68,68,0.4)]'
+          ? 'h-full rounded-[1.4rem] border-slate-200/80 bg-white/92 shadow-sm backdrop-blur-2xl'
+          : 'rounded-[1.4rem] border-slate-200 shadow-xl'
       }`}
     >
       <AnimatePresence>
@@ -223,8 +209,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </AnimatePresence>
 
       {/* Header with the live orb */}
-      <header className="relative flex items-center justify-between gap-2 border-b border-white/90 bg-gradient-to-r from-white/90 via-rose-50/70 to-white/80 px-4 py-3 backdrop-blur-xl">
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/70 to-transparent" />
+      <header className="relative flex items-center justify-between gap-2 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur-xl">
         <div className="flex items-center gap-2.5">
           <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 48 : 40} />
           <div>
@@ -240,13 +225,14 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               />
               {statusText}
             </p>
+            <p className="mt-0.5 text-[10px] font-bold text-slate-400">{workspace.shortTitle} mode</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={openTalk}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-red-600 transition hover:bg-red-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-50"
             aria-label="Talk to ProfAI"
           >
             <AudioLines className="h-3.5 w-3.5" />
@@ -285,7 +271,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
       {/* Messages */}
       <div
-        className={`flex-1 overflow-y-auto bg-gradient-to-b from-white/64 via-rose-50/34 to-white/72 px-4 py-3 ${
+        className={`flex-1 overflow-y-auto bg-slate-50/55 px-4 py-3 ${
           isPage ? 'min-h-[20rem]' : 'max-h-[22rem] min-h-[14rem]'
         }`}
       >
@@ -307,8 +293,8 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className={`group relative max-w-[88%] whitespace-pre-wrap rounded-2xl border px-3.5 py-2.5 text-sm leading-6 ${
                   message.role === 'assistant'
-                    ? 'border-white/95 bg-white/82 text-slate-800 shadow-[0_10px_28px_rgba(71,85,105,.08)] backdrop-blur-xl'
-                    : 'ml-auto border-transparent bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-md shadow-red-500/20'
+                    ? 'border-slate-200/80 bg-white text-slate-800 shadow-sm'
+                    : 'ml-auto border-transparent bg-slate-950 text-white shadow-sm'
                 }`}
               >
                 {message.images && message.images.length > 0 ? (
@@ -342,13 +328,53 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 {preferredLocale === 'uz' ? 'O‘ylayapman…' : 'Thinking…'}
               </div>
             ) : null}
+            <AnimatePresence>
+              {pendingActions.map((pending) => (
+                <motion.div
+                  key={pending.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="max-w-md rounded-2xl border border-amber-200 bg-amber-50/90 p-3 shadow-sm"
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 shadow-sm">
+                      <ShieldCheck className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-black text-slate-900">
+                        {preferredLocale === 'uz' ? 'Ruxsat kerak' : 'Your permission'}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-slate-600">{pending.label}</p>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => approveAction(pending.id)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-800"
+                        >
+                          {preferredLocale === 'uz' ? 'Ruxsat berish' : 'Allow'}
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => dismissAction(pending.id)}
+                          className="rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-amber-50"
+                        >
+                          {preferredLocale === 'uz' ? 'Bekor qilish' : 'Dismiss'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
       {/* Composer */}
-      <div className="border-t border-white/90 bg-white/76 px-4 py-3 backdrop-blur-2xl">
+      <div className="border-t border-slate-100 bg-white/95 px-4 py-3 backdrop-blur-2xl">
         {/* Quick chips */}
         <div className="mb-2 flex flex-wrap gap-1.5">
           {quickChips.map((chip) => (
@@ -357,7 +383,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               type="button"
               onClick={() => doSend(chip)}
               disabled={isSending}
-              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-red-200 hover:text-red-700 disabled:opacity-50"
             >
               {chip}
             </button>
@@ -397,6 +423,24 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           ) : null}
         </AnimatePresence>
 
+        {voiceError ? (
+          <div className="mb-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900" role="status">
+            <Mic className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p>{voiceError}</p>
+              {voiceSupported ? (
+                <button
+                  type="button"
+                  onClick={() => void startVoice()}
+                  className="mt-1.5 rounded-lg bg-amber-900 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-amber-800"
+                >
+                  {preferredLocale === 'uz' ? 'Mikrofonni qayta yoqish' : 'Enable microphone'}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         {voiceSupported ? (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
@@ -419,13 +463,13 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           </div>
         ) : null}
 
-        <div className="flex items-end gap-2">
+        <div className="flex min-w-0 items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-red-200 hover:text-red-600 disabled:opacity-50"
             aria-label="Attach image"
           >
             <ImagePlus className="h-4 w-4" />
@@ -446,7 +490,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ? 'Yozing, rasm tashlang yoki mikrofonni bosing…'
                 : 'Type, paste an image, or tap the mic…'
             }
-            className="max-h-[140px] min-h-[40px] flex-1 resize-none rounded-xl border border-red-200 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200"
+            className="max-h-[140px] min-h-[40px] min-w-0 flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             disabled={isSending}
           />
 
@@ -476,7 +520,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             type="button"
             onClick={() => doSend()}
             disabled={isSending || (!draft.trim() && images.length === 0)}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-red-600 px-3.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />

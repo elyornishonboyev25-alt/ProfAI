@@ -22,10 +22,11 @@ const GEMINI_API_KEYS: string[] = (() => {
 
 // Models tried in priority order — first is highest quality, rest are high-quota fallbacks.
 const GEMINI_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-3.1-flash-lite',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-flash-latest',
-  'gemini-flash-lite-latest',
 ]
 
 // Every (model, key) combination, ordered model-first so the best model is preferred
@@ -80,6 +81,56 @@ export interface GeminiChatAction {
 export interface GeminiChatResponse {
   reply: string
   actions: GeminiChatAction[]
+}
+
+const ASSISTANT_ROUTES = new Set([
+  '/dashboard', '/ielts', '/ielts/reading/tests', '/ielts/listening/tests',
+  '/ielts/writing/tests', '/ielts/speaking/tests', '/sat', '/sat/calculator',
+  '/vocabulary', '/articles', '/speaking-lab', '/shadowing-lab', '/writing-lab',
+  '/podcast', '/admission', '/mock', '/mock/ielts', '/mock/sat', '/leaderboard',
+  '/analyze-mistakes', '/premium', '/account',
+])
+
+function sanitizeChatActions(value: unknown): GeminiChatAction[] {
+  if (!Array.isArray(value)) return []
+  const safe: GeminiChatAction[] = []
+
+  for (const candidate of value.slice(0, 3)) {
+    if (!candidate || typeof candidate !== 'object') continue
+    const item = candidate as Record<string, unknown>
+    const payload = item.payload && typeof item.payload === 'object'
+      ? item.payload as Record<string, unknown>
+      : {}
+
+    if (item.type === 'navigate' && typeof item.target === 'string' && ASSISTANT_ROUTES.has(item.target)) {
+      safe.push({ type: 'navigate', target: item.target })
+    } else if (item.type === 'open_writing_test' && typeof payload.testId === 'string') {
+      safe.push({
+        type: 'open_writing_test',
+        payload: {
+          testId: payload.testId,
+          timerEnabled: typeof payload.timerEnabled === 'boolean' ? payload.timerEnabled : false,
+          durationMinutes: typeof payload.durationMinutes === 'number' ? Math.max(5, Math.min(180, Math.round(payload.durationMinutes))) : undefined,
+        },
+      })
+    } else if (item.type === 'open_test' && (payload.track === 'reading' || payload.track === 'listening')) {
+      safe.push({
+        type: 'open_test',
+        payload: {
+          track: payload.track,
+          testId: typeof payload.testId === 'string' ? payload.testId : undefined,
+          ordinal: typeof payload.ordinal === 'number' ? Math.max(1, Math.min(50, Math.round(payload.ordinal))) : undefined,
+          unfinished: payload.unfinished === true,
+          timerEnabled: typeof payload.timerEnabled === 'boolean' ? payload.timerEnabled : false,
+          durationMinutes: typeof payload.durationMinutes === 'number' ? Math.max(5, Math.min(180, Math.round(payload.durationMinutes))) : undefined,
+        },
+      })
+    } else if (item.type === 'start_mock' && (payload.mock === 'ielts' || payload.mock === 'sat')) {
+      safe.push({ type: 'start_mock', payload: { mock: payload.mock } })
+    }
+  }
+
+  return safe
 }
 
 // Structured word explanation used by the "Ask AI about this word" feature in Reading,
@@ -168,18 +219,20 @@ type AssistantPromptContext = {
   studyContext?: string
   learnerName?: string | null
   screenContext?: string
+  workspaceContext?: string
+  siteKnowledge?: string
   hasImages?: boolean
 }
 
 function buildAssistantSystemPrompt(pathname: string, context: AssistantPromptContext = {}): string {
-  const { studyContext, learnerName, screenContext, hasImages } = context
+  const { studyContext, learnerName, screenContext, workspaceContext, siteKnowledge, hasImages } = context
   const greetingName = learnerName ? learnerName : null
 
   return `You are ProfAI — a warm, brilliant, and genuinely caring personal study-abroad tutor. You are NOT a robotic chatbot; you are the kind of mentor a student instantly loves: patient, encouraging, human, and a little playful. You celebrate small wins, you never make the learner feel stupid, and you make hard things feel easy.${greetingName ? ` The learner's name is ${greetingName} — use it naturally and warmly, but don't overuse it.` : ''}
 
 WHO YOU ARE:
 - A real teacher. When a student asks you to explain something (grammar, a word, an essay structure, a reading strategy, a math concept), you explain it beautifully: simple first, then a clear example, then a tiny check or tip. You teach WITH them, like sitting side by side — not at them.
-- You can SEE what the learner currently has on their screen (the reading passage, the question, an article, a lesson, or text they highlighted). When they say "explain this", "what does it say here", "bu yerda nima deyilgan?", "это что значит?", look at the on-screen content provided below and explain THAT exact thing — quote the relevant phrase so they know you're with them. Never say you can't see their screen.${hasImages ? '\n- The learner has ATTACHED one or more images (often a screenshot of a question or text). Read them carefully and base your answer on what they show — describe what you see, solve it, or explain it as a tutor would.' : ''}
+- When ON-SCREEN CONTEXT is supplied below, use it as the source for references such as "this" or "here". Never claim to see content that was not supplied.${hasImages ? '\n- The learner attached one or more images. Inspect them carefully, say when a detail is unreadable, and base the answer only on what is actually visible.' : ''}
 - ProfAI's mission: help students reach top universities abroad. Your world is study-abroad: admissions, scholarships, choosing universities, and the prep that gets them there — IELTS, SAT, English, vocabulary, grammar, writing, speaking, reading, listening and exam strategy.
 - If asked something truly unrelated (politics, gossip, etc.), gently and kindly steer back: you are their study companion.
 
@@ -191,11 +244,17 @@ LANGUAGE — THIS IS CRITICAL:
 
 TONE & STYLE:
 - Warm, human, encouraging. Short, clear sentences. A well-placed emoji is fine (don't overdo it).
-- Your replies are often read ALOUD, so keep them SHORT and natural — usually 1–3 sentences. Get to the point fast; no preamble, no "Sure, I'd be happy to…". Expand into a fuller, structured explanation ONLY when the learner explicitly asks you to explain something in depth.
-- When you open something for them, say so in a few words ("Ochib beryapman… / Opening it now…") so it never feels abrupt.
+- Your replies may be read aloud. Use the shortest answer that fully teaches the point: brief for a simple question, structured and thorough for a plan, solution, review, or comparison.
+- For math, show the reasoning, verify the result, and never invent a numerical step. For writing, quote the learner's actual wording before correcting it. For plans, give concrete tasks, minutes and a measurable outcome.
+
+TRUTH & GROUNDING — NON-NEGOTIABLE:
+- Never fabricate a university requirement, ranking, fee, deadline, scholarship, score, user progress, quotation or fact.
+- Treat INTERNAL SITE KNOWLEDGE and LIVE PROGRESS below as the source of truth for what ProfAI currently stores. If a requested fact is absent, say it is not available in the site data.
+- Clearly separate stored facts from coaching advice. For requirements that can change, recommend the institution's official page. Do not turn uncertainty into a confident guess.
+- If the learner's premise is wrong, correct it calmly and directly.
 
 CURRENT PAGE: ${pathname}
-${studyContext ? `\nLEARNER'S LIVE PROGRESS (use this to act like a real teacher — recommend the right next step, and when they ask for "a test I haven't done", pick from the live tests that are NOT marked ✔done):\n${studyContext}\n` : ''}${screenContext ? `\n━━━ WHAT THE LEARNER IS LOOKING AT RIGHT NOW (their screen) ━━━\n${screenContext}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` : ''}
+${workspaceContext ? `\nACTIVE LEARNING MODE (adapt this conversation; selecting it never navigates):\n${workspaceContext}\n` : ''}${studyContext ? `\nLEARNER'S LIVE PROGRESS (recommend the right next step and choose only unfinished tests when requested):\n${studyContext}\n` : ''}${siteKnowledge ? `\nINTERNAL SITE KNOWLEDGE:\n${siteKnowledge}\n` : ''}${screenContext ? `\nON-SCREEN CONTEXT:\n${screenContext}\n` : ''}
 ═══════════════════════════════════════════
 YOU CONTROL THE WHOLE WEBSITE via "actions". You can navigate anywhere AND open any test, with a timer, exactly as asked.
 
@@ -233,7 +292,7 @@ ACTION TYPES — return inside the "actions" array:
 ACTION RULES:
 - ONLY include an action when the learner EXPLICITLY asks to open/start/go/show something. For questions, explanations, tips, greetings or chat → return "actions": [] and reply with text only. NEVER navigate as a side effect of answering.
 - You may return multiple actions only if they clearly ask for a sequence.
-- Always also write a warm "reply" — even when you take an action, tell them what you're doing.
+- The application shows an Allow button for every action. Do not ask the learner to type permission and do not claim the page is already open. Briefly explain what is ready, then let the button handle consent.
 
 RESPONSE FORMAT — return ONLY valid JSON, nothing else (no markdown fences):
 { "reply": "<your warm message in the learner's language>", "actions": [ ...zero or more actions... ] }
@@ -274,12 +333,6 @@ export async function callGeminiAPI(
     systemInstruction: {
       parts: [{ text: systemPrompt }],
     },
-    generationConfig: {
-      temperature: 0.6,
-      maxOutputTokens,
-      // Disable "thinking" tokens so the full budget goes to the answer and output stays predictable JSON.
-      thinkingConfig: { thinkingBudget: 0 },
-    },
   }
 
   let lastError = ''
@@ -293,6 +346,20 @@ export async function callGeminiAPI(
   // problem does not come back: add more keys and the combined capacity scales linearly.
   for (const { model, key } of MODEL_KEY_COMBOS) {
     const url = buildModelUrl(model, key)
+    const generationConfig = model.startsWith('gemini-3')
+      ? {
+          maxOutputTokens,
+          responseMimeType: 'application/json',
+          // Balanced reasoning materially improves SAT Math, planning and admissions
+          // while keeping an interactive-chat response time.
+          thinkingConfig: { thinkingLevel: 'medium' },
+        }
+      : {
+          temperature: 0.6,
+          maxOutputTokens,
+          responseMimeType: 'application/json',
+          thinkingConfig: { thinkingBudget: 0 },
+        }
     let response: Response | null = null
 
     const MAX_ATTEMPTS = 2
@@ -300,7 +367,7 @@ export async function callGeminiAPI(
       response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, generationConfig }),
       })
       if (response.status !== 503 || attempt === MAX_ATTEMPTS - 1) break
       await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
@@ -310,7 +377,10 @@ export async function callGeminiAPI(
 
     if (response.ok) {
       const data = await response.json()
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      const text = data?.candidates?.[0]?.content?.parts
+        ?.filter((part: { text?: string; thought?: boolean }) => part?.text && !part.thought)
+        .map((part: { text: string }) => part.text)
+        .join('')
       if (text) return text
       lastError = 'Empty response from the AI.'
       continue
@@ -334,6 +404,10 @@ export async function callGeminiAPI(
     }
     if (response.status === 403 || response.status === 401) {
       // This key is rejected (leaked/invalid/restricted). A different key may still work.
+      continue
+    }
+    if (response.status === 404) {
+      // A newly introduced model may not be enabled in every project/region yet.
       continue
     }
     // A 400-style error is a request problem that no other key/model will fix.
@@ -422,6 +496,8 @@ export type ChatAssistantOptions = {
   studyContext?: string
   learnerName?: string | null
   screenContext?: string
+  workspaceContext?: string
+  siteKnowledge?: string
   /** Image attachments (data URLs) the learner sent — e.g. a screenshot. */
   images?: string[]
 }
@@ -437,6 +513,8 @@ export async function chatWithAssistant(
     studyContext: options.studyContext,
     learnerName: options.learnerName,
     screenContext: options.screenContext,
+    workspaceContext: options.workspaceContext,
+    siteKnowledge: options.siteKnowledge,
     hasImages,
   })
 
@@ -450,15 +528,14 @@ export async function chatWithAssistant(
     ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
     : `User: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
 
-  // Smaller cap → the model finishes faster, so spoken replies start sooner.
-  const raw = await callGeminiAPI(systemPrompt, fullMessage, 900, options.images ?? [])
+  const raw = await callGeminiAPI(systemPrompt, fullMessage, 1800, options.images ?? [])
   const jsonStr = extractJSON(raw)
 
   try {
     const parsed = JSON.parse(jsonStr) as GeminiChatResponse
     return {
       reply: parsed.reply || "I'm here to help with your studies!",
-      actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+      actions: sanitizeChatActions(parsed.actions),
     }
   } catch {
     return {

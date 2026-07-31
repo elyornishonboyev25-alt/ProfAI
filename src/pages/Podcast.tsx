@@ -117,9 +117,9 @@ function loadProgress(id: string): Progress {
 }
 
 function levelBadge(level: PodcastEpisode['level']) {
-  if (level === 'Beginner') return 'border-emerald-300/60 bg-emerald-400/15 text-emerald-200'
-  if (level === 'Advanced') return 'border-rose-300/60 bg-rose-400/15 text-rose-200'
-  return 'border-amber-300/60 bg-amber-400/15 text-amber-200'
+  if (level === 'Beginner') return 'border-emerald-200 bg-emerald-50/95 text-emerald-700'
+  if (level === 'Advanced') return 'border-rose-200 bg-rose-50/95 text-rose-700'
+  return 'border-amber-200 bg-amber-50/95 text-amber-700'
 }
 
 const LISTEN_STEPS = [
@@ -1213,32 +1213,33 @@ export default function Podcast() {
   const containerWidth = theater ? 'max-w-[88rem]' : 'max-w-6xl'
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#0b1020] via-[#0c1228] to-[#0a0f22] px-4 py-8 text-slate-100 sm:px-6 lg:px-10">
+    <div className="workspace-page podcast-page relative min-h-screen overflow-hidden px-4 py-6 text-slate-900 sm:px-6 lg:px-10">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-6 h-80 w-80 rounded-full bg-indigo-600/25 blur-3xl" />
-        <div className="absolute bottom-[-6rem] right-[-3rem] h-96 w-96 rounded-full bg-sky-500/20 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl" />
+        <div className="absolute -left-24 top-6 h-80 w-80 rounded-full bg-red-200/45 blur-3xl" />
+        <div className="absolute bottom-[-6rem] right-[-3rem] h-96 w-96 rounded-full bg-rose-200/35 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-orange-100/35 blur-3xl" />
       </div>
 
       <div className={`relative mx-auto w-full ${containerWidth}`}>
         {/* Hero */}
-        <section className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_56px_rgba(2,6,23,0.5)] backdrop-blur sm:p-8">
+        <section className="relative isolate overflow-hidden rounded-[2rem] border border-white/90 bg-white/72 p-6 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl sm:p-8">
+          <span className="pointer-events-none absolute -right-20 -top-24 -z-10 h-64 w-64 rounded-full bg-red-200/55 blur-3xl" />
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => navigate('/dashboard')}
-              className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:bg-white/10"
+              className="premium-back-btn group min-h-11"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
+              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
               Back to Dashboard
             </button>
-            <span className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-indigo-200">
+            <span className="premium-top-chip min-h-11 gap-1.5">
               <Headphones className="h-3.5 w-3.5" />
               English Podcast · Listening
             </span>
             <button
               type="button"
               onClick={() => setShowHelp(true)}
-              className="ml-auto inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-200 transition hover:bg-white/10"
+              className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-red-100 bg-white/80 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700"
             >
               <Keyboard className="h-3.5 w-3.5" />
               Shortcuts
@@ -1247,22 +1248,22 @@ export default function Podcast() {
 
           <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">
                 Train your ear with{' '}
-                <span className="bg-gradient-to-r from-indigo-400 to-sky-300 bg-clip-text text-transparent">English Podcasts</span>
+                <span className="bg-gradient-to-r from-red-700 via-rose-600 to-orange-500 bg-clip-text text-transparent">English Podcasts</span>
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">
                 A distraction-free cinema player — captions, adjustable speed, A–B loops, bookmarks and fullscreen. The fastest
                 way to level up your IELTS &amp; everyday listening.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className={`rounded-full border px-3 py-1 text-xs font-bold ${levelBadge(episode.level)}`}>{episode.level}</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200">
+              <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
                 <Languages className="h-3.5 w-3.5" />
                 English captions
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
                 <ListMusic className="h-3.5 w-3.5" />
                 {PODCAST_EPISODES.length} episode{PODCAST_EPISODES.length === 1 ? '' : 's'}
               </span>
@@ -1293,26 +1294,26 @@ export default function Podcast() {
             </div>
 
             {/* Episode meta */}
-            <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+            <div className="mt-4 rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${levelBadge(episode.level)}`}>
                   {episode.level}
                 </span>
-                <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">
+                <span className="rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
                   {episode.topic}
                 </span>
               </div>
-              <h2 className="mt-2.5 text-xl font-black text-white">{episode.title}</h2>
-              <p className="mt-1.5 text-sm leading-6 text-slate-300">{episode.description}</p>
+              <h2 className="mt-2.5 text-xl font-black text-slate-950">{episode.title}</h2>
+              <p className="mt-1.5 text-sm leading-6 text-slate-600">{episode.description}</p>
             </div>
           </div>
 
           {/* Side column */}
           <div className={theater ? 'grid gap-6 lg:grid-cols-3' : 'space-y-6'}>
             {/* Transcript */}
-            <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-white">
-                <Captions className="h-4 w-4 text-indigo-300" />
+            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
+                <Captions className="h-4 w-4 text-red-500" />
                 Transcript &amp; subtitles
               </h3>
               {transcriptCues.length > 0 ? (
@@ -1326,21 +1327,21 @@ export default function Podcast() {
                         onClick={() => seekTo(cue.start)}
                         className={`block w-full rounded-xl border px-3 py-2 text-left text-sm leading-6 transition ${
                           active
-                            ? 'border-indigo-400/50 bg-indigo-500/15 font-semibold text-white shadow-sm'
-                            : 'border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5'
+                            ? 'border-red-200 bg-red-50 font-semibold text-slate-950 shadow-sm'
+                            : 'border-transparent text-slate-600 hover:border-red-100 hover:bg-red-50/60'
                         }`}
                       >
-                        <span className="mr-2 font-mono text-[11px] text-indigo-300">{formatTime(cue.start)}</span>
+                        <span className="mr-2 font-mono text-[11px] text-red-500">{formatTime(cue.start)}</span>
                         {cue.text}
                       </button>
                     )
                   })}
                 </div>
               ) : (
-                <div className="mt-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-4">
-                  <p className="text-sm font-bold text-slate-100">Subtitles are on the player</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-400">
-                    Use the <span className="font-bold text-indigo-300">CC</span> button (or press <kbd className="rounded bg-white/10 px-1">C</kbd>) to
+                <div className="mt-3 rounded-xl border border-dashed border-red-200 bg-red-50/55 p-4">
+                  <p className="text-sm font-bold text-slate-900">Subtitles are on the player</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Use the <span className="font-bold text-red-600">CC</span> button (or press <kbd className="rounded bg-white px-1">C</kbd>) to
                     show or hide English captions. Adjust caption size in player settings.
                   </p>
                 </div>
@@ -1348,9 +1349,9 @@ export default function Podcast() {
             </article>
 
             {/* Bookmarks */}
-            <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
               <div className="flex items-center justify-between">
-                <h3 className="inline-flex items-center gap-2 text-base font-black text-white">
+                <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
                   <Bookmark className="h-4 w-4 text-amber-300" />
                   Bookmarks
                 </h3>
@@ -1367,7 +1368,7 @@ export default function Podcast() {
                   {bookmarks.map((time) => (
                     <div
                       key={time}
-                      className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 transition hover:border-amber-300/40"
+                      className="group flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/45 px-3 py-2 transition hover:border-amber-300"
                     >
                       <button
                         type="button"
@@ -1380,7 +1381,7 @@ export default function Podcast() {
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/20 text-amber-200">
                           <Bookmark className="h-3.5 w-3.5" />
                         </span>
-                        <span className="font-mono text-sm font-semibold text-slate-100">{formatTime(time)}</span>
+                        <span className="font-mono text-sm font-semibold text-slate-800">{formatTime(time)}</span>
                       </button>
                       <button
                         type="button"
@@ -1394,33 +1395,33 @@ export default function Podcast() {
                   ))}
                 </div>
               ) : (
-                <p className="mt-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-xs leading-5 text-slate-400">
-                  Press <kbd className="rounded bg-white/10 px-1">N</kbd> or tap <span className="font-bold text-amber-200">Add</span> to save the current
+                <p className="mt-3 rounded-xl border border-dashed border-amber-200 bg-amber-50/45 p-4 text-xs leading-5 text-slate-500">
+                  Press <kbd className="rounded bg-white px-1">N</kbd> or tap <span className="font-bold text-amber-700">Add</span> to save the current
                   moment. Bookmarks appear on the seek bar and are saved on this device.
                 </p>
               )}
             </article>
 
             {/* How to use */}
-            <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-white">
-                <Sparkles className="h-4 w-4 text-indigo-300" />
+            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
+                <Sparkles className="h-4 w-4 text-red-500" />
                 How to practise listening
               </h3>
               <div className="mt-3 space-y-2.5">
                 {LISTEN_STEPS.map((step, index) => {
                   const Icon = step.icon
                   return (
-                    <div key={step.title} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white">
+                    <div key={step.title} className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50/45 p-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
                         <Icon className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-sm font-bold text-white">
-                          <span className="mr-1 text-indigo-300">{index + 1}.</span>
+                        <p className="text-sm font-bold text-slate-900">
+                          <span className="mr-1 text-red-500">{index + 1}.</span>
                           {step.title}
                         </p>
-                        <p className="mt-0.5 text-xs leading-5 text-slate-400">{step.detail}</p>
+                        <p className="mt-0.5 text-xs leading-5 text-slate-500">{step.detail}</p>
                       </div>
                     </div>
                   )
@@ -1429,9 +1430,9 @@ export default function Podcast() {
             </article>
 
             {/* Playlist */}
-            <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-white">
-                <ListVideo className="h-4 w-4 text-indigo-300" />
+            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
+                <ListVideo className="h-4 w-4 text-red-500" />
                 Episodes
               </h3>
               <div className="mt-3 space-y-2">
@@ -1440,21 +1441,21 @@ export default function Podcast() {
                     key={item.id}
                     className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-200 ${
                       item.id === episode.id
-                        ? 'border-indigo-400/50 bg-indigo-500/15'
-                        : 'border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-indigo-400/30 hover:bg-white/[0.07]'
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-slate-100 bg-white hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50'
                     }`}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
                       <Headphones className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-white">{item.title}</p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="truncate text-sm font-bold text-slate-900">{item.title}</p>
+                      <p className="text-[11px] text-slate-500">
                         {item.level} · {item.topic}
                       </p>
                     </div>
                     {item.id === episode.id ? (
-                      <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
                         {playing ? (
                           <span className="flex items-end gap-[2px]">
                             <span className="pod-eq-bar h-2 w-[2px] rounded bg-white" />

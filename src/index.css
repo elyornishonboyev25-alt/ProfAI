@@ -382,6 +382,13 @@
     image-orientation: from-image;
   }
 
+  .profile-avatar-media--hero {
+    position: absolute;
+    inset: 0;
+    min-width: 100%;
+    min-height: 100%;
+  }
+
   .premium-page-stage {
     isolation: isolate;
     background:

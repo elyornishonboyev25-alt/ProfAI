@@ -57,16 +57,15 @@ export default function SpeakingCommunity() {
           <section className="premium-hero p-6 sm:p-8">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-center">
               <div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/dashboard')}
-                  className="mb-4 inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white/85 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-red-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50 hover:shadow-[0_8px_18px_rgba(220,38,38,0.18)]"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" /> Back
-                </button>
-                <span className="premium-top-chip">
-                  <Mic className="h-3.5 w-3.5" /> Speaking Studio
-                </span>
+                <div className="premium-top-controls">
+                  <button type="button" onClick={() => navigate('/dashboard')} className="premium-back-btn group">
+                    <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
+                    Back to Dashboard
+                  </button>
+                  <span className="premium-top-chip">
+                    <Mic className="h-3.5 w-3.5" /> Speaking Studio
+                  </span>
+                </div>
                 <h1 className="premium-section-title mt-4">
                   Master <span className="arena-title-accent-red">English Speaking</span>
                 </h1>

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, Clock3, Crown, Headphones, ShieldCheck, Sparkles, Target } from 'lucide-react'
+import { ArrowRight, Clock3, Crown, Headphones, ShieldCheck, Sparkles, Target } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
+import CatalogHero from '@/components/catalog/CatalogHero'
 
 const tracks = [
   {
@@ -123,101 +124,68 @@ export default function Mock() {
         ) : null}
       </AnimatePresence>
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <Reveal>
-          <section className="premium-hero p-6 sm:p-9">
-            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_28rem] xl:items-start">
-              <div className="xl:pr-2">
-                <div className="premium-top-controls">
-                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Dashboard
-                  </button>
-                  <span className="premium-top-chip">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Mock Exam Center
-                  </span>
-                </div>
-                <h1 className="premium-section-title mt-4">
-                  Choose your <span className="arena-title-accent-red">Mock Arena</span>
-                </h1>
-                <p className="premium-section-subtitle max-w-3xl">
-                  IELTS and SAT now open as dedicated mock exam spaces with structured timing, clean layout, and real test pressure.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Full-length timing
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
-                    <Target className="h-3.5 w-3.5" />
-                    Real exam pressure
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Section lock flow
-                  </span>
-                  {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {Math.max(0, mockTrial.remaining)}/{mockTrial.limit} free mocks left
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2 xl:w-full">
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Mock Tracks</p>
-                  <p className="hero-metric-value-sm">
-                    <CountUp value={2} />
-                  </p>
-                  <p className="hero-metric-note">IELTS + SAT</p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Session Style</p>
-                  <p className="hero-metric-value-sm hero-metric-value-compact">Locked</p>
-                  <p className="hero-metric-note">Exam-first sequence</p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">IELTS Flow</p>
-                  <p className="hero-metric-value-sm hero-metric-value-compact">2h 45m</p>
-                  <p className="hero-metric-note">4 sections</p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">SAT Flow</p>
-                  <p className="hero-metric-value-sm hero-metric-value-compact">2h 14m</p>
-                  <p className="hero-metric-note">4 modules</p>
-                </div>
-              </div>
+      <div className="relative mx-auto w-full max-w-[92rem] space-y-5">
+        <CatalogHero
+          tone="rose"
+          backLabel="Dashboard"
+          onBack={() => navigate('/dashboard')}
+          eyebrow="Mock Exam Center"
+          title={<>Real exam pressure. <span className="bg-gradient-to-r from-red-700 via-rose-600 to-orange-500 bg-clip-text text-transparent">Clear controlled practice.</span></>}
+          subtitle="Choose IELTS or Digital SAT and enter a distraction-free simulation with official pacing, locked section flow and actionable review."
+          filters={tracks.map((track) => ({ id: track.id, label: track.id === 'ielts' ? 'IELTS full mock' : 'Digital SAT mock' }))}
+          activeFilter=""
+          onFilterChange={(id) => {
+            const track = tracks.find((item) => item.id === id)
+            if (track) launchMock(track.path)
+          }}
+          summary={[
+            { label: 'Exam tracks', value: '2' },
+            { label: 'Session mode', value: 'Locked' },
+          ]}
+          badge={!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
+            <span className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-amber-700">
+              <Sparkles className="h-3.5 w-3.5" /> {Math.max(0, mockTrial.remaining)}/{mockTrial.limit} free mocks left
+            </span>
+          ) : undefined}
+          actions={(
+            <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Clock3 className="h-3.5 w-3.5 text-red-600" /> Full-length timing</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Target className="h-3.5 w-3.5 text-red-600" /> Real exam pressure</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><ShieldCheck className="h-3.5 w-3.5 text-red-600" /> Section lock flow</span>
             </div>
-          </section>
-        </Reveal>
+          )}
+        />
 
         <Stagger className="grid gap-5 md:grid-cols-2">
-          {tracks.map((track) => (
+          {tracks.map((track, index) => (
             <StaggerItem key={track.id} className="h-full">
               <Tilt3D className="h-full rounded-[1.85rem]" max={6}>
                 <button
                   onClick={() => launchMock(track.path)}
-                  className={`interactive-lift group h-full w-full rounded-[1.85rem] border p-6 text-left ${cardToneClass(track.tone)}`}
+                  className={`interactive-lift group relative isolate flex min-h-[24rem] h-full w-full flex-col overflow-hidden rounded-[1.85rem] border p-6 text-left ${cardToneClass(track.tone)}`}
                 >
-                  <div className={`inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-semibold ${labelToneClass(track.tone)}`}>
-                    <Headphones className="h-3.5 w-3.5" />
+                  <span className={`pointer-events-none absolute -right-16 -top-20 -z-10 h-64 w-64 rounded-full blur-3xl ${track.tone === 'blue' ? 'bg-blue-200/70' : 'bg-red-200/70'}`} />
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg ${track.tone === 'blue' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 'bg-gradient-to-br from-red-600 to-rose-700'}`}>
+                      <Headphones className="h-5 w-5" />
+                    </span>
+                    <span className="text-5xl font-black tracking-[-0.08em] text-white/80">0{index + 1}</span>
+                  </div>
+                  <div className={`mt-6 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${labelToneClass(track.tone)}`}>
                     {track.subtitle}
                   </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">{track.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{track.description}</p>
+                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">{track.title}</h2>
+                  <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-600">{track.description}</p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                     {track.chips.map((chip) => (
-                      <span key={chip} className="rounded-full bg-white px-3 py-1 text-slate-700">
+                      <span key={chip} className="rounded-full border border-white bg-white/85 px-3 py-1 text-slate-600 shadow-sm">
                         {chip}
                       </span>
                     ))}
                   </div>
-                  <p className={`mt-6 text-sm font-semibold transition group-hover:translate-x-1 ${linkToneClass(track.tone)}`}>
-                    Open {track.title} -&gt;
-                  </p>
+                  <span className={`mt-auto inline-flex items-center gap-1 pt-7 text-sm font-black transition group-hover:translate-x-1 ${linkToneClass(track.tone)}`}>
+                    Enter {track.title} <ArrowRight className="h-4 w-4" />
+                  </span>
                 </button>
               </Tilt3D>
             </StaggerItem>

@@ -314,7 +314,7 @@ export default function Vocabulary() {
                 <div>
                   <div className="premium-top-controls">
                     <button
-                      onClick={() => navigate('/vocabulary')}
+                      onClick={() => navigate('/dashboard')}
                       className="premium-back-btn"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
@@ -446,7 +446,7 @@ export default function Vocabulary() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/vocabulary')}
+                    onClick={() => navigate('/dashboard')}
                     className="premium-back-btn-blue"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />

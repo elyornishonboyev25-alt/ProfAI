@@ -2,13 +2,44 @@
 // to a square and downscales it to a small data URL so it can be stored directly in
 // the database (no upload infrastructure needed) and shown to other learners.
 
-function readFileAsDataUrl(file: File): Promise<string> {
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
     reader.onerror = () => reject(new Error('Could not read the image file.'))
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(blob)
   })
+}
+
+async function readImageSource(file: File): Promise<string> {
+  if (file.type !== 'image/svg+xml') return readBlobAsDataUrl(file)
+
+  // SVGs without explicit width/height use a browser fallback viewport (often
+  // 300x150). That made the square preset avatars look rectangular to canvas,
+  // so the old crop kept only part of the character. Give the SVG its viewBox
+  // dimensions before decoding so the complete illustration is rasterised.
+  const document = new DOMParser().parseFromString(await file.text(), 'image/svg+xml')
+  const svg = document.documentElement
+  if (svg.tagName.toLowerCase() !== 'svg' || document.querySelector('parsererror')) {
+    return readBlobAsDataUrl(file)
+  }
+
+  const viewBox = svg
+    .getAttribute('viewBox')
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number)
+
+  if (viewBox?.length === 4 && viewBox.every(Number.isFinite)) {
+    const [, , width, height] = viewBox
+    if (width > 0 && height > 0) {
+      if (!svg.hasAttribute('width')) svg.setAttribute('width', String(width))
+      if (!svg.hasAttribute('height')) svg.setAttribute('height', String(height))
+    }
+  }
+
+  const normalizedSvg = new XMLSerializer().serializeToString(svg)
+  return readBlobAsDataUrl(new Blob([normalizedSvg], { type: 'image/svg+xml' }))
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -38,12 +69,16 @@ export async function compressImageToDataUrl(file: File, options: CompressOption
     throw new Error('Please choose an image file.')
   }
 
-  const sourceDataUrl = await readFileAsDataUrl(file)
+  const sourceDataUrl = await readImageSource(file)
   const img = await loadImage(sourceDataUrl)
 
-  const side = Math.min(img.width, img.height)
-  const sx = (img.width - side) / 2
-  const sy = (img.height - side) / 2
+  const sourceWidth = img.naturalWidth || img.width
+  const sourceHeight = img.naturalHeight || img.height
+  if (!sourceWidth || !sourceHeight) throw new Error('Could not determine the image dimensions.')
+
+  const side = Math.min(sourceWidth, sourceHeight)
+  const sx = (sourceWidth - side) / 2
+  const sy = (sourceHeight - side) / 2
 
   const canvas = document.createElement('canvas')
   canvas.width = size

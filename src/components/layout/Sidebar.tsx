@@ -55,7 +55,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ielts', label: 'IELTS Prep', icon: BookOpen, path: '/ielts' },
       { id: 'sat', label: 'SAT Prep', icon: GraduationCap, path: '/sat' },
-      { id: 'vocabulary', label: 'IELTS Vocabulary', icon: BookMarked, path: '/vocabulary/ielts' },
       { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
       { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
       { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
@@ -66,8 +65,9 @@ const NAV_GROUPS: NavGroup[] = [
     heading: 'More',
     items: [
       { id: 'community', label: 'Community', icon: Users, path: '/community' },
+      { id: 'ielts-vocabulary', label: 'IELTS Vocabulary', icon: BookMarked, path: '/vocabulary/ielts' },
+      { id: 'sat-vocabulary', label: 'SAT Vocabulary', icon: BookMarked, path: '/vocabulary/sat' },
       { id: 'top-universities', label: 'Top Universities', icon: GraduationCap, path: '/admission/universities' },
-      { id: 'application', label: 'Application', icon: FileText, path: '/admission' },
     ],
   },
 ]

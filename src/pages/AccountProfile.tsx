@@ -355,8 +355,8 @@ export default function AccountProfile() {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(239,68,68,0.82),0_20px_44px_rgba(220,38,38,0.34)]">
-                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="profile-avatar-media" /> : initials}
+                <div className="relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(239,68,68,0.82),0_20px_44px_rgba(220,38,38,0.34)]">
+                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="profile-avatar-media profile-avatar-media--hero" /> : initials}
                 </div>
                 <button
                   type="button"

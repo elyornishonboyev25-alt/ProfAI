@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Award, Bell, CheckCheck, ChevronRight, Flame, Sparkles, X } from 'lucide-react'
@@ -50,6 +51,7 @@ export default function NotificationsBell() {
   const [badges, setBadges] = useState<SkillBadgeRecord[]>([])
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const panelRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   const streak = Math.max(0, user?.currentStreak ?? 0)
 
@@ -86,7 +88,8 @@ export default function NotificationsBell() {
   useEffect(() => {
     if (!open) return
     const onPointer = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (!panelRef.current?.contains(target) && !dialogRef.current?.contains(target)) setOpen(false)
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
@@ -139,16 +142,30 @@ export default function NotificationsBell() {
         ) : null}
       </button>
 
-      <AnimatePresence>
+      {typeof document !== 'undefined' ? createPortal(<AnimatePresence>
         {open ? (
-          <motion.div
-            initial={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed right-4 top-20 z-[120] w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-[1.5rem] border border-red-100 bg-white/98 shadow-[0_32px_80px_rgba(15,23,42,0.25)] backdrop-blur-xl"
-          >
-            <div className="flex items-center justify-between border-b border-red-50 px-4 py-3">
+          <>
+            <motion.button
+              type="button"
+              aria-label="Close notifications"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[110] cursor-default bg-slate-950/10 backdrop-blur-[1px]"
+            />
+            <motion.div
+              ref={dialogRef}
+              initial={minimalMotion ? { opacity: 0 } : { opacity: 0, x: 14, y: -6, scale: 0.975 }}
+              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              exit={minimalMotion ? { opacity: 0 } : { opacity: 0, x: 10, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Notifications panel"
+              className="fixed bottom-4 left-4 right-4 top-[4.75rem] z-[120] flex min-h-0 flex-col overflow-hidden rounded-[1.6rem] border border-red-100 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.28)] sm:left-auto sm:w-[25rem]"
+            >
+            <div className="flex shrink-0 items-center justify-between border-b border-red-100 bg-gradient-to-r from-white via-rose-50/60 to-white px-4 py-3.5">
               <div>
                 <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>
                 <p className="text-[10px] font-bold text-slate-400">{unreadCount ? `${unreadCount} unread` : 'You are all caught up'}</p>
@@ -173,9 +190,10 @@ export default function NotificationsBell() {
               </div>
             </div>
 
-            <div className="max-h-[26rem] space-y-3 overflow-y-auto p-4">
+            <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
               {/* Streak card */}
-              <div className="rounded-2xl bg-gradient-to-br from-[#DC2626] to-[#B91C1C] p-4 text-white">
+              <div className="relative overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#ef4444] via-[#dc2626] to-[#991b1b] p-4 text-white shadow-[0_18px_38px_rgba(220,38,38,0.24)]">
+                <span className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
                 <div className="flex items-center gap-2">
                   <Flame className="h-5 w-5 text-amber-300" />
                   <p className="text-sm font-black">
@@ -190,11 +208,11 @@ export default function NotificationsBell() {
                       : 'One session a day builds the habit.'}
                 </p>
                 {week.length > 0 ? (
-                  <div className="mt-3 flex items-center gap-1.5" aria-label="This week's activity">
+                  <div className="mt-3 grid grid-cols-7 gap-1.5" aria-label="This week's activity">
                     {week.slice(-7).map((day) => (
                       <span
                         key={day.date}
-                        className={`flex h-8 w-8 flex-col items-center justify-center rounded-lg border text-[8px] font-bold uppercase ${
+                        className={`flex aspect-square min-w-0 flex-col items-center justify-center rounded-lg border text-[8px] font-bold uppercase ${
                           day.active ? 'border-white/40 bg-white/20 text-white' : 'border-white/15 bg-white/5 text-red-100/60'
                         }`}
                       >
@@ -288,9 +306,10 @@ export default function NotificationsBell() {
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
               </button>
             </div>
-          </motion.div>
+            </motion.div>
+          </>
         ) : null}
-      </AnimatePresence>
+      </AnimatePresence>, document.body) : null}
     </div>
   )
 }

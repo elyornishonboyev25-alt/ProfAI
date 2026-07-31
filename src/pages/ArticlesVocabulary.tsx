@@ -17,7 +17,7 @@ export default function ArticlesVocabulary() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="premium-top-controls">
-                  <button onClick={() => navigate('/vocabulary')} className="premium-back-btn">
+                  <button onClick={() => navigate('/articles')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
                     Back
                   </button>

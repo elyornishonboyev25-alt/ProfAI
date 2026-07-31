@@ -26,7 +26,7 @@ export default function AdmissionUniversities() {
   }, [all, query])
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">

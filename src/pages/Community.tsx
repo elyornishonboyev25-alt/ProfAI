@@ -85,14 +85,12 @@ export default function Community() {
   const topLearner = results[0]?.nickname ?? null
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <main className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
       <AmbientBackdrop variant="red" />
-      <div className="pointer-events-none absolute left-[8%] top-36 h-28 w-28 animate-float-slow rounded-full bg-gradient-to-br from-red-300/50 to-red-600/20 blur-xl" />
-      <div className="pointer-events-none absolute bottom-24 right-[10%] h-40 w-40 animate-float-reverse rounded-full bg-gradient-to-br from-orange-200/45 to-red-500/20 blur-2xl" />
 
       <div className="relative mx-auto w-full max-w-[1500px]">
         <Reveal>
-          <header className="mb-5 flex flex-col gap-4 rounded-[1.75rem] border border-white/80 bg-white/75 p-4 shadow-[0_22px_70px_rgba(127,29,29,0.12)] backdrop-blur-2xl lg:flex-row lg:items-center">
+          <header className="apple-glass-card mb-5 flex flex-col gap-4 rounded-[1.75rem] p-4 lg:flex-row lg:items-center">
             <button
               onClick={() => navigate('/dashboard')}
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-extrabold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700"
@@ -133,7 +131,7 @@ export default function Community() {
         <section className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_300px]">
           <aside className="space-y-4">
             <Reveal>
-              <div className="rounded-[1.65rem] border border-white/90 bg-white/78 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.09)] backdrop-blur-2xl">
+              <div className="apple-glass-card rounded-[1.65rem] p-5">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 text-red-600" />
                   <h2 className="text-sm font-black text-slate-950">Quick filters</h2>
@@ -240,10 +238,10 @@ export default function Community() {
                     <motion.article
                       whileHover={{ y: -5 }}
                       className={cn(
-                        'relative overflow-hidden rounded-[1.65rem] border p-5 shadow-[0_18px_45px_rgba(15,23,42,0.09)] backdrop-blur-2xl',
+                        'apple-glass-card relative rounded-[1.65rem] p-5 transition-shadow hover:shadow-[0_26px_58px_rgba(190,24,93,0.16)]',
                         isTop
-                          ? 'border-amber-300/80 bg-gradient-to-br from-amber-50/95 via-white/90 to-red-50/95'
-                          : 'border-white/90 bg-white/78',
+                          ? '!border-amber-300/80 !bg-gradient-to-br !from-amber-50/95 !via-white/90 !to-red-50/95'
+                          : '',
                       )}
                     >
                       {isTop ? (
@@ -256,7 +254,7 @@ export default function Community() {
                         <div className="relative">
                           <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-600 to-rose-900 text-xl font-black text-white ring-4 ring-red-100 ring-offset-2">
                             {learner.avatarUrl ? (
-                              <img src={learner.avatarUrl} alt="" className="h-full w-full object-cover" />
+                              <img src={learner.avatarUrl} alt="" className="profile-avatar-media" />
                             ) : (
                               initialsOf(learner.nickname)
                             )}
@@ -314,7 +312,7 @@ export default function Community() {
 
           <aside className="hidden xl:block">
             <Reveal>
-              <div className="sticky top-24 rounded-[1.65rem] border border-white/90 bg-white/78 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.09)] backdrop-blur-2xl">
+              <div className="apple-glass-card sticky top-24 rounded-[1.65rem] p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-black text-slate-950">Suggested partners</h2>
                   <Sparkles className="h-4 w-4 text-red-500" />
@@ -328,7 +326,7 @@ export default function Community() {
                       className="group flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 p-3 text-left transition hover:border-red-200 hover:shadow-md"
                     >
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-red-600 text-xs font-black text-white">
-                        {learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="h-full w-full object-cover" /> : initialsOf(learner.nickname)}
+                        {learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}
                       </div>
                       <span className="min-w-0 flex-1">
                         <b className="block truncate text-xs text-slate-900">@{learner.nickname}</b>

@@ -11,6 +11,7 @@ import {
   Mic2,
   PenLine,
   Sigma,
+  ShieldCheck,
   Sparkles,
 } from 'lucide-react'
 import AIChatWindow from '@/components/ai/AIChatWindow'
@@ -68,10 +69,8 @@ export default function AITutor() {
   const firstName = user?.fullName?.split(' ')[0] ?? 'Learner'
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <main className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
       <AmbientBackdrop variant="red" />
-      <div className="pointer-events-none absolute left-[18%] top-20 h-44 w-44 rounded-full bg-red-400/25 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 right-[12%] h-52 w-52 rounded-full bg-orange-300/20 blur-3xl" />
 
       <motion.div
         initial={{ opacity: 0, y: 14 }}
@@ -79,7 +78,7 @@ export default function AITutor() {
         transition={{ duration: 0.38, ease: EASE }}
         className="relative mx-auto w-full max-w-[1450px]"
       >
-        <header className="mb-5 flex flex-col gap-4 rounded-[1.7rem] border border-white/85 bg-white/78 p-4 shadow-[0_20px_65px_rgba(127,29,29,0.12)] backdrop-blur-2xl sm:flex-row sm:items-center">
+        <header className="apple-glass-card mb-5 flex flex-col gap-4 rounded-[1.7rem] p-4 sm:flex-row sm:items-center">
           <button
             onClick={() => navigate('/dashboard')}
             className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:text-red-700"
@@ -98,6 +97,9 @@ export default function AITutor() {
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
               </div>
               <p className="truncate text-xs font-semibold text-slate-500">Personal coaching connected to your ProfAI progress</p>
+              <span className="mt-1 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-700">
+                <ShieldCheck className="h-3 w-3" /> Account-private conversation
+              </span>
             </div>
           </div>
           <button
@@ -135,7 +137,7 @@ export default function AITutor() {
               </div>
             </section>
 
-            <section className="rounded-[1.65rem] border border-white/90 bg-white/78 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.09)] backdrop-blur-2xl">
+            <section className="apple-glass-card rounded-[1.65rem] p-3">
               <div className="flex items-center gap-2 px-2 pb-3 pt-1">
                 <BrainCircuit className="h-4 w-4 text-red-600" />
                 <h2 className="text-sm font-black text-slate-950">Learning workspaces</h2>
@@ -145,7 +147,7 @@ export default function AITutor() {
                   <button
                     key={title}
                     onClick={() => navigate(path)}
-                    className="group flex min-h-16 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 p-3 text-left transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md"
+                    className="glass-tile group flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:-translate-y-1 hover:border-red-200 hover:shadow-md"
                   >
                     <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${tone} text-white shadow-md`}>
                       <Icon className="h-4 w-4" />
@@ -160,7 +162,7 @@ export default function AITutor() {
             </section>
           </aside>
 
-          <section className="min-h-[43rem] overflow-hidden rounded-[1.8rem] border border-white/90 bg-white/70 p-2 shadow-[0_28px_75px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:p-3">
+          <section className="apple-glass-card min-h-[43rem] rounded-[1.8rem] p-2 sm:p-3">
             <AIChatWindow variant="page" />
           </section>
         </div>

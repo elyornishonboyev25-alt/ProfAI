@@ -7,6 +7,7 @@ import {
   Check,
   GraduationCap,
   Loader2,
+  LogOut,
   Lock,
   Mail,
   Save,
@@ -29,6 +30,7 @@ import {
 } from '@/lib/profileApi'
 import { setNickname as apiSetNickname, checkNicknameAvailable } from '@/lib/speakingApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
+import { apiClient } from '@/lib/apiClient'
 import { getUniversityBySlug } from '@/data/admission'
 import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import BadgeShelf from '@/components/achievements/BadgeShelf'
@@ -109,11 +111,14 @@ export default function AccountProfile() {
   const user = useAuthStore((state: AuthState) => state.user)
   const setUserNickname = useAuthStore((state) => state.setUserNickname)
   const setUserAvatar = useAuthStore((state) => state.setUserAvatar)
+  const refreshToken = useAuthStore((state: AuthState) => state.refreshToken)
+  const clearSession = useAuthStore((state: AuthState) => state.clearSession)
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
 
   const [form, setForm] = useState<AccountProfileFields>(EMPTY_PROFILE)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl ?? null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -276,11 +281,22 @@ export default function AccountProfile() {
 
   const initials = (savedNickname || user?.fullName || 'U').slice(0, 2).toUpperCase()
 
+  const signOut = async () => {
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      if (refreshToken) await apiClient.post('/auth/logout', { refreshToken })
+    } catch {
+      // A local sign-out must still succeed if the API is temporarily offline.
+    } finally {
+      clearSession()
+      window.location.replace('/login')
+    }
+  }
+
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <AmbientBackdrop variant="red" />
-      <div className="pointer-events-none absolute -left-20 top-48 h-60 w-60 rounded-full bg-red-400/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full bg-orange-300/20 blur-3xl" />
       <div className="relative mx-auto w-full max-w-7xl">
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
 
@@ -295,6 +311,15 @@ export default function AccountProfile() {
               <Sparkles className="h-3.5 w-3.5" />
               My Profile
             </span>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              disabled={signingOut}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 bg-white/80 px-4 text-xs font-black text-red-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-red-50 disabled:opacity-60"
+            >
+              {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+              Log out
+            </button>
           </div>
 
           <div className="mt-5 grid gap-6 lg:grid-cols-[auto_1fr_auto] lg:items-center">
@@ -302,7 +327,7 @@ export default function AccountProfile() {
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
                 <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(239,68,68,0.82),0_20px_44px_rgba(220,38,38,0.34)]">
-                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" /> : initials}
+                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="profile-avatar-media" /> : initials}
                 </div>
                 <button
                   type="button"

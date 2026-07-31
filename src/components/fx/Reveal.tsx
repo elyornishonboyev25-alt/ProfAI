@@ -15,7 +15,7 @@ interface RevealProps {
  * Entrance wrapper — fades/slides/unblurs its children when they scroll into
  * view. No-op under reduced-motion.
  */
-export default function Reveal({ children, className, delay = 0, y = 16, blur = true, once = true }: RevealProps) {
+export default function Reveal({ children, className, delay = 0, y = 22, blur: _blur = false, once = true }: RevealProps) {
   const { reducedMotion } = useMotionPreferences()
 
   if (reducedMotion) return <div className={className}>{children}</div>
@@ -23,10 +23,10 @@ export default function Reveal({ children, className, delay = 0, y = 16, blur = 
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y, filter: blur ? 'blur(6px)' : 'blur(0px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once, margin: '-8% 0px' }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y, scale: 0.992 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once, margin: '-5% 0px -4% 0px', amount: 0.12 }}
+      transition={{ duration: 0.68, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>

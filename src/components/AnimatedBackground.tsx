@@ -6,7 +6,7 @@ export const AnimatedBackground = memo(function AnimatedBackground() {
   const { minimalMotion } = useMotionPreferences()
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div className="workspace-background fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
       <div className="ambient-mesh" />
       <div className="ambient-noise" />
       <motion.div
@@ -28,38 +28,32 @@ export const AnimatedBackground = memo(function AnimatedBackground() {
       />
 
       <motion.div
-        className="ambient-orb absolute left-[46%] top-[18%] h-52 w-52 rounded-full bg-rose-200/45"
-        animate={minimalMotion ? undefined : { x: [0, 14, -10, 0], y: [0, -16, 8, 0], scale: [1, 1.06, 1] }}
-        transition={minimalMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
-      <motion.div
-        className="glossy-orb left-[2%] top-[13%] h-20 w-20"
-        animate={minimalMotion ? undefined : { x: [0, 34, 8, 0], y: [0, -24, 18, 0], rotate: [0, 18, -8, 0] }}
+        className="glossy-orb left-[3%] top-[24%] h-16 w-16 md:h-20 md:w-20"
+        animate={minimalMotion ? undefined : { x: [0, 18, 4, 0], y: [0, -14, 10, 0], rotate: [0, 12, -6, 0] }}
         transition={minimalMotion ? undefined : { duration: 13, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb glossy-orb-soft right-[3%] top-[9%] h-36 w-36"
-        animate={minimalMotion ? undefined : { x: [0, -28, 5, 0], y: [0, 22, -12, 0], rotate: [0, -16, 10, 0] }}
+        className="glossy-orb glossy-orb-soft right-[2%] top-[30%] h-24 w-24 md:h-32 md:w-32"
+        animate={minimalMotion ? undefined : { x: [0, -16, 4, 0], y: [0, 14, -8, 0], rotate: [0, -12, 7, 0] }}
         transition={minimalMotion ? undefined : { duration: 17, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb bottom-[8%] left-[9%] h-12 w-12"
+        className="glossy-orb bottom-[10%] left-[15%] h-10 w-10 md:h-12 md:w-12"
         animate={minimalMotion ? undefined : { x: [0, 18, -8, 0], y: [0, -30, 8, 0], scale: [1, 1.12, 0.96, 1] }}
         transition={minimalMotion ? undefined : { duration: 11, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb glossy-orb-soft bottom-[16%] right-[14%] h-16 w-16"
+        className="glossy-orb glossy-orb-soft bottom-[12%] right-[18%] h-14 w-14 md:h-16 md:w-16"
         animate={minimalMotion ? undefined : { x: [0, -18, 12, 0], y: [0, -16, 20, 0], scale: [1, 0.94, 1.08, 1] }}
         transition={minimalMotion ? undefined : { duration: 14, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb left-[28%] top-[54%] hidden h-9 w-9 opacity-55 md:block"
+        className="glossy-orb left-[38%] top-[62%] hidden h-9 w-9 opacity-45 md:block"
         animate={minimalMotion ? undefined : { x: [0, 24, -10, 0], y: [0, -28, 12, 0], scale: [1, 1.14, 0.95, 1] }}
         transition={minimalMotion ? undefined : { duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="glossy-orb right-[31%] top-[38%] hidden h-12 w-12 opacity-45 lg:block"
+        className="glossy-orb right-[34%] top-[16%] hidden h-10 w-10 opacity-35 lg:block"
         animate={minimalMotion ? undefined : { x: [0, -18, 12, 0], y: [0, 20, -14, 0], rotate: [0, -12, 8, 0] }}
         transition={minimalMotion ? undefined : { duration: 15, repeat: Infinity, ease: 'easeInOut' }}
       />

@@ -43,13 +43,7 @@ function Overview() {
   const total = CONTEXTS.reduce((sum, c) => sum + countSavedWords(c.key), 0)
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="ambient-mesh" />
-        <div className="ambient-grid" />
-        <div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-red-200/40 blur-3xl" />
-        <div className="absolute bottom-[-8rem] right-0 h-96 w-96 rounded-full bg-rose-200/35 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-5xl space-y-6">
         <Reveal>
           <section className="rounded-[2rem] border border-red-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-8">
@@ -177,11 +171,7 @@ function Collection({ context }: { context: VocabContext }) {
   const manualCount = words.filter((w) => w.source === 'manual').length
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fff8f8] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-14 top-8 h-72 w-72 rounded-full bg-red-200/40 blur-3xl" />
-        <div className="absolute right-[-8rem] top-20 h-[22rem] w-[22rem] rounded-full bg-rose-200/30 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-5xl space-y-5">
         <section className="rounded-[1.8rem] border border-red-100 bg-white/90 p-5 shadow-[0_24px_54px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-7">

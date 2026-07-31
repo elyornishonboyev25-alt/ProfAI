@@ -396,10 +396,8 @@ export default function AnalyzeMistakes() {
 
   return (
     <>
-      <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
         <AmbientBackdrop variant="red" />
-        <div className="pointer-events-none absolute -left-16 top-52 h-64 w-64 rounded-full bg-red-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute right-[4%] top-16 h-52 w-52 rounded-full bg-orange-300/20 blur-3xl" />
         <div className="relative mx-auto w-full max-w-7xl">
         <Reveal>
         <section className="rounded-[2rem] border border-white/90 bg-white/78 p-6 shadow-[0_28px_75px_rgba(127,29,29,0.14)] backdrop-blur-2xl sm:p-8">

@@ -66,6 +66,8 @@ const NAV_GROUPS: NavGroup[] = [
     heading: 'More',
     items: [
       { id: 'community', label: 'Community', icon: Users, path: '/community' },
+      { id: 'top-universities', label: 'Top Universities', icon: GraduationCap, path: '/admission/universities' },
+      { id: 'application', label: 'Application', icon: FileText, path: '/admission' },
     ],
   },
 ]
@@ -206,7 +208,7 @@ export function Sidebar() {
             )}
           >
             <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-red-500 to-rose-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(220,38,38,0.25)]">
-              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
+              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
               {premium ? (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white">
                   <Crown className="h-2.5 w-2.5" />

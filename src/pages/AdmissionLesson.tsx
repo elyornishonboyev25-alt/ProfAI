@@ -82,7 +82,7 @@ export default function AdmissionLesson() {
 
   if (!lesson || !phase) {
     return (
-      <div className="relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
         <AmbientBackdrop variant="red" />
         <div className="relative mx-auto max-w-3xl rounded-2xl border border-red-100 bg-white p-10 text-center">
           <h1 className="text-2xl font-black text-slate-900">Lesson not found</h1>
@@ -99,7 +99,7 @@ export default function AdmissionLesson() {
   const accent = phase.accent
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-3xl space-y-6">

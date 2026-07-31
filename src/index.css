@@ -81,6 +81,33 @@
     background: transparent;
   }
 
+  .workspace-background {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    contain: strict;
+    isolation: isolate;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .workspace-page {
+    isolation: isolate;
+    background: transparent !important;
+  }
+
+  .workspace-ambient-wash {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,248,246,.04));
+  }
+
+  .workspace-ambient-wash-blue {
+    background: linear-gradient(145deg, rgba(239,246,255,.08), rgba(255,255,255,.04));
+  }
+
   /* ── Liquid Glass (Apple-style) — translucent frosted surfaces with a glossy
      top sheen and a soft inner light. Used by the ProfAI landing hero. ─────── */
   .lg-glass {
@@ -278,6 +305,81 @@
       radial-gradient(circle at 0% 0%, rgba(252, 165, 165, 0.12), transparent 38%),
       linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 246, 247, 0.78));
     overflow: hidden;
+  }
+
+  /* High-clarity liquid glass used by the signed-in workspace. The highlight
+     remains light at every scroll position and avoids GPU filter fades. */
+  .apple-glass-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    background:
+      linear-gradient(138deg, rgba(255, 255, 255, 0.82), rgba(255, 246, 247, 0.58)),
+      radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.96), transparent 36%);
+    box-shadow:
+      0 20px 55px rgba(65, 24, 38, 0.09),
+      inset 0 1px 0 rgba(255, 255, 255, 0.96),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(24px) saturate(145%);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+  }
+
+  .apple-glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(118deg, rgba(255,255,255,.72) 0%, rgba(255,255,255,.18) 30%, transparent 54%);
+  }
+
+  .glass-tile {
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(255,248,248,.68));
+    box-shadow: 0 10px 26px rgba(51, 65, 85, 0.07), inset 0 1px 0 rgba(255,255,255,.98);
+    backdrop-filter: blur(16px) saturate(135%);
+    -webkit-backdrop-filter: blur(16px) saturate(135%);
+  }
+
+  .target-glass-card {
+    isolation: isolate;
+    border: 1px solid rgba(255,255,255,.34);
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255,255,255,.22), transparent 34%),
+      linear-gradient(145deg, rgba(244,63,94,.97), rgba(220,38,38,.97) 48%, rgba(127,29,29,.98));
+    box-shadow:
+      0 28px 65px rgba(190,24,93,.3),
+      inset 0 1px 0 rgba(255,255,255,.4),
+      inset 0 -14px 34px rgba(69,10,10,.16);
+  }
+
+  .target-glass-card::after {
+    content: '';
+    position: absolute;
+    inset: -45% auto -45% -55%;
+    width: 38%;
+    z-index: 0;
+    pointer-events: none;
+    transform: rotate(18deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.48), transparent);
+    animation: targetGlassShine 6.5s ease-in-out infinite;
+  }
+
+  .target-glass-card > * {
+    z-index: 1;
+  }
+
+  .profile-avatar-media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: none !important;
+    rotate: none !important;
+    image-orientation: from-image;
   }
 
   .premium-page-stage {
@@ -874,6 +976,12 @@
     opacity: 0.56;
     transform: translateX(10%);
   }
+}
+
+@keyframes targetGlassShine {
+  0%, 22% { left: -55%; opacity: 0; }
+  36% { opacity: .78; }
+  58%, 100% { left: 125%; opacity: 0; }
 }
 
 @keyframes ctaSunSweep {

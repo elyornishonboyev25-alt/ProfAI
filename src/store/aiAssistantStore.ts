@@ -24,7 +24,7 @@ type AiAssistantState = {
   isOpen: boolean
   isSending: boolean
   error: string | null
-  messages: AiAssistantMessage[]
+  conversations: Record<string, AiAssistantMessage[]>
   reportSnapshot: AiReportResponse | null
   reportUpdatedAt: string | null
   /** Immersive full-screen "talk to ProfAI" overlay. */
@@ -41,8 +41,8 @@ type AiAssistantState = {
   setVoiceLevel: (level: number) => void
   setSending: (value: boolean) => void
   setError: (value: string | null) => void
-  pushMessage: (message: AiAssistantMessage) => void
-  clearMessages: () => void
+  pushMessage: (ownerKey: string, message: AiAssistantMessage) => void
+  clearMessages: (ownerKey: string) => void
   setReportSnapshot: (report: AiReportResponse | null) => void
 }
 
@@ -52,7 +52,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       isOpen: false,
       isSending: false,
       error: null,
-      messages: [],
+      conversations: {},
       reportSnapshot: null,
       reportUpdatedAt: null,
       talkOpen: false,
@@ -67,11 +67,18 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       setVoiceLevel: (level: number) => set({ voiceLevel: Math.max(0, Math.min(1, level)) }),
       setSending: (value: boolean) => set({ isSending: value }),
       setError: (value: string | null) => set({ error: value }),
-      pushMessage: (message: AiAssistantMessage) =>
+      pushMessage: (ownerKey: string, message: AiAssistantMessage) =>
         set((state) => ({
-          messages: [...state.messages, message].slice(-40),
+          conversations: {
+            ...state.conversations,
+            [ownerKey]: [...(state.conversations[ownerKey] ?? []), message].slice(-40),
+          },
         })),
-      clearMessages: () => set({ messages: [], error: null }),
+      clearMessages: (ownerKey: string) =>
+        set((state) => ({
+          conversations: { ...state.conversations, [ownerKey]: [] },
+          error: null,
+        })),
       setReportSnapshot: (report: AiReportResponse | null) =>
         set({
           reportSnapshot: report,
@@ -80,8 +87,11 @@ export const useAiAssistantStore = create<AiAssistantState>()(
     }),
     {
       name: 'profai-ai-chat',
-      // Only the conversation is worth persisting; transient UI/voice state resets.
-      partialize: (state) => ({ messages: state.messages }),
+      version: 2,
+      // Conversations are deliberately namespaced by account id. Version 2
+      // discards the old shared history instead of risking cross-account leaks.
+      migrate: () => ({ conversations: {} }),
+      partialize: (state) => ({ conversations: state.conversations }),
     },
   ),
 )

@@ -155,15 +155,7 @@ export default function Vocabulary() {
 
   if (!routeTrack) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="ambient-mesh" />
-          <div className="ambient-grid" />
-          <div className="ambient-noise" />
-          <div className="absolute -top-24 left-[-8rem] h-72 w-72 rounded-full bg-red-200/50 blur-3xl" />
-          <div className="absolute right-[-10rem] top-12 h-96 w-96 rounded-full bg-rose-200/40 blur-3xl" />
-          <div className="absolute bottom-[-12rem] left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-orange-200/35 blur-3xl" />
-        </div>
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
         <div className="relative mx-auto w-full max-w-6xl space-y-6">
           <Reveal>
@@ -313,14 +305,7 @@ export default function Vocabulary() {
 
   if (routeTrack === 'IELTS') {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="ambient-mesh" />
-          <div className="ambient-grid" />
-          <div className="ambient-noise" />
-          <div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-red-200/45 blur-3xl" />
-          <div className="absolute bottom-[-8rem] right-0 h-96 w-96 rounded-full bg-rose-200/35 blur-3xl" />
-        </div>
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
         <div className="relative mx-auto w-full max-w-6xl space-y-6">
           <Reveal>
@@ -452,14 +437,7 @@ export default function Vocabulary() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#eaf2ff] via-[#edf4ff] to-[#e5edff] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="ambient-mesh" />
-        <div className="ambient-grid opacity-90" />
-        <div className="ambient-noise" />
-        <div className="absolute -left-20 top-0 h-80 w-80 rounded-full bg-blue-200/45 blur-3xl" />
-        <div className="absolute -right-16 bottom-[-6rem] h-[26rem] w-[26rem] rounded-full bg-indigo-200/35 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <Reveal>

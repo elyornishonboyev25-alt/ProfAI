@@ -35,8 +35,7 @@ export default function SATMistakes() {
     : 0
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(145deg,#eef6ff,#f8fbff_48%,#eef2ff)] px-4 py-7 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-indigo-300/25 blur-3xl" />
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
       <div className="relative mx-auto max-w-6xl space-y-5">
         <section className="rounded-[2rem] border border-white/90 bg-white/75 p-6 shadow-[0_24px_60px_rgba(37,99,235,0.12)] backdrop-blur-2xl sm:p-8">
           <button onClick={() => navigate('/sat')} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-blue-700 hover:bg-blue-50">

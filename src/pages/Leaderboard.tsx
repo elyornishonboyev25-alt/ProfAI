@@ -19,8 +19,8 @@ import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { motion } from 'framer-motion'
-import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
-import PremiumSphereField from '@/components/fx/PremiumSphereField'
+import { Burst, CountUp, CrownBadge, FeatureSticker, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
 
@@ -165,6 +165,7 @@ export default function Leaderboard() {
   }, [rows])
 
   const topTen = rows.slice(0, 10)
+  const premiumLocked = Boolean(user) && !isPremiumUser(user)
 
   // Re-order podium so #1 is in the middle: [#2, #1, #3]
   const visualPodium = useMemo(() => {
@@ -173,13 +174,11 @@ export default function Leaderboard() {
   }, [podiumRows])
 
   return (
-    <div className="premium-page-stage relative mx-auto min-h-screen w-full max-w-7xl overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <PremiumSphereField />
+    <div className="workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative mx-auto w-full max-w-7xl">
       {/* ── Hero ──────────────────────────────────────────────── */}
       <Reveal>
         <section className="relative overflow-hidden rounded-[2rem] border border-red-100 bg-[radial-gradient(circle_at_8%_12%,rgba(252,165,165,0.35),transparent_38%),radial-gradient(circle_at_90%_10%,rgba(251,113,133,0.25),transparent_42%),linear-gradient(150deg,#fff,#fff5f5)] p-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-gradient-to-br from-amber-200/30 to-orange-300/15 blur-3xl" />
-          <div className="pointer-events-none absolute -left-16 bottom-0 h-60 w-60 rounded-full bg-rose-200/25 blur-3xl" />
 
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -274,10 +273,13 @@ export default function Leaderboard() {
 
       {/* ── Podium ────────────────────────────────────────────── */}
       <Reveal delay={0.05} className="mt-8">
+        <PremiumFeatureLock
+          locked={premiumLocked}
+          title="Unlock the Live Podium"
+          description="See verified leaders, rank movement, accuracy and competitive streak intelligence."
+        >
         <div className="mb-3 flex items-center gap-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-[0_10px_22px_rgba(245,158,11,0.32)]">
-            <Trophy className="h-4 w-4" />
-          </span>
+          <FeatureSticker icon={Trophy} tone="amber" />
           <h2 className="text-lg font-black tracking-tight text-slate-900">Podium · Top 3</h2>
         </div>
         {loading ? (
@@ -390,18 +392,22 @@ export default function Leaderboard() {
             })}
           </div>
         )}
+        </PremiumFeatureLock>
       </Reveal>
 
       {/* ── Top 10 leaderboard + side rail ────────────────────── */}
       <section className="mt-8 grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
         <Reveal>
+          <PremiumFeatureLock
+            locked={premiumLocked}
+            title="Unlock the Top 10 Board"
+            description="Access the live XP table, rank movement, accuracy and streak comparisons."
+          >
           <article className="surface-card relative overflow-hidden p-5 sm:p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
-                  <Medal className="h-4 w-4" />
-                </span>
+                <FeatureSticker icon={Medal} tone="rose" />
                 <h3 className="text-lg font-black tracking-tight text-slate-900">Top 10 · Pure XP</h3>
               </div>
               {summary ? (
@@ -488,16 +494,16 @@ export default function Leaderboard() {
               </div>
             )}
           </article>
+          </PremiumFeatureLock>
         </Reveal>
 
         <div className="space-y-4">
           <Reveal>
+            <PremiumFeatureLock locked={premiumLocked} title="Unlock League Promotion" compact>
             <article className="surface-card relative overflow-hidden border-amber-200 p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
               <div className="flex items-center gap-3">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-[0_12px_26px_rgba(245,158,11,.32)]">
-                  <Crown className="h-5 w-5" />
-                </span>
+                <FeatureSticker icon={Crown} tone="amber" size="lg" />
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">Gold League</p>
                   <h3 className="text-lg font-black text-slate-900">League Promotion</h3>
@@ -516,6 +522,7 @@ export default function Leaderboard() {
                 2 days left · Your rank #{data?.currentUserRank ?? '—'}
               </p>
             </article>
+            </PremiumFeatureLock>
           </Reveal>
 
           {/* XP formula explainer */}
@@ -523,9 +530,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-[0_10px_22px_rgba(245,158,11,0.32)]">
-                  <Zap className="h-4 w-4" />
-                </span>
+                <FeatureSticker icon={Zap} tone="amber" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">How XP Works</h3>
               </div>
               <p className="mt-3 text-xs leading-5 text-slate-600">
@@ -560,12 +565,11 @@ export default function Leaderboard() {
 
           {/* Weekly winner */}
           <Reveal delay={0.06}>
+            <PremiumFeatureLock locked={premiumLocked} title="Unlock Weekly Champion" compact>
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
-                  <Trophy className="h-4 w-4" />
-                </span>
+                <FeatureSticker icon={Trophy} tone="rose" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">Weekly Champion</h3>
               </div>
               {data?.weeklyPremiumWinner ? (
@@ -579,17 +583,17 @@ export default function Leaderboard() {
                 <p className="mt-3 text-sm text-slate-500">No champion yet this week.</p>
               )}
             </article>
+            </PremiumFeatureLock>
           </Reveal>
 
           {/* Stats snapshot */}
           {summary ? (
             <Reveal delay={0.1}>
+              <PremiumFeatureLock locked={premiumLocked} title="Unlock Board Snapshot" compact>
               <article className="surface-card relative overflow-hidden p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
-                    <Users className="h-4 w-4" />
-                  </span>
+                  <FeatureSticker icon={Users} tone="red" />
                   <h3 className="text-base font-black tracking-tight text-slate-900">Board Snapshot</h3>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -607,6 +611,7 @@ export default function Leaderboard() {
                   </div>
                 </div>
               </article>
+              </PremiumFeatureLock>
             </Reveal>
           ) : null}
 
@@ -615,9 +620,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-[0_10px_22px_rgba(16,185,129,0.3)]">
-                  <Shield className="h-4 w-4" />
-                </span>
+                <FeatureSticker icon={Shield} tone="emerald" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">Integrity Rules</h3>
               </div>
               <div className="mt-3 space-y-2">
@@ -631,6 +634,7 @@ export default function Leaderboard() {
           </Reveal>
         </div>
       </section>
+      </div>
     </div>
   )
 }

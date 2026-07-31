@@ -153,14 +153,7 @@ export default function Premium() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
-      {/* Ambient backdrop */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[6%] top-[6%] h-72 w-72 rounded-full bg-red-400/18 blur-3xl" />
-        <div className="absolute right-[8%] top-[20%] h-80 w-80 rounded-full bg-amber-300/18 blur-3xl" />
-        <div className="absolute bottom-[6%] left-[30%] h-72 w-72 rounded-full bg-rose-300/16 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,113,113,0.04)_1px,transparent_1px),linear-gradient(180deg,rgba(248,113,113,0.04)_1px,transparent_1px)] bg-[size:46px_46px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-6xl">
         <button

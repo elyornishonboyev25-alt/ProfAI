@@ -149,7 +149,7 @@ export default function VocabularyActivity() {
   // My Words sets can be empty — guide the learner instead of showing a broken activity.
   if (entries.length === 0) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[#fff8f8] px-4 py-10 sm:px-6 lg:px-10">
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
         <div className="relative mx-auto w-full max-w-2xl rounded-[1.8rem] border border-red-100 bg-white p-8 text-center shadow-[0_24px_54px_rgba(15,23,42,0.1)]">
           <BookOpenCheck className="mx-auto h-10 w-10 text-red-500" />
           <h3 className="mt-3 text-2xl font-black text-slate-900">{title}</h3>
@@ -163,12 +163,7 @@ export default function VocabularyActivity() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fff8f8] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-14 top-8 h-72 w-72 rounded-full bg-red-200/40 blur-3xl" />
-        <div className="absolute right-[-8rem] top-20 h-[22rem] w-[22rem] rounded-full bg-rose-200/30 blur-3xl" />
-        <div className="absolute bottom-[-8rem] left-1/2 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-orange-200/25 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-5xl space-y-5">
         {/* hero */}

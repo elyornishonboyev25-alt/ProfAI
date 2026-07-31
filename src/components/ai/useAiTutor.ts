@@ -25,6 +25,8 @@ import {
 import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
 
+const EMPTY_MESSAGES: AiAssistantMessage[] = []
+
 function createId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
   return `msg-${Date.now()}-${Math.round(Math.random() * 1000)}`
@@ -74,16 +76,17 @@ export function useAiTutor() {
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
   const hasPremium = hasPremiumAccess(user)
+  const ownerKey = user?.id ? `user:${user.id}` : 'guest'
 
-  const messages = useAiAssistantStore((s) => s.messages)
+  const messages = useAiAssistantStore((s) => s.conversations[ownerKey] ?? EMPTY_MESSAGES)
   const isSending = useAiAssistantStore((s) => s.isSending)
   const error = useAiAssistantStore((s) => s.error)
   const voiceState = useAiAssistantStore((s) => s.voiceState)
   const voiceLevel = useAiAssistantStore((s) => s.voiceLevel)
   const setSending = useAiAssistantStore((s) => s.setSending)
   const setError = useAiAssistantStore((s) => s.setError)
-  const pushMessage = useAiAssistantStore((s) => s.pushMessage)
-  const clearMessages = useAiAssistantStore((s) => s.clearMessages)
+  const pushStoredMessage = useAiAssistantStore((s) => s.pushMessage)
+  const clearStoredMessages = useAiAssistantStore((s) => s.clearMessages)
   const setVoiceState = useAiAssistantStore((s) => s.setVoiceState)
   const setVoiceLevel = useAiAssistantStore((s) => s.setVoiceLevel)
 
@@ -94,6 +97,8 @@ export function useAiTutor() {
   // The language the mic listens in AND the voice replies in. The user can switch it
   // (EN/UZ/RU), and it auto-adapts to the language the tutor just replied in.
   const [voiceLang, setVoiceLang] = useState<SpeechLang>('en')
+  const pushMessage = useCallback((message: AiAssistantMessage) => pushStoredMessage(ownerKey, message), [ownerKey, pushStoredMessage])
+  const clearMessages = useCallback(() => clearStoredMessages(ownerKey), [clearStoredMessages, ownerKey])
 
   const ttsSupported = isSpeechSynthesisSupported()
   const recognition = useSpeechRecognition(speechLangToBcp47(voiceLang))

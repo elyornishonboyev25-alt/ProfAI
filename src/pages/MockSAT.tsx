@@ -96,13 +96,7 @@ export default function MockSAT() {
   const finishedAttempt = existingAttempt?.status === 'submitted'
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(145deg,#eff9ff_0%,#f8f7fb_42%,#fff4f1_100%)] px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-24 h-[28rem] w-[28rem] rounded-full bg-cyan-200/35 blur-3xl" />
-        <div className="absolute -right-24 top-8 h-[30rem] w-[30rem] rounded-full bg-red-200/30 blur-3xl" />
-        <div className="absolute bottom-[-16rem] left-1/3 h-[36rem] w-[36rem] rounded-full bg-indigo-200/25 blur-3xl" />
-        <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,.9)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.9)_1px,transparent_1px)] [background-size:48px_48px]" />
-      </div>
+    <main className="workspace-page relative min-h-screen overflow-hidden px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
 
       <div className="relative mx-auto max-w-[88rem]">
         <header className="flex items-center justify-between gap-4 rounded-[1.6rem] border border-white/85 bg-white/70 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-6">

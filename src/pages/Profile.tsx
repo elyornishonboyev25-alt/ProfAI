@@ -37,7 +37,8 @@ import type { AuthUser, ProfileOverview } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
-import PremiumSphereField from '@/components/fx/PremiumSphereField'
+import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
+import { isPremiumUser } from '@/utils/premiumAccess'
 
 function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
@@ -221,6 +222,7 @@ export default function Profile() {
   const data = fetchedData ?? buildProfileFallback(user)
   const usingFallback = !fetchedData
   const hasActivity = (data?.stats.totalAttempts ?? 0) > 0
+  const premiumLocked = Boolean(user) && !isPremiumUser(user)
 
   const xpToNext = useMemo(() => {
     if (!data) return 0
@@ -275,12 +277,10 @@ export default function Profile() {
   )
 
   return (
-    <div className="premium-page-stage relative mx-auto min-h-screen w-full max-w-7xl overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <PremiumSphereField />
+    <div className="workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative mx-auto w-full max-w-7xl">
       <Reveal>
         <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-gradient-to-br from-amber-200/30 to-orange-300/15 blur-3xl" />
-          <div className="pointer-events-none absolute -left-16 bottom-0 h-60 w-60 rounded-full bg-rose-200/25 blur-3xl" />
 
           {loading ? (
             <>
@@ -383,7 +383,7 @@ export default function Profile() {
             <ArrowUpRight className="h-5 w-5 shrink-0 text-red-500" />
           </button>
         </Reveal>
-      ) : usingFallback && !loading ? (
+      ) : usingFallback && premiumLocked && !loading ? (
         <Reveal className="mt-6">
           <button
             type="button"
@@ -415,6 +415,11 @@ export default function Profile() {
             return (
               <StaggerItem key={card.label} className="h-full">
                 <Tilt3D className="h-full rounded-3xl" max={6}>
+                  <PremiumFeatureLock
+                    locked={premiumLocked && (card.label === 'Tests Completed' || card.label === 'Average Accuracy')}
+                    title={`Unlock ${card.label}`}
+                    compact
+                  >
                   <article className="group relative h-full overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_20px_40px_rgba(220,38,38,0.12)]">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     <div className="flex items-center justify-between">
@@ -440,6 +445,7 @@ export default function Profile() {
                       Live data
                     </div>
                   </article>
+                  </PremiumFeatureLock>
                 </Tilt3D>
               </StaggerItem>
             )
@@ -449,6 +455,11 @@ export default function Profile() {
       {/* ── Skill matrix radar + Average accuracy ring ─────────── */}
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Reveal>
+          <PremiumFeatureLock
+            locked={premiumLocked}
+            title="Unlock your AI Skill Matrix"
+            description="See IELTS and SAT skill power, track-by-track strengths and precision trends."
+          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
             <div className="flex items-center justify-between">
@@ -510,9 +521,15 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
+          </PremiumFeatureLock>
         </Reveal>
 
         <Reveal delay={0.08}>
+          <PremiumFeatureLock
+            locked={premiumLocked}
+            title="Unlock Accuracy Intelligence"
+            description="Reveal verified accuracy, average score and test-based XP analytics."
+          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
             <div className="flex items-center gap-2">
@@ -552,11 +569,17 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
+          </PremiumFeatureLock>
         </Reveal>
       </section>
 
       {/* ── XP Momentum ─────────────────────────────────────────── */}
       <Reveal className="mt-6">
+        <PremiumFeatureLock
+          locked={premiumLocked}
+          title="Unlock XP Momentum"
+          description="Explore your cumulative XP curve and understand how every attempt changes your trajectory."
+        >
         <article className="surface-card relative overflow-hidden p-6">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
           <div className="flex items-center justify-between">
@@ -601,11 +624,17 @@ export default function Profile() {
             </div>
           ) : null}
         </article>
+        </PremiumFeatureLock>
       </Reveal>
 
       {/* ── Weekly activity + Achievements ──────────────────────── */}
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <Reveal>
+          <PremiumFeatureLock
+            locked={premiumLocked}
+            title="Unlock Weekly Activity"
+            description="Compare daily XP, consistency and study intensity across your week."
+          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
             <div className="flex items-center gap-2">
@@ -640,6 +669,7 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
+          </PremiumFeatureLock>
         </Reveal>
 
         <Reveal delay={0.08}>
@@ -765,6 +795,7 @@ export default function Profile() {
           )}
         </article>
       </Reveal>
+      </div>
     </div>
   )
 }

@@ -202,7 +202,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       onDrop={onDrop}
       className={`relative flex flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
-          ? 'h-full rounded-[1.6rem] border-red-100 shadow-[0_30px_70px_-30px_rgba(239,68,68,0.45)]'
+          ? 'h-full rounded-[1.6rem] border-white/90 bg-white/72 shadow-[0_30px_70px_-30px_rgba(239,68,68,0.45)] backdrop-blur-2xl'
           : 'rounded-[1.4rem] border-red-100 shadow-[0_24px_55px_-20px_rgba(239,68,68,0.4)]'
       }`}
     >
@@ -223,7 +223,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </AnimatePresence>
 
       {/* Header with the live orb */}
-      <header className="relative flex items-center justify-between gap-2 border-b border-red-100 bg-gradient-to-r from-red-50 via-rose-50/60 to-white px-4 py-3">
+      <header className="relative flex items-center justify-between gap-2 border-b border-white/90 bg-gradient-to-r from-white/90 via-rose-50/70 to-white/80 px-4 py-3 backdrop-blur-xl">
         <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/70 to-transparent" />
         <div className="flex items-center gap-2.5">
           <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 48 : 40} />
@@ -285,7 +285,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
       {/* Messages */}
       <div
-        className={`flex-1 overflow-y-auto bg-gradient-to-b from-white via-rose-50/30 to-white px-4 py-3 ${
+        className={`flex-1 overflow-y-auto bg-gradient-to-b from-white/64 via-rose-50/34 to-white/72 px-4 py-3 ${
           isPage ? 'min-h-[20rem]' : 'max-h-[22rem] min-h-[14rem]'
         }`}
       >
@@ -307,7 +307,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className={`group relative max-w-[88%] whitespace-pre-wrap rounded-2xl border px-3.5 py-2.5 text-sm leading-6 ${
                   message.role === 'assistant'
-                    ? 'border-red-100 bg-white text-slate-800 shadow-sm'
+                    ? 'border-white/95 bg-white/82 text-slate-800 shadow-[0_10px_28px_rgba(71,85,105,.08)] backdrop-blur-xl'
                     : 'ml-auto border-transparent bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-md shadow-red-500/20'
                 }`}
               >
@@ -348,7 +348,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </div>
 
       {/* Composer */}
-      <div className="border-t border-red-100 bg-white px-4 py-3">
+      <div className="border-t border-white/90 bg-white/76 px-4 py-3 backdrop-blur-2xl">
         {/* Quick chips */}
         <div className="mb-2 flex flex-wrap gap-1.5">
           {quickChips.map((chip) => (

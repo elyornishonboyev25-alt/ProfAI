@@ -134,7 +134,7 @@ export default function ShadowingLab() {
   // ── Player view ──────────────────────────────────────────────────────
   if (active) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
+      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
         <AmbientBackdrop variant="red" />
         <div className="relative">
           <ShadowingPlayer video={active} onBack={() => setActive(null)} />
@@ -145,7 +145,7 @@ export default function ShadowingLab() {
 
   // ── Library view ─────────────────────────────────────────────────────
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">

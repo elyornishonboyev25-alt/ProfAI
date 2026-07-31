@@ -31,10 +31,7 @@ import { TIER_NAME, TRACK_META, formatBand } from '@/components/achievements/bad
 
 function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-20 top-8 h-72 w-72 rounded-full bg-red-200/45 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
@@ -127,7 +124,7 @@ export default function PublicProfile() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(220,38,38,0.32)]">
-                {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}
+                {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </div>

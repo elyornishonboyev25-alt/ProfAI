@@ -22,7 +22,6 @@ import {
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
 import { Skeleton } from '@/components/common/Skeleton'
-import PremiumSphereField from '@/components/fx/PremiumSphereField'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
@@ -66,7 +65,7 @@ function StatCard({
   icon: typeof Clock3
 }) {
   return (
-    <article className="group rounded-[1.35rem] border border-white/80 bg-white/72 p-4 shadow-[0_12px_30px_rgba(71,85,105,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-[0_18px_38px_rgba(220,38,38,0.12)]">
+    <article className="apple-glass-card group rounded-[1.35rem] p-4 transition hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_22px_48px_rgba(220,38,38,0.14)]">
       <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600">
         <Icon className="h-4.5 w-4.5" />
       </span>
@@ -96,13 +95,21 @@ export default function Dashboard() {
   )
 
   const overview = data ?? EMPTY_OVERVIEW
-  const examLabel = profile?.targetExam === 'SAT' ? 'SAT' : 'IELTS'
-  const currentScore =
-    examLabel === 'SAT'
-      ? profile?.currentSatScore ?? 1050
-      : profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
-  const targetScore = examLabel === 'SAT' ? profile?.targetSatScore ?? 1450 : profile?.targetIeltsScore ?? 7.5
-  const targetProgress = Math.max(8, Math.min(100, Math.round((currentScore / targetScore) * 100)))
+  const targetExam = profile?.targetExam ?? 'IELTS'
+  const ieltsCurrent = profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
+  const satCurrent = profile?.currentSatScore ?? 1050
+  const examTargets = [
+    ...(targetExam !== 'SAT'
+      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: profile?.targetIeltsScore ?? 7.5 }]
+      : []),
+    ...(targetExam !== 'IELTS'
+      ? [{ label: 'SAT' as const, current: satCurrent, target: profile?.targetSatScore ?? 1450 }]
+      : []),
+  ]
+  const targetProgress = Math.max(
+    8,
+    Math.min(100, Math.round(examTargets.reduce((sum, exam) => sum + exam.current / exam.target, 0) / examTargets.length * 100)),
+  )
 
   const chartData = useMemo(
     () =>
@@ -127,14 +134,7 @@ export default function Dashboard() {
       ]
 
   return (
-    <div className="premium-page-stage relative min-h-screen overflow-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-      <PremiumSphereField />
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red-400/14 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 h-96 w-96 rounded-full bg-sky-300/12 blur-3xl" />
-        <div className="absolute left-16 top-1/3 h-64 w-64 rounded-full bg-orange-200/16 blur-3xl" />
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:42px_42px]" />
-      </div>
+    <div className="workspace-page premium-page-stage relative min-h-screen overflow-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
 
       <div className="relative mx-auto max-w-[94rem]">
         <motion.header
@@ -146,7 +146,7 @@ export default function Dashboard() {
             <div className="relative h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-red-700 p-[4px] shadow-[0_10px_28px_rgba(220,38,38,0.3)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-sm font-black text-red-700">
                 {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                  <img src={user.avatarUrl} alt="" className="profile-avatar-media" />
                 ) : (
                   (user?.fullName || 'PL').slice(0, 2).toUpperCase()
                 )}
@@ -183,11 +183,17 @@ export default function Dashboard() {
           <motion.article
             initial={minimalMotion ? false : { opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            className="relative overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#e11d48] via-[#dc2626] to-[#991b1b] p-5 text-white shadow-[0_22px_55px_rgba(190,24,93,0.26)]"
+            className="target-glass-card relative overflow-hidden rounded-[1.8rem] p-5 text-white"
           >
-            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
+            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/20 blur-2xl" />
             <p className="relative text-[10px] font-black uppercase tracking-[0.17em] text-red-100">Your target</p>
-            <h2 className="relative mt-1 text-2xl font-black">{examLabel} {targetScore}</h2>
+            <div className="relative mt-2 flex flex-wrap gap-2">
+              {examTargets.map((exam) => (
+                <span key={exam.label} className="inline-flex items-center rounded-full border border-white/25 bg-white/14 px-3 py-1 text-sm font-black shadow-inner backdrop-blur-md">
+                  {exam.label} <span className="ml-1.5 text-red-100">{exam.target}</span>
+                </span>
+              ))}
+            </div>
             <div className="relative mx-auto mt-5 flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
               <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
                 <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="8" />
@@ -210,11 +216,15 @@ export default function Dashboard() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-red-100">on track</p>
               </div>
             </div>
-            <div className="relative mt-5 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-xs">
-              <span className="text-red-100">Current</span>
-              <strong>{currentScore}</strong>
+            <div className={`relative mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {examTargets.map((exam) => (
+                <div key={`current-${exam.label}`} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs backdrop-blur-md">
+                  <span className="block text-[9px] font-black uppercase tracking-wider text-red-100">{exam.label} current</span>
+                  <strong className="mt-0.5 block text-base">{exam.current}</strong>
+                </div>
+              ))}
             </div>
-            <button onClick={() => navigate(examLabel === 'SAT' ? '/sat' : '/ielts')} className="relative mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5">
+            <button onClick={() => navigate(targetExam === 'SAT' ? '/sat' : targetExam === 'IELTS' ? '/ielts' : '/tests')} className="relative mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5">
               Continue preparing <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </motion.article>
@@ -227,7 +237,7 @@ export default function Dashboard() {
               <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} />
             </div>
 
-            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+            <article className="apple-glass-card rounded-[1.8rem] p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Weekly activity</p>
@@ -262,7 +272,7 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-5">
-            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+            <article className="apple-glass-card rounded-[1.8rem] p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Leaderboard</p>
@@ -295,7 +305,7 @@ export default function Dashboard() {
               </button>
             </article>
 
-            <article className="rounded-[1.8rem] border border-white/80 bg-white/68 p-5 shadow-[0_18px_45px_rgba(51,65,85,0.09)] backdrop-blur-2xl">
+            <article className="apple-glass-card rounded-[1.8rem] p-5">
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600"><Award className="h-4 w-4" /></span>
                 <div>
@@ -311,7 +321,13 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-[1.8rem] border border-white/80 bg-white/58 p-5 shadow-[0_18px_48px_rgba(51,65,85,0.08)] backdrop-blur-2xl">
+        <motion.section
+          initial={minimalMotion ? false : { opacity: 0, y: 26, scale: 0.992 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, amount: 0.12 }}
+          transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
+          className="apple-glass-card mt-5 rounded-[1.8rem] p-5"
+        >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Continue learning</p>
@@ -325,7 +341,7 @@ export default function Dashboard() {
             {learningCards.map((card) => {
               const Icon = card.icon
               return (
-                <button key={card.title} onClick={() => navigate(card.path)} className="group rounded-2xl border border-white bg-white/75 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-[0_14px_30px_rgba(220,38,38,0.1)]">
+                <button key={card.title} onClick={() => navigate(card.path)} className="glass-tile group rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_18px_36px_rgba(220,38,38,0.13)]">
                   <div className="flex items-start justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600"><Icon className="h-4 w-4" /></span>
                     <span className="text-[10px] font-black text-red-600">{card.progress}%</span>
@@ -342,7 +358,7 @@ export default function Dashboard() {
               )
             })}
           </div>
-        </section>
+        </motion.section>
       </div>
     </div>
   )

@@ -272,11 +272,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
 
 function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="ambient-mesh" />
-        <div className="absolute -left-20 top-8 h-72 w-72 rounded-full bg-red-200/45 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard

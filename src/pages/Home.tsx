@@ -73,7 +73,7 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen">
+    <div className="workspace-page min-h-screen">
       <section className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-primary-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">

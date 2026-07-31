@@ -22,7 +22,7 @@ export default function Admission() {
   const studyHours = Math.round(totalLessonMinutes / 60)
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
       <UniversityMatcher open={matcherOpen} onClose={() => setMatcherOpen(false)} />
 

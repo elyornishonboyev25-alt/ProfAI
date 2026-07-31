@@ -54,12 +54,7 @@ export default function SAT() {
   })
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(145deg,#eef6ff_0%,#f8fbff_48%,#eef2ff_100%)] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-0 h-96 w-96 rounded-full bg-blue-300/25 blur-3xl" />
-        <div className="absolute -right-20 top-1/3 h-96 w-96 rounded-full bg-indigo-300/20 blur-3xl" />
-        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:44px_44px]" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
 
       <div className="relative mx-auto max-w-[92rem] space-y-5">
         <motion.section

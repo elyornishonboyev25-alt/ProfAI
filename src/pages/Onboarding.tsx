@@ -392,7 +392,7 @@ export default function Onboarding() {
   const meta = STEP_META[step - 1]
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden px-4 py-8 sm:py-12">
+    <div className="workspace-page relative flex min-h-screen flex-col overflow-hidden px-4 py-8 sm:py-12">
       {/* Ambient backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-[8%] top-[10%] h-72 w-72 rounded-full bg-red-300/25 blur-3xl" />

@@ -49,13 +49,7 @@ export default function SpeakingCommunity() {
   const active = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#fde8e8] via-[#fceaea] to-[#f9dede] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="ambient-mesh" />
-        <div className="ambient-grid" />
-        <div className="absolute -left-20 top-8 h-72 w-72 rounded-full bg-red-200/45 blur-3xl" />
-        <div className="absolute -right-16 top-20 h-80 w-80 rounded-full bg-rose-200/35 blur-3xl" />
-      </div>
+    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         {/* Hero */}

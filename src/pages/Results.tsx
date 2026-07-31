@@ -30,6 +30,8 @@ import {
   formatQuestionTypeLabel,
 } from '@/utils/ieltsUtils'
 import { saveReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { createSharedResult } from '@/lib/sharedResultsApi'
+import { useToastStore } from '@/store/toastStore'
 import {
   firstQuestionNumber,
   formatCorrectAnswer,
@@ -78,6 +80,8 @@ export default function Results() {
   const { result, test } = (location.state as ResultLocationState) || {}
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)
+  const [sharingResult, setSharingResult] = useState(false)
+  const pushToast = useToastStore((state) => state.pushToast)
 
   const hasPayload = Boolean(result && test)
   const resolvedTestId = result?.testId ?? test?.id ?? ''
@@ -99,6 +103,17 @@ export default function Results() {
 
   const bandScore = calculateBandScore(analysis.summary.correctAnswers)
   const effectiveBandScore = Number((result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
+  const recommendations = useMemo(() => [
+    analysis.summary.skippedAnswers > 0
+      ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
+      : 'Keep your complete-answer discipline in the next mock.',
+    analysis.summary.incorrectAnswers > 0
+      ? `Review ${analysis.summary.incorrectAnswers} mistakes by question type and record the reason.`
+      : 'Move to a harder passage while keeping the same pace.',
+    effectiveBandScore < 7
+      ? 'Schedule one timed Reading session and one vocabulary session this week.'
+      : 'Protect this band with one full timed simulation this week.',
+  ], [analysis.summary.incorrectAnswers, analysis.summary.skippedAnswers, effectiveBandScore])
 
   const questionMetaMap = useMemo(() => {
     const map = new Map<string, { question: Section['questions'][number]; section: Section }>()
@@ -227,6 +242,60 @@ export default function Results() {
         fromResults: true,
       },
     })
+  }
+
+  const shareResult = async () => {
+    if (!result || !test || sharingResult) return
+    setSharingResult(true)
+
+    try {
+      const attemptedAt = new Date(result.date)
+      const response = await createSharedResult({
+        attemptKey: `${result.testId}-${result.date}`,
+        testId: result.testId,
+        testTitle: test.title,
+        attemptedAt: Number.isNaN(attemptedAt.getTime()) ? new Date().toISOString() : attemptedAt.toISOString(),
+        bandScore: effectiveBandScore,
+        accuracy: analysis.summary.accuracy,
+        correctAnswers: analysis.summary.correctAnswers,
+        incorrectAnswers: analysis.summary.incorrectAnswers,
+        skippedAnswers: analysis.summary.skippedAnswers,
+        totalQuestions: analysis.summary.totalQuestions,
+        timeSpentSec: Math.max(0, Math.round(result.timeSpent || 0)),
+        sectionSummaries: analysis.sectionSummaries.map((section) => ({
+          title: section.sectionTitle,
+          correctAnswers: section.correctAnswers,
+          totalQuestions: section.totalQuestions,
+          accuracy: section.accuracy,
+        })),
+        recommendations,
+      })
+
+      const url = new URL(response.path, window.location.origin).toString()
+      const sharePayload = {
+        title: `${test.title} result`,
+        text: `IELTS Band ${effectiveBandScore.toFixed(1)} · ${analysis.summary.accuracy}% accuracy`,
+        url,
+      }
+
+      if (navigator.share) {
+        await navigator.share(sharePayload)
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        pushToast({ type: 'success', title: 'Result link copied', message: 'Anyone with the link can open this result page.' })
+      } else {
+        throw new Error('Sharing is not supported by this browser.')
+      }
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return
+      pushToast({
+        type: 'error',
+        title: 'Result was not shared',
+        message: shareError instanceof Error ? shareError.message : 'Please try again.',
+      })
+    } finally {
+      setSharingResult(false)
+    }
   }
 
   if (!result || !test) {
@@ -418,17 +487,7 @@ export default function Results() {
                 </div>
                 <h3 className="mt-3 text-xl font-black text-slate-900">AI recommendations</h3>
                 <div className="mt-4 flex-1 space-y-3">
-                  {[
-                    analysis.summary.skippedAnswers > 0
-                      ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
-                      : 'Keep your complete-answer discipline in the next mock.',
-                    analysis.summary.incorrectAnswers > 0
-                      ? `Review ${analysis.summary.incorrectAnswers} mistakes by question type and record the reason.`
-                      : 'Move to a harder passage while keeping the same pace.',
-                    effectiveBandScore < 7
-                      ? 'Schedule one timed Reading session and one vocabulary session this week.'
-                      : 'Protect this band with one full timed simulation this week.',
-                  ].map((recommendation, index) => (
+                  {recommendations.map((recommendation, index) => (
                     <div key={recommendation} className="flex gap-3 rounded-2xl border border-red-100 bg-red-50/55 p-3">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600 shadow-sm">{index + 1}</span>
                       <p className="text-xs font-semibold leading-5 text-slate-600">{recommendation}</p>
@@ -437,10 +496,11 @@ export default function Results() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigator.clipboard?.writeText(`${test.title}: IELTS band ${effectiveBandScore.toFixed(1)}`)}
+                  onClick={() => void shareResult()}
+                  disabled={sharingResult}
                   className="arena-primary-btn mt-4 justify-center py-2.5 text-sm"
                 >
-                  <Share2 className="mr-2 h-4 w-4" /> Share result
+                  <Share2 className="mr-2 h-4 w-4" /> {sharingResult ? 'Creating secure link…' : 'Share result'}
                 </button>
               </aside>
             </Reveal>
@@ -563,5 +623,4 @@ export default function Results() {
     </div>
   )
 }
-
 

@@ -2,11 +2,8 @@ import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  ArrowLeft,
   Clock3,
   Crown,
-  Layers3,
-  Mic2,
   PlayCircle,
   Search,
   Sparkles,
@@ -18,6 +15,7 @@ import {
 } from '@/utils/ieltsSpeakingCatalog'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
+import CatalogHero from '@/components/catalog/CatalogHero'
 
 type Filter = 'all' | 'days' | 'full-mocks'
 
@@ -134,7 +132,7 @@ export default function IELTSSpeakingTests() {
       initial={minimalMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={minimalMotion ? { duration: 0.14 } : { duration: 0.34, ease: CARD_EASE }}
-      className="w-full px-4 py-6 sm:px-6 lg:px-8"
+      className="w-full min-w-0 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8"
     >
       <AnimatePresence>
         {showTrialGate ? (
@@ -188,94 +186,36 @@ export default function IELTSSpeakingTests() {
         ) : null}
       </AnimatePresence>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-[1.9rem] border border-rose-100/85 bg-[linear-gradient(142deg,rgba(255,255,255,0.99),rgba(255,244,247,0.95))] p-5 shadow-[0_24px_56px_rgba(190,24,93,0.14)] sm:p-6">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-16 -top-16 h-44 w-44 rounded-full bg-rose-200/55 blur-3xl" />
-          <div className="absolute -bottom-20 -right-16 h-48 w-48 rounded-full bg-orange-200/45 blur-3xl" />
-        </div>
-
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(fromMock ? '/mock/ielts' : '/ielts')}
-                className="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-rose-200 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-rose-700 shadow-[0_8px_18px_rgba(190,24,93,0.14)] transition hover:border-rose-300 hover:bg-rose-50"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back
-              </button>
-              <span className="inline-flex min-h-[38px] items-center rounded-full border border-rose-200 bg-rose-50/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-rose-700">
-                IELTS Speaking Section
-              </span>
-              {!speakingTrial.isPremium && Number.isFinite(speakingTrial.remaining) ? (
-                <span className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {Math.max(0, speakingTrial.remaining)}/{speakingTrial.limit} free sessions left
-                </span>
-              ) : null}
-            </div>
-
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#0F172A] sm:text-4xl">
-              IELTS <span className="arena-title-accent-red">Speaking Studio</span>
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-              Daily practice roadmap with Day 1–30 questions, plus full mocks with AI examiner. Record each answer and
-              get instant grammar analysis, a corrected version, and a Band 8+ model rewrite.
-            </p>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 xl:w-[26rem] xl:grid-cols-3">
-            <HeroMetric icon={<Layers3 className="h-4 w-4" />} label="Days" value={String(counts.days)} helper="Curated roadmap" />
-            <HeroMetric icon={<Mic2 className="h-4 w-4" />} label="Full Mocks" value={String(counts.mocks)} helper="Graded by AI" />
-            <HeroMetric icon={<PlayCircle className="h-4 w-4" />} label="Live now" value={String(counts.available)} helper="Ready to launch" />
-          </div>
-        </div>
-      </section>
+      <CatalogHero
+        tone="rose"
+        backLabel="Back to IELTS"
+        onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts')}
+        eyebrow="IELTS Speaking Section"
+        title={<>Speak with confidence. <span className="arena-title-accent-red">Score with proof.</span></>}
+        subtitle="A focused 30-day speaking roadmap with realistic full mocks, AI examiner feedback, grammar correction and Band 8+ model answers."
+        filters={[
+          { id: 'all', label: 'All sessions', count: counts.all },
+          { id: 'days', label: 'Daily practice', count: counts.days },
+          { id: 'full-mocks', label: 'Full mocks', count: counts.mocks },
+        ]}
+        activeFilter={activeFilter}
+        onFilterChange={(id) => setActiveFilter(id as Filter)}
+        summary={[
+          { label: 'Live now', value: counts.available },
+          { label: 'AI mocks', value: counts.mocks },
+        ]}
+        badge={!speakingTrial.isPremium && Number.isFinite(speakingTrial.remaining) ? (
+          <span className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 text-xs font-bold text-amber-700">
+            <Sparkles className="h-3.5 w-3.5" />
+            {Math.max(0, speakingTrial.remaining)}/{speakingTrial.limit} free sessions left
+          </span>
+        ) : undefined}
+      />
 
       {/* Layout */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="h-fit rounded-3xl border border-rose-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(190,24,93,0.1)] lg:sticky lg:top-5">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-600">Filter</p>
-          <div className="mt-3 space-y-2">
-            {(
-              [
-                { id: 'all' as Filter, title: 'All', helper: 'Full roadmap', count: counts.all },
-                { id: 'days' as Filter, title: 'Daily practice', helper: 'Day 1 → 30 cycle', count: counts.days },
-                { id: 'full-mocks' as Filter, title: 'Full mocks', helper: 'Exam simulation', count: counts.mocks },
-              ] as const
-            ).map((item) => {
-              const isActive = activeFilter === item.id
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveFilter(item.id)}
-                  className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
-                    isActive
-                      ? 'border-rose-500 bg-gradient-to-r from-rose-600 via-red-500 to-orange-500 text-white shadow-[0_16px_30px_rgba(190,24,93,0.24)]'
-                      : 'border-rose-100 text-slate-700 hover:border-rose-300 hover:bg-rose-50/45'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-base font-bold leading-tight">{item.title}</p>
-                      <p className={`text-xs ${isActive ? 'text-white/90' : 'text-slate-500'}`}>{item.helper}</p>
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-sm font-black ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {item.count}
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75 p-3 text-xs">
+          <div className="rounded-2xl border border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75 p-3 text-xs">
             <p className="font-semibold uppercase tracking-[0.14em] text-rose-600">How the cycle works</p>
             <p className="mt-2 text-slate-600">
               Day 1 = Part 1 · Day 2 = Part 2 · Day 3 = Part 3. The cycle repeats — Day 4 is Part 1 again — across the
@@ -380,23 +320,5 @@ export default function IELTSSpeakingTests() {
         </div>
       </section>
     </motion.div>
-  )
-}
-
-function HeroMetric({ icon, label, value, helper }: { icon: React.ReactNode; label: string; value: string; helper: string }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-rose-100/85 bg-white/90 px-4 py-3 shadow-[0_12px_28px_rgba(190,24,93,0.11)]">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
-      <div className="relative flex items-start justify-between gap-2">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-600">{label}</p>
-          <p className="mt-1 text-[1.8rem] font-black leading-none text-slate-900">{value}</p>
-          <p className="mt-1 text-xs text-slate-500">{helper}</p>
-        </div>
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/85 text-slate-600">
-          {icon}
-        </span>
-      </div>
-    </div>
   )
 }

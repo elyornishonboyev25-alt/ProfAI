@@ -116,8 +116,35 @@ model User {
   createdTests   Test[]             @relation("TestAuthor")
   profile        UserProfile?
   skillBadges    SkillBadge[]
+  sharedResults  SharedResult[]
 
   @@index([xp, level])
+  @@index([createdAt])
+}
+
+// A deliberately small, public-safe snapshot of a submitted result. Raw answers,
+// answer keys, email and private profile fields never enter this table.
+model SharedResult {
+  id                 String   @id @default(cuid())
+  userId             String
+  attemptKey         String
+  testId             String
+  testTitle          String
+  attemptedAt        DateTime
+  bandScore          Float
+  accuracy           Float
+  correctAnswers     Int
+  incorrectAnswers   Int
+  skippedAnswers     Int
+  totalQuestions     Int
+  timeSpentSec       Int
+  sectionSummaries   Json
+  recommendations    Json
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, attemptKey])
   @@index([createdAt])
 }
 

@@ -53,6 +53,7 @@ const MockSAT = lazy(() => import('@/pages/MockSAT'))
 const TestInterface = lazy(() => import('@/pages/TestInterface'))
 const Results = lazy(() => import('@/pages/Results'))
 const ResultsReview = lazy(() => import('@/pages/ResultsReview'))
+const SharedResult = lazy(() => import('@/pages/SharedResult'))
 const Profile = lazy(() => import('@/pages/Profile'))
 const AnalyzeMistakes = lazy(() => import('@/pages/AnalyzeMistakes'))
 const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
@@ -154,7 +155,7 @@ function App() {
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     pathname === '/mock/sat' ||
     pathname === '/sat/mock/4/run'
-  const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
+  const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
   // Authenticated pages use one persistent workspace sidebar. The old dashboard
@@ -221,7 +222,7 @@ function App() {
 
   // Onboarding is a required, server-backed one-time contract. Once completed,
   // the flag travels with the account and this guard never interrupts the user again.
-  if (user && !user.onboardingCompleted && pathname !== '/onboarding') {
+  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && !pathname.startsWith('/shared/results/')) {
     return <Navigate to="/onboarding" replace />
   }
   if (user?.onboardingCompleted && pathname === '/onboarding') {
@@ -542,6 +543,7 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+                      <Route path="/shared/results/:shareId" element={<AnimatedRoute><SharedResult /></AnimatedRoute>} />
                       <Route
                         path="/analyze-mistakes"
                         element={

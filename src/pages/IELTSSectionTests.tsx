@@ -2,7 +2,6 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft,
   BookOpenText,
   CalendarClock,
   CheckCircle2,
@@ -11,15 +10,12 @@ import {
   Clock3,
   Crown,
   Flame,
-  Headphones,
-  Layers3,
   Lock,
   PlayCircle,
   Search,
   Sparkles,
   Target,
   Trophy,
-  type LucideIcon,
 } from 'lucide-react'
 
 import {
@@ -32,6 +28,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
+import CatalogHero from '@/components/catalog/CatalogHero'
 
 type CatalogFilter = 'all-tests' | 'passages' | 'full-tests'
 
@@ -249,49 +246,6 @@ function resolveUnlockDays(row: CatalogRow): number {
   const numericValue = Number(row.title.replace(/\D+/g, '')) || 1
   if (row.badge === 'passage') return (numericValue % 6) + 1
   return (numericValue % 5) + 2
-}
-
-type DashboardMetricProps = {
-  icon: LucideIcon
-  label: string
-  value: string | number
-  helper: string
-  allowHoverMotion: boolean
-  minimalMotion: boolean
-  className: string
-  labelClassName: string
-}
-
-function DashboardMetric({
-  icon: Icon,
-  label,
-  value,
-  helper,
-  allowHoverMotion,
-  minimalMotion,
-  className,
-  labelClassName,
-}: DashboardMetricProps) {
-  return (
-    <motion.article
-      whileHover={allowHoverMotion ? { y: -2, scale: 1.02 } : undefined}
-      whileTap={minimalMotion ? undefined : { scale: 0.995 }}
-      transition={minimalMotion ? { duration: 0.12 } : { duration: 0.24, ease: CARD_EASE }}
-      className={`relative overflow-hidden rounded-2xl border px-4 py-3 ${className}`}
-    >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
-      <div className="relative flex items-start justify-between gap-2">
-        <div>
-          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${labelClassName}`}>{label}</p>
-          <p className="mt-1 text-[1.8rem] font-black leading-none text-slate-900">{value}</p>
-          <p className="mt-1 text-xs text-slate-500">{helper}</p>
-        </div>
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/85 text-slate-600">
-          <Icon className="h-4 w-4" />
-        </span>
-      </div>
-    </motion.article>
-  )
 }
 
 function ProgressRing({ value, track }: { value: number; track: IeltsTrackType }) {
@@ -567,30 +521,22 @@ export default function IELTSSectionTests() {
   const filterCards: {
     id: CatalogFilter
     title: string
-    description: string
     count: number
-    icon: LucideIcon
   }[] = [
     {
       id: 'all-tests',
       title: 'All tests',
-      description: 'Complete roadmap overview',
       count: counts.all,
-      icon: Layers3,
     },
     {
       id: 'passages',
       title: 'Passages',
-      description: 'Daily precision practice',
       count: counts.passages,
-      icon: BookOpenText,
     },
     {
       id: 'full-tests',
       title: 'Full tests',
-      description: 'Exam simulation mode',
       count: counts.fullTests,
-      icon: Headphones,
     },
   ]
 
@@ -658,7 +604,7 @@ export default function IELTSSectionTests() {
       initial={minimalMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={minimalMotion ? { duration: 0.14 } : { duration: 0.34, ease: CARD_EASE }}
-      className="w-full px-4 py-6 sm:px-6 lg:px-8"
+      className="w-full min-w-0 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8"
     >
       <AnimatePresence>
         {pendingUnmarkRow ? (
@@ -813,93 +759,38 @@ export default function IELTSSectionTests() {
         ) : null}
       </AnimatePresence>
 
-      <section className={`relative overflow-hidden rounded-[1.9rem] border p-5 sm:p-6 ${theme.heroPanel}`}>
-        <div className="pointer-events-none absolute inset-0">
-          <div className={`absolute -left-16 -top-16 h-44 w-44 rounded-full blur-3xl ${theme.heroGlowPrimary}`} />
-          <div className={`absolute -bottom-20 -right-16 h-48 w-48 rounded-full blur-3xl ${theme.heroGlowSecondary}`} />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/95 to-transparent" />
-        </div>
-
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (fromMock) {
-                    navigate('/mock/ielts', { state: { from: mockFrom } })
-                    return
-                  }
-                  navigate('/ielts')
-                }}
-                className={`inline-flex min-h-[38px] items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${theme.backButton}`}
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back
-              </button>
-              <span className={`inline-flex min-h-[38px] items-center rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${theme.chip}`}>
-                IELTS {trackTitle} Section
-              </span>
-              {!trial.isPremium && Number.isFinite(trial.remaining) ? (
-                <span className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {Math.max(0, trial.remaining)}/{trial.limit} free tests left
-                </span>
-              ) : null}
-            </div>
-
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#0F172A] sm:text-4xl">
-              IELTS <span className={theme.accentTitle}>{trackTitle} Studio</span>
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-              Premium focus mode for daily passages and full test simulation roadmap.
-            </p>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 xl:w-[34rem] xl:grid-cols-4">
-            <DashboardMetric
-              icon={Layers3}
-              label="Tests"
-              value={counts.all}
-              helper="Total catalog"
-              allowHoverMotion={allowHoverMotion}
-              minimalMotion={minimalMotion}
-              className={theme.metricCard}
-              labelClassName={theme.metricLabel}
-            />
-            <DashboardMetric
-              icon={PlayCircle}
-              label="Live now"
-              value={counts.available}
-              helper="Ready to launch"
-              allowHoverMotion={allowHoverMotion}
-              minimalMotion={minimalMotion}
-              className={theme.metricCard}
-              labelClassName={theme.metricLabel}
-            />
-            <DashboardMetric
-              icon={CheckCircle2}
-              label="Completed"
-              value={completedLiveCount}
-              helper="Marked done"
-              allowHoverMotion={allowHoverMotion}
-              minimalMotion={minimalMotion}
-              className={theme.metricCard}
-              labelClassName={theme.metricLabel}
-            />
-            <DashboardMetric
-              icon={Flame}
-              label="Streak"
-              value={Math.max(trackEngagement.streakDays, 1)}
-              helper="Daily momentum"
-              allowHoverMotion={allowHoverMotion}
-              minimalMotion={minimalMotion}
-              className={theme.metricCard}
-              labelClassName={theme.metricLabel}
-            />
-          </div>
-        </div>
-      </section>
+      <CatalogHero
+        tone={track === 'reading' ? 'rose' : 'sky'}
+        backLabel="Back to IELTS"
+        onBack={() => {
+          if (fromMock) {
+            navigate('/mock/ielts', { state: { from: mockFrom } })
+            return
+          }
+          navigate('/ielts')
+        }}
+        eyebrow={`IELTS ${trackTitle} Section`}
+        title={track === 'reading'
+          ? <>Read smarter. <span className="arena-title-accent-red">Score higher.</span></>
+          : <>Hear every detail. <span className="arena-title-accent-blue">Answer with confidence.</span></>}
+        subtitle={track === 'reading'
+          ? 'Daily passages and complete IELTS simulations, arranged as one calm roadmap from focused practice to exam-day precision.'
+          : 'Train concentration, distractor control and answer-transfer accuracy through focused listening practice and full simulations.'}
+        filters={filterCards.map((item) => ({ id: item.id, label: item.title, count: item.count }))}
+        activeFilter={activeFilter}
+        onFilterChange={(id) => setActiveFilter(id as CatalogFilter)}
+        summary={[
+          { label: 'Live now', value: counts.available },
+          { label: 'Completed', value: completedLiveCount },
+          { label: 'Streak', value: `${Math.max(trackEngagement.streakDays, 1)}d` },
+        ]}
+        badge={!trial.isPremium && Number.isFinite(trial.remaining) ? (
+          <span className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 text-xs font-bold text-amber-700">
+            <Sparkles className="h-3.5 w-3.5" />
+            {Math.max(0, trial.remaining)}/{trial.limit} free tests left
+          </span>
+        ) : undefined}
+      />
 
       <section className="mt-5 grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className={`h-fit rounded-3xl border p-4 lg:sticky lg:top-5 ${theme.sidebarPanel}`}>
@@ -936,45 +827,7 @@ export default function IELTSSectionTests() {
             </button>
           </div>
 
-          <p className={`text-xs font-black uppercase tracking-[0.16em] ${theme.filterHeading}`}>Filter tests</p>
-          <div className="mt-3 space-y-2">
-            {filterCards.map((item) => {
-              const isActive = activeFilter === item.id
-              const Icon = item.icon
-              return (
-                <motion.button
-                  key={item.id}
-                  type="button"
-                  whileHover={allowHoverMotion ? { scale: 1.02, y: -1 } : undefined}
-                  whileTap={minimalMotion ? undefined : { scale: 0.99 }}
-                  transition={minimalMotion ? { duration: 0.1 } : { duration: 0.22, ease: CARD_EASE }}
-                  onClick={() => setActiveFilter(item.id)}
-                  className={`w-full rounded-2xl border px-3 py-3 text-left ${isActive ? theme.filterActive : theme.filterInactive}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl border ${
-                          isActive ? 'border-white/40 bg-white/20 text-white' : theme.filterIconInactive
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-base font-bold leading-tight">{item.title}</p>
-                        <p className={`text-xs ${isActive ? 'text-white/90' : 'text-slate-500'}`}>{item.description}</p>
-                      </div>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-sm font-black ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      {item.count}
-                    </span>
-                  </div>
-                </motion.button>
-              )
-            })}
-          </div>
-
-          <div className={`mt-4 rounded-2xl border p-3 ${theme.progressCard}`}>
+          <div className={`rounded-2xl border p-3 ${theme.progressCard}`}>
             <div className="flex items-center justify-between">
               <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${theme.accentText}`}>Daily progress</p>
               <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700">

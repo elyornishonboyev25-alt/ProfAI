@@ -444,7 +444,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         {voiceSupported ? (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              {preferredLocale === 'uz' ? 'Ovoz tili' : 'Voice'}
+              {voiceLang === 'uz' ? 'Til' : voiceLang === 'ru' ? 'Язык' : 'Language'}
             </span>
             {VOICE_LANGS.map((lang) => (
               <button

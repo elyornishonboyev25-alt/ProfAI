@@ -20,7 +20,6 @@ import {
   speak,
   cancelSpeech,
   isSpeechSynthesisSupported,
-  detectSpeechLang,
   speechLangToBcp47,
   type SpeechLang,
 } from '@/lib/speech'
@@ -40,26 +39,6 @@ function createMessage(
   images?: string[],
 ): AiAssistantMessage {
   return { id: createId(), role, content, createdAt: new Date().toISOString(), images }
-}
-
-function containsAny(input: string, tokens: string[]) {
-  return tokens.some((token) => input.includes(token))
-}
-
-function detectLocaleFromMessage(message: string, fallback: ChatLocale): ChatLocale {
-  const normalized = message.toLowerCase()
-  if (
-    containsAny(normalized, [
-      'salom', 'rahmat', 'iltimos', 'ochib ber', 'menga', 'savol', 'lugat', 'imtihon',
-      'yozing', 'ochildi', 'oquv', 'gaplash', 'qanday', 'qil', 'och', 'yordam', 'kerak', 'tushuntir',
-    ])
-  ) {
-    return 'uz'
-  }
-  if (containsAny(normalized, ['hello', 'open', 'reading', 'listening', 'practice', 'exam', 'how', 'what', 'help'])) {
-    return 'en'
-  }
-  return fallback
 }
 
 // Strip emoji / markdown so the spoken reply sounds natural.
@@ -112,14 +91,13 @@ export function useAiTutor() {
   const clearStoredMessages = useAiAssistantStore((s) => s.clearMessages)
   const setVoiceState = useAiAssistantStore((s) => s.setVoiceState)
   const setVoiceLevel = useAiAssistantStore((s) => s.setVoiceLevel)
+  const voiceLang = useAiAssistantStore((s) => s.voiceLang)
+  const setStoredVoiceLang = useAiAssistantStore((s) => s.setVoiceLang)
 
   const [draft, setDraft] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [preferredLocale, setPreferredLocale] = useState<ChatLocale>('en')
   const [preferredName, setPreferredName] = useState<string | null>(null)
-  // The language the mic listens in AND the voice replies in. The user can switch it
-  // (EN/UZ/RU), and it auto-adapts to the language the tutor just replied in.
-  const [voiceLang, setVoiceLang] = useState<SpeechLang>('en')
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [pendingActions, setPendingActions] = useState<PendingAiAction[]>([])
   const pushMessage = useCallback((message: AiAssistantMessage) => pushStoredMessage(ownerKey, message), [ownerKey, pushStoredMessage])
@@ -147,7 +125,6 @@ export function useAiTutor() {
         if (!mounted) return
         const locale = prefs.preferredLocale.toLowerCase().startsWith('uz') ? 'uz' : 'en'
         setPreferredLocale(locale)
-        setVoiceLang(locale)
         if (prefs.preferredName) setPreferredName(prefs.preferredName)
       })
       .catch(() => {})
@@ -286,7 +263,7 @@ export function useAiTutor() {
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const currentLocale = detectLocaleFromMessage(text, preferredLocale)
+      const currentLocale: ChatLocale = voiceLang === 'uz' ? 'uz' : 'en'
       setPreferredLocale(currentLocale)
 
       const snapshot = buildStudySnapshot(user?.id ?? null)
@@ -301,20 +278,18 @@ export function useAiTutor() {
           workspaceContext: `${workspace.title}: ${workspace.prompt}`,
           siteKnowledge,
           images: outImages,
+          responseLanguage: voiceLang,
         })
         pushMessage(createMessage('assistant', response.reply))
 
-        // Match the spoken voice + the next listen to the language the tutor actually
-        // replied in (the model mirrors the learner), so the conversation auto-adapts.
-        const replyLang = detectSpeechLang(response.reply)
-        setVoiceLang(replyLang)
-
-        // Speak the reply back in voice / talk turns; otherwise return to idle.
+        // The selected language controls the reply, microphone, and TTS together.
+        // Do not auto-switch it after a response: EN / UZ / RU is an explicit choice.
         if (options.speak && ttsSupported && response.reply.trim()) {
           setVoiceState('speaking')
           startLevelPulse()
           speak(cleanForSpeech(response.reply), {
-            lang: replyLang,
+            lang: voiceLang,
+            rate: voiceLang === 'en' ? 1 : 0.96,
             onEnd: () => {
               stopLevelPulse()
               setVoiceState('idle')
@@ -341,9 +316,11 @@ export function useAiTutor() {
         pushMessage(
           createMessage(
             'assistant',
-            preferredLocale === 'uz'
+            voiceLang === 'uz'
               ? "Kechirasiz, hozir ulanishda muammo bo'ldi. Iltimos, qayta urinib ko'ring."
-              : 'Sorry, I had a connection issue just now. Please try again.',
+              : voiceLang === 'ru'
+                ? 'Извините, сейчас возникла проблема с подключением. Пожалуйста, попробуйте ещё раз.'
+                : 'Sorry, I had a connection issue just now. Please try again.',
           ),
         )
       } finally {
@@ -353,9 +330,18 @@ export function useAiTutor() {
     [
       draft, images, isSending, messages, preferredLocale, preferredName, location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      startLevelPulse, stopLevelPulse, workspace,
+      startLevelPulse, stopLevelPulse, voiceLang, workspace,
     ],
   )
+
+  const setVoiceLang = useCallback((language: SpeechLang) => {
+    cancelSpeech()
+    stopLevelPulse()
+    setVoiceState('idle')
+    setVoiceError(null)
+    setStoredVoiceLang(language)
+    setPreferredLocale(language === 'uz' ? 'uz' : 'en')
+  }, [setStoredVoiceLang, setVoiceState, stopLevelPulse])
 
   // ── Voice control ──────────────────────────────────────────────────────────
   const startVoice = useCallback(async () => {

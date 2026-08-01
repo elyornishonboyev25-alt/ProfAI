@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AiReportResponse } from '@/types/platform'
 import type { AiWorkspaceId } from '@/services/ai/workspaces'
+import type { SpeechLang } from '@/lib/speech'
 
 export type AiAssistantMessageRole = 'user' | 'assistant'
 
@@ -33,6 +34,8 @@ type AiAssistantState = {
   voiceState: AiVoiceState
   /** Live amplitude 0–1 used to make the orb pulse with the voice. */
   voiceLevel: number
+  /** Language explicitly selected for AI replies, recognition, and speech. */
+  voiceLang: SpeechLang
   activeWorkspace: AiWorkspaceId
   open: () => void
   close: () => void
@@ -41,6 +44,7 @@ type AiAssistantState = {
   closeTalk: () => void
   setVoiceState: (state: AiVoiceState) => void
   setVoiceLevel: (level: number) => void
+  setVoiceLang: (language: SpeechLang) => void
   setActiveWorkspace: (workspace: AiWorkspaceId) => void
   setSending: (value: boolean) => void
   setError: (value: string | null) => void
@@ -61,6 +65,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       talkOpen: false,
       voiceState: 'idle',
       voiceLevel: 0,
+      voiceLang: 'en',
       activeWorkspace: 'general',
       open: () => set({ isOpen: true }),
       close: () => set({ isOpen: false }),
@@ -69,6 +74,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
       setVoiceState: (state: AiVoiceState) => set({ voiceState: state }),
       setVoiceLevel: (level: number) => set({ voiceLevel: Math.max(0, Math.min(1, level)) }),
+      setVoiceLang: (voiceLang: SpeechLang) => set({ voiceLang }),
       setActiveWorkspace: (workspace: AiWorkspaceId) => set({ activeWorkspace: workspace }),
       setSending: (value: boolean) => set({ isSending: value }),
       setError: (value: string | null) => set({ error: value }),
@@ -95,7 +101,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       version: 3,
       // Conversations are deliberately namespaced by account id. Version 2
       // discards the old shared history instead of risking cross-account leaks.
-      migrate: () => ({ conversations: {}, activeWorkspace: 'general' as AiWorkspaceId }),
+      migrate: () => ({ conversations: {}, activeWorkspace: 'general' as AiWorkspaceId, voiceLang: 'en' as SpeechLang }),
       partialize: (state) => ({
         // Keep text history, but never duplicate large image data URLs into localStorage.
         // Attachments remain visible for the current session and are sent to the model.
@@ -106,6 +112,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           ]),
         ),
         activeWorkspace: state.activeWorkspace,
+        voiceLang: state.voiceLang,
       }),
     },
   ),

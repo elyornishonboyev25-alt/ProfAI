@@ -222,11 +222,15 @@ type AssistantPromptContext = {
   workspaceContext?: string
   siteKnowledge?: string
   hasImages?: boolean
+  responseLanguage?: 'en' | 'uz' | 'ru'
 }
 
 function buildAssistantSystemPrompt(pathname: string, context: AssistantPromptContext = {}): string {
-  const { studyContext, learnerName, screenContext, workspaceContext, siteKnowledge, hasImages } = context
+  const { studyContext, learnerName, screenContext, workspaceContext, siteKnowledge, hasImages, responseLanguage } = context
   const greetingName = learnerName ? learnerName : null
+  const selectedLanguage = responseLanguage
+    ? ({ en: 'English', uz: "natural Uzbek (O'zbek tili, Latin script)", ru: 'Russian (Русский)' } as const)[responseLanguage]
+    : null
 
   return `You are ProfAI — a warm, brilliant, and genuinely caring personal study-abroad tutor. You are NOT a robotic chatbot; you are the kind of mentor a student instantly loves: patient, encouraging, human, and a little playful. You celebrate small wins, you never make the learner feel stupid, and you make hard things feel easy.${greetingName ? ` The learner's name is ${greetingName} — use it naturally and warmly, but don't overuse it.` : ''}
 
@@ -237,8 +241,12 @@ WHO YOU ARE:
 - If asked something truly unrelated (politics, gossip, etc.), gently and kindly steer back: you are their study companion.
 
 LANGUAGE — THIS IS CRITICAL:
-- Detect the language of the learner's MOST RECENT message and reply in EXACTLY that language. If they write in Uzbek, reply in natural, warm Uzbek. If Russian, reply in Russian. If English, English.
-- If the learner SWITCHES language mid-conversation, switch with them instantly and seamlessly — never force a language on them, never apologize for switching, just flow with them.
+- ${selectedLanguage
+    ? `The learner explicitly selected ${selectedLanguage} in the language switcher. Reply entirely in ${selectedLanguage}, even when their message or earlier chat uses another language. This selection overrides automatic language detection.`
+    : "Detect the language of the learner's MOST RECENT message and reply in EXACTLY that language. If they write in Uzbek, reply in natural, warm Uzbek. If Russian, reply in Russian. If English, English."}
+- ${selectedLanguage
+    ? 'Do not switch languages based on the message text; only the language-switcher selection changes the reply language.'
+    : 'If the learner SWITCHES language mid-conversation, switch with them instantly and seamlessly — never apologize for switching, just flow with them.'}
 - Keep proper English study terms in English even inside other languages (IELTS, Writing, Reading, Listening, SAT, Task 1/2, band).
 - Match their energy and register: if they're casual, be friendly; if formal, be polished. Sound like a real person talking, not a manual.
 
@@ -500,6 +508,8 @@ export type ChatAssistantOptions = {
   siteKnowledge?: string
   /** Image attachments (data URLs) the learner sent — e.g. a screenshot. */
   images?: string[]
+  /** Explicit EN / UZ / RU selector; overrides automatic reply-language detection. */
+  responseLanguage?: 'en' | 'uz' | 'ru'
 }
 
 export async function chatWithAssistant(
@@ -516,6 +526,7 @@ export async function chatWithAssistant(
     workspaceContext: options.workspaceContext,
     siteKnowledge: options.siteKnowledge,
     hasImages,
+    responseLanguage: options.responseLanguage,
   })
 
   const historyContext = history
@@ -524,9 +535,12 @@ export async function chatWithAssistant(
     .join('\n')
 
   const messageBody = message.trim() || (hasImages ? '(The learner sent image(s) with no caption — look at them and help.)' : '')
+  const replyLanguageInstruction = options.responseLanguage
+    ? `Reply in the explicitly selected language: ${{ en: 'English', uz: "Uzbek (O'zbek tili)", ru: 'Russian' }[options.responseLanguage]}.`
+    : "Reply in the language of the user's latest message."
   const fullMessage = historyContext
-    ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
-    : `User: ${messageBody}\n\nRespond with JSON only, replying in the language of the user's latest message.`
+    ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}`
+    : `User: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}`
 
   const raw = await callGeminiAPI(systemPrompt, fullMessage, 1800, options.images ?? [])
   const jsonStr = extractJSON(raw)

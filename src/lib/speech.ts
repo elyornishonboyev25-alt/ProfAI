@@ -269,20 +269,21 @@ export function detectSpeechLang(text: string): SpeechLang {
   return 'en'
 }
 
-// Pick the most natural installed voice for a language, with sensible fallbacks
-// (Uzbek TTS is rarely installed → fall back to Turkish/Russian, never English).
+// Pick the most natural installed voice for a language, with close linguistic
+// fallbacks only. Returning null lets the browser honor utterance.lang instead of
+// forcing an unrelated installed voice with incorrect pronunciation.
 export function pickVoiceForLang(lang: SpeechLang): SpeechSynthesisVoice | null {
   const voices = cachedVoices.length ? cachedVoices : loadVoices()
   if (voices.length === 0) return null
   const byPrefix = (...prefixes: string[]) =>
     voices.find((v) => prefixes.some((p) => v.lang?.toLowerCase().startsWith(p)))
 
-  if (lang === 'ru') return byPrefix('ru') ?? voices[0]
-  if (lang === 'uz') return byPrefix('uz', 'tr', 'ru') ?? voices[0]
+  if (lang === 'ru') return byPrefix('ru') ?? null
+  if (lang === 'uz') return byPrefix('uz', 'tr', 'az') ?? null
   return (
     voices.find((v) => v.name.toLowerCase().includes('google us english')) ??
     byPrefix('en-us', 'en-gb', 'en') ??
-    voices[0]
+    null
   )
 }
 

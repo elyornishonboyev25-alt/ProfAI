@@ -1,0 +1,2324 @@
+[
+  {
+    "id": "rw1-1",
+    "prompt": "The spacecraft OSIRIS-REx briefly made contact\nwith the asteroid 101955 Bennu in 2020. NASA\nscientist Daniella DellaGiustina reports that despite\nfacing the unexpected obstacle of a surface mostly\ncovered in boulders, OSIRIS-REx successfully\n_______ a sample of the surface, gathering pieces of\nit to bring back to Earth.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "attached"
+      },
+      {
+        "key": "B",
+        "text": "collected"
+      },
+      {
+        "key": "C",
+        "text": "followed"
+      },
+      {
+        "key": "D",
+        "text": "replaced"
+      }
+    ]
+  },
+  {
+    "id": "rw1-2",
+    "prompt": "Research conducted by planetary scientist Katarina\nMiljkovic suggests that the Moon’s surface may not\naccurately _______ early impact events. When the\nMoon was still forming, its surface was softer, and\nasteroid or meteoroid impacts would have left less\nof an impression; thus, evidence of early impacts\nmay no longer be present.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "reflect"
+      },
+      {
+        "key": "B",
+        "text": "receive"
+      },
+      {
+        "key": "C",
+        "text": "evaluate"
+      },
+      {
+        "key": "D",
+        "text": "mimic"
+      }
+    ]
+  },
+  {
+    "id": "rw1-3",
+    "prompt": "Handedness, a preferential use of either the right or\nleft hand, typically is easy to observe in humans.\nBecause this trait is present but less _______ in\nmany other animals, animal-behavior researchers\noften employ tasks specially designed to reveal\nindividual animals’ preferences for a certain hand\nor paw.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "recognizable"
+      },
+      {
+        "key": "B",
+        "text": "intriguing"
+      },
+      {
+        "key": "C",
+        "text": "significant"
+      },
+      {
+        "key": "D",
+        "text": "useful"
+      }
+    ]
+  },
+  {
+    "id": "rw1-4",
+    "prompt": "It is by no means _______ to recognize the influence\nof Dutch painter Hieronymus Bosch on Ali\nBanisadr’s paintings; indeed, Banisadr himself cites\nBosch as an inspiration. However, some scholars\nhave suggested that the ancient Mesopotamian poem\nEpic of Gilgamesh may have had a far greater impact\non Banisadr’s work.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "substantial"
+      },
+      {
+        "key": "B",
+        "text": "satisfying"
+      },
+      {
+        "key": "C",
+        "text": "unimportant"
+      },
+      {
+        "key": "D",
+        "text": "appropriate"
+      }
+    ]
+  },
+  {
+    "id": "rw1-5",
+    "prompt": "The following text is adapted from Susan Glaspell’s\n1912 short story “‘Out There.’” An elderly shop\nowner is looking at a picture that he recently\nacquired and hopes to sell.\nIt did seem that the picture failed to fit in with\nthe rest of the shop. A persuasive young fellow\nwho claimed he was closing out his stock let the\nold man have it for what he called a song. It was\nonly a little out-of-the-way store which subsisted\nchiefly on the framing of pictures. The old man\nlooked around at his views of the city, his\npictures of cats and dogs, his flaming bits of\nlandscape. “Don’t belong in here,” he fumed.\nAnd yet the old man was secretly proud of his\nacquisition. There was a hidden dignity in his\nscowling as he shuffled about pondering the least\nridiculous place for the picture.\nWhich choice best states the main purpose of the\ntext?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To reveal the shop owner’s conflicted feelings about the new picture"
+      },
+      {
+        "key": "B",
+        "text": "To convey the shop owner’s resentment of the person he got the new picture from"
+      },
+      {
+        "key": "C",
+        "text": "To describe the items that the shop owner most highly prizes"
+      },
+      {
+        "key": "D",
+        "text": "To explain differences between the new picture and other pictures in the shop"
+      }
+    ]
+  },
+  {
+    "id": "rw1-6",
+    "prompt": "The following text is from the 1923 poem “Black\nFinger” by Angelina Weld Grimké, a Black American\nwriter. A cypress is a type of evergreen tree.\nI have just seen a most beautiful thing,\nSlim and still,\nAgainst a gold, gold sky,\nA straight black cypress,\nSensitive,\nExquisite,\nA black finger\nPointing upwards.\nWhy, beautiful still finger, are you black?\nAnd why are you pointing upwards?\nWhich choice best describes the overall structure of\nthe text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The speaker assesses a natural phenomenon, then questions the accuracy of her assessment."
+      },
+      {
+        "key": "B",
+        "text": "The speaker describes a distinctive sight in nature, then ponders what meaning to attribute to that sight."
+      },
+      {
+        "key": "C",
+        "text": "The speaker presents an outdoor scene, then considers a human behavior occurring within that scene."
+      },
+      {
+        "key": "D",
+        "text": "The speaker examines her surroundings, then speculates about their influence on her emotional state."
+      }
+    ]
+  },
+  {
+    "id": "rw1-7",
+    "prompt": "The following text is from Walt Whitman’s 1860\npoem “Calamus 24.”\nI HEAR it is charged against me that I seek to\ndestroy institutions;\nBut really I am neither for nor against\ninstitutions\n(What indeed have I in common with them?—\nOr what with the destruction of them?),\nOnly I will establish in the Mannahatta\n[Manhattan] and in every city of These States,\ninland and seaboard,\nAnd in the fields and woods, and above every\nkeel [ship] little or large, that dents the water,\nWithout edifices, or rules, or trustees, or any\nargument,\nThe institution of the dear love of comrades.\nWhich choice best describes the overall structure of\nthe text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The speaker questions an increasingly prevalent attitude, then summarizes his worldview."
+      },
+      {
+        "key": "B",
+        "text": "The speaker regrets his isolation from others, then predicts a profound change in society."
+      },
+      {
+        "key": "C",
+        "text": "The speaker concedes his personal shortcomings, then boasts of his many achievements."
+      },
+      {
+        "key": "D",
+        "text": "The speaker addresses a criticism leveled against him, then announces a grand ambition of his."
+      }
+    ]
+  },
+  {
+    "id": "rw1-8",
+    "prompt": "The mimosa tree evolved in East Asia, where the\nbeetle Bruchidius terrenus preys on its seeds. In 1785,\nmimosa trees were introduced to North America, far\nfrom any B. terrenus. But evolutionary links between\npredators and their prey can persist across centuries\nand continents. Around 2001, B. terrenus was\nintroduced in southeastern North America near\nwhere botanist Shu-Mei Chang and colleagues had\nbeen monitoring mimosa trees. Within a year,\n93 percent of the trees had been attacked by the\nbeetles.\nWhich choice best describes the function of the third\nsentence in the overall structure of the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It states the hypothesis that Chang and colleagues had set out to investigate using mimosa trees and B. terrenus."
+      },
+      {
+        "key": "B",
+        "text": "It presents a generalization that is exemplified by the discussion of the mimosa trees and B. terrenus."
+      },
+      {
+        "key": "C",
+        "text": "It offers an alternative explanation for the findings of Chang and colleagues."
+      },
+      {
+        "key": "D",
+        "text": "It provides context that clarifies why the species mentioned spread to new locations."
+      }
+    ]
+  },
+  {
+    "id": "rw1-9",
+    "prompt": "Text 1\nConventional wisdom long held that human\nsocial systems evolved in stages, beginning with\nhunter-gatherers forming small bands of members\nwith roughly equal status. The shift to agriculture\nabout 12,000 years ago sparked population growth\nthat led to the emergence of groups with hierarchical\nstructures: associations of clans first, then chiefdoms,\nand finally, bureaucratic states.\nText 2\nIn a 2021 book, anthropologist David Graeber and\narchaeologist David Wengrow maintain that humans\nhave always been socially flexible, alternately forming\nsystems based on hierarchy and collective ones with\ndecentralized leadership. The authors point to\nevidence that as far back as 50,000 years ago some\nhunter-gatherers adjusted their social structures\nseasonally, at times dispersing in small groups but\nalso assembling into communities that included\nesteemed individuals.\nBased on the texts, how would Graeber and\nWengrow (Text 2) most likely respond to the\n“conventional wisdom” presented in Text 1?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "By conceding the importance of hierarchical systems but asserting the greater significance of decentralized collective societies"
+      },
+      {
+        "key": "B",
+        "text": "By disputing the idea that developments in social structures have followed a linear progression through distinct stages"
+      },
+      {
+        "key": "C",
+        "text": "By acknowledging that hierarchical roles likely weren’t a part of social systems before the rise of agriculture"
+      },
+      {
+        "key": "D",
+        "text": "By challenging the assumption that groupings of hunter-gatherers were among the earliest forms of social structure"
+      }
+    ]
+  },
+  {
+    "id": "rw1-10",
+    "prompt": "The following text is adapted from Frances Hodgson\nBurnett’s 1911 novel The Secret Garden. Mary, a\nyoung girl, recently found an overgrown hidden\ngarden.\nMary was an odd, determined little person,\nand now she had something interesting to be\ndetermined about, she was very much absorbed,\nindeed. She worked and dug and pulled up\nweeds steadily, only becoming more pleased with\nher work every hour instead of tiring of it. It\nseemed to her like a fascinating sort of play.\nWhich choice best states the main idea of the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Mary hides in the garden to avoid doing her chores."
+      },
+      {
+        "key": "B",
+        "text": "Mary is getting bored with pulling up so many weeds in the garden."
+      },
+      {
+        "key": "C",
+        "text": "Mary is clearing out the garden to create a space to play."
+      },
+      {
+        "key": "D",
+        "text": "Mary feels very satisfied when she’s taking care of the garden."
+      }
+    ]
+  },
+  {
+    "id": "rw1-11",
+    "prompt": "The following text is from Ezra Pound’s 1909 poem\n“Hymn III,” based on the work of Marcantonio\nFlaminio.\nAs a fragile and lovely flower unfolds its gleaming\nfoliage on the breast of the fostering earth, if\nthe dew and the rain draw it forth;\nSo doth my tender mind flourish, if it be fed with the\nsweet dew of the fostering spirit,\nLacking this, it beginneth straightway to languish,\neven as a floweret born upon dry earth, if the\ndew and the rain tend it not.\nBased on the text, in what way is the human mind\nlike a flower?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It becomes increasingly vigorous with the passage of time."
+      },
+      {
+        "key": "B",
+        "text": "It draws strength from changes in the weather."
+      },
+      {
+        "key": "C",
+        "text": "It requires proper nourishment in order to thrive."
+      },
+      {
+        "key": "D",
+        "text": "It perseveres despite challenging circumstances."
+      }
+    ]
+  },
+  {
+    "id": "rw1-12",
+    "prompt": "The following text is adapted from Jack London’s\n1903 novel The Call of the Wild. Buck is a sled dog\nliving with John Thornton in Yukon, Canada.\nThornton alone held [Buck]. The rest of\nmankind was as nothing. Chance travellers\nmight praise or pet him; but he was cold under it\nall, and from a too demonstrative man he would\nget up and walk away. When Thornton’s\npartners, Hans and Pete, arrived on the\nlong-expected raft, Buck refused to notice them\ntill he learned they were close to Thornton; after\nthat he tolerated them in a passive sort of way,\naccepting favors from them as though he favored\nthem by accepting.\nWhich choice best states the main idea of the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Buck has become less social since he began living with Thornton."
+      },
+      {
+        "key": "B",
+        "text": "Buck mistrusts humans and does his best to avoid them."
+      },
+      {
+        "key": "C",
+        "text": "Buck has been especially well liked by most of Thornton’s friends."
+      },
+      {
+        "key": "D",
+        "text": "Buck holds Thornton in higher regard than any other person."
+      }
+    ]
+  },
+  {
+    "id": "rw1-13",
+    "prompt": "US States with the Greatest Number of\nOrganic Farms in 2016\nState\nOrganic farming is a method of growing food that\ntries to reduce environmental harm by using natural\nforms of pest control and avoiding fertilizers made\nwith synthetic materials. Organic farms are still a\nsmall fraction of the total farms in the United States,\nbut they have been becoming more popular.\nAccording to the US Department of Agriculture, in\n2016 California had between 2,600 and 2,800 organic\nfarms and _______\nWhich choice most effectively uses data from the\ngraph to complete the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Washington had between 600 and 800 organic farms."
+      },
+      {
+        "key": "B",
+        "text": "New York had fewer than 800 organic farms."
+      },
+      {
+        "key": "C",
+        "text": "Wisconsin and Iowa each had between 1,200 and 1,400 organic farms."
+      },
+      {
+        "key": "D",
+        "text": "Pennsylvania had more than 1,200 organic farms."
+      }
+    ]
+  },
+  {
+    "id": "rw1-14",
+    "prompt": "Biologist Valentina Gómez-Bahamón and her team\nhave investigated two subspecies of the fork-tailed\nflycatcher bird that live in the same region in\nColombia, but one subspecies migrates south for part\nof the year, and the other doesn’t. The researchers\nfound that, due to slight differences in feather shape,\nthe feathers of migratory forked-tailed flycatcher\nmales make a sound during flight that is higher\npitched than that made by the feathers of\nnonmigratory males. The researchers hypothesize\nthat fork-tailed flycatcher females are attracted to the\nspecific sound made by the males of their own\nsubspecies, and that over time the females’\npreference will drive further genetic and anatomical\ndivergence between the subspecies.\nWhich finding, if true, would most directly support\nGómez-Bahamón and her team’s hypothesis?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The feathers located on the wings of the migratory fork-tailed flycatchers have a narrower shape than those of the nonmigratory birds, which allows them to fly long distances."
+      },
+      {
+        "key": "B",
+        "text": "Over several generations, the sound made by the feathers of migratory male fork-tailed flycatchers grows progressively higher pitched relative to that made by the feathers of nonmigratory males."
+      },
+      {
+        "key": "C",
+        "text": "Fork-tailed flycatchers communicate different messages to each other depending on whether their feathers create high-pitched or low-pitched sounds."
+      },
+      {
+        "key": "D",
+        "text": "The breeding habits of the migratory and nonmigratory fork-tailed flycatchers remained generally the same over several generations."
+      }
+    ]
+  },
+  {
+    "id": "rw1-15",
+    "prompt": "Dust Source\nElement SPC AST HTC OCC\niron 20% 28% 90% 98%\npotassium 44% 74% 97% 100%\nsodium 45% 75% 99% 100%\nI I I I I I\nEarth’s atmosphere is bombarded by cosmic dust\noriginating from several sources: short-period\ncomets (SPCs), particles from the asteroid belt\n(ASTs), Halley-type comets (HTCs), and Oort cloud\ncomets (OCCs). Some of the dust’s material\nvaporizes in the atmosphere in a process called\nablation, and the faster the particles move, the higher\nthe rate of ablation. Astrophysicist Juan Diego\nCarrillo-Sánchez led a team that calculated average\nablation rates for elements in the dust (such as iron\nand potassium) and showed that material in slower-\nmoving SPC or AST dust has a lower rate than the\nsame material in faster-moving HTC or OCC dust.\nFor example, whereas the average ablation rate\nfor iron from AST dust is 28%, the average rate\nfor _______\nWhich choice most effectively uses data from the\ntable to complete the example?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "iron from SPC dust is 20%."
+      },
+      {
+        "key": "B",
+        "text": "sodium from OCC dust is 100%."
+      },
+      {
+        "key": "C",
+        "text": "iron from HTC dust is 90%."
+      },
+      {
+        "key": "D",
+        "text": "sodium from AST dust is 75%."
+      }
+    ]
+  },
+  {
+    "id": "rw1-16",
+    "prompt": "Art collectives, like the United States- and Vietnam-\nbased collective The Propeller Group or Cuba’s Los\nCarpinteros, are groups of artists who agree to work\ntogether: perhaps for stylistic reasons, or to advance\ncertain shared political ideals, or to help mitigate the\ncosts of supplies and studio space. Regardless of\nthe reasons, art collectives usually involve some\ncollaboration among the artists. Based on a recent\nseries of interviews with various art collectives, an\narts journalist claims that this can be difficult for\nartists who are often used to having sole control over\ntheir work.\nWhich quotation from the interviews best illustrates\nthe journalist’s claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "“The first collective I joined included many amazingly talented artists, and we enjoyed each other’s company, but because we had a hard time sharing credit and responsibility for our work, the collective didn’t last.”"
+      },
+      {
+        "key": "B",
+        "text": "“We work together, but that doesn’t mean that individual projects are equally the work of all of us. Many of our projects are primarily the responsibility of whoever originally proposed the work to the group.”"
+      },
+      {
+        "key": "C",
+        "text": "“Having worked as a member of a collective for several years, it’s sometimes hard to recall what it was like to work alone without the collective’s support. But that support encourages my individual expression rather than limits it.”"
+      },
+      {
+        "key": "D",
+        "text": "“Sometimes an artist from outside the collective will choose to collaborate with us on a project, but all of those projects fit within the larger themes of the work the collective does on its own.”"
+      }
+    ]
+  },
+  {
+    "id": "rw1-17",
+    "prompt": "Effects of Mycorrhizal Fungi on 3 Plant Species\nAverage mass of plants\ngrown in soil containing Average mass of plants\nPlant Mycorrhizal mycorrhizal fungi grown in soil treated\nspecies host (in grams) to kill fungi (in grams)\nCorn yes 15.1\nMarigold yes 10.2\nBroccoli no 7.5\nMycorrhizal fungi in soil benefits many plants, substantially increasing\nthe mass of some. A student conducted an experiment to illustrate this\neffect. The student chose three plant species for the experiment,\nincluding two that are mycorrhizal hosts (species known to benefit\nfrom mycorrhizal fungi) and one nonmycorrhizal species (a species\nthat doesn’t benefit from and may even be harmed by mycorrhizal\nfungi). The student then grew several plants from each species both in\nsoil containing mycorrhizal fungi and in soil that had been treated to\nkill mycorrhizal and other fungi. After several weeks, the student\nmeasured the plants’ average mass and was surprised to discover\nthat _______\nWhich choice most effectively uses data from the table to complete the\nstatement?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "broccoli grown in soil containing mycorrhizal fungi had a slightly higher average mass than broccoli grown in soil that had been treated to kill fungi."
+      },
+      {
+        "key": "B",
+        "text": "corn grown in soil containing mycorrhizal fungi had a higher average mass than broccoli grown in soil containing mycorrhizal fungi."
+      },
+      {
+        "key": "C",
+        "text": "marigolds grown in soil containing mycorrhizal fungi had a much higher average mass than marigolds grown in soil that had been treated to kill fungi."
+      },
+      {
+        "key": "D",
+        "text": "corn had the highest average mass of all three species grown in soil that had been treated to kill fungi, while marigolds had the lowest."
+      }
+    ]
+  },
+  {
+    "id": "rw1-18",
+    "prompt": "Several artworks found among the ruins of the\nancient Roman city of Pompeii depict a female figure\nfishing with a cupid nearby. Some scholars have\nasserted that the figure is the goddess Venus, since\nshe is known to have been linked with cupids in\nRoman culture, but University of Leicester\narchaeologist Carla Brain suggests that cupids may\nhave also been associated with fishing generally. The\nfact that a cupid is shown near the female figure,\ntherefore, _______\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "is not conclusive evidence that the figure is Venus."
+      },
+      {
+        "key": "B",
+        "text": "suggests that Venus was often depicted fishing."
+      },
+      {
+        "key": "C",
+        "text": "eliminates the possibility that the figure is Venus."
+      },
+      {
+        "key": "D",
+        "text": "would be difficult to account for if the figure is not Venus."
+      }
+    ]
+  },
+  {
+    "id": "rw1-19",
+    "prompt": "Literary agents estimate that more than half of all\nnonfiction books credited to a celebrity or other\npublic figure are in fact written by ghostwriters,\nprofessional authors who are paid to write other\n_______ but whose names never appear on book\ncovers.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "people’s stories"
+      },
+      {
+        "key": "B",
+        "text": "peoples story’s"
+      },
+      {
+        "key": "C",
+        "text": "peoples stories"
+      },
+      {
+        "key": "D",
+        "text": "people’s story’s"
+      }
+    ]
+  },
+  {
+    "id": "rw1-20",
+    "prompt": "Like other amphibians, the wood frog (Rana\nsylvatica) is unable to generate its own heat, so\nduring periods of subfreezing temperatures, it\n_______ by producing large amounts of glucose, a\nsugar that helps prevent damaging ice from forming\ninside its cells.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "had survived"
+      },
+      {
+        "key": "B",
+        "text": "survived"
+      },
+      {
+        "key": "C",
+        "text": "would survive"
+      },
+      {
+        "key": "D",
+        "text": "survives"
+      }
+    ]
+  },
+  {
+    "id": "rw1-21",
+    "prompt": "After a spate of illnesses as a child, Wilma Rudolph\nwas told she might never walk again. Defying all\nodds, Rudolph didn’t just walk, she _______ the\n1960 Summer Olympics in Rome, she won both the\n100- and 200-meter dashes and clinched first place\nfor her team in the 4 ×100-meter relay, becoming\nthe first US woman to win three gold medals in a\nsingle Olympics.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "ran—fast—during"
+      },
+      {
+        "key": "B",
+        "text": "ran—fast during"
+      },
+      {
+        "key": "C",
+        "text": "ran—fast, during"
+      },
+      {
+        "key": "D",
+        "text": "ran—fast. During"
+      }
+    ]
+  },
+  {
+    "id": "rw1-22",
+    "prompt": "In many of her landscape paintings from the 1970s\nand 1980s, Lebanese American artist Etel Adnan\nworked to capture the essence of California’s\nfog-shrouded Mount Tamalpais region through\nabstraction, using splotches of color to represent\nthe area’s features. Interestingly, the triangle\nrepresenting the mountain itself _______ among the\nfew defined figures in her paintings.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "are"
+      },
+      {
+        "key": "B",
+        "text": "have been"
+      },
+      {
+        "key": "C",
+        "text": "were"
+      },
+      {
+        "key": "D",
+        "text": "is"
+      }
+    ]
+  },
+  {
+    "id": "rw1-23",
+    "prompt": "Seneca sculptor Marie Watt’s blanket art comes in a\nrange of shapes and sizes. In 2004, Watt sewed strips\nof blankets together to craft a 10-by-13-inch\n_______ in 2014, she arranged folded blankets into\ntwo large stacks and then cast them in bronze,\ncreating two curving 18-foot-tall blue-bronze pillars.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "sampler later,"
+      },
+      {
+        "key": "B",
+        "text": "sampler;"
+      },
+      {
+        "key": "C",
+        "text": "sampler,"
+      },
+      {
+        "key": "D",
+        "text": "sampler, later,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-24",
+    "prompt": "African American Percy Julian was a scientist and\nentrepreneur whose work helped people around the\nworld to see. Named in 1999 as one of the greatest\nachievements by a US chemist in the past hundred\nyears, _______ led to the first mass-produced\ntreatment for glaucoma.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Julian synthesized the alkaloid physostigmine in 1935; it"
+      },
+      {
+        "key": "B",
+        "text": "in 1935 Julian synthesized the alkaloid physostigmine, which"
+      },
+      {
+        "key": "C",
+        "text": "Julian’s 1935 synthesis of the alkaloid physostigmine"
+      },
+      {
+        "key": "D",
+        "text": "the alkaloid physostigmine was synthesized by Julian in 1935 and"
+      }
+    ]
+  },
+  {
+    "id": "rw1-25",
+    "prompt": "The Arctic-Alpine Botanic Garden in Norway and\nthe Jardim Botânico of Rio de Janeiro in Brazil are\ntwo of many botanical gardens around the world\ndedicated to growing diverse plant _______\nfostering scientific research; and educating the public\nabout plant conservation.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "species, both native and nonnative,"
+      },
+      {
+        "key": "B",
+        "text": "species, both native and nonnative;"
+      },
+      {
+        "key": "C",
+        "text": "species; both native and nonnative,"
+      },
+      {
+        "key": "D",
+        "text": "species both native and nonnative,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-26",
+    "prompt": "Sociologist Alton Okinaka sits on the review board\ntasked with adding new sites to the Hawai‘i Register\nof Historic Places, which includes Pi‘ilanihale\nHeiau and the ‘Ōpaeka‘a Road Bridge. Okinaka\ndoesn’t make such decisions _______ all historical\ndesignations must be approved by a group of nine\nother experts from the fields of architecture,\narchaeology, history, and Hawaiian culture.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "single-handedly, however;"
+      },
+      {
+        "key": "B",
+        "text": "single-handedly; however,"
+      },
+      {
+        "key": "C",
+        "text": "single-handedly, however,"
+      },
+      {
+        "key": "D",
+        "text": "single-handedly however"
+      }
+    ]
+  },
+  {
+    "id": "rw1-27",
+    "prompt": "--~ ---~\nIn 1968, US Congressman John Conyers introduced\na bill to establish a national holiday in honor of\nDr. Martin Luther King Jr. The bill didn’t make it to\na vote, but Conyers was determined. He teamed up\nwith Shirley Chisholm, the first Black woman to be\nelected to Congress, and they resubmitted the bill\nevery session for the next fifteen years. _______ in\n1983, the bill passed.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Instead,"
+      },
+      {
+        "key": "B",
+        "text": "Likewise,"
+      },
+      {
+        "key": "C",
+        "text": "Finally,"
+      },
+      {
+        "key": "D",
+        "text": "Additionally,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-28",
+    "prompt": "Geoscientists have long considered Hawaii’s Mauna\nLoa volcano to be Earth’s largest shield volcano by\nvolume, measuring approximately 74,000 cubic\nkilometers. _______ according to a 2020 study by\nlocal geoscientist Michael Garcia, Hawaii’s\nPūhāhonu shield volcano is significantly larger,\nboasting a volume of about 148,000 cubic kilometers.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Secondly,"
+      },
+      {
+        "key": "B",
+        "text": "Consequently,"
+      },
+      {
+        "key": "C",
+        "text": "Moreover,"
+      },
+      {
+        "key": "D",
+        "text": "However,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-29",
+    "prompt": "Samuel Coleridge-Taylor was a prominent classical\nmusic composer from England who toured the US\nthree times in the early 1900s. The child of a West\nAfrican father and an English mother, Coleridge-\nTaylor emphasized his mixed-race ancestry. For\nexample, he referred to himself as Anglo-African.\n_______ he incorporated the sounds of traditional\nAfrican music into his classical music compositions.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "In addition,"
+      },
+      {
+        "key": "B",
+        "text": "Actually,"
+      },
+      {
+        "key": "C",
+        "text": "However,"
+      },
+      {
+        "key": "D",
+        "text": "Regardless,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-30",
+    "prompt": "In 2019, researcher Patricia Jurado Gonzalez and\nfood historian Nawal Nasrallah prepared a stew from\na 4,000-year-old recipe found on a Mesopotamian\nclay tablet. When they tasted the dish, known as\npašrūtum (“unwinding”), they found that it had a\nmild taste and inspired a sense of calm. _______ the\nresearchers, knowing that dishes were sometimes\nnamed after their intended effects, theorized that the\ndish’s name, “unwinding,” referred to its function: to\nhelp ancient diners relax.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Therefore,"
+      },
+      {
+        "key": "B",
+        "text": "Alternately,"
+      },
+      {
+        "key": "C",
+        "text": "Nevertheless,"
+      },
+      {
+        "key": "D",
+        "text": "Likewise,"
+      }
+    ]
+  },
+  {
+    "id": "rw1-31",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• Chemical leavening agents cause carbon dioxide\nto be released within a liquid batter, making the\nbatter rise as it bakes.\n• Baking soda and baking powder are chemical\nleavening agents.\n• Baking soda is pure sodium bicarbonate.\n• To produce carbon dioxide, baking soda needs to\nbe mixed with liquid and an acidic ingredient such\nas honey.\n• Baking powder is a mixture of sodium bicarbonate\nand an acid.\n• To produce carbon dioxide, baking powder needs\nto be mixed with liquid but not with an acidic\ningredient.\nThe student wants to emphasize a difference between\nbaking soda and baking powder. Which choice most\neffectively uses relevant information from the notes\nto accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To make batters rise, bakers use chemical leavening agents such as baking soda and baking powder."
+      },
+      {
+        "key": "B",
+        "text": "Baking soda and baking powder are chemical leavening agents that, when mixed with other ingredients, cause carbon dioxide to be released within a batter."
+      },
+      {
+        "key": "C",
+        "text": "Baking soda is pure sodium bicarbonate, and honey is a type of acidic ingredient."
+      },
+      {
+        "key": "D",
+        "text": "To produce carbon dioxide within a liquid batter, baking soda needs to be mixed with an acidic ingredient, whereas baking powder does not."
+      }
+    ]
+  },
+  {
+    "id": "rw1-32",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• Soo Sunny Park is a Korean American artist who\nuses light as her primary medium of expression.\n• She created her work Unwoven Light in 2013.\n• Unwoven Light featured a chain-link fence fitted\nwith iridescent plexiglass tiles.\n• When light passed through the fence, colorful\nprisms formed.\nThe student wants to describe Unwoven Light to an\naudience unfamiliar with Soo Sunny Park. Which\nchoice most effectively uses relevant information\nfrom the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Park’s 2013 installation Unwoven Light, which included a chain-link fence and iridescent tiles made from plexiglass, featured light as its primary medium of expression."
+      },
+      {
+        "key": "B",
+        "text": "Korean American light artist Soo Sunny Park created Unwoven Light in 2013."
+      },
+      {
+        "key": "C",
+        "text": "The chain-link fence in Soo Sunny Park’s Unwoven Light was fitted with tiles made from iridescent plexiglass."
+      },
+      {
+        "key": "D",
+        "text": "In Unwoven Light, a 2013 work by Korean American artist Soo Sunny Park, light formed colorful prisms as it passed through a fence Park had fitted with iridescent tiles. If you finish before time is called, you may check your work on this module only. Do not turn to any other module in the test."
+      }
+    ]
+  },
+  {
+    "id": "rw1-33",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• Cambodia’s Angkor Wat was built in the 1100s to\nhonor the Hindu god Vishnu.\n• It has been a Buddhist temple since the sixteenth\ncentury.\n• Decorrelation stretch analysis is a novel digital\nimaging technique that enhances the contrast\nbetween colors in a photograph.\n• Archaeologist Noel Hidalgo Tan applied\ndecorrelation stretch analysis to photographs he\nhad taken of Angkor Wat’s plaster walls.\n• Tan’s analysis revealed hundreds of images\nunknown to researchers.\nThe student wants to present Tan’s research to an\naudience unfamiliar with Angkor Wat. Which choice\nmost effectively uses relevant information from the\nnotes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Tan photographed Angkor Wat’s plaster walls and then applied decorrelation stretch analysis to the photographs."
+      },
+      {
+        "key": "B",
+        "text": "Decorrelation stretch analysis is a novel digital imaging technique that Tan used to enhance the contrast between colors in a photograph."
+      },
+      {
+        "key": "C",
+        "text": "Using a novel digital imaging technique, Tan revealed hundreds of images hidden on the walls of Angkor Wat, a Cambodian temple."
+      },
+      {
+        "key": "D",
+        "text": "Built to honor a Hindu god before becoming a Buddhist temple, Cambodia’s Angkor Wat concealed hundreds of images on its plaster walls."
+      }
+    ]
+  },
+  {
+    "id": "rw2-1",
+    "prompt": "The fashion resale market, in which consumers\npurchase secondhand clothing from stores and\nonline sellers, generated nearly $30 billion globally\nin 2019. Expecting to see continued growth, some\nanalysts _______ that revenues will more than\ndouble by 2028.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "produced"
+      },
+      {
+        "key": "B",
+        "text": "denied"
+      },
+      {
+        "key": "C",
+        "text": "worried"
+      },
+      {
+        "key": "D",
+        "text": "predicted"
+      }
+    ]
+  },
+  {
+    "id": "rw2-2",
+    "prompt": "Artificially delivering biomolecules to plant cells is\nan important component of protecting plants from\npathogens, but it is difficult to transmit biomolecules\nthrough the layers of the plant cell wall. Markita del\nCarpio Landry and her colleagues have shown that\nit may be possible to _______ this problem by\ntransmitting molecules through carbon nanotubes,\nwhich can cross cell walls.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "conceptualize"
+      },
+      {
+        "key": "B",
+        "text": "neglect"
+      },
+      {
+        "key": "C",
+        "text": "illustrate"
+      },
+      {
+        "key": "D",
+        "text": "overcome"
+      }
+    ]
+  },
+  {
+    "id": "rw2-3",
+    "prompt": "Particle physicists like Ayana Holloway Arce and\nAida El-Khadra spend much of their time _______\nwhat is invisible to the naked eye: using sophisticated\ntechnology, they closely examine the behavior of\nsubatomic particles, the smallest detectable parts of\nmatter.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "selecting"
+      },
+      {
+        "key": "B",
+        "text": "inspecting"
+      },
+      {
+        "key": "C",
+        "text": "creating"
+      },
+      {
+        "key": "D",
+        "text": "deciding"
+      }
+    ]
+  },
+  {
+    "id": "rw2-4",
+    "prompt": "--~ ---~\nAnthropologist Kristian J. Carlson and colleagues\nexamined the fossilized clavicle and shoulder bones\nof a 3.6-million-year-old early hominin known as\n“Little Foot.” They found that these bones were\n_______ the clavicle and shoulder bones of modern\napes that are frequent climbers, such as gorillas and\nchimpanzees, suggesting that Little Foot had adapted\nto life in the trees.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "surpassed by"
+      },
+      {
+        "key": "B",
+        "text": "comparable to"
+      },
+      {
+        "key": "C",
+        "text": "independent of"
+      },
+      {
+        "key": "D",
+        "text": "obtained from"
+      }
+    ]
+  },
+  {
+    "id": "rw2-5",
+    "prompt": "Rydra Wong, the protagonist of Samuel R. Delany’s\n1966 novel Babel-17, is a poet, an occupation which,\nin Delany’s work, is not _______: nearly a dozen of\nthe characters that populate his novels are poets or\nwriters.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "infallible"
+      },
+      {
+        "key": "B",
+        "text": "atypical"
+      },
+      {
+        "key": "C",
+        "text": "lucrative"
+      },
+      {
+        "key": "D",
+        "text": "tedious"
+      }
+    ]
+  },
+  {
+    "id": "rw2-6",
+    "prompt": "For a 2020 exhibition, photographer and\nneurobiologist Okunola Jeyifous _______ a series of\nnew images based on a series of alphabet posters\nfrom the 1970s known as the “Black ABCs,” which\nfeatured Black children from Chicago. Jeyifous\nphotographed the now-adult models and layered the\nphotos over magnified images of the models’ cells,\nresulting in what he called “micro and macro\nportraiture.”\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "validated"
+      },
+      {
+        "key": "B",
+        "text": "created"
+      },
+      {
+        "key": "C",
+        "text": "challenged"
+      },
+      {
+        "key": "D",
+        "text": "restored"
+      }
+    ]
+  },
+  {
+    "id": "rw2-7",
+    "prompt": "In addition to being an accomplished psychologist\nhimself, Francis Cecil Sumner was a _______\nincreasing the opportunity for Black students to\nstudy psychology, helping to found the psychology\ndepartment at Howard University, a historically\nBlack university, in 1930.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "proponent of"
+      },
+      {
+        "key": "B",
+        "text": "supplement to"
+      },
+      {
+        "key": "C",
+        "text": "beneficiary of"
+      },
+      {
+        "key": "D",
+        "text": "distraction for"
+      }
+    ]
+  },
+  {
+    "id": "rw2-8",
+    "prompt": "Whether the reign of a French monarch such\nas Hugh Capet or Henry I was historically\nconsequential or relatively uneventful, its trajectory\nwas shaped by questions of legitimacy and therefore\ncannot be understood without a corollary\nunderstanding of the factors that allowed the\nmonarch to _______ his right to hold the throne.\nWhich choice completes the text with the most\nlogical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "reciprocate"
+      },
+      {
+        "key": "B",
+        "text": "annotate"
+      },
+      {
+        "key": "C",
+        "text": "buttress"
+      },
+      {
+        "key": "D",
+        "text": "disengage"
+      }
+    ]
+  },
+  {
+    "id": "rw2-9",
+    "prompt": "Some bird species don’t raise their own chicks.\nInstead, adult females lay their eggs in other nests,\nnext to another bird species’ own eggs. Female\ncuckoos have been seen quickly laying eggs in the\nnests of other bird species when those birds are out\nlooking for food. After the eggs hatch, the noncuckoo\nparents will typically raise the cuckoo chicks as if\nthey were their own offspring, even if the cuckoos\nlook very different from the other chicks.\nWhich choice best describes the function of the\nunderlined sentence in the text as a whole?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It introduces a physical feature of female cuckoos that is described later in the text."
+      },
+      {
+        "key": "B",
+        "text": "It describes the appearance of the cuckoo nests mentioned earlier in the text."
+      },
+      {
+        "key": "C",
+        "text": "It offers a detail about how female cuckoos carry out the behavior discussed in the text."
+      },
+      {
+        "key": "D",
+        "text": "It explains how other birds react to the female cuckoo behavior discussed in the text."
+      }
+    ]
+  },
+  {
+    "id": "rw2-10",
+    "prompt": "Cats can judge unseen people’s positions in space by\nthe sound of their voices and thus react with surprise\nwhen the same person calls to them from two\ndifferent locations in a short span of time. Saho\nTakagi and colleagues reached this conclusion by\nmeasuring cats’ levels of surprise based on their ear\nand head movements while the cats heard recordings\nof their owners’ voices from two speakers spaced far\napart. Cats exhibited a low level of surprise when\nowners’ voices were played twice from the same\nspeaker, but they showed a high level of surprise\nwhen the voice was played once each from the two\ndifferent speakers.\nAccording to the text, how did the researchers\ndetermine the level of surprise displayed by the cats\nin the study?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "They watched how each cat moved its ears and head."
+      },
+      {
+        "key": "B",
+        "text": "They examined how each cat reacted to the voice of a stranger."
+      },
+      {
+        "key": "C",
+        "text": "They studied how each cat physically interacted with its owner."
+      },
+      {
+        "key": "D",
+        "text": "They tracked how each cat moved around the room."
+      }
+    ]
+  },
+  {
+    "id": "rw2-11",
+    "prompt": "A student performs an experiment testing her\nhypothesis that a slightly acidic soil environment is\nmore beneficial for the growth of the plant Brassica\nrapa parachinensis (a vegetable commonly known as\nchoy sum) than a neutral soil environment. She\nplants sixteen seeds of choy sum in a mixture of\nequal amounts of coffee grounds (which are highly\nacidic) and potting soil and another sixteen seeds in\npotting soil without coffee grounds as the control for\nthe experiment. The two groups of seeds were\nexposed to the same growing conditions and\nmonitored for three weeks.\nWhich finding, if true, would most directly weaken\nthe student’s hypothesis?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The choy sum planted in the soil without coffee grounds were significantly taller at the end of the experiment than the choy sum planted in the mixture of soil and coffee grounds."
+      },
+      {
+        "key": "B",
+        "text": "The choy sum grown in the soil without coffee grounds weighed significantly less at the end of the experiment than the choy sum grown in the mixture of soil and coffee grounds."
+      },
+      {
+        "key": "C",
+        "text": "The choy sum seeds planted in the soil without coffee grounds sprouted significantly later in the experiment than did the seeds planted in the mixture of soil and coffee grounds."
+      },
+      {
+        "key": "D",
+        "text": "Significantly fewer of the choy sum seeds planted in the soil without coffee grounds sprouted plants than did the seeds planted in the mixture of soil and coffee grounds."
+      }
+    ]
+  },
+  {
+    "id": "rw2-12",
+    "prompt": "“The Young Girl” is a 1920 short story by Katherine\nMansfield. In the story, the narrator takes an\nunnamed seventeen-year-old girl and her younger\nbrother out for a meal. In describing the teenager,\nMansfield frequently contrasts the character’s\npleasant appearance with her unpleasant attitude, as\nwhen Mansfield writes of the teenager, _______\nWhich quotation from “The Young Girl” most\neffectively illustrates the claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "“I heard her murmur, ‘I can’t bear flowers on a table.’ They had evidently been giving her intense pain, for she positively closed her eyes as I moved them away.”"
+      },
+      {
+        "key": "B",
+        "text": "“While we waited she took out a little, gold powder-box with a mirror in the lid, shook the poor little puff as though she loathed it, and dabbed her lovely nose.”"
+      },
+      {
+        "key": "C",
+        "text": "“I saw, after that, she couldn’t stand this place a moment longer, and, indeed, she jumped up and turned away while I went through the vulgar act of paying for the tea.”"
+      },
+      {
+        "key": "D",
+        "text": "“She didn’t even take her gloves off. She lowered her eyes and drummed on the table. When a faint violin sounded she winced and bit her lip again. Silence.”"
+      }
+    ]
+  },
+  {
+    "id": "rw2-13",
+    "prompt": "Economic Policy Uncertainty in\nthe United Kingdom, 2005–2010\n200\n150\n100\nUncertainty\n50\n0\n(larger values = more uncertainty)\n2005 2006 2007 2008 2009 2010\nYear\ntax and public spending policy\ntrade policy\ngeneral economic policy\nHigh levels of public uncertainty about which\neconomic policies a country will adopt can make\nplanning difficult for businesses, but measures of\nsuch uncertainty have not tended to be very detailed.\nRecently, however, economist Sandile Hlatshwayo\nanalyzed trends in news reports to derive measures\nnot only for general economic policy uncertainty but\nalso for uncertainty related to specific areas of\neconomic policy, like tax or trade policy. One\nrevelation of her work is that a general measure may\nnot fully reflect uncertainty about specific areas of\npolicy, as in the case of the United Kingdom, where\ngeneral economic policy uncertainty _______",
+    "choices": []
+  },
+  {
+    "id": "rw2-14",
+    "prompt": "Linguist Deborah Tannen has cautioned against\nframing contentious issues in terms of two highly\ncompetitive perspectives, such as pro versus con.\nAccording to Tannen, this debate-driven approach\ncan strip issues of their complexity and, when used in\nfront of an audience, can be less informative than\nthe presentation of multiple perspectives in a\nnoncompetitive format. To test Tannen’s hypothesis,\nstudents conducted a study in which they showed\nparticipants one of three different versions of local\nnews commentary about the same issue. Each\nversion featured a debate between two commentators\nwith opposing views, a panel of three commentators\nwith various views, or a single commentator.\nWhich finding from the students’ study, if true,\nwould most strongly support Tannen’s hypothesis?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "On average, participants perceived commentators in the debate as more knowledgeable about the issue than commentators in the panel."
+      },
+      {
+        "key": "B",
+        "text": "On average, participants perceived commentators in the panel as more knowledgeable about the issue than the single commentator."
+      },
+      {
+        "key": "C",
+        "text": "On average, participants who watched the panel correctly answered more questions about the issue than those who watched the debate or the single commentator did."
+      },
+      {
+        "key": "D",
+        "text": "On average, participants who watched the single commentator correctly answered more questions about the issue than those who watched the debate did."
+      }
+    ]
+  },
+  {
+    "id": "rw2-15",
+    "prompt": "King Lear is a circa 1606 play by William\nShakespeare. In the play, the character of King Lear\nattempts to test his three daughters’ devotion to him.\nHe later expresses regret for his actions, as is evident\nwhen he _______\nWhich choice most effectively uses a quotation from\nKing Lear to illustrate the claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "says of himself, “I am a man / more sinned against than sinning.”"
+      },
+      {
+        "key": "B",
+        "text": "says during a growing storm, “This tempest will not give me leave to ponder / On things would hurt me more.”"
+      },
+      {
+        "key": "C",
+        "text": "says to himself while striking his head, “Beat at this gate that let thy folly in / And thy dear judgement out!”"
+      },
+      {
+        "key": "D",
+        "text": "says of himself, “I will do such things— / What they are yet, I know not; but they shall be / The terrors of the earth!”"
+      }
+    ]
+  },
+  {
+    "id": "rw2-16",
+    "prompt": "Many of William Shakespeare’s tragedies address\nbroad themes that still appeal to today’s audiences.\nFor instance, Romeo and Juliet, which is set in the\nItaly of Shakespeare’s time, tackles the themes of\nparents versus children and love versus hate, and\nthe play continues to be read and produced\nwidely around the world. But understanding\nShakespeare’s so-called history plays can require a\nknowledge of several centuries of English history.\nConsequently, _______\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "many theatergoers and readers today are likely to find Shakespeare’s history plays less engaging than the tragedies."
+      },
+      {
+        "key": "B",
+        "text": "some of Shakespeare’s tragedies are more relevant to today’s audiences than twentieth-century plays."
+      },
+      {
+        "key": "C",
+        "text": "Romeo and Juliet is the most thematically accessible of all Shakespeare’s tragedies."
+      },
+      {
+        "key": "D",
+        "text": "experts in English history tend to prefer Shakespeare’s history plays to his other works."
+      }
+    ]
+  },
+  {
+    "id": "rw2-17",
+    "prompt": "Ancestral Puebloans, the civilization from which\npresent-day Pueblo tribes descended, emerged as\nearly as 1500 B.C.E. in an area of what is now the\nsouthwestern United States and dispersed suddenly\nin the late 1200s C.E., abandoning established\nvillages with systems for farming crops and turkeys.\nRecent analysis comparing turkey remains at Mesa\nVerde, one such village in southern Colorado, to\nsamples from modern turkey populations in the\nRio Grande Valley of north central New Mexico\ndetermined that the latter birds descended in part\nfrom turkeys cultivated at Mesa Verde, with shared\ngenetic markers appearing only after 1280. Thus,\nresearchers concluded that _______\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "conditions of the terrains in the Rio Grande Valley and Mesa Verde had greater similarities in the past than they do today."
+      },
+      {
+        "key": "B",
+        "text": "some Ancestral Puebloans migrated to the Rio Grande Valley in the late 1200s and carried farming practices with them."
+      },
+      {
+        "key": "C",
+        "text": "Indigenous peoples living in the Rio Grande Valley primarily planted crops and did not cultivate turkeys before 1280."
+      },
+      {
+        "key": "D",
+        "text": "the Ancestral Puebloans of Mesa Verde likely adopted the farming practices of Indigenous peoples living in other regions."
+      }
+    ]
+  },
+  {
+    "id": "rw2-18",
+    "prompt": "One challenge when researching whether holding\nelected office changes a person’s behavior is the\nproblem of ensuring that the experiment has an\nappropriate control group. To reveal the effect of\nholding office, researchers must compare people\nwho hold elected office with people who do not\nhold office but who are otherwise similar to the\noffice-holders. Since researchers are unable to\ncontrol which politicians win elections, they\ntherefore _______\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "struggle to find valid data about the behavior of politicians who do not currently hold office."
+      },
+      {
+        "key": "B",
+        "text": "can only conduct valid studies with people who have previously held office rather than people who presently hold office."
+      },
+      {
+        "key": "C",
+        "text": "should select a control group of people who differ from office holders in several significant ways."
+      },
+      {
+        "key": "D",
+        "text": "will find it difficult to identify a group of people who can function as an appropriate control group for their studies."
+      }
+    ]
+  },
+  {
+    "id": "rw2-19",
+    "prompt": "In his groundbreaking book Bengali Harlem and the\nLost Histories of South Asian America, Vivek Bald\nuses newspaper articles, census records, ships’ logs,\nand memoirs to tell the _______ who made New\nYork City their home in the early twentieth century.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "story’s of the South Asian immigrants"
+      },
+      {
+        "key": "B",
+        "text": "story’s of the South Asian immigrants’"
+      },
+      {
+        "key": "C",
+        "text": "stories of the South Asian immigrants"
+      },
+      {
+        "key": "D",
+        "text": "stories’ of the South Asian immigrant’s"
+      }
+    ]
+  },
+  {
+    "id": "rw2-20",
+    "prompt": "In her two major series “Memory Test” and\n“Autobiography,” painter Howardena Pindell\nexplored themes _______ healing, self-discovery,\nand memory by cutting and sewing back together\npieces of canvas and inserting personal artifacts, such\nas postcards, into some of the paintings.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "of"
+      },
+      {
+        "key": "B",
+        "text": "of,"
+      },
+      {
+        "key": "C",
+        "text": "of—"
+      },
+      {
+        "key": "D",
+        "text": "of:"
+      }
+    ]
+  },
+  {
+    "id": "rw2-21",
+    "prompt": "Both Sona Charaipotra, an Indian American, and\nDhonielle Clayton, an African American, grew up\nfrustrated by the lack of diverse characters in books\nfor young people. In 2011, these two writers joined\nforces to found CAKE Literary, a book packaging\n_______ specializes in the creation and promotion\nof stories told from diverse perspectives for children\nand young adults.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "company,"
+      },
+      {
+        "key": "B",
+        "text": "company that"
+      },
+      {
+        "key": "C",
+        "text": "company"
+      },
+      {
+        "key": "D",
+        "text": "company, that"
+      }
+    ]
+  },
+  {
+    "id": "rw2-22",
+    "prompt": "A study led by scientist Rebecca Kirby at the\nUniversity of Wisconsin–Madison found that black\nbears that eat human food before hibernation have\nincreased levels of a rare carbon isotope, _______\n13\ndue to the higher C levels in corn and cane sugar.\nBears with these elevated levels were also found to\nhave much shorter hibernation periods on average.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?\n13",
+    "choices": [
+      {
+        "key": "A",
+        "text": "carbon-13, (C) 13"
+      },
+      {
+        "key": "B",
+        "text": "carbon-13 (C) 13"
+      },
+      {
+        "key": "C",
+        "text": "carbon-13, (C), 13"
+      },
+      {
+        "key": "D",
+        "text": "carbon-13 (C),"
+      }
+    ]
+  },
+  {
+    "id": "rw2-23",
+    "prompt": "In 2010, archaeologist Noel Hidalgo Tan was visiting\nthe twelfth-century temple of Angkor Wat in\nCambodia when he noticed markings of red paint on\nthe temple _______ the help of digital imaging\ntechniques, he discovered the markings to be part of\nan elaborate mural containing over 200 paintings.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "walls, with"
+      },
+      {
+        "key": "B",
+        "text": "walls with"
+      },
+      {
+        "key": "C",
+        "text": "walls so with"
+      },
+      {
+        "key": "D",
+        "text": "walls. With"
+      }
+    ]
+  },
+  {
+    "id": "rw2-24",
+    "prompt": "Working from an earlier discovery of Charpentier’s,\nchemists Emmanuelle Charpentier and Jennifer\nDoudna—winners of the 2020 Nobel Prize in\nChemistry—re-created and then reprogrammed\nthe so-called “genetic scissors” of a species of\nDNA-cleaving bacteria _______ a tool that is\nrevolutionizing the field of gene technology.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "to forge"
+      },
+      {
+        "key": "B",
+        "text": "forging"
+      },
+      {
+        "key": "C",
+        "text": "forged"
+      },
+      {
+        "key": "D",
+        "text": "and forging"
+      }
+    ]
+  },
+  {
+    "id": "rw2-25",
+    "prompt": "In 2016, engineer Vanessa Galvez oversaw the\ninstallation of 164 bioswales, vegetated channels\ndesigned to absorb and divert stormwater, along the\nstreets of Queens, New York. By reducing the runoff\nflowing into city sewers, _______\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "the mitigation of both street flooding and the resulting pollution of nearby waterways has been achieved by bioswales."
+      },
+      {
+        "key": "B",
+        "text": "the bioswales have mitigated both street flooding and the resulting pollution of nearby waterways."
+      },
+      {
+        "key": "C",
+        "text": "the bioswales’ mitigation of both street flooding and the resulting pollution of nearby waterways has been achieved."
+      },
+      {
+        "key": "D",
+        "text": "both street flooding and the resulting pollution of nearby waterways have been mitigated by bioswales."
+      }
+    ]
+  },
+  {
+    "id": "rw2-26",
+    "prompt": "A study published by Rice University geoscientist\nMing Tang in 2019 offers a new explanation for the\norigin of Earth’s _______ structures called arcs,\ntowering ridges that form when a dense oceanic plate\nsubducts under a less dense continental plate, melts\nin the mantle below, and then rises and bursts\nthrough the continental crust above.\nWhich choice completes the text so that it conforms\nto the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "continents geological"
+      },
+      {
+        "key": "B",
+        "text": "continents: geological"
+      },
+      {
+        "key": "C",
+        "text": "continents; geological"
+      },
+      {
+        "key": "D",
+        "text": "continents. Geological"
+      }
+    ]
+  },
+  {
+    "id": "rw2-27",
+    "prompt": "During a 2021 launch, Rocket Labs’ Electron rocket\nexperienced an unexpected failure: its second-stage\nbooster shut down suddenly after ignition. _______\ninstead of downplaying the incident, Rocket Labs’\nCEO publicly acknowledged what happened and\napologized for the loss of the rocket’s payload, which\nhad consisted of two satellites.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Afterward,"
+      },
+      {
+        "key": "B",
+        "text": "Additionally,"
+      },
+      {
+        "key": "C",
+        "text": "Indeed,"
+      },
+      {
+        "key": "D",
+        "text": "Similarly,"
+      }
+    ]
+  },
+  {
+    "id": "rw2-28",
+    "prompt": "When soil becomes contaminated by toxic metals, it\ncan be removed from the ground and disposed of\nin a landfill. _______ contaminated soil can be\ndetoxified via phytoremediation: plants that can\nwithstand high concentrations of metals absorb the\npollutants and store them in their shoots, which are\nthen cut off and safely disposed of, preserving the\nhealth of the plants.\nWhich choice completes the text with the most\nlogical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Alternatively,"
+      },
+      {
+        "key": "B",
+        "text": "Specifically,"
+      },
+      {
+        "key": "C",
+        "text": "For example,"
+      },
+      {
+        "key": "D",
+        "text": "As a result,"
+      }
+    ]
+  },
+  {
+    "id": "rw2-29",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• The calendar used by most of the world (the\nGregorian calendar) has 365 days.\n• Because 365 days can’t be divided evenly by 7 (the\nnumber of days in a week), calendar dates fall on a\ndifferent day of the week each year.\n• The Hanke-Henry permanent calendar, developed\nas an alternative to the Gregorian calendar, has\n364 days.\n• Because 364 can be divided evenly by 7, calendar\ndates fall on the same day of the week each year,\nwhich supports more predictable scheduling.\nThe student wants to explain an advantage of the\nHanke-Henry calendar. Which choice most\neffectively uses relevant information from the notes\nto accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The Gregorian calendar has 365 days, which is one day longer than the Hanke-Henry permanent calendar."
+      },
+      {
+        "key": "B",
+        "text": "Adopting the Hanke-Henry permanent calendar would help solve a problem with the Gregorian calendar."
+      },
+      {
+        "key": "C",
+        "text": "Designed so calendar dates would occur on the same day of the week each year, the Hanke-Henry calendar supports more predictable scheduling than does the Gregorian calendar."
+      },
+      {
+        "key": "D",
+        "text": "The Hanke-Henry permanent calendar was developed as an alternative to the Gregorian calendar, which is currently the most-used calendar in the world."
+      }
+    ]
+  },
+  {
+    "id": "rw2-30",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• The Haudenosaunee Confederacy is a nearly\n1,000-year-old alliance of six Native nations in the\nnortheastern US.\n• The members are bound by a centuries-old\nagreement known as the Great Law of Peace.\n• Historian Bruce Johansen is one of several\nscholars who believe that the principles of the\nGreat Law of Peace influenced the US\nConstitution.\n• This theory is called the influence theory.\n• Johansen cites the fact that Benjamin Franklin and\nThomas Jefferson both studied the\nHaudenosaunee Confederacy.\nThe student wants to present the influence theory to\nan audience unfamiliar with the Haudenosaunee\nConfederacy. Which choice most effectively uses\nrelevant information from the notes to accomplish\nthis goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Historian Bruce Johansen believes that the Great Law of Peace was very influential."
+      },
+      {
+        "key": "B",
+        "text": "The influence theory is supported by the fact that Benjamin Franklin and Thomas Jefferson both studied the Haudenosaunee Confederacy."
+      },
+      {
+        "key": "C",
+        "text": "The influence theory holds that the principles of the Great Law of Peace, a centuries-old agreement binding six Native nations in the northeastern US, influenced the US Constitution."
+      },
+      {
+        "key": "D",
+        "text": "Native people, including the members of the Haudenosaunee Confederacy, influenced the founding of the US in many different ways."
+      }
+    ]
+  },
+  {
+    "id": "rw2-31",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• In 1999, astronomer Todd Henry studied the\ndifferences in surface temperature between the\nSun and nearby stars.\n• His team mapped all stars within 10 parsecs\n(approximately 200 trillion miles) of the Sun.\n• The surface temperature of the Sun is around\n9,800°F, which classifies it as a G star.\n• 327 of the 357 stars in the study were classified as\nK or M stars, with surface temperatures under\n8,900°F (cooler than the Sun).\n• 11 of the 357 stars in the study were classified as A\nor F stars, with surface temperatures greater than\n10,300°F (hotter than the Sun).\nThe student wants to emphasize how hot the Sun\nis relative to nearby stars. Which choice most\neffectively uses relevant information from the notes\nto accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "At around 9,800°F, which classifies it as a G star, the Sun is hotter than most but not all of the stars within 10 parsecs of it."
+      },
+      {
+        "key": "B",
+        "text": "Astronomer Todd Henry determined that the Sun, at around 9,800°F, is a G star, and several other stars within a 10-parsec range are A or F stars."
+      },
+      {
+        "key": "C",
+        "text": "Of the 357 stars within ten parsecs of the Sun, 327 are classified as K or M stars, with surface temperatures under 8,900°F."
+      },
+      {
+        "key": "D",
+        "text": "While most of the stars within 10 parsecs of the Sun are classified as K, M, A, or F stars, the Sun is classified as a G star due to its surface temperature of 9,800°F."
+      }
+    ]
+  },
+  {
+    "id": "rw2-32",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• The Atlantic Monthly magazine was first\npublished in 1857.\n• The magazine focused on politics, art, and\nliterature.\n• In 2019, historian Cathryn Halverson published\nthe book Faraway Women and the “Atlantic\nMonthly.”\n• Its subject is female authors whose\nautobiographies appeared in the magazine in the\nearly 1900s.\n• One of the authors discussed is Juanita Harrison.\nThe student wants to introduce Cathryn Halverson’s\nbook to an audience already familiar with the\nAtlantic Monthly. Which choice most effectively uses\nrelevant information from the notes to accomplish\nthis goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Cathryn Halverson’s Faraway Women and the “Atlantic Monthly” discusses female authors whose autobiographies appeared in the magazine in the early 1900s."
+      },
+      {
+        "key": "B",
+        "text": "A magazine called the Atlantic Monthly, referred to in Cathryn Halverson’s book title, was first published in 1857."
+      },
+      {
+        "key": "C",
+        "text": "Faraway Women and the “Atlantic Monthly” features contributors to the Atlantic Monthly, first published in 1857 as a magazine focusing on politics, art, and literature."
+      },
+      {
+        "key": "D",
+        "text": "An author discussed by Cathryn Halverson is Juanita Harrison, whose autobiography appeared in the Atlantic Monthly in the early 1900s. STOP If you finish before time is called, you may check your work on this module only. Do not turn to any other module in the test."
+      }
+    ]
+  },
+  {
+    "id": "rw2-33",
+    "prompt": "While researching a topic, a student has taken the\nfollowing notes:\n• The magnificent frigatebird (fregata magnificens)\nis a species of seabird that feeds mainly on fish,\ntuna, squid, and other small sea animals.\n• It is unusual among seabirds in that it doesn’t dive\ninto the water for prey.\n• One way it acquires food is by using its\nhook-tipped bill to snatch prey from the surface of\nthe water.\n• Another way it acquires food is by taking it from\nweaker birds by force.\n• This behavior is known as kleptoparasitism.\nThe student wants to emphasize a similarity between\nthe two ways a magnificent frigatebird acquires food.\nWhich choice most effectively uses relevant\ninformation from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "A magnificent frigatebird never dives into the water, instead using its hook-tipped bill to snatch prey from the surface."
+      },
+      {
+        "key": "B",
+        "text": "Neither of a magnificent frigatebird’s two ways of acquiring food requires the bird to dive into the water."
+      },
+      {
+        "key": "C",
+        "text": "Of the magnificent frigatebird’s two ways of acquiring food, only one is known as kleptoparasitism."
+      },
+      {
+        "key": "D",
+        "text": "In addition to snatching prey from the water with its hook-tipped bill, a magnificent frigatebird takes food from other birds by force."
+      }
+    ]
+  },
+  {
+    "id": "math1-1",
+    "prompt": "50\n45\n...,</l\n40\nQ\n<l>\n\"O 35\n...,::s\n</l 30\n0 25\n1-.\n<l> 20\n..0\n8 15\n::s\nz 10\n5\n0\n1 2 3 4 5\nActivity\nA group of students voted on five after-school\nactivities. The bar graph shows the number of\nstudents who voted for each of the five activities.\nHow many students chose activity 3?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "25"
+      },
+      {
+        "key": "B",
+        "text": "39"
+      },
+      {
+        "key": "C",
+        "text": "48"
+      },
+      {
+        "key": "D",
+        "text": "50"
+      }
+    ]
+  },
+  {
+    "id": "math1-2",
+    "prompt": "What percentage of 300 is 75?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "25%"
+      },
+      {
+        "key": "B",
+        "text": "50%"
+      },
+      {
+        "key": "C",
+        "text": "75%"
+      },
+      {
+        "key": "D",
+        "text": "225%"
+      }
+    ]
+  },
+  {
+    "id": "math1-3",
+    "prompt": "2\nx\n= 36\n25\nWhat is a solution to the given equation?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "6"
+      },
+      {
+        "key": "B",
+        "text": "30"
+      },
+      {
+        "key": "C",
+        "text": "450"
+      },
+      {
+        "key": "D",
+        "text": "900"
+      }
+    ]
+  },
+  {
+    "id": "math1-4",
+    "prompt": "3 more than 8 times a number x is equal to 83.\nWhich equation represents this situation?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "()()38x = 83"
+      }
+    ]
+  },
+  {
+    "id": "math1-5",
+    "prompt": "Hana deposited a fixed amount into her bank\naccount each month. The function f t() = 100 + 25\ngives the amount, in dollars, in Hana’s bank account\nafter t monthly deposits. What is the best\ninterpretation of 25 in this context?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "With each monthly deposit, the amount in Hana’s bank account increased by $25."
+      },
+      {
+        "key": "B",
+        "text": "Before Hana made any monthly deposits, the amount in her bank account was $25."
+      },
+      {
+        "key": "C",
+        "text": "After 1 monthly deposit, the amount in Hana’s bank account was $25."
+      },
+      {
+        "key": "D",
+        "text": "Hana made a total of 25 monthly deposits."
+      }
+    ]
+  },
+  {
+    "id": "math1-6",
+    "prompt": "A customer spent $27 to purchase oranges at $3 per\npound. How many pounds of oranges did the\ncustomer purchase?",
+    "choices": []
+  },
+  {
+    "id": "math1-7",
+    "prompt": "Nasir bought 9 storage bins that were each the same\nprice. He used a coupon for $63 off the entire\npurchase. The cost for the entire purchase after using\nthe coupon was $27. What was the original price, in\ndollars, for 1 storage bin?",
+    "choices": []
+  },
+  {
+    "id": "math1-8",
+    "prompt": "x f(x)\n0 29\n1 32\n2 35\nFor the linear function f, the table shows three values\nof x and their corresponding values of f x(). Which\nequation defines f x()?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "f x() = 3x + 29"
+      },
+      {
+        "key": "B",
+        "text": "f x() = 29x + 32"
+      },
+      {
+        "key": "C",
+        "text": "f x() = 35x + 29"
+      },
+      {
+        "key": "D",
+        "text": "f x() = 32x + 35"
+      }
+    ]
+  },
+  {
+    "id": "math1-9",
+    "prompt": "Q\nP ___....._.R S~:\nNote: Figures not drawn to scale.\nRight triangles PQR and STU are similar, where P\ncorresponds to S. If the measure of angle Q is 18°,\nwhat is the measure of angle S?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "18°"
+      },
+      {
+        "key": "B",
+        "text": "72°"
+      },
+      {
+        "key": "C",
+        "text": "82°"
+      },
+      {
+        "key": "D",
+        "text": "162°"
+      }
+    ]
+  },
+  {
+    "id": "math1-10",
+    "prompt": "The scatterplot shows the relationship between\ntwo variables, x and y.\ny\n10+-+--+--+--i------,f-----+---+--+--+--+\n9 ---+--+--i------,f-----+---+--+--+--+\n8-+---+--+-4~o--+---+---+---+--+--+---+---+-\n7-+---+--+--+--+-----,,-----+---+---+---+----+-\n6 +--+--+--+--i------,f-----+---+--+--+--+\n5+--+--+----t----+if-----+---+--+--+--+\n4-+---+--+--+--+-----,,-----+---+---+---+----+-\n3-+---+--+--+--+-----,re-----+-11-r-t<-.-+---+----+-\n2+--+--+--+--i------,f-----+---+--+--+---.+-\n1-+---+--+--+--+-----,,-----+---+---+___,_---+-\nU-----------------x12345678910\nWhich of the following equations is the most\nappropriate linear model for the data shown?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "y = 0.9 + 9.4x"
+      },
+      {
+        "key": "B",
+        "text": "y = 0.9 − 9.4x"
+      },
+      {
+        "key": "C",
+        "text": "y = 9.4 + 0.9x"
+      },
+      {
+        "key": "D",
+        "text": "y = 9.4 − 0.9x"
+      }
+    ]
+  },
+  {
+    "id": "math1-11",
+    "prompt": "2.5b + 5r = 80\nThe given equation describes the relationship\nbetween the number of birds, b, and the number of\nreptiles, r, that can be cared for at a pet care business\non a given day. If the business cares for 16 reptiles on\na given day, how many birds can it care for on this\nday?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0"
+      },
+      {
+        "key": "B",
+        "text": "5"
+      },
+      {
+        "key": "C",
+        "text": "40"
+      },
+      {
+        "key": "D",
+        "text": "80"
+      }
+    ]
+  },
+  {
+    "id": "math1-12",
+    "prompt": "y\n16\n14\n12\n1\n8\n6\n4\n2\nX\n-1 \"0-=8~ -<:..4--=2_f- ~2-4_6_8_10\n14\n\"\"'-..I /\nI~\n,v\nL\nI..........._\n·12 \"\n·14\nI\"\"'-..\n·16 \"\n'\nWhat is an equation of the graph shown?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "y = −2x − 8"
+      },
+      {
+        "key": "B",
+        "text": "y = x − 8"
+      },
+      {
+        "key": "C",
+        "text": "y = −x − 8"
+      },
+      {
+        "key": "D",
+        "text": "y = 2x − 8"
+      }
+    ]
+  },
+  {
+    "id": "math1-13",
+    "prompt": "x 8",
+    "choices": []
+  },
+  {
+    "id": "math1-14",
+    "prompt": "24x + y = 48\n6x + y = 72\nThe solution to the given system of equations is\n(x, y). What is the value of y?",
+    "choices": []
+  },
+  {
+    "id": "math1-15",
+    "prompt": "1\nLine t in the xy-plane has a slope of − and passes\n3\nthrough the point (9, 10). Which equation defines\nline t?\n1",
+    "choices": [
+      {
+        "key": "A",
+        "text": "y = 13x − 3"
+      },
+      {
+        "key": "B",
+        "text": "y = 9x + 10 x"
+      },
+      {
+        "key": "C",
+        "text": "y = − + 10 3 x"
+      },
+      {
+        "key": "D",
+        "text": "y = − + 13 3"
+      }
+    ]
+  },
+  {
+    "id": "math1-16",
+    "prompt": "x\nThe function f x() = 206(1.034) models the value,\nin dollars, of a certain bank account by the end of\neach year from 1957 through 1972, where x is the\nnumber of years after 1957. Which of the following is\nthe best interpretation of “ f (5) is approximately\nequal to 243” in this context?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The value of the bank account is estimated to be approximately 5 dollars greater in 1962 than in 1957."
+      },
+      {
+        "key": "B",
+        "text": "The value of the bank account is estimated to be approximately 243 dollars in 1962."
+      },
+      {
+        "key": "C",
+        "text": "The value, in dollars, of the bank account is estimated to be approximately 5 times greater in 1962 than in 1957."
+      },
+      {
+        "key": "D",
+        "text": "The value of the bank account is estimated to increase by approximately 243 dollars every 5 years between 1957 and 1972."
+      }
+    ]
+  },
+  {
+    "id": "math1-17",
+    "prompt": "For a certain rectangular region, the ratio of its\nlength to its width is 35 to 10. If the width of the\nrectangular region increases by 7 units, how must the\nlength change to maintain this ratio?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It must decrease by 24.5 units."
+      },
+      {
+        "key": "B",
+        "text": "It must increase by 24.5 units."
+      },
+      {
+        "key": "C",
+        "text": "It must decrease by 7 units."
+      },
+      {
+        "key": "D",
+        "text": "It must increase by 7 units."
+      }
+    ]
+  },
+  {
+    "id": "math1-18",
+    "prompt": "Square P has a side length of x inches. Square Q has\na perimeter that is 176 inches greater than the\nperimeter of square P. The function f gives the area\nof square Q, in square inches. Which of the following\ndefines f?\n2",
+    "choices": [
+      {
+        "key": "A",
+        "text": "f x() = (x + 44) 2"
+      },
+      {
+        "key": "B",
+        "text": "f x() = (x + 176) 2"
+      },
+      {
+        "key": "C",
+        "text": "f x() = (176x + 44) 2"
+      },
+      {
+        "key": "D",
+        "text": "f x() = (176x + 176)"
+      }
+    ]
+  },
+  {
+    "id": "math1-19",
+    "prompt": "14x\n= 2 w + 19\n7y\nThe given equation relates the distinct positive real\nnumbers w, x, and y. Which equation correctly\nexpresses w in terms of x and y?\nx",
+    "choices": [
+      {
+        "key": "A",
+        "text": "w = − 19 fy 28x"
+      },
+      {
+        "key": "B",
+        "text": "w = − 19 14y F 2 ⎛x ⎞ ⎜ ⎟"
+      },
+      {
+        "key": "C",
+        "text": "w = ⎜ ⎟ − 19 ⎜ ⎟ ⎝ y⎟⎠ 2 ⎛28x ⎞ ⎜ ⎟"
+      },
+      {
+        "key": "D",
+        "text": "w = ⎜ ⎟ − 19 ⎜ ⎟ ⎝14y ⎟⎠"
+      }
+    ]
+  },
+  {
+    "id": "math1-20",
+    "prompt": "Point O is the center of a circle. The measure of\narc RS on this circle is 100°. What is the measure, in\ndegrees, of its associated angle ROS?",
+    "choices": []
+  },
+  {
+    "id": "math1-21",
+    "prompt": "5 5 45 8 8 b\nThe expression 6 3 x · 2 x is equivalent to ax,\nwhere a and b are positive constants and x > 1.\nWhat is the value of a + b?",
+    "choices": []
+  },
+  {
+    "id": "math1-22",
+    "prompt": "A right triangle has sides of length 2 2, 6 2, and",
+    "choices": []
+  },
+  {
+    "id": "math1-23",
+    "prompt": "2\nThe expression 4x + bx − 45, where b is a constant,\ncan be rewritten as (hx + k)(x + j), where h, k, and j\nare integer constants. Which of the following must\nbe an integer?\nb",
+    "choices": [
+      {
+        "key": "A",
+        "text": "h b"
+      },
+      {
+        "key": "B",
+        "text": "k 45"
+      },
+      {
+        "key": "C",
+        "text": "h 45"
+      },
+      {
+        "key": "D",
+        "text": "k"
+      }
+    ]
+  },
+  {
+    "id": "math1-24",
+    "prompt": "2\ny = 2x − 21x + 64\ny = 3x + a\nIn the given system of equations, a is a constant. The\ngraphs of the equations in the given system intersect\nat exactly one point, (,x y), in the xy-plane. What is\nthe value of x?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−8"
+      },
+      {
+        "key": "B",
+        "text": "−6"
+      },
+      {
+        "key": "C",
+        "text": "6"
+      },
+      {
+        "key": "D",
+        "text": "8"
+      }
+    ]
+  },
+  {
+    "id": "math1-25",
+    "prompt": "An isosceles right triangle has a hypotenuse of length\n58 inches. What is the perimeter, in inches, of this\ntriangle?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "29 2"
+      },
+      {
+        "key": "B",
+        "text": "58 2"
+      },
+      {
+        "key": "C",
+        "text": "58 + 58 2"
+      },
+      {
+        "key": "D",
+        "text": "58 + 116 2 If you finish before time is called, you may check your work on this module only. Do not turn to any other module in the test."
+      }
+    ]
+  },
+  {
+    "id": "math1-26",
+    "prompt": "In the xy-plane, a parabola has vertex (9, −14) and\nintersects the x-axis at two points. If the equation of\n2\nthe parabola is written in the form y = ax + bx +\nwhere a, b, and c are constants, which of the\nfollowing could be the value of a + b + c?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−23"
+      },
+      {
+        "key": "B",
+        "text": "−19"
+      },
+      {
+        "key": "C",
+        "text": "−14"
+      },
+      {
+        "key": "D",
+        "text": "−12"
+      }
+    ]
+  },
+  {
+    "id": "math1-27",
+    "prompt": "x\nFunction f is defined by f x() = −a + b, where a\nand b are constants. In the xy-plane, the graph of\n⎛ 99 ⎞\ny = f ()x − 15 has a y-intercept at ⎜0, − ⎟. The\n⎜ ⎟\n⎝ ⎟⎠\n7\n65\nproduct of a and b is. What is the value of a?\n7",
+    "choices": []
+  },
+  {
+    "id": "math2-1",
+    "prompt": "The line graph shows the estimated number of\nchipmunks in a state park on April 1 of each year\nfrom 1989 to 1999.\nI \\\nI I\nI '\\ /\n'\n'\nBased on the line graph, in which year was the\nestimated number of chipmunks in the state park the\ngreatest?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "1989"
+      },
+      {
+        "key": "B",
+        "text": "1994"
+      },
+      {
+        "key": "C",
+        "text": "1995"
+      },
+      {
+        "key": "D",
+        "text": "1998"
+      }
+    ]
+  },
+  {
+    "id": "math2-2",
+    "prompt": "A fish swam a distance of 5,104 yards. How far did\nthe fish swim, in miles? (1 mile = 1,760 yards)",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0.3"
+      },
+      {
+        "key": "B",
+        "text": "2.9"
+      },
+      {
+        "key": "C",
+        "text": "3,344"
+      },
+      {
+        "key": "D",
+        "text": "6,864"
+      }
+    ]
+  },
+  {
+    "id": "math2-3",
+    "prompt": "3 3\nWhich expression is equivalent to 12x − 5x?",
+    "choices": []
+  },
+  {
+    "id": "math2-4",
+    "prompt": "x + y = 18\n5y = x\nWhat is the solution (,x y) to the given system of\nequations?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "(15, 3)"
+      },
+      {
+        "key": "B",
+        "text": "(16, 2)"
+      },
+      {
+        "key": "C",
+        "text": "(17, 1)"
+      },
+      {
+        "key": "D",
+        "text": "(18, 0)"
+      }
+    ]
+  },
+  {
+    "id": "math2-5",
+    "prompt": "The point (8, 2) in the xy-plane is a solution to\nwhich of the following systems of inequalities?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "x > 0 y > 0"
+      },
+      {
+        "key": "B",
+        "text": "x > 0 y < 0"
+      },
+      {
+        "key": "C",
+        "text": "x < 0 y > 0"
+      },
+      {
+        "key": "D",
+        "text": "x < 0 y < 0"
+      }
+    ]
+  },
+  {
+    "id": "math2-6",
+    "prompt": "x − 5 = 10\n1 I\nWhat is one possible solution to the given equation?",
+    "choices": []
+  },
+  {
+    "id": "math2-7",
+    "prompt": "f x() = 7x + 1\nThe function gives the total number of people on a\ncompany retreat with x managers. What is the total\nnumber of people on a company retreat with\n7 managers?",
+    "choices": []
+  },
+  {
+    "id": "math2-8",
+    "prompt": "2\nh x() = x − 3\nWhich table gives three values of x and their\ncorresponding values of h x() for the given\nfunction h?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "x 1 2 3 h(x) 4 5 6"
+      },
+      {
+        "key": "B",
+        "text": "x 1 2 3 h(x) −2 1 6"
+      },
+      {
+        "key": "C",
+        "text": "x 1 2 3 h(x) −1 1 3"
+      },
+      {
+        "key": "D",
+        "text": "x 1 2 3 h(x) −2 1 3"
+      }
+    ]
+  },
+  {
+    "id": "math2-9",
+    "prompt": "x\nThe function f is defined by f x() = 270(0.1). What\nis the value of f (0)?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0"
+      },
+      {
+        "key": "B",
+        "text": "1"
+      },
+      {
+        "key": "C",
+        "text": "27"
+      },
+      {
+        "key": "D",
+        "text": "270"
+      }
+    ]
+  },
+  {
+    "id": "math2-10",
+    "prompt": "To estimate the proportion of a population that has a\ncertain characteristic, a random sample was selected\nfrom the population. Based on the sample, it is\nestimated that the proportion of the population that\nhas the characteristic is 0.49, with an associated\nmargin of error of 0.04. Based on this estimate and\nmargin of error, which of the following is the most\nappropriate conclusion about the proportion of the\npopulation that has the characteristic?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It is plausible that the proportion is between 0.45 and 0.53."
+      },
+      {
+        "key": "B",
+        "text": "It is plausible that the proportion is less than 0.45."
+      },
+      {
+        "key": "C",
+        "text": "The proportion is exactly 0.49."
+      },
+      {
+        "key": "D",
+        "text": "It is plausible that the proportion is greater than 0.53."
+      }
+    ]
+  },
+  {
+    "id": "math2-11",
+    "prompt": "A moving truck can tow a trailer if the combined\nweight of the trailer and the boxes it contains is no\nmore than 4,600 pounds. What is the maximum\nnumber of boxes this truck can tow in a trailer with a\nweight of 500 pounds if each box weighs 120 pounds?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "34"
+      },
+      {
+        "key": "B",
+        "text": "35"
+      },
+      {
+        "key": "C",
+        "text": "38"
+      },
+      {
+        "key": "D",
+        "text": "39"
+      }
+    ]
+  },
+  {
+    "id": "math2-12",
+    "prompt": "2\n−4x − 7x = −36\nWhat is the positive solution to the given equation?\n7",
+    "choices": [
+      {
+        "key": "A",
+        "text": "4 9"
+      },
+      {
+        "key": "B",
+        "text": "4"
+      },
+      {
+        "key": "C",
+        "text": "4"
+      },
+      {
+        "key": "D",
+        "text": "7"
+      }
+    ]
+  },
+  {
+    "id": "math2-13",
+    "prompt": "The table summarizes the distribution of color and\nshape for 100 tiles of equal area.\nRed Blue Yellow Total\nSquare 10 20 25 55\nPentagon 20 10 15 45\nTotal 30 30 40 100\nI I I I I I\nIf one of these tiles is selected at random, what is the\nprobability of selecting a red tile? (Express your\nanswer as a decimal or fraction, not as a percent.)",
+    "choices": []
+  },
+  {
+    "id": "math2-14",
+    "prompt": "f x() = 2x + 3\nFor the given function f, the graph of y = f (x) in the\nxy-plane is parallel to line j. What is the slope of\nline j?",
+    "choices": []
+  },
+  {
+    "id": "math2-15",
+    "prompt": "A proposal for a new library was included on an\nelection ballot. A radio show stated that 3 times as\nmany people voted in favor of the proposal as people\nwho voted against it. A social media post reported\nthat 15,000 more people voted in favor of the\nproposal than voted against it. Based on these data,\nhow many people voted against the proposal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "7,500"
+      },
+      {
+        "key": "B",
+        "text": "15,000"
+      },
+      {
+        "key": "C",
+        "text": "22,500"
+      },
+      {
+        "key": "D",
+        "text": "45,000"
+      }
+    ]
+  },
+  {
+    "id": "math2-16",
+    "prompt": "t\nm\nn\nNote: Figure not drawn to scale.\nIn the figure, lines m and n are parallel. If\nx = 6k + 13 and y = 8k − 29, what is the value of",
+    "choices": [
+      {
+        "key": "A",
+        "text": "3"
+      },
+      {
+        "key": "B",
+        "text": "21"
+      },
+      {
+        "key": "C",
+        "text": "41"
+      },
+      {
+        "key": "D",
+        "text": "139"
+      }
+    ]
+  },
+  {
+    "id": "math2-17",
+    "prompt": "−3x + 21px = 84\nIn the given equation, p is a constant. The equation\nhas no solution. What is the value of p?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0 1"
+      },
+      {
+        "key": "B",
+        "text": "7 4"
+      },
+      {
+        "key": "C",
+        "text": "3"
+      },
+      {
+        "key": "D",
+        "text": "4"
+      }
+    ]
+  },
+  {
+    "id": "math2-18",
+    "prompt": "f x() = (x − 10)(x + 13)\nThe function f is defined by the given equation. For\nwhat value of x does f x() reach its minimum?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−130"
+      },
+      {
+        "key": "B",
+        "text": "−13 23"
+      },
+      {
+        "key": "C",
+        "text": "− 2 3"
+      },
+      {
+        "key": "D",
+        "text": "− 2"
+      }
+    ]
+  },
+  {
+    "id": "math2-19",
+    "prompt": "1\n2\nThe function f x() = (x − 7) + 3 gives a metal\n9\nball’s height above the ground f x(), in inches,\nx seconds after it started moving on a track, where\n0 ≤ x ≤ 10. Which of the following is the best\ninterpretation of the vertex of the graph of\ny = f x() in the xy-plane?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The metal ball’s minimum height was 3 inches above the ground."
+      },
+      {
+        "key": "B",
+        "text": "The metal ball’s minimum height was 7 inches above the ground."
+      },
+      {
+        "key": "C",
+        "text": "The metal ball’s height was 3 inches above the ground when it started moving."
+      },
+      {
+        "key": "D",
+        "text": "The metal ball’s height was 7 inches above the ground when it started moving."
+      }
+    ]
+  },
+  {
+    "id": "math2-20",
+    "prompt": "24\nIn triangle JKL, cos(K) = and angle J is a right\n51\nangle. What is the value of cos(L)?",
+    "choices": []
+  },
+  {
+    "id": "math2-21",
+    "prompt": "2\n−x + bx − 676 = 0\nIn the given equation, b is a positive integer. The\nequation has no real solution. What is the greatest\npossible value of b?",
+    "choices": []
+  },
+  {
+    "id": "math2-22",
+    "prompt": "y\n10\n8\n- 6\n-1--l.\n,......\nX\n-10 -8 -6 -4 -2- \"-',-- -2-,-4-,--6--8- 10\n:2\n4\n6\nI\n18\n1\n10\nIf a new graph of three linear equations is created\nusing the system of equations shown and the\nequation x + 4y = −16, how many solutions (x y,)\nwill the resulting system of three equations have?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Zero"
+      },
+      {
+        "key": "B",
+        "text": "Exactly one"
+      },
+      {
+        "key": "C",
+        "text": "Exactly two"
+      },
+      {
+        "key": "D",
+        "text": "Infinitely many"
+      }
+    ]
+  },
+  {
+    "id": "math2-23",
+    "prompt": "x\n12\nf x() = 5,470(0.64)\nThe function f gives the value, in dollars, of a certain\npiece of equipment after x months of use. If the\nvalue of the equipment decreases each year by p%\nits value the preceding year, what is the value of p",
+    "choices": [
+      {
+        "key": "A",
+        "text": "4"
+      },
+      {
+        "key": "B",
+        "text": "5"
+      },
+      {
+        "key": "C",
+        "text": "36"
+      },
+      {
+        "key": "D",
+        "text": "64"
+      }
+    ]
+  },
+  {
+    "id": "math2-24",
+    "prompt": "Data Set A\n• •\n• • •\n• • • •\n• • • • •\n22 23 24 25 26\nThe dot plot represents the 15 values in data set A.\nData set B is created by adding 56 to each of the\nvalues in data set A. Which of the following correctly\ncompares the medians and the ranges of data sets A\nand B?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The median of data set B is equal to the median of data set A, and the range of data set B is equal to the range of data set A."
+      },
+      {
+        "key": "B",
+        "text": "The median of data set B is equal to the median of data set A, and the range of data set B is greater than the range of data set A."
+      },
+      {
+        "key": "C",
+        "text": "The median of data set B is greater than the median of data set A, and the range of data set B is equal to the range of data set A."
+      },
+      {
+        "key": "D",
+        "text": "The median of data set B is greater than the median of data set A, and the range of data set B is greater than the range of data set A."
+      }
+    ]
+  },
+  {
+    "id": "math2-25",
+    "prompt": "2 2\nThe equation x + (y − 1) = 49 represents circle A.\nCircle B is obtained by shifting circle A down 2 units\nin the xy-plane. Which of the following equations\nrepresents circle B?\n2 2",
+    "choices": [
+      {
+        "key": "A",
+        "text": "(x − 2) + (y − 1) = 49 2 2"
+      },
+      {
+        "key": "B",
+        "text": "x + (y − 3) = 49 2 2"
+      },
+      {
+        "key": "C",
+        "text": "(x + 2) + (y − 1) = 49 2 2"
+      },
+      {
+        "key": "D",
+        "text": "x + (y + 1) = 49 STOP If you finish before time is called, you may check your work on this module only. Do not turn to any other module in the test."
+      }
+    ]
+  },
+  {
+    "id": "math2-26",
+    "prompt": "Two identical rectangular prisms each have a height\nof 90 centimeters (cm). The base of each prism is a\n2\nsquare, and the surface area of each prism is K cm.\nIf the prisms are glued together along a square base,\n92\n2\nthe resulting prism has a surface area of K cm.\n47\nWhat is the side length, in cm, of each square base?",
+    "choices": []
+  },
+  {
+    "id": "math2-27",
+    "prompt": "210 is p% greater than 30. What is the value of p?",
+    "choices": []
+  }
+]

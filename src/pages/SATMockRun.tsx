@@ -15,18 +15,16 @@ import {
   Check,
   ChevronDown,
   Clock3,
-  Eye,
   EyeOff,
   Flag,
   Highlighter,
+  Lightbulb,
   ListChecks,
-  Minus,
   NotebookPen,
   PauseCircle,
-  Plus,
-  RotateCcw,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Trash2,
   Undo2,
   X,
@@ -38,8 +36,8 @@ import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
 import {
-  SAT_PRACTICE_TEST_4,
   SAT_PRACTICE_TEST_4_MODULES,
+  isSATAnswerCorrect,
   type HighlightStroke,
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
@@ -78,6 +76,7 @@ export default function SATMockRun() {
   const [zoom, setZoom] = useState(1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const [checkedQuestions, setCheckedQuestions] = useState<string[]>([])
   const [violationDeadline, setViolationDeadline] = useState<number | null>(null)
   const violationFrozenRef = useRef(false)
 
@@ -382,6 +381,7 @@ export default function SATMockRun() {
   }
 
   const updateAnswer = (value: string) => {
+    setCheckedQuestions((current) => current.filter((id) => id !== currentQuestion.id))
     persistUpdate((current) => ({
       ...current,
       answers: { ...current.answers, [currentQuestion.id]: value },
@@ -406,9 +406,11 @@ export default function SATMockRun() {
     attempt.mode === 'exam'
       ? Math.max(0, Math.min(1, moduleSeconds / currentModule.durationSeconds))
       : 1
+  const practiceChecked = checkedQuestions.includes(currentQuestion.id)
+  const practiceCorrect = practiceChecked && isSATAnswerCorrect(currentQuestion, currentAnswer)
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(145deg,#f0f9ff_0%,#f8fafc_46%,#fff5f4_100%)] text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(145deg,#f0f9ff_0%,#f8fafc_46%,#fff5f4_100%)] text-slate-950">
       <header className="sticky top-0 z-[80] border-b border-white/80 bg-white/82 px-3 py-2 shadow-[0_10px_35px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-5">
         <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-3">
           <BrandLockup iconSize={38} titleClassName="text-base sm:text-lg" subtitle={currentModule.title} subtitleClassName="hidden text-[9px] sm:block" />
@@ -457,9 +459,9 @@ export default function SATMockRun() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[100rem] px-3 py-3 sm:px-5 sm:py-5">
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
-          <article className="min-w-0 rounded-[1.8rem] border border-white/90 bg-white/78 p-3 shadow-[0_22px_60px_rgba(15,23,42,.09)] backdrop-blur-xl sm:p-5">
+      <div className="mx-auto max-w-[100rem] px-3 py-3 pb-24 sm:px-5 sm:py-5 sm:pb-24">
+        <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
+          <article className="w-full min-w-0 rounded-[1.8rem] border border-white/90 bg-white/78 p-3 shadow-[0_22px_60px_rgba(15,23,42,.09)] backdrop-blur-xl sm:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-600">{currentModule.shortTitle}</p>
@@ -529,6 +531,8 @@ export default function SATMockRun() {
 
             <SATQuestionCanvas
               question={currentQuestion}
+              answer={currentAnswer}
+              onAnswer={updateAnswer}
               strokes={currentStrokes}
               highlightEnabled={highlightEnabled}
               highlightColor={highlightColor}
@@ -537,12 +541,12 @@ export default function SATMockRun() {
             />
           </article>
 
-          <aside className="space-y-3 xl:sticky xl:top-[5.5rem] xl:self-start">
+          <aside className="min-w-0 space-y-3 xl:sticky xl:top-[5.5rem] xl:self-start">
             <div className="rounded-[1.5rem] border border-white/90 bg-white/82 p-4 shadow-[0_18px_42px_rgba(15,23,42,.08)] backdrop-blur-xl">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.13em] text-slate-400">Your response</p>
-                  <p className="mt-1 text-sm font-black">{currentQuestion.kind === 'multiple-choice' ? 'Select one answer' : 'Enter your answer'}</p>
+                  <p className="mt-1 text-sm font-black">{currentQuestion.kind === 'multiple-choice' ? (currentAnswer ? `Choice ${currentAnswer} selected` : 'Select an answer in the question') : 'Enter your answer'}</p>
                 </div>
                 {currentAnswer ? (
                   <button type="button" onClick={() => updateAnswer('')} className="text-[9px] font-black text-red-600">Clear</button>
@@ -550,26 +554,22 @@ export default function SATMockRun() {
               </div>
 
               {currentQuestion.kind === 'multiple-choice' ? (
-                <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-1">
-                  {['A', 'B', 'C', 'D'].map((choice) => (
+                <div className="mt-4">
+                  <div className={`flex items-center gap-3 rounded-xl border px-3 py-3 ${currentAnswer ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-dashed border-slate-200 bg-slate-50 text-slate-500'}`}>
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${currentAnswer ? 'bg-blue-600 text-white' : 'bg-white ring-1 ring-slate-200'}`}>{currentAnswer || '—'}</span>
+                    <span className="text-[10px] font-black">{currentAnswer ? 'Response saved automatically' : 'No response yet'}</span>
+                    {currentAnswer ? <Check className="ml-auto h-4 w-4" /> : null}
+                  </div>
+                  {attempt.mode === 'practice' ? (
                     <button
                       type="button"
-                      key={choice}
-                      onClick={() => updateAnswer(choice)}
-                      aria-pressed={currentAnswer === choice}
-                      className={`flex items-center gap-3 rounded-xl border p-3 text-left ${
-                        currentAnswer === choice
-                          ? 'border-red-300 bg-gradient-to-r from-red-50 to-rose-100 text-red-700 shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-red-200'
-                      }`}
+                      disabled={!currentAnswer || practiceChecked}
+                      onClick={() => setCheckedQuestions((current) => [...new Set([...current, currentQuestion.id])])}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-[10px] font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-35"
                     >
-                      <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${
-                        currentAnswer === choice ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}>{choice}</span>
-                      <span className="text-[11px] font-black">Choice {choice}</span>
-                      {currentAnswer === choice ? <Check className="ml-auto h-4 w-4" /> : null}
+                      <Lightbulb className="h-3.5 w-3.5" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
                     </button>
-                  ))}
+                  ) : null}
                 </div>
               ) : (
                 <div className="mt-4">
@@ -593,6 +593,32 @@ export default function SATMockRun() {
                 </div>
               )}
             </div>
+
+            {attempt.mode === 'practice' && practiceChecked ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-[1.5rem] border p-4 shadow-sm ${practiceCorrect ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${practiceCorrect ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>
+                    {practiceCorrect ? <Sparkles className="h-5 w-5" /> : <Lightbulb className="h-5 w-5" />}
+                  </span>
+                  <div>
+                    <p className={`text-sm font-black ${practiceCorrect ? 'text-emerald-900' : 'text-amber-950'}`}>
+                      {practiceCorrect ? 'Excellent — that is correct!' : 'Strong attempt — review the key idea.'}
+                    </p>
+                    <p className="mt-1 text-[10px] font-bold leading-5 text-slate-600">
+                      {practiceCorrect ? 'You identified the right reasoning. Keep the momentum going.' : `The correct answer is ${currentQuestion.correctAnswer}. Study the explanation, then try the next question.`}
+                    </p>
+                  </div>
+                </div>
+                <details className="mt-3 rounded-xl border border-white/80 bg-white/75 px-3 py-2.5">
+                  <summary className="cursor-pointer text-[10px] font-black text-slate-700">Step-by-step explanation</summary>
+                  <p className="mt-2 text-[11px] font-medium leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                </details>
+              </motion.div>
+            ) : null}
 
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-1">
               <button
@@ -645,7 +671,7 @@ export default function SATMockRun() {
         </section>
       </div>
 
-      <footer className="sticky bottom-0 z-[70] border-t border-white/80 bg-white/88 px-3 py-2.5 shadow-[0_-12px_36px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-5">
+      <footer className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/80 bg-white/88 px-3 py-2.5 shadow-[0_-12px_36px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-5">
         <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-2">
           <button
             type="button"

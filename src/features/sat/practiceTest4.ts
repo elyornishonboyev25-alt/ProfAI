@@ -1,5 +1,10 @@
 import manifestData from '@/data/sat/practiceTest4Manifest.json'
 import explanationsData from '@/data/sat/practiceTest4Explanations.json'
+import questionsData from '@/data/sat/practiceTest4Questions.json'
+import {
+  SAT_PRACTICE_TEST_4_CONTENT_OVERRIDES,
+  type SATStructuredChoice,
+} from './practiceTest4QuestionCorrections'
 
 export type SATMode = 'practice' | 'exam'
 export type SATModuleId = 'rw1' | 'rw2' | 'math1' | 'math2'
@@ -15,6 +20,12 @@ export type SATQuestion = {
   correctAnswer: string
   acceptedAnswers?: string[]
   tolerance?: number
+  prompt: string
+  choices: SATStructuredChoice[]
+  visual?: { asset: string; alt: string }
+  domain: string
+  skill: string
+  difficulty: 'Foundation' | 'Medium' | 'Advanced'
   asset: string
   assetWidth: number
   assetHeight: number
@@ -69,6 +80,11 @@ type ManifestEntry = {
 
 const manifest = manifestData as ManifestEntry[]
 const explanations = explanationsData as Record<SATModuleId, Record<string, string>>
+const structuredQuestions = questionsData as Array<{
+  id: string
+  prompt: string
+  choices: SATStructuredChoice[]
+}>
 
 const MULTIPLE_CHOICE_KEYS: Record<SATModuleId, string[]> = {
   rw1: 'B A A C A B D B B D C D A B C A A A A D D D B C B A C D A A D D C'.split(' '),
@@ -131,11 +147,40 @@ const MODULE_META: Array<Omit<SATModule, 'questions'>> = [
   },
 ]
 
+function questionSkill(section: SATSection, prompt: string) {
+  const text = prompt.toLowerCase()
+  if (section === 'reading-writing') {
+    if (text.includes('conventions of standard english')) return ['Standard English Conventions', 'Grammar & Usage']
+    if (text.includes('transition')) return ['Expression of Ideas', 'Transitions']
+    if (text.includes('student has taken') || text.includes('information from the notes')) return ['Expression of Ideas', 'Rhetorical Synthesis']
+    if (text.includes('data from the') || text.includes('evidence') || text.includes('claim') || text.includes('main purpose')) return ['Information and Ideas', 'Evidence & Inference']
+    if (text.includes('word or phrase')) return ['Craft and Structure', 'Words in Context']
+    return ['Craft and Structure', 'Text Structure & Purpose']
+  }
+  if (/circle|triangle|angle|square|prism|perimeter|area/.test(text)) return ['Geometry and Trigonometry', 'Geometry']
+  if (/percent|ratio|probability|sample|margin of error|data set|scatterplot|graph shows|table/.test(text)) return ['Problem-Solving and Data Analysis', 'Data & Ratios']
+  if (/quadratic|parabola|exponent|radical|no real solution|minimum|vertex/.test(text)) return ['Advanced Math', 'Nonlinear Functions']
+  return ['Algebra', 'Linear Equations & Functions']
+}
+
+function questionDifficulty(moduleId: SATModuleId, number: number): SATQuestion['difficulty'] {
+  const moduleBoost = moduleId === 'rw2' || moduleId === 'math2' ? 3 : 0
+  const level = number + moduleBoost
+  if (level <= 9) return 'Foundation'
+  if (level <= 21) return 'Medium'
+  return 'Advanced'
+}
+
 function buildQuestion(moduleMeta: Omit<SATModule, 'questions'>, entry: ManifestEntry): SATQuestion {
   const response = STUDENT_RESPONSES[moduleMeta.id]?.[entry.number]
   const answer = response?.accepted[0] ?? MULTIPLE_CHOICE_KEYS[moduleMeta.id][entry.number - 1]
+  const id = `${moduleMeta.id}-${entry.number}`
+  const extracted = structuredQuestions.find((question) => question.id === id)
+  const override = SAT_PRACTICE_TEST_4_CONTENT_OVERRIDES[id]
+  const prompt = override?.prompt ?? extracted?.prompt ?? ''
+  const [domain, skill] = questionSkill(moduleMeta.section, prompt)
   return {
-    id: `${moduleMeta.id}-${entry.number}`,
+    id,
     moduleId: moduleMeta.id,
     number: entry.number,
     section: moduleMeta.section,
@@ -143,6 +188,12 @@ function buildQuestion(moduleMeta: Omit<SATModule, 'questions'>, entry: Manifest
     correctAnswer: answer,
     acceptedAnswers: response?.accepted,
     tolerance: response?.tolerance,
+    prompt,
+    choices: override?.choices ?? extracted?.choices ?? [],
+    visual: override?.visual,
+    domain,
+    skill,
+    difficulty: questionDifficulty(moduleMeta.id, entry.number),
     asset: entry.asset,
     assetWidth: entry.width,
     assetHeight: entry.height,

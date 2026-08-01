@@ -19,7 +19,7 @@ import {
   type SpeakingEvaluation,
 } from '@/services/speakingAI'
 import { analyseTranscript, mergeStats, type SpeechStats } from '@/lib/speakingScoring'
-import { cancelSpeech, speak, useSpeechRecognition } from '@/lib/speech'
+import { cancelSpeech, getExaminerVoice, speak, useSpeechRecognition } from '@/lib/speech'
 import MicVisualizer from './MicVisualizer'
 import SpeakingResult from './SpeakingResult'
 
@@ -278,6 +278,11 @@ export default function ExaminerSession({
         pushTurn('examiner', text)
       }
       speak(text, {
+        // Examiner prompts are always English. Do not auto-detect here: words such
+        // as "test" also occur in Uzbek and could select a non-English TTS voice.
+        lang: 'en',
+        voice: getExaminerVoice(),
+        rate: 0.98,
         onStart: reveal,
         onEnd: () => {
           reveal()

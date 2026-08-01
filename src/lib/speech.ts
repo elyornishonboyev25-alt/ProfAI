@@ -294,10 +294,9 @@ export function getExaminerVoice(): SpeechSynthesisVoice | null {
     voices.find((v) => needles.some((n) => v.name.toLowerCase().includes(n)))
   return (
     byName(['google uk english female', 'libby', 'sonia', 'hazel']) ??
-    voices.find((v) => v.lang === 'en-GB') ??
+    voices.find((v) => v.lang?.toLowerCase() === 'en-gb') ??
     byName(['google us english', 'samantha', 'jenny', 'aria']) ??
-    voices.find((v) => v.lang?.startsWith('en')) ??
-    voices[0] ??
+    voices.find((v) => v.lang?.toLowerCase().startsWith('en')) ??
     null
   )
 }
@@ -309,6 +308,8 @@ export type SpeakOptions = {
   pitch?: number
   /** Language of the text — selects a matching voice. Defaults to auto-detect. */
   lang?: SpeechLang
+  /** Exact installed voice to use when a screen has a specific voice profile. */
+  voice?: SpeechSynthesisVoice | null
 }
 
 /** Speak `text` aloud. Cancels any in-flight utterance first. Returns a stop fn. */
@@ -333,7 +334,7 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
 
   const lang = options.lang ?? detectSpeechLang(text)
   const utterance = new SpeechSynthesisUtterance(text)
-  const voice = pickVoiceForLang(lang)
+  const voice = options.voice ?? pickVoiceForLang(lang)
   if (voice) {
     utterance.voice = voice
     utterance.lang = voice.lang

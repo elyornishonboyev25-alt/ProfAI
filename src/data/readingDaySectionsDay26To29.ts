@@ -472,6 +472,7 @@ function createSection(day: 26 | 27 | 28 | 29, passageNumber: 1 | 2 | 3, questio
     id: `reading-day-${day}-passage-${passageNumber}`,
     title: `Day ${day} Passage ${passageNumber}: ${imported.title}`,
     paragraphs: imported.paragraphs,
+    showParagraphLabels: day === 26 || day === 28,
     questions,
   }
 }

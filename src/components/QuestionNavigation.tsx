@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, FlagIcon } from '@heroicons/react/24
 export interface SectionMeta {
     id: string
     title: string
+    partNumber: number
     startIndex: number
     questionCount: number
     questionIds: string[]
@@ -86,7 +87,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                             >
                                 <div className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
                                     <span className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
-                                        Part {idx + 1}
+                                        Part {section.partNumber}
                                     </span>
                                     <span className="text-xs font-medium text-slate-400">
                                         {isActive ? ':' : `| ${answeredInSection} of ${section.questionCount} solved`}
@@ -188,5 +189,4 @@ const QuestionNavigation = memo(function QuestionNavigation({
 })
 
 export default QuestionNavigation
-
 

@@ -76,6 +76,7 @@ const sectionIdsWithoutParagraphLabels = new Set([
 
 function sectionHasLabeledParagraphs(section: Section | undefined): boolean {
   if (!section) return false
+  if (typeof section.showParagraphLabels === 'boolean') return section.showParagraphLabels
   if (sectionIdsWithoutParagraphLabels.has(section.id)) return false
   return section.questions.some(
     (q) =>
@@ -84,6 +85,19 @@ function sectionHasLabeledParagraphs(section: Section | undefined): boolean {
         Array.isArray(q.options) &&
         q.options.some((opt) => /^[A-Z]$/.test(opt))),
   )
+}
+
+function resolvePassageNumber(section: Section | undefined, fallback: number): number {
+  const match = section?.title?.match(/\bPassage\s+([1-3])\b/i)
+  return match ? Number(match[1]) : fallback
+}
+
+function passageDisplayTitle(section: Section | undefined): string {
+  const title = section?.title?.trim() ?? ''
+  return title
+    .replace(/^Day\s+\d+\s+Passage\s+\d+:?\s*/i, '')
+    .replace(/^Reading\s+Passage\s+\d+:?\s*/i, '')
+    .trim()
 }
 
 function formatShortDuration(totalSeconds: number): string {
@@ -437,6 +451,7 @@ export default function IELTSReadingInterface({
 
   const currentSection = activeSections[currentSectionIndex] || activeSections[0]
   const isDayOneCurieSection = currentSection?.id === 'day1-curie-p1'
+  const currentPassageNumber = resolvePassageNumber(currentSection, currentSectionIndex + 1)
 
   // ---- Listening: continuous non-controllable audio playlist ----
   const listeningAudioSources = useMemo(
@@ -529,7 +544,7 @@ export default function IELTSReadingInterface({
 
   const sectionMeta = useMemo(() => {
     let currentIndex = 0;
-    return activeSections.map(s => {
+    return activeSections.map((s, sectionIndex) => {
       const start = currentIndex;
       const questionIds: string[] = [];
       const questionNumbers: number[] = [];
@@ -545,6 +560,7 @@ export default function IELTSReadingInterface({
       return {
         id: s.id,
         title: s.title,
+        partNumber: resolvePassageNumber(s, sectionIndex + 1),
         startIndex: start,
         questionCount,
         questionIds,
@@ -583,7 +599,7 @@ export default function IELTSReadingInterface({
 
       return {
         sectionId: section.id,
-        partNumber: sectionIndex + 1,
+        partNumber: resolvePassageNumber(section, sectionIndex + 1),
         title: section.title,
         answered,
         total,
@@ -2082,6 +2098,58 @@ export default function IELTSReadingInterface({
     )
   }
 
+  const renderShortAnswerGroup = (questions: Question[], title: string, instruction: string) => {
+    return (
+      <section className="rounded-2xl border border-red-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
+        <h4 className="text-xl font-black text-slate-900">{title}</h4>
+        <p className="mt-0.5 text-sm text-slate-700">{instruction}</p>
+        <div className="mt-2 space-y-2 rounded-xl border border-red-100 bg-white px-2.5 py-2">
+          {questions.map((question) => {
+            const globalIdx = getCurrentSectionGlobalIndex(question.id)
+            const isFlagged = flaggedQuestions.includes(globalIdx)
+            const meta = getQuestionReviewMeta(question)
+            const isCorrect = meta?.status === 'correct'
+            const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
+            return (
+              <div key={question.id} id={`question-card-${question.id}`} className="rounded-xl border border-red-100 bg-[#fffdfd] px-3 py-2.5">
+                <div className="flex items-start gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleFlagQuestion(globalIdx)}
+                    className={`mt-0.5 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
+                  >
+                    <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
+                  </button>
+                  <span className="mt-[1px] text-lg font-black leading-none text-red-600">{question.number}.</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold leading-relaxed text-slate-900">{question.text}</p>
+                    <input
+                      type="text"
+                      value={(answers[question.id] as string) || ''}
+                      onChange={(event) => handleAnswerChange(question.id, event.target.value)}
+                      disabled={isReviewMode}
+                      placeholder="Type your answer..."
+                      className={`mt-2 h-9 w-full rounded-lg border px-3 text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 ${
+                        isReviewMode && reviewShowCorrectAnswers
+                          ? isWrong
+                            ? 'border-red-300 bg-red-50/70 text-red-700'
+                            : isCorrect
+                              ? 'border-emerald-300 bg-emerald-50/80 text-emerald-700'
+                              : 'border-red-200'
+                          : 'border-red-200'
+                      }`}
+                    />
+                  </div>
+                </div>
+                {reviewHint(question, 'ml-8 mt-1')}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    )
+  }
+
   const renderDay1CurieNotesGroup = (questions: Question[]) => {
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
@@ -2149,6 +2217,78 @@ export default function IELTSReadingInterface({
               )
             })}
           </ul>
+        </div>
+      </section>
+    )
+  }
+
+  const renderMargaretPrestonNotesGroup = (questions: Question[]) => {
+    const byNumber = new Map(questions.map((question) => [question.number, question]))
+    const firstNumber = questions[0]?.number ?? 8
+    const questionForSlot = (slotOffset: number) => byNumber.get(firstNumber + slotOffset)
+    const renderNoteLine = (question: Question | undefined, prefix = '• ') => {
+      if (!question) return null
+      const meta = getQuestionReviewMeta(question)
+      const isCorrect = meta?.status === 'correct'
+      const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
+      return (
+        <div key={question.id} id={`question-card-${question.id}`} className="text-[15px] leading-relaxed text-slate-900">
+          <span>{prefix}</span>
+          {question.text.split(/(______|_+)/).map((part, partIndex) =>
+            /^_+$/.test(part) || part === '______' ? (
+              <input
+                key={`${question.id}-note-${partIndex}`}
+                type="text"
+                value={(answers[question.id] as string) || ''}
+                onChange={(event) => handleAnswerChange(question.id, event.target.value)}
+                disabled={isReviewMode}
+                placeholder={String(question.number)}
+                className={`mx-1 inline-flex h-8 min-w-[92px] max-w-[150px] rounded-md border px-2 text-center text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 ${
+                  isReviewMode && reviewShowCorrectAnswers
+                    ? isWrong
+                      ? 'border-red-300 bg-red-50/70 text-red-700'
+                      : isCorrect
+                        ? 'border-emerald-300 bg-emerald-50/80 text-emerald-700'
+                        : 'border-slate-300'
+                    : 'border-slate-400'
+                }`}
+              />
+            ) : (
+              <span key={`${question.id}-note-text-${partIndex}`}>{part}</span>
+            ),
+          )}
+          {reviewHint(question, 'mt-1')}
+        </div>
+      )
+    }
+
+    return (
+      <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
+        <h4 className="text-xl font-black text-slate-900">{questions[0]?.groupTitle ?? 'Questions 8-13'}</h4>
+        <p className="mt-1 text-sm text-slate-700">{questions[0]?.instruction}</p>
+        <div className="mt-2.5 rounded-xl border border-slate-200 bg-[#fefefe] px-3 py-3">
+          <p className="text-center text-lg font-black leading-tight text-slate-900 sm:text-xl">Margaret Preston&apos;s later life</p>
+
+          <div className="mt-3 space-y-3">
+            <div>
+              <p className="font-black text-slate-900">Aboriginal influence</p>
+              <p className="mt-1 text-[15px] leading-relaxed text-slate-900">• interest in Aboriginal art was inspired by seeing rock engravings close to her Berowra home</p>
+              {renderNoteLine(questionForSlot(0))}
+              {renderNoteLine(questionForSlot(1))}
+            </div>
+            <div>
+              <p className="font-black text-slate-900">1953 exhibition</p>
+              {renderNoteLine(questionForSlot(2))}
+              {renderNoteLine(questionForSlot(3))}
+              <p className="text-[15px] leading-relaxed text-slate-900">• combination of Chinese and Aboriginal elements</p>
+            </div>
+            <div>
+              <p className="font-black text-slate-900">Old age</p>
+              {renderNoteLine(questionForSlot(4))}
+              {renderNoteLine(questionForSlot(5))}
+              <p className="text-[15px] leading-relaxed text-slate-900">• dedicated to Australian art; the originality of her work is evident throughout her long career</p>
+            </div>
+          </div>
         </div>
       </section>
     )
@@ -2481,9 +2621,11 @@ export default function IELTSReadingInterface({
 
   const renderPassageThreeSummaryGroup = (questions: Question[]) => {
     const instruction = questions[0]?.instruction ?? 'Complete the summary.'
+    const firstNumber = questions[0]?.number ?? 1
+    const lastNumber = questions[questions.length - 1]?.number ?? firstNumber
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
-        <h4 className="text-xl font-black text-slate-900">Questions 31-36</h4>
+        <h4 className="text-xl font-black text-slate-900">{questions[0]?.groupTitle ?? `Questions ${firstNumber}-${lastNumber}`}</h4>
         <p className="mt-1 text-sm text-slate-700">{instruction}</p>
         <div className="mt-2 rounded-xl border border-slate-200 bg-[#fffdfd] px-3 py-2.5 text-[15px] leading-relaxed text-slate-900">
           {questions.map((question, index) => {
@@ -2491,7 +2633,7 @@ export default function IELTSReadingInterface({
             const isCorrect = meta?.status === 'correct'
             const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
             return (
-              <span key={question.id}>
+              <span key={question.id} id={`question-card-${question.id}`}>
                 {question.text.split(/(______|_+)/).map((part, partIndex) =>
                   /^_+$/.test(part) || part === '______' ? (
                     <input
@@ -2775,15 +2917,15 @@ export default function IELTSReadingInterface({
         className={`reading-pane reading-content h-full overflow-y-auto border-r border-red-100 bg-gradient-to-b from-white via-red-50/30 to-white p-4 sm:p-5 lg:p-6 font-sans leading-relaxed text-slate-800 transition-colors duration-300 scrollbar-thin scrollbar-thumb-red-200 ${isDayOneCurieSection ? 'day1-reading-pane' : ''}`}
       >
         <div className="mb-4">
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-red-600 sm:text-sm">PART {currentSectionIndex + 1}</p>
-          <h2 className="mb-1.5 text-lg font-bold font-sans text-slate-900 sm:text-xl">READING PASSAGE {currentSectionIndex + 1}</h2>
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-red-600 sm:text-sm">PART {currentPassageNumber}</p>
+          <h2 className="mb-1.5 text-lg font-bold font-sans text-slate-900 sm:text-xl">READING PASSAGE {currentPassageNumber}</h2>
           <p className="text-xs italic text-slate-600 sm:text-sm">
-            You should spend about 20 minutes on <strong>Questions {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]}</strong>, which are based on Reading Passage {currentSectionIndex + 1} below.
+            You should spend about 20 minutes on <strong>Questions {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]}</strong>, which are based on Reading Passage {currentPassageNumber} below.
           </p>
         </div>
         <div className={`mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-4 py-2.5 text-white shadow-[0_14px_30px_rgba(220,38,38,0.24)] ${isDayOneCurieSection ? 'day1-reading-title-card' : ''}`}>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">Reading Passage {currentSectionIndex + 1}</p>
-          <p className="text-base font-bold sm:text-lg">{currentSection?.title?.replace(/^Reading Passage \d+:?\s*/i, '').trim() || currentSection?.title}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">Reading Passage {currentPassageNumber}</p>
+          <p className="text-base font-bold sm:text-lg">{passageDisplayTitle(currentSection) || currentSection?.title}</p>
         </div>
         {currentSection?.paragraphs ? (
           (() => {
@@ -3211,6 +3353,158 @@ export default function IELTSReadingInterface({
           const dragDropAnswer = Array.from({ length: dragDropSlotCount }, (_, slotIndex) =>
             String((answers[q.id] as string[] | undefined)?.[slotIndex] ?? '').trim(),
           );
+
+          if (currentSection?.id === 'reading-day-26-passage-3') {
+            if (q.number === 1) {
+              const questions = currentSection.questions.filter((entry) => entry.number >= 1 && entry.number <= 7)
+              return (
+                <div key="day26-handshake-statement-group">
+                  {renderStatementChoiceGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? 'Questions 1-7',
+                    questions[0]?.instruction ?? '',
+                    ['TRUE', 'FALSE', 'NOT GIVEN'],
+                  )}
+                </div>
+              )
+            }
+            if (q.number > 1 && q.number <= 7) return null
+            if (q.number === 8) {
+              const questions = currentSection.questions.filter((entry) => entry.number >= 8 && entry.number <= 12)
+              return (
+                <div key="day26-handshake-summary-group">
+                  {renderTitledSummaryGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? 'Questions 8-12',
+                    questions[0]?.instruction ?? '',
+                    'The history of cheek kissing',
+                  )}
+                </div>
+              )
+            }
+            if (q.number > 8 && q.number <= 12) return null
+            if (q.number === 13) {
+              const questions = currentSection.questions.filter((entry) => entry.number >= 13 && entry.number <= 14)
+              return (
+                <div key="day26-handshake-short-answer-group">
+                  {renderShortAnswerGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? 'Questions 13-14',
+                    questions[0]?.instruction ?? '',
+                  )}
+                </div>
+              )
+            }
+            if (q.number === 14) return null
+          }
+
+          if (
+            currentSection?.id === 'reading-day-27-passage-1' ||
+            currentSection?.id === 'reading-day-30-passage-1'
+          ) {
+            if (q.number === 1) {
+              const questions = currentSection.questions.filter((entry) => entry.number >= 1 && entry.number <= 7)
+              return (
+                <div key={`${currentSection.id}-statement-group`}>
+                  {renderStatementChoiceGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? 'Questions 1-7',
+                    questions[0]?.instruction ?? '',
+                    ['TRUE', 'FALSE', 'NOT GIVEN'],
+                  )}
+                </div>
+              )
+            }
+            if (q.number > 1 && q.number <= 7) return null
+            if (q.number === 8) {
+              const questions = currentSection.questions.filter((entry) => entry.number >= 8 && entry.number <= 13)
+              return (
+                <div key={`${currentSection.id}-notes-group`}>
+                  {renderMargaretPrestonNotesGroup(questions)}
+                </div>
+              )
+            }
+            if (q.number > 8 && q.number <= 13) return null
+          }
+
+          if (
+            currentSection?.id === 'reading-day-28-passage-2' ||
+            currentSection?.id === 'reading-day-30-passage-2'
+          ) {
+            const firstNumber = currentSection.questions[0]?.number ?? 1
+            const headingsEnd = firstNumber + 5
+            const summaryStart = firstNumber + 8
+            const summaryEnd = firstNumber + 12
+            if (q.number === firstNumber) {
+              const questions = currentSection.questions.filter(
+                (entry) => entry.number >= firstNumber && entry.number <= headingsEnd,
+              )
+              return (
+                <div key={`${currentSection.id}-headings-group`}>
+                  {renderMatchingSelectGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? `Questions ${firstNumber}-${headingsEnd}`,
+                    questions[0]?.instruction ?? '',
+                    'List of Headings',
+                  )}
+                </div>
+              )
+            }
+            if (q.number > firstNumber && q.number <= headingsEnd) return null
+            if (q.number === summaryStart) {
+              const questions = currentSection.questions.filter(
+                (entry) => entry.number >= summaryStart && entry.number <= summaryEnd,
+              )
+              return (
+                <div key={`${currentSection.id}-summary-group`}>
+                  {renderTitledSummaryGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? `Questions ${summaryStart}-${summaryEnd}`,
+                    questions[0]?.instruction ?? '',
+                    'Lawyers as professionals',
+                  )}
+                </div>
+              )
+            }
+            if (q.number > summaryStart && q.number <= summaryEnd) return null
+          }
+
+          if (
+            currentSection?.id === 'reading-day-29-passage-3' ||
+            currentSection?.id === 'reading-day-30-passage-3'
+          ) {
+            const firstNumber = currentSection.questions[0]?.number ?? 1
+            const statementsEnd = firstNumber + 4
+            const summaryStart = firstNumber + 8
+            const summaryEnd = firstNumber + 13
+            if (q.number === firstNumber) {
+              const questions = currentSection.questions.filter(
+                (entry) => entry.number >= firstNumber && entry.number <= statementsEnd,
+              )
+              return (
+                <div key={`${currentSection.id}-statement-group`}>
+                  {renderStatementChoiceGroup(
+                    questions,
+                    questions[0]?.groupTitle ?? `Questions ${firstNumber}-${statementsEnd}`,
+                    questions[0]?.instruction ?? '',
+                    ['TRUE', 'FALSE', 'NOT GIVEN'],
+                  )}
+                </div>
+              )
+            }
+            if (q.number > firstNumber && q.number <= statementsEnd) return null
+            if (q.number === summaryStart) {
+              const questions = currentSection.questions.filter(
+                (entry) => entry.number >= summaryStart && entry.number <= summaryEnd,
+              )
+              return (
+                <div key={`${currentSection.id}-summary-group`}>
+                  {renderPassageThreeSummaryGroup(questions)}
+                </div>
+              )
+            }
+            if (q.number > summaryStart && q.number <= summaryEnd) return null
+          }
 
           if (
             currentSection?.id === 'georgia-okeeffe-p1' ||
@@ -5150,7 +5444,7 @@ export default function IELTSReadingInterface({
                   ) : isFiveTrue ? (
                     <div className="space-y-3">
                       <p className="text-[15px] text-slate-950 font-bold leading-relaxed mb-3">
-                        {q.instruction || `Select ${requiredSelectionCount} correct statements.`}
+                        {q.text || `Select ${requiredSelectionCount} correct statements.`}
                       </p>
                       <div className="space-y-2">
                         {(q.options || []).map((opt: string, i: number) => {
@@ -5510,7 +5804,7 @@ export default function IELTSReadingInterface({
                 <div className="space-y-4">
                   {activeSections.map((section, sIdx) => (
                     <div key={section.id}>
-                      <p className="text-sm font-bold text-slate-700 mb-2">Part {sIdx + 1}: {section.title}</p>
+                      <p className="text-sm font-bold text-slate-700 mb-2">Part {resolvePassageNumber(section, sIdx + 1)}: {section.title}</p>
                       <div className="flex flex-wrap gap-2">
                         {section.questions.map((q, qIdx) => {
                           const startIndex = getQuestionGlobalIndex(sIdx, qIdx);

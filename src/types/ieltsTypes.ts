@@ -59,6 +59,7 @@ export interface Section {
     title: string
     content?: string // For Reading (full text)
     paragraphs?: { label: string; content: string }[] // For structured Reading passages
+    showParagraphLabels?: boolean // Preserve source lettering only when the original passage uses it
     audioUrl?: string // For Listening
     visualAidUrl?: string // Optional prompt/diagram image for Listening
     audioTranscript?: string // Optional transcript for practice mode review

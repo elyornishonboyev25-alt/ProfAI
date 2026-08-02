@@ -1,7 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, AudioLines, Check, Copy, ImagePlus, Maximize2, Mic, Send, ShieldCheck, Sparkles, Square, Trash2, X } from 'lucide-react'
+import {
+  ArrowRight,
+  AudioLines,
+  BrainCircuit,
+  Check,
+  Copy,
+  History,
+  ImagePlus,
+  Maximize2,
+  Mic,
+  Pencil,
+  Plus,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Square,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
@@ -70,11 +88,13 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   const {
     user, hasPremium, messages, isSending, error,
     draft, setDraft, images, addImages, removeImage,
-    send, clear, preferredLocale, preferredName,
+    send, preferredLocale, preferredName,
     workspace, pendingActions, approveAction, dismissAction,
     voiceState, voiceLevel, voiceSupported, isListening,
     interimTranscript, startVoice, stopVoice,
     voiceLang, setVoiceLang, voiceError,
+    chatThreads, activeThread, activeThreadId, threadsLoading, memories,
+    createNewChat, selectChat, renameChat, deleteChat, forgetMemory,
   } = tutor
 
   const VOICE_LANGS = [
@@ -84,6 +104,38 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   ] as const
 
   const isPage = variant === 'page'
+  const [panel, setPanel] = useState<'chats' | 'memory' | null>(null)
+  const [editingThreadId, setEditingThreadId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+
+  const beginRename = (threadId: string, title: string) => {
+    setEditingThreadId(threadId)
+    setEditingTitle(title)
+  }
+
+  const finishRename = () => {
+    if (editingThreadId && editingTitle.trim()) void renameChat(editingThreadId, editingTitle)
+    setEditingThreadId(null)
+    setEditingTitle('')
+  }
+
+  const confirmDeleteChat = (threadId: string, title: string) => {
+    const prompt = voiceLang === 'uz'
+      ? `"${title}" chatini butunlay o'chirasizmi?`
+      : voiceLang === 'ru'
+        ? `Удалить чат «${title}» безвозвратно?`
+        : `Permanently delete "${title}"?`
+    if (window.confirm(prompt)) void deleteChat(threadId)
+  }
+
+  const confirmForgetMemory = (memoryId: string) => {
+    const prompt = voiceLang === 'uz'
+      ? "Bu xotirani butunlay o'chirasizmi?"
+      : voiceLang === 'ru'
+        ? 'Удалить эту запись из памяти?'
+        : 'Delete this memory?'
+    if (window.confirm(prompt)) void forgetMemory(memoryId)
+  }
 
   const [hero, setHero] = useState(true)
   useEffect(() => {
@@ -208,6 +260,136 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         ) : null}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {panel ? (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Close panel"
+              className="absolute inset-0 z-30 bg-slate-950/20 backdrop-blur-[1px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPanel(null)}
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-y-0 left-0 z-40 flex w-[min(88%,20rem)] flex-col border-r border-slate-200 bg-white shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                <div>
+                  <p className="text-sm font-black text-slate-950">
+                    {panel === 'chats'
+                      ? voiceLang === 'uz' ? 'Chatlar' : voiceLang === 'ru' ? 'Чаты' : 'Chats'
+                      : voiceLang === 'uz' ? 'Xotira' : voiceLang === 'ru' ? 'Память' : 'Memory'}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-500">
+                    {panel === 'chats'
+                      ? voiceLang === 'uz' ? 'Alohida saqlangan suhbatlar' : voiceLang === 'ru' ? 'Отдельно сохранённые диалоги' : 'Your saved conversations'
+                      : voiceLang === 'uz' ? 'Barcha chatlarda ishlatiladi' : voiceLang === 'ru' ? 'Доступна во всех чатах' : 'Available across every chat'}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setPanel(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {panel === 'chats' ? (
+                <>
+                  <div className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => { void createNewChat(); setPanel(null) }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {voiceLang === 'uz' ? 'Yangi chat' : voiceLang === 'ru' ? 'Новый чат' : 'New chat'}
+                    </button>
+                  </div>
+                  <div className="flex-1 space-y-1 overflow-y-auto px-2 pb-3">
+                    {threadsLoading ? <p className="px-3 py-4 text-xs text-slate-500">Loading chats…</p> : null}
+                    {chatThreads.map((thread) => {
+                      const selected = thread.id === activeThreadId
+                      const editing = thread.id === editingThreadId
+                      return (
+                        <div key={thread.id} className={`group rounded-xl border px-2 py-2 transition ${selected ? 'border-red-200 bg-red-50' : 'border-transparent hover:bg-slate-50'}`}>
+                          {editing ? (
+                            <input
+                              autoFocus
+                              value={editingTitle}
+                              onChange={(event) => setEditingTitle(event.target.value)}
+                              onBlur={finishRename}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') finishRename()
+                                if (event.key === 'Escape') setEditingThreadId(null)
+                              }}
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold outline-none focus:border-red-300"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => { selectChat(thread.id); setPanel(null) }}
+                                className="min-w-0 flex-1 px-1 py-0.5 text-left"
+                              >
+                                <span className="block truncate text-xs font-bold text-slate-800">{thread.title}</span>
+                                <span className="mt-0.5 block text-[9px] font-semibold text-slate-400">
+                                  {new Date(thread.updatedAt).toLocaleDateString()} · {thread.messages.length} messages
+                                </span>
+                              </button>
+                              <button type="button" onClick={() => beginRename(thread.id, thread.title)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-slate-700 group-hover:opacity-100" aria-label="Rename chat">
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" onClick={() => confirmDeleteChat(thread.id, thread.title)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-red-600 group-hover:opacity-100" aria-label="Delete chat">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-3">
+                  <div className="mb-3 rounded-xl border border-violet-100 bg-violet-50 p-3 text-[11px] leading-5 text-violet-900">
+                    {voiceLang === 'uz'
+                      ? '“Eslab qol…” deb ayting. ProfAI muhim maqsad va afzalliklaringizni keyingi chatlarda ham eslaydi.'
+                      : voiceLang === 'ru'
+                        ? 'Скажите: «Запомни…» ProfAI использует важные цели и предпочтения в следующих чатах.'
+                        : 'Say “Remember that…” and ProfAI will use important goals and preferences in future chats.'}
+                  </div>
+                  {memories.length === 0 ? (
+                    <p className="px-2 py-6 text-center text-xs text-slate-500">
+                      {voiceLang === 'uz' ? 'Hali saqlangan xotira yo‘q.' : voiceLang === 'ru' ? 'Память пока пуста.' : 'No saved memories yet.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {memories.map((memory) => (
+                        <div key={memory.id} className="group rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                          <div className="flex items-start gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[9px] font-black uppercase tracking-wide text-violet-600">{memory.key.replace(/_/g, ' ')}</p>
+                              <p className="mt-1 text-xs leading-5 text-slate-700">{memory.value}</p>
+                            </div>
+                            <button type="button" onClick={() => confirmForgetMemory(memory.id)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100" aria-label="Forget memory">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.aside>
+          </>
+        ) : null}
+      </AnimatePresence>
+
       {/* Header with the live orb */}
       <header className="relative flex items-center justify-between gap-2 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur-xl">
         <div className="flex items-center gap-2.5">
@@ -225,10 +407,40 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               />
               {statusText}
             </p>
-            <p className="mt-0.5 text-[10px] font-bold text-slate-400">{workspace.shortTitle} mode</p>
+            <p className="mt-0.5 max-w-[16rem] truncate text-[10px] font-bold text-slate-400">
+              {activeThread?.title ?? `${workspace.shortTitle} mode`}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => void createNewChat()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-800"
+            aria-label="New chat"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">
+              {voiceLang === 'uz' ? 'Yangi chat' : voiceLang === 'ru' ? 'Новый чат' : 'New chat'}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPanel(panel === 'chats' ? null : 'chats')}
+            className={`rounded-lg border p-2 transition ${panel === 'chats' ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+            aria-label="Chat history"
+          >
+            <History className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setPanel(panel === 'memory' ? null : 'memory')}
+            className={`relative rounded-lg border p-2 transition ${panel === 'memory' ? 'border-violet-200 bg-violet-50 text-violet-600' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+            aria-label="Memory"
+          >
+            <BrainCircuit className="h-3.5 w-3.5" />
+            {memories.length > 0 ? <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-violet-600 px-1 text-center text-[8px] font-black leading-3.5 text-white">{Math.min(memories.length, 99)}</span> : null}
+          </button>
           <button
             type="button"
             onClick={openTalk}
@@ -248,14 +460,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               <Maximize2 className="h-4 w-4" />
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={clear}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-            aria-label="Clear chat"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
           {onClose ? (
             <button
               type="button"

@@ -19,6 +19,7 @@ import plannerRoutes from './routes/planner.routes.js'
 import shadowingRoutes from './routes/shadowing.routes.js'
 import reviewsRoutes from './routes/reviews.routes.js'
 import sharedResultsRoutes from './routes/sharedResults.routes.js'
+import aiWorkspaceRoutes from './routes/aiWorkspace.routes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -60,6 +61,7 @@ app.use('/api/v1/planner', plannerRoutes)
 app.use('/api/v1/shadowing', shadowingRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)
 app.use('/api/v1/shared-results', sharedResultsRoutes)
+app.use('/api/v1/ai-workspace', aiWorkspaceRoutes)
 
 app.get('/googleea0efe504503609e.html', (_req, res) => {
   res.type('html').send('google-site-verification: googleea0efe504503609e.html')

@@ -11,30 +11,45 @@ export type AiAssistantMessage = {
   role: AiAssistantMessageRole
   content: string
   createdAt: string
-  /** Optional image attachments (data URLs) the learner sent with the message. */
+  /** Optional image attachments remain local and are not uploaded to chat history. */
   images?: string[]
 }
 
-// Drives the animated voice orb everywhere it appears (floating, page, talk overlay).
-//  idle      → resting glow
-//  listening → mic is open, capturing the learner
-//  thinking  → request in flight, waiting on the model
-//  speaking  → the tutor is talking back (TTS)
+export type AiAssistantThread = {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messages: AiAssistantMessage[]
+  /** False for offline-created chats that have not reached the backend. */
+  synced: boolean
+}
+
+export type AiMemoryItem = {
+  id: string
+  key: string
+  value: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Drives the animated voice orb everywhere it appears.
 export type AiVoiceState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 type AiAssistantState = {
   isOpen: boolean
   isSending: boolean
   error: string | null
-  conversations: Record<string, AiAssistantMessage[]>
+  threadsByOwner: Record<string, AiAssistantThread[]>
+  activeThreadIds: Record<string, string | null>
+  threadsLoading: Record<string, boolean>
+  threadsLoaded: Record<string, boolean>
+  memoriesByOwner: Record<string, AiMemoryItem[]>
   reportSnapshot: AiReportResponse | null
   reportUpdatedAt: string | null
-  /** Immersive full-screen "talk to ProfAI" overlay. */
   talkOpen: boolean
   voiceState: AiVoiceState
-  /** Live amplitude 0–1 used to make the orb pulse with the voice. */
   voiceLevel: number
-  /** Language explicitly selected for AI replies, recognition, and speech. */
   voiceLang: SpeechLang
   activeWorkspace: AiWorkspaceId
   open: () => void
@@ -48,10 +63,22 @@ type AiAssistantState = {
   setActiveWorkspace: (workspace: AiWorkspaceId) => void
   setSending: (value: boolean) => void
   setError: (value: string | null) => void
-  pushMessage: (ownerKey: string, message: AiAssistantMessage) => void
+  setThreadLoading: (ownerKey: string, loading: boolean) => void
+  setThreads: (ownerKey: string, threads: AiAssistantThread[]) => void
+  addThread: (ownerKey: string, thread: AiAssistantThread) => void
+  setActiveThread: (ownerKey: string, threadId: string) => void
+  pushMessage: (ownerKey: string, threadId: string, message: AiAssistantMessage) => void
+  renameThread: (ownerKey: string, threadId: string, title: string) => void
+  removeThread: (ownerKey: string, threadId: string) => void
   clearMessages: (ownerKey: string) => void
+  setMemories: (ownerKey: string, memories: AiMemoryItem[]) => void
+  upsertMemories: (ownerKey: string, memories: AiMemoryItem[]) => void
+  removeMemory: (ownerKey: string, memoryId: string) => void
   setReportSnapshot: (report: AiReportResponse | null) => void
 }
+
+const sortThreads = (threads: AiAssistantThread[]) =>
+  [...threads].sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
 
 export const useAiAssistantStore = create<AiAssistantState>()(
   persist(
@@ -59,7 +86,11 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       isOpen: false,
       isSending: false,
       error: null,
-      conversations: {},
+      threadsByOwner: {},
+      activeThreadIds: {},
+      threadsLoading: {},
+      threadsLoaded: {},
+      memoriesByOwner: {},
       reportSnapshot: null,
       reportUpdatedAt: null,
       talkOpen: false,
@@ -72,47 +103,158 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       toggle: () => set((state) => ({ isOpen: !state.isOpen })),
       openTalk: () => set({ talkOpen: true, isOpen: false }),
       closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
-      setVoiceState: (state: AiVoiceState) => set({ voiceState: state }),
-      setVoiceLevel: (level: number) => set({ voiceLevel: Math.max(0, Math.min(1, level)) }),
-      setVoiceLang: (voiceLang: SpeechLang) => set({ voiceLang }),
-      setActiveWorkspace: (workspace: AiWorkspaceId) => set({ activeWorkspace: workspace }),
-      setSending: (value: boolean) => set({ isSending: value }),
-      setError: (value: string | null) => set({ error: value }),
-      pushMessage: (ownerKey: string, message: AiAssistantMessage) =>
+      setVoiceState: (voiceState) => set({ voiceState }),
+      setVoiceLevel: (voiceLevel) => set({ voiceLevel: Math.max(0, Math.min(1, voiceLevel)) }),
+      setVoiceLang: (voiceLang) => set({ voiceLang }),
+      setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace }),
+      setSending: (isSending) => set({ isSending }),
+      setError: (error) => set({ error }),
+      setThreadLoading: (ownerKey, loading) =>
         set((state) => ({
-          conversations: {
-            ...state.conversations,
-            [ownerKey]: [...(state.conversations[ownerKey] ?? []), message].slice(-40),
+          threadsLoading: { ...state.threadsLoading, [ownerKey]: loading },
+          threadsLoaded: loading ? state.threadsLoaded : { ...state.threadsLoaded, [ownerKey]: true },
+        })),
+      setThreads: (ownerKey, serverThreads) =>
+        set((state) => {
+          const localOnly = (state.threadsByOwner[ownerKey] ?? []).filter(
+            (thread) => !thread.synced && !serverThreads.some((server) => server.id === thread.id),
+          )
+          const threads = sortThreads([...localOnly, ...serverThreads])
+          const currentActive = state.activeThreadIds[ownerKey]
+          const activeThreadId = threads.some((thread) => thread.id === currentActive)
+            ? currentActive ?? null
+            : threads[0]?.id ?? null
+          return {
+            threadsByOwner: { ...state.threadsByOwner, [ownerKey]: threads },
+            activeThreadIds: { ...state.activeThreadIds, [ownerKey]: activeThreadId },
+            threadsLoading: { ...state.threadsLoading, [ownerKey]: false },
+            threadsLoaded: { ...state.threadsLoaded, [ownerKey]: true },
+          }
+        }),
+      addThread: (ownerKey, thread) =>
+        set((state) => ({
+          threadsByOwner: {
+            ...state.threadsByOwner,
+            [ownerKey]: sortThreads([thread, ...(state.threadsByOwner[ownerKey] ?? []).filter((item) => item.id !== thread.id)]),
+          },
+          activeThreadIds: { ...state.activeThreadIds, [ownerKey]: thread.id },
+        })),
+      setActiveThread: (ownerKey, threadId) =>
+        set((state) => ({ activeThreadIds: { ...state.activeThreadIds, [ownerKey]: threadId } })),
+      pushMessage: (ownerKey, threadId, message) =>
+        set((state) => {
+          const now = message.createdAt
+          const threads = (state.threadsByOwner[ownerKey] ?? []).map((thread) =>
+            thread.id === threadId
+              ? { ...thread, updatedAt: now, messages: [...thread.messages, message].slice(-100) }
+              : thread,
+          )
+          return { threadsByOwner: { ...state.threadsByOwner, [ownerKey]: sortThreads(threads) } }
+        }),
+      renameThread: (ownerKey, threadId, title) =>
+        set((state) => ({
+          threadsByOwner: {
+            ...state.threadsByOwner,
+            [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) =>
+              thread.id === threadId ? { ...thread, title: title.trim().slice(0, 80) || thread.title } : thread,
+            ),
           },
         })),
-      clearMessages: (ownerKey: string) =>
-        set((state) => ({
-          conversations: { ...state.conversations, [ownerKey]: [] },
-          error: null,
-        })),
-      setReportSnapshot: (report: AiReportResponse | null) =>
-        set({
-          reportSnapshot: report,
-          reportUpdatedAt: report ? new Date().toISOString() : null,
+      removeThread: (ownerKey, threadId) =>
+        set((state) => {
+          const threads = (state.threadsByOwner[ownerKey] ?? []).filter((thread) => thread.id !== threadId)
+          const active = state.activeThreadIds[ownerKey]
+          return {
+            threadsByOwner: { ...state.threadsByOwner, [ownerKey]: threads },
+            activeThreadIds: {
+              ...state.activeThreadIds,
+              [ownerKey]: active === threadId ? threads[0]?.id ?? null : active ?? null,
+            },
+          }
         }),
+      clearMessages: (ownerKey) =>
+        set((state) => {
+          const aliases = new Set([ownerKey, ownerKey.startsWith('user:') ? ownerKey.slice(5) : `user:${ownerKey}`])
+          const threadsByOwner = { ...state.threadsByOwner }
+          const activeThreadIds = { ...state.activeThreadIds }
+          const memoriesByOwner = { ...state.memoriesByOwner }
+          for (const alias of aliases) {
+            delete threadsByOwner[alias]
+            delete activeThreadIds[alias]
+            delete memoriesByOwner[alias]
+          }
+          return { threadsByOwner, activeThreadIds, memoriesByOwner, error: null }
+        }),
+      setMemories: (ownerKey, memories) =>
+        set((state) => ({ memoriesByOwner: { ...state.memoriesByOwner, [ownerKey]: memories } })),
+      upsertMemories: (ownerKey, memories) =>
+        set((state) => {
+          const current = state.memoriesByOwner[ownerKey] ?? []
+          const merged = [...current]
+          for (const memory of memories) {
+            const index = merged.findIndex((item) => item.id === memory.id || item.key === memory.key)
+            if (index >= 0) merged[index] = memory
+            else merged.unshift(memory)
+          }
+          merged.sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+          return { memoriesByOwner: { ...state.memoriesByOwner, [ownerKey]: merged } }
+        }),
+      removeMemory: (ownerKey, memoryId) =>
+        set((state) => ({
+          memoriesByOwner: {
+            ...state.memoriesByOwner,
+            [ownerKey]: (state.memoriesByOwner[ownerKey] ?? []).filter((memory) => memory.id !== memoryId),
+          },
+        })),
+      setReportSnapshot: (reportSnapshot) =>
+        set({ reportSnapshot, reportUpdatedAt: reportSnapshot ? new Date().toISOString() : null }),
     }),
     {
       name: 'profai-ai-chat',
-      version: 3,
-      // Conversations are deliberately namespaced by account id. Version 2
-      // discards the old shared history instead of risking cross-account leaks.
-      migrate: () => ({ conversations: {}, activeWorkspace: 'general' as AiWorkspaceId, voiceLang: 'en' as SpeechLang }),
-      partialize: (state) => ({
-        // Keep text history, but never duplicate large image data URLs into localStorage.
-        // Attachments remain visible for the current session and are sent to the model.
-        conversations: Object.fromEntries(
-          Object.entries(state.conversations).map(([owner, messages]) => [
+      version: 4,
+      migrate: (persistedState, version) => {
+        const old = persistedState as Partial<AiAssistantState> & {
+          conversations?: Record<string, AiAssistantMessage[]>
+        }
+        if (version >= 4 || !old.conversations) return old as AiAssistantState
+
+        const now = new Date().toISOString()
+        const threadsByOwner: Record<string, AiAssistantThread[]> = {}
+        const activeThreadIds: Record<string, string> = {}
+        for (const [ownerKey, messages] of Object.entries(old.conversations)) {
+          if (messages.length === 0) continue
+          const id = `local-migrated-${ownerKey.replace(/[^a-z0-9]/gi, '-')}`
+          threadsByOwner[ownerKey] = [{
+            id,
+            title: 'Previous conversation',
+            createdAt: messages[0]?.createdAt ?? now,
+            updatedAt: messages[messages.length - 1]?.createdAt ?? now,
+            messages,
+            synced: false,
+          }]
+          activeThreadIds[ownerKey] = id
+        }
+        return { ...old, conversations: undefined, threadsByOwner, activeThreadIds } as AiAssistantState
+      },
+      partialize: (state): AiAssistantState => ({
+        ...state,
+        isOpen: false,
+        isSending: false,
+        error: null,
+        talkOpen: false,
+        voiceState: 'idle',
+        voiceLevel: 0,
+        threadsLoading: {},
+        threadsLoaded: {},
+        threadsByOwner: Object.fromEntries(
+          Object.entries(state.threadsByOwner).map(([owner, threads]) => [
             owner,
-            messages.map(({ images: _images, ...message }) => message),
+            threads.map((thread) => ({
+              ...thread,
+              messages: thread.messages.map(({ images: _images, ...message }) => message),
+            })),
           ]),
         ),
-        activeWorkspace: state.activeWorkspace,
-        voiceLang: state.voiceLang,
       }),
     },
   ),

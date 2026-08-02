@@ -156,7 +156,7 @@ const passage1: Section = {
       number: 13,
       type: 'true-false-not-given',
       text: 'Academics at the University of Haifa are currently researching how to decipher the final scroll.',
-      correctAnswer: 'FALSE',
+      correctAnswer: 'NOT GIVEN',
       location: 'Paragraph G',
     },
   ],
@@ -295,7 +295,7 @@ const passage2: Section = {
       groupTitle: 'Questions 24-26',
       instruction: 'Complete the sentences below. Choose ONE WORD ONLY from the passage for each answer.',
       text: 'An undesirable trait such as loss of ______ may be caused by a mutation in a tomato gene.',
-      correctAnswer: 'flavour',
+      correctAnswer: 'flavour|flavor',
       location: 'Section C',
     },
     {
@@ -498,7 +498,7 @@ const passage3: Section = {
       number: 36,
       type: 'yes-no-not-given',
       text: 'Many scientists are now turning away from the notion of intelligent design and genius.',
-      correctAnswer: 'YES',
+      correctAnswer: 'NOT GIVEN',
       location: 'Paragraph K',
     },
     {
@@ -525,4 +525,3 @@ export const fullReadingTest9: IELTSTest = {
   totalQuestions: 40,
   sections: [passage1, passage2, passage3],
 }
-

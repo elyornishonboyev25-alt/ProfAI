@@ -120,7 +120,7 @@ const passage1: Section = {
       number: 7,
       type: 'true-false-not-given',
       text: "The polar bear's mechanism for increasing bone density could also be used by people one day.",
-      correctAnswer: 'FALSE',
+      correctAnswer: 'TRUE',
       location: 'Paragraph D',
     },
     {
@@ -557,4 +557,3 @@ export const fullReadingTest10: IELTSTest = {
   totalQuestions: 40,
   sections: [passage1, passage2, passage3],
 }
-

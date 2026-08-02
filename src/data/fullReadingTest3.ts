@@ -82,7 +82,7 @@ const passage1: Section = {
       number: 3,
       type: 'note-completion',
       text: 'sense vibrations in the water by means of ______ on their skin',
-      correctAnswer: 'hairs',
+      correctAnswer: 'hairs|hair',
       location: 'Paragraph B',
     },
     {
@@ -526,4 +526,3 @@ export const fullReadingTest3: IELTSTest = {
   sections: [passage1, passage2, passage3],
   totalQuestions: 40,
 }
-

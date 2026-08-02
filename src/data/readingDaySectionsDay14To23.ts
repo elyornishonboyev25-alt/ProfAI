@@ -678,7 +678,7 @@ const day18Questions: Question[] = [
     number: 26,
     type: 'summary-completion',
     text: 'One problem is construction of new homes in a narrow ______ of land on the route.',
-    correctAnswer: 'corridor',
+    correctAnswer: 'corridor|passageway',
     location: 'Paragraph G',
   },
 ]
@@ -1572,4 +1572,3 @@ export const readingDaySectionsDay14To23: Record<number, Section> = {
   22: day22Section,
   23: day23Section,
 }
-

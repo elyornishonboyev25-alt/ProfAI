@@ -282,7 +282,7 @@ const passage2: Section = {
       number: 22,
       type: 'summary-completion',
       text: 'Scientists from the University of Washington and the University of Connecticut recorded speech and sound using special ______ that the babies were equipped with.',
-      correctAnswer: 'audio-recording vests',
+      correctAnswer: 'audio-recording vests|vests',
       location: 'Paragraph D',
     },
     {

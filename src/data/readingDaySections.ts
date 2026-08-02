@@ -760,7 +760,7 @@ const day6Questions: Question[] = [
     number: 33,
     type: 'yes-no-not-given',
     text: 'Iconoclasts are unusually receptive to new experiences.',
-    correctAnswer: 'NO',
+    correctAnswer: 'YES',
     location: 'Paragraph E',
   },
   {

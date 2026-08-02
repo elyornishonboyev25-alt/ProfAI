@@ -498,7 +498,7 @@ const day11Questions: Question[] = [
     groupTitle: 'Questions 9-13',
     instruction: 'Choose NO MORE THAN TWO WORDS from the passage for each answer.',
     text: '______ attached to hull by wires',
-    correctAnswer: 'lifting frame',
+    correctAnswer: 'lifting frame|frame',
     location: 'Paragraph F',
   },
   {
@@ -522,7 +522,7 @@ const day11Questions: Question[] = [
     number: 12,
     type: 'short-answer',
     text: 'hull is lowered into ______',
-    correctAnswer: 'lifting cradle',
+    correctAnswer: 'lifting cradle|cradle',
     location: 'Paragraph G',
   },
   {

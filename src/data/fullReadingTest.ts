@@ -446,8 +446,8 @@ const passage3: Section = {
       id: 'met-q36',
       number: 36,
       type: 'summary-completion',
-      text: 'Besides, the writer compares the film to the modern global economy in which multinational corporations care more about growing ______ and money.',
-      correctAnswer: 'profits',
+      text: 'Besides, the writer compares the film to the modern global economy in which multinational corporations care more about increased ______ and profits.',
+      correctAnswer: 'efficiency',
       location: 'Paragraph E',
     },
     {

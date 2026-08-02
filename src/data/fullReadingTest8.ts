@@ -520,7 +520,7 @@ const passage3: Section = {
       groupTitle: 'Questions 38-40',
       instruction: 'Choose NO MORE THAN TWO WORDS from the passage for each answer.',
       text: 'The writer has encountered a wide variety of ______.',
-      correctAnswer: 'expeditions',
+      correctAnswer: 'expeditions|unique expeditions',
       location: 'Paragraph G',
     },
     {
@@ -528,7 +528,7 @@ const passage3: Section = {
       number: 39,
       type: 'summary-completion',
       text: 'He was the first outsider many previously ______ individuals had met.',
-      correctAnswer: 'uncontacted',
+      correctAnswer: 'uncontacted|isolated',
       location: 'Paragraph G',
     },
     {
@@ -536,7 +536,7 @@ const passage3: Section = {
       number: 40,
       type: 'summary-completion',
       text: "He believes there is no need to further explore Earth's ______, except to address specific questions.",
-      correctAnswer: 'land surface',
+      correctAnswer: 'land surface|surface',
       location: 'Paragraph H',
     },
   ],
@@ -551,4 +551,3 @@ export const fullReadingTest8: IELTSTest = {
   totalQuestions: 40,
   sections: [passage1, passage2, passage3],
 }
-

@@ -9,6 +9,7 @@ import { fullReadingTest8 } from '@/data/fullReadingTest8'
 import { fullReadingTest9 } from '@/data/fullReadingTest9'
 import { fullReadingTest10 } from '@/data/fullReadingTest10'
 import { readingDaySections } from '@/data/readingDaySections'
+import { readingMockDayTests } from '@/data/readingMockDayTests'
 import { mockListeningTests } from '@/data/listeningPassages'
 import type { IELTSTest, Section } from '@/types/ieltsTypes'
 
@@ -34,44 +35,12 @@ function getQuestionSlotCount(section: Section): number {
   )
 }
 
-function cloneAndRenumberSection(section: Section, offset: number, partNumber: number): Section {
-  const cloned = cloneSection(section)
-  return {
-    ...cloned,
-    id: `reading-day-30-passage-${partNumber}`,
-    title: cloned.title.replace(/^Day \d+ Passage \d+:/, `Reading Passage ${partNumber}:`),
-    questions: cloned.questions.map((question) => ({
-      ...question,
-      id: `day30-${question.id}`,
-      number: question.number + offset,
-      groupTitle: question.groupTitle?.replace(/Questions (\d+)-(\d+)/i, (_, start: string, end: string) =>
-        `Questions ${Number(start) + offset}-${Number(end) + offset}`,
-      ),
-    })),
-  }
-}
-
 export function buildReadingDayTest(day: number): IELTSTest {
   const normalizedDay = Math.max(1, day)
   const isMockDay = MOCK_READING_DAYS.has(normalizedDay)
-  if (normalizedDay === 30) {
-    const passage1 = readingDaySections[27]
-    const passage2 = readingDaySections[28]
-    const passage3 = readingDaySections[29]
-    if (passage1 && passage2 && passage3) {
-      return {
-        ...fullReadingTest,
-        id: 'reading-day-30',
-        title: 'IELTS Reading Day 30 (Mock)',
-        duration: 60,
-        sections: [
-          cloneAndRenumberSection(passage1, 0, 1),
-          cloneAndRenumberSection(passage2, 13, 2),
-          cloneAndRenumberSection(passage3, 26, 3),
-        ],
-        totalQuestions: 40,
-      }
-    }
+  if (isMockDay) {
+    const mock = readingMockDayTests[normalizedDay as 10 | 20 | 30]
+    if (mock) return { ...mock, sections: mock.sections.map((section) => cloneSection(section)) }
   }
   const seededDaySection = readingDaySections[normalizedDay]
   const section = seededDaySection

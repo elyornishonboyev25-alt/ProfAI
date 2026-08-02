@@ -10,6 +10,7 @@ import { readingVocabularyByTest8 } from './ieltsReadingVocabularyTest8'
 import { readingVocabularyByTest9 } from './ieltsReadingVocabularyTest9'
 import { readingVocabularyByTest10 } from './ieltsReadingVocabularyTest10'
 import { readingDayVocabularySeeds } from './readingDayVocabularySeeds'
+import { readingDayVocabularyByPassage } from './readingDayVocabularyByPassage'
 import { isAvailableIeltsTrackTest } from '../utils/ieltsTrackCatalog'
 
 export type VocabularyTrack = 'IELTS' | 'SAT'
@@ -17,8 +18,10 @@ export type VocabularyTrack = 'IELTS' | 'SAT'
 export type VocabularyEntry = {
   id: string
   term: string
+  uzbek?: string
   definition: string
   example: string
+  exampleUzbek?: string
   synonym: string
 }
 
@@ -67,8 +70,10 @@ function toEntry(seed: ReadingVocabularySeed, id: string): VocabularyEntry {
   return {
     id,
     term: seed.term.trim(),
+    uzbek: seed.uzbek?.trim(),
     definition: seed.definition.trim(),
     example: seed.example.trim(),
+    exampleUzbek: seed.exampleUzbek?.trim(),
     synonym: firstSynonymLine(seed.synonyms),
   }
 }
@@ -138,6 +143,7 @@ function buildDayTrackTests(): IeltsTest[] {
     const fallbackSourcePassage = (fallbackRotationIndex % PASSAGES_PER_FULL_TEST) + 1
 
     const customDaySeeds = readingDayVocabularySeeds[day] ?? []
+    const customPassageSeeds = readingDayVocabularyByPassage[day]
     const primarySeeds = getPassageSeeds(sourceTest, passageNumber)
     const seeds =
       customDaySeeds.length > 0
@@ -158,7 +164,17 @@ function buildDayTrackTests(): IeltsTest[] {
       title: MOCK_READING_DAYS.has(day) ? `Day ${day} (Mock)` : `Day ${day}`,
       available: isAvailable,
       sections: isAvailable
-        ? [
+        ? customPassageSeeds
+          ? Object.entries(customPassageSeeds)
+              .sort(([left], [right]) => Number(left) - Number(right))
+              .map(([customPassageNumber, passageSeeds]) => ({
+                id: `reading_day_${day}_passage_${customPassageNumber}`,
+                title: `Passage ${customPassageNumber}`,
+                entries: passageSeeds.map((seed, entryIndex) =>
+                  toEntry(seed, `reading_day_${day}_passage_${customPassageNumber}_entry_${entryIndex + 1}`),
+                ),
+              }))
+          : [
             {
               id: sectionId,
               title: sectionTitle,

@@ -122,7 +122,7 @@ function TermPreview({ entries }: { entries: VocabularyEntry[] }) {
         <div key={entry.id} className="flex items-start justify-between gap-2 rounded-xl border border-red-100 bg-white px-3.5 py-2.5">
           <div className="min-w-0">
             <p className="text-sm font-bold text-slate-900">{entry.term}</p>
-            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{entry.definition}</p>
+            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{entry.uzbek ?? entry.definition}</p>
           </div>
           <button onClick={() => speak(entry.term)} className="shrink-0 rounded-md p-1 text-slate-400 hover:text-red-600" aria-label="Pronounce">
             <Volume2 className="h-3.5 w-3.5" />

@@ -273,7 +273,7 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
         <motion.button
           onClick={() => setFlipped((v) => !v)}
           whileTap={{ scale: 0.99 }}
-          className="relative block h-[360px] w-full text-left md:h-[400px]"
+          className={`relative block w-full text-left ${current.uzbek || current.exampleUzbek ? 'h-[500px] md:h-[520px]' : 'h-[360px] md:h-[400px]'}`}
         >
           <motion.div animate={{ rotateY: flipped ? 180 : 0 }} transition={FLIP} style={{ transformStyle: 'preserve-3d' }} className="relative h-full w-full">
             {/* front */}
@@ -301,10 +301,22 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
             {/* back */}
             <div style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(59,130,246,0.2)]">
               <div className="absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
-              <span className="inline-flex w-fit items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Definition</span>
-              <p className="mt-4 text-2xl font-bold leading-8 text-slate-900">{current.definition}</p>
-              <p className="mt-4 rounded-xl border border-blue-100 bg-white/90 px-4 py-3 text-sm italic leading-6 text-slate-700">“{current.example}”</p>
-              <p className="mt-auto pt-3 text-sm font-semibold text-blue-700">Synonym: {current.synonym}</p>
+              <span className="inline-flex w-fit items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Meaning & translation</span>
+              {current.uzbek ? (
+                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/80 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">Uzbek</p>
+                  <p className="mt-1 text-lg font-bold leading-7 text-slate-900">{current.uzbek}</p>
+                </div>
+              ) : null}
+              <div className="mt-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">Meaning (EN)</p>
+                <p className="mt-1 text-lg font-bold leading-7 text-slate-900">{current.definition}</p>
+              </div>
+              <div className="mt-3 rounded-xl border border-blue-100 bg-white/90 px-4 py-3 text-sm leading-6 text-slate-700">
+                <p className="italic">“{current.example}”</p>
+                {current.exampleUzbek ? <p className="mt-1.5 font-medium text-slate-600">{current.exampleUzbek}</p> : null}
+              </div>
+              <p className="mt-auto pt-3 text-sm font-semibold text-blue-700">Synonym (EN): {current.synonym}</p>
             </div>
           </motion.div>
         </motion.button>

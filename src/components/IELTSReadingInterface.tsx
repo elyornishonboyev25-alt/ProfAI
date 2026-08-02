@@ -541,6 +541,15 @@ export default function IELTSReadingInterface({
   )
   const leaderboardAttemptKind = activeQuestionCount >= 27 ? 'full-test' : 'passage'
   const minimumLeaderboardTimeSec = leaderboardAttemptKind === 'full-test' ? 30 * 60 : 10 * 60
+  const testQuestionNumberCeiling = useMemo(
+    () => Math.max(
+      test.totalQuestions,
+      ...test.sections.flatMap((section) =>
+        section.questions.map((question) => question.number + getQuestionSlotCount(question) - 1),
+      ),
+    ),
+    [test],
+  )
 
   const sectionMeta = useMemo(() => {
     let currentIndex = 0;
@@ -3326,7 +3335,7 @@ export default function IELTSReadingInterface({
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-500">Answer panel</p>
         </div>
         <span className="text-xs font-semibold text-red-700 bg-red-50 px-3 py-1.5 rounded-xl border border-red-200">
-          {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} of {sectionMeta.reduce((acc, s) => acc + s.questionCount, 0)}
+          {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} of {testQuestionNumberCeiling}
         </span>
       </div>
       <div className="space-y-8 pb-20">
@@ -3353,6 +3362,93 @@ export default function IELTSReadingInterface({
           const dragDropAnswer = Array.from({ length: dragDropSlotCount }, (_, slotIndex) =>
             String((answers[q.id] as string[] | undefined)?.[slotIndex] ?? '').trim(),
           );
+
+          if (currentSection?.premiumQuestionGroups) {
+            const groupStartIndexes = currentSection.questions.reduce<number[]>((indexes, question, questionIndex) => {
+              const previousGroupTitle = currentSection.questions[questionIndex - 1]?.groupTitle
+              if (question.groupTitle && question.groupTitle !== previousGroupTitle) indexes.push(questionIndex)
+              return indexes
+            }, [])
+            const groupStartIndex = [...groupStartIndexes].reverse().find((questionIndex) => questionIndex <= idx) ?? 0
+            const nextGroupStartIndex = groupStartIndexes.find((questionIndex) => questionIndex > groupStartIndex) ?? currentSection.questions.length
+            const groupQuestions = currentSection.questions.slice(groupStartIndex, nextGroupStartIndex)
+            const groupFirst = groupQuestions[0]
+            const groupTypes = new Set(groupQuestions.map((question) => question.type))
+
+            if (groupTypes.size === 1 && groupTypes.has('true-false-not-given')) {
+              if (idx !== groupStartIndex) return null
+              return (
+                <div key={`${currentSection.id}-${groupFirst.groupTitle}-statements`}>
+                  {renderStatementChoiceGroup(
+                    groupQuestions,
+                    groupFirst.groupTitle ?? questionRangeDisplay,
+                    groupFirst.instruction ?? '',
+                    ['TRUE', 'FALSE', 'NOT GIVEN'],
+                  )}
+                </div>
+              )
+            }
+
+            if (groupTypes.size === 1 && groupTypes.has('yes-no-not-given')) {
+              if (idx !== groupStartIndex) return null
+              return (
+                <div key={`${currentSection.id}-${groupFirst.groupTitle}-claims`}>
+                  {renderStatementChoiceGroup(
+                    groupQuestions,
+                    groupFirst.groupTitle ?? questionRangeDisplay,
+                    groupFirst.instruction ?? '',
+                    ['YES', 'NO', 'NOT GIVEN'],
+                  )}
+                </div>
+              )
+            }
+
+            if (
+              groupTypes.size === 1 &&
+              (groupTypes.has('matching-headings') || groupTypes.has('matching-information'))
+            ) {
+              if (idx !== groupStartIndex) return null
+              return (
+                <div key={`${currentSection.id}-${groupFirst.groupTitle}-matching`}>
+                  {renderMatchingSelectGroup(
+                    groupQuestions,
+                    groupFirst.groupTitle ?? questionRangeDisplay,
+                    groupFirst.instruction ?? '',
+                    groupFirst.type === 'matching-headings' ? 'List of Headings' : 'Options',
+                  )}
+                </div>
+              )
+            }
+
+            if (
+              groupTypes.size === 1 &&
+              (groupTypes.has('summary-completion') || groupTypes.has('note-completion'))
+            ) {
+              if (idx !== groupStartIndex) return null
+              return (
+                <div key={`${currentSection.id}-${groupFirst.groupTitle}-completion`}>
+                  {renderSentenceCompletionGroup(
+                    groupQuestions,
+                    groupFirst.groupTitle ?? questionRangeDisplay,
+                    groupFirst.instruction ?? '',
+                  )}
+                </div>
+              )
+            }
+
+            if (groupTypes.size === 1 && groupTypes.has('short-answer')) {
+              if (idx !== groupStartIndex) return null
+              return (
+                <div key={`${currentSection.id}-${groupFirst.groupTitle}-short-answer`}>
+                  {renderShortAnswerGroup(
+                    groupQuestions,
+                    groupFirst.groupTitle ?? questionRangeDisplay,
+                    groupFirst.instruction ?? '',
+                  )}
+                </div>
+              )
+            }
+          }
 
           if (currentSection?.id === 'reading-day-26-passage-3') {
             if (q.number === 1) {
@@ -3398,10 +3494,7 @@ export default function IELTSReadingInterface({
             if (q.number === 14) return null
           }
 
-          if (
-            currentSection?.id === 'reading-day-27-passage-1' ||
-            currentSection?.id === 'reading-day-30-passage-1'
-          ) {
+          if (currentSection?.id === 'reading-day-27-passage-1') {
             if (q.number === 1) {
               const questions = currentSection.questions.filter((entry) => entry.number >= 1 && entry.number <= 7)
               return (
@@ -3427,10 +3520,7 @@ export default function IELTSReadingInterface({
             if (q.number > 8 && q.number <= 13) return null
           }
 
-          if (
-            currentSection?.id === 'reading-day-28-passage-2' ||
-            currentSection?.id === 'reading-day-30-passage-2'
-          ) {
+          if (currentSection?.id === 'reading-day-28-passage-2') {
             const firstNumber = currentSection.questions[0]?.number ?? 1
             const headingsEnd = firstNumber + 5
             const summaryStart = firstNumber + 8
@@ -3469,10 +3559,7 @@ export default function IELTSReadingInterface({
             if (q.number > summaryStart && q.number <= summaryEnd) return null
           }
 
-          if (
-            currentSection?.id === 'reading-day-29-passage-3' ||
-            currentSection?.id === 'reading-day-30-passage-3'
-          ) {
+          if (currentSection?.id === 'reading-day-29-passage-3') {
             const firstNumber = currentSection.questions[0]?.number ?? 1
             const statementsEnd = firstNumber + 4
             const summaryStart = firstNumber + 8

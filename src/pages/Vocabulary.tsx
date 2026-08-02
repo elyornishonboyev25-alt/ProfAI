@@ -384,7 +384,9 @@ export default function Vocabulary() {
                                   {test.available === false
                                     ? 'Coming soon'
                                     : book.id === 'reading_days_track'
-                                      ? `${test.sections[0]?.title ?? 'Passage'} available`
+                                      ? test.sections.length > 1
+                                        ? `${test.sections.length} passages available`
+                                        : `${test.sections[0]?.title ?? 'Passage'} available`
                                       : 'Click to choose one passage'}
                                 </p>
                               </div>

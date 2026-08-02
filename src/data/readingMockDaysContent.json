@@ -1,0 +1,320 @@
+{
+  "day10p1": {
+    "title": "E-training",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "E-learning is the unifying term to describe the fields of online learning, web-based training, and technology-delivered instruction, which can be a great benefit to corporate e-learning. IBM, for instance, claims that the institution of its e-training program, Basic Blue, whose purpose is to train new managers, saved the company in the range of $200 million in 1999. Cutting the travel expenses required to bring employees and instructors to a central classroom account for the lion's share of the savings. With an online course, employees can learn from any Internet-connected PC, anywhere in the world. Ernst and Young reduced training costs by 35 percent while improving consistency and scalability."
+      },
+      {
+        "label": "B",
+        "content": "In addition to generally positive economic benefits, other advantages such as convenience, standardized delivery, self-paced learning, and a variety of available content, have made e-learning a high priority for many corporations. E-learning is widely believed to offer flexible \"any time, any place\" learning. The claim for \"any place\" is valid in principle and is a great development. Many people can engage with rich learning materials that simply were not possible in a paper or broadcast distance learning era. For teaching specific information and skills, e-training holds great promise. It can be especially effective at helping employees prepare for IT certification programs. E-learning also seems to effectively address topics such as sexual harassment education, safety training and management training — all areas where a clear set of objectives can be identified. Ultimately, training experts recommend a \"blended\" approach that combines both online and in-person training as the instruction requires. E-learning is not an end-all solution. But if it helps decrease costs and windowless classrooms filled with snoring students, it definitely has its advantages."
+      },
+      {
+        "label": "C",
+        "content": "Much of the discussion about implementing e-learning has focused on the technology, but as Driscoll and others have reminded us, e-learning is not just about the technology, but also many human factors. As any capable manager knows, teaching employees new skills is critical to a smoothly run business. Having said that, however, the traditional route of classroom instruction runs the risk of being expensive, slow and, oftentimes, ineffective. Perhaps the classroom's greatest disadvantage is the fact that it takes employees out of their jobs. Every minute an employee is sitting in a classroom training session is a minute they're not out on the floor working. It now looks as if there is a way to circumvent these traditional training drawbacks. E-training promises more effective teaching techniques by integrating audio, video, animation, text and interactive materials with the intent of teaching each student at his or her own pace. In addition to higher performance results, there are other immediate benefits to students such as increased time on task, higher levels of motivation, and reduced test anxiety for many learners."
+      },
+      {
+        "label": "D",
+        "content": "On the other hand, nobody said E-training technology would be cheap. E-training service providers, on the average, charge from $10,000 to $60,000 to develop one hour of online instruction. This price varies depending on the complexity of the training topic and the media used. HTML pages are a little cheaper to develop while streaming-video presentations or flash animations cost more. Course content is just the starting place for the cost. A complete e-learning solution also includes the technology platform (the computers, applications and network connections that are used to deliver the courses). This technology platform, known as a learning management system (LMS), can either be installed onsite or outsourced. Add to that cost the necessary investments in network bandwidth to deliver multimedia courses, and you're left holding one heck of a bill. For the LMS infrastructure and a dozen or so online courses, costs can top $500,000 in the first year. These kinds of costs mean that custom e-training is, for the time being, an option only for large organizations. For those companies that have a large enough staff, the e-training concept pays for itself. Aware of this fact, large companies are investing heavily in online training. Today, over half of the 400-plus courses that Rockwell Collins offers are delivered instantly to its clients in an e-learning format, a change that has reduced its annual training costs by 40%. Many other success stories exist."
+      },
+      {
+        "label": "E",
+        "content": "E-learning isn't expected to replace the classroom entirely. For one thing, bandwidth limitations are still an issue in presenting multimedia over the Internet. Furthermore, e-training isn't suited to every mode of instruction or topic. For instance, it's rather ineffective imparting cultural values or building teams. If your company has a unique corporate culture, it would be difficult to convey that to first-time employees through a computer monitor. Group training sessions are better suited for these purposes. In addition, there is a perceived loss of research time because of the work involved in developing and teaching online classes. Professor Wallin estimated that it required between 500 and 1,000 person-hours, that is, Wallin-hours, to keep the course at the appropriate level of currency and usefulness. (Distance learning instructors often need technical skills, no matter how advanced the courseware system.) That amounts to between a quarter and half of a person-year. Finally, teaching materials require computer literacy and access to equipment. Any e-learning system involves basic equipment and a minimum level of computer knowledge in order to perform the tasks required by the system. A student that does not possess these skills, or have access to these tools, cannot succeed in an e-learning program."
+      },
+      {
+        "label": "F",
+        "content": "While few people debate the obvious advantages of e-learning, systematic research is needed to confirm that learners are actually acquiring and using the skills that are being taught online, and that e-learning is the best way to achieve the outcomes in a corporate environment. Nowadays, a go-between style of blended learning, which refers to a mixing of different learning environments, is gaining popularity. It combines traditional face-to-face classroom methods with more modern computer-mediated activities. According to its proponents, the strategy creates a more integrated approach for both instructors and learners. Formerly, technology-based materials played a supporting role in face-to-face instruction. Through a blended learning approach, technology will be more important."
+      }
+    ]
+  },
+  "day10p2": {
+    "title": "Insect decision-making",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "It has long been held that decisions made collectively by large groups of people are more likely to turn out to be accurate than decisions made by individuals. The idea goes back to the 'jury theorem' of Nicolas de Condorcet, an 18th-century French philosopher who was one of the first to apply mathematics to the social sciences. Condorcet's theory describes collective decisions, outlining how democratic decisions tend to outperform dictatorial ones. If, for example, each member of a jury has only partial information,the majority decision is more likely to be correct than a decision arrived at by a single juror. Moreover, the probability of a correct decision increases with the size of the jury."
+      },
+      {
+        "label": "B",
+        "content": "Now it is becoming clear that group decisions are also extremely valuable for the success of social animals, such as ants, bees, birds and dolphins.Bees make collective decisions,and they do it rather well, according to Christian List of the London School of Economics,who has studied group decision-making in humans and animals. Researchers led by Dr List looked at colonies once the original colony reaches a certain size. The queen goes off with about two-thirds of the worker bees to live in a new home or nest, leaving a daughter queen in the old nest with the remaining workers. Among the bees that depart are some that have searched for and found some new nest sites, and reported back using a characteristic body movement known as a 'waggle dance' to indicate to the other bees the suitable places they have located. The longer the dance, the better the site. After a while, other bees start to visit the sites signalled by their companions to see for themselves and, on their return, also perform more waggle dances. The process eventually leads to a consensus on the best site and the breakaway swarm migrates. The decision is remarkably reliable,with the bees choosing the best site even when there are only small difference between alternative sites."
+      },
+      {
+        "label": "C",
+        "content": "But exactly how do bees reach such a robust consensus? To find out, Dr List and his colleagues used a computer generated model of the decision-making process. By experimenting with it they found that, when bees in the model were very good at finding nesting sites but did not share their information, this dramatically slowed down the migration, leaving the swarm homeless and vulnerable. Conversely, bees in the model blindly following the waggle dances of others without first checking. The researchers concluded that the ability of bees to identify successfully and quickly the best site depends on both the bees' interdependence in communicating the whereabouts of the best site, and their independence in confirming this information for themselves."
+      },
+      {
+        "label": "D",
+        "content": "Another situation in which collective decisions are taken occurs when animals are either isolated from crucial sources of information or dominated by other members of the group. Jos— Halloy of the Free University of Brussels in Belgium used robotic cockroaches to subvert the behaviour of living cockroaches and control their decision-making process. In his experiment, the artificial bugs were introduced to the live ones and soon became sufficiently socially integrated that they were perceived by the real cockroaches as equals. By manipulating the robots, which were in the minority, Halloy was able to persuade the living cockroaches to choose an inappropriate shelter-even one which they had rejected before being infiltrated by the robots."
+      },
+      {
+        "label": "E",
+        "content": "The way insects put into effect collective decisions can be complex, and as important as the decisions themselves.At the University of Bristol, in the UK, Nigel Franks and his colleagues studied how a species of ant establishes a new nest. Franks and his associates reported how the insects reduce the problems associated with making a necessarily swift choice. If the ants' existing nest becomess suddenly threatened, the insects choose certain ants to act as scouts to find a new nest. How quickly they accomplish the transfer to a new home depends not only on how soon the best available site is found, but also on how quickly the migration there can be achieved."
+      },
+      {
+        "label": "F",
+        "content": "Once the suitable new nest is identified, the chosen ants begin to lead others, which have made it to the new site, or which may simply be in the vicinity, back to the original threatened nest. In this way, those ants which are familiar with the route can help transport,for example,the queen and young ants to the new site and simultaneously show the way to those ants which have been left behind to guard the old nest. In this way moving processes are accomplished faster and more efficiently. Thus the dynamics of collective decision-making are closely related to the efficient implementation of those decisions. How this might apply to choices that humans make is, as yet, unclear. But it does suggest, even for humans,the importance of recruiting dynamic leaders to a cause, because the most important thing about collective decision-making,as shown by these insect experiments, is to get others to follow."
+      }
+    ]
+  },
+  "day10p3": {
+    "title": "The Beginning of Intelligence",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "No one doubts that intelligence develops as children grow older. Yet the concept of intelligence has proved both quite difficult to define in unambiguous terms and unexpectedly controversial in some respects. Although, at one level, there seem to be almost as many definitions of intelligence as people who have tried to define it, there is broad agreement on two key features. That is, intelligence involves the capacity not only to learn from experience but also to adapt to one's environment. However, we cannot leave the concept there. Before turning to what is known about the development of intelligence, it is necessary to consider whether we are considering the growth of one or many skills. That question has been tackled in rather different ways by psychometricians and by developmentalists."
+      },
+      {
+        "label": "B",
+        "content": "The former group has examined the issue by determining how children's abilities on a wide range of tasks intercorrelate, or go together. Statistical techniques have been used to find out whether the patterns are best explained by one broad underlying capacity, general intelligence, or by a set of multiple, relatively separate, special skills in domains such as verbal and visuospatial ability. While it cannot be claimed that everyone agrees on what the results mean, most people now accept that for practical purposes it is reasonable to suppose that both are involved. In brief, the evidence in favour of some kind of general intellectual capacity is that people who are superior (or inferior) on one type of task tend also to be superior (or inferior) on others. Moreover, general measures of intelligence tend to have considerable powers to predict a person's performance on a wide range of tasks requiring special skills. Nevertheless, it is plain that it is not at all uncommon for individuals to be very good at some sorts of task and yet quite poor at some others."
+      },
+      {
+        "label": "C",
+        "content": "Furthermore the influences that affect verbal skills are not quite the same as those that affect other skills. This approach to investigating intelligence is based on the nature of the task involved, but studies of age-related changes show that this is not the only, or necessarily the most important, approach. For instance, some decades ago, Horn and Cattell argued for a differentiation between what they termed`fluid' and`crystallised' intelligence. Fluid abilities are best assessed by tests that require mental manipulation of abstract symbols. Crystallised abilities, by contrast, reflect knowledge of the environment in which we live and past experience of similar tasks; they may be assessed by tests of comprehension and information. It seems that fluid abilities peak in early adult life, whereas crystallised abilities increase up to advanced old age."
+      },
+      {
+        "label": "D",
+        "content": "Developmental studies also show that the interconnections between different skills vary with age. Thus in the first year of life an interest in perceptual patterns is a major contributor to cognitive abilities, whereas verbal abilities are more important later on. These findings seemed to suggest a substantial lack of continuity between infancy and middle childhood. However, it is important to realise that the apparent discontinuity will vary according to which of the cognitive skills were assessed in infancy. It has been found that tests of coping with novelty do predict later intelligence. These findings reinforce the view that young children's intellectual performance needs to be assessed from their interest in and curiosity about the environment, and the extent to which this is applied to new situations, as well as by standardised intelligence testing."
+      },
+      {
+        "label": "E",
+        "content": "These psychometric approaches have focused on children's increase in cognitive skills as they grow older. Piaget brought about a revolution in the approach to cognitive development through his arguments ( backed up by observations) that the focus should be on the thinking processes involved rather than on levels of cognitive achievement. These ideas of Piaget gave rise to an immense body of research and it would be true to say that subsequent thinking has been heavily dependent on his genius in opening up new ways of thinking about cognitive development. Nevertheless, most of his concepts have had to be so radically revised, or rejected, that his theory no longer provides an appropriate basis for thinking about cognitive development. To appreciate why that is so, we need to focus on some rather different elements of Piaget's theorising."
+      },
+      {
+        "label": "F",
+        "content": "The first element, which has stood the test of time, is his view that the child is an active agent of learning and of the importance of this activity in cognitive development. Numerous studies have shown how infants actively scan their environment; how they prefer patterned to non-patterned objects, how they choose novel over familiar stimuli, and how they explore their environment as if to see how it works. Children's questions and comments vividly illustrate the ways in which they are constantly constructing schemes of what they know and trying out their ideas of how to fit new knowledge into those schemes or deciding that the schemes need modification. Moreover, a variety of studies have shown that active experiences have a greater effect on learning than comparable passive experiences. However, a second element concerns the notion that development proceeds through a series of separate stages that have to be gone through step-by-step, in a set order, each of which is characterised by a particular cognitive structure. That has turned out to be a rather misleading way of thinking about cognitive development, although it is not wholly wrong."
+      }
+    ]
+  },
+  "day20p1": {
+    "title": "Katherine Mansfield",
+    "showParagraphLabels": false,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "Katherine Mansfield was a modernist writer of short fiction who was born and brought up in New Zealand. Katherine Mansfield Beauchamp Murry was born in 1888 into a prominent family in Wellington, New Zealand. She became one of New Zealand's best-known writers, using the pen name of Katherine Mansfield. The daughter of a banker, and born into a middle-class family, she was also a first cousin of Countess Elizabeth von Arnim, a distinguished novelist in her time. Mansfield had two older sisters and a younger brother. Her father, Harold Beauchamp, went on to become the chairman of the Bank of New Zealand. In 1893, the Mansfield family moved to Karori, a suburb of Wellington, where Mansfield would spend the happiest years of her childhood; she later used her memories of this time as an inspiration for her Prelude story."
+      },
+      {
+        "label": "B",
+        "content": "Her first published stories appeared in the High School Reporter and the Wellington Girls' High School magazine in 1898 and 1899. In 1902, she developed strong feelings for a musician who played the cello, Arnold Trowell, although her feelings were not, for the most part, returned. Mansfield herself was an accomplished cellist, having received lessons from Trowell's father. Mansfield wrote in her journals of feeling isolated to some extent in New Zealand, and, in general terms of her interest in the Maori people ( New Zealand's native people), who were often portrayed in a sympathetic light in her later stories, such as How Pearl Button was Kidnapped"
+      },
+      {
+        "label": "C",
+        "content": "She moved to London in 1903, where she attended Queen's college, along with her two sisters. Mansfield recommenced playing the cello, an occupation that she believed, during her time at Queen's, she would take up professionally. She also began contributing to the college newspaper, with such a dedication to it that she eventually became its editor. She was particularly interested in the works of the French writers of this period and on the 19thcentury British writer, Oscar Wilde, and she was appreciated amongst fellow students at Queen's for her lively and charismatic approach to life and work. She met fellow writer Ida Baker, a South African, at the college, and the pair became lifelong friends. Mansfield did not actively support the suffragette movement in the UK. Women in New Zealand had gained the right to vote in 1893."
+      },
+      {
+        "label": "D",
+        "content": "Mansfield first began journeying into the other parts of Europe in the period 1903-1906, mainly to Belgium and Germany. After finishing her schooling in England, she returned to her New Zealand home in 1906, only then beginning to write short stories in a serious way. She had several works published in Australia in a magazine called Native Companion, which was her first paid writing work, and by this time she had her mind set on becoming a professional writer. It was also the first occasion on which she used the pseudonym \"k.Mansfield\"."
+      },
+      {
+        "label": "E",
+        "content": "Mansfield rapidly grew discontented with the provincial New Zealand lifestyle, and with her family. Two years later she headed again to London. Her father sent her an annual subsidy of £100 for the rest of her life. In later years, she would express both admiration and disdain for New Zealand in her journals."
+      },
+      {
+        "label": "F",
+        "content": "In 1911, Mansfield met John Middleton Murry, the Oxford scholar and editor of the literary magazine Rhythm. They were later to marry in 1918. Mansfield became a co-editor of Rhythm, which was subsequently called The Blue Review, in which more of her works were published. She and Murry lived in various houses in England and briefly in Paris. The Blue Review failed to gain enough readers and was no longer published. Their attempt to set up as writers in Paris was cut short by Murry's bankruptcy, which resulted from the failure of this and other journals. Life back in England meant frequently changed addresses and very limited funds."
+      },
+      {
+        "label": "G",
+        "content": "Between 1915 and 1918, Mansfield moved between England and Bandol, France. She and Murry developed close contact with other well-known writers of the time such as DH Lawrence, Bertrand Russell and Aldous Huxley. By October 1918 Mansfield had become seriously ill; she had been diagnosed with tuberculosis and was advised to enter a sanatorium. She could no longer spend time with writers in London. In the autumn of 1918 she was so ill that she decided to go to Ospedale in Italy. It was the publication of Bliss and Other Stories in 1920 that was to solidify Mansfield's reputation as a writer."
+      },
+      {
+        "label": "H",
+        "content": "Mansfield also spent time in Menton, France, as the tenant of her father's cousin at \" The Villa Isola Bella\". There she wrote she pronounced to be \"...the only story that satisfies me to any extent\"."
+      },
+      {
+        "label": "I",
+        "content": "Mansfield produced a great deal of work in the final years of her life, and much of her prose and poetry remained unpublished at her death in 1923. After her death, her husband, Murry, took on the task of editing and publishing her works. His efforts resulted in two additional volumes of short stories, The Doves' Nest and Something Childish, published in 1923 and 1924 respectively, the publication of her Poems, as well as a collection of critical writings (Novels and Novelists) and a number of editions of Mansfield's previously unpublished letters and journals."
+      }
+    ]
+  },
+  "day20p2": {
+    "title": "Answers Underground",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "One way to slow global warming is to take the greenhouse gases that cause it and bury them. That is the idea behind projects now under way to capture emissions from power plants and factories and force them underground or deep into the ocean. There, proponents argue, they could be trapped for thousands of years."
+      },
+      {
+        "label": "B",
+        "content": "This concept, known as carbon sequestration, is already being used by oil companies to improve the efficiency of oil wells, and now engineers have begun exploring ways to capture carbon dioxide emissions from power plants to reduce their impact on the environment. At a recent conference, delegates from fourteen industrialised and developing countries agreed to engage in cooperative research into capturing and storing carbon dioxide."
+      },
+      {
+        "label": "C",
+        "content": "The goal is to stabilise emissions of greenhouse gases that trap heat in the atmosphere. Over the past century, airborne carbon dioxide concentrations have risen by nearly a third, according to Scott Klara, sequestration manager at the US National Energy Technology Laboratory. Unless emissions are slashed by two thirds worldwide, the Intergovernmental Panel on Climate Change predicts that concentrations will rise to double the levels of the early 1700s, before the Industrial Revolution. These increased levels of carbon-based compounds in the atmosphere are believed to be the cause of rising temperatures and sea levels around the world. Ignoring the problem is therefore not an option."
+      },
+      {
+        "label": "D",
+        "content": "Limiting emissions, however, is not an easy undertaking since increased energy consumption is a key to economic growth. Two thirds of the world's power-generating capacity, expected to come into use by 2030, has not been constructed yet, according to the International Energy Agency. The developing world will be particularly important. China and India alone are expected to account for two thirds of the global increase in coal usage over the next fifteen years."
+      },
+      {
+        "label": "E",
+        "content": "Solutions are being sought. Work is being undertaken with alternatives to fossil fuels such as wind and solar energy, but it will be a long time before these alternative sources play a major role in fulfilling the world's energy needs. Geophysicist Klaus Lackner points out that around 85% of the world's energy is derived from fossil fuels, the cheapest and most plentiful energy source available, and the developing world in particular is unlikely to give them up. That is why many scientists support sequestration"
+      },
+      {
+        "label": "F",
+        "content": "However, several problems must be resolved before sequestration plays a key role in a low-carbon future. One is the cost of capturing carbon dioxide. A second is storing the gas safely once it's been captured. Today, it costs about US$50 to extract and store a tonne of carbon dioxide from a power plant, which raises the cost of producing electricity by 30–80%. Lackner argues that it is too expensive to adapt existing plants to capture carbon dioxide. Instead, he recommends that carbon-capturing capacity be built into future plants. Economic incentives are needed to encourage companies to identify low-cost carbon-sequestration solutions. A government-supported program in the US has enabled some factories to partially capture carbon emissions, which they then sell for various uses, including carbonating soft drinks. However, there are no power plants ready for full carbon capture."
+      },
+      {
+        "label": "G",
+        "content": "Once the carbon has been captured it must be stored. Natural carbon sinks, such as forests and wetlands, can remove some carbon dioxide from the atmosphere, but not nearly enough. Carbon dioxide could be pumped to the bottom of the ocean, where the pressure would keep it pinned to the seabed in liquid form for decades, but that has serious long-term environmental risks. David Hawkins, from the Natural Resources Defense Council in Washington, warns that the carbon dioxide could radically alter the chemical balance in the ocean, with potentially harmful consequences for marine life. Others worry that the carbon dioxide could escape back into the atmosphere."
+      },
+      {
+        "label": "H",
+        "content": "A few promising attempts at underground carbon sequestration are currently under way. In western Canada, an oil company is pumping liquefied carbon dioxide into oil wells to force more oil to the surface and boost recovery by 10-15%. The company gets the carbon dioxide via a pipeline from North Dakota in the US, where the gas is captured from a synthetic-fuel plant. In another instance in the North Sea, a Norwegian energy firm is injecting carbon dioxide waste from its natural-gas operations into a saline aquifer 1,000 metres beneath the ocean floor."
+      },
+      {
+        "label": "I",
+        "content": "Clearly, storing large amounts of gas underground raises environmental fears. Environmentalists argue that more research is needed on potential storage sites, such as oil and gas reservoirs and coal seams unsuitable for mining, to ensure that they offer long-term solutions. The World Wide Fund for Nature Australia has argued that the primary risk of underground storage is that dangerously large volumes of carbon dioxide might escape and people become asphyxiated."
+      },
+      {
+        "label": "J",
+        "content": "Little progress in slashing global greenhouse gases can be achieved without involving developing countries, but for now carbon sequestration is not their priority because of the increased costs this would add to energy production. Hawkins argues that, to encourage developing nations to use sequestration, developed nations will have to provide assistance. He suggests a multilateral initiative in which developed nations, perhaps by purchasing carbon credits from poorer countries, finance the difference between the cost of a regular coal-fired power plant and one that captures carbon emissions. That is, the rich who will remain the world's biggest polluters for years to come would buy the right to emit carbon from the poor, who would use the proceeds to build better plants."
+      }
+    ]
+  },
+  "day20p3": {
+    "title": "Willpower",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "Although willpower does not shape our decisions, it determines whether and how long we can follow through on them. It almost single-handedly determines life outcomes. Interestingly, research suggests the general population is indeed aware of how essential willpower is to their wellbeing; survey participants routinely identify a `lack of willpower' as the major impediment to making beneficial life changes. There are, however, misunderstandings surrounding the nature of willpower and how we can acquire more of it. There is a widespread misperception, for example, that increased leisure time would lead to subsequent increases in willpower."
+      },
+      {
+        "label": "B",
+        "content": "Although the concept of willpower is often explained through single-word terms, such as `resolve' or `drive', it refers in fact to a variety of behaviours and situations. There is a common perception that willpower entails resisting some kind of a `treat', such as a sugary drink or a lazy morning in bed, in favour of decisions that we know are better for us, such as drinking water or going to the gym. Of course this is a familiar phenomenon for all. Yet willpower also involves elements such as overriding negative thought processes, biting your tongue in social situations, or persevering through a difficult activity. At the heart of any exercise of willpower, however, is the notion of `delayed gratification', which involves resisting immediate satisfaction for a course that will yield greater or more permanent satisfaction in the long run."
+      },
+      {
+        "label": "C",
+        "content": "Scientists are making general investigations into why some individuals are better able than others to delay gratification and thus employ their willpower, but the genetic or environmental origins of this ability remain a mystery for now. Some groups who are particularly vulnerable to reduced willpower capacity, such as those with addictive personalities, may claim a biological origin for their problems. What is clear is that levels of willpower typically remain consistent over time (studies tracking individuals from early childhood to their adult years demonstrate a remarkable consistency in willpower abilities). In the short term, however, our ability to draw on willpower can fluctuate dramatically due to factors such as fatigue, diet and stress. Indeed, research by Matthew Gailliot suggests that willpower, even in the absence of physical activity, both requires and drains blood glucose levels, suggesting that willpower operates more or less like a `muscle', and, like a muscle, requires fuel for optimum functioning."
+      },
+      {
+        "label": "D",
+        "content": "These observations lead to an important question: if the strength of our willpower at the age of thirty-five is somehow pegged to our ability at the age of four, are all efforts to improve our willpower certain to prove futile? According to newer research, this is not necessarily the case. Gregory M. Walton, for example, found that a single verbal cue — telling research participants how strenuous mental tasks could `energise' them for further challenging activities — made a profound difference in terms of how much willpower participants could draw upon to complete the activity. Just as our willpower is easily drained by negative influences, it appears that willpower can also be boosted by other prompts, such as encouragement or optimistic self-talk."
+      },
+      {
+        "label": "E",
+        "content": "Strengthening willpower thus relies on a two-pronged approach: reducing negative influences and improving positive ones. One of the most popular and effective methods simply involves avoiding willpower depletion triggers, and is based on the old adage, `out of sight, out of mind'. In one study, workers who kept a bowl of enticing candy on their desks were far more likely to indulge than those who placed it in a desk drawer. It also appears that finding sources of motivation from within us may be important. In another study, Mark Muraven found that those who felt compelled by an external authority to exert self-control experienced far greater rates of willpower depletion than those who identified their own reasons for taking a particular course of action. This idea that our mental convictions can influence willpower was borne out by Veronika Job. Her research indicates that those who think that willpower is a finite resource exhaust their supplies of this commodity long before those who do not hold this opinion."
+      },
+      {
+        "label": "F",
+        "content": "Willpower is clearly fundamental to our ability to follow through on our decisions but, as psychologist Roy Baumeister has discovered, a lack of willpower may not be the sole impediment every time our good intentions fail to manifest themselves. A critical precursor, he suggests, is motivation — if we are only mildly invested in the change we are trying to make, our efforts are bound to fall short. This may be why so many of us abandon our New Year's Resolutions — if these were actions we really wanted to take, rather than things we felt we ought to be doing, we would probably be doing them already. In addition, Muraven emphasises the value of monitoring progress towards a desired result, such as by using a fitness journal, or keeping a record of savings toward a new purchase. The importance of motivation and monitoring cannot be overstated. Indeed, it appears that, even when our willpower reserves are entirely depleted, motivation alone may be sufficient to keep us on the course we originally chose."
+      }
+    ]
+  },
+  "day30p1": {
+    "title": "What Is the Secret of a Long Life?",
+    "showParagraphLabels": false,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "This year, the number of retired pensioners in the UK exceeded the number of under 18 years old for the first time in history. That's remarkable in its own right, but the real 'population explosion' has been among the oldest of the old—the centenarians. In fact, this imbalance is the fastest growing demographic in much of the developed world. In the UK, the number of centenarians has increased by 60 per cent since the early 20th century. And their ranks are set to swell even further, thanks to the ageing baby-boomer generation: by 2030 there will be about a million worldwide."
+      },
+      {
+        "label": "B",
+        "content": "These trends raise social, ethical and economic dilemmas. Are medical advances artificially prolonging life, with little regard for the quality of that life? If growing numbers of elderly people become dependent on state or familial support, society faces skyrocketing costs and commitments. Yet researchers who study the oldest old have made a surprising discovery that presents a less pessimistic view of the future than many anticipate."
+      },
+      {
+        "label": "C",
+        "content": "It is becoming clear that people who break through the 90-plus barrier represent a physical elite. Far from gaining a longer burden of disability, their extra years tend to be healthy ones. And supercentenarians, people aged 110 or over, are even better examples of ageing well. The average supercentenarian had freely gone about their daily life up until the age of 105 or so, some five to ten years longer even than centenarians."
+      },
+      {
+        "label": "D",
+        "content": "One of the most comprehensive studies comes from Denmark. In 1998 Kare Christensen, at the University of Southern Denmark, contacted every single one of 3600 people born in 1905 who was still alive. Assessing their health over the subsequent decade, he found that the proportion of people who managed to remain independent throughout was constantly around one-third of the total. Each individual risked becoming more infirm, but the unhealthiest ones passed away at earlier ages, leaving the strongest behind. In 2005, only 166 of the people in Christensen's sample were still alive, but one-third of those were still entirely self-sufficient."
+      },
+      {
+        "label": "E",
+        "content": "Christensen's optimistic findings are echoed in studies all over the world. In the MC, Carol Brayne at the University of Cambridge studied 958 people aged over 90, and found that only one-quarter of them were living in accommodation specifically catering for the needs of older people. Research in China reveals that centenarians and nonagenarians spend fewer days ill and in bed than younger elderly groups. Of course, people can live independently without being entirely healthy, and it is true that most centenarians suffer from some kind of ailment. These range from osteoarthritis to simple loneliness."
+      },
+      {
+        "label": "F",
+        "content": "Not all the oldest old survive by delaying illness or disability, though. Many soldier through it. Jessica Evert of Ohio State University examined the medical histories of over 400 centenarians. She found that those who achieve extreme longevity tend to fall into three categories. About 40 per cent were 'delayers', who avoided chronic diseases until after the age of 80. Another 40 per cent were 'survivors', who suffered from chronic diseases before the age of 80 but lived longer to tell the tale. The final 20 per cent were 'escapers', who reached their century with no sign of the most common chronic diseases. Intriguingly, onethird of male centenarians were in this category, compared with only 15 per cent of women. In fact, the two sexes fare very differently when it comes to longevity. There are far more female centenarians, but the reasons for this are unclear. Certainly, women tend to lead healthier lifestyles and experience fewer serious accidents. They also go to their doctor more. Men are more prone to risky behaviour and chronic illness, so it must be genetics which allows some men to reach extreme old age. Evidence of this comes from longevity hotspots."
+      },
+      {
+        "label": "G",
+        "content": "The Japanese island of Okinawa is the front runner. At 58 centenarians per 100,000 people, it has the world's highest proportion in this age group, with Sardinia and Iceland not too far behind. All three are relatively isolated island communities, which leads to less genetic variation amongst inhabitants. In these places, the result has been a predisposition towards a longer life. Of course, members of such communities usually share a particular environment, too, but this alone cannot explain longevity. Gerontologists have emphasised the importance of regular exercise, so anyone aiming to reach a century should not underestimate this. They have also found that the influence on lifespan of social factors such as wealth fades as we age. By comparing 10,000 pairs of Scandinavian twins, Christensen found that genes are key, but that they only start exerting a strong influence on our lifespan after the age of 60. Before then, those who are both identical and non-identical have largely independent chances of reaching a given age."
+      },
+      {
+        "label": "H",
+        "content": "Longevity genes have also been found in abundance in other organisms, including over 70 in particular worms. Unfortunately, it's a different story in humans. While many genes have been suggested to affect lifespan, very few have been consistently verified in multiple populations. Note: 1.''Centenarian\": someone who is 100 years or older. 2. \" Baby boomer\": someone born just after the Second World War, a time which saw a rapid increase in birth rate. 3. \"Nonagenarian\": someone who is between 90 and 99 years old. 4. \"Gerontologist\": a medical professional who specialises in aging and the problems of aged Persons."
+      }
+    ]
+  },
+  "day30p2": {
+    "title": "Mind Music",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "Ever had a song stuck in your head, playing on an endless loop? Scientists call them 'involuntary musical images', or 'earworms', and a wave of new research is shining light on why they occur and what can be learned from them. Some neuroscientists and cognitive psychologists are studying earworms to explore the mysteries of memory and the part of the brain that is beyond our conscious control. The idea that we have full control over our thought processes is an illusion,' says psychologist Lauren Stewart, who founded the master's program in music, mind and brain at Goldsmiths, University of London, UK, where recent research has taken place. Researchers haven't been able to watch what happens in the brain when earworms occur, because they happen unpredictably. Much of what is known about them comes from surveys, questionnaires, diaries and lab experiments."
+      },
+      {
+        "label": "B",
+        "content": "A Goldsmiths study published in the journal Memory and Cognition this year showed that the singing we hear in our heads tends to be true to actual recordings. Researchers had 17 volunteers tap to the beat of any earworm they heard during a four-day period while a device attached to their wrist recorded their movements. The tapping tempos were within 10% of the tempos of the original recordings. Another Goldsmiths study, published this year in Consciousness and Cognition, found that people who report hearing earworms often, and find them most intrusive, have slightly different brain structures, with more gray matter in areas associated with processing emotions."
+      },
+      {
+        "label": "C",
+        "content": "Studies also show that the music in our heads often starts playing during times of 'low cognitive load', such as while showering, getting dressed, walking, or doing chores. Dr Stewart likens earworms to 'sonic screen savers' that keep the mind entertained while it is otherwise unoccupied. She and her colleagues tested that theory by having volunteers listen to songs and giving them various tasks afterwards. The volunteers who sat idly for the next five minutes were the most likely to report hearing the music in their heads. Dr Stewart observed that the more challenging the activity, the less likely the volunteers were to hear the music. Diary studies also show songs tend to match people's moods and therefore they are not random. If you are energized and upbeat, an earworm that occurs is likely to be uptempo too."
+      },
+      {
+        "label": "D",
+        "content": "Songs the brain fixates on are usually those it has been exposed to recently, surveys show, which is why tunes getting heavy radio play frequently top the earworm charts. Even tunes you may have heard but didn't pay attention to can worm their way into your subconscious, says Ira Hyman, a psychologist at Western Washington University in Bellingham, USA. In an unpublished study there, participants who listened to music while doing other tasks were more likely to report that the songs returned as earworms later on, compared with participants who simply listened."
+      },
+      {
+        "label": "E",
+        "content": "Some earworms are just fragments of a song that repeat like a broken record. So, when the mind hits a part of a song it can't remember, it loops back rather than moving on. That could make an earworm even more entrenched, Dr Hyman says. According to a theory known as the Zeigarnik effect, named for a Soviet psychologist, Bluma Zeigarnik, unfinished thoughts and activities weigh on the mind more heavily than those that are completed, although experiments exposing students to interrupted songs have yielded mixed results."
+      },
+      {
+        "label": "F",
+        "content": "Researchers say they can't pinpoint a spot in the brain where earworms live. Imaging studies by Andrea Halpern at Bucknell University, in Lewisburg, USA, have shown that deliberately imagining music and actually listening to music activate many of the same neurological networks. Dr Halpern's earlier studies showed that when subjects listened to the first few notes of familiar music, areas in the right frontal and superior temporal portions of the brain became activated, along with the supplementary motor area at the top, which is typically involved in remembering sequences. When the same subjects listened to unfamiliar music and were asked to recall it, there was activity in the left frontal portions of the brain instead."
+      },
+      {
+        "label": "G",
+        "content": "One factor that makes some songs stick might be repetition. 'Repetition leads to familiarity which leads to anticipation, which is satisfied by hearing the song,' says John Seabrook, author of The Song Machine: Inside the Hit Factory, about how producers pump pop songs full of aural \"hooks', the punchy melodic phrases designed to target the brain and leave it wanting more. The researchers are comparing the melodic structure of 100 often-mentioned songs with 100 similarly popular songs that weren't cited as earworms, to assess the difference. Songs with earworm potential appear to share certain features: a repeating pattern of ups and downs in pitch, and an irregular musical interval."
+      },
+      {
+        "label": "H",
+        "content": "The researchers plan next to test their results in reverse, and play ringtones from songs of both the earworm and non-earworm variety for volunteers several times a day to see which ones get stuck. Drs Stewart and Halpernn are now working together to recruit survey participants for a study looking at whether people at different stages of life experience earworms differently. 'You can argue that older people might get them more often because they know more songs,' Dr Halpern says. 'But the few responses we have so far indicate that they have earworms less often. It could be that they don't play music as often as younger people do."
+      }
+    ]
+  },
+  "day30p3": {
+    "title": "Sunny Days For Silicon",
+    "showParagraphLabels": true,
+    "paragraphs": [
+      {
+        "label": "A",
+        "content": "The old saw that \"the devil is in the details\" characterizes the kind of needling obstacles that prevent an innovative concept from becoming a working technology. It also often describes the type of problems that must be overcome to shave cost from the resulting product so that people will buy it. Emanuel Sachs of the Massachusetts Institute of Technology has struggled with many such little devils in his career-long endeavor to develop low-cost, high-efficiency solar cells. In his latest effort, Sachs has found incremental ways to boost the amount of electricity that common photovoltaics (PVs) generate from sunlight without increasing the costs. Specifically, he has raised the conversion efficiency of test cells made from multi-crystalline silicon from the typical 15.5 percent to nearly 20 percent—on par with pricier single-crystal silicon cells. Such improvements could bring the cost of PV power down from the current $1.90 to $2.10 per watt to $1.65 per watt. With additional tweaks, Sachs anticipates creating within four years solar cells that can produce juice at a dollar per watt, a feat that would make electricity from the sun competitive with that from coal-burning power plants."
+      },
+      {
+        "label": "B",
+        "content": "Most PV cells, such as those on home rooftops, rely on silicon to convert sunlight into electric current. Metal interconnects then funnel the electricity out from the silicon to power devices or to feed an electrical grid. Since solar cells became practical and affordable three decades ago, engineers have mostly favored using single-crystal silicon as the active material, says Michael Rogol, managing director of Germany-based Photon Consulting. Wafers of the substance are typically sawed from an ingot consisting of one large crystal that has been pulled like taffy out of a vat of molten silicon. Especially at first, the high-purity ingots were left over from integrated-circuit manufacture, but later the process was used to make PV cells themselves, Rogol recounts. Although single-crystal cells offer high conversion efficiencies, they are expensive to make. The alternatives—multi-crystalline silicon cells, which factories fabricate from lower-purity, cast ingots composed of many smaller crystals—are cheaper to make, but unfortunately they are less efficient than single-crystal cells."
+      },
+      {
+        "label": "C",
+        "content": "Sachs, who has pioneered several novel ways to make silicon solar cells less costly and more effective, recently turned his focus to the details of multi-crystalline silicon cell manufacture. The first small improvement concerns the little silver fingers that gather electric current from the surface of the bulk silicon,\" he explains. In conventional fabrication processes, cell manufacturers use screen-printing techniques (\"like high-accuracy silkscreening of T-shirts,\" Sachs notes) and inks containing silver particles to create these bus wires. The trouble is that standard silver wires come out wide and short, about 120 by 10 microns, and include many nonconductive voids. As a result, they block considerable sunlight and do not carry as much current as they should."
+      },
+      {
+        "label": "D",
+        "content": "At his start-up company—Lexington, Massachusetts-based 1366 Technologies (the number refers to the flux of sunlight that strikes the earth's outer atmosphere: 1,366 watts per square meter)—Sachs is employing \"a proprietary wet process that can produce thinner and taller\" wires that are 20 by 20 microns. The slimmer bus wires use less costly silver and can be placed closer together so they can draw more current from the neighboring active material, through which free electrons can travel only so far. At the same time, the wires block less incoming light than their standard counterparts."
+      },
+      {
+        "label": "E",
+        "content": "The second innovation alters the wide, flat interconnect wires that collect current from the silver bus wires and electrically link adjacent cells. Interconnect wires at the top can shade as much as 5 percent of the area of a cell. \"We place textured mirror surfaces on the faces of these rolled wires. These little mirrors reflect incoming light at a lower angle—around 30 degrees—so that when the reflected rays hit the glass layer at the top, they stay within the silicon wafer by way of total internal reflection,\" Sachs explains. (Divers and snorkelers commonly see this optical effect when they view water surfaces from below.) The longer that light remains inside, the more chance it has to be absorbed and transformed into electricity."
+      },
+      {
+        "label": "F",
+        "content": "Sachs expects that new anti-reflection coatings will further raise multi-crystalline cell efficiencies. One of his firm's future goals will be a switch from expensive silver bus wires to cheaper copper ones. And he has a few ideas regarding how to successfully make the substitution. \"Unlike silver, copper poisons the performance of silicon PVs,\" Sachs says, \"so it will be crucial to include a low-cost diffusion barrier that stops direct contact between copper and the silicon.\" In this business, it's always the little devilish details that count."
+      },
+      {
+        "label": "G",
+        "content": "The cost of silicon solar cells is likely to fall as bulk silicon prices drop, according to the U.S. Energy Information Administration and the industry tracking firm Solarbuzz. A steep rise in solar panel sales in recent years had led to a global shortage of silicon because production capacity for the active material lagged behind, but now new silicon manufacturing plants are coming online. The reduced materials costs and resulting lower system prices will greatly boost demand for solar-electric technology, according to market watcher Michael Rogol of Photon Consulting."
+      }
+    ]
+  }
+}

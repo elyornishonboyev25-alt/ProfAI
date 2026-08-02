@@ -60,6 +60,7 @@ export interface Section {
     content?: string // For Reading (full text)
     paragraphs?: { label: string; content: string }[] // For structured Reading passages
     showParagraphLabels?: boolean // Preserve source lettering only when the original passage uses it
+    premiumQuestionGroups?: boolean // Render contiguous question groups with the shared Full Test visual system
     audioUrl?: string // For Listening
     visualAidUrl?: string // Optional prompt/diagram image for Listening
     audioTranscript?: string // Optional transcript for practice mode review

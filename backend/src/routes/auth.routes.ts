@@ -72,6 +72,7 @@ function sanitizeUser(user: {
   const premium = isPremiumUser({
     role: user.role,
     email: user.email,
+    nickname: user.nickname,
   })
 
   return {

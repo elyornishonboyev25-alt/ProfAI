@@ -31,7 +31,14 @@ const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'nishonboyv7@gmail.com',
 ])
 
-type PremiumInput = { email?: string | null; premium?: boolean | null; role?: string | null } | null | undefined
+const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs'])
+
+type PremiumInput = {
+  email?: string | null
+  nickname?: string | null
+  premium?: boolean | null
+  role?: string | null
+} | null | undefined
 
 /**
  * Whether the account is a genuine premium owner (allowlist or admin).
@@ -41,7 +48,8 @@ type PremiumInput = { email?: string | null; premium?: boolean | null; role?: st
 export function isPremiumUser(input?: PremiumInput) {
   if (!input) return false
   if (input.role === 'ADMIN') return true
-  if (input.email && PREMIUM_EMAIL_ALLOWLIST.has(input.email.toLowerCase())) return true
+  if (input.email && PREMIUM_EMAIL_ALLOWLIST.has(input.email.trim().toLowerCase())) return true
+  if (input.nickname && PREMIUM_NICKNAME_ALLOWLIST.has(input.nickname.trim().toLowerCase())) return true
   return false
 }
 

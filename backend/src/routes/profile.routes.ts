@@ -368,6 +368,7 @@ router.get(
           id: true,
           fullName: true,
           email: true,
+          nickname: true,
           role: true,
           xp: true,
           level: true,
@@ -426,7 +427,7 @@ router.get(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email })) {
+    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Analysis is available for Premium users only.',
       })
@@ -553,6 +554,7 @@ router.post(
       where: { id: userId },
       select: {
         email: true,
+        nickname: true,
         role: true,
       },
     })
@@ -561,7 +563,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email })) {
+    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Analysis is available for Premium users only.',
       })
@@ -593,6 +595,7 @@ router.post(
       where: { id: userId },
       select: {
         email: true,
+        nickname: true,
         role: true,
       },
     })
@@ -601,7 +604,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email })) {
+    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Copilot is available for Premium users only.',
       })
@@ -1109,6 +1112,7 @@ router.post(
       where: { id: userId },
       select: {
         email: true,
+        nickname: true,
         role: true,
       },
     })
@@ -1117,7 +1121,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email })) {
+    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'Realtime speaking is available for Premium users only.',
       })

@@ -36,6 +36,7 @@ const READING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
 const LISTENING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
   1: 'ielts-listening-1',
   2: 'ielts-listening-2',
+  3: 'ielts-listening-3',
 }
 
 const MOCK_READING_DAYS = new Set([10, 20, 30])
@@ -83,7 +84,7 @@ const CURRENTLY_AVAILABLE_TRACK_TESTS: Record<IeltsTrackType, Set<string>> = {
     'ielts-reading-full-vol9',
     'ielts-reading-full-vol10',
   ]),
-  listening: new Set(['ielts-listening-1', 'ielts-listening-2']),
+  listening: new Set(['ielts-listening-1', 'ielts-listening-2', 'ielts-listening-3']),
 }
 
 function resolvePassageDifficulty(day: number): PassageDifficulty {

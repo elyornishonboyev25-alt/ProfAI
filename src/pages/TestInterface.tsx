@@ -207,7 +207,7 @@ export default function TestInterface() {
           </span>
           <h1 className="mt-4 text-3xl font-black text-slate-900">{label} Test Coming Soon</h1>
           <p className="mt-2 text-sm text-slate-600">
-            This test is currently in preview mode. Right now <strong>Reading Full Test 1-10</strong> and <strong>Listening Full Test 1-2</strong> are fully live.
+            This test is currently in preview mode. Right now <strong>Reading Full Test 1-10</strong> and <strong>Listening Full Test 1-3</strong> are fully live.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <button

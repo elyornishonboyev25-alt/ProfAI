@@ -46,6 +46,7 @@ export type ListeningBlock =
     | { kind: 'grid'; columns: string[]; rows: { blank: number; label: string }[]; options?: ListeningOption[] }
     | { kind: 'mcq'; blank: number; prompt: string; options: string[] }
     | { kind: 'table'; columns: string[]; rows: { segments: ListeningSegment[] }[][] }
+    | { kind: 'image'; src: string; alt: string; caption?: string }
     | { kind: 'space' }
 
 export interface ListeningGroup {
@@ -80,6 +81,8 @@ export interface IELTSTest {
     duration: number // Total minutes
     sections: Section[]
     totalQuestions: number
+    /** A single, continuous recording used by a full Listening test. */
+    continuousAudioUrl?: string
 }
 
 // Writing Specific Types

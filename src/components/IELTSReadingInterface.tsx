@@ -455,8 +455,8 @@ export default function IELTSReadingInterface({
 
   // ---- Listening: continuous non-controllable audio playlist ----
   const listeningAudioSources = useMemo(
-    () => (isListening ? activeSections.map((section) => section.audioUrl ?? '') : []),
-    [isListening, activeSections],
+    () => (isListening ? (test.continuousAudioUrl ? [test.continuousAudioUrl] : activeSections.map((section) => section.audioUrl ?? '')) : []),
+    [isListening, activeSections, test.continuousAudioUrl],
   )
   const listeningQuestionByNumber = useMemo(() => {
     const map = new Map<number, Question>()
@@ -3252,6 +3252,13 @@ export default function IELTSReadingInterface({
           return <div key={key}>{renderMcq(block)}</div>
         case 'table':
           return <div key={key}>{renderTable(block)}</div>
+        case 'image':
+          return (
+            <figure key={key} className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <img src={block.src} alt={block.alt} className="mx-auto h-auto w-full max-w-3xl rounded-lg bg-white" />
+              {block.caption ? <figcaption className="px-1 pt-2 text-center text-xs font-medium text-slate-600">{block.caption}</figcaption> : null}
+            </figure>
+          )
         case 'space':
           return <div key={key} className="h-2" />
         default:

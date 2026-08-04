@@ -1,5 +1,6 @@
 import type { Article, ArticleCategory, ArticleCoverTheme } from './types'
 import { fiveBooksArticle } from './a001-five-books'
+import { birthOfTheUniverseArticle } from './a002-birth-of-the-universe'
 
 export type { Article, ArticleBlock, ArticleVocabEntry, ArticleCategory, ArticleCover, ArticleCoverTheme } from './types'
 
@@ -8,6 +9,7 @@ export type { Article, ArticleBlock, ArticleVocabEntry, ArticleCategory, Article
 // vocabulary arena all pick it up automatically — no other wiring required.
 export const articles: Article[] = [
   fiveBooksArticle,
+  birthOfTheUniverseArticle,
 ]
 
 // How many article slots the hub is designed to grow into.

@@ -29,9 +29,10 @@ export type PremiumTier = 'FREE' | 'BASIC' | 'STANDARD' | 'PRO' | 'UNLIMITED'
 const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'elyornishonboyev000@gmail.com',
   'nishonboyv7@gmail.com',
+  'erkiinov09@gmail.com',
 ])
 
-const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs'])
+const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7'])
 
 type PremiumInput = {
   email?: string | null

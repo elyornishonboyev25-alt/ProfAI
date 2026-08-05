@@ -1,208 +1,336 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
+  ArrowLeft,
   ArrowRight,
-  BookMarked,
-  BrainCircuit,
-  CheckCircle2,
+  BookOpenText,
+  Calculator,
+  Check,
+  Clock3,
   FileSearch,
-  Lock,
-  Search,
-  Target,
+  Flag,
+  LibraryBig,
+  Sparkles,
 } from 'lucide-react'
-import ExamCountdown from '@/components/exam/ExamCountdown'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import CatalogHero from '@/components/catalog/CatalogHero'
-import { hasSATTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
+import { SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
+import { loadSATAttempt } from '@/features/sat/attemptStorage'
+import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 
-const MOCK_COUNT = 30
-const LIVE_MOCKS = Object.keys(SAT_TEST_CATALOG).length
+type AttemptWithTest = {
+  attempt: SATAttempt
+  test: SATTestDefinition
+}
+
+const glassCard = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/50 shadow-[0_24px_70px_rgba(55,65,100,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-[28px]'
+
+function ProgressRing({ value, size = 126 }: { value: number; size?: number }) {
+  const radius = 45
+  const circumference = 2 * Math.PI * radius
+  const progress = circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} aria-label={`${value}% complete`}>
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 110 110" aria-hidden="true">
+        <defs>
+          <linearGradient id={`sat-ring-${value}-${size}`} x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ef353d" />
+            <stop offset="100%" stopColor="#9f2028" />
+          </linearGradient>
+        </defs>
+        <circle cx="55" cy="55" r={radius} fill="none" stroke="rgba(148,163,184,.24)" strokeWidth="11" />
+        <circle
+          cx="55"
+          cy="55"
+          r={radius}
+          fill="none"
+          stroke={`url(#sat-ring-${value}-${size})`}
+          strokeLinecap="round"
+          strokeWidth="11"
+          strokeDasharray={circumference}
+          strokeDashoffset={progress}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[1.75rem] font-extrabold tracking-[-0.05em] text-[#141521] sm:text-[2rem]">
+        {value}%
+      </span>
+    </div>
+  )
+}
+
+function SubjectIllustration({ subject }: { subject: 'math' | 'reading' }) {
+  return (
+    <div className="relative flex h-[7.25rem] w-[9rem] items-end justify-start" aria-hidden="true">
+      <span className="absolute bottom-2 left-2 h-16 w-16 rounded-full bg-red-300/25 blur-2xl" />
+      {subject === 'math' ? (
+        <>
+          <Calculator className="relative z-10 h-[5.7rem] w-[5.7rem] -rotate-6 text-[#4d5363]" strokeWidth={1.35} />
+          <svg className="absolute bottom-2 right-0 h-20 w-[5.6rem]" viewBox="0 0 90 80">
+            <path d="M5 68V44h14v24M28 68V32h14v36M51 68V19h14v49M74 68V7" fill="rgba(239,53,61,.24)" stroke="#535866" strokeWidth="1.6" />
+            <path d="m2 28 18-20 15 14L59 0" fill="none" stroke="#535866" strokeWidth="1.6" />
+            <path d="m50 1 10-1-1 10" fill="none" stroke="#535866" strokeWidth="1.6" />
+          </svg>
+        </>
+      ) : (
+        <>
+          <BookOpenText className="relative z-10 h-[6.4rem] w-[6.4rem] -rotate-3 text-[#4d5363]" fill="rgba(239,53,61,.12)" strokeWidth={1.3} />
+          <svg className="absolute bottom-8 right-1 h-16 w-16 rotate-[-12deg]" viewBox="0 0 64 64">
+            <path d="m11 52 35-38 8 8-35 38-12 3z" fill="#f6a6a9" stroke="#535866" strokeWidth="1.6" />
+            <path d="m46 14 4-4c2-2 4-2 6 0l2 2c2 2 2 4 0 6l-4 4z" fill="#f4d9d7" stroke="#535866" strokeWidth="1.6" />
+          </svg>
+        </>
+      )}
+    </div>
+  )
+}
+
+function SubjectCard({
+  title,
+  topics,
+  progress,
+  subject,
+  onStart,
+}: {
+  title: string
+  topics: string[]
+  progress: number
+  subject: 'math' | 'reading'
+  onStart: () => void
+}) {
+  return (
+    <motion.article whileHover={{ y: -4 }} className={`${glassCard} min-h-[24rem] p-6 sm:p-7`}>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(116deg,rgba(255,255,255,.62)_0%,rgba(255,255,255,.08)_47%,rgba(205,220,242,.2)_48%,rgba(255,255,255,.05)_100%)]" />
+      <div className="relative flex h-full flex-col">
+        <h2 className="text-[1.7rem] font-extrabold leading-tight tracking-[-0.045em] text-[#12131f] sm:text-[2rem]">{title}</h2>
+        <div className="mt-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-extrabold text-[#1b1c27]">Topics</h3>
+            <ul className="mt-1 space-y-1 text-base font-medium leading-6 text-[#292a35] sm:text-lg">
+              {topics.map((topic) => <li key={topic}>{topic}</li>)}
+            </ul>
+          </div>
+          <ProgressRing value={progress} />
+        </div>
+        <div className="mt-auto flex items-end justify-between gap-4 pt-3">
+          <SubjectIllustration subject={subject} />
+          <button
+            type="button"
+            onClick={onStart}
+            className="group mb-1 inline-flex min-w-[9.5rem] items-center justify-center gap-2 rounded-full border border-red-300/70 bg-gradient-to-b from-[#ee4248] to-[#d5222c] px-7 py-3 text-lg font-extrabold text-white shadow-[0_12px_24px_rgba(220,38,38,.3),inset_0_2px_3px_rgba(255,255,255,.55)] hover:-translate-y-0.5 hover:brightness-105"
+          >
+            Start <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  )
+}
+
+function ScoreChart({ scores }: { scores: number[] }) {
+  const values = scores.length >= 2 ? scores.slice(-5) : [1050, 1190, 1110, 1290, 1380]
+  const min = Math.min(...values) - 40
+  const max = Math.max(...values) + 40
+  const points = values.map((score, index) => {
+    const x = 12 + (index / Math.max(1, values.length - 1)) * 276
+    const y = 156 - ((score - min) / Math.max(1, max - min)) * 124
+    return { x, y }
+  })
+  const line = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const area = `${line} L ${points[points.length - 1]?.x ?? 288} 174 L ${points[0]?.x ?? 12} 174 Z`
+
+  return (
+    <svg className="mt-4 h-[13.5rem] w-full" viewBox="0 0 300 185" preserveAspectRatio="none" role="img" aria-label="SAT score trend">
+      <defs>
+        <linearGradient id="score-area" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#ef353d" stopOpacity=".28" />
+          <stop offset="100%" stopColor="#ef353d" stopOpacity=".02" />
+        </linearGradient>
+      </defs>
+      {[12, 81, 150, 219, 288].map((x) => <line key={x} x1={x} y1="8" x2={x} y2="176" stroke="rgba(148,163,184,.22)" strokeWidth="1" />)}
+      <path d={area} fill="url(#score-area)" />
+      <path d={line} fill="none" stroke="#d9343d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((point, index) => (
+        <g key={`${point.x}-${point.y}`}>
+          <circle cx={point.x} cy={point.y} r="9" fill="rgba(255,255,255,.65)" />
+          <circle cx={point.x} cy={point.y} r="5.5" fill={index === points.length - 1 ? '#ef353d' : '#b43038'} />
+        </g>
+      ))}
+    </svg>
+  )
+}
 
 export default function SAT() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
-  const { allowHoverMotion, minimalMotion } = useMotionPreferences()
+  const { minimalMotion } = useMotionPreferences()
   const profile = loadOnboardingProfile(user?.id)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'available' | 'completed'>('all')
 
-  const mocks = useMemo(
-    () =>
-      Array.from({ length: MOCK_COUNT }, (_, index) => {
-        const id = index + 1
+  const attempts = useMemo<AttemptWithTest[]>(() => (
+    Object.values(SAT_TEST_CATALOG)
+      .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
+      .filter((item): item is AttemptWithTest => Boolean(item.attempt))
+      .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
+  ), [])
 
-        return {
-          id,
-          title: id === 4
-            ? 'College Board Practice Test 04'
-            : id === 17
-              ? 'Digital SAT Paper 17 · Hard'
-              : `Digital SAT Full Mock ${String(id).padStart(2, '0')}`,
-          available: hasSATTest(id),
-          completed: false,
-          difficulty: id === 4 ? 'Official' : id === 17 ? 'Licensed hard' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
-        }
-      }).sort((first, second) => Number(second.available) - Number(first.available) || first.id - second.id),
-    [],
-  )
+  const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
+  const completedAttempts = attempts.filter(({ attempt }) => attempt.status === 'submitted')
+  const scoreHistory = completedAttempts
+    .slice()
+    .sort((a, b) => a.attempt.updatedAt - b.attempt.updatedAt)
+    .map(({ attempt, test }) => scoreSATModules(test.modules, attempt.answers).midpoint)
+  const bestScore = scoreHistory.length ? Math.max(...scoreHistory) : (profile?.currentSatScore ?? 1050)
+  const targetScore = profile?.targetSatScore ?? 1400
+  const targetProgress = Math.min(100, Math.max(1, Math.round((bestScore / targetScore) * 100)))
+  const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
 
-  const firstAvailableMock = mocks.find((mock) => mock.available)
+  const answeredBySection = (section: 'math' | 'reading-writing') => {
+    const latest = attempts[0]
+    if (!latest) return section === 'math' ? 45 : 60
+    const questions = latest.test.modules.flatMap((module) => module.questions).filter((question) => question.section === section)
+    const answered = questions.filter((question) => latest.attempt.answers[question.id]?.trim()).length
+    return Math.max(section === 'math' ? 12 : 18, Math.round((answered / Math.max(1, questions.length)) * 100))
+  }
 
-  const visibleMocks = mocks.filter((mock) => {
-    const matchesSearch = mock.title.toLowerCase().includes(search.toLowerCase()) || String(mock.id) === search.trim()
-    const matchesFilter = filter === 'all' || (filter === 'available' && mock.available) || (filter === 'completed' && mock.completed)
-    return matchesSearch && matchesFilter
-  })
+  const activityLog = loadActivityLog(user?.id)
+  const studyMinutes = Object.values(activityLog).reduce((total, day) => (
+    total + (day['sat-math'] ?? 0) + (day['sat-rw'] ?? 0) + (day.mock ?? 0)
+  ), 0)
+  const studyHours = studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`
+  const recentProgress = activeAttempt
+    ? Math.round((Object.keys(activeAttempt.attempt.answers).length / activeAttempt.test.questionCount) * 100)
+    : completedAttempts.length ? 100 : 0
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <div className="workspace-page relative min-h-screen overflow-hidden bg-[#eef2f8] px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,.96),transparent_30%),radial-gradient(circle_at_78%_18%,rgba(204,226,244,.72),transparent_35%),radial-gradient(circle_at_50%_78%,rgba(220,225,240,.72),transparent_42%),linear-gradient(135deg,#f3eff4_0%,#edf4f8_48%,#e5edf6_100%)]" />
+      <div className="pointer-events-none absolute -left-24 top-[48%] -z-10 h-72 w-72 rounded-full border border-white/60 bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.95),rgba(201,234,240,.28)_40%,rgba(238,113,161,.16)_66%,rgba(255,255,255,.1)_75%)] shadow-[inset_-18px_-20px_44px_rgba(125,164,197,.22),inset_10px_8px_28px_rgba(255,255,255,.86)]" />
+      <div className="pointer-events-none absolute -right-28 -top-24 -z-10 h-[28rem] w-[28rem] rounded-full border border-white/60 bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.96),rgba(204,232,240,.24)_42%,rgba(239,118,183,.14)_68%,rgba(255,255,255,.08)_76%)] shadow-[inset_-24px_-28px_60px_rgba(122,160,197,.2),inset_14px_10px_34px_rgba(255,255,255,.9)]" />
 
-      <div className="relative mx-auto max-w-[92rem] space-y-5">
-        <CatalogHero
-          tone="blue"
-          backLabel="Test Library"
-          onBack={() => navigate('/dashboard')}
-          eyebrow="Digital SAT Command Center"
-          title={<>30 full Digital SAT mocks. <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">One score journey.</span></>}
-          subtitle="Reading & Writing and Math stay together in every official-style simulation, with clear practice, review and recovery in one focused workspace."
-          filters={[
-            { id: 'all', label: 'All mocks', count: MOCK_COUNT },
-            { id: 'available', label: 'Available now', count: LIVE_MOCKS },
-            { id: 'completed', label: 'Completed', count: mocks.filter((mock) => mock.completed).length },
-          ]}
-          activeFilter={filter}
-          onFilterChange={(id) => setFilter(id as typeof filter)}
-          summary={[
-            { label: 'Exam length', value: '2h 14m' },
-            { label: 'Score range', value: '400–1600' },
-          ]}
-          actions={(
-            <>
-              {firstAvailableMock && (
-                <button onClick={() => navigate(`/mock/sat/${firstAvailableMock.id}`)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
-                  Start Test {firstAvailableMock.id} <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              )}
-              <button onClick={() => navigate('/sat/mistakes')} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/90 bg-white/72 px-4 text-xs font-black text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:text-blue-700">
-                <FileSearch className="h-3.5 w-3.5" /> Analyze SAT mistakes
-              </button>
-            </>
-          )}
-        />
+      <div className="relative mx-auto max-w-[112rem]">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/55 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm backdrop-blur-xl hover:bg-white/80 hover:text-red-600"
+        >
+          <ArrowLeft className="h-4 w-4" /> Dashboard
+        </button>
 
-        <ExamCountdown
-          exam="SAT"
-          tone="blue"
-          date={profile?.satExamDate}
-          currentScore={profile?.currentSatScore}
-          targetScore={profile?.targetSatScore}
-        />
+        <motion.header
+          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/40 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-red-600 backdrop-blur-xl">
+            <Sparkles className="h-3 w-3" /> Digital SAT command center
+          </div>
+          <h1 className="mt-3 text-5xl font-extrabold tracking-[-0.06em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">SAT Arena</h1>
+          <p className="mx-auto mt-3 max-w-3xl text-base font-medium tracking-[-0.025em] text-[#262733] sm:text-xl lg:text-[2rem]">
+            Math + Reading &amp; Writing — your path to {targetScore}+
+          </p>
+        </motion.header>
 
-        <section className="group relative isolate overflow-hidden rounded-[1.6rem] border border-blue-100 bg-white/78 p-5 shadow-[0_18px_48px_rgba(30,64,175,0.09)] backdrop-blur-2xl sm:p-6">
-          <span className="pointer-events-none absolute -right-16 -top-20 -z-10 h-56 w-56 rounded-full bg-blue-200/50 blur-3xl transition duration-700 group-hover:scale-125" />
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]"><BrainCircuit className="h-5 w-5" /></span>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">SAT Review Lab</p>
-                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-600">Domain analysis</span>
-                  <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[9px] font-bold text-cyan-700">Recovery queue</span>
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.54fr)]">
+          <SubjectCard
+            title="SAT Math"
+            topics={['Algebra', 'Problem Solving', 'Advanced Math']}
+            progress={answeredBySection('math')}
+            subject="math"
+            onStart={() => navigate(`/mock/sat/${availableTests[0]?.mockId ?? 4}`)}
+          />
+          <SubjectCard
+            title="SAT Reading & Writing"
+            topics={['Evidence', 'Grammar', 'Revision']}
+            progress={answeredBySection('reading-writing')}
+            subject="reading"
+            onStart={() => navigate(`/mock/sat/${availableTests[availableTests.length - 1]?.mockId ?? 17}`)}
+          />
+
+          <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
+            <article className={`${glassCard} p-6 sm:p-7`}>
+              <h2 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.04em] text-[#151621]">Continue where<br className="hidden xl:block" /> you left off</h2>
+              <div className="mt-5 rounded-[1.55rem] border border-white/90 bg-white/42 p-5 shadow-[0_12px_30px_rgba(55,65,100,.08),inset_0_1px_0_white]">
+                <p className="text-sm font-semibold text-slate-600">{activeAttempt ? 'Recent lesson' : 'Recommended next'}</p>
+                <h3 className="mt-1 text-base font-extrabold leading-snug text-[#22232e]">
+                  {activeAttempt ? activeAttempt.test.title : availableTests[0]?.title ?? 'Digital SAT Practice'}
+                </h3>
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-300/70">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#9f2028] to-[#ef353d]" style={{ width: `${Math.max(10, recentProgress)}%` }} />
                 </div>
-                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Know exactly where your next points will come from.</h2>
-                <p className="mt-1 max-w-3xl text-xs font-medium leading-5 text-slate-500 sm:text-sm">Review Math and Reading &amp; Writing errors by domain, find repeated patterns and return to focused practice.</p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/mock/sat/${activeAttempt?.test.mockId ?? availableTests[0]?.mockId ?? 4}`)}
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-red-700 hover:text-red-500"
+                >
+                  {activeAttempt ? 'Continue test' : 'Start practice'} <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
+            </article>
+
+            <article className={`${glassCard} p-6 sm:p-7`}>
+              <h2 className="text-[1.65rem] font-extrabold tracking-[-0.045em] text-[#151621]">Score-trend chart</h2>
+              <ScoreChart scores={scoreHistory} />
+              <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                <span>First attempt</span><span>Latest</span>
+              </div>
+            </article>
+          </aside>
+
+          <article className={`${glassCard} flex min-h-[15rem] items-center justify-between gap-4 p-6 sm:p-7`}>
+            <div>
+              <p className="text-xl font-extrabold tracking-[-0.035em] text-[#191a25]">Target score</p>
+              <p className="mt-3 text-5xl font-extrabold tracking-[-0.065em] text-[#11121d] sm:text-6xl">{targetScore}+</p>
+              <p className="mt-3 text-xs font-bold text-slate-500">Best score: {bestScore}</p>
             </div>
-            <button onClick={() => navigate('/sat/mistakes')} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-[0_12px_26px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 hover:bg-blue-700">
-              Analyze SAT mistakes <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            <ProgressRing value={targetProgress} size={134} />
+          </article>
+
+          <div className="grid min-h-[15rem] grid-cols-3 gap-4">
+            {[
+              { label: 'Practice tests', value: `${completedAttempts.length}/${30}`, icon: Check },
+              { label: 'Best score', value: bestScore, icon: Flag },
+              { label: 'Study hours', value: studyHours, icon: Clock3 },
+            ].map(({ label, value, icon: Icon }) => (
+              <article key={label} className={`${glassCard} flex flex-col justify-center p-4 sm:p-5`}>
+                <Icon className="mb-5 h-5 w-5 text-red-500" />
+                <p className="text-xs font-semibold leading-5 text-[#343540] sm:text-sm">{label}:</p>
+                <p className="mt-2 text-2xl font-extrabold tracking-[-0.05em] text-[#151621] sm:text-3xl lg:text-[2.15rem]">{value}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
-          <article className="rounded-[2rem] border border-white/90 bg-white/76 p-4 shadow-[0_22px_55px_rgba(37,99,235,0.1)] backdrop-blur-2xl sm:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
+        <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_auto]">
+          <article className={`${glassCard} p-6 sm:p-7`}>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">Full mock roadmap</p>
-                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">30 complete Digital SAT mocks</h2>
-                <p className="mt-1 text-xs font-medium text-slate-500">Each mock contains both Reading &amp; Writing and Math modules.</p>
+                <div className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><p className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</p></div>
+                <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Full Digital SAT mocks</h2>
+                <p className="mt-1 text-xs font-medium text-slate-500">Reading &amp; Writing and Math in one official-style simulation.</p>
               </div>
-              <label className="relative w-full sm:w-64">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search mock number" className="h-11 w-full rounded-xl border border-blue-100 bg-white pl-9 pr-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100" />
-              </label>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {visibleMocks.map((mock) => (
-                <motion.article
-                  key={mock.id}
-                  initial={minimalMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={allowHoverMotion ? { y: -3 } : undefined}
-                  className={`group relative isolate flex min-h-[14.5rem] flex-col overflow-hidden rounded-[1.35rem] border p-4 transition ${mock.available ? 'border-blue-200 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-[0_14px_30px_rgba(37,99,235,0.12)]' : 'border-slate-200/80 bg-white/72 shadow-[0_10px_24px_rgba(15,23,42,0.05)]'}`}
-                >
-                  <span className={`pointer-events-none absolute -right-10 -top-12 -z-10 h-32 w-32 rounded-full blur-3xl ${mock.available ? 'bg-blue-200/70' : 'bg-slate-200/55'}`} />
-                  <div className="flex items-start justify-between gap-2">
-                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-xs font-black ${mock.available ? 'bg-blue-600 text-white shadow-[0_8px_18px_rgba(37,99,235,.25)]' : 'border border-slate-200 bg-white text-slate-500'}`}>
-                      {String(mock.id).padStart(2, '0')}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wider ${mock.available ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                      {mock.available ? <CheckCircle2 className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      {mock.available ? 'Ready now' : 'Coming soon'}
-                    </span>
-                  </div>
-                  <p className={`mt-4 text-[9px] font-black uppercase tracking-[0.15em] ${mock.available ? 'text-blue-600' : 'text-slate-400'}`}>{mock.difficulty} path</p>
-                  <h3 className="mt-1 text-base font-black leading-tight text-slate-950">{mock.title}</h3>
-                  <p className="mt-1.5 text-[10px] font-semibold text-slate-500">
-                    {mock.difficulty} · {mock.id === 4 ? '120' : '98'} questions · 134 min
-                  </p>
-                  <div className="mt-3 grid grid-cols-2 gap-1.5">
-                    <span className="rounded-lg border border-slate-100 bg-white px-2 py-1.5 text-center text-[9px] font-bold text-slate-500">English + Math</span>
-                    <span className="rounded-lg border border-slate-100 bg-white px-2 py-1.5 text-center text-[9px] font-bold text-slate-500">
-                      {mock.id === 4 ? 'Official scoring' : mock.id === 17 ? 'Answers + explanations' : 'Adaptive modules'}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={!mock.available}
-                    onClick={() => navigate(`/mock/sat/${mock.id}`)}
-                    className={`mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-black transition ${mock.available ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-[0_10px_22px_rgba(37,99,235,.22)] hover:brightness-105' : 'cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400'}`}
-                  >
-                    {mock.available ? <>Start full mock <ArrowRight className="h-3 w-3" /></> : <><Lock className="h-3 w-3" /> Unlocking soon</>}
+              <div className="flex flex-wrap gap-2">
+                {availableTests.map((test) => (
+                  <button key={test.id} type="button" onClick={() => navigate(`/mock/sat/${test.mockId}`)} className="inline-flex items-center gap-2 rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg hover:-translate-y-0.5 hover:bg-red-600">
+                    Test {String(test.mockId).padStart(2, '0')} <ArrowRight className="h-3.5 w-3.5" />
                   </button>
-                </motion.article>
-              ))}
+                ))}
+              </div>
             </div>
           </article>
-
-          <aside className="space-y-4">
-            <button onClick={() => navigate('/vocabulary/sat')} className="group w-full overflow-hidden rounded-[1.7rem] border border-cyan-100 bg-gradient-to-br from-white via-cyan-50 to-blue-100 p-5 text-left shadow-[0_18px_42px_rgba(14,116,144,0.14)] transition hover:-translate-y-0.5">
-              <div className="flex items-start justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,.25)]"><BookMarked className="h-5 w-5" /></span>
-                <span className="rounded-full border border-blue-100 bg-white px-2 py-1 text-[9px] font-black uppercase text-blue-700">600 words</span>
-              </div>
-              <p className="mt-5 text-[9px] font-black uppercase tracking-[0.16em] text-blue-600">Built into SAT Prep</p>
-              <h3 className="mt-1 text-xl font-black text-slate-950">SAT Vocabulary</h3>
-              <p className="mt-2 text-xs leading-5 text-slate-600">10 packs · 40 focused sections · matching, recall, quiz and typing drills.</p>
-              <span className="mt-5 inline-flex items-center gap-1 text-xs font-black text-blue-700">Study vocabulary <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></span>
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[24rem]">
+            <button type="button" onClick={() => navigate('/sat/mistakes')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+              <FileSearch className="h-6 w-6 text-red-500" />
+              <span className="mt-4 block text-sm font-extrabold text-[#171823]">Mistake lab</span>
+              <span className="mt-1 block text-[11px] font-medium text-slate-500">Review weak domains</span>
             </button>
-
-            <div className="rounded-[1.7rem] border border-blue-100 bg-white/75 p-5 backdrop-blur">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-600" />
-                <h3 className="text-sm font-black text-slate-900">This week’s focus</h3>
-              </div>
-              <div className="mt-3 space-y-2 text-[11px] font-semibold text-slate-600">
-                <p className="rounded-xl bg-blue-50 px-3 py-2">1 full timed mock</p>
-                <p className="rounded-xl bg-blue-50 px-3 py-2">2 mistake recovery sessions</p>
-                <p className="rounded-xl bg-blue-50 px-3 py-2">60 vocabulary reviews</p>
-              </div>
-            </div>
-          </aside>
+            <button type="button" onClick={() => navigate('/vocabulary/sat')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+              <BookOpenText className="h-6 w-6 text-red-500" />
+              <span className="mt-4 block text-sm font-extrabold text-[#171823]">Vocabulary</span>
+              <span className="mt-1 block text-[11px] font-medium text-slate-500">600 SAT words</span>
+            </button>
+          </div>
         </section>
       </div>
     </div>

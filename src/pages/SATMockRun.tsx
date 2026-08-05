@@ -4,26 +4,20 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft,
-  ArrowRight,
-  Bookmark,
   Calculator,
-  Check,
   ChevronDown,
-  Clock3,
+  EllipsisVertical,
   EyeOff,
   Flag,
+  FileText,
   Highlighter,
   Lightbulb,
   ListChecks,
   NotebookPen,
-  PauseCircle,
   ShieldAlert,
-  ShieldCheck,
   Sparkles,
   Trash2,
   Undo2,
@@ -31,7 +25,6 @@ import {
   ZoomIn,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { BrandLockup } from '@/components/brand/BrandLogo'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
@@ -48,6 +41,7 @@ import {
 } from '@/features/sat/attemptStorage'
 import { getSATTest } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
+import { useAuthStore, type AuthState } from '@/store/authStore'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
 
@@ -68,6 +62,7 @@ export default function SATMockRun() {
   const { mockId = '4' } = useParams<{ mockId: string }>()
   const test = getSATTest(mockId)
   const modules = test.modules
+  const user = useAuthStore((state: AuthState) => state.user)
   const { isFullscreen, enter, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => loadSATAttempt(test.id))
   const [now, setNow] = useState(Date.now())
@@ -75,6 +70,9 @@ export default function SATMockRun() {
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [directionsOpen, setDirectionsOpen] = useState(false)
   const [highlightEnabled, setHighlightEnabled] = useState(false)
   const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_COLORS[0])
   const [zoom, setZoom] = useState(1)
@@ -407,355 +405,226 @@ export default function SATMockRun() {
     }))
   }
 
-  const timerProgress =
-    attempt.mode === 'exam'
-      ? Math.max(0, Math.min(1, moduleSeconds / currentModule.durationSeconds))
-      : 1
   const practiceChecked = checkedQuestions.includes(currentQuestion.id)
   const practiceCorrect = practiceChecked && isSATAnswerCorrect(currentQuestion, currentAnswer)
+  const sectionNumber = currentModule.section === 'reading-writing' ? 1 : 2
+  const moduleNumber = currentModule.id.endsWith('1') ? 1 : 2
+  const sectionTitle = currentModule.section === 'reading-writing' ? 'Reading and Writing' : 'Math'
+  const learnerName = user?.fullName || 'ProfAI Student'
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(145deg,#f0f9ff_0%,#f8fafc_46%,#fff5f4_100%)] text-slate-950">
-      <header className="sticky top-0 z-[80] border-b border-white/80 bg-white/82 px-3 py-2 shadow-[0_10px_35px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-5">
-        <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-3">
-          <BrandLockup iconSize={38} titleClassName="text-base sm:text-lg" subtitle={currentModule.title} subtitleClassName="hidden text-[9px] sm:block" />
-          <button
-            type="button"
-            onClick={() => setNavigatorOpen(true)}
-            className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600 shadow-sm md:inline-flex"
-          >
-            <ListChecks className="h-3.5 w-3.5 text-red-500" />
-            Question {questionIndex + 1} of {currentModule.questions.length}
-            <ChevronDown className="h-3 w-3" />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className={`hidden rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-[0.13em] sm:inline-flex ${
-              attempt.mode === 'exam' ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'
-            }`}>
-              {attempt.mode === 'exam' ? <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> : <PauseCircle className="mr-1.5 h-3.5 w-3.5" />}
-              {attempt.mode} mode
-            </span>
-            {currentModule.section === 'math' ? (
-              <button
-                type="button"
-                aria-label="Open calculator"
-                onClick={() => setCalculatorOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 px-3 py-2 text-[10px] font-black text-white shadow-[0_9px_22px_rgba(220,38,38,.25)] sm:px-4"
-              >
-                <Calculator className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Calculator</span>
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setTimerVisible((value) => !value)}
-              className="relative flex h-11 min-w-11 items-center justify-center rounded-full border border-slate-200 bg-white px-2 shadow-sm"
-              title={timerVisible ? 'Hide timer' : 'Show timer'}
-            >
-              <span
-                className="absolute inset-0 rounded-full"
-                style={{ background: `conic-gradient(#dc2626 ${timerProgress * 360}deg,#e2e8f0 0deg)` }}
-              />
-              <span className="absolute inset-[3px] rounded-full bg-white" />
-              <span className="relative text-[10px] font-black tabular-nums">
-                {timerVisible ? formatTime(moduleSeconds) : <EyeOff className="h-3.5 w-3.5 text-slate-500" />}
-              </span>
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f8fa] text-[#151515]">
+      <header className="sticky top-0 z-[80] border-b border-slate-200 bg-white">
+        <div className="relative mx-auto grid max-w-[112rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
+          <div className="min-w-0 font-serif">
+            <h1 className="truncate font-serif text-base font-bold text-slate-800 sm:text-xl lg:text-2xl">
+              Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}
+            </h1>
+            <button type="button" onClick={() => setDirectionsOpen(true)} className="mt-0.5 text-sm font-bold text-[#2355ed] hover:underline sm:text-base">
+              Directions
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setTimerVisible((value) => !value)}
+            className="flex min-w-24 items-center justify-center gap-2 font-serif text-2xl font-bold tabular-nums sm:text-3xl"
+            title={timerVisible ? 'Hide timer' : 'Show timer'}
+          >
+            {timerVisible ? formatTime(moduleSeconds) : 'Hidden'}
+            <EyeOff className="h-5 w-5 text-slate-600" />
+          </button>
+
+          <div className="col-span-2 flex items-center justify-end gap-1 sm:gap-3 md:col-span-1">
+            <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Open question navigator">
+              <FileText className="h-6 w-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setToolsOpen((open) => !open); setMoreOpen(false) }}
+              className="flex items-center gap-2 px-2 py-2 font-serif text-sm font-bold text-slate-700 sm:text-base"
+            >
+              <NotebookPen className="h-6 w-6" /> <span className="hidden sm:inline">Highlights & Notes</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMoreOpen((open) => !open); setToolsOpen(false) }}
+              className="flex flex-col items-center px-2 py-1 font-serif text-xs font-bold text-slate-700"
+            >
+              <EllipsisVertical className="h-6 w-6" /> <span className="hidden sm:block">More</span>
+            </button>
+          </div>
+
+          {toolsOpen ? (
+            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-black">Highlights & Notes</p>
+                <button type="button" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHighlightEnabled((value) => !value)}
+                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black ${highlightEnabled ? 'border-amber-500 bg-amber-100 text-amber-900' : 'border-black bg-white text-black'}`}
+              >
+                <Highlighter className="h-4 w-4" /> {highlightEnabled ? 'Highlight mode on' : 'Turn on highlight mode'}
+              </button>
+              <div className="mt-3 flex items-center gap-2">
+                {HIGHLIGHT_COLORS.map((color) => (
+                  <button type="button" key={color} aria-label={`Use ${color} highlighter`} onClick={() => setHighlightColor(color)} className={`h-7 w-7 rounded-full border-2 ${highlightColor === color ? 'border-black' : 'border-white ring-1 ring-slate-300'}`} style={{ backgroundColor: color }} />
+                ))}
+                <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
+              </div>
+              <button type="button" onClick={() => { setNotesOpen(true); setToolsOpen(false) }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
+                <NotebookPen className="h-4 w-4" /> {attempt.notes[currentQuestion.id] ? 'Edit note' : 'Add note'}
+              </button>
+            </div>
+          ) : null}
+
+          {moreOpen ? (
+            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-56 rounded-2xl border border-slate-300 bg-white p-2 shadow-2xl">
+              {currentModule.section === 'math' ? (
+                <button type="button" onClick={() => { setCalculatorOpen(true); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Calculator className="h-4 w-4" /> Calculator</button>
+              ) : null}
+              <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.15).toFixed(2))))} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><ZoomIn className="h-4 w-4" /> Zoom in ({Math.round(zoom * 100)}%)</button>
+              <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
+              <button type="button" onClick={() => navigate('/sat')} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Exit test</button>
+            </div>
+          ) : null}
         </div>
+        <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
       </header>
 
-      <div className="mx-auto max-w-[100rem] px-3 py-3 pb-24 sm:px-5 sm:py-5 sm:pb-24">
-        <section className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
-          <article className="w-full min-w-0 rounded-[1.8rem] border border-white/90 bg-white/78 p-3 shadow-[0_22px_60px_rgba(15,23,42,.09)] backdrop-blur-xl sm:p-5">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-600">{currentModule.shortTitle}</p>
-                <h1 className="mt-0.5 text-xl font-black">Question {currentQuestion.number}</h1>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setHighlightEnabled((value) => !value)}
-                  className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[10px] font-black ${
-                    highlightEnabled ? 'border-amber-300 bg-amber-100 text-amber-800' : 'border-slate-200 bg-white text-slate-600'
-                  }`}
-                >
-                  <Highlighter className="h-3.5 w-3.5" /> Highlight
-                </button>
-                {highlightEnabled ? (
-                  <div className="flex h-9 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2">
-                    {HIGHLIGHT_COLORS.map((color) => (
-                      <button
-                        type="button"
-                        key={color}
-                        aria-label={`Use ${color} highlighter`}
-                        onClick={() => setHighlightColor(color)}
-                        className={`h-5 w-5 rounded-full border-2 ${highlightColor === color ? 'border-slate-950' : 'border-white ring-1 ring-slate-200'}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => changeHighlights(currentStrokes.slice(0, -1))}
-                  disabled={currentStrokes.length === 0}
-                  title="Undo last highlight"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 disabled:opacity-35"
-                >
-                  <Undo2 className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => changeHighlights([])}
-                  disabled={currentStrokes.length === 0}
-                  title="Clear highlights"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 disabled:opacity-35"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.15).toFixed(2))))}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500"
-                  title="Zoom in"
-                >
-                  <ZoomIn className="h-3.5 w-3.5" />
-                </button>
-                {zoom > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => setZoom(1)}
-                    className="h-9 rounded-xl border border-slate-200 bg-white px-2 text-[9px] font-black text-slate-500"
-                  >
-                    {Math.round(zoom * 100)}%
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <SATQuestionCanvas
-              question={currentQuestion}
-              answer={currentAnswer}
-              onAnswer={updateAnswer}
-              strokes={currentStrokes}
-              highlightEnabled={highlightEnabled}
-              highlightColor={highlightColor}
-              zoom={zoom}
-              onChange={changeHighlights}
-            />
-          </article>
-
-          <aside className="min-w-0 space-y-3 xl:sticky xl:top-[5.5rem] xl:self-start">
-            <div className="rounded-[1.5rem] border border-white/90 bg-white/82 p-4 shadow-[0_18px_42px_rgba(15,23,42,.08)] backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.13em] text-slate-400">Your response</p>
-                  <p className="mt-1 text-sm font-black">{currentQuestion.kind === 'multiple-choice' ? (currentAnswer ? `Choice ${currentAnswer} selected` : 'Select an answer in the question') : 'Enter your answer'}</p>
-                </div>
-                {currentAnswer ? (
-                  <button type="button" onClick={() => updateAnswer('')} className="text-[9px] font-black text-red-600">Clear</button>
-                ) : null}
-              </div>
-
-              {currentQuestion.kind === 'multiple-choice' ? (
-                <div className="mt-4">
-                  <div className={`flex items-center gap-3 rounded-xl border px-3 py-3 ${currentAnswer ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-dashed border-slate-200 bg-slate-50 text-slate-500'}`}>
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${currentAnswer ? 'bg-blue-600 text-white' : 'bg-white ring-1 ring-slate-200'}`}>{currentAnswer || '—'}</span>
-                    <span className="text-[10px] font-black">{currentAnswer ? 'Response saved automatically' : 'No response yet'}</span>
-                    {currentAnswer ? <Check className="ml-auto h-4 w-4" /> : null}
-                  </div>
-                  {attempt.mode === 'practice' ? (
-                    <button
-                      type="button"
-                      disabled={!currentAnswer || practiceChecked}
-                      onClick={() => setCheckedQuestions((current) => [...new Set([...current, currentQuestion.id])])}
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-[10px] font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-35"
-                    >
-                      <Lightbulb className="h-3.5 w-3.5" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
-                    </button>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <label htmlFor="student-response" className="sr-only">Student response</label>
-                  <input
-                    id="student-response"
-                    value={currentAnswer}
-                    onChange={(event) => updateAnswer(event.target.value)}
-                    onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
-                      if (event.key === 'Enter' && questionIndex < currentModule.questions.length - 1) {
-                        persistUpdate((current) => ({ ...current, currentQuestionIndex: current.currentQuestionIndex + 1 }))
-                      }
-                    }}
-                    inputMode="decimal"
-                    placeholder="e.g. 3/10 or 0.3"
-                    className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-lg font-black text-slate-900 outline-none focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
-                  />
-                  <p className="mt-2 text-[9px] font-semibold leading-4 text-slate-400">
-                    Fractions and equivalent decimals are accepted. Do not enter mixed numbers or symbols.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {attempt.mode === 'practice' && practiceChecked ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`rounded-[1.5rem] border p-4 shadow-sm ${practiceCorrect ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${practiceCorrect ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>
-                    {practiceCorrect ? <Sparkles className="h-5 w-5" /> : <Lightbulb className="h-5 w-5" />}
-                  </span>
-                  <div>
-                    <p className={`text-sm font-black ${practiceCorrect ? 'text-emerald-900' : 'text-amber-950'}`}>
-                      {practiceCorrect ? 'Excellent — that is correct!' : 'Strong attempt — review the key idea.'}
-                    </p>
-                    <p className="mt-1 text-[10px] font-bold leading-5 text-slate-600">
-                      {practiceCorrect ? 'You identified the right reasoning. Keep the momentum going.' : `The correct answer is ${currentQuestion.correctAnswer}. Study the explanation, then try the next question.`}
-                    </p>
-                  </div>
-                </div>
-                <details className="mt-3 rounded-xl border border-white/80 bg-white/75 px-3 py-2.5">
-                  <summary className="cursor-pointer text-[10px] font-black text-slate-700">Step-by-step explanation</summary>
-                  <SATRichText text={currentQuestion.explanation} className="mt-2 text-[11px] font-medium leading-5 text-slate-600" />
-                </details>
-              </motion.div>
-            ) : null}
-
-            <div className="grid grid-cols-2 gap-2 xl:grid-cols-1">
-              <button
-                type="button"
-                onClick={() =>
-                  persistUpdate((current) => ({
-                    ...current,
-                    flagged: current.flagged.includes(currentQuestion.id)
-                      ? current.flagged.filter((id) => id !== currentQuestion.id)
-                      : [...current.flagged, currentQuestion.id],
-                  }))
-                }
-                className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-[10px] font-black ${
-                  isFlagged ? 'border-amber-300 bg-amber-100 text-amber-800' : 'border-white bg-white/82 text-slate-600'
-                }`}
-              >
-                <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-amber-500' : ''}`} />
-                {isFlagged ? 'Flagged' : 'Mark for review'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setNotesOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white bg-white/82 p-3 text-[10px] font-black text-slate-600"
-              >
-                <NotebookPen className="h-3.5 w-3.5 text-violet-600" />
-                {attempt.notes[currentQuestion.id] ? 'Edit note' : 'Add note'}
-              </button>
-            </div>
-
-            <div className="rounded-[1.4rem] border border-white/90 bg-white/75 p-4 shadow-sm">
-              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
-                <span>Module progress</span>
-                <span>{answeredInModule}/{currentModule.questions.length}</span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-600 transition-all"
-                  style={{ width: `${(answeredInModule / currentModule.questions.length) * 100}%` }}
-                />
+      <div className="pb-[5.4rem]">
+        <SATQuestionCanvas
+          question={currentQuestion}
+          answer={currentAnswer}
+          onAnswer={updateAnswer}
+          strokes={currentStrokes}
+          highlightEnabled={highlightEnabled}
+          highlightColor={highlightColor}
+          zoom={zoom}
+          onChange={changeHighlights}
+          flagged={isFlagged}
+          onToggleFlag={() => persistUpdate((current) => ({
+            ...current,
+            flagged: current.flagged.includes(currentQuestion.id)
+              ? current.flagged.filter((id) => id !== currentQuestion.id)
+              : [...current.flagged, currentQuestion.id],
+          }))}
+          practicePanel={attempt.mode === 'practice' ? (
+            <div className="mt-7 border-t border-slate-300 pt-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold text-slate-500">Your response is saved automatically.</p>
+                {currentAnswer ? <button type="button" onClick={() => updateAnswer('')} className="text-xs font-black text-red-700">Clear</button> : null}
               </div>
               <button
                 type="button"
-                onClick={() => setNavigatorOpen(true)}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600"
+                disabled={!currentAnswer || practiceChecked}
+                onClick={() => setCheckedQuestions((current) => [...new Set([...current, currentQuestion.id])])}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-4 py-3.5 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
               >
-                <ListChecks className="h-3.5 w-3.5" /> Open question navigator
+                <Lightbulb className="h-4 w-4" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
               </button>
+              {practiceChecked ? (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 rounded-xl border-2 p-4 ${practiceCorrect ? 'border-emerald-600 bg-emerald-50' : 'border-amber-500 bg-amber-50'}`}>
+                  <div className="flex items-start gap-3">
+                    {practiceCorrect ? <Sparkles className="mt-0.5 h-5 w-5 text-emerald-700" /> : <Lightbulb className="mt-0.5 h-5 w-5 text-amber-700" />}
+                    <div>
+                      <p className="font-serif text-base font-bold">{practiceCorrect ? 'Correct answer' : `Correct answer: ${currentQuestion.correctAnswer}`}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-600">Review the reasoning before moving to the next question.</p>
+                    </div>
+                  </div>
+                  <details className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
+                    <summary className="cursor-pointer text-xs font-black text-slate-800">Step-by-step explanation</summary>
+                    <SATRichText text={currentQuestion.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" />
+                  </details>
+                </motion.div>
+              ) : null}
             </div>
-          </aside>
-        </section>
+          ) : null}
+        />
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/80 bg-white/88 px-3 py-2.5 shadow-[0_-12px_36px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-5">
-        <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-2">
-          <button
-            type="button"
-            disabled={questionIndex === 0}
-            onClick={() => goToQuestion(questionIndex - 1)}
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[11px] font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Back</span>
+      <footer className="fixed inset-x-0 bottom-0 z-[70] bg-[#e7edf8]">
+        <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
+        <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
+          <p className="hidden truncate font-serif text-lg font-bold text-slate-800 md:block">{learnerName}</p>
+          <button type="button" onClick={() => setNavigatorOpen(true)} className="inline-flex h-12 items-center justify-center gap-3 rounded-2xl bg-black px-5 font-serif text-base font-bold text-white sm:text-lg">
+            Question {questionIndex + 1} of {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
           </button>
-          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-            {currentModule.questions.slice(Math.max(0, questionIndex - 2), questionIndex + 3).map((question, index, visible) => {
-              const actualIndex = currentModule.questions.indexOf(question)
-              const answered = Boolean(attempt.answers[question.id]?.trim())
-              const flagged = attempt.flagged.includes(question.id)
-              return (
-                <button
-                  type="button"
-                  key={question.id}
-                  onClick={() => goToQuestion(actualIndex)}
-                  className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
-                    actualIndex === questionIndex
-                      ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.28)]'
-                      : answered
-                        ? 'bg-slate-900 text-white'
-                        : 'border border-slate-200 bg-white text-slate-500'
-                  }`}
-                >
-                  {question.number}
-                  {flagged ? <Bookmark className="absolute -right-0.5 -top-1 h-3 w-3 fill-amber-400 text-amber-500" /> : null}
-                  {index < visible.length - 1 ? null : null}
-                </button>
-              )
-            })}
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#8fa0e8] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg">Back</button>
+            {questionIndex < currentModule.questions.length - 1 ? (
+              <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg">Next</button>
+            ) : (
+              <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base">Review module</button>
+            )}
           </div>
-          {questionIndex < currentModule.questions.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => goToQuestion(questionIndex + 1)}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 px-5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(220,38,38,.24)]"
-            >
-              <span className="hidden sm:inline">Next</span> <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={endCurrentModule}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 text-[11px] font-black text-white shadow-lg"
-            >
-              Review module <ListChecks className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
       </footer>
 
       <DesmosDrawer open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
 
       <AnimatePresence>
-        {navigatorOpen ? (
+        {directionsOpen ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/35 p-3 backdrop-blur-sm"
+            className="fixed inset-0 z-[145] flex items-center justify-center bg-black/45 p-4"
           >
             <motion.section
               initial={{ scale: 0.96, y: 12 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 12 }}
-              className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,.28)]"
+              className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-2xl"
             >
-              <header className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-white to-red-50 px-5 py-4">
+              <header className="flex items-center justify-between border-b border-slate-300 px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-600">{currentModule.shortTitle}</p>
-                  <h2 className="mt-1 text-xl font-black">Question navigator</h2>
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#4053d7]">Test directions</p>
+                  <h2 className="mt-1 font-serif text-xl font-bold sm:text-2xl">Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}</h2>
                 </div>
-                <button type="button" onClick={() => setNavigatorOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
+                <button type="button" onClick={() => setDirectionsOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300"><X className="h-4 w-4" /></button>
+              </header>
+              <div className="px-5 py-6 font-serif text-base leading-7 text-slate-700 sm:px-7 sm:text-lg">
+                {currentModule.section === 'reading-writing' ? (
+                  <p>Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review.</p>
+                ) : (
+                  <p>Solve each problem and select or enter the best answer. The calculator is available from the More menu. You may move between questions in this module and mark any question for review.</p>
+                )}
+                <p className="mt-4">Your answers, notes, highlights, and current position are saved automatically on this device.</p>
+              </div>
+              <footer className="flex justify-end border-t border-slate-300 bg-slate-50 px-5 py-4 sm:px-7">
+                <button type="button" onClick={() => setDirectionsOpen(false)} className="rounded-full bg-[#4053d7] px-6 py-3 font-serif text-base font-bold text-white">Continue</button>
+              </footer>
+            </motion.section>
+          </motion.div>
+        ) : null}
+
+        {navigatorOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[140] flex items-center justify-center bg-black/45 p-3"
+          >
+            <motion.section
+              initial={{ scale: 0.96, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.96, y: 12 }}
+              className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-2xl"
+            >
+              <header className="flex items-center justify-between border-b border-slate-300 bg-white px-5 py-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">{currentModule.shortTitle}</p>
+                  <h2 className="mt-1 font-serif text-xl font-bold">Question navigator</h2>
+                </div>
+                <button type="button" onClick={() => setNavigatorOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600">
                   <X className="h-4 w-4" />
                 </button>
               </header>
+              <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
               <div className="max-h-[62vh] overflow-y-auto p-5">
                 <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-11">
                   {currentModule.questions.map((question, index) => {
@@ -768,10 +637,10 @@ export default function SATMockRun() {
                         onClick={() => goToQuestion(index)}
                         className={`relative aspect-square rounded-xl text-xs font-black ${
                           index === questionIndex
-                            ? 'bg-red-600 text-white ring-4 ring-red-100'
+                            ? 'bg-[#4053d7] text-white ring-4 ring-indigo-100'
                             : answered
-                              ? 'bg-slate-950 text-white'
-                              : 'border border-slate-200 bg-slate-50 text-slate-500'
+                              ? 'bg-black text-white'
+                              : 'border-2 border-slate-400 bg-white text-slate-700'
                         }`}
                       >
                         {question.number}
@@ -786,11 +655,11 @@ export default function SATMockRun() {
                   <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> Flagged</span>
                 </div>
               </div>
-              <footer className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-5 py-4">
+              <footer className="flex items-center justify-between gap-3 border-t border-slate-300 bg-[#e7edf8] px-5 py-4">
                 <p className="text-[10px] font-bold text-slate-500">
                   {answeredInModule} answered · {currentModule.questions.length - answeredInModule} remaining
                 </p>
-                <button type="button" onClick={endCurrentModule} className="rounded-xl bg-slate-950 px-4 py-2.5 text-[10px] font-black text-white">
+                <button type="button" onClick={endCurrentModule} className="rounded-full bg-[#4053d7] px-5 py-2.5 text-[10px] font-black text-white">
                   Finish module
                 </button>
               </footer>
@@ -803,18 +672,18 @@ export default function SATMockRun() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[145] flex items-end justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:items-center"
+            className="fixed inset-0 z-[145] flex items-end justify-center bg-black/45 p-3 sm:items-center"
           >
             <motion.section
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 30, opacity: 0 }}
-              className="w-full max-w-lg rounded-[1.8rem] border border-white/80 bg-white p-5 shadow-[0_30px_90px_rgba(15,23,42,.28)]"
+              className="w-full max-w-lg rounded-2xl border border-slate-300 bg-white p-5 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-violet-600">Private note</p>
-                  <h2 className="mt-1 text-xl font-black">Question {currentQuestion.number}</h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private note</p>
+                  <h2 className="mt-1 font-serif text-xl font-bold">Question {currentQuestion.number}</h2>
                 </div>
                 <button type="button" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
                   <X className="h-4 w-4" />
@@ -830,10 +699,10 @@ export default function SATMockRun() {
                   }))
                 }
                 placeholder="Write your reasoning, a formula to revisit, or why an option felt tempting..."
-                className="mt-4 min-h-44 w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium leading-6 outline-none focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                className="mt-4 min-h-44 w-full resize-y rounded-xl border-2 border-slate-400 bg-slate-50 p-4 text-sm font-medium leading-6 outline-none focus:border-[#4053d7] focus:bg-white focus:ring-4 focus:ring-indigo-100"
               />
               <div className="mt-3 flex justify-end">
-                <button type="button" onClick={() => setNotesOpen(false)} className="rounded-xl bg-violet-600 px-4 py-2.5 text-[11px] font-black text-white">
+                <button type="button" onClick={() => setNotesOpen(false)} className="rounded-full bg-black px-5 py-2.5 text-[11px] font-black text-white">
                   Save note
                 </button>
               </div>
@@ -852,15 +721,15 @@ export default function SATMockRun() {
               initial={{ scale: 0.95, y: 16 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 16 }}
-              className="w-full max-w-xl rounded-[2rem] border border-white/80 bg-white p-6 shadow-[0_34px_100px_rgba(15,23,42,.34)] sm:p-8"
+              className="w-full max-w-xl rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl sm:p-8"
             >
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-[#4053d7]">
                 <ListChecks className="h-7 w-7" />
               </span>
-              <p className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">
+              <p className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">
                 {confirmSubmit ? 'Final submission' : 'Module ready'}
               </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">
+              <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight">
                 {confirmSubmit ? 'Submit your SAT attempt?' : `${currentModule.shortTitle} complete`}
               </h2>
               <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
@@ -884,7 +753,7 @@ export default function SATMockRun() {
                 <button
                   type="button"
                   onClick={confirmSubmit ? submitAttempt : advanceModule}
-                  className="rounded-xl bg-gradient-to-r from-red-600 to-rose-700 px-4 py-3 text-[11px] font-black text-white shadow-[0_12px_26px_rgba(220,38,38,.24)]"
+                  className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
                 >
                   {confirmSubmit ? 'Submit & score' : 'Continue to next module'}
                 </button>

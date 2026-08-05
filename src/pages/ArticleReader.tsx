@@ -362,6 +362,8 @@ export default function ArticleReader() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_10%_12%,rgba(255,244,214,0.96),transparent_36%),radial-gradient(circle_at_88%_18%,rgba(239,229,229,0.94),transparent_38%),linear-gradient(135deg,#fffaf0_0%,#f4ebe5_52%,#eee8e8_100%)]" />
       <div className="pointer-events-none fixed -left-24 top-[28%] -z-10 h-80 w-80 rounded-full border border-red-200/30" />
       <div className="pointer-events-none fixed -right-28 bottom-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full border border-red-200/25" />
+      <div className="pointer-events-none fixed right-[4%] top-[7%] -z-10 h-80 w-80 rounded-full bg-red-300/20 blur-[90px]" />
+      <div className="pointer-events-none fixed left-[18%] top-[-7rem] -z-10 h-64 w-[34rem] rounded-full bg-amber-200/25 blur-[100px]" />
 
       {/* reading progress */}
       <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-white/40">
@@ -371,26 +373,26 @@ export default function ArticleReader() {
         />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[1540px]">
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18.5rem]">
+      <div className="relative mx-auto w-full max-w-[1640px]">
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <main className="min-w-0 space-y-5">
-            <header className="article-reader-glass flex min-h-[5.8rem] items-center justify-between gap-4 rounded-[2rem] px-4 py-3 sm:px-7">
-              <div className="flex min-w-0 items-center gap-4 lg:gap-8">
-                <Link to="/dashboard" className="flex shrink-0 items-center gap-2" aria-label="ProfAI home">
-                  <img src="/logo.svg" alt="" className="h-12 w-12 drop-shadow-[0_8px_10px_rgba(220,38,38,0.25)] sm:h-14 sm:w-14" />
-                  <span className="hidden text-3xl font-black tracking-[-0.04em] text-slate-900 sm:inline">
+            <header className="article-reader-glass article-reader-header-glass flex min-h-[7rem] items-center justify-between gap-5 rounded-[2.35rem] px-5 py-4 sm:px-8 lg:px-10">
+              <div className="flex min-w-0 items-center gap-5 lg:gap-10">
+                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="ProfAI home">
+                  <img src="/logo.svg" alt="" className="h-14 w-14 drop-shadow-[0_12px_18px_rgba(220,38,38,0.32)] sm:h-[4.6rem] sm:w-[4.6rem]" />
+                  <span className="hidden text-[2.55rem] font-black tracking-[-0.05em] text-slate-900 sm:inline">
                     Prof<span className="text-red-600">AI</span>
                   </span>
                 </Link>
 
-                <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-sm font-medium text-slate-500 md:flex lg:text-base">
+                <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-3 text-[1.12rem] font-medium text-slate-500 md:flex lg:text-[1.28rem]">
                   <Link to="/dashboard" className="transition hover:text-red-700">Home</Link>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
                   <Link to="/articles" className="transition hover:text-red-700">Library</Link>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
                   <Link to="/articles" className="transition hover:text-red-700">Articles</Link>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="max-w-[20rem] truncate font-semibold text-slate-900">{article.title}</span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+                  <span className="max-w-[28rem] truncate font-bold text-slate-950">{article.title}</span>
                 </nav>
 
                 <Link to="/articles" className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 md:hidden">
@@ -403,11 +405,12 @@ export default function ArticleReader() {
                 onClick={() => setBookmarked(toggleArticleBookmark(slug))}
                 aria-pressed={bookmarked}
                 aria-label={bookmarked ? 'Remove article bookmark' : 'Bookmark article'}
-                className={`article-reader-icon-button grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition ${
+                className={`article-reader-icon-button grid h-[4.7rem] w-[4.7rem] shrink-0 place-items-center rounded-[1.7rem] transition hover:-translate-y-0.5 ${
                   bookmarked ? 'text-red-700' : 'text-red-600 hover:text-red-800'
                 }`}
+                title={bookmarked ? 'Remove bookmark' : 'Save article'}
               >
-                <Bookmark className="h-6 w-6" fill={bookmarked ? 'currentColor' : 'none'} />
+                <Bookmark className="h-8 w-8" fill={bookmarked ? 'currentColor' : 'none'} />
               </button>
             </header>
 
@@ -525,10 +528,10 @@ export default function ArticleReader() {
             </section>
           </main>
 
-          <aside className="grid gap-5 md:grid-cols-3 xl:sticky xl:top-6 xl:block xl:space-y-5">
-            <section className="article-reader-glass rounded-[2rem] p-5">
-              <div className="mx-auto grid h-36 w-36 place-items-center">
-                <svg viewBox="0 0 120 120" className="col-start-1 row-start-1 h-36 w-36 -rotate-90" aria-hidden="true">
+          <aside className="article-reader-rail relative grid gap-6 md:grid-cols-3 xl:sticky xl:top-6 xl:block xl:space-y-6">
+            <section className="article-reader-glass article-reader-rail-card rounded-[2.35rem] p-6 lg:p-7">
+              <div className="mx-auto grid h-44 w-44 place-items-center">
+                <svg viewBox="0 0 120 120" className="col-start-1 row-start-1 h-44 w-44 -rotate-90 drop-shadow-[0_12px_14px_rgba(127,29,29,0.12)]" aria-hidden="true">
                   <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(148,163,184,0.22)" strokeWidth="10" />
                   <circle
                     cx="60"
@@ -549,30 +552,30 @@ export default function ArticleReader() {
                     </linearGradient>
                   </defs>
                 </svg>
-                <span className="col-start-1 row-start-1 text-3xl font-black tabular-nums text-slate-950">{progressValue}%</span>
+                <span className="col-start-1 row-start-1 text-[2.55rem] font-black tabular-nums text-slate-950">{progressValue}%</span>
               </div>
 
-              <div className="my-5 h-px bg-slate-300/45" />
+              <div className="my-7 h-px bg-slate-400/25 shadow-[0_1px_0_rgba(255,255,255,0.8)]" />
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-slate-800"><Type className="h-4 w-4 text-red-600" /> Font size</span>
-                  <div className="article-reader-segmented flex items-center rounded-2xl p-1">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="inline-flex whitespace-nowrap items-center gap-2.5 text-base font-bold text-slate-900"><Type className="h-5 w-5 text-red-600" /> Font size</span>
+                  <div className="article-reader-segmented flex items-center rounded-[1.4rem] p-1.5">
                     <button
                       type="button"
                       onClick={() => updatePrefs({ fontScale: prefs.fontScale - FONT_SCALE_STEP })}
                       disabled={prefs.fontScale <= FONT_SCALE_MIN + 0.001}
-                      className="grid h-9 w-10 place-items-center rounded-xl text-sm font-black text-slate-700 transition hover:bg-white disabled:opacity-35"
+                      className="grid h-10 w-10 place-items-center rounded-xl text-base font-black text-slate-700 transition hover:bg-white disabled:opacity-35"
                       aria-label="Smaller text"
                     >
                       A−
                     </button>
-                    <span className="min-w-11 text-center text-[11px] font-black tabular-nums text-slate-500">{fontScalePct}%</span>
+                    <span className="min-w-12 text-center text-sm font-black tabular-nums text-slate-500">{fontScalePct}%</span>
                     <button
                       type="button"
                       onClick={() => updatePrefs({ fontScale: prefs.fontScale + FONT_SCALE_STEP })}
                       disabled={prefs.fontScale >= FONT_SCALE_MAX - 0.001}
-                      className="grid h-9 w-10 place-items-center rounded-xl text-base font-black text-slate-900 transition hover:bg-white disabled:opacity-35"
+                      className="grid h-10 w-10 place-items-center rounded-xl text-lg font-black text-slate-900 transition hover:bg-white disabled:opacity-35"
                       aria-label="Larger text"
                     >
                       A+
@@ -580,9 +583,9 @@ export default function ArticleReader() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-bold text-slate-800">Contrast</span>
-                  <div className="article-reader-segmented flex items-center gap-1 rounded-2xl p-1">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-base font-bold text-slate-900">Contrast</span>
+                  <div className="article-reader-segmented flex items-center gap-1 rounded-[1.4rem] p-1.5">
                     {([
                       { value: 'light' as ReaderTheme, label: 'Light', icon: Sun },
                       { value: 'sepia' as ReaderTheme, label: 'Sepia', icon: Coffee },
@@ -594,28 +597,29 @@ export default function ArticleReader() {
                         onClick={() => updatePrefs({ theme: value })}
                         aria-label={`${label} reading theme`}
                         aria-pressed={prefs.theme === value}
-                        className={`grid h-9 w-9 place-items-center rounded-xl transition ${
-                          prefs.theme === value ? 'bg-white text-red-700 shadow-sm' : 'text-slate-500 hover:text-red-700'
+                        title={label}
+                        className={`grid h-10 w-10 place-items-center rounded-xl transition ${
+                          prefs.theme === value ? 'bg-white text-red-700 shadow-[0_8px_16px_rgba(15,23,42,0.1)]' : 'text-slate-500 hover:bg-white/60 hover:text-red-700'
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon className="h-5 w-5" />
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => updatePrefs({ font: prefs.font === 'serif' ? 'sans' : 'serif' })}
-                    className="article-reader-segmented rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition hover:text-red-700"
+                    className="article-reader-segmented rounded-[1.15rem] px-3 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:text-red-700"
                   >
                     {prefs.font === 'serif' ? 'Serif font' : 'Sans font'}
                   </button>
                   <button
                     type="button"
                     onClick={() => updatePrefs({ width: prefs.width === 'cozy' ? 'wide' : 'cozy' })}
-                    className="article-reader-segmented rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition hover:text-red-700"
+                    className="article-reader-segmented rounded-[1.15rem] px-3 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:text-red-700"
                   >
                     {prefs.width === 'cozy' ? 'Cozy width' : 'Wide width'}
                   </button>
@@ -626,13 +630,13 @@ export default function ArticleReader() {
             <button
               type="button"
               onClick={() => setNotesOpen(true)}
-              className="article-reader-glass block w-full rounded-[2rem] p-5 text-left transition hover:-translate-y-0.5"
+              className="article-reader-glass article-reader-notes-card block min-h-[16rem] w-full rounded-[2.35rem] p-6 text-left transition hover:-translate-y-0.5 lg:p-7"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-2 text-lg font-black text-slate-950">
-                  <StickyNote className="h-5 w-5 text-red-600" /> Notes
+                <span className="inline-flex items-center gap-2.5 text-[1.35rem] font-black text-slate-950">
+                  <StickyNote className="h-6 w-6 text-red-600" /> Notes
                 </span>
-                <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black text-white">{notes.length}</span>
+                <span className="grid h-7 min-w-7 place-items-center rounded-full bg-red-600 px-2 text-xs font-black text-white shadow-[0_8px_16px_rgba(220,38,38,0.24)]">{notes.length}</span>
               </div>
               {notePreviews.length > 0 ? (
                 <div className="mt-5 grid grid-cols-2 gap-2 pb-2">
@@ -647,7 +651,7 @@ export default function ArticleReader() {
                   ))}
                 </div>
               ) : (
-                <span className="mt-4 block rounded-2xl border border-dashed border-red-200 bg-white/50 px-3 py-5 text-center text-xs font-medium text-slate-500">
+                <span className="article-reader-empty-note mt-6 flex min-h-28 items-center justify-center rounded-[1.5rem] border border-dashed border-red-200/80 bg-white/32 px-5 py-7 text-center text-sm font-medium leading-6 text-slate-500">
                   Select text and add your first note.
                 </span>
               )}
@@ -656,14 +660,14 @@ export default function ArticleReader() {
             <button
               type="button"
               onClick={onOpenAssistant}
-              className="article-reader-glass group flex w-full items-center gap-4 rounded-[2rem] p-4 text-left transition hover:-translate-y-0.5"
+              className="article-reader-glass article-reader-ai-card group flex min-h-[8.5rem] w-full items-center gap-5 rounded-[2.35rem] p-5 text-left transition hover:-translate-y-0.5 lg:px-6"
             >
-              <span className="article-reader-ai-orb grid h-14 w-14 shrink-0 place-items-center rounded-full text-red-600">
-                <Mic2 className="h-6 w-6" />
+              <span className="article-reader-ai-orb grid h-[4.8rem] w-[4.8rem] shrink-0 place-items-center rounded-full text-red-600 transition group-hover:scale-105">
+                <Mic2 className="h-7 w-7" />
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-xl font-black text-slate-950">Ask AI <MessageCircle className="h-5 w-5" /></span>
-                <span className="mt-0.5 block text-xs font-medium text-slate-500">Select text for word help</span>
+                <span className="flex items-center gap-2 text-[1.6rem] font-black text-slate-950">Ask AI <MessageCircle className="h-6 w-6" /></span>
+                <span className="mt-1 block whitespace-nowrap text-sm font-medium text-slate-500">Select text for word help</span>
               </span>
             </button>
           </aside>

@@ -10,6 +10,7 @@ export type {
   StudentBody,
   Campus,
   UniversityBrand,
+  UniversitySource,
   AdmissionLesson,
   LessonBlock,
   LessonLevel,
@@ -29,7 +30,7 @@ export const UNIVERSITY_COUNT = universities.length
 /* ------------------------------------------------------------------ */
 
 export function getUniversities(): University[] {
-  return [...universities].sort((a, b) => a.rank - b.rank)
+  return [...universities].sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name))
 }
 
 export function getUniversityBySlug(slug: string): University | undefined {

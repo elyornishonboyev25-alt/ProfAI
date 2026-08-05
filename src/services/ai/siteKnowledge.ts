@@ -34,7 +34,7 @@ export function describeRelevantSiteKnowledge(message: string): string {
   if (matches.length === 0) {
     return [
       `INTERNAL UNIVERSITY CATALOG (${QS_EDITION}):`,
-      universities.map((university) => `#${university.rank} ${university.name} (${university.city}, ${university.country})`).join('; '),
+      universities.map((university) => `${typeof university.rank === 'number' ? `#${university.rank} ` : ''}${university.name} (${university.city}, ${university.country})`).join('; '),
       'No exact catalog match was found for the learner’s wording. Do not invent a profile or requirement. Say when the requested university is not yet in ProfAI’s catalog and offer general guidance or the closest listed match.',
     ].join('\n')
   }
@@ -51,7 +51,7 @@ export function describeRelevantSiteKnowledge(message: string): string {
 
     return [
       `VERIFIED PROFai CATALOG RECORD — ${university.name}`,
-      `Edition: ${QS_EDITION}; rank #${university.rank}; overall ${university.overallScore}/100.`,
+      `Edition: ${QS_EDITION}; ${typeof university.rank === 'number' ? `rank #${university.rank}` : 'no QS 2026 rank listed'}; ${typeof university.overallScore === 'number' ? `overall ${university.overallScore}/100` : 'no overall score listed'}.`,
       `Location: ${university.city}, ${university.country}; type: ${university.type}; founded: ${university.founded}.`,
       `Profile: ${university.about}`,
       `Stored undergraduate indicators: ${requirements}.`,

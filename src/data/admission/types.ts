@@ -29,6 +29,19 @@ export type QSIndicators = {
 export type AdmissionRequirement = {
   label: string // e.g. "IELTS", "TOEFL iBT", "SAT"
   value: string // e.g. "7.0+", "100+", "1520+"
+  // Numeric comparison is intentionally opt-in. Universities that require a
+  // test but publish no cutoff must never be turned into an invented target.
+  minimum?: number
+  recommended?: number
+  comparison?: 'ieltsOverall' | 'satTotal'
+  policy?: 'required' | 'recommended' | 'optional' | 'conditional' | 'not-required' | 'not-accepted'
+  detail?: string
+  sourceUrl?: string
+}
+
+export type UniversitySource = {
+  label: string
+  url: string
 }
 
 export type CostOfLiving = {
@@ -69,13 +82,14 @@ export type UniversityBrand = {
 export type University = {
   id: string
   slug: string
-  rank: number // QS World University Rankings 2026 position
+  rank?: number // QS World University Rankings 2026 position, when ranked
+  rankTied?: boolean
   name: string
   shortName: string
   city: string
   country: string
   countryEmoji: string // flag emoji for the location chip
-  overallScore: number // QS overall score, 0–100
+  overallScore?: number // QS overall score, 0–100, when published in our verified dataset
   type: string // e.g. "Private, not-for-profit"
   founded: number
   website: string
@@ -94,8 +108,11 @@ export type University = {
   admission?: {
     bachelor?: AdmissionRequirement[]
     note?: string
+    verifiedAt?: string
   }
   campus?: Campus
+  groups?: ('qs-top-10' | 'ivy-league' | 'uzbekistan')[]
+  sources?: UniversitySource[]
   // Years the university held its current rank (or #1) — drawn as a stability timeline.
   rankHistory?: { year: number; rank: number }[]
 }

@@ -599,7 +599,7 @@ export default function AccountProfile() {
                   <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-slate-900">{targetUniversity.name}</p>
-                      <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country} · QS #{targetUniversity.rank}</p>
+                      <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS #${targetUniversity.rank}` : ''}</p>
                     </div>
                     <button onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)} className="shrink-0 text-xs font-bold text-red-600 hover:underline">
                       View

@@ -21,8 +21,10 @@ import {
 import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityRadar from '@/components/admission/UniversityRadar'
+import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
 import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import type { CostOfLiving } from '@/data/admission'
+import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 
 function money(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
@@ -39,6 +41,7 @@ export default function AdmissionUniversity() {
   const navigate = useNavigate()
   const { slug } = useParams<{ slug: string }>()
   const university = slug ? getUniversityBySlug(slug) : undefined
+  const { scores } = useAdmissionScores()
 
   if (!university) {
     return (
@@ -96,11 +99,11 @@ export default function AdmissionUniversity() {
             />
             <div className="relative">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/admission/universities')}
                 className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Dashboard
+                Back to Universities
               </button>
 
               <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -108,7 +111,7 @@ export default function AdmissionUniversity() {
                 <div className="min-w-0">
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
                     <Trophy className="h-3.5 w-3.5" />
-                    #{u.rank} · {QS_EDITION}
+                    {typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank} · ${QS_EDITION}` : 'Official university profile'}
                   </div>
                   <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-4xl">{u.name}</h1>
                   <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/80">
@@ -138,13 +141,13 @@ export default function AdmissionUniversity() {
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">QS World Ranking</p>
-                  <p className="mt-1 text-3xl font-black">#{u.rank}</p>
-                  <p className="text-[12px] font-medium text-white/70">{QS_EDITION}</p>
+                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank}` : 'Not ranked'}</p>
+                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS 2026 rank listed'}</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">Overall Score</p>
                   <p className="mt-1 text-3xl font-black">
-                    <CountUp value={u.overallScore} decimals={Number.isInteger(u.overallScore) ? 0 : 1} />
+                    {typeof u.overallScore === 'number' ? <CountUp value={u.overallScore} decimals={Number.isInteger(u.overallScore) ? 0 : 1} /> : '—'}
                   </p>
                   <p className="text-[12px] font-medium text-white/70">out of 100</p>
                 </div>
@@ -200,10 +203,18 @@ export default function AdmissionUniversity() {
                 </span>
                 QS Performance
               </h2>
-              <div className="mt-2 h-64 w-full sm:h-72">
-                <UniversityRadar indicators={u.indicators} accent={accent} />
-              </div>
-              <p className="text-center text-[11px] font-medium text-slate-400">All indicators scored out of 100</p>
+              {indicators.length > 0 ? (
+                <>
+                  <div className="mt-2 h-64 w-full sm:h-72">
+                    <UniversityRadar indicators={u.indicators} accent={accent} />
+                  </div>
+                  <p className="text-center text-[11px] font-medium text-slate-400">All indicators scored out of 100</p>
+                </>
+              ) : (
+                <div className="mt-5 flex flex-1 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+                  QS indicator breakdown is not included for this profile.
+                </div>
+              )}
             </section>
           </Reveal>
         </div>
@@ -219,11 +230,11 @@ export default function AdmissionUniversity() {
             </h2>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <RankCard icon={Trophy} label="QS World University Rankings" value={`#${u.rank}`} accent={accent} />
+              <RankCard icon={Trophy} label="QS World University Rankings" value={typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank}` : 'Not listed'} accent={accent} />
               {typeof u.subjectRank === 'number' ? (
                 <RankCard icon={Star} label="QS WUR Ranking by Subject" value={`#${u.subjectRank}`} accent={accent} />
               ) : (
-                <RankCard icon={Award} label="Overall Score" value={String(u.overallScore)} accent={accent} />
+                <RankCard icon={Award} label="Overall Score" value={typeof u.overallScore === 'number' ? String(u.overallScore) : 'Not listed'} accent={accent} />
               )}
               {typeof u.sustainabilityRank === 'number' ? (
                 <RankCard icon={Leaf} label="QS Sustainability Ranking" value={`#${u.sustainabilityRank}`} accent={accent} />
@@ -288,14 +299,24 @@ export default function AdmissionUniversity() {
                 Admission · Bachelor
               </h2>
               <p className="mt-2 text-[13px] text-slate-500">{u.admission.note}</p>
+              <div className="mt-5">
+                <AdmissionScoreComparison university={u} scores={scores} />
+              </div>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {u.admission.bachelor.map((req) => (
                   <div key={req.label} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{req.label}</p>
-                    <p className="mt-1.5 text-xl font-black text-slate-900">{req.value}</p>
+                    <p className="mt-1.5 text-base font-black leading-snug text-slate-900">{req.value}</p>
+                    {req.detail ? <p className="mt-1 text-[10px] leading-4 text-slate-500">{req.detail}</p> : null}
+                    {req.sourceUrl ? (
+                      <a href={req.sourceUrl} target="_blank" rel="noreferrer noopener" className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-red-600 hover:underline">
+                        Official source <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : null}
                   </div>
                 ))}
               </div>
+              {u.admission.verifiedAt ? <p className="mt-3 text-right text-[10px] font-medium text-slate-400">Verified {u.admission.verifiedAt}</p> : null}
             </section>
           </Reveal>
         ) : null}
@@ -400,10 +421,28 @@ export default function AdmissionUniversity() {
           </Reveal>
         ) : null}
 
+        {u.sources && u.sources.length > 0 ? (
+          <Reveal delay={0.04}>
+            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}><ExternalLink className="h-4 w-4" /></span>
+                Official sources
+              </h2>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {u.sources.map((source) => (
+                  <a key={source.url} href={source.url} target="_blank" rel="noreferrer noopener" className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-red-200 hover:text-red-700">
+                    {source.label}<ExternalLink className="h-4 w-4 shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+        ) : null}
+
         <Reveal delay={0.04}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Profile data from the {QS_EDITION}.
+            Rankings from {QS_EDITION}; admissions from the university’s official sources.
           </p>
         </Reveal>
       </div>

@@ -86,7 +86,7 @@ export default function Admission() {
                 <div className="hero-metric-card interactive-lift">
                   <p className="hero-metric-label">Universities</p>
                   <p className="hero-metric-value-sm">
-                    Top&nbsp;<CountUp value={UNIVERSITY_COUNT} />
+                    <CountUp value={UNIVERSITY_COUNT} />
                   </p>
                   <p className="hero-metric-note">{QS_EDITION}</p>
                 </div>
@@ -203,7 +203,7 @@ export default function Admission() {
                     <Trophy className="h-8 w-8" />
                   </span>
                   <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-red-700">
-                    Top {UNIVERSITY_COUNT} · QS 2026
+                    {UNIVERSITY_COUNT} verified profiles
                   </span>
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Universities</h2>

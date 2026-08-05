@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, MapPin, Search, Sparkles, Trophy } from 'lucide-react'
 import { AmbientBackdrop, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
+import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
 import { getUniversities, indicatorOrder, QS_EDITION, UNIVERSITY_COUNT } from '@/data/admission'
+import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 
 // The two headline indicators QS prints under each ranking row.
 const ROW_KEYS = ['citationsPerFaculty', 'academicReputation'] as const
@@ -12,6 +14,7 @@ export default function AdmissionUniversities() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const all = getUniversities()
+  const { scores } = useAdmissionScores()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -46,8 +49,8 @@ export default function AdmissionUniversities() {
               World University <span className="arena-title-accent-red">Rankings</span>
             </h1>
             <p className="premium-section-subtitle max-w-3xl">
-              The top {UNIVERSITY_COUNT} universities on earth, ranked by overall score with verified QS indicators.
-              Open any profile for the full breakdown — admissions, costs, student data and more.
+              Explore {UNIVERSITY_COUNT} verified profiles: the QS 2026 top 10, every Ivy League university, and
+              selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
             </p>
 
             <div className="relative mt-5 w-full sm:w-80">
@@ -87,12 +90,12 @@ export default function AdmissionUniversities() {
                     >
                       <div className="text-center">
                         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Rank</p>
-                        <p className="text-3xl font-black leading-none text-slate-900 sm:text-4xl">{u.rank}</p>
+                        <p className="text-3xl font-black leading-none text-slate-900 sm:text-4xl">{typeof u.rank === 'number' ? `${u.rankTied ? '=' : ''}${u.rank}` : '—'}</p>
                       </div>
                       <div className="text-center sm:mt-4">
                         <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Overall</p>
                         <p className="text-xl font-black leading-none" style={{ color: u.brand.accent }}>
-                          {u.overallScore}
+                          {typeof u.overallScore === 'number' ? u.overallScore : '—'}
                         </p>
                       </div>
                     </div>
@@ -119,6 +122,14 @@ export default function AdmissionUniversities() {
                           {u.countryEmoji} {u.city}, {u.country}
                         </p>
 
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {u.groups?.map((group) => (
+                            <span key={group} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
+                              {group === 'qs-top-10' ? 'QS Top 10' : group === 'ivy-league' ? 'Ivy League' : 'Uzbekistan'}
+                            </span>
+                          ))}
+                        </div>
+
                         {/* indicator mini-bars */}
                         <div className="mt-3 grid max-w-md grid-cols-2 gap-x-5 gap-y-2">
                           {rowMetrics.map((m) => (
@@ -135,6 +146,9 @@ export default function AdmissionUniversities() {
                               </div>
                             </div>
                           ))}
+                        </div>
+                        <div className="mt-3 max-w-xl">
+                          <AdmissionScoreComparison university={u} scores={scores} compact />
                         </div>
                       </div>
 
@@ -155,7 +169,7 @@ export default function AdmissionUniversities() {
         <Reveal delay={0.05}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Data from the {QS_EDITION}. Scores are updated each edition.
+            Rankings: {QS_EDITION}. Admissions: official university sources, verified 5 August 2026.
           </p>
         </Reveal>
       </div>

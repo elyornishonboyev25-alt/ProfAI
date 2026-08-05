@@ -43,6 +43,8 @@ export default function UniversityMatcher({ open, onClose }: Props) {
       .then((data) => {
         const p = data.profile
         if (p.gpa) setGpa(p.gpa)
+        if (p.currentSatScore) setSat(String(p.currentSatScore))
+        if (p.currentIeltsScore) setIelts(String(p.currentIeltsScore))
         if (p.fieldOfStudy) setFieldOfStudy(p.fieldOfStudy)
         if (p.budgetUsd) setBudget(String(p.budgetUsd))
         if (p.country) setPreferredCountry((prev) => prev || (COUNTRIES.includes(p.country as string) ? (p.country as string) : prev))
@@ -181,7 +183,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                         <UniversityLogo id={m.university.id} brand={m.university.brand} size={40} rounded="0.6rem" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-black text-slate-900">{m.university.name}</p>
-                          <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country} · QS #{m.university.rank}</p>
+                          <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS #${m.university.rank}` : ''}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-black text-slate-900">{m.fitPercent}%</p>

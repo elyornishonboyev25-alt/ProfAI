@@ -1,10 +1,8 @@
 import type { University } from './types'
 import { universities } from './universities'
 
-// Profile-based university matching. The QS dataset only fully lists entry scores
-// for the flagship (MIT); for the rest we estimate competitive requirements from
-// the QS overall score (higher score → more selective). The result is a ranked,
-// transparent "fit" with reach/match/safety classification and human reasons.
+// Profile-based university matching. Test thresholds come only from official
+// university policies; a missing cutoff stays missing instead of being estimated.
 
 export type DegreeLevel = 'bachelor' | 'master' | 'phd'
 
@@ -20,7 +18,7 @@ export type MatchInput = {
 
 export type MatchClassification = 'reach' | 'match' | 'safety'
 
-export type EstimatedRequirements = { sat: number; ielts: number; gpa: number; satExplicit: boolean; ieltsExplicit: boolean }
+export type EstimatedRequirements = { sat: number | null; ielts: number | null; gpa: number | null; satExplicit: boolean; ieltsExplicit: boolean }
 
 export type UniversityMatch = {
   university: University
@@ -34,39 +32,17 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-function parseFirstNumber(value: string): number | null {
-  const match = value.match(/\d+(\.\d+)?/)
-  return match ? Number(match[0]) : null
-}
-
 export function estimateRequirements(uni: University): EstimatedRequirements {
-  const o = uni.overallScore
-  let sat = Math.round(1380 + (o / 100) * 140) // ~1380–1520
-  let ielts = Math.round((6.5 + (o / 100) * 1.0) * 2) / 2 // ~6.5–7.5, rounded to .5
-  const gpa = Number((3.5 + (o / 100) * 0.5).toFixed(2)) // ~3.5–4.0
-  let satExplicit = false
-  let ieltsExplicit = false
-
   const bachelor = uni.admission?.bachelor ?? []
-  for (const req of bachelor) {
-    const label = req.label.toLowerCase()
-    if (label.includes('sat')) {
-      const n = parseFirstNumber(req.value)
-      if (n && n >= 400) {
-        sat = n
-        satExplicit = true
-      }
-    }
-    if (label.includes('ielts')) {
-      const n = parseFirstNumber(req.value)
-      if (n && n <= 9) {
-        ielts = n
-        ieltsExplicit = true
-      }
-    }
+  const satRequirement = bachelor.find((req) => req.comparison === 'satTotal')
+  const ieltsRequirement = bachelor.find((req) => req.comparison === 'ieltsOverall')
+  return {
+    sat: satRequirement?.minimum ?? satRequirement?.recommended ?? null,
+    ielts: ieltsRequirement?.minimum ?? ieltsRequirement?.recommended ?? null,
+    gpa: null,
+    satExplicit: Boolean(satRequirement),
+    ieltsExplicit: Boolean(ieltsRequirement),
   }
-
-  return { sat, ielts, gpa, satExplicit, ieltsExplicit }
 }
 
 function livingCost(uni: University): number | null {
@@ -86,28 +62,32 @@ export function scoreUniversity(uni: University, input: MatchInput): UniversityM
   const reasons: string[] = []
   const scores: number[] = []
 
-  if (typeof input.satTotal === 'number' && input.satTotal > 0) {
+  if (typeof input.satTotal === 'number' && input.satTotal > 0 && req.sat !== null) {
     const s = metricScore(input.satTotal, req.sat, 160)
     scores.push(s)
     const verb = input.satTotal >= req.sat ? 'meets' : input.satTotal >= req.sat - 80 ? 'is near' : 'is below'
-    reasons.push(`SAT ${input.satTotal} ${verb} the ~${req.sat}${req.satExplicit ? '' : ' (est.)'} target`)
+    reasons.push(`SAT ${input.satTotal} ${verb} the official ${req.sat} published benchmark`)
+  } else if (typeof input.satTotal === 'number' && input.satTotal > 0) {
+    reasons.push('No numeric SAT cutoff is published, so no SAT gap was invented')
   }
 
-  if (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0) {
+  if (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0 && req.ielts !== null) {
     const s = metricScore(input.ieltsOverall, req.ielts, 1)
     scores.push(s)
     const verb = input.ieltsOverall >= req.ielts ? 'meets' : input.ieltsOverall >= req.ielts - 0.5 ? 'is near' : 'is below'
-    reasons.push(`IELTS ${input.ieltsOverall.toFixed(1)} ${verb} the ~${req.ielts.toFixed(1)}${req.ieltsExplicit ? '' : ' (est.)'} target`)
+    reasons.push(`IELTS ${input.ieltsOverall.toFixed(1)} ${verb} the official ${req.ielts.toFixed(1)} published benchmark`)
+  } else if (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0) {
+    reasons.push('No numeric IELTS cutoff is published, so no IELTS gap was invented')
   }
 
-  if (typeof input.gpa === 'number' && input.gpa > 0) {
+  if (typeof input.gpa === 'number' && input.gpa > 0 && req.gpa !== null) {
     const s = metricScore(input.gpa, req.gpa, 0.4)
     scores.push(s)
     const verb = input.gpa >= req.gpa ? 'meets' : input.gpa >= req.gpa - 0.2 ? 'is near' : 'is below'
     reasons.push(`GPA ${input.gpa.toFixed(2)} ${verb} the ~${req.gpa.toFixed(2)} (est.) target`)
   }
 
-  let avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : clamp(0.5 + (50 - uni.rank) / 100, 0.2, 0.8)
+  let avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : typeof uni.rank === 'number' ? clamp(0.5 + (50 - uni.rank) / 100, 0.2, 0.8) : 0.5
 
   // Country preference
   if (input.preferredCountry) {
@@ -134,7 +114,14 @@ export function scoreUniversity(uni: University, input: MatchInput): UniversityM
   const classification: MatchClassification = avg >= 0.62 ? 'safety' : avg >= 0.42 ? 'match' : 'reach'
 
   if (scores.length === 0) {
-    reasons.unshift('Add your scores for a precise fit — this is based on QS rank only')
+    const hasUserTestScore = (typeof input.satTotal === 'number' && input.satTotal > 0) || (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0)
+    reasons.unshift(
+      hasUserTestScore
+        ? 'This university publishes no comparable numeric cutoff for the scores you entered'
+        : typeof uni.rank === 'number'
+          ? 'Add your scores for a more precise fit — this fallback uses QS rank only'
+          : 'Add your scores for a more precise fit',
+    )
   }
 
   return {
@@ -149,5 +136,5 @@ export function scoreUniversity(uni: University, input: MatchInput): UniversityM
 export function matchUniversities(input: MatchInput): UniversityMatch[] {
   return universities
     .map((uni) => scoreUniversity(uni, input))
-    .sort((a, b) => b.fitPercent - a.fitPercent || a.university.rank - b.university.rank)
+    .sort((a, b) => b.fitPercent - a.fitPercent || (a.university.rank ?? Number.MAX_SAFE_INTEGER) - (b.university.rank ?? Number.MAX_SAFE_INTEGER))
 }

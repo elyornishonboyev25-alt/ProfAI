@@ -19,6 +19,8 @@ import { AmbientBackdrop, BrandIcon, CountUp, Reveal, Stagger, StaggerItem, Tilt
 import { ApiError } from '@/lib/apiClient'
 import { formatClock } from '@/lib/youtube'
 import ShadowingPlayer from '@/components/shadowing/ShadowingPlayer'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { canSubmitCommunityVideo } from '@/utils/videoSubmissionAccess'
 import {
   getShadowingVideo,
   listShadowingVideos,
@@ -43,6 +45,8 @@ function levelBadge(level: string) {
 
 export default function ShadowingLab() {
   const navigate = useNavigate()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const canSubmitVideo = canSubmitCommunityVideo(user)
 
   const [videos, setVideos] = useState<ShadowingVideoSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,7 +88,7 @@ export default function ShadowingLab() {
   const handleSubmit = useCallback(
     async (rawUrl?: string) => {
       const target = (rawUrl ?? url).trim()
-      if (!target || submitting) return
+      if (!canSubmitVideo || !target || submitting) return
       setSubmitting(true)
       setSubmitError(null)
       setNotice(null)
@@ -110,7 +114,7 @@ export default function ShadowingLab() {
         setSubmitting(false)
       }
     },
-    [url, submitting, upsertIntoList],
+    [canSubmitVideo, url, submitting, upsertIntoList],
   )
 
   const openVideo = useCallback(async (youtubeId: string) => {
@@ -198,9 +202,10 @@ export default function ShadowingLab() {
           </section>
         </Reveal>
 
-        {/* Add a video */}
-        <Reveal delay={0.05}>
-          <section className="surface-card p-5 sm:p-6">
+        {/* Adding shared clips is intentionally limited to the authorised curators. */}
+        {canSubmitVideo ? (
+          <Reveal delay={0.05}>
+            <section className="surface-card p-5 sm:p-6">
             <div className="flex items-center gap-2">
               <BrandIcon icon={Wand2} soft />
               <div>
@@ -277,8 +282,9 @@ export default function ShadowingLab() {
               <ShieldCheck className="h-3.5 w-3.5" />
               Only English, embeddable, appropriate videos are accepted. Inappropriate or caption-less links are rejected.
             </p>
-          </section>
-        </Reveal>
+            </section>
+          </Reveal>
+        ) : null}
 
         {/* Library */}
         <section>
@@ -307,10 +313,11 @@ export default function ShadowingLab() {
           ) : videos.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-red-200 bg-white/70 p-10 text-center">
               <BrandIcon icon={AudioLines} soft />
-              <h3 className="mt-3 text-base font-bold text-slate-900">The library is empty — be the first!</h3>
+              <h3 className="mt-3 text-base font-bold text-slate-900">The library is empty.</h3>
               <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-                Paste an English YouTube link above (or tap a suggestion) and it becomes the first shadowing clip
-                everyone can practise with.
+                {canSubmitVideo
+                  ? 'Paste an English YouTube link above (or tap a suggestion) to add the first shadowing clip.'
+                  : 'New shadowing clips will appear here when they are published.'}
               </p>
             </div>
           ) : (

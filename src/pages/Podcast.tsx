@@ -45,6 +45,8 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { PODCAST_EPISODES, getPodcastEpisode, type PodcastEpisode } from '@/data/podcasts'
 import { ApiError } from '@/lib/apiClient'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { canSubmitCommunityVideo } from '@/utils/videoSubmissionAccess'
 import {
   getCommunityPodcast,
   listCommunityPodcasts,
@@ -194,6 +196,8 @@ const SHORTCUTS: { keys: string; action: string }[] = [
 export default function Podcast() {
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const canSubmitVideo = canSubmitCommunityVideo(user)
   const prefs0 = useRef<Prefs>(loadPrefs())
 
   const [communityVideos, setCommunityVideos] = useState<CommunityPodcastSummary[]>([])
@@ -293,7 +297,7 @@ export default function Podcast() {
   const addPodcast = useCallback(
     async (rawUrl?: string) => {
       const target = (rawUrl ?? podcastUrl).trim()
-      if (!target || addingPodcast) return
+      if (!canSubmitVideo || !target || addingPodcast) return
 
       setAddingPodcast(true)
       setPodcastError(null)
@@ -322,7 +326,7 @@ export default function Podcast() {
         setAddingPodcast(false)
       }
     },
-    [addingPodcast, podcastUrl],
+    [addingPodcast, canSubmitVideo, podcastUrl],
   )
 
   const openEpisode = useCallback(async (item: PodcastEpisode) => {
@@ -1406,8 +1410,9 @@ export default function Podcast() {
           </div>
         </section>
 
-        {/* Add a podcast — same checked, shared-link workflow as Shadowing Lab. */}
-        <section className="mt-6 rounded-[1.6rem] border border-white/90 bg-white/78 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-6">
+        {/* Adding shared episodes is intentionally limited to the authorised curators. */}
+        {canSubmitVideo ? (
+          <section className="mt-6 rounded-[1.6rem] border border-white/90 bg-white/78 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-6">
           <div className="flex items-center gap-2">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 shadow-sm">
               <Sparkles className="h-5 w-5" />
@@ -1483,7 +1488,8 @@ export default function Podcast() {
             <ShieldCheck className="h-3.5 w-3.5" />
             Public, embeddable English videos only. Audio is processed securely and is never stored.
           </p>
-        </section>
+          </section>
+        ) : null}
 
         <div className={`mt-6 ${theater ? 'space-y-6' : 'grid gap-6 lg:grid-cols-[1.6fr_1fr]'}`}>
           {/* Player column */}
@@ -1687,9 +1693,11 @@ export default function Podcast() {
                     ) : null}
                   </button>
                 ))}
-                <div className="rounded-xl border border-dashed border-red-200 bg-red-50/45 px-3 py-3 text-center text-xs font-medium text-slate-500">
-                  Add an English subtitled YouTube link above to grow this shared playlist.
-                </div>
+                {canSubmitVideo ? (
+                  <div className="rounded-xl border border-dashed border-red-200 bg-red-50/45 px-3 py-3 text-center text-xs font-medium text-slate-500">
+                    Add an English subtitled YouTube link above to grow this shared playlist.
+                  </div>
+                ) : null}
               </div>
             </article>
           </div>

@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
+import { requireVideoSubmissionAccess } from '../middleware/videoSubmissionAccess.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { buildShadowingDraft, extractYouTubeId, ShadowingError } from '../services/shadowing.service.js'
@@ -94,6 +95,7 @@ router.post(
   '/',
   requireAuth,
   submitRateLimit,
+  requireVideoSubmissionAccess,
   validateBody(submitSchema),
   asyncHandler(async (req, res) => {
     const { url } = req.body as z.infer<typeof submitSchema>

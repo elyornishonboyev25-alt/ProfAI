@@ -12,6 +12,7 @@
 // no CORS problem and no API key is required.
 
 import { fetchViaInnertube } from './youtubeInnertube.js'
+import { transcribeYouTubeVideo, VideoTranscriptionError } from './videoTranscription.service.js'
 
 /** A typed error whose HTTP status + message are safe to show the user. */
 export class ShadowingError extends Error {
@@ -39,7 +40,7 @@ export type ShadowingVideoDraft = {
   level: string
   accent: string | null
   topic: string | null
-  captionKind: 'manual' | 'auto'
+  captionKind: 'manual' | 'auto' | 'generated'
   language: string
   wordCount: number
   segments: ShadowingSegmentDraft[]
@@ -561,6 +562,7 @@ function importCopy(mode: VideoImportMode) {
         maxSeconds: MAX_SHADOWING_SECONDS,
         maxDurationError: 'This video is too long for shadowing. Pick a clip under 30 minutes.',
       }
+}
 
 async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promise<ShadowingVideoDraft> {
   const copy = importCopy(mode)
@@ -574,7 +576,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   const engineRan = innertube !== null
 
   let cues: Cue[] = []
-  let captionKind: 'manual' | 'auto' = 'auto'
+  let captionKind: 'manual' | 'auto' | 'generated' = 'auto'
   let language = 'en'
   let englishTrackFound = innertube?.hasEnglishCaptions ?? false
   let durationSec = innertube?.durationSec ?? 0
@@ -627,15 +629,44 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
         422,
       )
     }
-    if (englishTrackFound) {
+
+    // Reject known out-of-range media before downloading audio or spending a
+    // transcription request. Duration is checked again below for sources where
+    // YouTube only reveals it through caption/audio timestamps.
+    if (durationSec && durationSec > copy.maxSeconds) {
+      throw new ShadowingError(copy.maxDurationError)
+    }
+    if (durationSec && durationSec < MIN_VIDEO_SECONDS) {
+      throw new ShadowingError('This clip is too short. Choose a video of at least 15 seconds.')
+    }
+
+    // Podcast episodes may have no creator-provided captions. Generate synced
+    // English cues from the audio, then continue through the same content
+    // screening, segmentation and persistence path as YouTube captions.
+    if (mode === 'podcast') {
+      try {
+        cues = await transcribeYouTubeVideo(youtubeId, durationSec)
+        captionKind = 'generated'
+        language = 'en'
+        englishTrackFound = true
+      } catch (error) {
+        if (error instanceof VideoTranscriptionError) {
+          throw new ShadowingError(error.message, error.statusCode)
+        }
+        throw error
+      }
+    }
+
+    if (cues.length > 0) {
+      // Generated captions are ready; continue below.
+    } else if (englishTrackFound) {
       // The video HAS English captions but YouTube refused to hand the text to
       // this server (anti-bot / proof-of-origin wall).
       throw new ShadowingError(
         `YouTube is temporarily blocking this ${copy.noun}'s subtitle download. The video has English captions; please retry shortly.`,
         502,
       )
-    }
-    if (!engineRan) {
+    } else if (!engineRan) {
       // The poToken/BotGuard engine never started — almost always a stale
       // deployment (missing youtubei.js/bgutils/jsdom deps or old code) or a
       // server that just booted. This is NOT a problem with the video itself.
@@ -643,10 +674,11 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
         `The ${copy.engine} is temporarily unavailable. Please retry in a minute.`,
         503,
       )
+    } else {
+      throw new ShadowingError(
+        `This ${copy.noun} has no readable English subtitles. Turn on English CC in YouTube first, or choose another public video with captions.`,
+      )
     }
-    throw new ShadowingError(
-      `This ${copy.noun} has no readable English subtitles. Turn on English CC in YouTube first, or choose another public video with captions.`,
-    )
   }
 
   const lastEnd = cues[cues.length - 1]?.end ?? 0

@@ -1415,7 +1415,7 @@ export default function Podcast() {
             <div>
               <h2 className="text-lg font-black text-slate-950">Add a podcast to listen</h2>
               <p className="text-xs text-slate-500">
-                English YouTube videos with subtitles only — we check the language and screen the content automatically.
+                Paste any public English YouTube video — if captions are missing, AI creates synced subtitles automatically.
               </p>
             </div>
           </div>
@@ -1451,7 +1451,7 @@ export default function Podcast() {
           {addingPodcast ? (
             <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2 text-xs font-semibold text-red-700">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Checking English captions and preparing your podcast transcript…
+              Checking captions and generating a synced transcript when needed… this may take a few minutes.
             </div>
           ) : null}
           {podcastError ? (
@@ -1481,7 +1481,7 @@ export default function Podcast() {
           </div>
           <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Only English, embeddable, appropriate videos with captions are accepted.
+            Public, embeddable English videos only. Audio is processed securely and is never stored.
           </p>
         </section>
 

@@ -29,6 +29,22 @@ export type InnertubeResult = {
   cues: InnertubeCue[]
 }
 
+export type YouTubeAudio = {
+  bytes: Uint8Array
+  mimeType: string
+  fileName: string
+}
+
+export class YouTubeAudioError extends Error {
+  code: 'ENGINE_UNAVAILABLE' | 'AUDIO_UNAVAILABLE' | 'AUDIO_TOO_LARGE'
+
+  constructor(code: YouTubeAudioError['code'], message: string) {
+    super(message)
+    this.name = 'YouTubeAudioError'
+    this.code = code
+  }
+}
+
 const REQUEST_KEY = 'O43z0dpjhgX20SCx4KAo'
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
@@ -184,6 +200,76 @@ async function getSession(force = false): Promise<{ yt: Innertube; visitorData: 
     }
   })()
   return sessionInflight
+}
+
+/**
+ * Download the smallest available original audio stream for AI transcription.
+ * Bytes are capped from metadata and while streaming so a missing or forged
+ * Content-Length can never exhaust server memory.
+ */
+export async function downloadYouTubeAudio(videoId: string, maxBytes: number): Promise<YouTubeAudio> {
+  const session = await getSession()
+  if (!session) {
+    throw new YouTubeAudioError('ENGINE_UNAVAILABLE', 'The YouTube audio engine is temporarily unavailable.')
+  }
+
+  const contentPot = await mintToken(videoId)
+  const clients = ['ANDROID', 'IOS', 'TV_EMBEDDED', 'WEB'] as const
+  let lastError: unknown = null
+
+  for (const client of clients) {
+    try {
+    const audioOptions = {
+      type: 'audio',
+      quality: 'bestefficiency',
+      format: 'any',
+      language: 'original',
+        client,
+        po_token: contentPot ?? undefined,
+    } as const
+      const format = await session.yt.getStreamingData(videoId, audioOptions)
+
+      if (!format.url) continue
+      if (format.content_length && format.content_length > maxBytes) {
+        throw new YouTubeAudioError('AUDIO_TOO_LARGE', 'The compressed audio is too large for automatic subtitles.')
+      }
+
+      // youtubei.js handles the CDN's range requests and decipher parameters.
+      const stream = await session.yt.download(videoId, audioOptions)
+      const reader = stream.getReader()
+      const chunks: Uint8Array[] = []
+      let size = 0
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (!value) continue
+        size += value.byteLength
+        if (size > maxBytes) {
+          await reader.cancel().catch(() => undefined)
+          throw new YouTubeAudioError('AUDIO_TOO_LARGE', 'The compressed audio is too large for automatic subtitles.')
+        }
+        chunks.push(value)
+      }
+
+      const bytes = new Uint8Array(size)
+      let offset = 0
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset)
+        offset += chunk.byteLength
+      }
+
+      const mimeType = format.mime_type?.split(';')[0] || 'audio/webm'
+      const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('mpeg') ? 'mp3' : 'webm'
+      return { bytes, mimeType, fileName: `${videoId}.${extension}` }
+    } catch (error) {
+      if (error instanceof YouTubeAudioError && error.code === 'AUDIO_TOO_LARGE') throw error
+      lastError = error
+      console.warn('[video-import] audio client failed', videoId, client, (error as Error)?.message)
+    }
+  }
+
+  console.warn('[video-import] every audio client failed', videoId, (lastError as Error)?.message)
+  throw new YouTubeAudioError('AUDIO_UNAVAILABLE', 'Could not retrieve this video audio for transcription.')
 }
 
 /* ── caption parsing ─────────────────────────────────────────────────────── */

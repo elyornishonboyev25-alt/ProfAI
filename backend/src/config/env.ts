@@ -24,10 +24,12 @@ const envSchema = z.object({
   HF_ACCESS_TOKEN: z.string().default(''),
   HF_API_BASE: z.string().url().default('https://router.huggingface.co/v1'),
   HF_MODEL: z.string().default('Qwen/Qwen2.5-7B-Instruct'),
+  HF_ASR_URL: z.string().url().default('https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3-turbo'),
   HF_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
   OPENAI_API_KEY: z.string().default(''),
   OPENAI_API_BASE: z.string().url().default('https://api.openai.com/v1'),
   OPENAI_MODEL: z.string().default('gpt-4.1-mini'),
+  OPENAI_TRANSCRIBE_MODEL: z.string().default('whisper-1'),
   OPENAI_REALTIME_MODEL: z.string().default('gpt-4o-realtime-preview'),
 })
 

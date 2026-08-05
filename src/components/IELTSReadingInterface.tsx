@@ -18,6 +18,7 @@ import {
   PaperAirplaneIcon,
   SpeakerWaveIcon,
   PlayIcon,
+  PauseIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
 
@@ -235,6 +236,9 @@ export default function IELTSReadingInterface({
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0)
   const [isAudioPlaying, setIsAudioPlaying] = useState(false)
   const [audioDone, setAudioDone] = useState(false)
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [audioError, setAudioError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // True while a clip is meant to be playing. Lets us block external pauses
   // (media keys / OS controls) and avoid fighting an intentional stop.
@@ -506,6 +510,72 @@ export default function IELTSReadingInterface({
   const startListeningAudio = () => {
     shouldPlayRef.current = true
     setAudioStarted(true)
+    setAudioDone(false)
+    setAudioError(null)
+    const audio = audioRef.current
+    if (audio) {
+      audio.play().then(() => setIsAudioPlaying(true)).catch(() => {
+        setIsAudioPlaying(false)
+        setAudioError('Audio could not start. Please check your connection and try again.')
+      })
+    }
+  }
+
+  const toggleReviewAudio = () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isAudioPlaying) {
+      shouldPlayRef.current = false
+      audio.pause()
+      setIsAudioPlaying(false)
+      return
+    }
+
+    if (audioDone || (Number.isFinite(audio.duration) && audio.currentTime >= audio.duration)) {
+      audio.currentTime = 0
+      setAudioCurrentTime(0)
+      setAudioDone(false)
+    }
+
+    shouldPlayRef.current = true
+    setAudioStarted(true)
+    setAudioError(null)
+    audio.play().then(() => setIsAudioPlaying(true)).catch(() => {
+      setIsAudioPlaying(false)
+      setAudioError('Audio could not start. Please check your connection and try again.')
+    })
+  }
+
+  const handleReviewAudioSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isReviewMode) return
+    const audio = audioRef.current
+    if (!audio) return
+    const nextTime = Number(event.target.value)
+    if (!Number.isFinite(nextTime)) return
+    audio.currentTime = nextTime
+    setAudioCurrentTime(nextTime)
+    if (audioDone && nextTime < audio.duration) setAudioDone(false)
+  }
+
+  const handleAudioLoadedMetadata = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    setAudioDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
+    setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
+    setAudioError(null)
+  }
+
+  const handleAudioTimeUpdate = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
+  }
+
+  const handleAudioLoadError = () => {
+    shouldPlayRef.current = false
+    setIsAudioPlaying(false)
+    setAudioError('The Listening audio could not be loaded. Refresh the page or check your connection.')
   }
 
   // IELTS listening is continuous and may not be paused. If the audio is paused
@@ -513,7 +583,7 @@ export default function IELTSReadingInterface({
   // should still be playing, resume it right away.
   const handleAudioPause = () => {
     const audio = audioRef.current
-    if (shouldPlayRef.current && audio && !audio.ended) {
+    if (!isReviewMode && shouldPlayRef.current && audio && !audio.ended) {
       audio.play().catch(() => { /* ignore */ })
       return
     }
@@ -528,7 +598,16 @@ export default function IELTSReadingInterface({
       shouldPlayRef.current = false
       setAudioDone(true)
       setIsAudioPlaying(false)
+      const audio = audioRef.current
+      if (audio && Number.isFinite(audio.duration)) setAudioCurrentTime(audio.duration)
     }
+  }
+
+  const formatAudioTimestamp = (seconds: number) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '00:00'
+    const minutes = Math.floor(seconds / 60)
+    const remainder = Math.floor(seconds % 60)
+    return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
   }
 
   const activeQuestionCount = useMemo(
@@ -2971,6 +3050,13 @@ export default function IELTSReadingInterface({
       const meta = getQuestionReviewMeta(question)
       const isCorrect = meta?.status === 'correct'
       const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
+      const correctAnswerText = meta
+        ? Array.isArray(meta.correctAnswer)
+          ? meta.correctAnswer.join(', ')
+          : String(meta.correctAnswer)
+        : ''
+      const rawAnswer = answers[question.id]
+      const inputValue = Array.isArray(rawAnswer) ? rawAnswer.join(', ') : String(rawAnswer ?? '')
       const widthCls =
         width === 'sm'
           ? 'min-w-[60px] max-w-[88px]'
@@ -2980,15 +3066,15 @@ export default function IELTSReadingInterface({
               ? 'min-w-[180px] max-w-[240px]'
               : 'min-w-[100px] max-w-[168px]'
       return (
-        <span id={`question-card-${question.id}`} className="inline-flex align-middle">
+        <span id={`question-card-${question.id}`} className="mx-1 inline-flex flex-col items-start align-middle">
           <input
             type="text"
-            value={(answers[question.id] as string) || ''}
+            value={inputValue}
             onChange={(event) => handleAnswerChange(question.id, event.target.value)}
             onFocus={() => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(question.id))}
             disabled={isReviewMode}
             placeholder={String(number)}
-            className={`mx-1 inline-flex h-9 ${widthCls} rounded-lg border px-2 text-center text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 ${
+            className={`inline-flex h-9 ${widthCls} rounded-lg border px-2 text-center text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
               isReviewMode && reviewShowCorrectAnswers
                 ? isWrong
                   ? 'border-red-300 bg-red-50/70 text-red-700'
@@ -2998,6 +3084,11 @@ export default function IELTSReadingInterface({
                 : 'border-red-200'
             }`}
           />
+          {isReviewMode && reviewShowCorrectAnswers && correctAnswerText ? (
+            <span className="mt-1 inline-flex max-w-[240px] items-center rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.04em] text-emerald-700">
+              Correct: {correctAnswerText}
+            </span>
+          ) : null}
         </span>
       )
     }
@@ -3037,7 +3128,6 @@ export default function IELTSReadingInterface({
                     <span className="mr-2 font-black">{row.blank}.</span>{row.label}
                   </p>
                   {blankInput(row.blank, 'md')}
-                  {reviewHint(question, 'ml-auto')}
                 </div>
               )
             })}
@@ -3218,6 +3308,7 @@ export default function IELTSReadingInterface({
       const selected = questions
         .map((question) => answers[question.id])
         .filter((answer): answer is string => typeof answer === 'string' && answer.length > 0)
+      const correctSelections = new Set(questions.flatMap((question) => getCorrectChoiceTokens(question)))
       const primaryQuestion = questions[0]
       const primaryIndex = getCurrentSectionGlobalIndex(primaryQuestion.id)
       const isFlagged = questions.some((question) => flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id)))
@@ -3249,17 +3340,34 @@ export default function IELTSReadingInterface({
             {block.options.map((option, index) => {
               const letter = String.fromCharCode(65 + index)
               const isSelected = selected.includes(letter)
+              const isCorrectOption = correctSelections.has(letter)
+              const optionTone = isReviewMode && reviewShowCorrectAnswers
+                ? isCorrectOption
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : isSelected
+                    ? 'border-red-300 bg-red-50 text-red-700'
+                    : 'border-red-100 bg-white'
+                : isSelected
+                  ? 'border-red-300 bg-red-50 shadow-[0_10px_18px_rgba(220,38,38,0.14)]'
+                  : 'border-red-100 bg-white hover:border-red-300'
+              const markerTone = isReviewMode && reviewShowCorrectAnswers
+                ? isCorrectOption
+                  ? 'border-emerald-500 bg-emerald-500 text-white'
+                  : isSelected
+                    ? 'border-red-500 bg-red-500 text-white'
+                    : 'border-slate-300 text-slate-500'
+                : isSelected
+                  ? 'border-red-500 bg-red-500 text-white'
+                  : 'border-slate-300 text-slate-500'
               return (
                 <button
                   type="button"
                   key={letter}
                   disabled={isReviewMode}
                   onClick={() => { if (!isReviewMode) toggleChoice(letter) }}
-                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 ${
-                    isSelected ? 'border-red-300 bg-red-50 shadow-[0_10px_18px_rgba(220,38,38,0.14)]' : 'border-red-100 bg-white hover:border-red-300'
-                  }`}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 ${optionTone}`}
                 >
-                  <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-black ${isSelected ? 'border-red-500 bg-red-500 text-white' : 'border-slate-300 text-slate-500'}`}>{letter}</span>
+                  <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-black ${markerTone}`}>{letter}</span>
                   <span className="text-[15px] text-slate-900">{option}</span>
                 </button>
               )
@@ -3371,6 +3479,96 @@ export default function IELTSReadingInterface({
     )
   }
 
+  const renderListeningAudioPanel = () => {
+    const hasAudioSource = listeningAudioSources.some(Boolean)
+    const safeDuration = audioDuration > 0 ? audioDuration : 0
+    const safeCurrentTime = safeDuration > 0 ? Math.min(audioCurrentTime, safeDuration) : 0
+    const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (safeCurrentTime / safeDuration) * 100)) : 0
+    const statusLabel = audioError
+      ? 'Audio unavailable'
+      : isAudioPlaying
+        ? 'Playing'
+        : audioDone
+          ? 'Finished'
+          : audioStarted
+            ? 'Paused'
+            : 'Ready'
+
+    return (
+      <section className="mb-5 rounded-2xl border border-red-100 bg-white p-4 shadow-[0_10px_26px_rgba(220,38,38,0.10)]" aria-label="Listening audio player">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${audioError ? 'bg-red-100 text-red-600' : 'bg-red-600 text-white'}`}>
+            <SpeakerWaveIcon className={`h-5 w-5 ${isAudioPlaying ? 'animate-pulse' : ''}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-black text-slate-900">Listening audio</p>
+                <p className="text-xs text-slate-500">
+                  {isReviewMode ? 'Review mode — playback and seeking are available.' : 'Exam mode — the recording plays continuously.'}
+                </p>
+              </div>
+              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
+                audioError
+                  ? 'border-red-200 bg-red-50 text-red-700'
+                  : isAudioPlaying
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}>
+                {statusLabel}
+              </span>
+            </div>
+          </div>
+          {isReviewMode ? (
+            <button
+              type="button"
+              onClick={toggleReviewAudio}
+              disabled={!hasAudioSource}
+              className="inline-flex h-10 min-w-[104px] items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white shadow-[0_10px_20px_rgba(220,38,38,0.24)] transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+            >
+              {isAudioPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+              {isAudioPlaying ? 'Pause' : audioDone ? 'Replay' : 'Play'}
+            </button>
+          ) : null}
+        </div>
+
+        <div className="mt-3">
+          {isReviewMode ? (
+            <input
+              type="range"
+              min="0"
+              max={Math.max(1, safeDuration)}
+              step="0.1"
+              value={safeCurrentTime}
+              onChange={handleReviewAudioSeek}
+              disabled={!hasAudioSource || safeDuration <= 0 || Boolean(audioError)}
+              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-red-100 accent-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Seek Listening audio"
+            />
+          ) : (
+            <div className="h-2 overflow-hidden rounded-full bg-red-100" aria-label={`Audio progress ${Math.round(progress)} percent`}>
+              <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-[width] duration-300" style={{ width: `${progress}%` }} />
+            </div>
+          )}
+          <div className="mt-1 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+            <span>{formatAudioTimestamp(safeCurrentTime)}</span>
+            <span>{safeDuration > 0 ? formatAudioTimestamp(safeDuration) : '--:--'}</span>
+          </div>
+        </div>
+
+        {audioError ? (
+          <p className="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700" role="alert">
+            {audioError}
+          </p>
+        ) : !hasAudioSource ? (
+          <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
+            No audio source is configured for this test.
+          </p>
+        ) : null}
+      </section>
+    )
+  }
+
   const renderListeningRightPanel = () => {
     const sectionNumbers = sectionMeta[currentSectionIndex]?.questionNumbers ?? []
     const firstNum = sectionNumbers[0]
@@ -3381,6 +3579,7 @@ export default function IELTSReadingInterface({
         className="reading-pane reading-content reading-question-typography h-full overflow-y-auto bg-gradient-to-b from-white via-red-50/20 to-white font-sans scrollbar-thin scrollbar-thumb-red-200"
       >
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-10">
+          {renderListeningAudioPanel()}
           {/* Compact part header bar */}
           <div className="mb-5 overflow-hidden rounded-2xl border border-red-100 shadow-[0_10px_26px_rgba(220,38,38,0.10)]">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-5 py-3 text-white">
@@ -5936,6 +6135,10 @@ export default function IELTSReadingInterface({
           onEnded={handleListeningAudioEnded}
           onPlay={() => setIsAudioPlaying(true)}
           onPause={handleAudioPause}
+          onLoadedMetadata={handleAudioLoadedMetadata}
+          onTimeUpdate={handleAudioTimeUpdate}
+          onCanPlay={() => setAudioError(null)}
+          onError={handleAudioLoadError}
         />
       ) : null}
 

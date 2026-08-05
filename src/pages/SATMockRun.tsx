@@ -30,22 +30,23 @@ import {
   X,
   ZoomIn,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
+import SATRichText from '@/components/sat/SATRichText'
 import {
-  SAT_PRACTICE_TEST_4_MODULES,
   isSATAnswerCorrect,
   type HighlightStroke,
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
 import {
-  clearSATPracticeTest4Attempt,
-  loadSATPracticeTest4Attempt,
-  saveSATPracticeTest4Attempt,
+  clearSATAttempt,
+  loadSATAttempt,
+  saveSATAttempt,
 } from '@/features/sat/attemptStorage'
+import { getSATTest } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
@@ -64,8 +65,11 @@ function fullscreenElement() {
 
 export default function SATMockRun() {
   const navigate = useNavigate()
+  const { mockId = '4' } = useParams<{ mockId: string }>()
+  const test = getSATTest(mockId)
+  const modules = test.modules
   const { isFullscreen, enter, exit } = useFullscreen()
-  const [attempt, setAttempt] = useState<SATAttempt | null>(() => loadSATPracticeTest4Attempt())
+  const [attempt, setAttempt] = useState<SATAttempt | null>(() => loadSATAttempt(test.id))
   const [now, setNow] = useState(Date.now())
   const [timerVisible, setTimerVisible] = useState(true)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
@@ -81,7 +85,7 @@ export default function SATMockRun() {
   const violationFrozenRef = useRef(false)
 
   const moduleIndex = attempt?.currentModuleIndex ?? 0
-  const currentModule = SAT_PRACTICE_TEST_4_MODULES[moduleIndex] ?? SAT_PRACTICE_TEST_4_MODULES[0]
+  const currentModule = modules[moduleIndex] ?? modules[0]
   const questionIndex = Math.min(
     attempt?.currentQuestionIndex ?? 0,
     currentModule.questions.length - 1,
@@ -137,11 +141,11 @@ export default function SATMockRun() {
   const advanceModule = useCallback(() => {
     if (!attempt) return
     const nextModuleIndex = attempt.currentModuleIndex + 1
-    if (nextModuleIndex >= SAT_PRACTICE_TEST_4_MODULES.length) {
+    if (nextModuleIndex >= modules.length) {
       submitAttempt()
       return
     }
-    const nextModule = SAT_PRACTICE_TEST_4_MODULES[nextModuleIndex]
+    const nextModule = modules[nextModuleIndex]
     const startedAt = Date.now()
     persistUpdate((current) => ({
       ...current,
@@ -161,18 +165,18 @@ export default function SATMockRun() {
     setZoom(1)
     setHighlightEnabled(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [attempt, persistUpdate, submitAttempt])
+  }, [attempt, modules, persistUpdate, submitAttempt])
 
   const endCurrentModule = useCallback(() => {
-    if (moduleIndex === SAT_PRACTICE_TEST_4_MODULES.length - 1) {
+    if (moduleIndex === modules.length - 1) {
       setConfirmSubmit(true)
     } else {
       setModuleComplete(true)
     }
-  }, [moduleIndex])
+  }, [moduleIndex, modules.length])
 
   useEffect(() => {
-    if (attempt) saveSATPracticeTest4Attempt(attempt)
+    if (attempt) saveSATAttempt(attempt)
   }, [attempt])
 
   useEffect(() => {
@@ -327,7 +331,7 @@ export default function SATMockRun() {
           <ShieldAlert className="mx-auto h-10 w-10 text-red-600" />
           <h1 className="mt-4 text-2xl font-black">No SAT attempt found</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Choose Practice or Exam Mode before opening the test.</p>
-          <button type="button" onClick={() => navigate('/mock/sat')} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
+          <button type="button" onClick={() => navigate(`/mock/sat/${test.mockId}`)} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
             Choose test mode
           </button>
         </div>
@@ -339,9 +343,10 @@ export default function SATMockRun() {
     return (
       <SATReview
         attempt={attempt}
+        test={test}
         onStartAgain={() => {
-          clearSATPracticeTest4Attempt()
-          navigate('/mock/sat')
+          clearSATAttempt(test.id)
+          navigate(`/mock/sat/${test.mockId}`)
         }}
       />
     )
@@ -368,7 +373,7 @@ export default function SATMockRun() {
           <button
             type="button"
             onClick={() => {
-              clearSATPracticeTest4Attempt()
+              clearSATAttempt(test.id)
               navigate('/sat')
             }}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
@@ -615,7 +620,7 @@ export default function SATMockRun() {
                 </div>
                 <details className="mt-3 rounded-xl border border-white/80 bg-white/75 px-3 py-2.5">
                   <summary className="cursor-pointer text-[10px] font-black text-slate-700">Step-by-step explanation</summary>
-                  <p className="mt-2 text-[11px] font-medium leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                  <SATRichText text={currentQuestion.explanation} className="mt-2 text-[11px] font-medium leading-5 text-slate-600" />
                 </details>
               </motion.div>
             ) : null}

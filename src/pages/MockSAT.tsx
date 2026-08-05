@@ -17,18 +17,18 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import {
-  SAT_PRACTICE_TEST_4,
-  createSATPracticeTest4Attempt,
+  createSATAttempt,
   type SATMode,
 } from '@/features/sat/practiceTest4'
+import { getSATTest } from '@/features/sat/catalog'
 import {
-  clearSATPracticeTest4Attempt,
-  loadSATPracticeTest4Attempt,
-  saveSATPracticeTest4Attempt,
+  clearSATAttempt,
+  loadSATAttempt,
+  saveSATAttempt,
 } from '@/features/sat/attemptStorage'
 
 const modeCards = [
@@ -56,14 +56,16 @@ const modeCards = [
 
 export default function MockSAT() {
   const navigate = useNavigate()
+  const { mockId = '4' } = useParams<{ mockId: string }>()
+  const test = getSATTest(mockId)
   const { supported: fullscreenSupported, enter } = useFullscreen()
   const [selectedMode, setSelectedMode] = useState<SATMode>('practice')
-  const [existingAttempt, setExistingAttempt] = useState(loadSATPracticeTest4Attempt)
+  const [existingAttempt, setExistingAttempt] = useState(() => loadSATAttempt(test.id))
   const [fullscreenError, setFullscreenError] = useState('')
 
   useEffect(() => {
-    setExistingAttempt(loadSATPracticeTest4Attempt())
-  }, [])
+    setExistingAttempt(loadSATAttempt(test.id))
+  }, [test.id])
 
   const completedQuestions = useMemo(
     () => Object.values(existingAttempt?.answers ?? {}).filter(Boolean).length,
@@ -86,10 +88,10 @@ export default function MockSAT() {
     }
 
     if (!resume) {
-      const attempt = createSATPracticeTest4Attempt(mode)
-      saveSATPracticeTest4Attempt(attempt)
+      const attempt = createSATAttempt(test.id, test.modules, mode)
+      saveSATAttempt(attempt)
     }
-    navigate('/sat/mock/4/run')
+    navigate(`/sat/mock/${test.mockId}/run`)
   }
 
   const activeAttempt = existingAttempt?.status === 'active'
@@ -122,10 +124,10 @@ export default function MockSAT() {
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-red-600">
-                <Sparkles className="h-3.5 w-3.5" /> New official mock
+                <Sparkles className="h-3.5 w-3.5" /> Available SAT mock
               </span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
-                Practice Test #4
+                {test.badge}
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
@@ -135,13 +137,13 @@ export default function MockSAT() {
               </span>
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
-              All 120 questions from the supplied College Board paper-digital edition, with
-              original graphs and notation, autosave, review tools, and official range scoring.
+              All {test.questionCount} questions from {test.subtitle}, with original graphs,
+              autosave, review tools, explanations, and SAT range scoring.
             </p>
 
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                ['120', 'Questions'],
+                [String(test.questionCount), 'Questions'],
                 ['4', 'Modules'],
                 ['2h 14m', 'Exam time'],
                 ['400–1600', 'Score range'],
@@ -157,7 +159,7 @@ export default function MockSAT() {
               {[
                 { icon: Highlighter, title: 'Highlight & notes', copy: 'Draw directly over any passage, graph, or formula.' },
                 { icon: Focus, title: 'Focused runner', copy: 'Question-by-question flow with flags and keyboard controls.' },
-                { icon: Target, title: 'Official scoring', copy: 'R&W and Math score ranges from your supplied scoring guide.' },
+                { icon: Target, title: 'Range scoring', copy: 'R&W and Math performance converted into a clear SAT estimate.' },
                 { icon: GraduationCap, title: 'Deep review', copy: 'Correct answers, explanations, filters, and section insight.' },
               ].map((feature) => {
                 const Icon = feature.icon
@@ -258,7 +260,7 @@ export default function MockSAT() {
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-700">Saved attempt</p>
                     <p className="mt-1 text-sm font-black text-slate-900">
-                      {completedQuestions} of {SAT_PRACTICE_TEST_4.questionCount} answered
+                      {completedQuestions} of {test.questionCount} answered
                     </p>
                     <p className="mt-1 text-[10px] font-semibold text-slate-500">
                       {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · autosaved
@@ -277,7 +279,7 @@ export default function MockSAT() {
                   <button
                     type="button"
                     onClick={() => {
-                      clearSATPracticeTest4Attempt()
+                      clearSATAttempt(test.id)
                       setExistingAttempt(null)
                     }}
                     className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-[11px] font-black text-amber-700"
@@ -291,7 +293,7 @@ export default function MockSAT() {
             {finishedAttempt ? (
               <button
                 type="button"
-                onClick={() => navigate('/sat/mock/4/run')}
+                onClick={() => navigate(`/sat/mock/${test.mockId}/run`)}
                 className="mt-4 flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-left"
               >
                 <span>

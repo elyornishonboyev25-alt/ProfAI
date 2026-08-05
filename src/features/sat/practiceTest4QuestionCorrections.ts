@@ -1,4 +1,4 @@
-export type SATStructuredChoice = { key: string; text: string }
+export type SATStructuredChoice = { key: string; text: string; image?: string }
 
 export type SATQuestionContentOverride = {
   prompt?: string

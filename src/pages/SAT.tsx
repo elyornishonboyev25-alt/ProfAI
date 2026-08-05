@@ -18,7 +18,7 @@ import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import CatalogHero from '@/components/catalog/CatalogHero'
 
 const MOCK_COUNT = 30
-const LIVE_MOCKS = 1
+const LIVE_MOCKS = 2
 
 export default function SAT() {
   const navigate = useNavigate()
@@ -34,10 +34,12 @@ export default function SAT() {
         id: index + 1,
         title: index + 1 === 4
           ? 'College Board Practice Test 04'
-          : `Digital SAT Full Mock ${String(index + 1).padStart(2, '0')}`,
-        available: index + 1 === 4,
+          : index + 1 === 17
+            ? 'Digital SAT Paper 17 · Hard'
+            : `Digital SAT Full Mock ${String(index + 1).padStart(2, '0')}`,
+        available: index + 1 === 4 || index + 1 === 17,
         completed: false,
-        difficulty: index + 1 === 4 ? 'Official' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
+        difficulty: index + 1 === 4 ? 'Official' : index + 1 === 17 ? 'Licensed hard' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
       })),
     [],
   )
@@ -72,8 +74,8 @@ export default function SAT() {
           ]}
           actions={(
             <>
-              <button onClick={() => navigate('/mock/sat', { state: { mockId: 4, from: '/sat' } })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
-                Start Practice Test 04 <ArrowRight className="h-3.5 w-3.5" />
+              <button onClick={() => navigate('/mock/sat/17')} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
+                Start Paper 17 <ArrowRight className="h-3.5 w-3.5" />
               </button>
               <button onClick={() => navigate('/sat/mistakes')} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/90 bg-white/72 px-4 text-xs font-black text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:text-blue-700">
                 <FileSearch className="h-3.5 w-3.5" /> Analyze SAT mistakes
@@ -152,13 +154,13 @@ export default function SAT() {
                   <div className="mt-3 grid grid-cols-2 gap-1.5">
                     <span className="rounded-lg border border-slate-100 bg-white px-2 py-1.5 text-center text-[9px] font-bold text-slate-500">English + Math</span>
                     <span className="rounded-lg border border-slate-100 bg-white px-2 py-1.5 text-center text-[9px] font-bold text-slate-500">
-                      {mock.id === 4 ? 'Official scoring' : 'Adaptive modules'}
+                      {mock.id === 4 ? 'Official scoring' : mock.id === 17 ? 'Answers + explanations' : 'Adaptive modules'}
                     </span>
                   </div>
                   <button
                     type="button"
                     disabled={!mock.available}
-                    onClick={() => navigate('/mock/sat', { state: { mockId: mock.id, from: '/sat' } })}
+                    onClick={() => navigate(`/mock/sat/${mock.id}`)}
                     className={`mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-black transition ${mock.available ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-[0_10px_22px_rgba(37,99,235,.22)] hover:brightness-105' : 'cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400'}`}
                   >
                     {mock.available ? <>Start full mock <ArrowRight className="h-3 w-3" /></> : <><Lock className="h-3 w-3" /> Unlocking soon</>}

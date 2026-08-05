@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Check, FileImage, ImageOff, ScanText } from 'lucide-react'
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
+import SATRichText from './SATRichText'
 
 type Props = {
   question: SATQuestion
@@ -122,13 +123,9 @@ export default function SATQuestionCanvas({
         ) : null}
 
         {context ? (
-          <div className="break-words whitespace-pre-line rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-5 font-serif text-[17px] leading-8 text-slate-800 sm:px-7 sm:text-[18px]">
-            {context}
-          </div>
+          <SATRichText text={context} className="break-words rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-5 font-serif text-[17px] leading-8 text-slate-800 sm:px-7 sm:text-[18px]" />
         ) : null}
-        <p className={`${context ? 'mt-6' : ''} break-words whitespace-pre-line font-serif text-xl font-semibold leading-8 text-slate-950 sm:text-[22px] sm:leading-9`}>
-          {task}
-        </p>
+        <SATRichText text={task} className={`${context ? 'mt-6' : ''} break-words font-serif text-xl font-semibold leading-8 text-slate-950 sm:text-[22px] sm:leading-9`} />
 
         {question.kind === 'multiple-choice' ? (
           <div className="mt-7 space-y-3" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
@@ -152,7 +149,10 @@ export default function SATQuestionCanvas({
                   }`}>
                     {selected ? <Check className="h-4 w-4" /> : choice.key}
                   </span>
-                  <span className="whitespace-pre-line pt-1 font-serif text-[17px] font-medium leading-7 text-slate-800 sm:text-lg">{choice.text}</span>
+                  <span className="min-w-0 flex-1 pt-1 font-serif text-[17px] font-medium leading-7 text-slate-800 sm:text-lg">
+                    {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
+                    <SATRichText text={choice.text} />
+                  </span>
                 </button>
               )
             })}
@@ -160,7 +160,7 @@ export default function SATQuestionCanvas({
         ) : null}
       </div>
 
-      <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-6">
+      {question.asset ? <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={() => setSourceOpen((open) => !open)}
@@ -191,7 +191,7 @@ export default function SATQuestionCanvas({
             </div>
           </div>
         ) : null}
-      </div>
+      </div> : null}
     </div>
   )
 }

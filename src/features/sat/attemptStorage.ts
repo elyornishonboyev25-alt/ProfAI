@@ -1,25 +1,34 @@
 import type { SATAttempt } from './practiceTest4'
 
-export const SAT_ATTEMPT_STORAGE_KEY = 'profai:sat:practice-test-4:attempt:v1'
+const LEGACY_PRACTICE_4_KEY = 'profai:sat:practice-test-4:attempt:v1'
 
-export function loadSATPracticeTest4Attempt(): SATAttempt | null {
+function storageKey(testId: string) {
+  return `profai:sat:${testId}:attempt:v1`
+}
+
+export function loadSATAttempt(testId: string): SATAttempt | null {
   try {
-    const raw = window.localStorage.getItem(SAT_ATTEMPT_STORAGE_KEY)
+    const key = storageKey(testId)
+    const raw = window.localStorage.getItem(key)
+      ?? (testId === 'practice-test-4' ? window.localStorage.getItem(LEGACY_PRACTICE_4_KEY) : null)
     if (!raw) return null
     const parsed = JSON.parse(raw) as SATAttempt
-    if (parsed.version !== 1 || parsed.testId !== 'practice-test-4') return null
+    if (parsed.version !== 1 || parsed.testId !== testId) return null
+    if (!window.localStorage.getItem(key)) window.localStorage.setItem(key, raw)
     return parsed
   } catch {
     return null
   }
 }
-export function saveSATPracticeTest4Attempt(attempt: SATAttempt) {
+
+export function saveSATAttempt(attempt: SATAttempt) {
   window.localStorage.setItem(
-    SAT_ATTEMPT_STORAGE_KEY,
+    storageKey(attempt.testId),
     JSON.stringify({ ...attempt, updatedAt: Date.now() }),
   )
 }
 
-export function clearSATPracticeTest4Attempt() {
-  window.localStorage.removeItem(SAT_ATTEMPT_STORAGE_KEY)
+export function clearSATAttempt(testId: string) {
+  window.localStorage.removeItem(storageKey(testId))
+  if (testId === 'practice-test-4') window.localStorage.removeItem(LEGACY_PRACTICE_4_KEY)
 }

@@ -153,8 +153,8 @@ function App() {
     pathname.startsWith('/admission')
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
-    pathname === '/mock/sat' ||
-    pathname === '/sat/mock/4/run'
+    /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
+    /^\/sat\/mock\/\d+\/run$/.test(pathname)
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
@@ -326,10 +326,20 @@ function App() {
                           </PremiumRoute>
                         }
                       />
+                      <Route
+                        path="/mock/sat/:mockId"
+                        element={
+                          <PremiumRoute showGuestBanner>
+                            <AnimatedRoute>
+                              <MockSAT />
+                            </AnimatedRoute>
+                          </PremiumRoute>
+                        }
+                      />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route
-                        path="/sat/mock/4/run"
+                        path="/sat/mock/:mockId/run"
                         element={
                           <PremiumRoute>
                             <SATMockRun />
@@ -694,7 +704,6 @@ function App() {
 }
 
 export default App
-
 
 
 

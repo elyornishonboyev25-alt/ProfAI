@@ -51,7 +51,7 @@ export type HighlightStroke = {
 
 export type SATAttempt = {
   version: 1
-  testId: 'practice-test-4'
+  testId: string
   mode: SATMode
   status: SATAttemptStatus
   currentModuleIndex: number
@@ -295,8 +295,11 @@ export type SATScoreReport = {
   percent: number
 }
 
-export function scoreSATPracticeTest4(answers: Record<string, string>): SATScoreReport {
-  const questions = SAT_PRACTICE_TEST_4_MODULES.flatMap((module) => module.questions)
+export function scoreSATModules(
+  modules: SATModule[],
+  answers: Record<string, string>,
+): SATScoreReport {
+  const questions = modules.flatMap((module) => module.questions)
   let readingWritingRaw = 0
   let mathRaw = 0
   let unanswered = 0
@@ -312,8 +315,16 @@ export function scoreSATPracticeTest4(answers: Record<string, string>): SATScore
   })
 
   const correct = readingWritingRaw + mathRaw
-  const readingWritingRange = RW_SCORE_RANGES[readingWritingRaw] ?? [200, 200]
-  const mathRange = MATH_SCORE_RANGES[mathRaw] ?? [200, 200]
+  const readingWritingTotal = questions.filter((question) => question.section === 'reading-writing').length
+  const mathTotal = questions.filter((question) => question.section === 'math').length
+  const scaledReadingWritingRaw = Math.round(
+    (readingWritingRaw / Math.max(1, readingWritingTotal)) * (RW_SCORE_RANGES.length - 1),
+  )
+  const scaledMathRaw = Math.round(
+    (mathRaw / Math.max(1, mathTotal)) * (MATH_SCORE_RANGES.length - 1),
+  )
+  const readingWritingRange = RW_SCORE_RANGES[scaledReadingWritingRaw] ?? [200, 200]
+  const mathRange = MATH_SCORE_RANGES[scaledMathRaw] ?? [200, 200]
   const totalRange: [number, number] = [
     readingWritingRange[0] + mathRange[0],
     readingWritingRange[1] + mathRange[1],
@@ -334,12 +345,16 @@ export function scoreSATPracticeTest4(answers: Record<string, string>): SATScore
   }
 }
 
-export function createSATPracticeTest4Attempt(mode: SATMode): SATAttempt {
+export function scoreSATPracticeTest4(answers: Record<string, string>): SATScoreReport {
+  return scoreSATModules(SAT_PRACTICE_TEST_4_MODULES, answers)
+}
+
+export function createSATAttempt(testId: string, modules: SATModule[], mode: SATMode): SATAttempt {
   const now = Date.now()
-  const firstModule = SAT_PRACTICE_TEST_4_MODULES[0]
+  const firstModule = modules[0]
   return {
     version: 1,
-    testId: 'practice-test-4',
+    testId,
     mode,
     status: 'active',
     currentModuleIndex: 0,
@@ -354,4 +369,8 @@ export function createSATPracticeTest4Attempt(mode: SATMode): SATAttempt {
     moduleDeadlines:
       mode === 'exam' ? { [firstModule.id]: now + firstModule.durationSeconds * 1000 } : {},
   }
+}
+
+export function createSATPracticeTest4Attempt(mode: SATMode): SATAttempt {
+  return createSATAttempt(SAT_PRACTICE_TEST_4.id, SAT_PRACTICE_TEST_4_MODULES, mode)
 }

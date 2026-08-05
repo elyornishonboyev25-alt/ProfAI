@@ -16,9 +16,10 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import CatalogHero from '@/components/catalog/CatalogHero'
+import { hasSATTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
 
 const MOCK_COUNT = 30
-const LIVE_MOCKS = 2
+const LIVE_MOCKS = Object.keys(SAT_TEST_CATALOG).length
 
 export default function SAT() {
   const navigate = useNavigate()
@@ -30,19 +31,25 @@ export default function SAT() {
 
   const mocks = useMemo(
     () =>
-      Array.from({ length: MOCK_COUNT }, (_, index) => ({
-        id: index + 1,
-        title: index + 1 === 4
-          ? 'College Board Practice Test 04'
-          : index + 1 === 17
-            ? 'Digital SAT Paper 17 · Hard'
-            : `Digital SAT Full Mock ${String(index + 1).padStart(2, '0')}`,
-        available: index + 1 === 4 || index + 1 === 17,
-        completed: false,
-        difficulty: index + 1 === 4 ? 'Official' : index + 1 === 17 ? 'Licensed hard' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
-      })),
+      Array.from({ length: MOCK_COUNT }, (_, index) => {
+        const id = index + 1
+
+        return {
+          id,
+          title: id === 4
+            ? 'College Board Practice Test 04'
+            : id === 17
+              ? 'Digital SAT Paper 17 · Hard'
+              : `Digital SAT Full Mock ${String(id).padStart(2, '0')}`,
+          available: hasSATTest(id),
+          completed: false,
+          difficulty: id === 4 ? 'Official' : id === 17 ? 'Licensed hard' : index < 10 ? 'Foundation' : index < 20 ? 'Advanced' : 'Mastery',
+        }
+      }).sort((first, second) => Number(second.available) - Number(first.available) || first.id - second.id),
     [],
   )
+
+  const firstAvailableMock = mocks.find((mock) => mock.available)
 
   const visibleMocks = mocks.filter((mock) => {
     const matchesSearch = mock.title.toLowerCase().includes(search.toLowerCase()) || String(mock.id) === search.trim()
@@ -74,9 +81,11 @@ export default function SAT() {
           ]}
           actions={(
             <>
-              <button onClick={() => navigate('/mock/sat/17')} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
-                Start Paper 17 <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+              {firstAvailableMock && (
+                <button onClick={() => navigate(`/mock/sat/${firstAvailableMock.id}`)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
+                  Start Test {firstAvailableMock.id} <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button onClick={() => navigate('/sat/mistakes')} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/90 bg-white/72 px-4 text-xs font-black text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:text-blue-700">
                 <FileSearch className="h-3.5 w-3.5" /> Analyze SAT mistakes
               </button>

@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -7,10 +7,12 @@ import {
   BookOpenText,
   Calculator,
   Check,
+  ChevronDown,
   Clock3,
   FileSearch,
   Flag,
   LibraryBig,
+  Lock,
   Sparkles,
 } from 'lucide-react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -130,32 +132,51 @@ function SubjectCard({
 }
 
 function ScoreChart({ scores }: { scores: number[] }) {
-  const values = scores.length >= 2 ? scores.slice(-5) : [1050, 1190, 1110, 1290, 1380]
-  const min = Math.min(...values) - 40
-  const max = Math.max(...values) + 40
+  const values = scores.slice(-5)
+
+  if (!values.length) {
+    return (
+      <div className="mt-4 flex h-[13.5rem] flex-col items-center justify-center rounded-[1.4rem] border border-dashed border-slate-300/80 bg-white/25 px-5 text-center">
+        <Flag className="h-7 w-7 text-slate-400" />
+        <p className="mt-3 text-sm font-extrabold text-slate-700">No completed test yet</p>
+        <p className="mt-1 max-w-[15rem] text-[11px] font-medium leading-5 text-slate-500">Your verified SAT scores will appear here after you submit a full mock.</p>
+      </div>
+    )
+  }
+
   const points = values.map((score, index) => {
-    const x = 12 + (index / Math.max(1, values.length - 1)) * 276
-    const y = 156 - ((score - min) / Math.max(1, max - min)) * 124
-    return { x, y }
+    const x = values.length === 1 ? 164 : 34 + (index / (values.length - 1)) * 256
+    const y = 162 - ((score - 400) / 1200) * 132
+    return { x, y: Math.min(162, Math.max(30, y)), score }
   })
   const line = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  const area = `${line} L ${points[points.length - 1]?.x ?? 288} 174 L ${points[0]?.x ?? 12} 174 Z`
+  const area = `${line} L ${points[points.length - 1]?.x ?? 290} 174 L ${points[0]?.x ?? 34} 174 Z`
 
   return (
-    <svg className="mt-4 h-[13.5rem] w-full" viewBox="0 0 300 185" preserveAspectRatio="none" role="img" aria-label="SAT score trend">
+    <svg className="mt-4 h-[13.5rem] w-full" viewBox="0 0 310 190" role="img" aria-label={`SAT score trend: ${values.join(', ')}`}>
       <defs>
         <linearGradient id="score-area" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#ef353d" stopOpacity=".28" />
           <stop offset="100%" stopColor="#ef353d" stopOpacity=".02" />
         </linearGradient>
       </defs>
-      {[12, 81, 150, 219, 288].map((x) => <line key={x} x1={x} y1="8" x2={x} y2="176" stroke="rgba(148,163,184,.22)" strokeWidth="1" />)}
-      <path d={area} fill="url(#score-area)" />
-      <path d={line} fill="none" stroke="#d9343d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      {[1600, 1200, 800, 400].map((score) => {
+        const y = 162 - ((score - 400) / 1200) * 132
+        return (
+          <g key={score}>
+            <line x1="34" y1={y} x2="300" y2={y} stroke="rgba(148,163,184,.2)" strokeWidth="1" />
+            <text x="0" y={y + 3} fill="#7b8494" fontSize="9" fontWeight="700">{score}</text>
+          </g>
+        )
+      })}
+      {values.length > 1 ? <path d={area} fill="url(#score-area)" /> : null}
+      {values.length > 1 ? <path d={line} fill="none" stroke="#d9343d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /> : null}
       {points.map((point, index) => (
         <g key={`${point.x}-${point.y}`}>
           <circle cx={point.x} cy={point.y} r="9" fill="rgba(255,255,255,.65)" />
           <circle cx={point.x} cy={point.y} r="5.5" fill={index === points.length - 1 ? '#ef353d' : '#b43038'} />
+          <text x={point.x} y={Math.max(17, point.y - 13)} textAnchor="middle" fill="#991b1b" fontSize="10" fontWeight="800">{point.score}</text>
+          <text x={point.x} y="187" textAnchor="middle" fill="#7b8494" fontSize="8" fontWeight="700">Test {scores.length - values.length + index + 1}</text>
         </g>
       ))}
     </svg>
@@ -166,6 +187,7 @@ export default function SAT() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const { minimalMotion } = useMotionPreferences()
+  const [showMockCatalog, setShowMockCatalog] = useState(false)
   const profile = loadOnboardingProfile(user?.id)
 
   const attempts = useMemo<AttemptWithTest[]>(() => (
@@ -185,6 +207,10 @@ export default function SAT() {
   const targetScore = profile?.targetSatScore ?? 1400
   const targetProgress = Math.min(100, Math.max(1, Math.round((bestScore / targetScore) * 100)))
   const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
+  const mockSlots = Array.from({ length: 30 }, (_, index) => ({
+    displayNumber: index + 1,
+    test: availableTests[index],
+  }))
 
   const answeredBySection = (section: 'math' | 'reading-writing') => {
     const latest = attempts[0]
@@ -272,9 +298,11 @@ export default function SAT() {
             <article className={`${glassCard} p-6 sm:p-7`}>
               <h2 className="text-[1.65rem] font-extrabold tracking-[-0.045em] text-[#151621]">Score-trend chart</h2>
               <ScoreChart scores={scoreHistory} />
-              <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                <span>First attempt</span><span>Latest</span>
-              </div>
+              {scoreHistory.length ? (
+                <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>{scoreHistory.length} completed {scoreHistory.length === 1 ? 'test' : 'tests'}</span><span>Latest: {scoreHistory[scoreHistory.length - 1]}</span>
+                </div>
+              ) : null}
             </article>
           </aside>
 
@@ -304,20 +332,16 @@ export default function SAT() {
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_auto]">
           <article className={`${glassCard} p-6 sm:p-7`}>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><p className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</p></div>
-                <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Full Digital SAT mocks</h2>
-                <p className="mt-1 text-xs font-medium text-slate-500">Reading &amp; Writing and Math in one official-style simulation.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {availableTests.map((test) => (
-                  <button key={test.id} type="button" onClick={() => navigate(`/mock/sat/${test.mockId}`)} className="inline-flex items-center gap-2 rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg hover:-translate-y-0.5 hover:bg-red-600">
-                    Test {String(test.mockId).padStart(2, '0')} <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <button type="button" onClick={() => setShowMockCatalog((current) => !current)} className="flex w-full flex-col gap-5 text-left sm:flex-row sm:items-center sm:justify-between" aria-expanded={showMockCatalog} aria-controls="sat-mock-catalog">
+              <span className="block">
+                <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</span></span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Full Digital SAT mocks</span>
+                <span className="mt-1 block text-xs font-medium text-slate-500">Click to browse all 30 Reading &amp; Writing + Math simulations.</span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg sm:self-auto">
+                View 30 tests <ChevronDown className={`h-4 w-4 transition-transform ${showMockCatalog ? 'rotate-180' : ''}`} />
+              </span>
+            </button>
           </article>
           <div className="grid gap-3 sm:grid-cols-2 lg:w-[24rem]">
             <button type="button" onClick={() => navigate('/sat/mistakes')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
@@ -331,6 +355,51 @@ export default function SAT() {
               <span className="mt-1 block text-[11px] font-medium text-slate-500">600 SAT words</span>
             </button>
           </div>
+
+          <AnimatePresence initial={false}>
+            {showMockCatalog ? (
+              <motion.article
+                id="sat-mock-catalog"
+                initial={minimalMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={minimalMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
+                className={`${glassCard} lg:col-span-2`}
+              >
+                <div className="p-6 sm:p-7">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600">Practice library</p>
+                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">30 full Digital SAT tests</h2>
+                    </div>
+                    <p className="text-xs font-bold text-slate-500">2 available · 28 coming soon</p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6">
+                    {mockSlots.map(({ displayNumber, test }) => (
+                      <button
+                        key={displayNumber}
+                        type="button"
+                        disabled={!test}
+                        onClick={() => test && navigate(`/mock/sat/${test.mockId}`)}
+                        className={`group min-h-[8.5rem] rounded-[1.35rem] border p-4 text-left ${test
+                          ? 'border-red-200/80 bg-gradient-to-br from-white to-red-50/70 shadow-[0_12px_28px_rgba(185,28,28,.1)] hover:-translate-y-1 hover:border-red-300'
+                          : 'cursor-not-allowed border-white/70 bg-white/28 opacity-70'
+                        }`}
+                      >
+                        <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-extrabold ${test ? 'bg-red-600 text-white shadow-md' : 'bg-slate-200/80 text-slate-500'}`}>
+                          {String(displayNumber).padStart(2, '0')}
+                        </span>
+                        <span className="mt-4 block text-sm font-extrabold text-[#171823]">Test {displayNumber}</span>
+                        <span className={`mt-1 inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider ${test ? 'text-emerald-700' : 'text-slate-500'}`}>
+                          {test ? <><Check className="h-3 w-3" /> Available</> : <><Lock className="h-3 w-3" /> Coming soon</>}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.article>
+            ) : null}
+          </AnimatePresence>
         </section>
       </div>
     </div>

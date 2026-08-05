@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { buildShadowingDraft, extractYouTubeId, ShadowingError } from '../services/shadowing.service.js'
+import { buildPodcastDraft, extractYouTubeId, ShadowingError } from '../services/shadowing.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
 const router = Router()
@@ -97,7 +97,7 @@ router.post(
     if (existing) return res.json({ video: existing, created: false })
 
     try {
-      const draft = await buildShadowingDraft(youtubeId)
+      const draft = await buildPodcastDraft(youtubeId)
       const video = await podcastVideo.create({
         data: {
           youtubeId: draft.youtubeId,

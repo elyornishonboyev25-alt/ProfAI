@@ -542,12 +542,31 @@ function estimateLevel(wordCount: number, durationSec: number): string {
 /* ── 7. Orchestrator ─────────────────────────────────────────────────────── */
 
 const MIN_VIDEO_SECONDS = 15
-const MAX_VIDEO_SECONDS = 30 * 60
+const MAX_SHADOWING_SECONDS = 30 * 60
+const MAX_PODCAST_SECONDS = 3 * 60 * 60
 
-export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingVideoDraft> {
-  // Run the reliable metadata sources together: oEmbed (always works) and the
-  // bot-token InnerTube path (defeats YouTube's bot wall; also brings captions
-  // where allowed).
+type VideoImportMode = 'shadowing' | 'podcast'
+
+function importCopy(mode: VideoImportMode) {
+  return mode === 'podcast'
+    ? {
+        noun: 'podcast',
+        engine: 'podcast transcript engine',
+        maxSeconds: MAX_PODCAST_SECONDS,
+        maxDurationError: 'This podcast is too long. Choose an episode under 3 hours.',
+      }
+    : {
+        noun: 'shadowing video',
+        engine: 'shadowing engine',
+        maxSeconds: MAX_SHADOWING_SECONDS,
+        maxDurationError: 'This video is too long for shadowing. Pick a clip under 30 minutes.',
+      }
+
+async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promise<ShadowingVideoDraft> {
+  const copy = importCopy(mode)
+  // Run independent metadata sources together: oEmbed is a strong public-video
+  // signal, while the bot-token InnerTube path also brings captions where
+  // YouTube allows them.
   const [oembed, innertube] = await Promise.all([
     fetchOEmbed(youtubeId),
     fetchViaInnertube(youtubeId).catch(() => null),
@@ -559,6 +578,7 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
   let language = 'en'
   let englishTrackFound = innertube?.hasEnglishCaptions ?? false
   let durationSec = innertube?.durationSec ?? 0
+  let fallbackPlayer: PlayerData | null = null
 
   // 1) Reliable transcript provider, if an admin configured one.
   const apiCues = await fetchViaTranscriptApi(youtubeId)
@@ -576,30 +596,42 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
 
   // 3) Legacy free fallback: anonymous multi-client + watch-page caption fetch.
   if (cues.length === 0) {
-    const player = await gatherPlayer(youtubeId)
-    if (player) {
-      if (!durationSec) durationSec = player.durationSec
-      const english = pickEnglishTrack(player.captionTracks)
+    fallbackPlayer = await gatherPlayer(youtubeId)
+    if (fallbackPlayer) {
+      if (!durationSec) durationSec = fallbackPlayer.durationSec
+      const english = pickEnglishTrack(fallbackPlayer.captionTracks)
       if (english) {
         englishTrackFound = true
         captionKind = english.kind
         language = english.track.languageCode || 'en'
         cues = await fetchCues(english.track.baseUrl)
       }
-    } else if (!innertube && !oembed) {
-      throw new ShadowingError(
-        "We couldn't reach this video on YouTube. Check the link, or it may be private or region-locked.",
-        502,
-      )
     }
   }
 
   if (cues.length === 0) {
+    // Some unavailable/private videos still make youtubei.js return an empty
+    // info object. Treating that as a successful engine run produced the very
+    // misleading "no English subtitles" message. Require real metadata from at
+    // least one independent source before blaming captions.
+    const hasMetadata = Boolean(oembed?.title || innertube?.title || fallbackPlayer?.title)
+    if (!hasMetadata) {
+      console.warn(
+        '[video-import] unavailable YouTube source',
+        youtubeId,
+        fallbackPlayer?.status ?? 'UNKNOWN',
+        fallbackPlayer?.reason ?? '',
+      )
+      throw new ShadowingError(
+        'This YouTube video is unavailable. It may be private, removed, region/age restricted, or the link may be incorrect. Open the link in YouTube first, then choose a public embeddable video.',
+        422,
+      )
+    }
     if (englishTrackFound) {
       // The video HAS English captions but YouTube refused to hand the text to
       // this server (anti-bot / proof-of-origin wall).
       throw new ShadowingError(
-        'YouTube is blocking caption downloads from this server right now. Setting TRANSCRIPT_API_URL + TRANSCRIPT_API_KEY makes it 100% reliable, or try again shortly.',
+        `YouTube is temporarily blocking this ${copy.noun}'s subtitle download. The video has English captions; please retry shortly.`,
         502,
       )
     }
@@ -608,20 +640,20 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
       // deployment (missing youtubei.js/bgutils/jsdom deps or old code) or a
       // server that just booted. This is NOT a problem with the video itself.
       throw new ShadowingError(
-        "The shadowing engine isn't running on the server yet. If you just deployed, wait a minute and retry; otherwise the backend needs a redeploy + 'npm install' with the latest code.",
+        `The ${copy.engine} is temporarily unavailable. Please retry in a minute.`,
         503,
       )
     }
     throw new ShadowingError(
-      "This video has no English subtitles we can read, so it can't be turned into shadowing. Choose an English video that has captions.",
+      `This ${copy.noun} has no readable English subtitles. Turn on English CC in YouTube first, or choose another public video with captions.`,
     )
   }
 
   const lastEnd = cues[cues.length - 1]?.end ?? 0
   if (!durationSec) durationSec = Math.round(lastEnd)
 
-  if (durationSec && durationSec > MAX_VIDEO_SECONDS) {
-    throw new ShadowingError('This video is too long for shadowing. Pick a clip under 30 minutes.')
+  if (durationSec && durationSec > copy.maxSeconds) {
+    throw new ShadowingError(copy.maxDurationError)
   }
   if (durationSec && durationSec < MIN_VIDEO_SECONDS) {
     throw new ShadowingError('This clip is too short to shadow. Pick a video of at least 15 seconds.')
@@ -633,7 +665,7 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
 
   const segments = segmentCues(cues)
   if (segments.length < 2) {
-    throw new ShadowingError('This video did not produce enough shadowing lines. Try a different clip.')
+    throw new ShadowingError(`This ${copy.noun} does not contain enough spoken English to build a transcript.`)
   }
 
   const wordCount = countWords(segments.map((s) => s.text).join(' '))
@@ -653,4 +685,12 @@ export async function buildShadowingDraft(youtubeId: string): Promise<ShadowingV
     wordCount,
     segments,
   }
+}
+
+export function buildShadowingDraft(youtubeId: string): Promise<ShadowingVideoDraft> {
+  return buildVideoDraft(youtubeId, 'shadowing')
+}
+
+export function buildPodcastDraft(youtubeId: string): Promise<ShadowingVideoDraft> {
+  return buildVideoDraft(youtubeId, 'podcast')
 }

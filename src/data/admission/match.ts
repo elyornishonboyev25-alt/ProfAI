@@ -47,8 +47,10 @@ export function estimateRequirements(uni: University): EstimatedRequirements {
 
 function livingCost(uni: University): number | null {
   const c = uni.costOfLiving
-  if (!c) return null
-  return c.accommodation + c.food + c.transport + c.utilities
+  // The saved budget is USD/year. Never compare it with an unconverted local
+  // currency or with a monthly housing-only rate.
+  if (!c || c.currency !== 'USD' || c.period !== 'academic-year') return null
+  return c.maxAmount ?? c.amount
 }
 
 // metricScore: 0.5 means "meets requirement", 1 means "comfortably above",

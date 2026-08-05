@@ -45,11 +45,16 @@ export type UniversitySource = {
 }
 
 export type CostOfLiving = {
-  accommodation: number
-  food: number
-  transport: number
-  utilities: number
-  currency?: string // defaults to USD
+  amount: number
+  maxAmount?: number
+  currency: string
+  period: 'academic-year' | 'calendar-year' | 'month'
+  academicYear?: string
+  label: string
+  includes: string[]
+  note?: string
+  sourceUrl: string
+  verifiedAt: string
 }
 
 export type StudentBody = {

@@ -1,4 +1,4 @@
-import type { AdmissionRequirement, University } from './types'
+import type { AdmissionRequirement, CostOfLiving, University } from './types'
 
 // Rankings are QS World University Rankings 2026. Admissions policies are
 // undergraduate/first-year policies from each university's own website and were
@@ -10,6 +10,10 @@ const verifiedAt = '2026-08-05'
 
 function admission(note: string, bachelor: AdmissionRequirement[]) {
   return { note, bachelor, verifiedAt }
+}
+
+function livingCost(details: Omit<CostOfLiving, 'verifiedAt'>): CostOfLiving {
+  return { ...details, verifiedAt }
 }
 
 export const universities: University[] = [
@@ -26,6 +30,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no cutoff', policy: 'required', detail: 'SAT or ACT required; evaluated in context.', sourceUrl: 'https://mitadmissions.org/apply/firstyear/tests-scores/' },
       { label: 'IELTS', value: '7.0 min · 7.5 recommended', minimum: 7, recommended: 7.5, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://mitadmissions.org/apply/firstyear/tests-scores/' },
     ]),
+    costOfLiving: livingCost({ amount: 25620, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses'], note: 'Travel and health insurance can add to this amount. Tuition and the student life fee are excluded.', sourceUrl: 'https://sfs.mit.edu/cost-of-attendance-class-of-2030/' }),
     campus: { name: 'MIT main campus', address: '77 Massachusetts Avenue, Cambridge, MA 02139, USA', mapsQuery: 'MIT, 77 Massachusetts Avenue, Cambridge MA' },
     sources: [{ label: 'Official admissions: tests and scores', url: 'https://mitadmissions.org/apply/firstyear/tests-scores/' }, { label: 'Official MIT facts', url: 'https://facts.mit.edu/' }],
   },
@@ -41,6 +46,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'No university-wide requirement', policy: 'not-required', sourceUrl: 'https://www.imperial.ac.uk/study/apply/undergraduate/entry-requirements/' },
       { label: 'IELTS', value: '6.5 Standard · 7.0 Higher', minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Minimum components: 6.0 Standard or 6.5 Higher.', sourceUrl: 'https://www.imperial.ac.uk/study/apply/english-language/' },
     ]),
+    costOfLiving: livingCost({ amount: 15470, maxAmount: 16530, currency: 'GBP', period: 'academic-year', academicYear: '2026', label: 'Official average living-cost range for 9 months', includes: ['Accommodation', 'Food', 'London travel', 'Personal & leisure'], note: 'Tuition fees and study materials are not included. Actual spending depends on housing and lifestyle.', sourceUrl: 'https://www.imperial.ac.uk/study/pg/fees-and-funding/living-costs/' }),
     campus: { name: 'South Kensington Campus', address: 'Exhibition Road, London SW7 2AZ, UK', mapsQuery: 'Imperial College London South Kensington Campus' },
     sources: [{ label: 'Official English requirements', url: 'https://www.imperial.ac.uk/study/apply/english-language/' }, { label: 'Official undergraduate entry requirements', url: 'https://www.imperial.ac.uk/study/apply/undergraduate/entry-requirements/' }],
   },
@@ -56,6 +62,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no minimum', policy: 'required', sourceUrl: 'https://admission.stanford.edu/apply/first-year/testing.html' },
       { label: 'IELTS', value: 'Not required · no minimum', policy: 'not-required', sourceUrl: 'https://admission.stanford.edu/apply/international/' },
     ]),
+    costOfLiving: livingCost({ amount: 27204, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget', includes: ['Housing & food', 'Books & supplies', 'Personal expenses'], note: 'Travel varies. Student fees and international-student health insurance are excluded from this living-cost total.', sourceUrl: 'https://financialaid.stanford.edu/undergrad/budget/index.html' }),
     campus: { name: 'Stanford main campus', address: '450 Jane Stanford Way, Stanford, CA 94305, USA', mapsQuery: 'Stanford University 450 Jane Stanford Way' },
     sources: [{ label: 'Official standardized testing policy', url: 'https://admission.stanford.edu/apply/first-year/testing.html' }, { label: 'Official international applicant FAQ', url: 'https://admission.stanford.edu/apply/international/' }],
   },
@@ -71,6 +78,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Up to 1480 + three AP 5s', minimum: 1480, comparison: 'satTotal', policy: 'conditional', detail: 'For US qualifications and A*A*A-equivalent courses; other course combinations differ.', sourceUrl: 'https://www.ox.ac.uk/admissions/undergraduate/courses/admissions-requirements/international-qualifications' },
       { label: 'IELTS', value: '7.5 overall · 7.0 each', minimum: 7.5, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://www.ox.ac.uk/admissions/undergraduate/applying/for-international-students/english-language-requirements-visas' },
     ]),
+    costOfLiving: livingCost({ amount: 12645, maxAmount: 18945, currency: 'GBP', period: 'academic-year', academicYear: '2026–27', label: 'Official likely living-cost range for 9 months', includes: ['Accommodation & utilities', 'Food', 'Personal items', 'Social activities', 'Study costs', 'Other'], note: 'For a single full-time student with no dependants. Visa and immigration health surcharge are additional.', sourceUrl: 'https://www.ox.ac.uk/admissions/undergraduate/fees-and-funding/living-costs' }),
     campus: { name: 'University Offices', address: 'Wellington Square, Oxford OX1 2JD, UK', mapsQuery: 'University of Oxford Wellington Square' },
     sources: [{ label: 'Official English requirements', url: 'https://www.ox.ac.uk/admissions/undergraduate/applying/for-international-students/english-language-requirements-visas' }, { label: 'Official international qualifications', url: 'https://www.ox.ac.uk/admissions/undergraduate/courses/admissions-requirements/international-qualifications' }],
   },
@@ -86,6 +94,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no minimum', policy: 'required', sourceUrl: 'https://college.harvard.edu/resources/faq' },
       { label: 'IELTS', value: 'Optional · no minimum', policy: 'optional', sourceUrl: 'https://college.harvard.edu/resources/faq' },
     ]),
+    costOfLiving: livingCost({ amount: 26692, maxAmount: 31692, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget range', includes: ['Housing', 'Food', 'Books', 'Personal expenses', 'Transportation'], note: 'The range reflects Harvard’s $0–$5,000 transportation estimate. Tuition and fees are excluded.', sourceUrl: 'https://college.harvard.edu/financial-aid/how-aid-works' }),
     campus: { name: 'Harvard Yard', address: '2 Kirkland Street, Cambridge, MA 02138, USA', mapsQuery: 'Harvard Yard Cambridge Massachusetts' },
     sources: [{ label: 'Official Harvard College admissions FAQ', url: 'https://college.harvard.edu/resources/faq' }, { label: 'Official Harvard history', url: 'https://www.harvard.edu/about/history/' }],
   },
@@ -101,6 +110,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'No university-wide minimum', policy: 'conditional', sourceUrl: 'https://www.undergraduate.study.cam.ac.uk/apply/before/accepted-qualifications' },
       { label: 'IELTS', value: '7.5 overall · usually 7.0 each', minimum: 7.5, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://www.undergraduate.study.cam.ac.uk/apply/before/entry-requirements' },
     ]),
+    costOfLiving: livingCost({ amount: 11970, currency: 'GBP', period: 'academic-year', academicYear: '2027–28', label: 'Official indicative living cost for 9 months', includes: ['Accommodation', 'Food', 'Personal items', 'Social activities', 'Study costs', 'Miscellaneous'], note: 'Cambridge also publishes £15,960 for students staying 12 months. International College fees and settling-in costs are separate.', sourceUrl: 'https://www.undergraduate.study.cam.ac.uk/fees-funding/living-costs' }),
     campus: { name: 'The Old Schools', address: 'Trinity Lane, Cambridge CB2 1TN, UK', mapsQuery: 'University of Cambridge Old Schools Trinity Lane' },
     sources: [{ label: 'Official entry and English requirements', url: 'https://www.undergraduate.study.cam.ac.uk/apply/before/entry-requirements' }, { label: 'Official accepted qualifications', url: 'https://www.undergraduate.study.cam.ac.uk/apply/before/accepted-qualifications' }],
   },
@@ -117,6 +127,7 @@ export const universities: University[] = [
       { label: 'IELTS', value: 'Not accepted for bachelor language proof', policy: 'not-accepted', detail: 'German C1 is required unless an official waiver applies.', sourceUrl: 'https://ethz.ch/en/studium/bachelor/bewerbung/auslaendische-reifezeugnisse/sprachanforderungen.html' },
       { label: 'German', value: 'C1 required', policy: 'conditional', sourceUrl: 'https://ethz.ch/en/studium/bachelor/bewerbung/auslaendische-reifezeugnisse/sprachanforderungen.html' },
     ]),
+    costOfLiving: livingCost({ amount: 20000, maxAmount: 26000, currency: 'CHF', period: 'calendar-year', label: 'Official recommended annual living-and-study budget', includes: ['Living costs', 'Study costs'], note: 'ETH describes this as average student living and study costs. Its tuition and semester fees are shown separately on the same page.', sourceUrl: 'https://ethz.ch/en/studies/financial.html' }),
     campus: { name: 'ETH Zentrum', address: 'Rämistrasse 101, 8092 Zürich, Switzerland', mapsQuery: 'ETH Zurich Rämistrasse 101' },
     sources: [{ label: 'Official bachelor language requirements', url: 'https://ethz.ch/en/studium/bachelor/bewerbung/auslaendische-reifezeugnisse/sprachanforderungen.html' }, { label: 'Official bachelor admission prerequisites', url: 'https://ethz.ch/en/studium/bachelor/bewerbung/auslaendische-reifezeugnisse/zulassungsvoraussetzungen.html' }],
   },
@@ -132,6 +143,7 @@ export const universities: University[] = [
       { label: 'SAT', value: '1250 min (600 R&W + 650 Math)', minimum: 1250, comparison: 'satTotal', policy: 'conditional', detail: 'Required only for specified qualification groups and must be combined with at least three AP courses.', sourceUrl: 'https://nus.edu.sg/oam/docs/default-source/nus-publications/intlprospectus.pdf' },
       { label: 'IELTS', value: '6.5 overall, reading & writing', minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Only for qualification groups required to submit English-language proof.', sourceUrl: 'https://nus.edu.sg/oam/docs/default-source/nus-publications/intlprospectus.pdf' },
     ]),
+    costOfLiving: livingCost({ amount: 10000, maxAmount: 16290, currency: 'SGD', period: 'academic-year', label: 'Official estimated living cost with on-campus housing', includes: ['On-campus accommodation', 'Meals', 'Personal expenses', 'Local transport', 'Books & supplies'], note: 'Vacation is excluded. The range combines NUS’s S$6,000 non-housing estimate with its S$4,000–S$10,290 on-campus housing range.', sourceUrl: 'https://nus.edu.sg/oam/financial-aid/living-costs' }),
     campus: { name: 'Kent Ridge Campus', address: '21 Lower Kent Ridge Road, Singapore 119077', mapsQuery: 'National University of Singapore Kent Ridge Campus' },
     sources: [{ label: 'Official 2026/27 international prospectus', url: 'https://nus.edu.sg/oam/docs/default-source/nus-publications/intlprospectus.pdf' }, { label: 'Official international admission requirements', url: 'https://nus.edu.sg/oam/admissions/international-qualifications-for-foreigners/admission-requirements' }],
   },
@@ -147,6 +159,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Qualification-specific · no universal minimum', policy: 'conditional', sourceUrl: 'https://www.ucl.ac.uk/prospective-students/international/united-states-america' },
       { label: 'IELTS', value: '6.5–8.0 by programme level', minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Component minimums also apply; check the selected degree page.', sourceUrl: 'https://www.ucl.ac.uk/prospective-students/undergraduate/how-apply/english-language-requirements' },
     ]),
+    costOfLiving: livingCost({ amount: 16465, currency: 'GBP', period: 'academic-year', academicYear: '2026–27', label: 'Official indicative undergraduate cost for 39 weeks', includes: ['UCL self-catered halls', 'Food', 'Course materials', 'Mobile phone', 'Health & wellbeing', 'London travel'], note: 'Calculated from UCL’s £12,480 average hall rent and £3,985 other essential-cost guide. Visa, flights and tuition are separate.', sourceUrl: 'https://www.ucl.ac.uk/study/student-finances/cost-study/how-much-does-it-cost-study-ucl' }),
     campus: { name: 'UCL Bloomsbury campus', address: 'Gower Street, London WC1E 6BT, UK', mapsQuery: 'UCL Gower Street London' },
     sources: [{ label: 'Official undergraduate English requirements', url: 'https://www.ucl.ac.uk/prospective-students/undergraduate/how-apply/english-language-requirements' }, { label: 'Official undergraduate prospectus', url: 'https://www.ucl.ac.uk/prospective-students/undergraduate/' }],
   },
@@ -162,6 +175,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no cutoff', policy: 'required', sourceUrl: 'https://www.admissions.caltech.edu/apply/first-year-applicants/standardized-tests' },
       { label: 'IELTS', value: '7.0 overall · 7.0 each', minimum: 7, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://www.admissions.caltech.edu/apply/first-year-applicants/international-applicants' },
     ]),
+    costOfLiving: livingCost({ amount: 27393, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official on-campus non-tuition budget for 9 months', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses'], note: 'Health insurance, orientation and travel may add to this amount. Tuition and mandatory fees are excluded.', sourceUrl: 'https://www.finaid.caltech.edu/Costs' }),
     campus: { name: 'Caltech campus', address: '1200 E California Boulevard, Pasadena, CA 91125, USA', mapsQuery: 'Caltech 1200 E California Boulevard Pasadena' },
     sources: [{ label: 'Official standardized testing policy', url: 'https://www.admissions.caltech.edu/apply/first-year-applicants/standardized-tests' }, { label: 'Official international applicant requirements', url: 'https://www.admissions.caltech.edu/apply/first-year-applicants/international-applicants' }],
   },
@@ -176,6 +190,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no minimum', policy: 'required', sourceUrl: 'https://admissions.upenn.edu/how-to-apply/preparing-your-application/testing' },
       { label: 'IELTS', value: '7.0 competitive', recommended: 7, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://admissions.upenn.edu/how-to-apply/international-applicants' },
     ]),
+    costOfLiving: livingCost({ amount: 25104, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official on-campus non-tuition budget', includes: ['Housing', 'Food', 'Books & supplies', 'Local transportation', 'Personal expenses'], note: 'Tuition, mandatory fees, health insurance and travel home are excluded.', sourceUrl: 'https://srfs.upenn.edu/costs-budgeting/undergraduate-cost-attendance' }),
     campus: { name: 'Penn campus', address: 'Philadelphia, PA 19104, USA', mapsQuery: 'University of Pennsylvania Philadelphia' },
     sources: [{ label: 'Official Penn testing policy', url: 'https://admissions.upenn.edu/how-to-apply/preparing-your-application/testing' }, { label: 'Official international applicant requirements', url: 'https://admissions.upenn.edu/how-to-apply/international-applicants' }],
   },
@@ -190,6 +205,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no published cutoff', policy: 'required', sourceUrl: 'https://admissions.cornell.edu/how-to-apply/first-year-international-applicants' },
       { label: 'IELTS', value: '7.5 minimum', minimum: 7.5, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://admissions.cornell.edu/how-to-apply/first-year-international-applicants' },
     ]),
+    costOfLiving: livingCost({ amount: 24764, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget', includes: ['Housing', 'Food', 'Books & course materials', 'Personal expenses'], note: 'Transportation varies by home region. Health insurance and tuition/mandatory fees are excluded.', sourceUrl: 'https://finaid.cornell.edu/cost-to-attend' }),
     campus: { name: 'Ithaca campus', address: 'Ithaca, NY 14853, USA', mapsQuery: 'Cornell University Ithaca Campus' },
     sources: [{ label: 'Official international first-year requirements', url: 'https://admissions.cornell.edu/how-to-apply/first-year-international-applicants' }, { label: 'Official Cornell history', url: 'https://www.cornell.edu/about/timeline/' }],
   },
@@ -204,6 +220,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no minimum', policy: 'required', sourceUrl: 'https://admissions.yale.edu/standardized-testing' },
       { label: 'IELTS', value: '7.0 competitive', recommended: 7, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://admissions.yale.edu/standardized-testing' },
     ]),
+    costOfLiving: livingCost({ amount: 25300, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses'], note: 'Travel varies by home address. Tuition and the student activity fee are excluded.', sourceUrl: 'https://finaid.yale.edu/coa' }),
     campus: { name: 'Yale campus', address: 'New Haven, CT 06520, USA', mapsQuery: 'Yale University New Haven' },
     sources: [{ label: 'Official standardized testing policy', url: 'https://admissions.yale.edu/standardized-testing' }, { label: 'Official international applicant page', url: 'https://admissions.yale.edu/international' }],
   },
@@ -218,6 +235,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Optional for fall 2027 · required fall 2028', policy: 'optional', sourceUrl: 'https://admission.princeton.edu/apply/standardized-testing' },
       { label: 'IELTS', value: 'Required when applicable · no minimum', policy: 'conditional', sourceUrl: 'https://admission.princeton.edu/apply/international-students' },
     ]),
+    costOfLiving: livingCost({ amount: 26220, maxAmount: 31170, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official undergraduate non-tuition budget range', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses', 'Transportation'], note: 'The range applies Princeton’s published $50–$5,000 transportation estimate. Tuition and fees are excluded.', sourceUrl: 'https://admission.princeton.edu/cost-aid/fees-payment-options' }),
     campus: { name: 'Princeton campus', address: 'Princeton, NJ 08544, USA', mapsQuery: 'Princeton University New Jersey' },
     sources: [{ label: 'Official standardized testing policy', url: 'https://admission.princeton.edu/apply/standardized-testing' }, { label: 'Official international applicant requirements', url: 'https://admission.princeton.edu/apply/international-students' }],
   },
@@ -232,6 +250,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Optional · no cutoff', policy: 'optional', sourceUrl: 'https://undergrad.admissions.columbia.edu/faq' },
       { label: 'IELTS', value: 'No universal minimum published', policy: 'conditional', sourceUrl: 'https://undergrad.admissions.columbia.edu/faq' },
     ]),
+    costOfLiving: livingCost({ amount: 22814, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official first-year non-tuition budget before travel', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses'], note: 'Travel and local transportation vary. Health insurance, tuition and fees are excluded.', sourceUrl: 'https://cc-seas.financialaid.columbia.edu/eligibility/facts' }),
     campus: { name: 'Morningside Heights campus', address: '116th Street and Broadway, New York, NY 10027, USA', mapsQuery: 'Columbia University Morningside Heights' },
     sources: [{ label: 'Official undergraduate admissions FAQ', url: 'https://undergrad.admissions.columbia.edu/faq' }, { label: 'Official Columbia history', url: 'https://www.columbia.edu/content/history' }],
   },
@@ -246,6 +265,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'Required · no minimum', policy: 'required', sourceUrl: 'https://admission.brown.edu/ask/standardized-tests' },
       { label: 'IELTS', value: '8.0 expected in most cases', recommended: 8, comparison: 'ieltsOverall', policy: 'recommended', sourceUrl: 'https://admission.brown.edu/ask/standardized-tests' },
     ]),
+    costOfLiving: livingCost({ amount: 22342, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official first-year living and personal budget', includes: ['Housing', 'Food', 'Miscellaneous personal expenses'], note: 'Books may add $1,300 for students outside Brown’s course-material support; travel and health insurance also vary. Tuition and fees are excluded.', sourceUrl: 'https://finaid.brown.edu/estimate-cost-aid/cost' }),
     campus: { name: 'Brown campus', address: 'Providence, RI 02912, USA', mapsQuery: 'Brown University Providence Rhode Island' },
     sources: [{ label: 'Official standardized and English testing policy', url: 'https://admission.brown.edu/ask/standardized-tests' }, { label: 'Official Brown overview', url: 'https://www.brown.edu/about' }],
   },
@@ -260,6 +280,7 @@ export const universities: University[] = [
       { label: 'SAT', value: 'One testing option · no minimum', policy: 'conditional', sourceUrl: 'https://admissions.dartmouth.edu/apply-dartmouth' },
       { label: 'IELTS', value: 'No minimum · most successful >7', recommended: 7.5, comparison: 'ieltsOverall', policy: 'recommended', detail: 'IELTS is scored in half bands, so the next reportable overall band above 7.0 is 7.5.', sourceUrl: 'https://admissions.dartmouth.edu/glossary-question/if-english-not-my-first-language-am-i-required-submit-language-proficiency-test' },
     ]),
+    costOfLiving: livingCost({ amount: 24573, currency: 'USD', period: 'academic-year', academicYear: '2026–27', label: 'Official three-term non-tuition budget', includes: ['Housing', 'Food', 'Books & supplies', 'Personal expenses'], note: 'Health insurance, computer, first-year charges and travel may add to this amount. Tuition and fees are excluded.', sourceUrl: 'https://financialaid.dartmouth.edu/cost-attendance/cost-attendance-2026-2027' }),
     campus: { name: 'Dartmouth campus', address: 'Hanover, NH 03755, USA', mapsQuery: 'Dartmouth College Hanover New Hampshire' },
     sources: [{ label: 'Official application requirements', url: 'https://admissions.dartmouth.edu/apply-dartmouth' }, { label: 'Official English proficiency FAQ', url: 'https://admissions.dartmouth.edu/glossary-question/if-english-not-my-first-language-am-i-required-submit-language-proficiency-test' }],
   },
@@ -274,6 +295,7 @@ export const universities: University[] = [
       { label: 'SAT Math', value: '570 minimum (maths alternative)', minimum: 570, policy: 'conditional', detail: 'Section score; cannot be compared with a saved SAT total score.', sourceUrl: 'https://www.wiut.uz/certificate-international-foundation-studies' },
       { label: 'IELTS', value: '6.0 CIFS · 6.5 direct entry', minimum: 6, comparison: 'ieltsOverall', policy: 'conditional', detail: 'CIFS writing minimum 5.0; direct degree writing minimum is commonly 6.0.', sourceUrl: 'https://www.wiut.uz/certificate-international-foundation-studies' },
     ]),
+    costOfLiving: livingCost({ amount: 800000, currency: 'UZS', period: 'month', academicYear: '2025–26', label: 'Official dormitory rate — not a total living-cost estimate', includes: ['Dormitory accommodation'], note: 'WIUT publishes 800,000 UZS per month, payable as 3.2m for 4 months or 6.4m for 8 months. Food, transport and personal expenses are not published as one official estimate.', sourceUrl: 'https://www.wiut.uz/accommodation' }),
     campus: { name: 'WIUT campus', address: '12 Istiqbol Street, Tashkent 100047, Uzbekistan', mapsQuery: 'Westminster International University in Tashkent' },
     sources: [{ label: 'Official CIFS entry requirements', url: 'https://www.wiut.uz/certificate-international-foundation-studies' }, { label: 'Official undergraduate example and direct-entry requirements', url: 'https://www.wiut.uz/business-management' }],
   },
@@ -288,6 +310,7 @@ export const universities: University[] = [
       { label: 'SAT Math', value: '650 intl route · 780 exam exemption', minimum: 650, policy: 'conditional', detail: 'Section score; cannot be compared with a saved SAT total score.', sourceUrl: 'https://www.newuu.uz/en/undergraduate-admissions' },
       { label: 'IELTS', value: '5.5 or 6.0 by programme', minimum: 5.5, comparison: 'ieltsOverall', policy: 'required', sourceUrl: 'https://www.newuu.uz/en/undergraduate-admissions' },
     ]),
+    costOfLiving: livingCost({ amount: 640000, currency: 'UZS', period: 'month', label: 'Official dormitory rate — not a total living-cost estimate', includes: ['Dormitory', 'Heating', 'Electricity', 'Water', 'Essential services'], note: 'NewUU publishes this monthly price for Dormitory 1. It does not publish one combined estimate for food, transport and personal spending.', sourceUrl: 'https://newuu.uz/en/menu/accommodation' }),
     campus: { name: 'New Uzbekistan University', address: '1 Movarounnahr Street, Mirzo Ulugbek District, Tashkent, Uzbekistan', mapsQuery: 'New Uzbekistan University Tashkent' },
     sources: [{ label: 'Official fall 2026 bachelor admissions', url: 'https://www.newuu.uz/en/undergraduate-admissions' }, { label: 'Official international entry requirements', url: 'https://www.newuu.uz/en/menu/entry-requirements' }],
   },

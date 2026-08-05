@@ -43,10 +43,9 @@ export function describeRelevantSiteKnowledge(message: string): string {
     const requirements = university.admission?.bachelor?.length
       ? university.admission.bachelor.map((item) => `${item.label}: ${item.value}`).join(', ')
       : 'No entry scores stored in ProfAI'
-    const annualLiving = university.costOfLiving
-      ? Object.entries(university.costOfLiving)
-          .filter(([key, value]) => key !== 'currency' && typeof value === 'number')
-          .reduce((sum, [, value]) => sum + Number(value), 0)
+    const living = university.costOfLiving
+    const livingAmount = living
+      ? `${living.amount}${living.maxAmount ? `–${living.maxAmount}` : ''} ${living.currency} per ${living.period}`
       : null
 
     return [
@@ -56,7 +55,7 @@ export function describeRelevantSiteKnowledge(message: string): string {
       `Profile: ${university.about}`,
       `Stored undergraduate indicators: ${requirements}.`,
       university.admission?.note ? `Catalog note: ${university.admission.note}` : '',
-      annualLiving !== null ? `Stored annual living-cost estimate: ${annualLiving} ${university.costOfLiving?.currency ?? 'USD'} (not tuition).` : '',
+      livingAmount ? `Official published student-cost figure: ${livingAmount}. ${living?.label}. Includes: ${living?.includes.join(', ')}. ${living?.note ?? ''} Source: ${living?.sourceUrl}` : '',
       `Official website: ${university.website}`,
       'Accuracy rule: present these as ProfAI catalog data, not a guaranteed current offer. Requirements vary by programme and cycle; explicitly recommend confirming consequential details on the official website. Never add a deadline, acceptance rate, tuition, scholarship or score that is absent above.',
     ].filter(Boolean).join('\n')

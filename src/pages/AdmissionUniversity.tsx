@@ -23,19 +23,17 @@ import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityRadar from '@/components/admission/UniversityRadar'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
 import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
-import type { CostOfLiving } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 
 function money(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
 }
 
-const COST_LABELS: { key: keyof Omit<CostOfLiving, 'currency'>; label: string; icon: typeof Building2 }[] = [
-  { key: 'accommodation', label: 'Accommodation', icon: Building2 },
-  { key: 'food', label: 'Food', icon: CircleDollarSign },
-  { key: 'transport', label: 'Transport', icon: MapPin },
-  { key: 'utilities', label: 'Utilities', icon: Sparkles },
-]
+const PERIOD_LABELS = {
+  'academic-year': 'academic year',
+  'calendar-year': 'year',
+  month: 'month',
+} as const
 
 export default function AdmissionUniversity() {
   const navigate = useNavigate()
@@ -64,7 +62,6 @@ export default function AdmissionUniversity() {
   const indicators = presentIndicators(u.indicators)
   const students = u.students
   const cost = u.costOfLiving
-  const totalCost = cost ? cost.accommodation + cost.food + cost.transport + cost.utilities : 0
   const hasDetailedStudents = students && typeof students.undergraduate === 'number'
 
   const keyFacts: { icon: typeof Landmark; label: string; value: string }[] = [
@@ -334,19 +331,24 @@ export default function AdmissionUniversity() {
                     Cost of Living
                   </h2>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                    ≈ {money(totalCost, cost.currency)} / yr
+                    {money(cost.amount, cost.currency)}{cost.maxAmount ? `–${money(cost.maxAmount, cost.currency)}` : ''} / {PERIOD_LABELS[cost.period]}
                   </span>
                 </div>
-                <div className="mt-5 grid flex-1 grid-cols-2 gap-3">
-                  {COST_LABELS.map(({ key, label, icon: Icon }) => (
-                    <div key={key} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                      <Icon className="h-5 w-5" style={{ color: accent }} />
-                      <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">{label}</p>
-                      <p className="mt-0.5 text-lg font-black text-slate-900">{money(cost[key], cost.currency)}</p>
-                    </div>
-                  ))}
+                <div className="mt-5 flex-1 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                  <p className="text-sm font-black leading-snug text-slate-900">{cost.label}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {cost.includes.map((item) => (
+                      <span key={item} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">{item}</span>
+                    ))}
+                  </div>
+                  {cost.note ? <p className="mt-4 text-[12px] leading-5 text-slate-500">{cost.note}</p> : null}
                 </div>
-                <p className="mt-3 text-[12px] text-slate-400">Approximate annual amounts (USD) for an international student.</p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-slate-400">
+                  <span>{cost.academicYear ? `Published period: ${cost.academicYear}` : 'Current official published figure'} · Verified {cost.verifiedAt}</span>
+                  <a href={cost.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-bold text-red-600 hover:underline">
+                    Official cost source <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </section>
             </Reveal>
           ) : null}
@@ -442,7 +444,7 @@ export default function AdmissionUniversity() {
         <Reveal delay={0.04}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Rankings from {QS_EDITION}; admissions from the university’s official sources.
+            Rankings from {QS_EDITION}; admissions and student costs from official university sources.
           </p>
         </Reveal>
       </div>

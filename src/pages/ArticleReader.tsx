@@ -3,17 +3,22 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft,
+  Bookmark,
   BookOpenCheck,
   Check,
+  ChevronRight,
   Clock3,
-  Contrast,
+  Coffee,
   Highlighter as HighlighterIcon,
-  Languages,
+  MessageCircle,
+  Mic2,
   Minus,
+  Moon,
   Plus,
   Quote,
   Sparkles,
   StickyNote,
+  Sun,
   Trash2,
   Type,
   Volume2,
@@ -21,12 +26,13 @@ import {
 } from 'lucide-react'
 import { getArticleBySlug, articleWordCount } from '@/data/articles'
 import { saveArticleProgress } from '@/utils/articleProgressStore'
-import type { ArticleBlock } from '@/data/articles'
-import ArticleCover from '@/components/articles/ArticleCover'
+import type { ArticleBlock, ArticleVocabEntry } from '@/data/articles'
 import WordLookupModal from '@/components/vocab/WordLookupModal'
+import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import {
   addHighlight,
   addNote,
+  getArticleBookmark,
   getHighlights,
   getNotes,
   getReaderPrefs,
@@ -34,6 +40,7 @@ import {
   removeNote,
   setReaderPrefs,
   subscribeReader,
+  toggleArticleBookmark,
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
   FONT_SCALE_STEP,
@@ -73,45 +80,86 @@ type SelectionState = {
 }
 
 // Split a block's text so any saved highlight fragments render as clickable <mark> spans.
-function renderHighlighted(
+function renderRichText(
   text: string,
   highlights: Highlight[],
+  vocabulary: ArticleVocabEntry[],
   onMarkClick: (id: string, el: HTMLElement) => void,
+  onVocabClick: (entry: ArticleVocabEntry, sentence: string) => void,
 ) {
-  if (highlights.length === 0) return text
-  // Build a list of [start,end,highlight] matches, earliest first, non-overlapping.
-  const matches: Array<{ start: number; end: number; h: Highlight }> = []
+  type Match =
+    | { start: number; end: number; kind: 'highlight'; highlight: Highlight }
+    | { start: number; end: number; kind: 'vocabulary'; entry: ArticleVocabEntry }
+
+  const matches: Match[] = []
   for (const h of highlights) {
-    let from = 0
-    const idx = text.indexOf(h.text, from)
+    const idx = text.indexOf(h.text)
     if (idx !== -1) {
-      matches.push({ start: idx, end: idx + h.text.length, h })
-      from = idx + h.text.length
+      matches.push({ start: idx, end: idx + h.text.length, kind: 'highlight', highlight: h })
     }
   }
-  matches.sort((a, b) => a.start - b.start)
+
+  const lowerText = text.toLocaleLowerCase()
+  for (const entry of vocabulary) {
+    const term = entry.term.trim()
+    if (!term) continue
+    const lowerTerm = term.toLocaleLowerCase()
+    let from = 0
+    while (from < lowerText.length) {
+      const idx = lowerText.indexOf(lowerTerm, from)
+      if (idx === -1) break
+      const before = idx === 0 ? '' : text[idx - 1]
+      const after = idx + term.length >= text.length ? '' : text[idx + term.length]
+      const startsOnBoundary = !before || !/[a-z0-9]/i.test(before)
+      const endsOnBoundary = !after || !/[a-z0-9]/i.test(after)
+      if (startsOnBoundary && endsOnBoundary) {
+        matches.push({ start: idx, end: idx + term.length, kind: 'vocabulary', entry })
+      }
+      from = idx + term.length
+    }
+  }
+
+  if (matches.length === 0) return text
+  matches.sort((a, b) => a.start - b.start || (a.kind === 'highlight' ? -1 : 1))
 
   const out: ReactNode[] = []
   let cursor = 0
   let key = 0
-  for (const m of matches) {
-    if (m.start < cursor) continue
-    if (m.start > cursor) out.push(text.slice(cursor, m.start))
-    out.push(
-      <mark
-        key={`hl-${m.h.id}-${key++}`}
-        onClick={(e) => {
-          e.stopPropagation()
-          onMarkClick(m.h.id, e.currentTarget)
-        }}
-        title="Highlightni boshqarish"
-        style={{ backgroundColor: HIGHLIGHT_BG[m.h.color], color: 'inherit' }}
-        className="cursor-pointer rounded px-0.5 [box-decoration-break:clone]"
-      >
-        {text.slice(m.start, m.end)}
-      </mark>,
-    )
-    cursor = m.end
+  for (const match of matches) {
+    if (match.start < cursor) continue
+    if (match.start > cursor) out.push(text.slice(cursor, match.start))
+    if (match.kind === 'highlight') {
+      out.push(
+        <mark
+          key={`hl-${match.highlight.id}-${key++}`}
+          onClick={(event) => {
+            event.stopPropagation()
+            onMarkClick(match.highlight.id, event.currentTarget)
+          }}
+          title="Highlightni boshqarish"
+          style={{ backgroundColor: HIGHLIGHT_BG[match.highlight.color], color: 'inherit' }}
+          className="cursor-pointer rounded px-0.5 [box-decoration-break:clone]"
+        >
+          {text.slice(match.start, match.end)}
+        </mark>,
+      )
+    } else {
+      out.push(
+        <button
+          key={`vocab-${match.entry.id}-${key++}`}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onVocabClick(match.entry, text)
+          }}
+          className="article-vocab-word rounded-sm font-semibold text-red-700 underline decoration-red-300 decoration-dotted underline-offset-4 transition hover:bg-red-50 hover:text-red-800"
+          title="AI explanation"
+        >
+          {text.slice(match.start, match.end)}
+        </button>,
+      )
+    }
+    cursor = match.end
   }
   if (cursor < text.length) out.push(text.slice(cursor))
   return out
@@ -130,10 +178,14 @@ export default function ArticleReader() {
   const [noteQuote, setNoteQuote] = useState<string | null>(null)
   const [lookup, setLookup] = useState<{ word: string; sentence: string } | null>(null)
   const [progress, setProgress] = useState(0)
+  const [bookmarked, setBookmarked] = useState(() => (slug ? getArticleBookmark(slug) : false))
   // Popover shown when a saved highlight is tapped — removal only happens from here.
   const [hlMenu, setHlMenu] = useState<{ id: string; x: number; y: number } | null>(null)
 
   const bodyRef = useRef<HTMLDivElement>(null)
+  const readerScrollRef = useRef<HTMLDivElement>(null)
+  const openAiAssistant = useAiAssistantStore((state) => state.open)
+  const setAiWorkspace = useAiAssistantStore((state) => state.setActiveWorkspace)
 
   // Live sync with the store (works across the toolbar, body and notes drawer).
   useEffect(() => {
@@ -142,27 +194,28 @@ export default function ArticleReader() {
       setPrefs(getReaderPrefs())
       setHighlights(getHighlights(slug))
       setNotes(getNotes(slug))
+      setBookmarked(getArticleBookmark(slug))
     }
     sync()
     return subscribeReader(sync)
   }, [slug])
 
-  // Reading progress bar (also persisted so the library can show progress rings).
+  // Reading progress follows the paper's own scroll area, matching the focused
+  // reader in the reference while still persisting progress for the library.
   useEffect(() => {
     const onScroll = () => {
-      const el = bodyRef.current
+      const el = readerScrollRef.current
       if (!el) return
-      const rect = el.getBoundingClientRect()
-      const total = el.offsetHeight - window.innerHeight
-      const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1))
-      const pct = total > 0 ? (scrolled / total) * 100 : 0
+      const total = el.scrollHeight - el.clientHeight
+      const pct = total > 0 ? (el.scrollTop / total) * 100 : 100
       setProgress(pct)
       if (slug) saveArticleProgress(slug, pct)
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
+    const el = readerScrollRef.current
+    el?.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [slug])
+    return () => el?.removeEventListener('scroll', onScroll)
+  }, [slug, prefs.fontScale, prefs.width])
 
   const captureSelection = useCallback(() => {
     const sel = window.getSelection()
@@ -267,6 +320,15 @@ export default function ArticleReader() {
     window.getSelection()?.removeAllRanges()
   }
 
+  const onVocabularyClick = (entry: ArticleVocabEntry, sentence: string) => {
+    setLookup({ word: entry.term, sentence })
+  }
+
+  const onOpenAssistant = () => {
+    setAiWorkspace('general')
+    openAiAssistant()
+  }
+
   const onMarkClick = (id: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect()
     setSelection(null)
@@ -289,179 +351,323 @@ export default function ArticleReader() {
   const fontScalePct = Math.round(prefs.fontScale * 100)
   const bodyFontFamily = prefs.font === 'serif' ? 'Georgia, "Times New Roman", serif' : 'inherit'
   const surfaceClass = THEME_SURFACE[prefs.theme]
-  const widthClass = prefs.width === 'wide' ? 'max-w-3xl' : 'max-w-2xl'
+  const readingWidthClass = prefs.width === 'wide' ? 'max-w-5xl' : 'max-w-4xl'
+  const progressValue = Math.round(progress)
+  const progressCircumference = 2 * Math.PI * 52
+  const progressOffset = progressCircumference * (1 - progressValue / 100)
+  const notePreviews = notes.slice(0, 2)
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-10">
+    <div className="article-reader-page workspace-page relative min-h-screen overflow-hidden px-3 py-4 text-slate-950 sm:px-5 sm:py-6 lg:px-8">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_10%_12%,rgba(255,244,214,0.96),transparent_36%),radial-gradient(circle_at_88%_18%,rgba(239,229,229,0.94),transparent_38%),linear-gradient(135deg,#fffaf0_0%,#f4ebe5_52%,#eee8e8_100%)]" />
+      <div className="pointer-events-none fixed -left-24 top-[28%] -z-10 h-80 w-80 rounded-full border border-red-200/30" />
+      <div className="pointer-events-none fixed -right-28 bottom-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full border border-red-200/25" />
 
       {/* reading progress */}
-      <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-transparent">
+      <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-white/40">
         <div
-          className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 transition-[width] duration-150"
+          className="h-full bg-gradient-to-r from-red-700 via-red-500 to-rose-400 transition-[width] duration-150"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className={`relative mx-auto w-full ${widthClass} space-y-5`}>
-        {/* top controls */}
-        <div className="flex items-center justify-between gap-2">
-          <Link to="/articles" className="premium-back-btn-sm">
-            <ArrowLeft className="h-4 w-4" />
-            All articles
-          </Link>
-          <button
-            onClick={() => setNotesOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-50"
-          >
-            <StickyNote className="h-4 w-4" />
-            Notes
-            {notes.length > 0 ? (
-              <span className="ml-0.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white">{notes.length}</span>
-            ) : null}
-          </button>
-        </div>
+      <div className="relative mx-auto w-full max-w-[1540px]">
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18.5rem]">
+          <main className="min-w-0 space-y-5">
+            <header className="article-reader-glass flex min-h-[5.8rem] items-center justify-between gap-4 rounded-[2rem] px-4 py-3 sm:px-7">
+              <div className="flex min-w-0 items-center gap-4 lg:gap-8">
+                <Link to="/dashboard" className="flex shrink-0 items-center gap-2" aria-label="ProfAI home">
+                  <img src="/logo.svg" alt="" className="h-12 w-12 drop-shadow-[0_8px_10px_rgba(220,38,38,0.25)] sm:h-14 sm:w-14" />
+                  <span className="hidden text-3xl font-black tracking-[-0.04em] text-slate-900 sm:inline">
+                    Prof<span className="text-red-600">AI</span>
+                  </span>
+                </Link>
 
-        {/* hero */}
-        <div className="overflow-hidden rounded-[1.8rem] border border-red-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-          <ArticleCover article={article} variant="hero" className="h-44 sm:h-56" />
-          <div className="p-5 sm:p-7">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-              <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 uppercase tracking-[0.14em] text-red-700">
-                {article.category}
-              </span>
-              <span className="inline-flex items-center gap-1 text-slate-500">
-                <Clock3 className="h-3.5 w-3.5 text-red-500" />
-                {article.readMinutes} min read
-              </span>
-              <span className="text-slate-400">·</span>
-              <span className="text-slate-500">{wordCount.toLocaleString()} words</span>
-            </div>
-            <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl">
-              {article.title}
-            </h1>
-            <p className="mt-3 text-[15px] leading-7 text-slate-600">{article.teaser}</p>
-          </div>
-        </div>
+                <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-sm font-medium text-slate-500 md:flex lg:text-base">
+                  <Link to="/dashboard" className="transition hover:text-red-700">Home</Link>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Link to="/articles" className="transition hover:text-red-700">Library</Link>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Link to="/articles" className="transition hover:text-red-700">Articles</Link>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <span className="max-w-[20rem] truncate font-semibold text-slate-900">{article.title}</span>
+                </nav>
 
-        {/* reading toolbar */}
-        <div className="sticky top-3 z-40 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-100 bg-white/90 px-3 py-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="flex items-center gap-1.5">
-            <span className="hidden items-center gap-1 pr-1 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:inline-flex">
-              <Type className="h-3.5 w-3.5" /> Text
-            </span>
-            <button
-              onClick={() => updatePrefs({ fontScale: prefs.fontScale - FONT_SCALE_STEP })}
-              disabled={prefs.fontScale <= FONT_SCALE_MIN + 0.001}
-              className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-red-300 hover:text-red-700 disabled:opacity-40"
-              aria-label="Smaller text"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="w-11 text-center text-xs font-bold tabular-nums text-slate-600">{fontScalePct}%</span>
-            <button
-              onClick={() => updatePrefs({ fontScale: prefs.fontScale + FONT_SCALE_STEP })}
-              disabled={prefs.fontScale >= FONT_SCALE_MAX - 0.001}
-              className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-red-300 hover:text-red-700 disabled:opacity-40"
-              aria-label="Larger text"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {/* theme / contrast */}
-            <div className="inline-flex overflow-hidden rounded-lg border border-slate-200">
-              {(['light', 'sepia', 'dark'] as ReaderTheme[]).map((theme) => (
-                <button
-                  key={theme}
-                  onClick={() => updatePrefs({ theme })}
-                  className={`px-2.5 py-1.5 text-[11px] font-bold capitalize transition ${
-                    prefs.theme === theme ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  {theme === 'light' ? 'Light' : theme === 'sepia' ? 'Sepia' : 'Dark'}
-                </button>
-              ))}
-            </div>
-
-            {/* font family */}
-            <button
-              onClick={() => updatePrefs({ font: prefs.font === 'serif' ? 'sans' : 'serif' })}
-              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-600 transition hover:border-red-300 hover:text-red-700"
-            >
-              {prefs.font === 'serif' ? 'Serif' : 'Sans'}
-            </button>
-
-            {/* width */}
-            <button
-              onClick={() => updatePrefs({ width: prefs.width === 'cozy' ? 'wide' : 'cozy' })}
-              className="hidden rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-600 transition hover:border-red-300 hover:text-red-700 sm:block"
-            >
-              {prefs.width === 'cozy' ? 'Cozy' : 'Wide'}
-            </button>
-
-            <span className="hidden items-center gap-1 rounded-lg bg-amber-50 px-2 py-1.5 text-[10px] font-semibold text-amber-700 md:inline-flex">
-              <HighlighterIcon className="h-3.5 w-3.5" /> Select to highlight
-            </span>
-          </div>
-        </div>
-
-        {/* article body */}
-        <article
-          ref={bodyRef}
-          className={`select-text rounded-[1.6rem] border border-red-100 px-6 py-7 shadow-[0_16px_44px_rgba(15,23,42,0.08)] transition-colors sm:px-9 sm:py-10 ${surfaceClass}`}
-          style={{ fontFamily: bodyFontFamily }}
-        >
-          {article.blocks.map((block, index) => (
-            <BlockView
-              key={index}
-              block={block}
-              fontScale={prefs.fontScale}
-              theme={prefs.theme}
-              content={renderHighlighted(block.text, blockHighlights(index), onMarkClick)}
-              index={index}
-            />
-          ))}
-
-          {/* end-of-article vocabulary preview */}
-          <div className={`mt-10 rounded-2xl border p-5 ${prefs.theme === 'dark' ? 'border-slate-700 bg-slate-900/60' : 'border-red-100 bg-red-50/50'}`}>
-            <div className="flex items-center justify-between gap-2">
-              <div className="inline-flex items-center gap-2">
-                <BookOpenCheck className={`h-5 w-5 ${prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-600'}`} />
-                <h3 className="text-lg font-black">Key vocabulary ({article.vocabulary.length})</h3>
+                <Link to="/articles" className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 md:hidden">
+                  <ArrowLeft className="h-4 w-4" /> Articles
+                </Link>
               </div>
-              <Link
-                to={`/vocabulary/articles/${article.slug}`}
-                className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
+
+              <button
+                type="button"
+                onClick={() => setBookmarked(toggleArticleBookmark(slug))}
+                aria-pressed={bookmarked}
+                aria-label={bookmarked ? 'Remove article bookmark' : 'Bookmark article'}
+                className={`article-reader-icon-button grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition ${
+                  bookmarked ? 'text-red-700' : 'text-red-600 hover:text-red-800'
+                }`}
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                Study set
-              </Link>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {article.vocabulary.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`rounded-xl border px-3.5 py-2.5 ${prefs.theme === 'dark' ? 'border-slate-700 bg-slate-900/40' : 'border-red-100 bg-white'}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold">{entry.term}</p>
-                    <button
-                      onClick={() => speakWord(entry.term)}
-                      className={`rounded-md p-1 ${prefs.theme === 'dark' ? 'text-slate-400 hover:text-rose-300' : 'text-slate-400 hover:text-red-600'}`}
-                      aria-label="Pronounce"
-                    >
-                      <Volume2 className="h-3.5 w-3.5" />
-                    </button>
+                <Bookmark className="h-6 w-6" fill={bookmarked ? 'currentColor' : 'none'} />
+              </button>
+            </header>
+
+            <section className={`article-reader-paper overflow-hidden rounded-[2rem] border transition-colors ${surfaceClass} ${
+              prefs.theme === 'dark' ? 'border-slate-700/80' : 'border-white/90'
+            }`}>
+              <div ref={readerScrollRef} className="article-reader-scroll max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain">
+                <div className={`border-b px-6 pb-7 pt-8 sm:px-10 sm:pb-9 sm:pt-11 lg:px-14 ${
+                  prefs.theme === 'dark' ? 'border-slate-700' : 'border-red-100/70'
+                }`}>
+                  <Link
+                    to="/articles"
+                    className={`mb-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] ${
+                      prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-700'
+                    }`}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> All articles
+                  </Link>
+                  <h1
+                    className="max-w-5xl text-4xl leading-[1.08] tracking-[-0.025em] sm:text-5xl lg:text-[3.65rem]"
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                  >
+                    {article.title}
+                  </h1>
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${
+                      prefs.theme === 'dark' ? 'border-slate-600 bg-slate-800 text-slate-200' : 'border-white bg-white/75 text-slate-800 shadow-sm'
+                    }`}>
+                      <Clock3 className="h-4 w-4 text-red-500" />
+                      {article.readMinutes} min · {article.category}
+                      <span className="ml-1 h-1.5 w-20 overflow-hidden rounded-full bg-slate-200">
+                        <span className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.max(8, progressValue)}%` }} />
+                      </span>
+                    </span>
+                    <span className={`text-xs font-semibold ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {wordCount.toLocaleString()} words
+                    </span>
                   </div>
-                  <p className={`mt-0.5 text-xs leading-5 ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {entry.definition}
+                  <p className={`mt-6 max-w-4xl text-base leading-7 sm:text-lg ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {article.teaser}
                   </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </article>
+
+                <article
+                  ref={bodyRef}
+                  className={`select-text px-6 py-8 sm:px-10 sm:py-10 lg:px-14 ${readingWidthClass}`}
+                  style={{ fontFamily: bodyFontFamily }}
+                >
+                  {article.blocks.map((block, index) => (
+                    <BlockView
+                      key={index}
+                      block={block}
+                      fontScale={prefs.fontScale}
+                      theme={prefs.theme}
+                      content={renderRichText(
+                        block.text,
+                        blockHighlights(index),
+                        article.vocabulary,
+                        onMarkClick,
+                        onVocabularyClick,
+                      )}
+                      index={index}
+                    />
+                  ))}
+
+                  <div className={`mt-12 rounded-[1.5rem] border p-5 sm:p-6 ${
+                    prefs.theme === 'dark' ? 'border-slate-700 bg-slate-900/60' : 'border-red-100 bg-white/72'
+                  }`}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="inline-flex items-center gap-2">
+                        <BookOpenCheck className={`h-5 w-5 ${prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-600'}`} />
+                        <h3 className="text-lg font-black">Key vocabulary ({article.vocabulary.length})</h3>
+                      </div>
+                      <Link
+                        to={`/vocabulary/articles/${article.slug}`}
+                        className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-3.5 py-2 text-xs font-bold text-white shadow-[0_8px_20px_rgba(220,38,38,0.24)]"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Study set
+                      </Link>
+                    </div>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {article.vocabulary.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className={`flex items-start gap-2 rounded-xl border px-3.5 py-3 transition hover:-translate-y-0.5 ${
+                            prefs.theme === 'dark'
+                              ? 'border-slate-700 bg-slate-900/40 hover:border-rose-400'
+                              : 'border-red-100 bg-white hover:border-red-300 hover:shadow-sm'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => onVocabularyClick(entry, entry.example)}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <span className="block text-sm font-bold">{entry.term}</span>
+                            <span className={`mt-1 block text-xs leading-5 ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                              {entry.definition}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => speakWord(entry.term)}
+                            aria-label={`Pronounce ${entry.term}`}
+                            className={`rounded-lg p-1.5 ${prefs.theme === 'dark' ? 'text-slate-400 hover:text-rose-300' : 'text-red-500 hover:bg-red-50 hover:text-red-700'}`}
+                          >
+                            <Volume2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </main>
+
+          <aside className="grid gap-5 md:grid-cols-3 xl:sticky xl:top-6 xl:block xl:space-y-5">
+            <section className="article-reader-glass rounded-[2rem] p-5">
+              <div className="mx-auto grid h-36 w-36 place-items-center">
+                <svg viewBox="0 0 120 120" className="col-start-1 row-start-1 h-36 w-36 -rotate-90" aria-hidden="true">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(148,163,184,0.22)" strokeWidth="10" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    fill="none"
+                    stroke="url(#reader-progress-gradient)"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={progressCircumference}
+                    strokeDashoffset={progressOffset}
+                    className="transition-[stroke-dashoffset] duration-300"
+                  />
+                  <defs>
+                    <linearGradient id="reader-progress-gradient" x1="0" y1="0" x2="120" y2="120">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#991b1b" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="col-start-1 row-start-1 text-3xl font-black tabular-nums text-slate-950">{progressValue}%</span>
+              </div>
+
+              <div className="my-5 h-px bg-slate-300/45" />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 text-sm font-bold text-slate-800"><Type className="h-4 w-4 text-red-600" /> Font size</span>
+                  <div className="article-reader-segmented flex items-center rounded-2xl p-1">
+                    <button
+                      type="button"
+                      onClick={() => updatePrefs({ fontScale: prefs.fontScale - FONT_SCALE_STEP })}
+                      disabled={prefs.fontScale <= FONT_SCALE_MIN + 0.001}
+                      className="grid h-9 w-10 place-items-center rounded-xl text-sm font-black text-slate-700 transition hover:bg-white disabled:opacity-35"
+                      aria-label="Smaller text"
+                    >
+                      A−
+                    </button>
+                    <span className="min-w-11 text-center text-[11px] font-black tabular-nums text-slate-500">{fontScalePct}%</span>
+                    <button
+                      type="button"
+                      onClick={() => updatePrefs({ fontScale: prefs.fontScale + FONT_SCALE_STEP })}
+                      disabled={prefs.fontScale >= FONT_SCALE_MAX - 0.001}
+                      className="grid h-9 w-10 place-items-center rounded-xl text-base font-black text-slate-900 transition hover:bg-white disabled:opacity-35"
+                      aria-label="Larger text"
+                    >
+                      A+
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-slate-800">Contrast</span>
+                  <div className="article-reader-segmented flex items-center gap-1 rounded-2xl p-1">
+                    {([
+                      { value: 'light' as ReaderTheme, label: 'Light', icon: Sun },
+                      { value: 'sepia' as ReaderTheme, label: 'Sepia', icon: Coffee },
+                      { value: 'dark' as ReaderTheme, label: 'Dark', icon: Moon },
+                    ]).map(({ value, label, icon: Icon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => updatePrefs({ theme: value })}
+                        aria-label={`${label} reading theme`}
+                        aria-pressed={prefs.theme === value}
+                        className={`grid h-9 w-9 place-items-center rounded-xl transition ${
+                          prefs.theme === value ? 'bg-white text-red-700 shadow-sm' : 'text-slate-500 hover:text-red-700'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updatePrefs({ font: prefs.font === 'serif' ? 'sans' : 'serif' })}
+                    className="article-reader-segmented rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition hover:text-red-700"
+                  >
+                    {prefs.font === 'serif' ? 'Serif font' : 'Sans font'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updatePrefs({ width: prefs.width === 'cozy' ? 'wide' : 'cozy' })}
+                    className="article-reader-segmented rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition hover:text-red-700"
+                  >
+                    {prefs.width === 'cozy' ? 'Cozy width' : 'Wide width'}
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => setNotesOpen(true)}
+              className="article-reader-glass block w-full rounded-[2rem] p-5 text-left transition hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-2 text-lg font-black text-slate-950">
+                  <StickyNote className="h-5 w-5 text-red-600" /> Notes
+                </span>
+                <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black text-white">{notes.length}</span>
+              </div>
+              {notePreviews.length > 0 ? (
+                <div className="mt-5 grid grid-cols-2 gap-2 pb-2">
+                  {notePreviews.map((note, index) => (
+                    <span
+                      key={note.id}
+                      className={`article-sticky-note relative block min-h-28 px-3 pb-3 pt-5 text-xs font-semibold leading-5 text-slate-800 ${index % 2 === 0 ? '-rotate-2' : 'translate-y-3 rotate-3'}`}
+                    >
+                      <span className="article-note-pin" />
+                      <span className="line-clamp-4">{note.text}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="mt-4 block rounded-2xl border border-dashed border-red-200 bg-white/50 px-3 py-5 text-center text-xs font-medium text-slate-500">
+                  Select text and add your first note.
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenAssistant}
+              className="article-reader-glass group flex w-full items-center gap-4 rounded-[2rem] p-4 text-left transition hover:-translate-y-0.5"
+            >
+              <span className="article-reader-ai-orb grid h-14 w-14 shrink-0 place-items-center rounded-full text-red-600">
+                <Mic2 className="h-6 w-6" />
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-2 text-xl font-black text-slate-950">Ask AI <MessageCircle className="h-5 w-5" /></span>
+                <span className="mt-0.5 block text-xs font-medium text-slate-500">Select text for word help</span>
+              </span>
+            </button>
+          </aside>
+        </div>
       </div>
 
       {/* selection toolbar */}
@@ -549,7 +755,7 @@ export default function ArticleReader() {
                   <StickyNote className="h-5 w-5 text-red-600" />
                   Reading notes
                 </h3>
-                <button onClick={() => setNotesOpen(false)} className="rounded-lg p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-700">
+                <button onClick={() => setNotesOpen(false)} aria-label="Close notes" className="rounded-lg p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-700">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -593,7 +799,7 @@ export default function ArticleReader() {
                         <span className="text-[10px] uppercase tracking-wide text-slate-400">
                           {new Date(note.createdAt).toLocaleDateString()}
                         </span>
-                        <button onClick={() => removeNote(slug, note.id)} className="text-slate-400 hover:text-red-600">
+                        <button onClick={() => removeNote(slug, note.id)} aria-label="Delete note" className="text-slate-400 hover:text-red-600">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>

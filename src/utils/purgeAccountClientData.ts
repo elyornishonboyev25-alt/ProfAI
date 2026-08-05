@@ -12,6 +12,7 @@ const PERSONAL_EXACT_KEYS = new Set([
   'profai-admission-lessons-v1',
   'smarttest_reader_highlights_v1',
   'smarttest_reader_notes_v1',
+  'smarttest_reader_bookmarks_v1',
   'smarttest_vocab_matching_rewards_v2',
   'smarttest_vocab_diamond_bank_v1',
   'smarttest_vocab_mastery_v1',

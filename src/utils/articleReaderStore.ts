@@ -31,6 +31,7 @@ export type ReaderNote = {
 const PREFS_KEY = 'smarttest_reader_prefs_v1'
 const HIGHLIGHTS_KEY = 'smarttest_reader_highlights_v1'
 const NOTES_KEY = 'smarttest_reader_notes_v1'
+const BOOKMARKS_KEY = 'smarttest_reader_bookmarks_v1'
 const CHANGE_EVENT = 'reader:changed'
 
 export const DEFAULT_PREFS: ReaderPrefs = {
@@ -142,6 +143,21 @@ export function removeNote(slug: string, id: string) {
   const all = readJSON<Record<string, ReaderNote[]>>(NOTES_KEY, {})
   all[slug] = (all[slug] ?? []).filter((note) => note.id !== id)
   writeJSON(NOTES_KEY, all)
+}
+
+// ---------- bookmarks ----------
+export function getArticleBookmark(slug: string): boolean {
+  const bookmarks = readJSON<string[]>(BOOKMARKS_KEY, [])
+  return bookmarks.includes(slug)
+}
+
+export function toggleArticleBookmark(slug: string): boolean {
+  const bookmarks = readJSON<string[]>(BOOKMARKS_KEY, [])
+  const next = bookmarks.includes(slug)
+    ? bookmarks.filter((item) => item !== slug)
+    : [...bookmarks, slug]
+  writeJSON(BOOKMARKS_KEY, next)
+  return next.includes(slug)
 }
 
 export function subscribeReader(listener: () => void): () => void {

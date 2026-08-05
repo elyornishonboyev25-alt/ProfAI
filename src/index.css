@@ -20,6 +20,100 @@
   --app-duration: 260ms;
 }
 
+/* Article Reader — warm paper workspace inspired by a focused study desk. */
+.article-reader-glass {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(249, 242, 238, 0.56));
+  box-shadow:
+    0 20px 48px rgba(84, 53, 48, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.article-reader-glass::before,
+.article-reader-paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.54), transparent 34%);
+  pointer-events: none;
+}
+
+.article-reader-paper {
+  position: relative;
+  box-shadow:
+    0 28px 70px rgba(67, 42, 38, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 0 0 1px rgba(148, 163, 184, 0.12);
+}
+
+.article-reader-scroll {
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.65) transparent;
+}
+
+.article-reader-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.article-reader-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.article-reader-scroll::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.6);
+  background-clip: padding-box;
+}
+
+.article-reader-segmented,
+.article-reader-icon-button {
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow:
+    0 8px 18px rgba(71, 43, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.article-reader-icon-button {
+  box-shadow:
+    0 12px 24px rgba(220, 38, 38, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.article-sticky-note {
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(245, 238, 233, 0.88));
+  box-shadow: 0 15px 24px rgba(61, 38, 35, 0.14);
+  clip-path: polygon(0 0, 100% 0, 100% 84%, 86% 100%, 0 100%);
+}
+
+.article-note-pin {
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 15px;
+  height: 15px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fb7185, #b91c1c);
+  box-shadow: 0 5px 8px rgba(127, 29, 29, 0.3), inset 1px 1px 2px rgba(255, 255, 255, 0.55);
+}
+
+.article-reader-ai-orb {
+  border: 1px solid rgba(254, 202, 202, 0.9);
+  background: radial-gradient(circle at 35% 28%, #fff 0%, #fff1f2 42%, #fecdd3 100%);
+  box-shadow:
+    0 12px 24px rgba(220, 38, 38, 0.22),
+    inset 0 0 16px rgba(255, 255, 255, 0.9);
+}
+
 @layer base {
   html {
     font-size: 100%;

@@ -3014,7 +3014,38 @@ export default function IELTSReadingInterface({
         )
       })
 
-    const renderGrid = (block: Extract<ListeningBlock, { kind: 'grid' }>) => (
+    const renderGrid = (block: Extract<ListeningBlock, { kind: 'grid' }>) => {
+      if (block.inputMode) {
+        return (
+          <div className="my-3 space-y-3">
+            {block.rows.map((row) => {
+              const question = listeningQuestionByNumber.get(row.blank)
+              if (!question) return null
+              const globalIdx = getCurrentSectionGlobalIndex(question.id)
+              const isFlagged = flaggedQuestions.includes(globalIdx)
+              return (
+                <div key={row.blank} id={`question-card-${question.id}`} className="flex items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-3">
+                  <button
+                    type="button"
+                    onClick={() => handleFlagQuestion(globalIdx)}
+                    className={`rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
+                    aria-label={`Flag question ${row.blank}`}
+                  >
+                    <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
+                  </button>
+                  <p className="text-[15px] leading-snug text-slate-900">
+                    <span className="mr-2 font-black">{row.blank}.</span>{row.label}
+                  </p>
+                  {blankInput(row.blank, 'md')}
+                  {reviewHint(question, 'ml-auto')}
+                </div>
+              )
+            })}
+          </div>
+        )
+      }
+
+      return (
       <div className="my-2">
         <div className="overflow-x-auto rounded-xl border border-slate-300">
           <table className="w-full border-collapse text-left text-sm">
@@ -3120,7 +3151,8 @@ export default function IELTSReadingInterface({
           </div>
         ) : null}
       </div>
-    )
+      )
+    }
 
     const renderMcq = (block: Extract<ListeningBlock, { kind: 'mcq' }>) => {
       const question = listeningQuestionByNumber.get(block.blank)
@@ -3174,6 +3206,66 @@ export default function IELTSReadingInterface({
             })}
           </div>
           {reviewHint(question, 'mt-2 ml-8')}
+        </div>
+      )
+    }
+
+    const renderMultiMcq = (block: Extract<ListeningBlock, { kind: 'multi-mcq' }>) => {
+      const questions = block.blanks
+        .map((blank) => listeningQuestionByNumber.get(blank))
+        .filter((question): question is Question => Boolean(question))
+      if (questions.length === 0) return null
+      const selected = questions
+        .map((question) => answers[question.id])
+        .filter((answer): answer is string => typeof answer === 'string' && answer.length > 0)
+      const primaryQuestion = questions[0]
+      const primaryIndex = getCurrentSectionGlobalIndex(primaryQuestion.id)
+      const isFlagged = questions.some((question) => flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id)))
+      const toggleChoice = (letter: string) => {
+        const next = selected.includes(letter)
+          ? selected.filter((answer) => answer !== letter)
+          : [...selected, letter].slice(0, block.selectionLimit)
+        next.sort()
+        questions.forEach((question, index) => handleAnswerChange(question.id, next[index] ?? ''))
+      }
+
+      return (
+        <div id={`question-card-${primaryQuestion.id}`} className="mt-3 rounded-2xl border border-red-100 bg-white p-3">
+          <div className="mb-1 flex items-start gap-2.5">
+            <button
+              type="button"
+              onClick={() => handleFlagQuestion(primaryIndex)}
+              className={`mt-0.5 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
+              aria-label={`Flag questions ${block.blanks.join(' and ')}`}
+            >
+              <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
+            </button>
+            <p className="text-[15px] font-bold leading-relaxed text-slate-950">
+              <span className="mr-2 font-black">{block.blanks.join('–')}.</span>{block.prompt}
+            </p>
+          </div>
+          <p className="mb-2 pl-8 text-xs italic text-slate-500">Choose {block.selectionLimit} answers</p>
+          <div className="space-y-2 pl-8">
+            {block.options.map((option, index) => {
+              const letter = String.fromCharCode(65 + index)
+              const isSelected = selected.includes(letter)
+              return (
+                <button
+                  type="button"
+                  key={letter}
+                  disabled={isReviewMode}
+                  onClick={() => { if (!isReviewMode) toggleChoice(letter) }}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 ${
+                    isSelected ? 'border-red-300 bg-red-50 shadow-[0_10px_18px_rgba(220,38,38,0.14)]' : 'border-red-100 bg-white hover:border-red-300'
+                  }`}
+                >
+                  <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-black ${isSelected ? 'border-red-500 bg-red-500 text-white' : 'border-slate-300 text-slate-500'}`}>{letter}</span>
+                  <span className="text-[15px] text-slate-900">{option}</span>
+                </button>
+              )
+            })}
+          </div>
+          {questions.map((question) => reviewHint(question, 'mt-2 ml-8'))}
         </div>
       )
     }
@@ -3250,6 +3342,8 @@ export default function IELTSReadingInterface({
           return <div key={key}>{renderGrid(block)}</div>
         case 'mcq':
           return <div key={key}>{renderMcq(block)}</div>
+        case 'multi-mcq':
+          return <div key={key}>{renderMultiMcq(block)}</div>
         case 'table':
           return <div key={key}>{renderTable(block)}</div>
         case 'image':

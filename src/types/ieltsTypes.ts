@@ -43,8 +43,9 @@ export type ListeningBlock =
     | { kind: 'example'; segments: ListeningSegment[] } // italic "Example" line
     | { kind: 'note'; segments: ListeningSegment[]; bullet?: boolean; indent?: boolean }
     | { kind: 'flow'; boxes: { segments: ListeningSegment[] }[] } // vertical flow chart with arrows
-    | { kind: 'grid'; columns: string[]; rows: { blank: number; label: string }[]; options?: ListeningOption[] }
+    | { kind: 'grid'; columns: string[]; rows: { blank: number; label: string }[]; options?: ListeningOption[]; inputMode?: boolean }
     | { kind: 'mcq'; blank: number; prompt: string; options: string[] }
+    | { kind: 'multi-mcq'; blanks: number[]; prompt: string; options: string[]; selectionLimit: number }
     | { kind: 'table'; columns: string[]; rows: { segments: ListeningSegment[] }[][] }
     | { kind: 'image'; src: string; alt: string; caption?: string }
     | { kind: 'space' }

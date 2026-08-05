@@ -8,6 +8,7 @@ import {
   Captions,
   CaptionsOff,
   Check,
+  CheckCircle2,
   ChevronRight,
   Ear,
   Gauge,
@@ -31,16 +32,26 @@ import {
   RotateCw,
   Settings,
   Sparkles,
+  ShieldCheck,
   Timer,
   Trash2,
   Volume1,
   Volume2,
   VolumeX,
   X,
+  Youtube,
 } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { PODCAST_EPISODES, getPodcastEpisode, type PodcastEpisode } from '@/data/podcasts'
+import { ApiError } from '@/lib/apiClient'
+import {
+  getCommunityPodcast,
+  listCommunityPodcasts,
+  submitCommunityPodcast,
+  type CommunityPodcastDetail,
+  type CommunityPodcastSummary,
+} from '@/services/podcasts'
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function formatTime(seconds: number) {
@@ -73,6 +84,15 @@ type Prefs = {
 }
 
 const PREFS_KEY = 'smarttest-podcast-prefs'
+
+// These use the same subtitle-checked source as Shadowing Lab. They make a
+// submitted clip immediately useful as a listening episode, including a synced
+// transcript in the podcast player.
+const SUGGESTED_PODCASTS = [
+  { label: 'Everyday English', url: 'https://www.youtube.com/watch?v=P26AE7NLx4Q' },
+  { label: 'Inspiring 3-min talk', url: 'https://www.youtube.com/watch?v=mgmVOuLgFB0' },
+  { label: 'Steve Jobs — Stay Hungry', url: 'https://www.youtube.com/watch?v=UF8uR6Z6KLc' },
+]
 
 function loadPrefs(): Prefs {
   const fallback: Prefs = { speed: 1, volume: 100, captionsOn: true, captionSize: 0, theater: false }
@@ -122,6 +142,30 @@ function levelBadge(level: PodcastEpisode['level']) {
   return 'border-amber-200 bg-amber-50/95 text-amber-700'
 }
 
+function podcastLevel(level: string): PodcastEpisode['level'] {
+  return level === 'Beginner' || level === 'Advanced' ? level : 'Intermediate'
+}
+
+function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetail): PodcastEpisode {
+  return {
+    id: `community-${video.youtubeId}`,
+    slug: `community-${video.youtubeId}`,
+    title: video.title,
+    description: video.topic
+      ? `Community-added English listening practice about ${video.topic}. Use captions, speed control and A–B loops to master each part.`
+      : 'Community-added English listening practice. Use captions, speed control and A–B loops to master each part.',
+    youtubeId: video.youtubeId,
+    startSeconds: 0,
+    level: podcastLevel(video.level),
+    durationLabel: video.durationSec > 0 ? formatTime(video.durationSec) : 'Full episode',
+    topic: video.topic || 'English listening',
+    source: 'Community · YouTube',
+    transcript: 'segments' in video
+      ? video.segments.map((segment) => ({ start: segment.startSec, end: segment.endSec, text: segment.text }))
+      : undefined,
+  }
+}
+
 const LISTEN_STEPS = [
   { icon: Ear, title: 'Listen once', detail: 'Play through and catch the gist — no captions yet.' },
   { icon: Captions, title: 'Turn on CC', detail: 'Replay with English captions and read along.' },
@@ -152,7 +196,19 @@ export default function Podcast() {
   const { minimalMotion } = useMotionPreferences()
   const prefs0 = useRef<Prefs>(loadPrefs())
 
-  const episode = getPodcastEpisode()
+  const [communityVideos, setCommunityVideos] = useState<CommunityPodcastSummary[]>([])
+  const [selectedEpisode, setSelectedEpisode] = useState<PodcastEpisode | null>(null)
+  const [podcastUrl, setPodcastUrl] = useState('')
+  const [addingPodcast, setAddingPodcast] = useState(false)
+  const [podcastError, setPodcastError] = useState<string | null>(null)
+  const [podcastNotice, setPodcastNotice] = useState<string | null>(null)
+  const [openingPodcastId, setOpeningPodcastId] = useState<string | null>(null)
+
+  const episodes = useMemo(
+    () => [...PODCAST_EPISODES, ...communityVideos.map(communityPodcast)],
+    [communityVideos],
+  )
+  const episode = selectedEpisode ?? getPodcastEpisode()
 
   const playerRef = useRef<YTPlayer | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
@@ -220,6 +276,75 @@ export default function Podcast() {
   }, [])
 
   useEffect(() => {
+    let cancelled = false
+    void listCommunityPodcasts()
+      .then((videos) => {
+        if (!cancelled) setCommunityVideos(videos)
+      })
+      .catch(() => {
+        // The core podcast remains available if the community library is not
+        // reachable (for example, while signed out or offline).
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const addPodcast = useCallback(
+    async (rawUrl?: string) => {
+      const target = (rawUrl ?? podcastUrl).trim()
+      if (!target || addingPodcast) return
+
+      setAddingPodcast(true)
+      setPodcastError(null)
+      setPodcastNotice(null)
+      try {
+        const { video, created } = await submitCommunityPodcast(target)
+        const podcast = communityPodcast(video)
+        setCommunityVideos((current) => [
+          { ...video },
+          ...current.filter((item) => item.youtubeId !== video.youtubeId),
+        ])
+        setSelectedEpisode(podcast)
+        setPodcastUrl('')
+        setPodcastNotice(
+          created
+            ? 'Podcast added to the community library — ready to listen.'
+            : 'This podcast is already in the library — opening it now.',
+        )
+      } catch (error) {
+        setPodcastError(
+          error instanceof ApiError || error instanceof Error
+            ? error.message
+            : 'Something went wrong. Try another link.',
+        )
+      } finally {
+        setAddingPodcast(false)
+      }
+    },
+    [addingPodcast, podcastUrl],
+  )
+
+  const openEpisode = useCallback(async (item: PodcastEpisode) => {
+    if (!item.id.startsWith('community-')) {
+      setSelectedEpisode(item)
+      return
+    }
+
+    const youtubeId = item.youtubeId
+    setOpeningPodcastId(youtubeId)
+    setPodcastError(null)
+    try {
+      const video = await getCommunityPodcast(youtubeId)
+      setSelectedEpisode(communityPodcast(video))
+    } catch (error) {
+      setPodcastError(error instanceof Error ? error.message : 'Could not open this podcast.')
+    } finally {
+      setOpeningPodcastId(null)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!toast) return
     const handle = window.setTimeout(() => setToast(null), 1500)
     return () => window.clearTimeout(handle)
@@ -249,7 +374,16 @@ export default function Podcast() {
     let cancelled = false
     const saved = loadProgress(episode.id)
     progressRef.current = saved
+    setReady(false)
+    setStarted(false)
+    setEnded(false)
+    setPlaying(false)
+    setDuration(0)
+    setBuffered(0)
+    setCurrentTime(episode.startSeconds)
     setBookmarks(saved.bookmarks)
+    setLoopA(null)
+    setLoopB(null)
 
     void loadYouTubeApi().then(() => {
       if (cancelled || !containerRef.current || !window.YT) return
@@ -331,7 +465,8 @@ export default function Podcast() {
       }
       playerRef.current = null
     }
-    // Episode is fixed for this page instance; deps intentionally minimal.
+    // Rebuild when the listener changes episode; the player API has no safe
+    // way to swap the caption transcript and source as one atomic update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode.youtubeId, episode.startSeconds])
 
@@ -1265,10 +1400,89 @@ export default function Podcast() {
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
                 <ListMusic className="h-3.5 w-3.5" />
-                {PODCAST_EPISODES.length} episode{PODCAST_EPISODES.length === 1 ? '' : 's'}
+                {episodes.length} episode{episodes.length === 1 ? '' : 's'}
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Add a podcast — same checked, shared-link workflow as Shadowing Lab. */}
+        <section className="mt-6 rounded-[1.6rem] border border-white/90 bg-white/78 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-6">
+          <div className="flex items-center gap-2">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-lg font-black text-slate-950">Add a podcast to listen</h2>
+              <p className="text-xs text-slate-500">
+                English YouTube videos with subtitles only — we check the language and screen the content automatically.
+              </p>
+            </div>
+          </div>
+
+          <form
+            className="mt-4 flex flex-col gap-2 sm:flex-row"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void addPodcast()
+            }}
+          >
+            <div className="relative flex-1">
+              <Youtube className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+              <input
+                type="text"
+                value={podcastUrl}
+                onChange={(event) => setPodcastUrl(event.target.value)}
+                disabled={addingPodcast}
+                placeholder="Paste a YouTube link — youtube.com/watch?v=… or youtu.be/…"
+                className="w-full rounded-2xl border border-red-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200 disabled:opacity-60"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={addingPodcast || !podcastUrl.trim()}
+              className="cta-sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(220,38,38,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {addingPodcast ? 'Analyzing…' : 'Add & listen'}
+            </button>
+          </form>
+
+          {addingPodcast ? (
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2 text-xs font-semibold text-red-700">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Checking English captions and preparing your podcast transcript…
+            </div>
+          ) : null}
+          {podcastError ? (
+            <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{podcastError}</p>
+          ) : null}
+          {podcastNotice ? (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {podcastNotice}
+            </p>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Try:</span>
+            {SUGGESTED_PODCASTS.map((suggestion) => (
+              <button
+                key={suggestion.url}
+                type="button"
+                disabled={addingPodcast}
+                onClick={() => void addPodcast(suggestion.url)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+              >
+                <Sparkles className="h-3 w-3" />
+                {suggestion.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Only English, embeddable, appropriate videos with captions are accepted.
+          </p>
         </section>
 
         <div className={`mt-6 ${theater ? 'space-y-6' : 'grid gap-6 lg:grid-cols-[1.6fr_1fr]'}`}>
@@ -1436,14 +1650,17 @@ export default function Podcast() {
                 Episodes
               </h3>
               <div className="mt-3 space-y-2">
-                {PODCAST_EPISODES.map((item) => (
-                  <div
+                {episodes.map((item) => (
+                  <button
+                    type="button"
                     key={item.id}
+                    onClick={() => void openEpisode(item)}
+                    disabled={openingPodcastId === item.youtubeId}
                     className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-200 ${
                       item.id === episode.id
                         ? 'border-red-200 bg-red-50'
                         : 'border-slate-100 bg-white hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50'
-                    }`}
+                    } ${openingPodcastId === item.youtubeId ? 'cursor-wait opacity-70' : ''}`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
                       <Headphones className="h-4 w-4" />
@@ -1454,7 +1671,9 @@ export default function Podcast() {
                         {item.level} · {item.topic}
                       </p>
                     </div>
-                    {item.id === episode.id ? (
+                    {openingPodcastId === item.youtubeId ? (
+                      <Loader2 className="ml-auto h-4 w-4 animate-spin text-red-500" />
+                    ) : item.id === episode.id ? (
                       <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
                         {playing ? (
                           <span className="flex items-end gap-[2px]">
@@ -1466,10 +1685,10 @@ export default function Podcast() {
                         Now
                       </span>
                     ) : null}
-                  </div>
+                  </button>
                 ))}
-                <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-3 py-3 text-center text-xs font-medium text-slate-500">
-                  More episodes coming soon
+                <div className="rounded-xl border border-dashed border-red-200 bg-red-50/45 px-3 py-3 text-center text-xs font-medium text-slate-500">
+                  Add an English subtitled YouTube link above to grow this shared playlist.
                 </div>
               </div>
             </article>

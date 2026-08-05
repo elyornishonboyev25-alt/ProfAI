@@ -17,6 +17,7 @@ import profileRoutes from './routes/profile.routes.js'
 import leaderboardRoutes from './routes/leaderboard.routes.js'
 import plannerRoutes from './routes/planner.routes.js'
 import shadowingRoutes from './routes/shadowing.routes.js'
+import podcastsRoutes from './routes/podcasts.routes.js'
 import reviewsRoutes from './routes/reviews.routes.js'
 import sharedResultsRoutes from './routes/sharedResults.routes.js'
 import aiWorkspaceRoutes from './routes/aiWorkspace.routes.js'
@@ -59,6 +60,7 @@ app.use('/api/v1/profile', profileRoutes)
 app.use('/api/v1/leaderboard', leaderboardRoutes)
 app.use('/api/v1/planner', plannerRoutes)
 app.use('/api/v1/shadowing', shadowingRoutes)
+app.use('/api/v1/podcasts', podcastsRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)
 app.use('/api/v1/shared-results', sharedResultsRoutes)
 app.use('/api/v1/ai-workspace', aiWorkspaceRoutes)

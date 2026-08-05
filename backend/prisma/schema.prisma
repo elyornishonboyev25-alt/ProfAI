@@ -113,6 +113,7 @@ model User {
   speakingEvaluations SpeakingEvaluation[]
   speakingSessions SpeakingSession[]
   shadowingVideos ShadowingVideo[]   @relation("ShadowingSubmitter")
+  podcastVideos   PodcastVideo[]     @relation("PodcastSubmitter")
   createdTests   Test[]             @relation("TestAuthor")
   profile        UserProfile?
   skillBadges    SkillBadge[]
@@ -673,6 +674,46 @@ model ShadowingSegment {
   endSec     Float
   text       String
   video      ShadowingVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, orderIndex])
+  @@index([videoId, orderIndex])
+}
+
+// A shared listening-podcast library. Episodes use the same validated English
+// caption source as Shadowing, but remain independent from shadowing practice.
+model PodcastVideo {
+  id            String           @id @default(cuid())
+  youtubeId     String           @unique
+  title         String
+  author        String?
+  thumbnailUrl  String?
+  durationSec   Int              @default(0)
+  level         String           @default("Intermediate")
+  accent        String?
+  topic         String?
+  captionKind   String           @default("auto")
+  language      String           @default("en")
+  segmentCount  Int              @default(0)
+  wordCount     Int              @default(0)
+  playCount     Int              @default(0)
+  submittedById String?
+  submittedBy   User?            @relation("PodcastSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  segments      PodcastSegment[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([createdAt])
+  @@index([level])
+}
+
+model PodcastSegment {
+  id         String       @id @default(cuid())
+  videoId    String
+  orderIndex Int
+  startSec   Float
+  endSec     Float
+  text       String
+  video      PodcastVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@unique([videoId, orderIndex])
   @@index([videoId, orderIndex])

@@ -1,6 +1,7 @@
 import type { Article, ArticleCategory, ArticleCoverTheme } from './types'
 import { fiveBooksArticle } from './a001-five-books'
 import { birthOfTheUniverseArticle } from './a002-birth-of-the-universe'
+import { theLostArticle } from './a003-the-lost'
 
 export type { Article, ArticleBlock, ArticleVocabEntry, ArticleCategory, ArticleCover, ArticleCoverTheme } from './types'
 
@@ -10,6 +11,7 @@ export type { Article, ArticleBlock, ArticleVocabEntry, ArticleCategory, Article
 export const articles: Article[] = [
   fiveBooksArticle,
   birthOfTheUniverseArticle,
+  theLostArticle,
 ]
 
 // How many article slots the hub is designed to grow into.

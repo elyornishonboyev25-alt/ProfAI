@@ -30,16 +30,15 @@ const UNIVERSITY_HUBS = [
   { name: 'Singapore', coordinate: [103.78, 1.3] as Coordinate },
 ]
 
-const WIDTH = 600
-const HEIGHT = 530
-const CENTER_X = 300
-const CENTER_Y = 250
-const MAP_X = 1.22
-const MAP_Y = 1.93
+const WIDTH = 640
+const HEIGHT = 650
+const CENTER_X = 320
+const CENTER_Y = 292
+const GLOBE_RADIUS = 258
+const MAP_X = 1.38
+const MAP_Y = 2.12
 
 function project([longitude, latitude]: Coordinate) {
-  // Compress longitudes toward the poles so every real coordinate remains
-  // inside the spherical silhouette while preserving its geographic position.
   const polarCompression = Math.cos((latitude * Math.PI / 180) * 0.6)
   return {
     x: CENTER_X + longitude * MAP_X * polarCompression,
@@ -59,7 +58,7 @@ function routePath(from: Coordinate, to: Coordinate) {
   const end = project(to)
   const midX = (start.x + end.x) / 2
   const distance = Math.hypot(end.x - start.x, end.y - start.y)
-  const midY = (start.y + end.y) / 2 - Math.min(76, 24 + distance * 0.12)
+  const midY = (start.y + end.y) / 2 - Math.min(92, 32 + distance * 0.14)
   return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} Q ${midX.toFixed(1)} ${midY.toFixed(1)} ${end.x.toFixed(1)} ${end.y.toFixed(1)}`
 }
 
@@ -69,9 +68,7 @@ export default function UniversityGlobe({
   locationError,
   onRequestPreciseLocation,
 }: UniversityGlobeProps) {
-  const origin: Coordinate = location
-    ? [location.longitude, location.latitude]
-    : [69.2401, 41.2995]
+  const origin: Coordinate = location ? [location.longitude, location.latitude] : [69.2401, 41.2995]
   const marker = project(origin)
   const locationLabel = location?.country ?? (isLocating ? 'Finding your country…' : 'Location unavailable')
   const flag = location ? getCountryFlag(location.countryCode) : '🌍'
@@ -79,19 +76,21 @@ export default function UniversityGlobe({
     ? 'Precise device location'
     : location?.precision === 'network'
       ? 'Approximate network location'
-      : 'Use the location button'
+      : 'Use the target button'
+  const countryFontSize = locationLabel.length > 20 ? 21 : locationLabel.length > 14 ? 25 : 30
 
   return (
     <motion.div
       className="university-globe-card"
-      initial={{ opacity: 0, scale: 0.88, rotate: -7, x: 28 }}
+      initial={{ opacity: 0, scale: 0.84, rotate: -8, x: -44 }}
       animate={{ opacity: 1, scale: 1, rotate: 0, x: 0 }}
-      transition={{ duration: 1.15, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 1.25, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="university-globe-kicker">
         <Navigation className="h-3.5 w-3.5" />
-        Your global starting point
+        From your country to the world
       </div>
+      <span className="university-globe-red-haze" aria-hidden="true" />
 
       <svg
         className="university-globe-svg"
@@ -100,92 +99,119 @@ export default function UniversityGlobe({
         aria-label={`Animated university destinations from ${locationLabel}`}
       >
         <defs>
-          <radialGradient id="globeSurface" cx="36%" cy="25%" r="76%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
-            <stop offset="48%" stopColor="#eef6fb" stopOpacity="0.87" />
-            <stop offset="82%" stopColor="#cedde8" stopOpacity="0.76" />
-            <stop offset="100%" stopColor="#aebfcd" stopOpacity="0.7" />
+          <radialGradient id="globeSurface" cx="34%" cy="22%" r="78%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.96" />
+            <stop offset="42%" stopColor="#f5fbff" stopOpacity="0.74" />
+            <stop offset="76%" stopColor="#d9e7f0" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#a9bdcc" stopOpacity="0.7" />
           </radialGradient>
           <linearGradient id="landGlass" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#eff7fc" />
-            <stop offset="100%" stopColor="#aebfcd" />
+            <stop offset="0%" stopColor="#f8fcff" stopOpacity="0.72" />
+            <stop offset="55%" stopColor="#d4e2ec" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#9eb2c2" stopOpacity="0.68" />
           </linearGradient>
           <linearGradient id="routeRed" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#fb7185" stopOpacity="0.45" />
-            <stop offset="45%" stopColor="#ef4444" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.5" />
+            <stop offset="0%" stopColor="#fb7185" stopOpacity="0.46" />
+            <stop offset="45%" stopColor="#ef4444" stopOpacity="0.98" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.62" />
           </linearGradient>
-          <filter id="globeShadow" x="-30%" y="-30%" width="160%" height="180%">
-            <feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#881337" floodOpacity="0.18" />
+          <linearGradient id="pinRed" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fb7185" />
+            <stop offset="42%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+          <filter id="globeShadow" x="-35%" y="-35%" width="170%" height="190%">
+            <feDropShadow dx="0" dy="24" stdDeviation="22" floodColor="#64748b" floodOpacity="0.2" />
           </filter>
-          <filter id="pinGlow" x="-120%" y="-120%" width="340%" height="340%">
-            <feDropShadow dx="0" dy="5" stdDeviation="7" floodColor="#ef4444" floodOpacity="0.72" />
+          <filter id="landEmboss" x="-20%" y="-20%" width="140%" height="150%">
+            <feDropShadow dx="0" dy="3" stdDeviation="2.2" floodColor="#64748b" floodOpacity="0.32" />
+            <feDropShadow dx="-1" dy="-2" stdDeviation="1.2" floodColor="#ffffff" floodOpacity="0.9" />
+          </filter>
+          <filter id="pinGlow" x="-150%" y="-150%" width="400%" height="400%">
+            <feDropShadow dx="0" dy="8" stdDeviation="9" floodColor="#ef4444" floodOpacity="0.68" />
           </filter>
           <clipPath id="globeClip">
-            <circle cx={CENTER_X} cy={CENTER_Y} r="226" />
+            <circle cx={CENTER_X} cy={CENTER_Y} r={GLOBE_RADIUS} />
           </clipPath>
         </defs>
 
-        <ellipse cx="300" cy="477" rx="166" ry="19" fill="#be123c" opacity="0.09" />
+        <ellipse cx={CENTER_X} cy="574" rx="205" ry="24" fill="#64748b" opacity="0.1" />
         <g filter="url(#globeShadow)" className="university-globe-drift">
-          <circle cx={CENTER_X} cy={CENTER_Y} r="226" fill="url(#globeSurface)" stroke="#dbe7ef" strokeWidth="2" />
+          <circle cx={CENTER_X} cy={CENTER_Y} r={GLOBE_RADIUS} fill="url(#globeSurface)" stroke="#c8d8e4" strokeWidth="2.2" />
           <g clipPath="url(#globeClip)">
-            <ellipse cx="190" cy="111" rx="195" ry="74" fill="#fff" opacity="0.38" transform="rotate(-15 190 111)" />
+            <circle cx={CENTER_X} cy={CENTER_Y} r={GLOBE_RADIUS} fill="#fff" opacity="0.08" />
+            <ellipse cx="205" cy="122" rx="230" ry="86" fill="#fff" opacity="0.44" transform="rotate(-16 205 122)" />
+            <ellipse cx="485" cy="415" rx="135" ry="195" fill="#94a3b8" opacity="0.08" transform="rotate(-22 485 415)" />
 
-            <g className="university-globe-grid" fill="none" stroke="#9db2c2" strokeWidth="1">
-              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="226" ry="70" />
-              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="226" ry="142" />
-              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="80" ry="226" />
-              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="158" ry="226" />
-              <path d="M74 250 H526" />
+            <g className="university-globe-grid" fill="none" stroke="#91a7b8" strokeWidth="1">
+              <ellipse cx={CENTER_X} cy={CENTER_Y} rx={GLOBE_RADIUS} ry="82" />
+              <ellipse cx={CENTER_X} cy={CENTER_Y} rx={GLOBE_RADIUS} ry="164" />
+              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="90" ry={GLOBE_RADIUS} />
+              <ellipse cx={CENTER_X} cy={CENTER_Y} rx="180" ry={GLOBE_RADIUS} />
+              <path d={`M${CENTER_X - GLOBE_RADIUS} ${CENTER_Y} H${CENTER_X + GLOBE_RADIUS}`} />
             </g>
 
-            <g className="university-globe-land">
+            <g className="university-globe-land" filter="url(#landEmboss)">
               {LAND_MASSES.map((mass, index) => (
-                <path key={index} d={landPath(mass)} fill="url(#landGlass)" stroke="#8ca3b5" strokeWidth="1.7" strokeLinejoin="round" />
+                <path key={index} d={landPath(mass)} fill="url(#landGlass)" stroke="#8fa6b8" strokeWidth="1.9" strokeLinejoin="round" />
               ))}
             </g>
 
             {location && (
               <g className="university-route-layer">
-                {UNIVERSITY_HUBS.map((hub, index) => {
-                  const endpoint = project(hub.coordinate)
-                  return (
-                    <g key={hub.name}>
-                      <path
-                        d={routePath(origin, hub.coordinate)}
-                        className="university-route"
-                        style={{ animationDelay: `${0.42 + index * 0.24}s, ${1.8 + index * 0.24}s` }}
-                      />
-                      <circle cx={endpoint.x} cy={endpoint.y} r="4" fill="#fff" stroke="#ef4444" strokeWidth="2" />
-                      <circle cx={endpoint.x} cy={endpoint.y} r="9" fill="none" stroke="#fb7185" opacity="0.34" className="university-hub-pulse" style={{ animationDelay: `${index * 0.45}s` }} />
-                    </g>
-                  )
-                })}
+                {UNIVERSITY_HUBS.map((hub, index) => (
+                  <path
+                    key={hub.name}
+                    d={routePath(origin, hub.coordinate)}
+                    className="university-route"
+                    style={{ animationDelay: `${0.4 + index * 0.22}s, ${1.8 + index * 0.22}s` }}
+                  />
+                ))}
               </g>
             )}
           </g>
 
+          {UNIVERSITY_HUBS.map((hub, index) => {
+            const endpoint = project(hub.coordinate)
+            return (
+              <g key={hub.name} transform={`translate(${endpoint.x} ${endpoint.y})`} filter="url(#pinGlow)">
+                <circle r="14" fill="#ef4444" opacity="0.2" className="university-hub-pulse" style={{ animationDelay: `${index * 0.45}s` }} />
+                <g className="university-destination-pin" style={{ animationDelay: `${index * 0.32}s` }}>
+                  <path d="M0 15 C-15 -4 -18 -15 -18 -25 A18 18 0 1 1 18 -25 C18 -15 15 -4 0 15Z" fill="url(#pinRed)" stroke="#fecaca" strokeWidth="2.5" />
+                  <circle cy="-25" r="7" fill="#fff" opacity="0.94" />
+                  <ellipse cy="-31" rx="8" ry="4" fill="#fff" opacity="0.34" />
+                </g>
+              </g>
+            )
+          })}
+
           {location && (
             <g transform={`translate(${marker.x} ${marker.y})`} filter="url(#pinGlow)">
-              <g className="university-origin-marker">
-                <circle r="15" fill="#ef4444" opacity="0.16" className="university-origin-radar" />
-                <path d="M0 7 C-10 -5 -12 -12 -12 -18 A12 12 0 1 1 12 -18 C12 -12 10 -5 0 7Z" fill="#dc2626" stroke="#fff" strokeWidth="2" />
-                <circle cy="-18" r="4.5" fill="#fff" />
-              </g>
+              <circle r="12" fill="#ef4444" opacity="0.2" className="university-origin-radar" />
+              <circle r="6.5" fill="#ef4444" stroke="#fff" strokeWidth="2.5" />
             </g>
           )}
-          <circle cx={CENTER_X} cy={CENTER_Y} r="225" fill="none" stroke="#fff" strokeWidth="3" opacity="0.72" />
+
+          <g className="university-country-name" aria-hidden="true">
+            <text x={CENTER_X} y={CENTER_Y + 112} textAnchor="middle" style={{ fontSize: countryFontSize }}>
+              {locationLabel}
+            </text>
+            {location?.city && (
+              <text x={CENTER_X} y={CENTER_Y + 138} textAnchor="middle" className="university-country-city">
+                {location.city}
+              </text>
+            )}
+          </g>
+          <circle cx={CENTER_X} cy={CENTER_Y} r={GLOBE_RADIUS - 1} fill="none" stroke="#fff" strokeWidth="4" opacity="0.66" />
         </g>
       </svg>
 
       <div className="university-location-panel" aria-live="polite">
         <div className="university-location-icon" aria-hidden="true">{flag}</div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-red-500">
-            {isLocating ? 'Locating…' : 'Your country'}
+          <p className="truncate text-[9px] font-bold uppercase tracking-[0.16em] text-red-500">
+            {isLocating ? 'Locating…' : 'Your location'}
           </p>
-          <p className="truncate text-base font-black tracking-tight text-slate-900">{locationLabel}</p>
           <p className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-slate-500">
             <MapPin className="h-3 w-3 shrink-0 text-red-500" />
             {location?.city ? `${location.city} · ` : ''}{precisionLabel}
@@ -202,7 +228,7 @@ export default function UniversityGlobe({
           <LocateFixed className={`h-4 w-4 ${isLocating ? 'animate-pulse' : ''}`} />
         </button>
       </div>
-      {locationError && <p className="university-location-note">{locationError} The current map location is unchanged.</p>}
+      {locationError && <p className="university-location-note">{locationError}</p>}
     </motion.div>
   )
 }

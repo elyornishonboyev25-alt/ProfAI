@@ -32,33 +32,38 @@ export default function AdmissionUniversities() {
   }, [all, query])
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <AmbientBackdrop variant="red" />
+    <div className="workspace-page admission-universities-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="admission-universities-blur-field" aria-hidden="true">
+        <span className="admission-blur-glow admission-blur-glow-left" />
+        <span className="admission-blur-glow admission-blur-glow-right" />
+      </div>
+      <AmbientBackdrop variant="red" grid={false} className="admission-universities-ambient" />
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-6">
+      <div className="relative mx-auto w-full max-w-[90rem] space-y-6">
         <Reveal>
-          <section className="premium-hero admission-universities-hero p-6 sm:p-9">
-            <div className="relative z-10 grid items-center gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.72fr)] lg:gap-5">
-              <div className="min-w-0">
-                <div className="premium-top-controls">
-                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Dashboard
-                  </button>
-                  <span className="premium-top-chip">
-                    <Trophy className="h-3.5 w-3.5" />
-                    {QS_EDITION}
-                  </span>
+          <section className="premium-hero admission-universities-hero p-6 sm:p-8">
+            <div className="relative z-10">
+              <div className="premium-top-controls">
+                <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to Dashboard
+                </button>
+                <span className="premium-top-chip">
+                  <Trophy className="h-3.5 w-3.5" />
+                  {QS_EDITION}
+                </span>
+              </div>
+              <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h1 className="premium-section-title">
+                    World University <span className="arena-title-accent-red">Rankings</span>
+                  </h1>
+                  <p className="premium-section-subtitle max-w-3xl">
+                    Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
+                    selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
+                  </p>
                 </div>
-                <h1 className="premium-section-title mt-4">
-                  World University <span className="arena-title-accent-red">Rankings</span>
-                </h1>
-                <p className="premium-section-subtitle max-w-3xl">
-                  Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
-                  selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
-                </p>
-
-                <div className="relative mt-5 w-full sm:w-80">
+                <div className="relative w-full shrink-0 sm:w-80">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     value={query}
@@ -68,25 +73,27 @@ export default function AdmissionUniversities() {
                   />
                 </div>
               </div>
-
-              <div className="min-w-0 lg:-my-5 lg:-mr-3">
-                <UniversityGlobe
-                  location={location}
-                  isLocating={isLocating}
-                  locationError={locationError}
-                  onRequestPreciseLocation={requestPreciseLocation}
-                />
-              </div>
             </div>
           </section>
         </Reveal>
 
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-red-100 bg-white p-10 text-center text-slate-500">
-            No universities match your search.
-          </div>
-        ) : (
-          <Stagger key={query} className="space-y-3.5">
+        <div className="admission-universities-layout">
+          <aside className="admission-universities-globe-column">
+            <UniversityGlobe
+              location={location}
+              isLocating={isLocating}
+              locationError={locationError}
+              onRequestPreciseLocation={requestPreciseLocation}
+            />
+          </aside>
+
+          <div className="min-w-0">
+            {filtered.length === 0 ? (
+              <div className="rounded-2xl border border-red-100 bg-white p-10 text-center text-slate-500">
+                No universities match your search.
+              </div>
+            ) : (
+              <Stagger key={query} className="space-y-3.5">
             {filtered.map((u) => {
               const rowMetrics = ROW_KEYS.map((key) => ({
                 label: indicatorOrder.find((m) => m.key === key)?.short ?? key,
@@ -179,8 +186,10 @@ export default function AdmissionUniversities() {
                 </StaggerItem>
               )
             })}
-          </Stagger>
-        )}
+              </Stagger>
+            )}
+          </div>
+        </div>
 
         <Reveal delay={0.05}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">

@@ -1,12 +1,13 @@
 import type { AdmissionRequirement, CostOfLiving, University } from './types'
 import { qsTop50Additions } from './qsTop50Universities'
+import { QS_2027_RANKINGS, QS_2027_TOP_50_IDS } from './qs2027Rankings'
 
-// Rankings are QS World University Rankings 2026. Detailed admissions policies
+// Rankings are QS World University Rankings 2027. Detailed admissions policies
 // were rechecked against university sources on 5 August 2026; the top-50 additions
 // and their official source links were checked on 6 August 2026. A numeric
 // comparison is provided only when the university itself publishes a minimum or
 // clearly-labelled competitive score.
-export const QS_EDITION = 'QS World University Rankings 2026'
+export const QS_EDITION = 'QS World University Rankings 2027'
 
 const verifiedAt = '2026-08-05'
 
@@ -18,7 +19,7 @@ function livingCost(details: Omit<CostOfLiving, 'verifiedAt'>): CostOfLiving {
   return { ...details, verifiedAt }
 }
 
-export const universities: University[] = [
+const universityProfiles: University[] = [
   {
     id: 'mit', slug: 'mit', rank: 1, name: 'Massachusetts Institute of Technology (MIT)', shortName: 'MIT',
     city: 'Cambridge', country: 'United States', countryEmoji: '🇺🇸', overallScore: 100,
@@ -318,3 +319,26 @@ export const universities: University[] = [
     sources: [{ label: 'Official fall 2026 bachelor admissions', url: 'https://www.newuu.uz/en/undergraduate-admissions' }, { label: 'Official international entry requirements', url: 'https://www.newuu.uz/en/menu/entry-requirements' }],
   },
 ]
+
+export const universities: University[] = universityProfiles.map((university) => {
+  const ranking = QS_2027_RANKINGS[university.id]
+  const groups: NonNullable<University['groups']> = (university.groups ?? []).filter(
+    (group) => group !== 'qs-top-50',
+  )
+  if (QS_2027_TOP_50_IDS.has(university.id)) groups.unshift('qs-top-50')
+
+  return {
+    ...university,
+    ...(ranking
+      ? {
+          rank: ranking.rank,
+          rankTied: ranking.rankTied ?? false,
+          overallScore: ranking.overallScore,
+          // The previous indicator breakdown belonged to the 2026 edition.
+          // Hide it until QS 2027 indicator values are verified independently.
+          indicators: {},
+        }
+      : {}),
+    groups,
+  }
+})

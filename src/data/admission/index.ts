@@ -1,5 +1,6 @@
 import type { University, QSIndicators, AdmissionLesson, LessonPhase } from './types'
 import { universities, QS_EDITION } from './universities'
+import { QS_2027_TOP_50_IDS } from './qs2027Rankings'
 import { lessons, lessonPhases } from './lessons'
 
 export type {
@@ -36,8 +37,26 @@ function validateUniversityCatalog() {
   }
 
   const top50 = universities.filter((university) => university.groups?.includes('qs-top-50'))
-  if (top50.length !== 50 || top50.some((university) => typeof university.rank !== 'number' || university.rank > 50)) {
-    throw new Error('QS 2026 top-50 catalog must contain exactly 50 ranked universities')
+  if (
+    QS_2027_TOP_50_IDS.size !== 50 ||
+    top50.length !== 50 ||
+    top50.some(
+      (university) =>
+        !QS_2027_TOP_50_IDS.has(university.id) ||
+        typeof university.rank !== 'number' ||
+        university.rank > 50 ||
+        typeof university.overallScore !== 'number',
+    )
+  ) {
+    throw new Error('QS 2027 top-50 catalog must contain exactly 50 ranked universities')
+  }
+
+  const rankCounts = new Map<number, number>()
+  for (const university of top50) {
+    rankCounts.set(university.rank!, (rankCounts.get(university.rank!) ?? 0) + 1)
+  }
+  if (top50.some((university) => university.rankTied !== ((rankCounts.get(university.rank!) ?? 0) > 1))) {
+    throw new Error('QS 2027 tied-rank markers do not match the catalog positions')
   }
 }
 
@@ -45,7 +64,7 @@ validateUniversityCatalog()
 
 /* ------------------------------------------------------------------ */
 /*  University access — the single seam the whole hub reads through.    */
-/*  Today it returns the local QS 2026 dataset. To wire a live backend  */
+/*  Today it returns the local QS 2027 dataset. To wire a live backend  */
 /*  sync later, this is the only function that needs to change.         */
 /* ------------------------------------------------------------------ */
 

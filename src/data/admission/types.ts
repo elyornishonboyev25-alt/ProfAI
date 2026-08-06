@@ -87,7 +87,7 @@ export type UniversityBrand = {
 export type University = {
   id: string
   slug: string
-  rank?: number // QS World University Rankings 2026 position, when ranked
+  rank?: number // QS World University Rankings 2027 position, when ranked
   rankTied?: boolean
   name: string
   shortName: string

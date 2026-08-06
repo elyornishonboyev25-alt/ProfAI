@@ -56,7 +56,7 @@ function top50University({ admissionsUrl, qsProfileUrl, ...university }: CoreUni
 }
 
 // Universities missing from the original catalog that complete the official
-// QS World University Rankings 2026 top 50. Existing top-10 and Ivy League
+// QS World University Rankings 2027 top 50. Existing top-ranked and Ivy League
 // records stay in universities.ts so their richer verified profiles are kept.
 export const qsTop50Additions: University[] = [
   top50University({
@@ -350,14 +350,14 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/hong-kong-university-science-technology',
   }),
   top50University({
-    id: 'university-of-michigan', slug: 'university-of-michigan-ann-arbor', rank: 45,
-    name: 'University of Michigan-Ann Arbor', shortName: 'Michigan', city: 'Ann Arbor', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Public research university', founded: 1817, website: 'https://umich.edu',
-    tagline: 'Michigan’s flagship public research university, based in Ann Arbor.',
-    about: 'The University of Michigan was founded in Detroit in 1817 and moved to Ann Arbor in 1837. Its Ann Arbor campus includes undergraduate, graduate and professional schools across a wide range of disciplines.',
-    brand: { monogram: 'UM', gradient: 'linear-gradient(150deg,#00162c,#00274c 60%,#ffcb05)', accent: '#00274C', ink: '#ffffff' },
-    admissionsUrl: 'https://admissions.umich.edu/apply/international-applicants',
-    qsProfileUrl: 'https://www.topuniversities.com/universities/university-michigan-ann-arbor',
+    id: 'hong-kong-polytechnic-university', slug: 'hong-kong-polytechnic-university', rank: 50,
+    name: 'The Hong Kong Polytechnic University', shortName: 'PolyU', city: 'Hong Kong', country: 'Hong Kong SAR', countryEmoji: '🇭🇰',
+    type: 'Public research university', founded: 1937, website: 'https://www.polyu.edu.hk',
+    tagline: 'A public research university in Hong Kong with an applied education and innovation focus.',
+    about: 'The Hong Kong Polytechnic University traces its history to 1937 and became a university in 1994. Its Hung Hom campus supports education and research across business, construction and environment, engineering, health and social sciences, humanities, design, fashion and hospitality.',
+    brand: { monogram: 'PolyU', gradient: 'linear-gradient(150deg,#39050d,#a6192e 60%,#dc5666)', accent: '#A6192E', ink: '#ffffff' },
+    admissionsUrl: 'https://www.polyu.edu.hk/study/ug/admissions/international-qualifications/',
+    qsProfileUrl: 'https://www.topuniversities.com/universities/hong-kong-polytechnic-university',
   }),
   top50University({
     id: 'ucla', slug: 'university-of-california-los-angeles', rank: 46,

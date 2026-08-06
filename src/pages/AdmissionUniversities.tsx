@@ -59,7 +59,7 @@ export default function AdmissionUniversities() {
                     World University <span className="arena-title-accent-red">Rankings</span>
                   </h1>
                   <p className="premium-section-subtitle max-w-3xl">
-                    Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
+                    Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2027 top {QS_TOP_50_COUNT}, every Ivy League university, and
                     selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
                   </p>
                 </div>

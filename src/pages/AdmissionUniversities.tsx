@@ -4,8 +4,10 @@ import { ArrowLeft, ArrowRight, MapPin, Search, Sparkles, Trophy } from 'lucide-
 import { AmbientBackdrop, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
+import UniversityGlobe from '@/components/admission/UniversityGlobe'
 import { getUniversities, indicatorOrder, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
+import { useVisitorLocation } from '@/hooks/useVisitorLocation'
 
 // The two headline indicators QS prints under each ranking row.
 const ROW_KEYS = ['citationsPerFaculty', 'academicReputation'] as const
@@ -15,6 +17,7 @@ export default function AdmissionUniversities() {
   const [query, setQuery] = useState('')
   const all = getUniversities()
   const { scores } = useAdmissionScores()
+  const { location, isLocating, locationError, requestPreciseLocation } = useVisitorLocation()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -34,33 +37,46 @@ export default function AdmissionUniversities() {
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <Reveal>
-          <section className="premium-hero p-6 sm:p-9">
-            <div className="premium-top-controls">
-              <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Dashboard
-              </button>
-              <span className="premium-top-chip">
-                <Trophy className="h-3.5 w-3.5" />
-                {QS_EDITION}
-              </span>
-            </div>
-            <h1 className="premium-section-title mt-4">
-              World University <span className="arena-title-accent-red">Rankings</span>
-            </h1>
-            <p className="premium-section-subtitle max-w-3xl">
-              Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
-              selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
-            </p>
+          <section className="premium-hero admission-universities-hero p-6 sm:p-9">
+            <div className="relative z-10 grid items-center gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.72fr)] lg:gap-5">
+              <div className="min-w-0">
+                <div className="premium-top-controls">
+                  <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back to Dashboard
+                  </button>
+                  <span className="premium-top-chip">
+                    <Trophy className="h-3.5 w-3.5" />
+                    {QS_EDITION}
+                  </span>
+                </div>
+                <h1 className="premium-section-title mt-4">
+                  World University <span className="arena-title-accent-red">Rankings</span>
+                </h1>
+                <p className="premium-section-subtitle max-w-3xl">
+                  Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
+                  selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
+                </p>
 
-            <div className="relative mt-5 w-full sm:w-80">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name or country…"
-                className="h-11 w-full rounded-xl border border-red-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-              />
+                <div className="relative mt-5 w-full sm:w-80">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search by name or country…"
+                    className="h-11 w-full rounded-xl border border-red-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  />
+                </div>
+              </div>
+
+              <div className="min-w-0 lg:-my-5 lg:-mr-3">
+                <UniversityGlobe
+                  location={location}
+                  isLocating={isLocating}
+                  locationError={locationError}
+                  onRequestPreciseLocation={requestPreciseLocation}
+                />
+              </div>
             </div>
           </section>
         </Reveal>

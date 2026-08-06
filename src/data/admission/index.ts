@@ -22,6 +22,26 @@ export { lessons, lessonPhases } from './lessons'
 
 export const LESSON_COUNT = lessons.length
 export const UNIVERSITY_COUNT = universities.length
+export const QS_TOP_50_COUNT = universities.filter((university) => university.groups?.includes('qs-top-50')).length
+
+function validateUniversityCatalog() {
+  const ids = new Set<string>()
+  const slugs = new Set<string>()
+
+  for (const university of universities) {
+    if (ids.has(university.id)) throw new Error(`Duplicate university id: ${university.id}`)
+    if (slugs.has(university.slug)) throw new Error(`Duplicate university slug: ${university.slug}`)
+    ids.add(university.id)
+    slugs.add(university.slug)
+  }
+
+  const top50 = universities.filter((university) => university.groups?.includes('qs-top-50'))
+  if (top50.length !== 50 || top50.some((university) => typeof university.rank !== 'number' || university.rank > 50)) {
+    throw new Error('QS 2026 top-50 catalog must contain exactly 50 ranked universities')
+  }
+}
+
+validateUniversityCatalog()
 
 /* ------------------------------------------------------------------ */
 /*  University access — the single seam the whole hub reads through.    */

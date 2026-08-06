@@ -444,7 +444,7 @@ export default function AdmissionUniversity() {
         <Reveal delay={0.04}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Rankings from {QS_EDITION}; admissions and student costs from official university sources.
+            Rankings from {QS_EDITION}; available admissions and student costs from official university sources.
           </p>
         </Reveal>
       </div>

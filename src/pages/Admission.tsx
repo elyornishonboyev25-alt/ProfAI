@@ -208,8 +208,8 @@ export default function Admission() {
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Universities</h2>
                 <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore the world’s leading universities with verified QS rankings, overall scores and full indicator
-                  breakdowns — admissions, costs, student data and campus details, all in one professional profile.
+                  Explore the complete QS 2026 global top 50 with verified ranks, university facts and official source
+                  links. Published indicators, admissions and costs are shown only where they can be verified.
                 </p>
 
                 <div className="relative mt-5 space-y-2">

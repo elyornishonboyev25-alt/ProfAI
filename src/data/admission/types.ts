@@ -10,8 +10,8 @@
 
 // QS World University Rankings indicators. Every value is 0–100 as published by QS.
 // Fields are optional so a university only shows the indicators we can verify — we
-// never invent a score. MIT carries the full set (taken from the official profile);
-// the rest carry the six core indicators QS prints on the ranking row.
+// never invent a score. Profiles without a verified public indicator breakdown keep
+// these fields empty and the UI explains that the breakdown is not included.
 export type QSIndicators = {
   academicReputation?: number
   employerReputation?: number
@@ -116,7 +116,7 @@ export type University = {
     verifiedAt?: string
   }
   campus?: Campus
-  groups?: ('qs-top-10' | 'ivy-league' | 'uzbekistan')[]
+  groups?: ('qs-top-50' | 'ivy-league' | 'uzbekistan')[]
   sources?: UniversitySource[]
   // Years the university held its current rank (or #1) — drawn as a stability timeline.
   rankHistory?: { year: number; rank: number }[]

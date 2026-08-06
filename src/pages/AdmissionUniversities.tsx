@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, MapPin, Search, Sparkles, Trophy } from 'lucide-
 import { AmbientBackdrop, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
-import { getUniversities, indicatorOrder, QS_EDITION, UNIVERSITY_COUNT } from '@/data/admission'
+import { getUniversities, indicatorOrder, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 
 // The two headline indicators QS prints under each ranking row.
@@ -49,7 +49,7 @@ export default function AdmissionUniversities() {
               World University <span className="arena-title-accent-red">Rankings</span>
             </h1>
             <p className="premium-section-subtitle max-w-3xl">
-              Explore {UNIVERSITY_COUNT} verified profiles: the QS 2026 top 10, every Ivy League university, and
+              Explore {UNIVERSITY_COUNT} verified profiles: the complete QS 2026 top {QS_TOP_50_COUNT}, every Ivy League university, and
               selected universities in Uzbekistan. Admission policies link directly to each university’s official website.
             </p>
 
@@ -125,7 +125,7 @@ export default function AdmissionUniversities() {
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {u.groups?.map((group) => (
                             <span key={group} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">
-                              {group === 'qs-top-10' ? 'QS Top 10' : group === 'ivy-league' ? 'Ivy League' : 'Uzbekistan'}
+                              {group === 'qs-top-50' ? 'QS Top 50' : group === 'ivy-league' ? 'Ivy League' : 'Uzbekistan'}
                             </span>
                           ))}
                         </div>
@@ -169,7 +169,7 @@ export default function AdmissionUniversities() {
         <Reveal delay={0.05}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Rankings: {QS_EDITION}. Admissions: official university sources, verified 5 August 2026.
+            Rankings: {QS_EDITION}. Catalog and official source links verified 6 August 2026.
           </p>
         </Reveal>
       </div>

@@ -1,9 +1,11 @@
 import type { AdmissionRequirement, CostOfLiving, University } from './types'
+import { qsTop50Additions } from './qsTop50Universities'
 
-// Rankings are QS World University Rankings 2026. Admissions policies are
-// undergraduate/first-year policies from each university's own website and were
-// rechecked on 5 August 2026. A numeric comparison is provided only when the
-// university itself publishes a minimum or clearly-labelled competitive score.
+// Rankings are QS World University Rankings 2026. Detailed admissions policies
+// were rechecked against university sources on 5 August 2026; the top-50 additions
+// and their official source links were checked on 6 August 2026. A numeric
+// comparison is provided only when the university itself publishes a minimum or
+// clearly-labelled competitive score.
 export const QS_EDITION = 'QS World University Rankings 2026'
 
 const verifiedAt = '2026-08-05'
@@ -20,7 +22,7 @@ export const universities: University[] = [
   {
     id: 'mit', slug: 'mit', rank: 1, name: 'Massachusetts Institute of Technology (MIT)', shortName: 'MIT',
     city: 'Cambridge', country: 'United States', countryEmoji: '🇺🇸', overallScore: 100,
-    type: 'Private research university', founded: 1861, website: 'https://www.mit.edu', groups: ['qs-top-10'],
+    type: 'Private research university', founded: 1861, website: 'https://www.mit.edu', groups: ['qs-top-50'],
     tagline: 'Education and research focused on advancing knowledge in science, technology and other fields.',
     about: 'MIT was incorporated in 1861 and is based in Cambridge, Massachusetts. Its undergraduate education combines science and technology with hands-on learning, research and study across the humanities, arts and social sciences.',
     brand: { monogram: 'MIT', gradient: 'linear-gradient(150deg,#2b070b 0%,#7a1420 48%,#a31f34 100%)', accent: '#A31F34', ink: '#ffffff' },
@@ -37,7 +39,7 @@ export const universities: University[] = [
   {
     id: 'imperial-college-london', slug: 'imperial-college-london', rank: 2, name: 'Imperial College London', shortName: 'Imperial',
     city: 'London', country: 'United Kingdom', countryEmoji: '🇬🇧', overallScore: 99.4,
-    type: 'Public research university', founded: 1907, website: 'https://www.imperial.ac.uk', groups: ['qs-top-10'],
+    type: 'Public research university', founded: 1907, website: 'https://www.imperial.ac.uk', groups: ['qs-top-50'],
     tagline: 'A London university specialising in science, engineering, medicine and business.',
     about: 'Imperial College London was established in 1907. Its teaching and research focus on science, engineering, medicine and business, with its main campus in South Kensington.',
     brand: { monogram: 'ICL', gradient: 'linear-gradient(150deg,#03203f 0%,#003e74 52%,#0072b8 100%)', accent: '#0072B8', ink: '#ffffff' },
@@ -53,7 +55,7 @@ export const universities: University[] = [
   {
     id: 'stanford-university', slug: 'stanford-university', rank: 3, name: 'Stanford University', shortName: 'Stanford',
     city: 'Stanford', country: 'United States', countryEmoji: '🇺🇸', overallScore: 98.9,
-    type: 'Private research university', founded: 1885, website: 'https://www.stanford.edu', groups: ['qs-top-10'],
+    type: 'Private research university', founded: 1885, website: 'https://www.stanford.edu', groups: ['qs-top-50'],
     tagline: 'A research university in California with seven schools and a broad undergraduate curriculum.',
     about: 'Stanford University was founded in 1885 and opened in 1891. Its campus is in Stanford, California, and its undergraduate applicants apply to the university as a whole rather than to a particular school or major.',
     brand: { monogram: 'S', gradient: 'linear-gradient(150deg,#3d0a0a 0%,#8c1515 55%,#b1040e 100%)', accent: '#8C1515', ink: '#ffffff' },
@@ -69,7 +71,7 @@ export const universities: University[] = [
   {
     id: 'university-of-oxford', slug: 'university-of-oxford', rank: 4, name: 'University of Oxford', shortName: 'Oxford',
     city: 'Oxford', country: 'United Kingdom', countryEmoji: '🇬🇧', overallScore: 97.9,
-    type: 'Collegiate research university', founded: 1096, website: 'https://www.ox.ac.uk', groups: ['qs-top-10'],
+    type: 'Collegiate research university', founded: 1096, website: 'https://www.ox.ac.uk', groups: ['qs-top-50'],
     tagline: 'A collegiate university with evidence of teaching dating from 1096.',
     about: 'Oxford is a collegiate university with no single main campus. Teaching existed by 1096, and today students belong both to the University and to a college or permanent private hall.',
     brand: { monogram: 'OX', gradient: 'linear-gradient(150deg,#000d1f 0%,#002147 55%,#0b3a73 100%)', accent: '#002147', ink: '#ffffff' },
@@ -85,7 +87,7 @@ export const universities: University[] = [
   {
     id: 'harvard-university', slug: 'harvard-university', rank: 5, name: 'Harvard University', shortName: 'Harvard',
     city: 'Cambridge', country: 'United States', countryEmoji: '🇺🇸', overallScore: 97.7,
-    type: 'Private research university', founded: 1636, website: 'https://www.harvard.edu', groups: ['qs-top-10', 'ivy-league'],
+    type: 'Private research university', founded: 1636, website: 'https://www.harvard.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'The oldest institution of higher education in the United States.',
     about: 'Harvard was founded in 1636 and is based in Cambridge, Massachusetts. Harvard College provides the University’s undergraduate liberal arts and sciences education.',
     brand: { monogram: 'H', gradient: 'linear-gradient(150deg,#3a0a14 0%,#a51c30 55%,#c81e3a 100%)', accent: '#A51C30', ink: '#ffffff' },
@@ -101,7 +103,7 @@ export const universities: University[] = [
   {
     id: 'university-of-cambridge', slug: 'university-of-cambridge', rank: 6, name: 'University of Cambridge', shortName: 'Cambridge',
     city: 'Cambridge', country: 'United Kingdom', countryEmoji: '🇬🇧', overallScore: 97.2,
-    type: 'Collegiate research university', founded: 1209, website: 'https://www.cam.ac.uk', groups: ['qs-top-10'],
+    type: 'Collegiate research university', founded: 1209, website: 'https://www.cam.ac.uk', groups: ['qs-top-50'],
     tagline: 'A collegiate university founded in 1209.',
     about: 'The University of Cambridge was founded in 1209. It comprises academic departments and faculties alongside self-governing colleges, with undergraduate teaching shared between them.',
     brand: { monogram: 'CAM', gradient: 'linear-gradient(150deg,#062a3f 0%,#0072ce 60%,#67c7e8 100%)', accent: '#0072CE', ink: '#ffffff' },
@@ -117,7 +119,7 @@ export const universities: University[] = [
   {
     id: 'eth-zurich', slug: 'eth-zurich', rank: 7, name: 'ETH Zurich', shortName: 'ETH Zurich',
     city: 'Zurich', country: 'Switzerland', countryEmoji: '🇨🇭', overallScore: 96.7,
-    type: 'Public federal university', founded: 1855, website: 'https://ethz.ch', groups: ['qs-top-10'],
+    type: 'Public federal university', founded: 1855, website: 'https://ethz.ch', groups: ['qs-top-50'],
     tagline: 'A Swiss federal university for science and technology.',
     about: 'ETH Zurich was founded in 1855 as a federal polytechnic school. Its bachelor’s programmes are taught mainly in German, while the institution’s study and research focus on science, technology, engineering and related fields.',
     brand: { monogram: 'ETH', gradient: 'linear-gradient(150deg,#0a1c3a 0%,#215caf 58%,#3f7bd0 100%)', accent: '#215CAF', ink: '#ffffff' },
@@ -134,7 +136,7 @@ export const universities: University[] = [
   {
     id: 'national-university-of-singapore', slug: 'national-university-of-singapore', rank: 8, name: 'National University of Singapore (NUS)', shortName: 'NUS',
     city: 'Singapore', country: 'Singapore', countryEmoji: '🇸🇬', overallScore: 95.9,
-    type: 'Public autonomous university', founded: 1905, website: 'https://www.nus.edu.sg', groups: ['qs-top-10'],
+    type: 'Public autonomous university', founded: 1905, website: 'https://www.nus.edu.sg', groups: ['qs-top-50'],
     tagline: 'Singapore’s flagship comprehensive university.',
     about: 'NUS traces its roots to a medical school founded in 1905. It is a comprehensive university in Singapore with undergraduate programmes across disciplines and a qualification-specific international admissions process.',
     brand: { monogram: 'NUS', gradient: 'linear-gradient(150deg,#031f40 0%,#003d7c 52%,#ef7c00 130%)', accent: '#EF7C00', ink: '#ffffff' },
@@ -150,7 +152,7 @@ export const universities: University[] = [
   {
     id: 'ucl', slug: 'ucl', rank: 9, name: 'University College London (UCL)', shortName: 'UCL',
     city: 'London', country: 'United Kingdom', countryEmoji: '🇬🇧', overallScore: 95.8,
-    type: 'Public research university', founded: 1826, website: 'https://www.ucl.ac.uk', groups: ['qs-top-10'],
+    type: 'Public research university', founded: 1826, website: 'https://www.ucl.ac.uk', groups: ['qs-top-50'],
     tagline: 'A multidisciplinary university founded in London in 1826.',
     about: 'UCL was founded in 1826 and is a multidisciplinary university based in London. Undergraduate academic and English requirements vary by programme and by the qualification an applicant presents.',
     brand: { monogram: 'UCL', gradient: 'linear-gradient(150deg,#1a0533 0%,#500778 55%,#7b2fb0 100%)', accent: '#500778', ink: '#ffffff' },
@@ -166,7 +168,7 @@ export const universities: University[] = [
   {
     id: 'caltech', slug: 'caltech', rank: 10, name: 'California Institute of Technology (Caltech)', shortName: 'Caltech',
     city: 'Pasadena', country: 'United States', countryEmoji: '🇺🇸', overallScore: 94.3,
-    type: 'Private research university', founded: 1891, website: 'https://www.caltech.edu', groups: ['qs-top-10'],
+    type: 'Private research university', founded: 1891, website: 'https://www.caltech.edu', groups: ['qs-top-50'],
     tagline: 'A science and engineering institute in Pasadena, California.',
     about: 'Caltech is an independent, privately supported science and engineering institute in Pasadena. It has approximately 1,000 undergraduates and 1,400 graduate students and manages NASA’s Jet Propulsion Laboratory.',
     brand: { monogram: 'CIT', gradient: 'linear-gradient(150deg,#2a1402 0%,#b5510a 52%,#ff6c0c 110%)', accent: '#FF6C0C', ink: '#ffffff' },
@@ -179,10 +181,11 @@ export const universities: University[] = [
     campus: { name: 'Caltech campus', address: '1200 E California Boulevard, Pasadena, CA 91125, USA', mapsQuery: 'Caltech 1200 E California Boulevard Pasadena' },
     sources: [{ label: 'Official standardized testing policy', url: 'https://www.admissions.caltech.edu/apply/first-year-applicants/standardized-tests' }, { label: 'Official international applicant requirements', url: 'https://www.admissions.caltech.edu/apply/first-year-applicants/international-applicants' }],
   },
+  ...qsTop50Additions,
   {
     id: 'university-of-pennsylvania', slug: 'university-of-pennsylvania', rank: 15, name: 'University of Pennsylvania', shortName: 'Penn',
     city: 'Philadelphia', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Private research university', founded: 1740, website: 'https://www.upenn.edu', groups: ['ivy-league'],
+    type: 'Private research university', founded: 1740, website: 'https://www.upenn.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'An Ivy League university in Philadelphia with four undergraduate schools.',
     about: 'Penn dates its founding to 1740 and is based in Philadelphia. Undergraduate students study in the College of Arts and Sciences, Penn Engineering, the School of Nursing or the Wharton School.',
     brand: { monogram: 'PENN', gradient: 'linear-gradient(150deg,#001f3f,#011f5b 58%,#990000)', accent: '#011F5B', ink: '#ffffff' }, indicators: {},
@@ -197,7 +200,7 @@ export const universities: University[] = [
   {
     id: 'cornell-university', slug: 'cornell-university', rank: 16, name: 'Cornell University', shortName: 'Cornell',
     city: 'Ithaca', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Private research university', founded: 1865, website: 'https://www.cornell.edu', groups: ['ivy-league'],
+    type: 'Private research university', founded: 1865, website: 'https://www.cornell.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'An Ivy League land-grant university founded in Ithaca in 1865.',
     about: 'Cornell was founded in 1865 by Ezra Cornell and Andrew Dickson White. Its main campus is in Ithaca, New York, and first-year applicants apply to one of its undergraduate colleges or schools.',
     brand: { monogram: 'CU', gradient: 'linear-gradient(150deg,#4b0505,#B31B1B 62%,#d14a4a)', accent: '#B31B1B', ink: '#ffffff' }, indicators: {},
@@ -212,7 +215,7 @@ export const universities: University[] = [
   {
     id: 'yale-university', slug: 'yale-university', rank: 21, name: 'Yale University', shortName: 'Yale',
     city: 'New Haven', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Private research university', founded: 1701, website: 'https://www.yale.edu', groups: ['ivy-league'],
+    type: 'Private research university', founded: 1701, website: 'https://www.yale.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'An Ivy League research university founded in 1701 in New Haven.',
     about: 'Yale was founded in 1701 and is based in New Haven, Connecticut. Yale College is its undergraduate liberal arts college and uses a residential college system.',
     brand: { monogram: 'Y', gradient: 'linear-gradient(150deg,#001a33,#00356B 62%,#286dc0)', accent: '#00356B', ink: '#ffffff' }, indicators: {},
@@ -227,7 +230,7 @@ export const universities: University[] = [
   {
     id: 'princeton-university', slug: 'princeton-university', rank: 25, rankTied: true, name: 'Princeton University', shortName: 'Princeton',
     city: 'Princeton', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Private research university', founded: 1746, website: 'https://www.princeton.edu', groups: ['ivy-league'],
+    type: 'Private research university', founded: 1746, website: 'https://www.princeton.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'An Ivy League research university with a strong undergraduate focus.',
     about: 'Princeton was chartered in 1746 as the College of New Jersey and moved to Princeton in 1756. Its undergraduate programme spans the liberal arts, sciences and engineering.',
     brand: { monogram: 'PU', gradient: 'linear-gradient(150deg,#2a1600,#e77500 62%,#ff9b31)', accent: '#E77500', ink: '#ffffff' }, indicators: {},
@@ -242,7 +245,7 @@ export const universities: University[] = [
   {
     id: 'columbia-university', slug: 'columbia-university', rank: 38, rankTied: true, name: 'Columbia University', shortName: 'Columbia',
     city: 'New York City', country: 'United States', countryEmoji: '🇺🇸',
-    type: 'Private research university', founded: 1754, website: 'https://www.columbia.edu', groups: ['ivy-league'],
+    type: 'Private research university', founded: 1754, website: 'https://www.columbia.edu', groups: ['qs-top-50', 'ivy-league'],
     tagline: 'An Ivy League university in New York City, founded as King’s College.',
     about: 'Columbia was founded in 1754 as King’s College. Its traditional undergraduate schools are Columbia College and Columbia Engineering, based at the Morningside Heights campus in New York City.',
     brand: { monogram: 'CU', gradient: 'linear-gradient(150deg,#17384f,#6CACE4 70%,#b9dcf5)', accent: '#3D79A7', ink: '#ffffff' }, indicators: {},

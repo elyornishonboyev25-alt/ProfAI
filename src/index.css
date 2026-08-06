@@ -672,29 +672,26 @@
 
   .admission-universities-globe-column {
     @apply min-w-0;
+    align-self: start;
   }
 
   .university-globe-card {
-    @apply relative mx-auto w-full max-w-[42rem] pb-16 pt-3;
+    @apply relative mx-auto w-full max-w-[42rem] pb-3 pt-1;
     isolation: isolate;
   }
 
   .university-globe-red-haze {
     position: absolute;
     z-index: -1;
-    left: -8%;
-    bottom: 9%;
-    width: 58%;
+    left: -12%;
+    bottom: 3%;
+    width: 64%;
     aspect-ratio: 1;
     border-radius: 9999px;
     pointer-events: none;
-    background: radial-gradient(circle at 46% 48%, rgba(248, 113, 113, 0.9), rgba(239, 68, 68, 0.38) 42%, transparent 72%);
-    filter: blur(48px);
+    background: radial-gradient(circle at 46% 48%, rgba(248, 113, 113, 0.94), rgba(239, 68, 68, 0.42) 42%, transparent 72%);
+    filter: blur(54px);
     animation: universityRedHaze 8s ease-in-out infinite;
-  }
-
-  .university-globe-kicker {
-    @apply absolute left-1/2 top-2 z-20 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/90 bg-white/70 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.13em] text-red-600 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl;
   }
 
   .university-globe-svg {
@@ -708,11 +705,11 @@
   }
 
   .university-globe-grid {
-    opacity: 0.14;
+    opacity: 0.055;
   }
 
   .university-globe-land {
-    opacity: 0.8;
+    opacity: 0.86;
   }
 
   .university-route {
@@ -742,38 +739,13 @@
   }
 
   .university-country-name text {
-    fill: #0f172a;
+    fill: #111827;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    letter-spacing: -0.035em;
     paint-order: stroke;
-    stroke: rgba(255, 255, 255, 0.54);
-    stroke-width: 4px;
-  }
-
-  .university-country-name .university-country-city {
-    fill: #64748b;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    stroke-width: 3px;
-  }
-
-  .university-location-panel {
-    @apply absolute bottom-2 left-1/2 z-20 flex w-[min(90%,24rem)] -translate-x-1/2 items-center gap-3 rounded-2xl border border-white/90 bg-white/75 p-3 shadow-[0_18px_42px_rgba(15,23,42,0.13)] backdrop-blur-xl;
-  }
-
-  .university-location-icon {
-    @apply grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-100 bg-gradient-to-br from-white to-red-50 text-xl shadow-sm;
-  }
-
-  .university-locate-btn {
-    @apply grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50 text-red-600 shadow-sm outline-none hover:border-red-300 hover:bg-red-100 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-300 disabled:cursor-wait disabled:opacity-55;
-  }
-
-  .university-location-note {
-    @apply absolute -bottom-4 left-1/2 z-20 w-[90%] -translate-x-1/2 text-center text-[9px] font-semibold leading-4 text-slate-400;
+    stroke: rgba(255, 255, 255, 0.62);
+    stroke-width: 3.5px;
   }
 
   .premium-stat {
@@ -1283,24 +1255,26 @@
 
   .university-globe-card {
     max-width: 34rem;
-    padding-bottom: 3.75rem;
+    padding-bottom: 0.5rem;
   }
 
-  .university-globe-kicker {
-    top: 0;
-    font-size: 8px;
-    letter-spacing: 0.1em;
-  }
-
-  .university-location-panel {
-    width: 94%;
-  }
 }
 
 @media (min-width: 1024px) {
   .admission-universities-globe-column {
     position: sticky;
-    top: 1.5rem;
+    top: 1.25rem;
+    z-index: 10;
+    height: max-content;
+    max-height: calc(100dvh - 2.5rem);
+  }
+
+  .university-globe-card {
+    max-height: calc(100dvh - 2.5rem);
+  }
+
+  .university-globe-svg {
+    max-height: calc(100dvh - 2.5rem);
   }
 }
 

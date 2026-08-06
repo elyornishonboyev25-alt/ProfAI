@@ -17,7 +17,7 @@ export default function AdmissionUniversities() {
   const [query, setQuery] = useState('')
   const all = getUniversities()
   const { scores } = useAdmissionScores()
-  const { location, isLocating, locationError, requestPreciseLocation } = useVisitorLocation()
+  const { location, isLocating } = useVisitorLocation()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -32,7 +32,7 @@ export default function AdmissionUniversities() {
   }, [all, query])
 
   return (
-    <div className="workspace-page admission-universities-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-4 py-8 sm:px-6 lg:px-8">
       <div className="admission-universities-blur-field" aria-hidden="true">
         <span className="admission-blur-glow admission-blur-glow-left" />
         <span className="admission-blur-glow admission-blur-glow-right" />
@@ -82,8 +82,6 @@ export default function AdmissionUniversities() {
             <UniversityGlobe
               location={location}
               isLocating={isLocating}
-              locationError={locationError}
-              onRequestPreciseLocation={requestPreciseLocation}
             />
           </aside>
 

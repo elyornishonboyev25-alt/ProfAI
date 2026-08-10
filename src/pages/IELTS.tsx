@@ -8,10 +8,13 @@ import {
   PenLine,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
+import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
+import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
 import '@/styles/ieltsArena.css'
 
 const skills = [
@@ -19,7 +22,6 @@ const skills = [
     id: 'listening',
     title: 'Listening',
     description: 'Understand spoken English in various contexts.',
-    score: 7,
     tests: 15,
     icon: Headphones,
   },
@@ -27,7 +29,6 @@ const skills = [
     id: 'reading',
     title: 'Reading',
     description: 'Analyze and comprehend diverse texts.',
-    score: 7.5,
     tests: 12,
     icon: BookOpen,
   },
@@ -35,7 +36,6 @@ const skills = [
     id: 'writing',
     title: 'Writing',
     description: 'Express ideas clearly in written form.',
-    score: 6.5,
     tests: 10,
     icon: PenLine,
   },
@@ -43,13 +43,13 @@ const skills = [
     id: 'speaking',
     title: 'Speaking',
     description: 'Communicate effectively in interviews.',
-    score: 6.5,
     tests: 8,
     icon: Mic2,
   },
 ] as const
 
 type SkillId = (typeof skills)[number]['id']
+type SkillScore = Record<SkillId, number>
 
 function ArenaBrandMark() {
   return (
@@ -64,6 +64,21 @@ function ArenaBrandMark() {
 
 function formatBand(score: number) {
   return score.toFixed(1)
+}
+
+function validBand(score: unknown): number {
+  return typeof score === 'number' && Number.isFinite(score) && score > 0 && score <= 9 ? score : 0
+}
+
+function isListeningAttempt(testId: string, testTitle: string) {
+  return `${testId} ${testTitle}`.toLowerCase().includes('listening')
+}
+
+function calculateOverallBand(scores: SkillScore) {
+  const completedBands = Object.values(scores).filter((score) => score > 0)
+  if (completedBands.length === 0) return 0
+  const average = completedBands.reduce((sum, score) => sum + score, 0) / completedBands.length
+  return Math.round(average * 2) / 2
 }
 
 function MiniBand({ score }: { score: number }) {
@@ -87,7 +102,7 @@ function SkillCard({
   skill,
   onOpen,
 }: {
-  skill: (typeof skills)[number]
+  skill: (typeof skills)[number] & { score: number }
   onOpen: (id: SkillId) => void
 }) {
   const Icon = skill.icon
@@ -120,13 +135,28 @@ export default function IELTS() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const profile = loadOnboardingProfile(user?.id)
+  const speakingSessions = useSpeakingStore((state) => state.sessions)
   const { minimalMotion } = useMotionPreferences()
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const mockFrom = navigationState?.from ?? 'tests'
-  const profileBand = profile?.currentIeltsScore
-  const overallBand = profileBand && profileBand >= 0 && profileBand <= 9 ? profileBand : 6.8
+  const skillScores = useMemo<SkillScore>(() => {
+    const objectiveHistory = getReadingAnalysisHistory(user?.id)
+    const latestListening = objectiveHistory.find((entry) => isListeningAttempt(entry.testId, entry.testTitle))
+    const latestReading = objectiveHistory.find((entry) => !isListeningAttempt(entry.testId, entry.testTitle))
+    const latestWriting = getWritingAnalysisHistory(user?.id)[0]
+    const userSpeakingSessions = selectUserSessions(speakingSessions, user?.id ?? null)
+    const latestSpeaking = userSpeakingSessions[userSpeakingSessions.length - 1]
+
+    return {
+      listening: validBand(latestListening?.bandScore),
+      reading: validBand(latestReading?.bandScore),
+      writing: validBand(latestWriting?.overallBand),
+      speaking: validBand(latestSpeaking?.overallBand),
+    }
+  }, [speakingSessions, user?.id])
+  const scoredSkills = skills.map((skill) => ({ ...skill, score: skillScores[skill.id] }))
+  const overallBand = calculateOverallBand(skillScores)
   const overallDegrees = Math.min(360, Math.max(0, (overallBand / 9) * 360))
 
   const openSection = (id: SkillId) => {
@@ -181,7 +211,7 @@ export default function IELTS() {
 
         <main id="ielts-arena-features" className="ielts-arena-dashboard">
           <section className="ielts-arena-skills" aria-label="IELTS skills">
-            {skills.map((skill) => <SkillCard key={skill.id} skill={skill} onOpen={openSection} />)}
+            {scoredSkills.map((skill) => <SkillCard key={skill.id} skill={skill} onOpen={openSection} />)}
           </section>
 
           <section className="ielts-arena-glass ielts-arena-overview" aria-labelledby="ielts-overview-title">
@@ -198,7 +228,7 @@ export default function IELTS() {
             </div>
 
             <div className="ielts-arena-bars" aria-label="Skill band comparison">
-              {skills.map((skill) => (
+              {scoredSkills.map((skill) => (
                 <div className="ielts-arena-bar-item" key={skill.id}>
                   <span>{formatBand(skill.score)}</span>
                   <div className="ielts-arena-bar-track">

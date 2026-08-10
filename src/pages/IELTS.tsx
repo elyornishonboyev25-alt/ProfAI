@@ -11,6 +11,7 @@ import {
   Pencil,
   PenLine,
   Target,
+  ExternalLink,
   X,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -64,17 +65,28 @@ function examDateOverrideKey(userId?: string) {
   return `smarttest:ielts-exam-date:${userId?.trim() || 'guest'}`
 }
 
-function loadExamDate(userId?: string) {
-  if (typeof window === 'undefined') return ''
-  return window.localStorage.getItem(examDateOverrideKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+function examTimeOverrideKey(userId?: string) {
+  return `smarttest:ielts-exam-time:${userId?.trim() || 'guest'}`
 }
 
-function saveExamDate(date: string, userId?: string) {
+function loadExamDate(userId?: string) {
+  if (typeof window === 'undefined') return ''
+  const stored = window.localStorage.getItem(examDateOverrideKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+  return stored >= localToday() ? stored : ''
+}
+
+function loadExamTime(userId?: string) {
+  if (typeof window === 'undefined') return '08:00'
+  return window.localStorage.getItem(examTimeOverrideKey(userId)) || '08:00'
+}
+
+function saveExamDate(date: string, time: string, userId?: string) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(examDateOverrideKey(userId), date)
+  window.localStorage.setItem(examTimeOverrideKey(userId), time)
   const profile = loadOnboardingProfile(userId)
   if (!profile) return
-  const examAt = new Date(`${date}T08:00:00`).getTime()
+  const examAt = new Date(`${date}T${time}:00`).getTime()
   saveOnboardingProfile({
     ...profile,
     ieltsExamDate: date,
@@ -82,9 +94,9 @@ function saveExamDate(date: string, userId?: string) {
   }, userId)
 }
 
-function remainingUntil(date: string, now: number) {
+function remainingUntil(date: string, time: string, now: number) {
   if (!date) return null
-  const distance = Math.max(0, new Date(`${date}T08:00:00`).getTime() - now)
+  const distance = Math.max(0, new Date(`${date}T${time}:00`).getTime() - now)
   return {
     days: Math.floor(distance / DAY_MS),
     hours: Math.floor((distance / 3_600_000) % 24),
@@ -191,7 +203,9 @@ export default function IELTS() {
   const speakingSessions = useSpeakingStore((state) => state.sessions)
   const { minimalMotion, allowHoverMotion } = useMotionPreferences()
   const [examDate, setExamDate] = useState(() => loadExamDate(user?.id))
+  const [examTime, setExamTime] = useState(() => loadExamTime(user?.id))
   const [draftExamDate, setDraftExamDate] = useState(() => loadExamDate(user?.id))
+  const [draftExamTime, setDraftExamTime] = useState(() => loadExamTime(user?.id))
   const [editingExamDate, setEditingExamDate] = useState(false)
   const [now, setNow] = useState(Date.now())
   const navigationState = location.state as { entry?: string; from?: string } | null
@@ -216,16 +230,19 @@ export default function IELTS() {
   const overallBand = calculateOverallBand(skillScores)
   const completedSkillCount = Object.values(skillScores).filter((score) => score > 0).length
   const overallDegrees = Math.min(360, Math.max(0, (overallBand / 9) * 360))
-  const remaining = useMemo(() => remainingUntil(examDate, now), [examDate, now])
-  const examDateObject = examDate ? new Date(`${examDate}T08:00:00`) : null
+  const remaining = useMemo(() => remainingUntil(examDate, examTime, now), [examDate, examTime, now])
+  const examDateObject = examDate ? new Date(`${examDate}T${examTime}:00`) : null
   const formattedExamDate = examDateObject
-    ? examDateObject.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    ? examDateObject.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     : 'No exam date selected'
 
   useEffect(() => {
     const storedDate = loadExamDate(user?.id)
+    const storedTime = loadExamTime(user?.id)
     setExamDate(storedDate)
+    setExamTime(storedTime)
     setDraftExamDate(storedDate)
+    setDraftExamTime(storedTime)
   }, [user?.id])
 
   useEffect(() => {
@@ -236,8 +253,9 @@ export default function IELTS() {
 
   const confirmExamDate = () => {
     if (!draftExamDate) return
-    saveExamDate(draftExamDate, user?.id)
+    saveExamDate(draftExamDate, draftExamTime, user?.id)
     setExamDate(draftExamDate)
+    setExamTime(draftExamTime)
     setNow(Date.now())
     setEditingExamDate(false)
   }
@@ -311,13 +329,14 @@ export default function IELTS() {
             <div>
               <span className="ielts-arena-kicker">Your booked IELTS exam</span>
               <strong>{formattedExamDate}</strong>
-              <small>{examDate ? (remaining?.finished ? 'Exam day has arrived' : 'Countdown ends at 08:00 local time') : 'Add the exact date from your booking confirmation'}</small>
+              <small>{examDate ? (remaining?.finished ? 'Exam day has arrived' : `${examTime} local · booking-confirmed time`) : 'Use the exact date and time from your booking'}</small>
             </div>
             <button
               type="button"
               className="ielts-arena-date-edit"
               onClick={() => {
                 setDraftExamDate(examDate)
+                setDraftExamTime(examTime)
                 setEditingExamDate((value) => !value)
               }}
             >
@@ -368,13 +387,24 @@ export default function IELTS() {
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Clock3 />
-                <label htmlFor="ielts-exam-date">Exact exam date</label>
+                <div className="ielts-arena-date-editor-label">
+                  <label htmlFor="ielts-exam-date">Booking-confirmed exam</label>
+                  <a href="https://www.britishcouncil.uz/en/exam/ielts/test-dates-fees-location" target="_blank" rel="noreferrer">
+                    Official dates <ExternalLink />
+                  </a>
+                </div>
                 <input
                   id="ielts-exam-date"
                   type="date"
                   min={localToday()}
                   value={draftExamDate}
                   onChange={(event) => setDraftExamDate(event.target.value)}
+                />
+                <input
+                  aria-label="IELTS exam start time"
+                  type="time"
+                  value={draftExamTime}
+                  onChange={(event) => setDraftExamTime(event.target.value)}
                 />
                 <button type="button" className="ielts-arena-date-save" onClick={confirmExamDate} disabled={!draftExamDate}>
                   <Check /> Save date

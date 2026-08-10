@@ -1,0 +1,342 @@
+/* IELTS Arena dashboard — scoped so the glass treatment never leaks into tests. */
+.ielts-arena-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: #11172b;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(210, 248, 250, 0.82), transparent 29%),
+    radial-gradient(circle at 88% 13%, rgba(255, 237, 213, 0.78), transparent 31%),
+    radial-gradient(circle at 54% 82%, rgba(214, 246, 252, 0.72), transparent 32%),
+    linear-gradient(135deg, #f8fcfd 0%, #f7f5f9 52%, #fffaf3 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.ielts-arena-page::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.22;
+  background-image: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.82) 51%, transparent 66%);
+}
+
+.ielts-arena-ambient,
+.ielts-arena-ambient span {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ielts-arena-ambient span { filter: blur(90px); }
+.ielts-arena-ambient-blue { inset: 8% auto auto 5% !important; width: 32rem; height: 30rem; background: rgba(194, 240, 247, 0.48); }
+.ielts-arena-ambient-peach { inset: 8% 2% auto auto !important; width: 30rem; height: 36rem; background: rgba(255, 224, 192, 0.44); }
+.ielts-arena-ambient-bottom { inset: auto 30% -12% 26% !important; height: 24rem; background: rgba(197, 237, 248, 0.42); }
+
+.ielts-arena-shell {
+  position: relative;
+  z-index: 1;
+  width: min(89%, 1820px);
+  margin: 0 auto;
+  padding: 59px 0 72px;
+}
+
+.ielts-arena-header {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) auto minmax(210px, 1fr);
+  align-items: center;
+  min-height: 128px;
+  padding: 18px 20px 18px 31px;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  border-radius: 68px;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 30px 55px rgba(81, 85, 103, 0.12), inset 0 1px 0 white;
+  backdrop-filter: blur(25px) saturate(135%);
+}
+
+.ielts-arena-brand {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.ielts-arena-brand-mark {
+  display: grid;
+  width: 112px;
+  height: 86px;
+  place-items: center;
+  color: #d92a2a;
+  filter: drop-shadow(0 18px 12px rgba(219, 36, 36, 0.31));
+}
+
+.ielts-arena-brand-mark svg { width: 108px; height: 94px; overflow: visible; fill: #d92626; }
+.ielts-arena-brand-mark .ielts-arena-tassel { fill: #d92626; stroke: #d92626; stroke-width: 5; stroke-linecap: round; }
+.ielts-arena-brand-copy { display: flex; flex-direction: column; margin-left: 9px; }
+.ielts-arena-brand-copy strong { font-size: 48px; line-height: 1; letter-spacing: -0.045em; font-style: normal; font-weight: 750; white-space: nowrap; }
+.ielts-arena-brand-copy em { color: #dd2b2e; font-style: normal; }
+.ielts-arena-brand-copy small { margin-top: 6px; color: #3b4254; font-size: 28px; line-height: 1; letter-spacing: -0.035em; }
+
+.ielts-arena-nav { display: flex; align-items: center; gap: 3px; }
+.ielts-arena-nav button,
+.ielts-arena-nav a {
+  display: inline-flex;
+  min-height: 75px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 30px;
+  border: 0;
+  border-radius: 42px;
+  background: transparent;
+  color: #383a4c;
+  font-size: 31px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.ielts-arena-nav button:hover,
+.ielts-arena-nav a:hover { color: #c92529; transform: translateY(-2px); }
+.ielts-arena-nav .is-active { background: rgba(234, 241, 247, 0.61); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 12px 28px rgba(70, 84, 102, 0.08); }
+
+.ielts-arena-login {
+  justify-self: end;
+  min-width: 181px;
+  min-height: 88px;
+  padding: 0 28px;
+  border: 3px solid rgba(226, 66, 66, 0.4);
+  border-radius: 50px;
+  color: #bd1f22;
+  background: rgba(255, 248, 247, 0.4);
+  box-shadow: 0 24px 31px rgba(238, 49, 49, 0.25), inset 0 0 0 7px rgba(255,255,255,.15);
+  font-size: 31px;
+  font-weight: 650;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.ielts-arena-login:hover { transform: translateY(-3px); background: rgba(255, 241, 240, 0.76); box-shadow: 0 27px 38px rgba(238,49,49,.31); }
+
+.ielts-arena-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 2.08fr) minmax(350px, 1.04fr) minmax(330px, .96fr);
+  gap: 30px;
+  min-height: 823px;
+  margin-top: 62px;
+}
+
+.ielts-arena-glass {
+  position: relative;
+  overflow: hidden;
+  border: 3px solid rgba(190, 208, 220, 0.72);
+  border-right-color: rgba(255, 255, 255, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 23px 37px rgba(69, 76, 92, 0.1), inset 0 1px 0 rgba(255,255,255,.8);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.ielts-arena-glass::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,.23), transparent 44%, rgba(255,255,255,.12));
+}
+
+.ielts-arena-skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+
+.ielts-arena-skill-card {
+  display: flex;
+  min-width: 0;
+  min-height: 392px;
+  flex-direction: column;
+  padding: 26px 31px 23px;
+  border-radius: 38px;
+}
+
+.ielts-arena-card-heading,
+.ielts-arena-card-footer,
+.ielts-arena-card-action,
+.ielts-arena-recommendation-title,
+.ielts-arena-recommendation-row { position: relative; z-index: 1; display: flex; align-items: center; }
+
+.ielts-arena-card-heading { gap: 19px; }
+.ielts-arena-card-heading h2 { margin: 0; font-size: 45px; line-height: 1; letter-spacing: -0.045em; font-weight: 650; }
+
+.ielts-arena-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.82);
+  border-radius: 50%;
+  color: #ce3032;
+  background: linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,219,219,.51));
+  box-shadow: 0 24px 25px rgba(231, 44, 49, 0.28), inset 0 1px 2px white;
+}
+
+.ielts-arena-icon svg { width: 52px; height: 52px; stroke-width: 1.8; }
+.ielts-arena-skill-icon { width: 96px; height: 96px; }
+.ielts-arena-skill-description { position: relative; z-index: 1; max-width: 380px; margin: 19px 0 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.045em; }
+.ielts-arena-card-footer { justify-content: space-between; gap: 18px; margin-top: auto; }
+
+.ielts-arena-mini-band {
+  --band-degrees: 270deg;
+  position: relative;
+  display: grid;
+  width: 132px;
+  height: 132px;
+  flex: 0 0 132px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from -45deg, #ed2f34 0deg, #9e3037 var(--band-degrees), #323b50 var(--band-degrees), #323b50 360deg);
+  box-shadow: 0 10px 18px rgba(40, 50, 70, .13);
+}
+
+.ielts-arena-mini-band::before { position: absolute; width: 105px; height: 105px; border-radius: 50%; background: rgba(246,249,250,.95); content: ""; box-shadow: inset 0 3px 5px rgba(66,76,91,.09); }
+.ielts-arena-mini-band > div { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+.ielts-arena-mini-band span { font-size: 24px; line-height: 1; }
+.ielts-arena-mini-band strong { margin-top: 3px; font-size: 38px; line-height: 1; }
+
+.ielts-arena-card-action { min-width: 0; flex: 1 1 auto; flex-direction: column; align-items: stretch; }
+.ielts-arena-card-action p { margin: 0 0 21px; font-size: 25px; line-height: 1; text-align: center; white-space: nowrap; }
+.ielts-arena-card-action button {
+  position: relative;
+  min-height: 64px;
+  overflow: hidden;
+  border: 2px solid rgba(190, 32, 35, .72);
+  border-radius: 36px;
+  color: white;
+  background: linear-gradient(100deg, #e7282c 0%, #d62529 53%, #ff7775 100%);
+  box-shadow: 0 19px 25px rgba(241, 43, 48, .39), inset 0 2px 3px rgba(255,255,255,.54), inset 0 -3px 8px rgba(158,10,13,.2);
+  font-size: 29px;
+  line-height: 1;
+  transition: transform 170ms ease, filter 170ms ease;
+}
+
+.ielts-arena-card-action button::after { position: absolute; top: 5px; right: 14px; width: 62px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.43); filter: blur(5px); content: ""; transform: rotate(-7deg); }
+.ielts-arena-card-action button:hover { transform: scale(1.035); filter: saturate(1.12); }
+
+.ielts-arena-overview { display: flex; flex-direction: column; align-items: center; padding: 31px 31px 27px; border-radius: 38px; }
+.ielts-arena-overview::before { position: absolute; top: -45px; right: -48px; width: 155px; height: 540px; content: ""; background: rgba(255,255,255,.35); transform: rotate(25deg); }
+.ielts-arena-overview h1 { position: relative; z-index: 1; align-self: flex-start; margin: 0 0 54px 8px; font-size: 46px; line-height: 1.08; letter-spacing: -0.045em; font-weight: 700; }
+
+.ielts-arena-overall-band {
+  --overall-degrees: 272deg;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 310px;
+  height: 310px;
+  flex: 0 0 310px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from -8deg, #ef3033 0deg, #962e39 var(--overall-degrees), #323b50 var(--overall-degrees), #323b50 360deg);
+  box-shadow: 0 14px 9px rgba(50,57,73,.13);
+}
+
+.ielts-arena-overall-band::before { position: absolute; width: 262px; height: 262px; border-radius: 50%; background: rgba(249,249,249,.92); content: ""; box-shadow: inset 0 5px 7px rgba(70,70,80,.08); }
+.ielts-arena-overall-band > div { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+.ielts-arena-overall-band strong { font-size: 98px; line-height: .87; letter-spacing: -0.06em; }
+.ielts-arena-overall-band span { margin-top: 15px; font-size: 30px; line-height: 1; }
+
+.ielts-arena-bars { position: relative; z-index: 1; display: grid; width: 100%; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: auto; padding-top: 56px; border-bottom: 2px solid rgba(107,126,139,.32); }
+.ielts-arena-bar-item { display: grid; grid-template-rows: 26px 185px 43px; justify-items: center; align-items: end; }
+.ielts-arena-bar-item > span { font-size: 21px; line-height: 1; }
+.ielts-arena-bar-track { position: relative; width: 38px; height: 185px; overflow: hidden; border-radius: 18px 18px 0 0; background: rgba(197,211,219,.6); }
+.ielts-arena-bar-track i { position: absolute; right: 0; bottom: 0; left: 0; border-radius: 15px 15px 0 0; background: linear-gradient(#ed3033, #96303a); }
+.ielts-arena-bar-item small { align-self: center; font-size: 18px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
+
+.ielts-arena-recommendations { display: grid; min-width: 0; grid-template-rows: 392px 205px 168px; gap: 30px; }
+.ielts-arena-recommendation { width: 100%; padding: 27px 31px; border-radius: 38px; color: inherit; text-align: left; transition: border-color 180ms ease, box-shadow 180ms ease; }
+.ielts-arena-recommendation:hover { border-color: rgba(226,72,75,.4); box-shadow: 0 28px 43px rgba(211,50,53,.14); }
+.ielts-arena-recommendation h2 { position: relative; z-index: 1; margin: 0; font-size: 36px; line-height: 1; letter-spacing: -0.045em; }
+.ielts-arena-recommendation-title { gap: 18px; margin-top: 25px; }
+.ielts-arena-recommendation-title strong { font-size: 35px; line-height: 1; letter-spacing: -0.04em; white-space: nowrap; }
+.ielts-arena-recommendation .ielts-arena-icon { width: 96px; height: 96px; }
+.ielts-arena-recommendation .ielts-arena-icon svg { width: 47px; height: 47px; }
+.ielts-arena-reading-next > p { position: relative; z-index: 1; margin: 18px 0 0; font-size: 27px; line-height: 1.25; letter-spacing: -0.025em; }
+.ielts-arena-mock-next { padding-top: 30px; }
+.ielts-arena-recommendation-row { gap: 18px; margin-top: 22px; }
+.ielts-arena-recommendation-row p { margin: 0; font-size: 25px; line-height: 1.16; }
+.ielts-arena-full-mock { display: flex; align-items: center; gap: 20px; }
+.ielts-arena-full-mock > span:last-child { position: relative; z-index: 1; display: flex; min-width: 0; flex-direction: column; }
+.ielts-arena-full-mock strong { font-size: 34px; line-height: 1; letter-spacing: -0.04em; }
+.ielts-arena-full-mock small { margin-top: 9px; font-size: 24px; line-height: 1; white-space: nowrap; }
+
+@media (max-width: 1680px) {
+  .ielts-arena-shell { width: 92%; padding-top: 38px; }
+  .ielts-arena-header { grid-template-columns: minmax(350px, 1fr) auto minmax(155px, 1fr); min-height: 106px; }
+  .ielts-arena-brand-mark { width: 82px; height: 70px; }
+  .ielts-arena-brand-mark svg { width: 80px; height: 72px; }
+  .ielts-arena-brand-copy strong { font-size: 38px; }
+  .ielts-arena-brand-copy small { font-size: 22px; }
+  .ielts-arena-nav button, .ielts-arena-nav a { min-height: 63px; padding: 0 21px; font-size: 25px; }
+  .ielts-arena-login { min-width: 145px; min-height: 70px; font-size: 25px; }
+  .ielts-arena-dashboard { grid-template-columns: minmax(0, 2fr) minmax(310px, 1fr) minmax(290px, .9fr); gap: 22px; margin-top: 42px; }
+  .ielts-arena-skills, .ielts-arena-recommendations { gap: 22px; }
+  .ielts-arena-card-heading h2 { font-size: 35px; }
+  .ielts-arena-icon, .ielts-arena-skill-icon { width: 75px; height: 75px; }
+  .ielts-arena-icon svg { width: 41px; height: 41px; }
+  .ielts-arena-skill-description { font-size: 24px; }
+  .ielts-arena-card-action p { font-size: 19px; }
+  .ielts-arena-overview h1 { font-size: 38px; }
+  .ielts-arena-recommendation h2 { font-size: 29px; }
+  .ielts-arena-recommendation-title strong { font-size: 27px; }
+  .ielts-arena-reading-next > p { font-size: 22px; }
+}
+
+@media (max-width: 1250px) {
+  .ielts-arena-header { grid-template-columns: 1fr auto; border-radius: 42px; }
+  .ielts-arena-nav { display: none; }
+  .ielts-arena-dashboard { grid-template-columns: 1fr 1fr; }
+  .ielts-arena-skills { grid-column: 1 / -1; }
+  .ielts-arena-overview { min-height: 780px; }
+  .ielts-arena-recommendations { grid-template-rows: 1.5fr 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  .ielts-arena-page { width: 100%; max-width: 100vw; }
+  .ielts-arena-shell { width: min(92%, 560px); padding: 20px 0 38px; }
+  .ielts-arena-header { width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; min-height: 82px; padding: 11px 13px 11px 16px; overflow: hidden; border-radius: 30px; }
+  .ielts-arena-brand-mark { width: 49px; height: 49px; }
+  .ielts-arena-brand-mark svg { width: 48px; height: 48px; }
+  .ielts-arena-brand-copy { margin-left: 7px; }
+  .ielts-arena-brand-copy strong { font-size: 23px; }
+  .ielts-arena-brand-copy small { margin-top: 4px; font-size: 13px; }
+  .ielts-arena-login { min-width: 82px; min-height: 49px; padding: 0 14px; border-width: 2px; font-size: 15px; }
+  .ielts-arena-dashboard { display: flex; width: 100%; max-width: 100%; min-width: 0; flex-direction: column; gap: 18px; margin-top: 24px; }
+  .ielts-arena-skills { display: flex; width: 100%; max-width: 100%; min-width: 0; flex-direction: column; gap: 18px; }
+  .ielts-arena-skill-card { width: 100%; max-width: 100%; min-width: 0; min-height: 340px; padding: 22px; border-radius: 28px; }
+  .ielts-arena-card-heading h2 { font-size: 34px; }
+  .ielts-arena-skill-description { max-width: 100%; overflow-wrap: anywhere; font-size: 22px; }
+  .ielts-arena-card-footer { display: grid; width: 100%; min-width: 0; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; }
+  .ielts-arena-mini-band { width: 112px; height: 112px; flex-basis: 112px; }
+  .ielts-arena-mini-band::before { width: 89px; height: 89px; }
+  .ielts-arena-mini-band span { font-size: 19px; }
+  .ielts-arena-mini-band strong { font-size: 31px; }
+  .ielts-arena-card-action p { font-size: 16px; white-space: normal; }
+  .ielts-arena-card-action button { width: 100%; min-width: 0; min-height: 55px; font-size: 24px; }
+  .ielts-arena-overview { width: 100%; max-width: 100%; min-width: 0; min-height: 720px; padding: 28px 20px; border-radius: 28px; }
+  .ielts-arena-overview h1 { margin-bottom: 40px; font-size: 40px; }
+  .ielts-arena-overall-band { width: 270px; height: 270px; flex-basis: 270px; }
+  .ielts-arena-overall-band::before { width: 227px; height: 227px; }
+  .ielts-arena-overall-band strong { font-size: 82px; }
+  .ielts-arena-bars { gap: 4px; }
+  .ielts-arena-bar-item { grid-template-rows: 24px 160px 38px; }
+  .ielts-arena-bar-track { height: 160px; }
+  .ielts-arena-bar-item small { font-size: 14px; }
+  .ielts-arena-recommendations { display: flex; width: 100%; max-width: 100%; min-width: 0; flex-direction: column; gap: 18px; }
+  .ielts-arena-recommendation { min-height: 205px; padding: 24px; border-radius: 28px; }
+  .ielts-arena-reading-next { min-height: 335px; }
+  .ielts-arena-full-mock { min-height: 160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ielts-arena-page *, .ielts-arena-page *::before, .ielts-arena-page *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

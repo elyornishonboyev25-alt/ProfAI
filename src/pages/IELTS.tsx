@@ -1,20 +1,27 @@
 import {
   BookOpen,
+  CalendarDays,
   CalendarCheck,
+  Check,
+  Clock3,
   FileCheck2,
   FileText,
   Headphones,
   Mic2,
+  Pencil,
   PenLine,
+  Target,
+  X,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
+import { loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
 import '@/styles/ieltsArena.css'
 
 const skills = [
@@ -50,6 +57,50 @@ const skills = [
 
 type SkillId = (typeof skills)[number]['id']
 type SkillScore = Record<SkillId, number>
+
+const DAY_MS = 86_400_000
+
+function examDateOverrideKey(userId?: string) {
+  return `smarttest:ielts-exam-date:${userId?.trim() || 'guest'}`
+}
+
+function loadExamDate(userId?: string) {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(examDateOverrideKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+}
+
+function saveExamDate(date: string, userId?: string) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(examDateOverrideKey(userId), date)
+  const profile = loadOnboardingProfile(userId)
+  if (!profile) return
+  const examAt = new Date(`${date}T08:00:00`).getTime()
+  saveOnboardingProfile({
+    ...profile,
+    ieltsExamDate: date,
+    daysToExam: Math.max(0, Math.ceil((examAt - Date.now()) / DAY_MS)),
+  }, userId)
+}
+
+function remainingUntil(date: string, now: number) {
+  if (!date) return null
+  const distance = Math.max(0, new Date(`${date}T08:00:00`).getTime() - now)
+  return {
+    days: Math.floor(distance / DAY_MS),
+    hours: Math.floor((distance / 3_600_000) % 24),
+    minutes: Math.floor((distance / 60_000) % 60),
+    seconds: Math.floor((distance / 1000) % 60),
+    finished: distance === 0,
+  }
+}
+
+function localToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 function ArenaBrandMark() {
   return (
@@ -101,16 +152,18 @@ function MiniBand({ score }: { score: number }) {
 function SkillCard({
   skill,
   onOpen,
+  animateHover,
 }: {
   skill: (typeof skills)[number] & { score: number }
   onOpen: (id: SkillId) => void
+  animateHover: boolean
 }) {
   const Icon = skill.icon
 
   return (
     <motion.article
       className="ielts-arena-glass ielts-arena-skill-card"
-      whileHover={{ y: -5, scale: 1.006 }}
+      whileHover={animateHover ? { y: -6, scale: 1.008 } : undefined}
       transition={{ type: 'spring', stiffness: 260, damping: 22 }}
     >
       <div className="ielts-arena-card-heading">
@@ -136,7 +189,11 @@ export default function IELTS() {
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
   const speakingSessions = useSpeakingStore((state) => state.sessions)
-  const { minimalMotion } = useMotionPreferences()
+  const { minimalMotion, allowHoverMotion } = useMotionPreferences()
+  const [examDate, setExamDate] = useState(() => loadExamDate(user?.id))
+  const [draftExamDate, setDraftExamDate] = useState(() => loadExamDate(user?.id))
+  const [editingExamDate, setEditingExamDate] = useState(false)
+  const [now, setNow] = useState(Date.now())
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const mockFrom = navigationState?.from ?? 'tests'
@@ -157,7 +214,33 @@ export default function IELTS() {
   }, [speakingSessions, user?.id])
   const scoredSkills = skills.map((skill) => ({ ...skill, score: skillScores[skill.id] }))
   const overallBand = calculateOverallBand(skillScores)
+  const completedSkillCount = Object.values(skillScores).filter((score) => score > 0).length
   const overallDegrees = Math.min(360, Math.max(0, (overallBand / 9) * 360))
+  const remaining = useMemo(() => remainingUntil(examDate, now), [examDate, now])
+  const examDateObject = examDate ? new Date(`${examDate}T08:00:00`) : null
+  const formattedExamDate = examDateObject
+    ? examDateObject.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : 'No exam date selected'
+
+  useEffect(() => {
+    const storedDate = loadExamDate(user?.id)
+    setExamDate(storedDate)
+    setDraftExamDate(storedDate)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!examDate) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [examDate])
+
+  const confirmExamDate = () => {
+    if (!draftExamDate) return
+    saveExamDate(draftExamDate, user?.id)
+    setExamDate(draftExamDate)
+    setNow(Date.now())
+    setEditingExamDate(false)
+  }
 
   const openSection = (id: SkillId) => {
     const target = id === 'writing' ? '/ielts/writing/tests' : id === 'speaking' ? '/ielts/speaking/tests' : `/ielts/${id}`
@@ -179,7 +262,13 @@ export default function IELTS() {
       </div>
 
       <div className="ielts-arena-shell">
-        <header className="ielts-arena-header" aria-label="IELTS Arena navigation">
+        <motion.header
+          className="ielts-arena-header"
+          aria-label="IELTS Arena navigation"
+          initial={minimalMotion ? false : { opacity: 0, y: -18, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        >
           <button
             type="button"
             className="ielts-arena-brand"
@@ -207,11 +296,106 @@ export default function IELTS() {
           >
             {user ? 'Dashboard' : 'Login'}
           </button>
-        </header>
+        </motion.header>
 
-        <main id="ielts-arena-features" className="ielts-arena-dashboard">
+        <motion.section
+          className="ielts-arena-countdown"
+          initial={minimalMotion ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          aria-label="IELTS exam countdown"
+        >
+          <span className="ielts-arena-countdown-glow" aria-hidden="true" />
+          <div className="ielts-arena-countdown-date">
+            <span className="ielts-arena-countdown-icon"><CalendarDays /></span>
+            <div>
+              <span className="ielts-arena-kicker">Your booked IELTS exam</span>
+              <strong>{formattedExamDate}</strong>
+              <small>{examDate ? (remaining?.finished ? 'Exam day has arrived' : 'Countdown ends at 08:00 local time') : 'Add the exact date from your booking confirmation'}</small>
+            </div>
+            <button
+              type="button"
+              className="ielts-arena-date-edit"
+              onClick={() => {
+                setDraftExamDate(examDate)
+                setEditingExamDate((value) => !value)
+              }}
+            >
+              <Pencil /> {examDate ? 'Change' : 'Set date'}
+            </button>
+          </div>
+
+          <div className="ielts-arena-countdown-units" aria-live="polite">
+            {([
+              ['Days', remaining?.days ?? 0],
+              ['Hours', remaining?.hours ?? 0],
+              ['Minutes', remaining?.minutes ?? 0],
+              ['Seconds', remaining?.seconds ?? 0],
+            ] as const).map(([label, value]) => (
+              <div className="ielts-arena-countdown-unit" key={label}>
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.strong
+                    key={value}
+                    initial={minimalMotion ? false : { opacity: 0, y: -7, filter: 'blur(3px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={minimalMotion ? undefined : { opacity: 0, y: 6 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    {remaining ? String(value).padStart(2, '0') : '—'}
+                  </motion.strong>
+                </AnimatePresence>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="ielts-arena-countdown-progress">
+            <span className="ielts-arena-countdown-icon"><Target /></span>
+            <div>
+              <span className="ielts-arena-kicker">Verified score data</span>
+              <strong>{overallBand > 0 ? formatBand(overallBand) : '—'} <small>Overall</small></strong>
+              <p>{completedSkillCount} of 4 skills scored</p>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {editingExamDate ? (
+              <motion.div
+                className="ielts-arena-date-editor"
+                initial={minimalMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={minimalMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Clock3 />
+                <label htmlFor="ielts-exam-date">Exact exam date</label>
+                <input
+                  id="ielts-exam-date"
+                  type="date"
+                  min={localToday()}
+                  value={draftExamDate}
+                  onChange={(event) => setDraftExamDate(event.target.value)}
+                />
+                <button type="button" className="ielts-arena-date-save" onClick={confirmExamDate} disabled={!draftExamDate}>
+                  <Check /> Save date
+                </button>
+                <button type="button" className="ielts-arena-date-cancel" onClick={() => setEditingExamDate(false)} aria-label="Cancel date editing">
+                  <X />
+                </button>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.section>
+
+        <motion.main
+          id="ielts-arena-features"
+          className="ielts-arena-dashboard"
+          initial={minimalMotion ? false : { opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+        >
           <section className="ielts-arena-skills" aria-label="IELTS skills">
-            {scoredSkills.map((skill) => <SkillCard key={skill.id} skill={skill} onOpen={openSection} />)}
+            {scoredSkills.map((skill) => <SkillCard key={skill.id} skill={skill} onOpen={openSection} animateHover={allowHoverMotion} />)}
           </section>
 
           <section className="ielts-arena-glass ielts-arena-overview" aria-labelledby="ielts-overview-title">
@@ -278,7 +462,7 @@ export default function IELTS() {
               <span><strong>Full-Mock</strong><small>Take a Full Mock Test</small></span>
             </motion.button>
           </aside>
-        </main>
+        </motion.main>
       </div>
     </div>
   )

@@ -116,8 +116,8 @@ export function FloatingAIAssistant() {
 
       <motion.button
         type="button"
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.94 }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.96 }}
         onClick={() => {
           if (assistantBlocked) return
           if (isOpen) {
@@ -127,18 +127,26 @@ export function FloatingAIAssistant() {
           open()
         }}
         aria-label={isOpen ? 'Close AI tutor' : 'Open ProfAI tutor'}
-        className={`pointer-events-auto group relative inline-flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[0_18px_38px_rgba(220,38,38,0.4)] ${
+        className={`pointer-events-auto group relative inline-flex h-14 w-14 items-center justify-center rounded-[20px] border shadow-[0_14px_34px_-12px_rgba(15,23,42,0.52)] ring-1 ring-white/80 backdrop-blur-xl transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 active:shadow-[0_8px_22px_-12px_rgba(15,23,42,0.5)] dark:ring-white/10 dark:focus-visible:ring-offset-slate-950 ${
           showOrbLauncher
-            ? 'border-red-200/70 bg-white'
+            ? 'border-slate-200/80 bg-white/90 hover:border-rose-200 hover:bg-white dark:border-white/10 dark:bg-slate-900/90 dark:hover:border-rose-400/40 dark:hover:bg-slate-900'
             : isLegacyTestMode
-              ? 'border-slate-700 bg-slate-900 text-slate-200'
-              : 'border-red-300/60 bg-gradient-to-br from-red-500 via-rose-500 to-red-600 text-white'
+              ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600'
+              : 'border-rose-400/50 bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white hover:border-rose-300'
         }`}
       >
+        {!isOpen ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 whitespace-nowrap rounded-lg border border-slate-200/80 bg-slate-950/95 px-2.5 py-1.5 text-[11px] font-semibold tracking-wide text-white opacity-0 shadow-lg transition-all duration-150 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-translate-y-0.5 group-focus-visible:opacity-100 dark:border-white/10"
+          >
+            ProfAI tutor
+          </span>
+        ) : null}
         {showOrbLauncher ? (
-          <VoiceOrb state={voiceState} level={voiceLevel} size={52} />
+          <VoiceOrb state={voiceState} level={voiceLevel} size={42} />
         ) : (
-          <span className="relative">{isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}</span>
+          <span className="relative">{isOpen ? <X className="h-5 w-5" /> : <Bot className="h-5 w-5" />}</span>
         )}
         {!hasPremium && !assistantBlocked ? (
           <span className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-slate-100">

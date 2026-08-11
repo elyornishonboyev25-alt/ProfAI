@@ -229,8 +229,8 @@ function App() {
     return () => window.clearInterval(id)
   }, [user?.id])
 
-  // Onboarding is a required, server-backed one-time contract. Once completed,
-  // the flag travels with the account and this guard never interrupts the user again.
+  // New accounts enter onboarding once. Completing it or choosing "Skip for now"
+  // persists the flag, so learners can use the product and edit their profile later.
   if (user && !user.onboardingCompleted && pathname !== '/onboarding' && !pathname.startsWith('/shared/results/')) {
     return <Navigate to="/onboarding" replace />
   }
@@ -711,8 +711,6 @@ function App() {
 }
 
 export default App
-
-
 
 
 

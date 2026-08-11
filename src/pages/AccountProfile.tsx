@@ -38,8 +38,13 @@ import BadgeShelf from '@/components/achievements/BadgeShelf'
 import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog'
 import { setFlashToast } from '@/utils/authFlash'
 import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
+import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
 
 const NICKNAME_RE = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
+
+function normalizeSatScore(score: number) {
+  return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
+}
 
 const EMPTY_PROFILE: AccountProfileFields = {
   gender: null,
@@ -486,7 +491,10 @@ export default function AccountProfile() {
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Country
-                  <input value={form.country ?? ''} onChange={(e) => updateField('country', e.target.value)} className="input mt-1" placeholder="Country" />
+                  <input list="account-country-options" value={form.country ?? ''} onChange={(e) => updateField('country', e.target.value)} className="input mt-1" placeholder="Start typing a country..." autoComplete="off" />
+                  <datalist id="account-country-options">
+                    {WORLD_COUNTRIES.map((option) => <option key={option.code} value={option.name} label={`${option.flag} ${option.name}`} />)}
+                  </datalist>
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Grade level
@@ -522,7 +530,7 @@ export default function AccountProfile() {
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Current IELTS
-                  <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="6.0" />
+                  <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="N/A — not taken yet" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Target IELTS
@@ -530,11 +538,11 @@ export default function AccountProfile() {
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Current SAT
-                  <input type="number" min={400} max={1600} step={10} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="1100" />
+                  <input type="number" min={400} max={1600} step={50} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Target SAT
-                  <input type="number" min={400} max={1600} step={10} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="1450" />
+                  <input type="number" min={400} max={1600} step={50} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore))} className="input mt-1" placeholder="1450" />
                 </label>
                 <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                   Target countries
@@ -547,7 +555,10 @@ export default function AccountProfile() {
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Field of study
-                  <input value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder="Computer Science" />
+                  <input list="account-study-field-options" value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder="Type or choose a field..." autoComplete="off" />
+                  <datalist id="account-study-field-options">
+                    {POPULAR_STUDY_FIELDS.map((field) => <option key={field} value={field} />)}
+                  </datalist>
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   GPA

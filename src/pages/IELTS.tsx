@@ -355,8 +355,8 @@ export default function IELTS() {
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.strong
                     key={value}
-                    initial={minimalMotion ? false : { opacity: 0, y: -7, filter: 'blur(3px)' }}
-                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    initial={minimalMotion ? false : { opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={minimalMotion ? undefined : { opacity: 0, y: 6 }}
                     transition={{ duration: 0.22 }}
                   >
@@ -459,7 +459,7 @@ export default function IELTS() {
               type="button"
               className="ielts-arena-glass ielts-arena-recommendation ielts-arena-reading-next"
               onClick={() => openSection('reading')}
-              whileHover={{ y: -4 }}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
             >
               <h2>Recommended next</h2>
               <div className="ielts-arena-recommendation-title">
@@ -473,7 +473,7 @@ export default function IELTS() {
               type="button"
               className="ielts-arena-glass ielts-arena-recommendation ielts-arena-mock-next"
               onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}
-              whileHover={{ y: -4 }}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
             >
               <h2>Recommended next</h2>
               <div className="ielts-arena-recommendation-row">
@@ -486,7 +486,7 @@ export default function IELTS() {
               type="button"
               className="ielts-arena-glass ielts-arena-recommendation ielts-arena-full-mock"
               onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}
-              whileHover={{ y: -4 }}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
             >
               <span className="ielts-arena-icon"><FileCheck2 /></span>
               <span><strong>Full-Mock</strong><small>Take a Full Mock Test</small></span>

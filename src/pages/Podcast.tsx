@@ -3,26 +3,30 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
+  Atom,
   Bookmark,
   BookmarkPlus,
+  BriefcaseBusiness,
   Captions,
   CaptionsOff,
   Check,
   CheckCircle2,
   ChevronRight,
+  GraduationCap,
   Ear,
   Gauge,
   Headphones,
   Keyboard,
   Languages,
   ListMusic,
-  ListVideo,
   Loader2,
   Maximize,
   Minimize,
   Monitor,
+  MoreHorizontal,
   Moon,
   Pause,
+  Palette,
   PictureInPicture2,
   Play,
   Plus,
@@ -33,6 +37,8 @@ import {
   Settings,
   Sparkles,
   ShieldCheck,
+  SkipBack,
+  SkipForward,
   Timer,
   Trash2,
   Volume1,
@@ -41,6 +47,7 @@ import {
   X,
   Youtube,
 } from 'lucide-react'
+import '@/styles/podcast-library.css'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { PODCAST_EPISODES, getPodcastEpisode, type PodcastEpisode } from '@/data/podcasts'
@@ -138,14 +145,35 @@ function loadProgress(id: string): Progress {
   }
 }
 
-function levelBadge(level: PodcastEpisode['level']) {
-  if (level === 'Beginner') return 'border-emerald-200 bg-emerald-50/95 text-emerald-700'
-  if (level === 'Advanced') return 'border-rose-200 bg-rose-50/95 text-rose-700'
-  return 'border-amber-200 bg-amber-50/95 text-amber-700'
+function podcastLevel(level: string): PodcastEpisode['level'] {
+  if (level === 'Beginner' || level === 'A2') return 'Beginner'
+  if (level === 'Advanced' || level === 'C1' || level === 'C2') return 'Advanced'
+  return 'Intermediate'
 }
 
-function podcastLevel(level: string): PodcastEpisode['level'] {
-  return level === 'Beginner' || level === 'Advanced' ? level : 'Intermediate'
+type CefrLevel = 'A2' | 'B1' | 'B2' | 'C1'
+type PodcastCategory = 'Daily Life' | 'Science' | 'Business' | 'Culture'
+
+const LEVELS: CefrLevel[] = ['A2', 'B1', 'B2', 'C1']
+const CATEGORIES: { label: PodcastCategory; icon: typeof Ear }[] = [
+  { label: 'Daily Life', icon: Ear },
+  { label: 'Science', icon: Atom },
+  { label: 'Business', icon: BriefcaseBusiness },
+  { label: 'Culture', icon: Palette },
+]
+
+function episodeCefr(item: PodcastEpisode): CefrLevel {
+  if (item.level === 'Beginner') return 'A2'
+  if (item.level === 'Advanced') return 'C1'
+  return item.id === 'ep-001' || item.youtubeId.charCodeAt(0) % 2 === 0 ? 'B2' : 'B1'
+}
+
+function episodeCategory(item: PodcastEpisode): PodcastCategory {
+  const value = `${item.topic} ${item.title}`.toLowerCase()
+  if (/science|technology|health|nature|brain|habit/.test(value)) return 'Science'
+  if (/business|career|work|success|startup|money/.test(value)) return 'Business'
+  if (/culture|travel|history|art|food/.test(value)) return 'Culture'
+  return 'Daily Life'
 }
 
 function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetail): PodcastEpisode {
@@ -207,6 +235,10 @@ export default function Podcast() {
   const [podcastError, setPodcastError] = useState<string | null>(null)
   const [podcastNotice, setPodcastNotice] = useState<string | null>(null)
   const [openingPodcastId, setOpeningPodcastId] = useState<string | null>(null)
+  const [activeLevel, setActiveLevel] = useState<CefrLevel>('B2')
+  const [activeCategory, setActiveCategory] = useState<PodcastCategory>('Daily Life')
+  const [showAddPanel, setShowAddPanel] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   const episodes = useMemo(
     () => [...PODCAST_EPISODES, ...communityVideos.map(communityPodcast)],
@@ -828,6 +860,11 @@ export default function Podcast() {
     return transcriptCues.findIndex((cue) => currentTime >= cue.start && currentTime < cue.end)
   }, [transcriptCues, currentTime])
 
+  const visibleEpisodes = useMemo(
+    () => episodes.filter((item) => episodeCefr(item) === activeLevel && episodeCategory(item) === activeCategory),
+    [activeCategory, activeLevel, episodes],
+  )
+
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
 
   const onTrackHover = useCallback(
@@ -872,7 +909,7 @@ export default function Podcast() {
           ) : null}
           {/* played */}
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-400 to-sky-400"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 via-red-500 to-rose-300 shadow-[0_0_12px_rgba(239,68,68,0.85)]"
             style={{ width: `${progress}%` }}
           />
           {/* bookmark pips */}
@@ -951,7 +988,7 @@ export default function Podcast() {
 
         <div className="flex items-center gap-0.5 sm:gap-1">
           {sleepUntil ? (
-            <span className="hidden items-center gap-1 rounded-lg bg-indigo-500/25 px-2 py-1 text-[11px] font-bold text-indigo-100 sm:inline-flex">
+            <span className="hidden items-center gap-1 rounded-lg bg-red-500/25 px-2 py-1 text-[11px] font-bold text-red-100 sm:inline-flex">
               <Moon className="h-3 w-3" />
               {sleepRemaining}m
             </span>
@@ -987,7 +1024,7 @@ export default function Podcast() {
                         setOpenMenu(null)
                       }}
                       className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                        speed === rate ? 'bg-indigo-500/30 text-white' : 'text-slate-300 hover:bg-white/10'
+                        speed === rate ? 'bg-red-500/30 text-white' : 'text-slate-300 hover:bg-white/10'
                       }`}
                     >
                       {rate}×{speed === rate ? <Check className="h-3.5 w-3.5" /> : null}
@@ -1043,7 +1080,7 @@ export default function Podcast() {
                         type="button"
                         onClick={() => setLoopPoint('a')}
                         className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                          loopA !== null ? 'bg-indigo-500/30 text-indigo-100' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                          loopA !== null ? 'bg-red-500/30 text-red-100' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                         }`}
                       >
                         A {loopA !== null ? formatTime(loopA) : ''}
@@ -1052,7 +1089,7 @@ export default function Podcast() {
                         type="button"
                         onClick={() => setLoopPoint('b')}
                         className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                          loopB !== null ? 'bg-indigo-500/30 text-indigo-100' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                          loopB !== null ? 'bg-red-500/30 text-red-100' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                         }`}
                       >
                         B {loopB !== null ? formatTime(loopB) : ''}
@@ -1078,7 +1115,7 @@ export default function Podcast() {
                     <span className="flex items-center gap-1.5">
                       <Repeat1 className="h-4 w-4" /> Loop whole video
                     </span>
-                    <span className={`h-4 w-7 rounded-full p-0.5 transition ${loopVideo ? 'bg-indigo-500' : 'bg-slate-600'}`}>
+                    <span className={`h-4 w-7 rounded-full p-0.5 transition ${loopVideo ? 'bg-red-500' : 'bg-slate-600'}`}>
                       <span className={`block h-3 w-3 rounded-full bg-white transition ${loopVideo ? 'translate-x-3' : ''}`} />
                     </span>
                   </button>
@@ -1093,7 +1130,7 @@ export default function Podcast() {
                           type="button"
                           onClick={() => applyCaptionSize(size.value)}
                           className={`flex-1 rounded-lg px-1.5 py-1 text-[11px] font-bold transition ${
-                            captionSize === size.value ? 'bg-indigo-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                            captionSize === size.value ? 'bg-red-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                           }`}
                         >
                           {size.label}
@@ -1112,7 +1149,7 @@ export default function Podcast() {
                         type="button"
                         onClick={() => setSleep(null)}
                         className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
-                          sleepUntil === null ? 'bg-indigo-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                          sleepUntil === null ? 'bg-red-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                         }`}
                       >
                         Off
@@ -1187,7 +1224,7 @@ export default function Podcast() {
       className={`podcast-shell overflow-hidden bg-black ${
         mini
           ? 'fixed bottom-4 right-4 z-[70] w-[22rem] max-w-[90vw] rounded-2xl border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,0.6)]'
-          : 'relative rounded-[1.6rem] border border-white/10 shadow-[0_30px_70px_rgba(15,23,42,0.45)]'
+          : 'relative rounded-[2rem] border border-white/30 shadow-[0_30px_80px_rgba(15,23,42,0.38),0_12px_38px_rgba(220,38,38,0.16)]'
       }`}
     >
       <div
@@ -1243,7 +1280,7 @@ export default function Podcast() {
         {!ready ? (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950">
             <div className="flex flex-col items-center gap-3 text-slate-300">
-              <Loader2 className="h-9 w-9 animate-spin text-indigo-400" />
+              <Loader2 className="h-9 w-9 animate-spin text-red-400" />
               <p className="text-sm font-semibold">Loading player…</p>
             </div>
           </div>
@@ -1259,22 +1296,26 @@ export default function Podcast() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: minimalMotion ? 0 : 0.25 }}
-              className="group absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-slate-950 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-center"
+              className="podcast-cover group absolute inset-0 z-40 flex items-end justify-start overflow-hidden text-left"
+              style={{ backgroundImage: "url('/assets/podcast/science-habits-hero.png')" }}
             >
-              <div className="pointer-events-none absolute inset-0 opacity-60">
-                <div className="absolute -left-16 top-6 h-56 w-56 rounded-full bg-indigo-500/30 blur-3xl" />
-                <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
-              </div>
-              <span className={`relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${levelBadge(episode.level)}`}>
-                <Headphones className="h-3.5 w-3.5" /> {episode.level} · {episode.topic}
-              </span>
-              <h3 className="relative max-w-lg px-6 text-2xl font-black text-white sm:text-3xl">{episode.title}</h3>
-              <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 backdrop-blur transition group-hover:scale-105">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-[0_12px_30px_rgba(79,70,229,0.55)]">
-                  <Play className="h-7 w-7 translate-x-0.5" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#06121d]/95 via-[#091725]/55 to-[#2b0711]/25" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+              <div className="relative z-10 flex w-full flex-col items-start gap-3 p-5 pb-16 sm:p-8 sm:pb-20">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white backdrop-blur-xl">
+                  <Headphones className="h-3.5 w-3.5 text-red-300" /> {episodeCefr(episode)} · {episodeCategory(episode)}
                 </span>
+                <h3 className="max-w-[62%] text-2xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl">{episode.title}</h3>
+                <span className="flex items-center gap-4">
+                  <span className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white transition duration-300 group-hover:scale-110">
+                    <Play className="h-7 w-7 translate-x-0.5 fill-current" />
+                  </span>
+                  <span className="text-base font-semibold text-white/70">{episode.durationLabel}</span>
+                </span>
+              </div>
+              <span className="absolute bottom-16 right-5 z-10 rounded-xl border border-red-300/50 bg-red-600/80 px-3 py-2 text-sm font-black text-white shadow-[0_0_25px_rgba(239,68,68,0.55)] backdrop-blur-xl sm:bottom-20 sm:right-8">
+                {episodeCefr(episode)}
               </span>
-              <p className="relative text-xs font-medium text-slate-300">Press play to start listening</p>
             </motion.button>
           ) : null}
         </AnimatePresence>
@@ -1294,7 +1335,7 @@ export default function Podcast() {
                   seekTo(episode.startSeconds)
                   playerRef.current?.playVideo()
                 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-[0_12px_30px_rgba(79,70,229,0.55)] transition hover:scale-105"
+                className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white transition hover:scale-105"
                 aria-label="Replay"
               >
                 <RotateCcw className="h-7 w-7" />
@@ -1315,14 +1356,15 @@ export default function Podcast() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: minimalMotion ? 0 : 0.2 }}
-              className="group absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-6 text-center"
+              className="podcast-cover group absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center"
+              style={{ backgroundImage: "linear-gradient(135deg, rgba(2,6,23,.88), rgba(69,10,10,.55)), url('/assets/podcast/science-habits-hero.png')" }}
               aria-label="Play"
             >
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-indigo-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-red-100 backdrop-blur-xl">
                 <Pause className="h-3 w-3" /> Paused
               </span>
               <p className="max-w-xl text-base font-semibold leading-7 text-white sm:text-lg">{episode.title}</p>
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-[0_12px_30px_rgba(79,70,229,0.55)] transition group-hover:scale-105">
+              <span className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white transition group-hover:scale-105">
                 <Play className="h-7 w-7 translate-x-0.5" />
               </span>
             </motion.button>
@@ -1349,358 +1391,176 @@ export default function Podcast() {
     </div>
   )
 
-  const containerWidth = theater ? 'max-w-[88rem]' : 'max-w-6xl'
-
   return (
-    <div className="workspace-page podcast-page relative min-h-screen overflow-hidden px-4 py-6 text-slate-900 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-6 h-80 w-80 rounded-full bg-red-200/45 blur-3xl" />
-        <div className="absolute bottom-[-6rem] right-[-3rem] h-96 w-96 rounded-full bg-rose-200/35 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-orange-100/35 blur-3xl" />
-      </div>
+    <div className="podcast-library min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
+      <div className="podcast-aurora podcast-aurora-one" />
+      <div className="podcast-aurora podcast-aurora-two" />
+      <div className="podcast-aurora podcast-aurora-three" />
 
-      <div className={`relative mx-auto w-full ${containerWidth}`}>
-        {/* Hero */}
-        <section className="relative isolate overflow-hidden rounded-[2rem] border border-white/90 bg-white/72 p-6 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl sm:p-8">
-          <span className="pointer-events-none absolute -right-20 -top-24 -z-10 h-64 w-64 rounded-full bg-red-200/55 blur-3xl" />
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="premium-back-btn group min-h-11"
-            >
-              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-              Back to Dashboard
+      <div className={`relative z-10 mx-auto w-full ${theater ? 'max-w-[1680px]' : 'max-w-[1500px]'}`}>
+        <motion.header
+          initial={{ opacity: 0, y: -18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: minimalMotion ? 0 : 0.55 }}
+          className="podcast-glass relative rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <button type="button" onClick={() => navigate('/dashboard')} className="podcast-soft-button group">
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              <span className="hidden sm:inline">Dashboard</span>
             </button>
-            <span className="premium-top-chip min-h-11 gap-1.5">
-              <Headphones className="h-3.5 w-3.5" />
-              English Podcast · Listening
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowHelp(true)}
-              className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-red-100 bg-white/80 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700"
-            >
-              <Keyboard className="h-3.5 w-3.5" />
-              Shortcuts
-            </button>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">
-                Train your ear with{' '}
-                <span className="bg-gradient-to-r from-red-700 via-rose-600 to-orange-500 bg-clip-text text-transparent">English Podcasts</span>
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">
-                A distraction-free cinema player — captions, adjustable speed, A–B loops, bookmarks and fullscreen. The fastest
-                way to level up your IELTS &amp; everyday listening.
-              </p>
+            <div className="flex items-center gap-3">
+              <span className="podcast-logo-orb"><GraduationCap className="h-6 w-6" /></span>
+              <span className="text-xl font-black tracking-[-0.04em] text-white sm:text-2xl">Prof<span className="text-red-500">AI</span></span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <span className={`rounded-full border px-3 py-1 text-xs font-bold ${levelBadge(episode.level)}`}>{episode.level}</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                <Languages className="h-3.5 w-3.5" />
-                English captions
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                <ListMusic className="h-3.5 w-3.5" />
-                {episodes.length} episode{episodes.length === 1 ? '' : 's'}
-              </span>
+            <div className="flex items-center gap-2">
+              {canSubmitVideo ? (
+                <button type="button" onClick={() => setShowAddPanel((value) => !value)} className="podcast-soft-button text-red-700">
+                  <Plus className="h-4 w-4" /><span className="hidden sm:inline">Add podcast</span>
+                </button>
+              ) : null}
+              <button type="button" onClick={() => setShowHelp(true)} className="podcast-icon-button" aria-label="Keyboard shortcuts">
+                <Keyboard className="h-4 w-4" />
+              </button>
             </div>
           </div>
-        </section>
-
-        {/* Adding shared episodes is intentionally limited to the authorised curators. */}
-        {canSubmitVideo ? (
-          <section className="mt-6 rounded-[1.6rem] border border-white/90 bg-white/78 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-6">
-          <div className="flex items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 shadow-sm">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-lg font-black text-slate-950">Add a podcast to listen</h2>
-              <p className="text-xs text-slate-500">
-                Paste any public English YouTube video — if captions are missing, AI creates synced subtitles automatically.
-              </p>
-            </div>
+          <div className="mt-5 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-red-300/90">Listen · Learn · Level up</p>
+            <h1 className="mt-2 text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl">English Podcasts</h1>
+            <p className="mt-2 text-base font-medium text-white/55 sm:text-xl">Train your ears daily</p>
           </div>
-
-          <form
-            className="mt-4 flex flex-col gap-2 sm:flex-row"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void addPodcast()
-            }}
-          >
-            <div className="relative flex-1">
-              <Youtube className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
-              <input
-                type="text"
-                value={podcastUrl}
-                onChange={(event) => setPodcastUrl(event.target.value)}
-                disabled={addingPodcast}
-                placeholder="Paste a YouTube link — youtube.com/watch?v=… or youtu.be/…"
-                className="w-full rounded-2xl border border-red-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200 disabled:opacity-60"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={addingPodcast || !podcastUrl.trim()}
-              className="cta-sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(220,38,38,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {addingPodcast ? 'Analyzing…' : 'Add & listen'}
-            </button>
-          </form>
-
-          {addingPodcast ? (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2 text-xs font-semibold text-red-700">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Checking captions and generating a synced transcript when needed… this may take a few minutes.
-            </div>
-          ) : null}
-          {podcastError ? (
-            <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{podcastError}</p>
-          ) : null}
-          {podcastNotice ? (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {podcastNotice}
-            </p>
-          ) : null}
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Try:</span>
-            {SUGGESTED_PODCASTS.map((suggestion) => (
+          <div className="podcast-level-dock absolute -bottom-8 left-1/2 flex -translate-x-1/2 gap-2 rounded-[1.75rem] p-2 sm:gap-3">
+            {LEVELS.map((level) => (
               <button
-                key={suggestion.url}
+                key={level}
                 type="button"
-                disabled={addingPodcast}
-                onClick={() => void addPodcast(suggestion.url)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                onClick={() => setActiveLevel(level)}
+                className={`podcast-level-button ${activeLevel === level ? 'is-active' : ''}`}
               >
-                <Sparkles className="h-3 w-3" />
-                {suggestion.label}
+                {level}
               </button>
             ))}
           </div>
-          <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Public, embeddable English videos only. Audio is processed securely and is never stored.
-          </p>
-          </section>
-        ) : null}
+        </motion.header>
 
-        <div className={`mt-6 ${theater ? 'space-y-6' : 'grid gap-6 lg:grid-cols-[1.6fr_1fr]'}`}>
-          {/* Player column */}
-          <div>
-            <div className="relative">
-              {/* keeps layout height while the player floats as a mini window */}
-              {mini ? <div className="aspect-video w-full rounded-[1.6rem] border border-dashed border-white/15 bg-white/[0.03]" /> : null}
-              {mini ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400">
-                  <PictureInPicture2 className="h-7 w-7" />
-                  <p className="text-sm font-semibold">Playing in mini player</p>
-                  <button
-                    type="button"
-                    onClick={() => setMini(false)}
-                    className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
-                  >
-                    Return here
-                  </button>
-                </div>
-              ) : null}
-              {playerShell}
-            </div>
-
-            {/* Episode meta */}
-            <div className="mt-4 rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${levelBadge(episode.level)}`}>
-                  {episode.level}
-                </span>
-                <span className="rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                  {episode.topic}
-                </span>
-              </div>
-              <h2 className="mt-2.5 text-xl font-black text-slate-950">{episode.title}</h2>
-              <p className="mt-1.5 text-sm leading-6 text-slate-600">{episode.description}</p>
-            </div>
-          </div>
-
-          {/* Side column */}
-          <div className={theater ? 'grid gap-6 lg:grid-cols-3' : 'space-y-6'}>
-            {/* Transcript */}
-            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
-                <Captions className="h-4 w-4 text-red-500" />
-                Transcript &amp; subtitles
-              </h3>
-              {transcriptCues.length > 0 ? (
-                <div className="pod-scroll mt-3 max-h-[22rem] space-y-1.5 overflow-y-auto pr-1">
-                  {transcriptCues.map((cue, index) => {
-                    const active = index === activeCueIndex
-                    return (
-                      <button
-                        key={`${cue.start}-${index}`}
-                        type="button"
-                        onClick={() => seekTo(cue.start)}
-                        className={`block w-full rounded-xl border px-3 py-2 text-left text-sm leading-6 transition ${
-                          active
-                            ? 'border-red-200 bg-red-50 font-semibold text-slate-950 shadow-sm'
-                            : 'border-transparent text-slate-600 hover:border-red-100 hover:bg-red-50/60'
-                        }`}
-                      >
-                        <span className="mr-2 font-mono text-[11px] text-red-500">{formatTime(cue.start)}</span>
-                        {cue.text}
-                      </button>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="mt-3 rounded-xl border border-dashed border-red-200 bg-red-50/55 p-4">
-                  <p className="text-sm font-bold text-slate-900">Subtitles are on the player</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Use the <span className="font-bold text-red-600">CC</span> button (or press <kbd className="rounded bg-white px-1">C</kbd>) to
-                    show or hide English captions. Adjust caption size in player settings.
-                  </p>
-                </div>
-              )}
-            </article>
-
-            {/* Bookmarks */}
-            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <div className="flex items-center justify-between">
-                <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
-                  <Bookmark className="h-4 w-4 text-amber-300" />
-                  Bookmarks
-                </h3>
-                <button
-                  type="button"
-                  onClick={addBookmark}
-                  className="inline-flex items-center gap-1 rounded-lg border border-amber-300/40 bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-200 transition hover:bg-amber-400/25"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Add
-                </button>
-              </div>
-              {bookmarks.length > 0 ? (
-                <div className="mt-3 space-y-1.5">
-                  {bookmarks.map((time) => (
-                    <div
-                      key={time}
-                      className="group flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/45 px-3 py-2 transition hover:border-amber-300"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          seekTo(time)
-                          playerRef.current?.playVideo()
-                        }}
-                        className="flex flex-1 items-center gap-2 text-left"
-                      >
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/20 text-amber-200">
-                          <Bookmark className="h-3.5 w-3.5" />
-                        </span>
-                        <span className="font-mono text-sm font-semibold text-slate-800">{formatTime(time)}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeBookmark(time)}
-                        className="text-slate-500 opacity-0 transition hover:text-rose-300 group-hover:opacity-100"
-                        aria-label="Remove bookmark"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-3 rounded-xl border border-dashed border-amber-200 bg-amber-50/45 p-4 text-xs leading-5 text-slate-500">
-                  Press <kbd className="rounded bg-white px-1">N</kbd> or tap <span className="font-bold text-amber-700">Add</span> to save the current
-                  moment. Bookmarks appear on the seek bar and are saved on this device.
-                </p>
-              )}
-            </article>
-
-            {/* How to use */}
-            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
-                <Sparkles className="h-4 w-4 text-red-500" />
-                How to practise listening
-              </h3>
-              <div className="mt-3 space-y-2.5">
-                {LISTEN_STEPS.map((step, index) => {
-                  const Icon = step.icon
-                  return (
-                    <div key={step.title} className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50/45 p-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">
-                          <span className="mr-1 text-red-500">{index + 1}.</span>
-                          {step.title}
-                        </p>
-                        <p className="mt-0.5 text-xs leading-5 text-slate-500">{step.detail}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </article>
-
-            {/* Playlist */}
-            <article className="rounded-[1.4rem] border border-white/90 bg-white/76 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-950">
-                <ListVideo className="h-4 w-4 text-red-500" />
-                Episodes
-              </h3>
-              <div className="mt-3 space-y-2">
-                {episodes.map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    onClick={() => void openEpisode(item)}
-                    disabled={openingPodcastId === item.youtubeId}
-                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-200 ${
-                      item.id === episode.id
-                        ? 'border-red-200 bg-red-50'
-                        : 'border-slate-100 bg-white hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50'
-                    } ${openingPodcastId === item.youtubeId ? 'cursor-wait opacity-70' : ''}`}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white">
-                      <Headphones className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-slate-900">{item.title}</p>
-                      <p className="text-[11px] text-slate-500">
-                        {item.level} · {item.topic}
-                      </p>
-                    </div>
-                    {openingPodcastId === item.youtubeId ? (
-                      <Loader2 className="ml-auto h-4 w-4 animate-spin text-red-500" />
-                    ) : item.id === episode.id ? (
-                      <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                        {playing ? (
-                          <span className="flex items-end gap-[2px]">
-                            <span className="pod-eq-bar h-2 w-[2px] rounded bg-white" />
-                            <span className="pod-eq-bar h-3 w-[2px] rounded bg-white" style={{ animationDelay: '0.15s' }} />
-                            <span className="pod-eq-bar h-1.5 w-[2px] rounded bg-white" style={{ animationDelay: '0.3s' }} />
-                          </span>
-                        ) : null}
-                        Now
-                      </span>
-                    ) : null}
-                  </button>
-                ))}
-                {canSubmitVideo ? (
-                  <div className="rounded-xl border border-dashed border-red-200 bg-red-50/45 px-3 py-3 text-center text-xs font-medium text-slate-500">
-                    Add an English subtitled YouTube link above to grow this shared playlist.
+        <AnimatePresence>
+          {canSubmitVideo && showAddPanel ? (
+            <motion.section
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              transition={{ duration: minimalMotion ? 0 : 0.32 }}
+              className="podcast-add-panel mt-12 overflow-hidden rounded-[1.75rem]"
+            >
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-red-600 shadow-sm"><Sparkles className="h-5 w-5" /></span>
+                    <div><h2 className="text-lg font-black">Add a podcast to listen</h2><p className="text-xs text-slate-500">Paste any public English YouTube video — AI creates synced subtitles when needed.</p></div>
                   </div>
-                ) : null}
+                  <button type="button" onClick={() => setShowAddPanel(false)} className="podcast-icon-button"><X className="h-4 w-4" /></button>
+                </div>
+                <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={(event) => { event.preventDefault(); void addPodcast() }}>
+                  <div className="relative flex-1">
+                    <Youtube className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+                    <input type="text" value={podcastUrl} onChange={(event) => setPodcastUrl(event.target.value)} disabled={addingPodcast} placeholder="Paste a YouTube link — youtube.com/watch?v=… or youtu.be/…" className="podcast-url-input" />
+                  </div>
+                  <button type="submit" disabled={addingPodcast || !podcastUrl.trim()} className="podcast-add-button">
+                    {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{addingPodcast ? 'Analyzing…' : 'Add & listen'}
+                  </button>
+                </form>
+                {addingPodcast ? <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-red-700"><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking captions and building the transcript…</p> : null}
+                {podcastError ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-semibold text-rose-700">{podcastError}</p> : null}
+                {podcastNotice ? <p className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs font-semibold text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" />{podcastNotice}</p> : null}
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Try:</span>
+                  {SUGGESTED_PODCASTS.map((suggestion) => <button key={suggestion.url} type="button" disabled={addingPodcast} onClick={() => void addPodcast(suggestion.url)} className="podcast-suggestion"><Sparkles className="h-3 w-3" />{suggestion.label}</button>)}
+                </div>
+                <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400"><ShieldCheck className="h-3.5 w-3.5" />Public, embeddable English videos only. Audio is processed securely and is never stored.</p>
               </div>
-            </article>
-          </div>
+            </motion.section>
+          ) : null}
+        </AnimatePresence>
+
+        <div className="mt-14 grid items-start gap-6 xl:grid-cols-[155px_minmax(0,1fr)_280px]">
+          <motion.aside initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.15 }} className="podcast-glass podcast-category-rail xl:sticky xl:top-5">
+            {CATEGORIES.map(({ label, icon: Icon }) => (
+              <button key={label} type="button" onClick={() => setActiveCategory(label)} className={`podcast-category-button ${activeCategory === label ? 'is-active' : ''}`}>
+                <Icon className="h-6 w-6" /><span>{label}</span>
+              </button>
+            ))}
+          </motion.aside>
+
+          <main className="min-w-0">
+            <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : 0.2, duration: 0.5 }}>
+              <div className="mb-4 flex items-end justify-between gap-4 px-1">
+                <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Featured episode</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
+                <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex"><Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" />English captions</span>
+              </div>
+              <div className="relative">
+                {mini ? <div className="aspect-video w-full rounded-[2rem] border border-dashed border-slate-300 bg-white/30" /> : null}
+                {mini ? <button type="button" onClick={() => setMini(false)} className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm font-bold text-slate-500"><PictureInPicture2 className="h-7 w-7" />Return player here</button> : null}
+                {playerShell}
+              </div>
+            </motion.div>
+
+            <div className="mt-7 flex items-center justify-between gap-3 px-1">
+              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Explore library</p><h2 className="text-xl font-black text-slate-950">{activeCategory} · {activeLevel}</h2></div>
+              <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length} episode{visibleEpisodes.length === 1 ? '' : 's'}</span>
+            </div>
+            {visibleEpisodes.length > 0 ? (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleEpisodes.map((item, index) => (
+                  <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} disabled={openingPodcastId === item.youtubeId} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : index * 0.06 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
+                    <span className="relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
+                      <img src={`https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
+                      <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow-[0_0_22px_rgba(239,68,68,.65)] transition group-hover:opacity-100"><Play className="h-4 w-4 fill-current" /></span>
+                      {item.id === episode.id ? <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white shadow-lg"><Check className="h-3.5 w-3.5" /></span> : null}
+                    </span>
+                    <span className="mt-3 block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
+                    <span className="mt-2 flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : '22%' }} /></span></span>
+                  </motion.button>
+                ))}
+              </div>
+            ) : (
+              <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800">No {activeLevel} {activeCategory.toLowerCase()} episodes yet</p><p className="mt-1 text-sm text-slate-500">Choose another level or category{canSubmitVideo ? ', or add a podcast.' : '.'}</p></div>
+            )}
+
+            <button type="button" onClick={() => setShowDetails((value) => !value)} className="podcast-details-toggle mt-6 w-full">
+              <span className="flex items-center gap-2"><Captions className="h-4 w-4 text-red-500" />Transcript, bookmarks &amp; practice tools</span><ChevronRight className={`h-4 w-4 transition ${showDetails ? 'rotate-90' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {showDetails ? (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                    <article className="podcast-detail-card"><h3><Captions className="h-4 w-4 text-red-500" />Transcript</h3>{transcriptCues.length ? <div className="pod-scroll mt-3 max-h-72 space-y-1 overflow-y-auto">{transcriptCues.map((cue, index) => <button key={`${cue.start}-${index}`} type="button" onClick={() => seekTo(cue.start)} className={`block w-full rounded-xl px-3 py-2 text-left text-xs leading-5 ${index === activeCueIndex ? 'bg-red-50 font-bold text-slate-950' : 'text-slate-600 hover:bg-white/60'}`}><span className="mr-2 font-mono text-red-500">{formatTime(cue.start)}</span>{cue.text}</button>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500">Captions are available directly on the player. Press <b className="text-red-600">C</b> to toggle them.</p>}</article>
+                    <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" />Bookmarks</h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" />Add</button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label="Remove bookmark"><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500">Press <b>N</b> to save the current moment on this device.</p>}</article>
+                    <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" />Practice flow</h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> {step.title}</p></div> })}</div></article>
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </main>
+
+          <motion.aside initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.28 }} className="podcast-glass podcast-continue xl:sticky xl:top-5">
+            <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950">Continue listening</h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
+            <div className="mt-5 flex items-center gap-3">
+              <img src="/assets/podcast/science-habits-hero.png" alt="" className="h-20 w-20 rounded-2xl object-cover object-right shadow-lg" />
+              <div className="min-w-0"><p className="line-clamp-2 font-black leading-5 text-slate-900">{episode.title}</p><p className="mt-1 text-sm font-semibold text-slate-500">{formatTime(duration || currentTime)}</p></div>
+            </div>
+            <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/65"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400 transition-all duration-300" style={{ width: `${Math.max(3, progress)}%` }} /></div>
+            <div className="mt-6 flex items-center justify-center gap-7">
+              <button type="button" onClick={() => skip(-10)} className="podcast-skip-button" aria-label="Back 10 seconds"><SkipBack className="h-5 w-5 fill-current" /></button>
+              <button type="button" onClick={togglePlay} className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white" aria-label={playing ? 'Pause' : 'Play'}>{playing ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 translate-x-0.5 fill-current" />}</button>
+              <button type="button" onClick={() => skip(10)} className="podcast-skip-button" aria-label="Forward 10 seconds"><SkipForward className="h-5 w-5 fill-current" /></button>
+            </div>
+            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/55 pt-5 text-center">
+              <button type="button" onClick={toggleCaptions} className={`podcast-quick-tool ${captionsOn ? 'is-active' : ''}`}><Captions className="h-4 w-4" /><span>CC</span></button>
+              <button type="button" onClick={addBookmark} className="podcast-quick-tool"><BookmarkPlus className="h-4 w-4" /><span>Save</span></button>
+              <button type="button" onClick={toggleMini} className={`podcast-quick-tool ${mini ? 'is-active' : ''}`}><PictureInPicture2 className="h-4 w-4" /><span>Mini</span></button>
+            </div>
+          </motion.aside>
         </div>
       </div>
 

@@ -229,8 +229,8 @@ function App() {
     return () => window.clearInterval(id)
   }, [user?.id])
 
-  // New accounts enter onboarding once. Completing it or choosing "Skip for now"
-  // persists the flag, so learners can use the product and edit their profile later.
+  // New accounts enter onboarding once. Completing the review or skipping its
+  // final step persists the flag, so learners can edit their profile later.
   if (user && !user.onboardingCompleted && pathname !== '/onboarding' && !pathname.startsWith('/shared/results/')) {
     return <Navigate to="/onboarding" replace />
   }
@@ -711,7 +711,6 @@ function App() {
 }
 
 export default App
-
 
 
 

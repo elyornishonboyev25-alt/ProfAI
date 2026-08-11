@@ -342,6 +342,11 @@ export default function Onboarding() {
   }
 
   const handleSkip = () => {
+    if (step < 6) {
+      goTo((step + 1) as StepId, 'forward')
+      return
+    }
+
     const onboardingCompletedAt = new Date().toISOString()
     setOnboardingCompleted(true)
     void updateAccount({ onboardingCompletedAt }).catch(() => {

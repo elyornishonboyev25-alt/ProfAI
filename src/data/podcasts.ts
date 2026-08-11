@@ -15,6 +15,8 @@ export type PodcastEpisode = {
   durationLabel: string
   topic: string
   source: string
+  /** Optional artwork supplied by the podcast source. Falls back to the video's YouTube thumbnail. */
+  coverUrl?: string | null
   /**
    * Optional synced transcript. When present the transcript panel highlights
    * along with playback and each line is click-to-seek. When absent we rely on

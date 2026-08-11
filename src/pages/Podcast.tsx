@@ -176,6 +176,25 @@ function episodeCategory(item: PodcastEpisode): PodcastCategory {
   return 'Daily Life'
 }
 
+function episodeArtwork(item: PodcastEpisode) {
+  return item.coverUrl || `https://i.ytimg.com/vi/${item.youtubeId}/maxresdefault.jpg`
+}
+
+function fallbackArtwork(item: PodcastEpisode) {
+  return `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`
+}
+
+function handleArtworkError(event: React.SyntheticEvent<HTMLImageElement>, item: PodcastEpisode) {
+  const image = event.currentTarget
+  if (image.dataset.fallbackApplied === 'true') {
+    image.onerror = null
+    image.src = '/assets/podcast/science-habits-hero.png'
+    return
+  }
+  image.dataset.fallbackApplied = 'true'
+  image.src = fallbackArtwork(item)
+}
+
 function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetail): PodcastEpisode {
   return {
     id: `community-${video.youtubeId}`,
@@ -190,6 +209,7 @@ function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetai
     durationLabel: video.durationSec > 0 ? formatTime(video.durationSec) : 'Full episode',
     topic: video.topic || 'English listening',
     source: 'Community · YouTube',
+    coverUrl: video.thumbnailUrl,
     transcript: 'segments' in video
       ? video.segments.map((segment) => ({ start: segment.startSec, end: segment.endSec, text: segment.text }))
       : undefined,
@@ -245,6 +265,7 @@ export default function Podcast() {
     [communityVideos],
   )
   const episode = selectedEpisode ?? getPodcastEpisode()
+  const artworkUrl = episodeArtwork(episode)
 
   const playerRef = useRef<YTPlayer | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
@@ -1297,8 +1318,13 @@ export default function Podcast() {
               exit={{ opacity: 0 }}
               transition={{ duration: minimalMotion ? 0 : 0.25 }}
               className="podcast-cover group absolute inset-0 z-40 flex items-end justify-start overflow-hidden text-left"
-              style={{ backgroundImage: "url('/assets/podcast/science-habits-hero.png')" }}
             >
+              <img
+                src={artworkUrl}
+                onError={(event) => handleArtworkError(event, episode)}
+                alt=""
+                className="podcast-player-artwork pointer-events-none absolute inset-0 h-full w-full object-cover"
+              />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#06121d]/95 via-[#091725]/55 to-[#2b0711]/25" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
               <div className="relative z-10 flex w-full flex-col items-start gap-3 p-5 pb-16 sm:p-8 sm:pb-20">
@@ -1357,14 +1383,20 @@ export default function Podcast() {
               exit={{ opacity: 0 }}
               transition={{ duration: minimalMotion ? 0 : 0.2 }}
               className="podcast-cover group absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center"
-              style={{ backgroundImage: "linear-gradient(135deg, rgba(2,6,23,.88), rgba(69,10,10,.55)), url('/assets/podcast/science-habits-hero.png')" }}
               aria-label="Play"
             >
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-red-100 backdrop-blur-xl">
+              <img
+                src={artworkUrl}
+                onError={(event) => handleArtworkError(event, episode)}
+                alt=""
+                className="podcast-player-artwork pointer-events-none absolute inset-0 h-full w-full object-cover opacity-55"
+              />
+              <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/75 to-red-950/60 backdrop-blur-[2px]" />
+              <span className="relative z-10 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-red-100 backdrop-blur-xl">
                 <Pause className="h-3 w-3" /> Paused
               </span>
-              <p className="max-w-xl text-base font-semibold leading-7 text-white sm:text-lg">{episode.title}</p>
-              <span className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white transition group-hover:scale-105">
+              <p className="relative z-10 max-w-xl text-base font-semibold leading-7 text-white sm:text-lg">{episode.title}</p>
+              <span className="podcast-play-orb relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-white transition group-hover:scale-105">
                 <Play className="h-7 w-7 translate-x-0.5" />
               </span>
             </motion.button>
@@ -1396,14 +1428,34 @@ export default function Podcast() {
       <div className="podcast-aurora podcast-aurora-one" />
       <div className="podcast-aurora podcast-aurora-two" />
       <div className="podcast-aurora podcast-aurora-three" />
+      <div className="podcast-orb podcast-orb-one" />
+      <div className="podcast-orb podcast-orb-two" />
+      <div className="podcast-orb podcast-orb-three" />
+      <div className="podcast-orb podcast-orb-four" />
+      <div className="podcast-orb podcast-orb-five" />
+      <div className="podcast-orb podcast-orb-six" />
 
       <div className={`relative z-10 mx-auto w-full ${theater ? 'max-w-[1680px]' : 'max-w-[1500px]'}`}>
         <motion.header
           initial={{ opacity: 0, y: -18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: minimalMotion ? 0 : 0.55 }}
-          className="podcast-glass relative rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
+          className="podcast-glass relative isolate rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
         >
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={artworkUrl}
+              src={artworkUrl}
+              onError={(event) => handleArtworkError(event, episode)}
+              alt=""
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 0.72, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: minimalMotion ? 0 : 0.7 }}
+              className="podcast-header-artwork absolute inset-0 -z-20 h-full w-full rounded-[inherit] object-cover"
+            />
+          </AnimatePresence>
+          <span className="podcast-header-vignette pointer-events-none absolute inset-0 -z-10 rounded-[inherit]" />
           <div className="flex items-center justify-between gap-3">
             <button type="button" onClick={() => navigate('/dashboard')} className="podcast-soft-button group">
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -1513,7 +1565,7 @@ export default function Podcast() {
                 {visibleEpisodes.map((item, index) => (
                   <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} disabled={openingPodcastId === item.youtubeId} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : index * 0.06 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
                     <span className="relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
-                      <img src={`https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                      <img src={episodeArtwork(item)} onError={(event) => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                       <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
                       <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow-[0_0_22px_rgba(239,68,68,.65)] transition group-hover:opacity-100"><Play className="h-4 w-4 fill-current" /></span>
                       {item.id === episode.id ? <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white shadow-lg"><Check className="h-3.5 w-3.5" /></span> : null}
@@ -1533,8 +1585,40 @@ export default function Podcast() {
             <AnimatePresence>
               {showDetails ? (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                    <article className="podcast-detail-card"><h3><Captions className="h-4 w-4 text-red-500" />Transcript</h3>{transcriptCues.length ? <div className="pod-scroll mt-3 max-h-72 space-y-1 overflow-y-auto">{transcriptCues.map((cue, index) => <button key={`${cue.start}-${index}`} type="button" onClick={() => seekTo(cue.start)} className={`block w-full rounded-xl px-3 py-2 text-left text-xs leading-5 ${index === activeCueIndex ? 'bg-red-50 font-bold text-slate-950' : 'text-slate-600 hover:bg-white/60'}`}><span className="mr-2 font-mono text-red-500">{formatTime(cue.start)}</span>{cue.text}</button>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500">Captions are available directly on the player. Press <b className="text-red-600">C</b> to toggle them.</p>}</article>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_.8fr_.8fr]">
+                    <article className="podcast-detail-card podcast-transcript-card">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3><Captions className="h-4 w-4 text-red-500" />Transcript</h3>
+                        <span className="podcast-live-pill"><span />Synced</span>
+                      </div>
+                      {transcriptCues.length ? (
+                        <div className="pod-scroll mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                          {transcriptCues.map((cue, index) => {
+                            const active = index === activeCueIndex
+                            return (
+                              <motion.button
+                                layout
+                                key={`${cue.start}-${index}`}
+                                type="button"
+                                onClick={() => seekTo(cue.start)}
+                                className={`podcast-transcript-row ${active ? 'is-active' : ''}`}
+                              >
+                                <span className="podcast-transcript-time">{active ? <Play className="h-3 w-3 fill-current" /> : formatTime(cue.start)}</span>
+                                <span>{cue.text}</span>
+                              </motion.button>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <div className="podcast-transcript-empty mt-3">
+                          <span className="podcast-transcript-orb"><Captions className="h-5 w-5" /></span>
+                          <div>
+                            <p className="text-sm font-black text-slate-800">Captions live on the player</p>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">Press <b className="text-red-600">C</b> or use the CC control to show English subtitles.</p>
+                          </div>
+                        </div>
+                      )}
+                    </article>
                     <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" />Bookmarks</h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" />Add</button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label="Remove bookmark"><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500">Press <b>N</b> to save the current moment on this device.</p>}</article>
                     <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" />Practice flow</h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> {step.title}</p></div> })}</div></article>
                   </div>
@@ -1546,7 +1630,7 @@ export default function Podcast() {
           <motion.aside initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.28 }} className="podcast-glass podcast-continue xl:sticky xl:top-5">
             <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950">Continue listening</h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
             <div className="mt-5 flex items-center gap-3">
-              <img src="/assets/podcast/science-habits-hero.png" alt="" className="h-20 w-20 rounded-2xl object-cover object-right shadow-lg" />
+              <img src={artworkUrl} onError={(event) => handleArtworkError(event, episode)} alt="" className="h-20 w-20 rounded-2xl object-cover shadow-lg" />
               <div className="min-w-0"><p className="line-clamp-2 font-black leading-5 text-slate-900">{episode.title}</p><p className="mt-1 text-sm font-semibold text-slate-500">{formatTime(duration || currentTime)}</p></div>
             </div>
             <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/65"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400 transition-all duration-300" style={{ width: `${Math.max(3, progress)}%` }} /></div>

@@ -1458,6 +1458,7 @@ export default function Podcast() {
               src={artworkUrl}
               onError={(event) => handleArtworkError(event, episode)}
               alt=""
+              decoding="async"
               initial={{ opacity: 0, scale: 1.08 }}
               animate={minimalMotion
                 ? { opacity: 0.68, scale: 1.045 }
@@ -1555,7 +1556,7 @@ export default function Podcast() {
           ) : null}
         </AnimatePresence>
 
-        <div className="podcast-workspace mt-14 grid items-start gap-6 xl:grid-cols-[150px_minmax(0,1fr)_335px]">
+        <div className="podcast-workspace mt-14 grid items-start gap-6 xl:grid-cols-[132px_minmax(0,1fr)_335px]">
           <motion.aside initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.15 }} className="podcast-glass podcast-category-rail xl:sticky xl:top-5">
             {CATEGORIES.map(({ label, icon: Icon }) => (
               <button key={label} type="button" onClick={() => setActiveCategory(label)} className={`podcast-category-button ${activeCategory === label ? 'is-active' : ''}`}>

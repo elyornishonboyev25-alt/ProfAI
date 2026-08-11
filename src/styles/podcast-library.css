@@ -34,8 +34,8 @@
     radial-gradient(circle at 88% 13%, rgba(251, 146, 60, 0.18), transparent 22%),
     radial-gradient(circle at 75% 82%, rgba(248, 113, 113, 0.2), transparent 24%),
     radial-gradient(circle at 21% 74%, rgba(186, 230, 253, 0.22), transparent 25%);
-  filter: blur(38px);
   animation: podcast-background-drift 18s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .podcast-aurora {
@@ -639,21 +639,24 @@
 .podcast-library-header {
   min-height: 304px;
   border-color: rgba(255, 255, 255, 0.72);
-  background: linear-gradient(118deg, rgba(15, 46, 64, 0.58), rgba(16, 33, 54, 0.5) 52%, rgba(69, 42, 45, 0.38));
-  backdrop-filter: blur(72px) saturate(185%);
-  -webkit-backdrop-filter: blur(72px) saturate(185%);
+  background:
+    linear-gradient(118deg, rgba(15, 46, 64, 0.52), rgba(16, 33, 54, 0.42) 52%, rgba(69, 42, 45, 0.34)),
+    url('/assets/podcast/podcast-studio-hero.jpg') center 54% / cover no-repeat;
+  backdrop-filter: blur(42px) saturate(172%);
+  -webkit-backdrop-filter: blur(42px) saturate(172%);
 }
 
 .podcast-library-header .podcast-header-artwork {
-  filter: saturate(0.78) contrast(1.03) blur(5.5px);
+  filter: saturate(0.78) contrast(1.03) blur(4px);
+  will-change: transform, opacity;
 }
 
 .podcast-library-header .podcast-header-vignette {
   background:
     linear-gradient(112deg, rgba(16, 45, 61, 0.72), rgba(13, 29, 49, 0.6) 51%, rgba(66, 39, 39, 0.42)),
     linear-gradient(to bottom, rgba(2, 6, 23, 0.08), rgba(2, 6, 23, 0.34));
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(10px) saturate(138%);
+  -webkit-backdrop-filter: blur(10px) saturate(138%);
 }
 
 .podcast-library .podcast-library-header::before {
@@ -666,8 +669,6 @@
     linear-gradient(118deg, rgba(255, 255, 255, 0.16), transparent 32%, rgba(255, 255, 255, 0.08) 62%, transparent 82%);
   background-size: 145% 145%, 155% 155%, 135% 135%, 180% 100%;
   animation: podcast-header-glass-flow 13s ease-in-out infinite alternate;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .podcast-library .podcast-library-header::after {
@@ -691,8 +692,8 @@
 
 .podcast-library-header .podcast-level-dock {
   z-index: 4;
-  backdrop-filter: blur(52px) saturate(180%);
-  -webkit-backdrop-filter: blur(52px) saturate(180%);
+  backdrop-filter: blur(36px) saturate(168%);
+  -webkit-backdrop-filter: blur(36px) saturate(168%);
 }
 
 .podcast-library-header h1 {
@@ -724,8 +725,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.28),
     0 35px 76px rgba(15, 23, 42, 0.28),
     0 14px 42px rgba(220, 38, 38, 0.18);
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
   animation: podcast-featured-glow 7s ease-in-out infinite;
 }
 
@@ -753,17 +752,36 @@
 
 .podcast-category-rail,
 .podcast-continue,
+.podcast-add-panel {
+  backdrop-filter: blur(40px) saturate(175%);
+  -webkit-backdrop-filter: blur(40px) saturate(175%);
+}
+
 .podcast-episode-card,
 .podcast-details-toggle,
-.podcast-detail-card,
-.podcast-add-panel {
-  backdrop-filter: blur(58px) saturate(185%);
-  -webkit-backdrop-filter: blur(58px) saturate(185%);
+.podcast-detail-card {
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+
+.podcast-episode-card,
+.podcast-detail-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
 }
 
 .podcast-category-rail,
 .podcast-continue {
   overflow: hidden;
+}
+
+.podcast-category-rail {
+  border-color: rgba(255, 255, 255, 0.64);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(224, 242, 254, 0.16));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 22px 50px rgba(51,65,85,.1);
+  backdrop-filter: blur(40px) saturate(172%);
+  -webkit-backdrop-filter: blur(40px) saturate(172%);
+  animation: podcast-rail-glass 6.5s ease-in-out infinite;
 }
 
 .podcast-category-rail::after,
@@ -773,7 +791,9 @@
   border-radius: inherit;
   content: '';
   pointer-events: none;
-  background: linear-gradient(122deg, rgba(255,255,255,.26), transparent 38%, rgba(255,255,255,.1));
+  background: linear-gradient(122deg, rgba(255,255,255,.34), transparent 34%, rgba(255,255,255,.12));
+  background-size: 220% 100%;
+  animation: podcast-rail-sheen 7s ease-in-out infinite;
 }
 
 .podcast-episode-grid {
@@ -882,15 +902,16 @@
   }
 
   .podcast-category-rail {
-    min-height: 555px;
-    border-radius: 2rem;
-    padding: 0.85rem 0.65rem;
+    min-height: 458px;
+    border-radius: 1.7rem;
+    padding: 0.65rem 0.5rem;
   }
 
   .podcast-category-button {
     flex: 1;
     min-height: 0;
-    border-radius: 1.35rem;
+    border-radius: 1.15rem;
+    padding-inline: 0.2rem;
   }
 
   .podcast-continue {
@@ -955,6 +976,17 @@
 @keyframes podcast-background-drift {
   from { transform: translate3d(-2%, -1%, 0) scale(.97) rotate(-1deg); }
   to { transform: translate3d(3%, 2%, 0) scale(1.05) rotate(1.5deg); }
+}
+
+@keyframes podcast-rail-glass {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 20px 46px rgba(51,65,85,.09), 0 0 0 rgba(239,68,68,0); }
+  50% { box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 24px 56px rgba(51,65,85,.13), 0 0 28px rgba(248,113,113,.1); }
+}
+
+@keyframes podcast-rail-sheen {
+  0%, 20% { background-position: 135% 0; opacity: .28; }
+  55% { opacity: .66; }
+  80%, 100% { background-position: -85% 0; opacity: .3; }
 }
 
 @keyframes podcast-featured-glow {
@@ -1058,6 +1090,9 @@
   .podcast-continue-artwork,
   .podcast-continue-progress-fill::after,
   .podcast-continue .podcast-play-orb,
+  .podcast-category-rail,
+  .podcast-category-rail::after,
+  .podcast-continue::after,
   .podcast-level-dock,
   .podcast-continue,
   .podcast-add-panel,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -184,15 +184,38 @@ function fallbackArtwork(item: PodcastEpisode) {
   return `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`
 }
 
+function artworkFallbacks(item: PodcastEpisode) {
+  return [
+    `https://i.ytimg.com/vi/${item.youtubeId}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${item.youtubeId}/hq720.jpg`,
+    `https://i.ytimg.com/vi/${item.youtubeId}/sddefault.jpg`,
+    `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`,
+    `https://img.youtube.com/vi/${item.youtubeId}/0.jpg`,
+  ]
+}
+
 function handleArtworkError(event: React.SyntheticEvent<HTMLImageElement>, item: PodcastEpisode) {
   const image = event.currentTarget
-  if (image.dataset.fallbackApplied === 'true') {
+
+  if (image.dataset.artworkId !== item.youtubeId) {
+    image.dataset.artworkId = item.youtubeId
+    image.dataset.fallbackIndex = '0'
+  }
+
+  const currentSrc = image.currentSrc || image.src
+  const candidates = artworkFallbacks(item)
+  let index = Number(image.dataset.fallbackIndex || 0)
+
+  while (index < candidates.length && candidates[index] === currentSrc) index += 1
+
+  if (index >= candidates.length) {
     image.onerror = null
-    image.src = '/assets/podcast/science-habits-hero.png'
+    image.removeAttribute('src')
     return
   }
-  image.dataset.fallbackApplied = 'true'
-  image.src = fallbackArtwork(item)
+
+  image.dataset.fallbackIndex = String(index + 1)
+  image.src = candidates[index]
 }
 
 function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetail): PodcastEpisode {
@@ -1451,6 +1474,7 @@ export default function Podcast() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: minimalMotion ? 0 : 0.55 }}
           className="podcast-glass podcast-library-header relative isolate mx-auto rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
+          style={{ '--podcast-header-artwork': `url("${fallbackArtwork(episode)}")` } as CSSProperties}
         >
           <AnimatePresence mode="wait">
             <motion.img

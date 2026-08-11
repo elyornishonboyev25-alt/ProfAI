@@ -641,7 +641,7 @@
   border-color: rgba(255, 255, 255, 0.72);
   background:
     linear-gradient(118deg, rgba(15, 46, 64, 0.52), rgba(16, 33, 54, 0.42) 52%, rgba(69, 42, 45, 0.34)),
-    url('/assets/podcast/podcast-studio-hero.jpg') center 54% / cover no-repeat;
+    var(--podcast-header-artwork) center 54% / cover no-repeat;
   backdrop-filter: blur(42px) saturate(172%);
   -webkit-backdrop-filter: blur(42px) saturate(172%);
 }

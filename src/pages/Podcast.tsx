@@ -1496,10 +1496,10 @@ export default function Podcast() {
               transition={minimalMotion
                 ? { duration: 0 }
                 : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-              className="podcast-header-artwork absolute inset-0 -z-20 h-full w-full rounded-[inherit] object-cover"
+              className="podcast-header-artwork absolute inset-0 h-full w-full rounded-[inherit] object-cover"
             />
           </AnimatePresence>
-          <span className="podcast-header-vignette pointer-events-none absolute inset-0 -z-10 rounded-[inherit]" />
+          <span className="podcast-header-vignette pointer-events-none absolute inset-0 rounded-[inherit]" />
           <div className="flex items-center justify-between gap-3">
             <button type="button" onClick={() => navigate('/dashboard')} className="podcast-soft-button group">
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />

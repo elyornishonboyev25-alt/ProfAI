@@ -636,7 +636,7 @@
   width: min(100%, 1468px);
 }
 
-.podcast-library-header {
+.podcast-library header.podcast-library-header {
   min-height: 304px;
   border-color: rgba(255, 255, 255, 0.72);
   background:
@@ -647,20 +647,22 @@
 }
 
 .podcast-library-header .podcast-header-artwork {
+  z-index: 0;
   filter: saturate(0.78) contrast(1.03) blur(4px);
   will-change: transform, opacity;
 }
 
 .podcast-library-header .podcast-header-vignette {
+  z-index: 1;
   background:
-    linear-gradient(112deg, rgba(16, 45, 61, 0.72), rgba(13, 29, 49, 0.6) 51%, rgba(66, 39, 39, 0.42)),
-    linear-gradient(to bottom, rgba(2, 6, 23, 0.08), rgba(2, 6, 23, 0.34));
-  backdrop-filter: blur(10px) saturate(138%);
-  -webkit-backdrop-filter: blur(10px) saturate(138%);
+    linear-gradient(112deg, rgba(16, 45, 61, 0.62), rgba(13, 29, 49, 0.5) 51%, rgba(66, 39, 39, 0.34)),
+    linear-gradient(to bottom, rgba(2, 6, 23, 0.05), rgba(2, 6, 23, 0.3));
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
 }
 
-.podcast-library .podcast-library-header::before {
-  z-index: 0;
+.podcast-library header.podcast-library-header::before {
+  z-index: 2;
   opacity: 0.92;
   background:
     radial-gradient(circle at 13% 35%, rgba(125, 211, 252, 0.14), transparent 24%),
@@ -671,10 +673,10 @@
   animation: podcast-header-glass-flow 13s ease-in-out infinite alternate;
 }
 
-.podcast-library .podcast-library-header::after {
+.podcast-library header.podcast-library-header::after {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   border-radius: inherit;
   content: '';
   pointer-events: none;
@@ -687,11 +689,11 @@
 
 .podcast-library-header > div:not(.podcast-level-dock) {
   position: relative;
-  z-index: 3;
+  z-index: 4;
 }
 
 .podcast-library-header .podcast-level-dock {
-  z-index: 4;
+  z-index: 5;
   backdrop-filter: blur(36px) saturate(168%);
   -webkit-backdrop-filter: blur(36px) saturate(168%);
 }

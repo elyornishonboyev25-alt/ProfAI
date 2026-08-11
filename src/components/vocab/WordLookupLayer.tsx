@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
-import { WordLookupModal } from './WordLookupModal'
 import type { VocabContext } from '@/utils/myVocabularyStore'
+
+const WordLookupModal = lazy(() =>
+  import('./WordLookupModal').then((module) => ({ default: module.WordLookupModal })),
+)
 
 type PillState = {
   word: string
@@ -137,14 +140,18 @@ export function WordLookupLayer() {
         </button>
       ) : null}
 
-      <WordLookupModal
-        open={Boolean(active)}
-        word={active?.word ?? ''}
-        sentence={active?.sentence}
-        context={active?.context ?? 'reading'}
-        origin={active?.origin}
-        onClose={() => setActive(null)}
-      />
+      {active ? (
+        <Suspense fallback={null}>
+          <WordLookupModal
+            open
+            word={active.word}
+            sentence={active.sentence}
+            context={active.context}
+            origin={active.origin}
+            onClose={() => setActive(null)}
+          />
+        </Suspense>
+      ) : null}
     </>
   )
 }

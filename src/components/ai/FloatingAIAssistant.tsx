@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bot, Lock, Sparkles, X } from 'lucide-react'
@@ -7,8 +7,9 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
-import AIChatWindow from '@/components/ai/AIChatWindow'
 import VoiceOrb from '@/components/ai/VoiceOrb'
+
+const AIChatWindow = lazy(() => import('@/components/ai/AIChatWindow'))
 
 const ATTEMPT_SUBMITTED_EVENT = 'smarttest:attempt-submitted'
 
@@ -109,7 +110,9 @@ export function FloatingAIAssistant() {
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="pointer-events-auto w-[min(92vw,24rem)]"
           >
-            <AIChatWindow variant="floating" onClose={close} />
+            <Suspense fallback={null}>
+              <AIChatWindow variant="floating" onClose={close} />
+            </Suspense>
           </motion.div>
         ) : null}
       </AnimatePresence>

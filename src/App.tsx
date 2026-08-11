@@ -1,8 +1,7 @@
-import { Suspense, lazy, useEffect, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { TopNavigation } from '@/components/layout/TopNavigation'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -13,18 +12,21 @@ import PremiumRoute from '@/components/auth/PremiumRoute'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import RegisterModal from '@/components/auth/RegisterModal'
 import FloatingAIAssistant from '@/components/ai/FloatingAIAssistant'
-import TalkOverlay from '@/components/ai/TalkOverlay'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
-import AchievementCelebration from '@/components/achievements/AchievementCelebration'
 import { sendHeartbeat } from '@/lib/speakingApi'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { useCelebrationStore } from '@/store/celebrationStore'
+import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 
+const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
+const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
+const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const Tests = lazy(() => import('@/pages/Tests'))
@@ -79,18 +81,6 @@ const AdmissionUniversity = lazy(() => import('@/pages/AdmissionUniversity'))
 const AITutor = lazy(() => import('@/pages/AITutor'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
-const prefetchHighTrafficRoutes = () =>
-  Promise.allSettled([
-    import('@/pages/Tests'),
-    import('@/pages/Leaderboard'),
-    import('@/pages/SpeakingCommunity'),
-    import('@/pages/Mock'),
-    import('@/pages/AccountProfile'),
-    import('@/pages/Profile'),
-    import('@/pages/IELTS'),
-    import('@/pages/SAT'),
-  ])
-
 function toDateISO(date: Date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -100,6 +90,47 @@ function toDateISO(date: Date) {
 
 function RouteLoader() {
   return <BrandPageLoader />
+}
+
+function DeferredTalkOverlay() {
+  const talkOpen = useAiAssistantStore((state) => state.talkOpen)
+  const [hasLoaded, setHasLoaded] = useState(talkOpen)
+
+  useEffect(() => {
+    if (talkOpen) setHasLoaded(true)
+  }, [talkOpen])
+
+  if (!hasLoaded) return null
+
+  return (
+    <Suspense fallback={null}>
+      <TalkOverlay />
+    </Suspense>
+  )
+}
+
+function DeferredRegisterModal() {
+  const isOpen = useRegisterModalStore((state) => state.isOpen)
+
+  if (!isOpen) return null
+
+  return (
+    <Suspense fallback={null}>
+      <RegisterModal />
+    </Suspense>
+  )
+}
+
+function DeferredAchievementCelebration() {
+  const current = useCelebrationStore((state) => state.current)
+
+  if (!current) return null
+
+  return (
+    <Suspense fallback={null}>
+      <AchievementCelebration />
+    </Suspense>
+  )
 }
 
 function AnimatedRoute({ children }: { children: ReactNode }) {
@@ -162,7 +193,6 @@ function App() {
   // Authenticated pages use one persistent workspace sidebar. The old dashboard
   // top bar duplicated the same destinations and made the layout jump between
   // sections, so it is intentionally kept only out of the app workspace.
-  const showTopNavigation = false
   // `/` renders the authenticated dashboard too. Keep it inside the same
   // workspace shell so opening the site never flashes the standalone version.
   const sidebarRoutes = new Set(['/', '/dashboard', '/tests', '/ai-tutor'])
@@ -174,28 +204,6 @@ function App() {
     sidebarRoutes.has(pathname)
   // Standalone prep/content screens expose their own Dashboard back action.
   const showMobileNav = Boolean(user) && showSidebar
-
-  useEffect(() => {
-    const connection = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
-    const slowConnection =
-      connection.connection?.saveData === true ||
-      connection.connection?.effectiveType === 'slow-2g' ||
-      connection.connection?.effectiveType === '2g'
-
-    if (slowConnection) return
-
-    const runPrefetch = () => {
-      void prefetchHighTrafficRoutes()
-    }
-
-    if (typeof window.requestIdleCallback === 'function') {
-      const callbackId = window.requestIdleCallback(runPrefetch, { timeout: 2500 })
-      return () => window.cancelIdleCallback(callbackId)
-    }
-
-    const timeoutId = window.setTimeout(runPrefetch, 600)
-    return () => window.clearTimeout(timeoutId)
-  }, [])
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)
@@ -234,21 +242,19 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100 ${usesStickyWorkspaceContent ? 'app-shell-sticky-content' : ''}`}>
       <AnimatedBackground />
       <ToastViewport />
-      <RegisterModal />
+      <DeferredRegisterModal />
       <NicknameGate />
-      <AchievementCelebration />
+      <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
           <FloatingAIAssistant />
-          <TalkOverlay />
+          <DeferredTalkOverlay />
           <FullscreenToggle />
           <WordLookupLayer />
         </>
       ) : null}
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        {showTopNavigation && <TopNavigation />}
-
         <div className="flex flex-1">
           <AnimatePresence initial={false}>
             {showSidebar ? <Sidebar key="workspace-sidebar" /> : null}

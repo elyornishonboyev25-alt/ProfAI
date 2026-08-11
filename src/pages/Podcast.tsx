@@ -885,10 +885,13 @@ export default function Podcast() {
     return transcriptCues.findIndex((cue) => currentTime >= cue.start && currentTime < cue.end)
   }, [transcriptCues, currentTime])
 
-  const visibleEpisodes = useMemo(
-    () => episodes.filter((item) => episodeCefr(item) === activeLevel && episodeCategory(item) === activeCategory),
-    [activeCategory, activeLevel, episodes],
-  )
+  // Keep every saved episode visible. Level/category controls rank matching
+  // items first instead of hiding older community submissions behind filters.
+  const visibleEpisodes = useMemo(() => {
+    const rank = (item: PodcastEpisode) =>
+      Number(episodeCefr(item) === activeLevel) * 2 + Number(episodeCategory(item) === activeCategory)
+    return [...episodes].sort((left, right) => rank(right) - rank(left))
+  }, [activeCategory, activeLevel, episodes])
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
 
@@ -1248,13 +1251,13 @@ export default function Podcast() {
       ref={shellRef}
       className={`podcast-shell overflow-hidden bg-black ${
         mini
-          ? 'fixed bottom-4 right-4 z-[70] w-[22rem] max-w-[90vw] rounded-2xl border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,0.6)]'
-          : 'relative rounded-[2rem] border border-white/30 shadow-[0_30px_80px_rgba(15,23,42,0.38),0_12px_38px_rgba(220,38,38,0.16)]'
+          ? 'is-mini fixed bottom-4 right-4 z-[70] w-[22rem] max-w-[90vw] rounded-2xl border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,0.6)]'
+          : 'podcast-featured-shell relative rounded-[2rem] border border-white/30 shadow-[0_30px_80px_rgba(15,23,42,0.38),0_12px_38px_rgba(220,38,38,0.16)]'
       }`}
     >
       <div
         ref={stageRef}
-        className={`podcast-stage relative aspect-video w-full bg-black ${immersive ? 'cursor-none' : 'cursor-default'}`}
+        className={`podcast-stage relative w-full bg-black ${mini ? 'aspect-video' : 'podcast-featured-stage'} ${immersive ? 'cursor-none' : 'cursor-default'}`}
         onMouseMove={revealControls}
         onClick={(event) => {
           if (openMenu) {
@@ -1331,7 +1334,7 @@ export default function Podcast() {
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#06121d]/95 via-[#091725]/55 to-[#2b0711]/25" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
-              <div className="relative z-10 flex w-full flex-col items-start gap-3 p-5 pb-16 sm:p-8 sm:pb-20">
+              <div className="podcast-featured-copy relative z-10 flex w-full flex-col items-start gap-3 p-5 pb-16 sm:p-8 sm:pb-20">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white backdrop-blur-xl">
                   <Headphones className="h-3.5 w-3.5 text-red-300" /> {episodeCefr(episode)} · {episodeCategory(episode)}
                 </span>
@@ -1343,7 +1346,7 @@ export default function Podcast() {
                   <span className="text-base font-semibold text-white/70">{episode.durationLabel}</span>
                 </span>
               </div>
-              <span className="absolute bottom-16 right-5 z-10 rounded-xl border border-red-300/50 bg-red-600/80 px-3 py-2 text-sm font-black text-white shadow-[0_0_25px_rgba(239,68,68,0.55)] backdrop-blur-xl sm:bottom-20 sm:right-8">
+              <span className="podcast-featured-level absolute bottom-16 right-5 z-10 rounded-xl border border-red-300/50 bg-red-600/80 px-3 py-2 text-sm font-black text-white shadow-[0_0_25px_rgba(239,68,68,0.55)] backdrop-blur-xl sm:bottom-20 sm:right-8">
                 {episodeCefr(episode)}
               </span>
             </motion.button>
@@ -1439,12 +1442,12 @@ export default function Podcast() {
       <div className="podcast-orb podcast-orb-five" />
       <div className="podcast-orb podcast-orb-six" />
 
-      <div className={`relative z-10 mx-auto w-full ${theater ? 'max-w-[1680px]' : 'max-w-[1500px]'}`}>
+      <div className={`podcast-page-frame relative z-10 mx-auto w-full ${theater ? 'max-w-[1980px]' : 'max-w-[1900px]'}`}>
         <motion.header
           initial={{ opacity: 0, y: -18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: minimalMotion ? 0 : 0.55 }}
-          className="podcast-glass relative isolate rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
+          className="podcast-glass podcast-library-header relative isolate mx-auto rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
         >
           <AnimatePresence mode="wait">
             <motion.img
@@ -1506,7 +1509,7 @@ export default function Podcast() {
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: -10 }}
               transition={{ duration: minimalMotion ? 0 : 0.32 }}
-              className="podcast-add-panel mt-12 overflow-hidden rounded-[1.75rem]"
+              className="podcast-add-panel mx-auto mt-12 overflow-hidden rounded-[1.75rem]"
             >
               <div className="p-5 sm:p-6">
                 <div className="flex items-center justify-between gap-3">
@@ -1540,7 +1543,7 @@ export default function Podcast() {
           ) : null}
         </AnimatePresence>
 
-        <div className="mt-14 grid items-start gap-6 xl:grid-cols-[155px_minmax(0,1fr)_280px]">
+        <div className="podcast-workspace mt-14 grid items-start gap-6 xl:grid-cols-[150px_minmax(0,1fr)_335px]">
           <motion.aside initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.15 }} className="podcast-glass podcast-category-rail xl:sticky xl:top-5">
             {CATEGORIES.map(({ label, icon: Icon }) => (
               <button key={label} type="button" onClick={() => setActiveCategory(label)} className={`podcast-category-button ${activeCategory === label ? 'is-active' : ''}`}>
@@ -1549,9 +1552,9 @@ export default function Podcast() {
             ))}
           </motion.aside>
 
-          <main className="min-w-0">
+          <main className="podcast-main min-w-0">
             <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : 0.2, duration: 0.5 }}>
-              <div className="mb-4 flex items-end justify-between gap-4 px-1">
+              <div className="podcast-featured-heading mb-4 flex items-end justify-between gap-4 px-1">
                 <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Featured episode</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
                 <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex">
                   {captionsAvailable ? <Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" /> : <Headphones className="mr-1.5 h-3.5 w-3.5 text-red-500" />}
@@ -1565,12 +1568,12 @@ export default function Podcast() {
               </div>
             </motion.div>
 
-            <div className="mt-7 flex items-center justify-between gap-3 px-1">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Explore library</p><h2 className="text-xl font-black text-slate-950">{activeCategory} · {activeLevel}</h2></div>
+            <div className="podcast-library-heading mt-7 flex items-center justify-between gap-3 px-1">
+              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Podcast library</p><h2 className="text-xl font-black text-slate-950">All saved episodes</h2></div>
               <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length} episode{visibleEpisodes.length === 1 ? '' : 's'}</span>
             </div>
             {visibleEpisodes.length > 0 ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="podcast-episode-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleEpisodes.map((item, index) => (
                   <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} disabled={openingPodcastId === item.youtubeId} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : index * 0.06 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
                     <span className="relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">

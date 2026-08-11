@@ -51,7 +51,6 @@ router.get(
     const videos = await podcastVideo.findMany({
       orderBy: { createdAt: 'desc' },
       select: PODCAST_LIST_SELECT,
-      take: 200,
     })
     return res.json({ videos })
   }),

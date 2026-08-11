@@ -1441,6 +1441,9 @@ export default function Podcast() {
       <div className="podcast-orb podcast-orb-four" />
       <div className="podcast-orb podcast-orb-five" />
       <div className="podcast-orb podcast-orb-six" />
+      <div className="podcast-orb podcast-orb-seven" />
+      <div className="podcast-orb podcast-orb-eight" />
+      <div className="podcast-orb podcast-orb-nine" />
 
       <div className={`podcast-page-frame relative z-10 mx-auto w-full ${theater ? 'max-w-[1980px]' : 'max-w-[1900px]'}`}>
         <motion.header
@@ -1456,9 +1459,18 @@ export default function Podcast() {
               onError={(event) => handleArtworkError(event, episode)}
               alt=""
               initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 0.72, scale: 1 }}
+              animate={minimalMotion
+                ? { opacity: 0.68, scale: 1.045 }
+                : {
+                    opacity: [0.58, 0.72, 0.62],
+                    scale: [1.045, 1.105, 1.045],
+                    x: ['-1.2%', '1.2%', '-1.2%'],
+                    y: ['-0.6%', '0.7%', '-0.6%'],
+                  }}
               exit={{ opacity: 0 }}
-              transition={{ duration: minimalMotion ? 0 : 0.7 }}
+              transition={minimalMotion
+                ? { duration: 0 }
+                : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
               className="podcast-header-artwork absolute inset-0 -z-20 h-full w-full rounded-[inherit] object-cover"
             />
           </AnimatePresence>
@@ -1646,10 +1658,10 @@ export default function Podcast() {
           <motion.aside initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.28 }} className="podcast-glass podcast-continue xl:sticky xl:top-5">
             <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950">Continue listening</h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
             <div className="mt-5 flex items-center gap-3">
-              <img src={artworkUrl} onError={(event) => handleArtworkError(event, episode)} alt="" className="h-20 w-20 rounded-2xl object-cover shadow-lg" />
+              <img src={artworkUrl} onError={(event) => handleArtworkError(event, episode)} alt="" className="podcast-continue-artwork h-20 w-20 rounded-2xl object-cover shadow-lg" />
               <div className="min-w-0"><p className="line-clamp-2 font-black leading-5 text-slate-900">{episode.title}</p><p className="mt-1 text-sm font-semibold text-slate-500">{formatTime(duration || currentTime)}</p></div>
             </div>
-            <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/65"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400 transition-all duration-300" style={{ width: `${Math.max(3, progress)}%` }} /></div>
+            <div className="podcast-continue-progress mt-6 h-2 overflow-hidden rounded-full bg-white/65"><div className="podcast-continue-progress-fill h-full rounded-full bg-gradient-to-r from-red-700 to-red-400 transition-all duration-300" style={{ width: `${Math.max(3, progress)}%` }} /></div>
             <div className="mt-6 flex items-center justify-center gap-7">
               <button type="button" onClick={() => skip(-10)} className="podcast-skip-button" aria-label="Back 10 seconds"><SkipBack className="h-5 w-5 fill-current" /></button>
               <button type="button" onClick={togglePlay} className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white" aria-label={playing ? 'Pause' : 'Play'}>{playing ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 translate-x-0.5 fill-current" />}</button>

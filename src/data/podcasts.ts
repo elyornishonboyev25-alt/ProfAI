@@ -17,6 +17,8 @@ export type PodcastEpisode = {
   source: string
   /** Optional artwork supplied by the podcast source. Falls back to the video's YouTube thumbnail. */
   coverUrl?: string | null
+  /** Transcript source state. Metadata-only podcasts remain fully playable. */
+  captionKind?: 'manual' | 'auto' | 'generated' | 'unavailable'
   /**
    * Optional synced transcript. When present the transcript panel highlights
    * along with playback and each line is click-to-seek. When absent we rely on
@@ -43,6 +45,7 @@ export const PODCAST_EPISODES: PodcastEpisode[] = [
     durationLabel: 'Full episode',
     topic: 'Everyday English',
     source: 'YouTube',
+    captionKind: 'auto',
   },
 ]
 

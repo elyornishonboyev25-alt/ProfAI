@@ -40,7 +40,7 @@ export type ShadowingVideoDraft = {
   level: string
   accent: string | null
   topic: string | null
-  captionKind: 'manual' | 'auto' | 'generated'
+  captionKind: 'manual' | 'auto' | 'generated' | 'unavailable'
   language: string
   wordCount: number
   segments: ShadowingSegmentDraft[]
@@ -544,7 +544,10 @@ function estimateLevel(wordCount: number, durationSec: number): string {
 
 const MIN_VIDEO_SECONDS = 15
 const MAX_SHADOWING_SECONDS = 30 * 60
-const MAX_PODCAST_SECONDS = 3 * 60 * 60
+// YouTube allows long-form podcast uploads. Podcast playback itself does not
+// buffer media on our server, so accept episodes up to YouTube's normal
+// long-form ceiling even when their audio is too large to transcribe.
+const MAX_PODCAST_SECONDS = 12 * 60 * 60
 
 type VideoImportMode = 'shadowing' | 'podcast'
 
@@ -554,7 +557,7 @@ function importCopy(mode: VideoImportMode) {
         noun: 'podcast',
         engine: 'podcast transcript engine',
         maxSeconds: MAX_PODCAST_SECONDS,
-        maxDurationError: 'This podcast is too long. Choose an episode under 3 hours.',
+        maxDurationError: 'This podcast is longer than the supported 12-hour YouTube limit.',
       }
     : {
         noun: 'shadowing video',
@@ -576,7 +579,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   const engineRan = innertube !== null
 
   let cues: Cue[] = []
-  let captionKind: 'manual' | 'auto' | 'generated' = 'auto'
+  let captionKind: 'manual' | 'auto' | 'generated' | 'unavailable' = 'auto'
   let language = 'en'
   let englishTrackFound = innertube?.hasEnglishCaptions ?? false
   let durationSec = innertube?.durationSec ?? 0
@@ -640,9 +643,11 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
       throw new ShadowingError('This clip is too short. Choose a video of at least 15 seconds.')
     }
 
-    // Podcast episodes may have no creator-provided captions. Generate synced
-    // English cues from the audio, then continue through the same content
-    // screening, segmentation and persistence path as YouTube captions.
+    // Podcast episodes may have no creator-provided captions. Try to generate
+    // synced English cues, but never reject an otherwise public, embeddable
+    // podcast merely because YouTube blocks audio retrieval or an ASR provider
+    // is temporarily unavailable. The YouTube player remains fully usable and
+    // the library can expose captions later when the source/provider recovers.
     if (mode === 'podcast') {
       try {
         cues = await transcribeYouTubeVideo(youtubeId, durationSec)
@@ -651,14 +656,24 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
         englishTrackFound = true
       } catch (error) {
         if (error instanceof VideoTranscriptionError) {
-          throw new ShadowingError(error.message, error.statusCode)
+          console.warn('[podcast-import] continuing without transcript', youtubeId, error.message)
+          captionKind = 'unavailable'
+          language = 'und'
+        } else {
+          console.warn('[podcast-import] unexpected transcript failure', youtubeId, (error as Error)?.message)
+          captionKind = 'unavailable'
+          language = 'und'
         }
-        throw error
       }
     }
 
     if (cues.length > 0) {
       // Generated captions are ready; continue below.
+    } else if (mode === 'podcast') {
+      // Metadata-only is a valid podcast state. Playback, cover artwork,
+      // progress, speed, loops and bookmarks all continue to work.
+      captionKind = 'unavailable'
+      language = 'und'
     } else if (englishTrackFound) {
       // The video HAS English captions but YouTube refused to hand the text to
       // this server (anti-bot / proof-of-origin wall).
@@ -695,8 +710,20 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   const fullText = cues.map((c) => c.text).join(' ')
   screenContent(title, fullText)
 
-  const segments = segmentCues(cues)
-  if (segments.length < 2) {
+  let segments = segmentCues(cues)
+  if (mode === 'podcast' && segments.length === 0 && cues.length > 0) {
+    // Very short or sparse podcasts can legitimately produce a single cue;
+    // preserve readable cues instead of rejecting the whole episode.
+    segments = cues
+      .filter((cue) => cue.text.trim())
+      .map((cue, index) => ({
+        orderIndex: index,
+        startSec: Math.max(0, cue.start),
+        endSec: Math.max(cue.start + 0.5, cue.end),
+        text: cue.text.trim(),
+      }))
+  }
+  if (mode !== 'podcast' && segments.length < 2) {
     throw new ShadowingError(`This ${copy.noun} does not contain enough spoken English to build a transcript.`)
   }
 
@@ -709,7 +736,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
     author: innertube?.author || oembed?.author || null,
     thumbnailUrl: innertube?.thumbnailUrl || oembed?.thumbnailUrl || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`,
     durationSec: finalDuration,
-    level: estimateLevel(wordCount, finalDuration),
+    level: wordCount > 0 ? estimateLevel(wordCount, finalDuration) : 'Intermediate',
     accent: null,
     topic: null,
     captionKind,

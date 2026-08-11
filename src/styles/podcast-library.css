@@ -216,19 +216,57 @@
   transform: translateY(-2px);
 }
 
-.podcast-add-panel { background: rgba(255, 245, 245, 0.64); }
+.podcast-add-panel {
+  position: relative;
+  isolation: isolate;
+  border-color: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 241, 242, 0.36));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 28px 70px rgba(51, 65, 85, 0.14),
+    0 12px 38px rgba(239, 68, 68, 0.09);
+  backdrop-filter: blur(42px) saturate(165%);
+  -webkit-backdrop-filter: blur(42px) saturate(165%);
+  animation: podcast-add-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.podcast-add-panel::before {
+  position: absolute;
+  z-index: -1;
+  top: -90px;
+  right: 7%;
+  width: 210px;
+  height: 210px;
+  border-radius: 999px;
+  content: '';
+  pointer-events: none;
+  background: rgba(248, 113, 113, 0.24);
+  filter: blur(45px);
+  animation: podcast-add-glow 7s ease-in-out infinite alternate;
+}
+
+.podcast-add-panel::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(112deg, rgba(255, 255, 255, 0.22), transparent 38%, rgba(255, 255, 255, 0.12));
+}
 
 .podcast-url-input {
   width: 100%;
   height: 52px;
   border: 1px solid rgba(252, 165, 165, 0.82);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.52);
   padding: 0 1rem 0 3rem;
   font-size: 0.875rem;
   color: #1e293b;
   outline: none;
-  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.04), 0 10px 25px rgba(220, 38, 38, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 12px 32px rgba(220, 38, 38, 0.07);
+  backdrop-filter: blur(26px) saturate(145%);
   transition: border 180ms ease, box-shadow 180ms ease;
 }
 
@@ -241,12 +279,14 @@
   justify-content: center;
   gap: 0.5rem;
   border-radius: 18px;
-  background: linear-gradient(135deg, #dc2626, #f87171);
+  border: 1px solid rgba(254, 202, 202, 0.72);
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.94), rgba(248, 113, 113, 0.9));
   padding: 0 1.6rem;
   color: white;
   font-size: 0.875rem;
   font-weight: 900;
-  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.28);
+  box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.34), 0 12px 30px rgba(220, 38, 38, 0.3), 0 0 28px rgba(248, 113, 113, 0.16);
+  backdrop-filter: blur(18px);
   transition: 180ms ease;
 }
 
@@ -268,6 +308,25 @@
 }
 
 .podcast-suggestion:hover { transform: translateY(-1px); background: white; }
+
+.podcast-import-status,
+.podcast-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.42);
+  padding: 0.65rem 0.8rem;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 26px rgba(51, 65, 85, 0.08);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.podcast-feedback.is-error { border-color: rgba(253, 164, 175, 0.62); color: #be123c; }
+.podcast-feedback.is-success { border-color: rgba(110, 231, 183, 0.62); color: #047857; }
 
 .podcast-category-rail {
   display: grid;
@@ -569,6 +628,16 @@
   50% { opacity: 1; transform: scale(1.08); }
 }
 
+@keyframes podcast-add-arrive {
+  from { opacity: 0; transform: translateY(-14px) scale(0.985); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes podcast-add-glow {
+  from { transform: translate3d(-18px, -8px, 0) scale(0.9); opacity: 0.5; }
+  to { transform: translate3d(32px, 20px, 0) scale(1.14); opacity: 0.9; }
+}
+
 @media (min-width: 1280px) {
   .podcast-category-rail { display: flex; flex-direction: column; padding: 0.7rem; }
   .podcast-category-button { min-height: 92px; font-size: 0.78rem; }
@@ -598,6 +667,8 @@
   .podcast-player-artwork,
   .podcast-level-dock,
   .podcast-continue,
+  .podcast-add-panel,
+  .podcast-add-panel::before,
   .podcast-live-pill span { animation: none; }
   .podcast-level-button,
   .podcast-episode-card,

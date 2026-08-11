@@ -210,6 +210,7 @@ function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetai
     topic: video.topic || 'English listening',
     source: 'Community · YouTube',
     coverUrl: video.thumbnailUrl,
+    captionKind: video.captionKind === 'unavailable' ? 'unavailable' : video.captionKind as PodcastEpisode['captionKind'],
     transcript: 'segments' in video
       ? video.segments.map((segment) => ({ start: segment.startSec, end: segment.endSec, text: segment.text }))
       : undefined,
@@ -266,6 +267,7 @@ export default function Podcast() {
   )
   const episode = selectedEpisode ?? getPodcastEpisode()
   const artworkUrl = episodeArtwork(episode)
+  const captionsAvailable = episode.captionKind !== 'unavailable'
 
   const playerRef = useRef<YTPlayer | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
@@ -366,7 +368,9 @@ export default function Podcast() {
         setPodcastUrl('')
         setPodcastNotice(
           created
-            ? 'Podcast added to the community library — ready to listen.'
+            ? video.captionKind === 'unavailable'
+              ? 'Podcast added — playback is ready. This source does not currently provide a transcript.'
+              : 'Podcast added to the community library — ready to listen.'
             : 'This podcast is already in the library — opening it now.',
         )
       } catch (error) {
@@ -1521,9 +1525,11 @@ export default function Podcast() {
                     {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{addingPodcast ? 'Analyzing…' : 'Add & listen'}
                   </button>
                 </form>
-                {addingPodcast ? <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-red-700"><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking captions and building the transcript…</p> : null}
-                {podcastError ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-semibold text-rose-700">{podcastError}</p> : null}
-                {podcastNotice ? <p className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs font-semibold text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" />{podcastNotice}</p> : null}
+                {addingPodcast ? <p className="podcast-import-status mt-3"><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking the source, artwork and available captions…</p> : null}
+                <AnimatePresence mode="popLayout">
+                  {podcastError ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-error mt-3">{podcastError}</motion.p> : null}
+                  {podcastNotice ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-success mt-3"><CheckCircle2 className="h-3.5 w-3.5" />{podcastNotice}</motion.p> : null}
+                </AnimatePresence>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Try:</span>
                   {SUGGESTED_PODCASTS.map((suggestion) => <button key={suggestion.url} type="button" disabled={addingPodcast} onClick={() => void addPodcast(suggestion.url)} className="podcast-suggestion"><Sparkles className="h-3 w-3" />{suggestion.label}</button>)}
@@ -1547,7 +1553,10 @@ export default function Podcast() {
             <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : 0.2, duration: 0.5 }}>
               <div className="mb-4 flex items-end justify-between gap-4 px-1">
                 <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Featured episode</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
-                <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex"><Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" />English captions</span>
+                <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex">
+                  {captionsAvailable ? <Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" /> : <Headphones className="mr-1.5 h-3.5 w-3.5 text-red-500" />}
+                  {captionsAvailable ? 'English captions' : 'Audio ready'}
+                </span>
               </div>
               <div className="relative">
                 {mini ? <div className="aspect-video w-full rounded-[2rem] border border-dashed border-slate-300 bg-white/30" /> : null}
@@ -1613,8 +1622,12 @@ export default function Podcast() {
                         <div className="podcast-transcript-empty mt-3">
                           <span className="podcast-transcript-orb"><Captions className="h-5 w-5" /></span>
                           <div>
-                            <p className="text-sm font-black text-slate-800">Captions live on the player</p>
-                            <p className="mt-1 text-xs leading-5 text-slate-500">Press <b className="text-red-600">C</b> or use the CC control to show English subtitles.</p>
+                            <p className="text-sm font-black text-slate-800">{captionsAvailable ? 'Captions live on the player' : 'Podcast ready without a transcript'}</p>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                              {captionsAvailable
+                                ? <>Press <b className="text-red-600">C</b> or use the CC control to show English subtitles.</>
+                                : 'Playback, speed, loops and bookmarks still work normally. YouTube CC will appear if the creator enables it.'}
+                            </p>
                           </div>
                         </div>
                       )}

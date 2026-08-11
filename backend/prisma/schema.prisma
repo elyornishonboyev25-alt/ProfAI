@@ -691,7 +691,7 @@ model PodcastVideo {
   level         String           @default("Intermediate")
   accent        String?
   topic         String?
-  captionKind   String           @default("auto") // manual | auto | generated
+  captionKind   String           @default("auto") // manual | auto | generated | unavailable
   language      String           @default("en")
   segmentCount  Int              @default(0)
   wordCount     Int              @default(0)

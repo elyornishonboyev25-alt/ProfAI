@@ -76,8 +76,8 @@ router.get(
 )
 
 /**
- * Submit a YouTube podcast. The existing caption validation and safety checks
- * are shared with Shadowing, while the accepted episode is stored separately.
+ * Submit a public YouTube podcast. Captions enrich the episode when available,
+ * but a temporary caption/audio failure does not block normal playback.
  */
 router.post(
   '/',
@@ -115,14 +115,18 @@ router.post(
           segmentCount: draft.segments.length,
           wordCount: draft.wordCount,
           submittedById: req.user!.id,
-          segments: {
-            create: draft.segments.map((segment) => ({
-              orderIndex: segment.orderIndex,
-              startSec: segment.startSec,
-              endSec: segment.endSec,
-              text: segment.text,
-            })),
-          },
+          ...(draft.segments.length > 0
+            ? {
+                segments: {
+                  create: draft.segments.map((segment) => ({
+                    orderIndex: segment.orderIndex,
+                    startSec: segment.startSec,
+                    endSec: segment.endSec,
+                    text: segment.text,
+                  })),
+                },
+              }
+            : {}),
         },
         include: { segments: { orderBy: { orderIndex: 'asc' } } },
       })

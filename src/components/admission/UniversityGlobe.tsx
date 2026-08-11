@@ -78,14 +78,14 @@ function drawGlobe(
 
   const cx = bounds.width / 2
   const cy = bounds.height / 2
-  const radius = Math.min(bounds.width, bounds.height) * 0.425
+  const radius = Math.min(bounds.width, bounds.height) * 0.46
 
   ctx.save()
-  ctx.shadowColor = 'rgba(220, 38, 38, 0.2)'
-  ctx.shadowBlur = radius * 0.15
+  ctx.shadowColor = 'rgba(225, 29, 72, 0.28)'
+  ctx.shadowBlur = radius * 0.2
   ctx.beginPath()
   ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)'
+  ctx.fillStyle = 'rgba(255, 250, 250, 0.84)'
   ctx.fill()
   ctx.restore()
 
@@ -102,15 +102,29 @@ function drawGlobe(
     cy + radius * 0.08,
     radius * 1.12,
   )
-  ocean.addColorStop(0, 'rgba(255, 255, 255, 0.98)')
-  ocean.addColorStop(0.48, 'rgba(234, 243, 248, 0.92)')
-  ocean.addColorStop(0.8, 'rgba(213, 226, 236, 0.88)')
-  ocean.addColorStop(1, 'rgba(181, 202, 218, 0.92)')
+  ocean.addColorStop(0, 'rgba(255, 255, 255, 0.99)')
+  ocean.addColorStop(0.48, 'rgba(255, 247, 247, 0.96)')
+  ocean.addColorStop(0.8, 'rgba(254, 226, 226, 0.92)')
+  ocean.addColorStop(1, 'rgba(246, 205, 213, 0.94)')
   ctx.fillStyle = ocean
   ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
 
+  const reflectedGlow = ctx.createRadialGradient(
+    cx - radius * 0.72,
+    cy + radius * 0.72,
+    0,
+    cx - radius * 0.72,
+    cy + radius * 0.72,
+    radius * 1.08,
+  )
+  reflectedGlow.addColorStop(0, 'rgba(239, 68, 68, 0.32)')
+  reflectedGlow.addColorStop(0.42, 'rgba(251, 113, 133, 0.12)')
+  reflectedGlow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  ctx.fillStyle = reflectedGlow
+  ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
+
   ctx.lineWidth = Math.max(0.55, radius * 0.0022)
-  ctx.strokeStyle = 'rgba(100, 128, 151, 0.18)'
+  ctx.strokeStyle = 'rgba(190, 24, 93, 0.13)'
   for (const latitude of [-60, -30, 0, 30, 60]) {
     const latitudeRadius = Math.cos(latitude * DEG) * radius
     const y = cy - Math.sin(latitude * DEG) * radius
@@ -135,8 +149,8 @@ function drawGlobe(
     ctx.stroke()
   }
 
-  ctx.fillStyle = 'rgba(190, 207, 220, 0.88)'
-  ctx.strokeStyle = 'rgba(102, 132, 157, 0.66)'
+  ctx.fillStyle = 'rgba(229, 213, 218, 0.92)'
+  ctx.strokeStyle = 'rgba(159, 57, 84, 0.56)'
   ctx.lineWidth = Math.max(0.8, radius * 0.004)
 
   const drawPolygon = (rings: Position[][]) => {
@@ -200,7 +214,7 @@ function drawGlobe(
   ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
   ctx.fillStyle = shine
   ctx.fill()
-  ctx.strokeStyle = 'rgba(119, 149, 172, 0.48)'
+  ctx.strokeStyle = 'rgba(190, 24, 93, 0.42)'
   ctx.lineWidth = Math.max(1, radius * 0.006)
   ctx.stroke()
 }
@@ -227,7 +241,7 @@ export default function UniversityGlobe() {
   const targetLatitude = location?.latitude ?? DEFAULT_LATITUDE
   const markerStyle: GlobeMarkerStyle = {
     '--globe-marker-x': '50%',
-    '--globe-marker-y': `${50 - Math.sin(targetLatitude * DEG) * 42.5}%`,
+    '--globe-marker-y': `${50 - Math.sin(targetLatitude * DEG) * 46}%`,
   }
 
   useEffect(() => {
@@ -306,17 +320,11 @@ export default function UniversityGlobe() {
           <span className="university-globe-user-marker-pin">
             <MapPin />
           </span>
+          <span className="university-globe-country-readout">
+            <span aria-hidden="true">{flag}</span>
+            <span>{isLocating && !profileCountry ? 'Locating you…' : resolvedCountry}</span>
+          </span>
         </motion.span>
-
-        <motion.div
-          className="university-globe-country-readout"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0.01 : 0.5, delay: minimalMotion ? 0 : 2.25 }}
-        >
-          <span aria-hidden="true">{flag}</span>
-          <span>{isLocating && !profileCountry ? 'Locating you…' : resolvedCountry}</span>
-        </motion.div>
       </div>
     </motion.figure>
   )

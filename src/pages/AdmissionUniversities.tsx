@@ -97,7 +97,7 @@ export default function AdmissionUniversities() {
                 <StaggerItem key={u.id}>
                   <button
                     onClick={() => navigate(`/admission/universities/${u.slug}`)}
-                    className="group grid w-full grid-cols-[auto_1fr] gap-0 overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:border-red-200 hover:shadow-[0_20px_46px_rgba(220,38,38,0.14)] sm:grid-cols-[8.5rem_1fr]"
+                    className="group grid w-full grid-cols-[auto_1fr] gap-0 overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:border-red-200 hover:shadow-[0_20px_46px_rgba(220,38,38,0.14)] sm:grid-cols-[7.25rem_minmax(0,1fr)]"
                   >
                     {/* Rank + overall score rail */}
                     <div
@@ -117,7 +117,7 @@ export default function AdmissionUniversities() {
                     </div>
 
                     {/* Body */}
-                    <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                    <div className="grid min-w-0 grid-cols-1 gap-4 p-4 sm:grid-cols-[4rem_minmax(0,1fr)] sm:items-center sm:p-5 xl:grid-cols-[4rem_minmax(0,1fr)_auto]">
                       <UniversityLogo id={u.id} brand={u.brand} size={64} className="hidden sm:inline-flex" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-3 sm:hidden">
@@ -130,7 +130,7 @@ export default function AdmissionUniversities() {
                             </p>
                           </div>
                         </div>
-                        <h2 className="hidden truncate text-lg font-black tracking-tight text-slate-900 sm:block">
+                        <h2 className="hidden break-words text-lg font-black leading-tight tracking-tight text-slate-900 sm:block">
                           {u.name}
                         </h2>
                         <p className="hidden items-center gap-1 text-[13px] font-medium text-slate-500 sm:inline-flex">
@@ -168,8 +168,8 @@ export default function AdmissionUniversities() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-end sm:flex-col sm:items-end sm:justify-center">
-                        <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50/60 px-3.5 py-1.5 text-[12px] font-bold text-red-700 transition group-hover:gap-2 group-hover:bg-red-100">
+                      <div className="flex items-center justify-end sm:col-start-2 xl:col-start-3 xl:row-start-1">
+                        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-red-200 bg-red-50/60 px-3.5 py-1.5 text-[12px] font-bold text-red-700 transition group-hover:gap-2 group-hover:bg-red-100">
                           Explore
                           <ArrowRight className="h-3.5 w-3.5" />
                         </span>

@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  BookOpenText,
   CalendarDays,
   CalendarCheck,
   Check,
@@ -8,6 +9,7 @@ import {
   FileText,
   Headphones,
   Mic2,
+  Music2,
   Pencil,
   PenLine,
   Target,
@@ -32,6 +34,7 @@ const skills = [
     description: 'Understand spoken English in various contexts.',
     tests: 15,
     icon: Headphones,
+    hoverIcon: Music2,
   },
   {
     id: 'reading',
@@ -39,6 +42,7 @@ const skills = [
     description: 'Analyze and comprehend diverse texts.',
     tests: 12,
     icon: BookOpen,
+    hoverIcon: BookOpenText,
   },
   {
     id: 'writing',
@@ -46,6 +50,7 @@ const skills = [
     description: 'Express ideas clearly in written form.',
     tests: 10,
     icon: PenLine,
+    hoverIcon: null,
   },
   {
     id: 'speaking',
@@ -53,6 +58,7 @@ const skills = [
     description: 'Communicate effectively in interviews.',
     tests: 8,
     icon: Mic2,
+    hoverIcon: null,
   },
 ] as const
 
@@ -171,6 +177,7 @@ function SkillCard({
   animateHover: boolean
 }) {
   const Icon = skill.icon
+  const HoverIcon = skill.hoverIcon
 
   return (
     <motion.article
@@ -182,6 +189,7 @@ function SkillCard({
         <span className="ielts-arena-icon ielts-arena-skill-icon" data-skill={skill.id}>
           <span className="ielts-arena-emblem-halo" aria-hidden="true" />
           <Icon className="ielts-arena-emblem-glyph" />
+          {HoverIcon ? <HoverIcon className="ielts-arena-emblem-hover-glyph" aria-hidden="true" /> : null}
           <span className="ielts-arena-emblem-detail" aria-hidden="true" />
         </span>
         <h2>{skill.title}</h2>

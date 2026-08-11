@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 import { MapPin } from 'lucide-react'
 import { WORLD_COUNTRIES } from '@/data/countries'
@@ -7,23 +7,209 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAuthStore } from '@/store/authStore'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
+type Position = [number, number]
+
+type WorldGeometry =
+  | { type: 'Polygon'; coordinates: Position[][] }
+  | { type: 'MultiPolygon'; coordinates: Position[][][] }
+
+type WorldFeatureCollection = {
+  features: Array<{ geometry: WorldGeometry | null }>
+}
+
 type GlobeMarkerStyle = CSSProperties & {
   '--globe-marker-x': string
   '--globe-marker-y': string
 }
 
-function projectToGlobe(latitude?: number, longitude?: number) {
-  if (latitude === undefined || longitude === undefined) return { x: 64, y: 44 }
+const DEG = Math.PI / 180
+const DEFAULT_LONGITUDE = 69.24
+const DEFAULT_LATITUDE = 41.3
+const UNIVERSITY_PINS: Position[] = [
+  [-122.17, 37.43],
+  [-0.13, 51.51],
+  [103.82, 1.35],
+]
 
-  // The reference artwork is centred on Europe/Africa. Keep edge cases inside
-  // the visible glass sphere while preserving the user's rough world position.
+function easeOutQuart(value: number) {
+  return 1 - (1 - value) ** 4
+}
+
+function nearestRotation(from: number, target: number) {
+  return from + ((((target - from) % 360) + 540) % 360) - 180
+}
+
+function project(longitude: number, latitude: number, rotation: number, cx: number, cy: number, radius: number) {
+  const lambda = (longitude - rotation) * DEG
+  const phi = latitude * DEG
+  const cosPhi = Math.cos(phi)
+  const depth = cosPhi * Math.cos(lambda)
+
   return {
-    x: Math.max(17, Math.min(85, 51 + longitude * 0.27)),
-    y: Math.max(24, Math.min(70, 54 - latitude * 0.24)),
+    x: cx + radius * cosPhi * Math.sin(lambda),
+    y: cy - radius * Math.sin(phi),
+    visible: depth >= -0.015,
+    depth,
   }
 }
 
+function drawGlobe(
+  canvas: HTMLCanvasElement,
+  world: WorldFeatureCollection,
+  rotation: number,
+  origin: Position,
+) {
+  const bounds = canvas.getBoundingClientRect()
+  if (!bounds.width || !bounds.height) return
+
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+  const width = Math.round(bounds.width * pixelRatio)
+  const height = Math.round(bounds.height * pixelRatio)
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+  ctx.clearRect(0, 0, bounds.width, bounds.height)
+
+  const cx = bounds.width / 2
+  const cy = bounds.height / 2
+  const radius = Math.min(bounds.width, bounds.height) * 0.425
+
+  ctx.save()
+  ctx.shadowColor = 'rgba(220, 38, 38, 0.2)'
+  ctx.shadowBlur = radius * 0.15
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)'
+  ctx.fill()
+  ctx.restore()
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+  ctx.clip()
+
+  const ocean = ctx.createRadialGradient(
+    cx - radius * 0.36,
+    cy - radius * 0.42,
+    radius * 0.04,
+    cx + radius * 0.12,
+    cy + radius * 0.08,
+    radius * 1.12,
+  )
+  ocean.addColorStop(0, 'rgba(255, 255, 255, 0.98)')
+  ocean.addColorStop(0.48, 'rgba(234, 243, 248, 0.92)')
+  ocean.addColorStop(0.8, 'rgba(213, 226, 236, 0.88)')
+  ocean.addColorStop(1, 'rgba(181, 202, 218, 0.92)')
+  ctx.fillStyle = ocean
+  ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
+
+  ctx.lineWidth = Math.max(0.55, radius * 0.0022)
+  ctx.strokeStyle = 'rgba(100, 128, 151, 0.18)'
+  for (const latitude of [-60, -30, 0, 30, 60]) {
+    const latitudeRadius = Math.cos(latitude * DEG) * radius
+    const y = cy - Math.sin(latitude * DEG) * radius
+    ctx.beginPath()
+    ctx.ellipse(cx, y, latitudeRadius, latitudeRadius * 0.12, 0, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+
+  for (let longitude = -150; longitude <= 180; longitude += 30) {
+    ctx.beginPath()
+    let started = false
+    for (let latitude = -90; latitude <= 90; latitude += 3) {
+      const point = project(longitude, latitude, rotation, cx, cy, radius)
+      if (!point.visible) {
+        started = false
+        continue
+      }
+      if (!started) ctx.moveTo(point.x, point.y)
+      else ctx.lineTo(point.x, point.y)
+      started = true
+    }
+    ctx.stroke()
+  }
+
+  ctx.fillStyle = 'rgba(190, 207, 220, 0.88)'
+  ctx.strokeStyle = 'rgba(102, 132, 157, 0.66)'
+  ctx.lineWidth = Math.max(0.8, radius * 0.004)
+
+  const drawPolygon = (rings: Position[][]) => {
+    ctx.beginPath()
+    for (const ring of rings) {
+      let started = false
+      for (const [longitude, latitude] of ring) {
+        const point = project(longitude, latitude, rotation, cx, cy, radius)
+        if (!point.visible) {
+          started = false
+          continue
+        }
+        if (!started) ctx.moveTo(point.x, point.y)
+        else ctx.lineTo(point.x, point.y)
+        started = true
+      }
+    }
+    ctx.fill('evenodd')
+    ctx.stroke()
+  }
+
+  for (const feature of world.features) {
+    const geometry = feature.geometry
+    if (!geometry) continue
+    if (geometry.type === 'Polygon') drawPolygon(geometry.coordinates)
+    else for (const polygon of geometry.coordinates) drawPolygon(polygon)
+  }
+
+  const originPoint = project(origin[0], origin[1], rotation, cx, cy, radius)
+  ctx.lineCap = 'round'
+  for (const [longitude, latitude] of UNIVERSITY_PINS) {
+    const destination = project(longitude, latitude, rotation, cx, cy, radius)
+    if (!originPoint.visible || !destination.visible) continue
+
+    const controlX = (originPoint.x + destination.x) / 2
+    const controlY = Math.min(originPoint.y, destination.y) - radius * 0.16
+    ctx.beginPath()
+    ctx.moveTo(originPoint.x, originPoint.y)
+    ctx.quadraticCurveTo(controlX, controlY, destination.x, destination.y)
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.66)'
+    ctx.lineWidth = Math.max(1.2, radius * 0.006)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(destination.x, destination.y, Math.max(3, radius * 0.014), 0, Math.PI * 2)
+    ctx.fillStyle = '#ef4444'
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.8)'
+    ctx.shadowBlur = radius * 0.045
+    ctx.fill()
+    ctx.shadowBlur = 0
+  }
+
+  ctx.restore()
+
+  const shine = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius)
+  shine.addColorStop(0, 'rgba(255, 255, 255, 0.76)')
+  shine.addColorStop(0.33, 'rgba(255, 255, 255, 0.06)')
+  shine.addColorStop(0.68, 'rgba(255, 255, 255, 0)')
+  shine.addColorStop(1, 'rgba(255, 255, 255, 0.24)')
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
+  ctx.fillStyle = shine
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(119, 149, 172, 0.48)'
+  ctx.lineWidth = Math.max(1, radius * 0.006)
+  ctx.stroke()
+}
+
 export default function UniversityGlobe() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const currentRotationRef = useRef(DEFAULT_LONGITUDE - 360)
+  const hasSpunRef = useRef(false)
+  const [world, setWorld] = useState<WorldFeatureCollection | null>(null)
   const userId = useAuthStore((state) => state.user?.id)
   const { location, isLocating } = useVisitorLocation()
   const { minimalMotion } = useMotionPreferences()
@@ -37,11 +223,58 @@ export default function UniversityGlobe() {
   const flag = location?.countryCode
     ? getCountryFlag(location.countryCode)
     : profileCountryOption?.flag ?? '🌍'
-  const marker = projectToGlobe(location?.latitude, location?.longitude)
+  const targetLongitude = location?.longitude ?? DEFAULT_LONGITUDE
+  const targetLatitude = location?.latitude ?? DEFAULT_LATITUDE
   const markerStyle: GlobeMarkerStyle = {
-    '--globe-marker-x': `${marker.x}%`,
-    '--globe-marker-y': `${marker.y}%`,
+    '--globe-marker-x': '50%',
+    '--globe-marker-y': `${50 - Math.sin(targetLatitude * DEG) * 42.5}%`,
   }
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/assets/countries.geo.json', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error('World map could not be loaded')
+        return response.json() as Promise<WorldFeatureCollection>
+      })
+      .then(setWorld)
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !world) return
+
+    const origin: Position = [targetLongitude, targetLatitude]
+    const firstSpin = !hasSpunRef.current
+    const from = firstSpin ? targetLongitude - 360 : currentRotationRef.current
+    const to = firstSpin ? targetLongitude : nearestRotation(from, targetLongitude)
+    const duration = minimalMotion ? 1 : firstSpin ? 2600 : 850
+    let frame = 0
+    let start = 0
+
+    hasSpunRef.current = true
+    currentRotationRef.current = from
+
+    const render = (time: number) => {
+      if (!start) start = time
+      const progress = Math.min(1, (time - start) / duration)
+      const rotation = from + (to - from) * easeOutQuart(progress)
+      currentRotationRef.current = rotation
+      drawGlobe(canvas, world, rotation, origin)
+      if (progress < 1) frame = window.requestAnimationFrame(render)
+    }
+
+    frame = window.requestAnimationFrame(render)
+    const observer = new ResizeObserver(() => drawGlobe(canvas, world, currentRotationRef.current, origin))
+    observer.observe(canvas)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [minimalMotion, targetLatitude, targetLongitude, world])
 
   return (
     <motion.figure
@@ -49,31 +282,24 @@ export default function UniversityGlobe() {
       initial={{ opacity: 0, scale: 0.92, x: minimalMotion ? 0 : -28 }}
       animate={{ opacity: 1, scale: 1, x: 0 }}
       transition={{ duration: minimalMotion ? 0.01 : 0.72, ease: [0.16, 1, 0.3, 1] }}
-      aria-label={`Interactive university globe focused on ${resolvedCountry}`}
+      aria-label={`Animated university globe focused on ${resolvedCountry}`}
     >
-      <motion.div
-        className="university-globe-spin-stage"
-        initial={minimalMotion ? false : { rotateY: -360, scale: 0.84 }}
-        animate={{ rotateY: 0, scale: 1 }}
-        transition={{
-          rotateY: { duration: minimalMotion ? 0.01 : 1.75, delay: 0.08, ease: [0.45, 0, 0.16, 1] },
-          scale: { duration: minimalMotion ? 0.01 : 1.15, delay: 0.08, ease: [0.16, 1, 0.3, 1] },
-        }}
-      >
+      <div className="university-globe-visual">
         <img
-          src="/assets/university-globe-glass.png"
+          src="/assets/university-globe-glass-clean.png"
           alt=""
-          className="university-globe-reference-image"
+          className={`university-globe-reference-image ${world ? 'university-globe-reference-image-hidden' : ''}`}
           draggable={false}
           decoding="async"
         />
+        <canvas ref={canvasRef} className="university-globe-canvas" aria-hidden="true" />
 
         <motion.span
           className="university-globe-user-marker"
           style={markerStyle}
           initial={{ opacity: 0, scale: 0.3, y: -16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0.01 : 0.45, delay: minimalMotion ? 0 : 1.48, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: minimalMotion ? 0.01 : 0.45, delay: minimalMotion ? 0 : 2.35, ease: [0.16, 1, 0.3, 1] }}
           aria-hidden="true"
         >
           <span className="university-globe-user-marker-ring" />
@@ -86,12 +312,12 @@ export default function UniversityGlobe() {
           className="university-globe-country-readout"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0.01 : 0.5, delay: minimalMotion ? 0 : 1.35 }}
+          transition={{ duration: minimalMotion ? 0.01 : 0.5, delay: minimalMotion ? 0 : 2.25 }}
         >
           <span aria-hidden="true">{flag}</span>
           <span>{isLocating && !profileCountry ? 'Locating you…' : resolvedCountry}</span>
         </motion.div>
-      </motion.div>
+      </div>
     </motion.figure>
   )
 }

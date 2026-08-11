@@ -22,18 +22,14 @@ export default function NotFound() {
         <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-red-200/45 blur-3xl" />
         <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-rose-200/35 blur-3xl" />
         {/* drifting paper planes (concept: 33-404-Page) */}
-        {!minimalMotion &&
-          paperPlanes.map((plane) => (
-            <motion.span
+        {paperPlanes.map((plane) => (
+            <span
               key={`${plane.left}-${plane.top}`}
               className="absolute text-red-300/70"
-              style={{ left: plane.left, top: plane.top }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 1, 0.6], y: [0, -14, 4, -10], x: [0, 10, -6, 8], rotate: [plane.rotate, plane.rotate + 8, plane.rotate - 6, plane.rotate] }}
-              transition={{ duration: 9, delay: plane.delay, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ left: plane.left, top: plane.top, transform: `rotate(${plane.rotate}deg)` }}
             >
               <Send style={{ width: plane.size, height: plane.size }} />
-            </motion.span>
+            </span>
           ))}
       </div>
 

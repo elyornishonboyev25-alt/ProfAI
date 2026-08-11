@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
-// Live microphone activity bars driven by a real AnalyserNode. When `active` and a
-// `stream` are provided it animates with the user's voice; otherwise it shows a calm
-// idle state. Pure visual feedback so the speaker knows the mic is hearing them.
-
+// Live microphone activity bars are updated directly on their DOM nodes. Keeping
+// this high-frequency visual outside React prevents a full component render on
+// every animation frame while preserving the same analyser-driven feedback.
 export default function MicVisualizer({
   stream,
   active,
@@ -13,17 +12,20 @@ export default function MicVisualizer({
   active: boolean
   bars?: number
 }) {
-  const [levels, setLevels] = useState<number[]>(() => Array.from({ length: bars }, () => 0.08))
+  const barRefs = useRef<Array<HTMLSpanElement | null>>([])
   const rafRef = useRef<number | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
 
   useEffect(() => {
+    const resetBars = () => {
+      for (const bar of barRefs.current) {
+        if (bar) bar.style.height = '8%'
+      }
+    }
+
     if (!active || !stream) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       rafRef.current = null
-      setLevels(Array.from({ length: bars }, () => 0.08))
+      resetBars()
       return
     }
 
@@ -31,27 +33,26 @@ export default function MicVisualizer({
       window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtx) return
 
-    const ctx = new AudioCtx()
-    audioCtxRef.current = ctx
-    const analyser = ctx.createAnalyser()
+    const context = new AudioCtx()
+    const analyser = context.createAnalyser()
     analyser.fftSize = 64
     analyser.smoothingTimeConstant = 0.8
-    analyserRef.current = analyser
-    const source = ctx.createMediaStreamSource(stream)
+    const source = context.createMediaStreamSource(stream)
     source.connect(analyser)
-    sourceRef.current = source
-
     const data = new Uint8Array(analyser.frequencyBinCount)
+    let lastPaint = 0
 
-    const tick = () => {
-      analyser.getByteFrequencyData(data)
-      const next: number[] = []
-      for (let i = 0; i < bars; i++) {
-        const idx = Math.floor((i / bars) * data.length)
-        const v = data[idx] / 255
-        next.push(Math.max(0.08, v))
+    const tick = (now: number) => {
+      if (now - lastPaint >= 33) {
+        analyser.getByteFrequencyData(data)
+        for (let index = 0; index < bars; index += 1) {
+          const dataIndex = Math.floor((index / bars) * data.length)
+          const level = Math.max(0.08, data[dataIndex] / 255)
+          const bar = barRefs.current[index]
+          if (bar) bar.style.height = `${Math.round(level * 100)}%`
+        }
+        lastPaint = now
       }
-      setLevels(next)
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
@@ -63,22 +64,24 @@ export default function MicVisualizer({
         source.disconnect()
         analyser.disconnect()
       } catch {
-        // ignore
+        // The browser may already have disconnected a stopped stream.
       }
-      void ctx.close().catch(() => {})
-      audioCtxRef.current = null
+      void context.close().catch(() => {})
     }
   }, [active, stream, bars])
 
   return (
     <div className="flex h-14 items-center justify-center gap-[3px]" aria-hidden>
-      {levels.map((level, i) => (
+      {Array.from({ length: bars }, (_, index) => (
         <span
-          key={i}
+          key={index}
+          ref={(element) => {
+            barRefs.current[index] = element
+          }}
           className={`w-[3px] rounded-full transition-[height,background-color] duration-75 ${
             active ? 'bg-gradient-to-t from-red-500 to-rose-400' : 'bg-slate-300'
           }`}
-          style={{ height: `${Math.round(level * 100)}%`, minHeight: 4 }}
+          style={{ height: '8%', minHeight: 4 }}
         />
       ))}
     </div>

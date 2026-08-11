@@ -180,8 +180,8 @@ export default function Login() {
               <motion.span
                 aria-hidden
                 initial={minimalMotion ? false : { opacity: 0.5, scale: 0.92 }}
-                animate={minimalMotion ? undefined : { opacity: [0.45, 0.75, 0.45], scale: [0.96, 1.06, 0.96] }}
-                transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+                animate={{ opacity: 0.55, scale: 1 }}
+                transition={{ duration: minimalMotion ? 0 : 0.35 }}
                 className="absolute inset-0 -z-10 rounded-2xl bg-red-500/25 blur-xl"
               />
               <span className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white bg-white/90 shadow-[0_18px_38px_rgba(220,38,38,.24)]">

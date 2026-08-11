@@ -184,6 +184,9 @@ export default function ArticleReader() {
 
   const bodyRef = useRef<HTMLDivElement>(null)
   const readerScrollRef = useRef<HTMLDivElement>(null)
+  const progressFrameRef = useRef<number | null>(null)
+  const pendingProgressRef = useRef(0)
+  const persistedProgressBucketRef = useRef(-1)
   const openAiAssistant = useAiAssistantStore((state) => state.open)
   const setAiWorkspace = useAiAssistantStore((state) => state.setActiveWorkspace)
 
@@ -203,18 +206,33 @@ export default function ArticleReader() {
   // Reading progress follows the paper's own scroll area, matching the focused
   // reader in the reference while still persisting progress for the library.
   useEffect(() => {
+    persistedProgressBucketRef.current = -1
     const onScroll = () => {
       const el = readerScrollRef.current
       if (!el) return
       const total = el.scrollHeight - el.clientHeight
-      const pct = total > 0 ? (el.scrollTop / total) * 100 : 100
-      setProgress(pct)
-      if (slug) saveArticleProgress(slug, pct)
+      pendingProgressRef.current = total > 0 ? (el.scrollTop / total) * 100 : 100
+      if (progressFrameRef.current !== null) return
+
+      progressFrameRef.current = window.requestAnimationFrame(() => {
+        progressFrameRef.current = null
+        const nextProgress = pendingProgressRef.current
+        setProgress(nextProgress)
+        const nextBucket = Math.floor(nextProgress / 5)
+        if (slug && nextBucket !== persistedProgressBucketRef.current) {
+          persistedProgressBucketRef.current = nextBucket
+          saveArticleProgress(slug, nextProgress)
+        }
+      })
     }
     const el = readerScrollRef.current
     el?.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
-    return () => el?.removeEventListener('scroll', onScroll)
+    return () => {
+      el?.removeEventListener('scroll', onScroll)
+      if (progressFrameRef.current !== null) window.cancelAnimationFrame(progressFrameRef.current)
+      progressFrameRef.current = null
+    }
   }, [slug, prefs.fontScale, prefs.width])
 
   const captureSelection = useCallback(() => {

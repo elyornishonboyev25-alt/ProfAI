@@ -74,7 +74,7 @@ export function FloatingAIAssistant() {
   }, [assistantBlocked, close, isAiAnalysisStandalone])
 
   useEffect(() => {
-    if (isAuthPage) return
+    if (isAuthPage || (!isOpen && !talkOpen)) return
     void refreshContext(false)
 
     const onAttemptSubmitted = () => {
@@ -92,7 +92,7 @@ export function FloatingAIAssistant() {
       window.removeEventListener(ATTEMPT_SUBMITTED_EVENT, onAttemptSubmitted as EventListener)
       window.removeEventListener('focus', onWindowFocus)
     }
-  }, [isAuthPage, refreshContext])
+  }, [isAuthPage, isOpen, refreshContext, talkOpen])
 
   // While the immersive talk overlay is up it owns the corner, so hide the launcher.
   if (isAuthPage || isAiAnalysisStandalone || assistantBlocked || talkOpen) return null

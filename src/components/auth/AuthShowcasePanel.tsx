@@ -86,13 +86,7 @@ export default function AuthShowcasePanel({ quote = 'Your university journey con
               >
                 <span className={`relative mx-auto flex h-10 w-10 items-center justify-center rounded-2xl border shadow-lg backdrop-blur-xl ${index === 1 ? 'border-red-300/60 bg-red-500 text-white shadow-red-900/40' : 'border-white/20 bg-white/10 text-white'}`}>
                   <Icon className="h-4 w-4" />
-                  {index === 1 && !minimalMotion ? (
-                    <motion.span
-                      className="absolute inset-0 rounded-2xl border border-red-300/70"
-                      animate={{ scale: [1, 1.35], opacity: [0.8, 0] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
-                    />
-                  ) : null}
+                  {index === 1 ? <span className="absolute inset-0 rounded-2xl border border-red-300/70" /> : null}
                 </span>
                 <p className="mt-2 text-[11px] font-black text-white">{label}</p>
                 <p className="mt-0.5 text-[9px] font-semibold text-white/45">{detail}</p>

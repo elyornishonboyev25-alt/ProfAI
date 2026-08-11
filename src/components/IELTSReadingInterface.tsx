@@ -6045,6 +6045,7 @@ export default function IELTSReadingInterface({
                     onTimeUp={handleTimeUp}
                     isActive={isTestActive}
                     variant="readingCompact"
+                    syncIntervalSeconds={5}
                   />
                 </span>
               </div>

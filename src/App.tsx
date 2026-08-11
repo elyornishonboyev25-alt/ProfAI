@@ -240,7 +240,7 @@ function App() {
 
   return (
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100 ${usesStickyWorkspaceContent ? 'app-shell-sticky-content' : ''}`}>
-      <AnimatedBackground />
+      {!isGuestLanding ? <AnimatedBackground /> : null}
       <ToastViewport />
       <DeferredRegisterModal />
       <NicknameGate />

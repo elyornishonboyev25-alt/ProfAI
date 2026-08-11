@@ -140,7 +140,7 @@ export default function Dashboard() {
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-[1.8rem] border border-white/80 bg-white/58 px-5 py-4 shadow-[0_18px_55px_rgba(51,65,85,0.09)] backdrop-blur-2xl sm:px-6"
+          className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-[1.8rem] border border-white/80 bg-white/78 px-5 py-4 shadow-[0_18px_55px_rgba(51,65,85,0.09)] sm:px-6"
         >
           <div className="flex min-w-0 items-center gap-3.5">
             <div className="relative h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-red-700 p-[4px] shadow-[0_10px_28px_rgba(220,38,38,0.3)]">

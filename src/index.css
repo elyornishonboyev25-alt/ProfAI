@@ -292,10 +292,10 @@
   /* ── Liquid Glass (Apple-style) — translucent frosted surfaces with a glossy
      top sheen and a soft inner light. Used by the ProfAI landing hero. ─────── */
   .lg-glass {
-    background: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow:
       0 8px 32px rgba(180, 60, 60, 0.1),
       0 2px 8px rgba(0, 0, 0, 0.04),
@@ -357,8 +357,7 @@
     filter: blur(0.5px);
   }
   .lg-sphere-float {
-    animation: lgFloat 9s ease-in-out infinite;
-    will-change: transform;
+    animation: none;
   }
 }
 
@@ -375,15 +374,196 @@
   }
 }
 
+.landing-wave-bar {
+  animation: none;
+  transform: scaleY(var(--landing-wave-peak, 1));
+}
+
+.landing-glow-dot {
+  animation: none;
+  opacity: 0.72;
+}
+
+.landing-skill-float {
+  animation: none;
+}
+
+.landing-deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+@keyframes landingWaveBar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(var(--landing-wave-peak, 1)); }
+}
+
+@keyframes landingGlowDot {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-10px); opacity: 0.95; }
+}
+
+@keyframes landingSkillFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .lg-sphere-float {
+  .lg-sphere-float,
+  .landing-wave-bar,
+  .landing-glow-dot,
+  .landing-skill-float {
     animation: none;
+  }
+}
+
+.voice-orb-glow {
+  position: absolute;
+  inset: -22%;
+  border-radius: 9999px;
+  filter: blur(8px);
+  opacity: 0.55;
+}
+
+.voice-orb-glow--active {
+  opacity: 0.8;
+}
+
+.voice-orb-ring {
+  position: absolute;
+  inset: 6%;
+  border: 2px solid;
+  border-radius: 9999px;
+  opacity: 0;
+}
+
+.voice-orb-halo {
+  position: absolute;
+  inset: 0;
+}
+
+.voice-orb-halo--thinking {
+  animation-duration: 6s;
+}
+
+.voice-orb-spark {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0.7;
+}
+
+.voice-orb-core {
+  position: absolute;
+  inset: 16%;
+  border-radius: 9999px;
+  backface-visibility: hidden;
+}
+
+.voice-orb--animated .voice-orb-core {
+  will-change: transform, border-radius;
+}
+
+.voice-orb-core--rest {
+  animation: none;
+}
+
+.voice-orb-core--active {
+  transition: transform 180ms ease-out;
+}
+
+.voice-orb-core--speaking {
+  animation: none;
+}
+
+.voice-orb--animated .voice-orb-glow {
+  animation: voiceOrbGlowIdle 3.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.voice-orb--animated .voice-orb-glow--active {
+  animation-name: voiceOrbGlowActive;
+  animation-duration: 1.6s;
+}
+
+.voice-orb--animated .voice-orb-ring {
+  animation: voiceOrbRing 1.8s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+.voice-orb--animated .voice-orb-halo {
+  animation: voiceOrbRotate 16s linear infinite;
+  will-change: transform;
+}
+
+.voice-orb--animated .voice-orb-spark {
+  animation: voiceOrbSpark 2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.voice-orb--animated .voice-orb-core--rest {
+  animation: voiceOrbCoreBreathe 3.2s ease-in-out infinite;
+}
+
+.voice-orb--animated .voice-orb-core--speaking {
+  animation: voiceOrbCoreWobble 1.1s ease-in-out infinite;
+}
+
+.voice-orb-highlight {
+  position: absolute;
+  top: 14%;
+  left: 20%;
+  width: 38%;
+  height: 30%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%);
+  filter: blur(2px);
+}
+
+@keyframes voiceOrbGlowIdle {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.06); }
+}
+
+@keyframes voiceOrbGlowActive {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes voiceOrbRing {
+  from { opacity: 0.5; transform: scale(0.7); }
+  to { opacity: 0; transform: scale(1.7); }
+}
+
+@keyframes voiceOrbRotate { to { transform: rotate(360deg); } }
+
+@keyframes voiceOrbSpark {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+@keyframes voiceOrbCoreBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes voiceOrbCoreWobble {
+  0%, 100% { border-radius: 48% 52% 53% 47%; }
+  50% { border-radius: 52% 48% 47% 53%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-orb-glow,
+  .voice-orb-ring,
+  .voice-orb-halo,
+  .voice-orb-spark,
+  .voice-orb-core {
+    animation: none !important;
   }
 }
 
 @layer components {
   .app-panel {
-    @apply relative border border-red-100/85 bg-white/95 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-md;
+    @apply relative border border-red-100/85 bg-white/95 shadow-[0_16px_36px_rgba(15,23,42,0.08)];
     background-image:
       radial-gradient(circle at 8% -20%, rgba(252, 165, 165, 0.16), transparent 42%),
       linear-gradient(145deg, rgba(255, 255, 255, 0.995), rgba(255, 247, 247, 0.94));
@@ -401,7 +581,7 @@
   }
 
   .panel-surface {
-    @apply relative rounded-3xl border border-red-100/90 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm;
+    @apply relative rounded-3xl border border-red-100/90 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.08)];
     background-image:
       radial-gradient(circle at 88% -28%, rgba(251, 146, 60, 0.11), transparent 48%),
       radial-gradient(circle at -6% 104%, rgba(244, 63, 94, 0.07), transparent 42%),
@@ -481,7 +661,7 @@
   }
 
   .surface-card {
-    @apply relative rounded-3xl border border-white/90 bg-white/85 shadow-[0_20px_44px_rgba(15,23,42,0.09)] backdrop-blur-xl;
+    @apply relative rounded-3xl border border-white/90 bg-white/85 shadow-[0_20px_44px_rgba(15,23,42,0.09)];
     background-image:
       radial-gradient(circle at 0% 0%, rgba(252, 165, 165, 0.12), transparent 38%),
       linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 246, 247, 0.78));
@@ -502,8 +682,8 @@
       0 20px 55px rgba(65, 24, 38, 0.09),
       inset 0 1px 0 rgba(255, 255, 255, 0.96),
       inset 0 -1px 0 rgba(255, 255, 255, 0.42);
-    backdrop-filter: blur(24px) saturate(145%);
-    -webkit-backdrop-filter: blur(24px) saturate(145%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .apple-glass-card::before {
@@ -520,8 +700,8 @@
     border: 1px solid rgba(255, 255, 255, 0.92);
     background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(255,248,248,.68));
     box-shadow: 0 10px 26px rgba(51, 65, 85, 0.07), inset 0 1px 0 rgba(255,255,255,.98);
-    backdrop-filter: blur(16px) saturate(135%);
-    -webkit-backdrop-filter: blur(16px) saturate(135%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .target-glass-card {
@@ -543,9 +723,14 @@
     width: 38%;
     z-index: 0;
     pointer-events: none;
-    transform: rotate(18deg);
+    transform: translate3d(0, 0, 0) rotate(18deg);
+    will-change: transform, opacity;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.48), transparent);
-    animation: targetGlassShine 6.5s ease-in-out infinite;
+    opacity: 0;
+  }
+
+  .target-glass-card:hover::after {
+    animation: targetGlassShine 1.2s ease-in-out 1;
   }
 
   .target-glass-card > * {
@@ -964,7 +1149,7 @@
 
   .dashboard-accent-reveal {
     background-size: 170% 100%;
-    animation: accentGradientShift 6s ease-in-out infinite;
+    animation: accentGradientShift 1.2s ease-in-out 1;
   }
 
   .premium-top-chip {
@@ -1054,14 +1239,18 @@
       rgba(255, 255, 255, 0) 82%
     );
     transform: translateX(-165%);
-    animation: ctaSunSweep 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    opacity: 0;
     mix-blend-mode: screen;
   }
 
   .arena-primary-btn:hover::before,
   .arena-primary-btn-blue:hover::before,
-  .cta-sheen:hover::before {
-    animation-duration: 2.6s;
+  .cta-sheen:hover::before,
+  .arena-primary-btn:focus-visible::before,
+  .arena-primary-btn-blue:focus-visible::before,
+  .cta-sheen:focus-visible::before {
+    opacity: 1;
+    animation: ctaSunSweep 900ms cubic-bezier(0.22, 1, 0.36, 1) 1;
   }
 
   .panel-recent-activity {
@@ -1145,7 +1334,6 @@
   .ambient-orb {
     position: absolute;
     border-radius: 9999px;
-    will-change: transform;
     filter: blur(72px);
   }
 
@@ -1177,7 +1365,6 @@
       inset 8px 9px 18px rgba(255,255,255,0.38),
       0 18px 42px rgba(190, 24, 93, 0.3),
       0 0 48px rgba(248, 113, 113, 0.22);
-    will-change: transform;
   }
 
   .glossy-orb::after {
@@ -1204,7 +1391,6 @@
     box-shadow:
       inset 0 0 42px rgba(251, 113, 133, 0.05),
       0 0 48px rgba(251, 113, 133, 0.05);
-    will-change: transform;
   }
 
   .ambient-orbit::before {
@@ -1397,9 +1583,9 @@
 }
 
 @keyframes targetGlassShine {
-  0%, 22% { left: -55%; opacity: 0; }
+  0%, 22% { transform: translate3d(0, 0, 0) rotate(18deg); opacity: 0; }
   36% { opacity: .78; }
-  58%, 100% { left: 125%; opacity: 0; }
+  58%, 100% { transform: translate3d(475%, 0, 0) rotate(18deg); opacity: 0; }
 }
 
 @keyframes ctaSunSweep {
@@ -1988,19 +2174,18 @@
     rgba(255, 255, 255, 0) 80%
   );
   transform: translateX(-100%);
-  animation: fxShimmer 2.2s var(--app-ease-smooth) infinite;
+  animation: fxShimmer 850ms var(--app-ease-smooth) 1;
   mix-blend-mode: screen;
 }
 
 /* Gentle vertical bob for hero art / badges */
 .fx-float {
-  animation: fxFloat 6s ease-in-out infinite;
-  will-change: transform;
+  animation: none;
 }
 
 /* Breathing glow ring for "live" / active elements */
 .fx-glow-breath {
-  animation: fxGlowBreath 2.8s ease-in-out infinite;
+  animation: none;
 }
 
 /* Diagonal shine sweep for leaderboard medals / premium chips */
@@ -2022,19 +2207,22 @@
     rgba(255, 255, 255, 0) 62%
   );
   transform: translateX(-160%);
-  animation: fxMedalShine 4.2s var(--app-ease-smooth) infinite;
   mix-blend-mode: screen;
+}
+
+.fx-medal-shine:hover::after,
+.fx-medal-shine:focus-within::after {
+  animation: fxMedalShine 850ms var(--app-ease-smooth) 1;
 }
 
 /* Slow drifting aurora gradient for premium hero backdrops */
 .fx-aurora {
-  background-size: 200% 200%;
-  animation: fxAurora 14s ease-in-out infinite;
+  background-size: 150% 150%;
 }
 
 /* Soft live pulse dot */
 .fx-pulse-dot {
-  animation: fxPulseDot 1.8s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes fxShimmer {

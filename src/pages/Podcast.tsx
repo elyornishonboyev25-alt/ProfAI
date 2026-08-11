@@ -1484,18 +1484,9 @@ export default function Podcast() {
               alt=""
               decoding="async"
               initial={{ opacity: 0, scale: 1.08 }}
-              animate={minimalMotion
-                ? { opacity: 0.68, scale: 1.045 }
-                : {
-                    opacity: [0.58, 0.72, 0.62],
-                    scale: [1.045, 1.105, 1.045],
-                    x: ['-1.2%', '1.2%', '-1.2%'],
-                    y: ['-0.6%', '0.7%', '-0.6%'],
-                  }}
+              animate={{ opacity: 0.68, scale: 1.045 }}
               exit={{ opacity: 0 }}
-              transition={minimalMotion
-                ? { duration: 0 }
-                : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: minimalMotion ? 0 : 0.45 }}
               className="podcast-header-artwork absolute inset-0 h-full w-full rounded-[inherit] object-cover"
             />
           </AnimatePresence>

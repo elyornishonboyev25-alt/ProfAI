@@ -289,10 +289,14 @@ export function useAiTutor() {
       meterRef.current = meter
       let spoke = false
       let lastLoud = Date.now()
-      const tick = () => {
+      let lastVisualUpdate = 0
+      const tick = (now: number) => {
         if (!meterRef.current) return
         const level = meterRef.current.getLevel()
-        setVoiceLevel(level)
+        if (now - lastVisualUpdate >= 50) {
+          setVoiceLevel(level)
+          lastVisualUpdate = now
+        }
         if (level > 0.14) {
           spoke = true
           lastLoud = Date.now()

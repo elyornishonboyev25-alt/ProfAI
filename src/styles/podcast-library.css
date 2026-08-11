@@ -1076,6 +1076,47 @@
   .podcast-category-button svg { width: 1.15rem; height: 1.15rem; }
 }
 
+/* Keep the library visually rich without continuously repainting the page. */
+.podcast-library::after,
+.podcast-aurora,
+.podcast-orb,
+.podcast-level-dock,
+.podcast-add-panel::before,
+.podcast-player-artwork,
+.podcast-continue,
+.podcast-library header.podcast-library-header::before,
+.podcast-library header.podcast-library-header::after,
+.podcast-library-header h1,
+.podcast-library-header .podcast-logo-orb,
+.podcast-library-header .podcast-soft-button,
+.podcast-library-header .podcast-icon-button,
+.podcast-featured-shell,
+.podcast-category-rail,
+.podcast-category-rail::after,
+.podcast-continue::after,
+.podcast-continue::before,
+.podcast-continue-artwork,
+.podcast-continue-progress-fill::after,
+.podcast-continue .podcast-play-orb {
+  animation: none;
+  will-change: auto;
+}
+
+.podcast-level-dock,
+.podcast-add-panel,
+.podcast-library-header .podcast-header-vignette,
+.podcast-library-header .podcast-soft-button,
+.podcast-library-header .podcast-icon-button,
+.podcast-category-rail,
+.podcast-continue,
+.podcast-episode-card,
+.podcast-details-toggle,
+.podcast-detail-card,
+.podcast-continue-progress {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .podcast-library::after,
   .podcast-aurora,

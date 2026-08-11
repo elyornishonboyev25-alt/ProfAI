@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -147,16 +147,18 @@ function RubricVisual() {
 const WAVE_BARS = [0.5, 0.8, 0.4, 1, 0.6, 0.9, 0.45, 0.75, 0.55, 1, 0.5, 0.85, 0.6, 0.95, 0.4, 0.7, 0.5, 0.9]
 
 function WaveVisual() {
-  const reduce = !!useReducedMotion()
   return (
     <div className="mt-5 flex h-12 items-center gap-1">
       {WAVE_BARS.map((peak, i) => (
-        <motion.span
+        <span
           key={i}
-          animate={reduce ? undefined : { scaleY: [0.3, peak, 0.3] }}
-          transition={{ duration: 1.2 + (i % 5) * 0.18, repeat: Infinity, ease: 'easeInOut', delay: i * 0.05 }}
-          className="h-full w-1 flex-1 rounded-full bg-gradient-to-t from-red-500/70 to-rose-400/70"
-          style={{ transformOrigin: 'center', transform: `scaleY(${peak})` }}
+          className="landing-wave-bar h-full w-1 flex-1 rounded-full bg-gradient-to-t from-red-500/70 to-rose-400/70"
+          style={{
+            transformOrigin: 'center',
+            animationDuration: `${1.2 + (i % 5) * 0.18}s`,
+            animationDelay: `${i * 0.05}s`,
+            '--landing-wave-peak': peak,
+          } as CSSProperties}
         />
       ))}
     </div>
@@ -615,7 +617,7 @@ export default function Landing() {
       </section>
 
       {/* ── Stat band ───────────────────────────────────────────────── */}
-      <section className="px-4 py-10">
+      <section className="landing-deferred-section px-4 py-10">
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.05)] sm:grid-cols-4">
           {STATS.map((s, i) => (
             <motion.div
@@ -636,7 +638,7 @@ export default function Landing() {
       </section>
 
       {/* ── Bento features ──────────────────────────────────────────── */}
-      <section id="features" className="scroll-mt-24 px-4 py-16 sm:py-24">
+      <section id="features" className="landing-deferred-section scroll-mt-24 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div
             initial="hidden"
@@ -710,7 +712,7 @@ export default function Landing() {
       </section>
 
       {/* ── Tracks (interactive) ────────────────────────────────────── */}
-      <section id="tracks" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
+      <section id="tracks" className="landing-deferred-section scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <SectionTag>Choose your goal</SectionTag>
@@ -784,7 +786,7 @@ export default function Landing() {
       </section>
 
       {/* ── How it works ────────────────────────────────────────────── */}
-      <section id="route" className="scroll-mt-24 px-4 py-16 sm:py-24">
+      <section id="route" className="landing-deferred-section scroll-mt-24 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <SectionTag>Your route</SectionTag>
@@ -822,7 +824,7 @@ export default function Landing() {
       </section>
 
       {/* ── Reviews wall ────────────────────────────────────────────── */}
-      <section id="reviews" className="scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
+      <section id="reviews" className="landing-deferred-section scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -993,7 +995,7 @@ export default function Landing() {
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────── */}
-      <section className="px-4 py-16 sm:py-24">
+      <section className="landing-deferred-section px-4 py-16 sm:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

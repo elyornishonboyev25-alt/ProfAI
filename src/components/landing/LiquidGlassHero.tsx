@@ -44,11 +44,10 @@ export default function LiquidGlassHero() {
       <div className="absolute left-1/2 top-1/2 h-[330px] w-[430px] -translate-x-1/2 -translate-y-1/2">
         {/* glow dots + spheres around the tiles */}
         {GLOW_DOTS.map((dot, i) => (
-          <motion.span
+          <span
             key={i}
-            className={`lg-orb pointer-events-none absolute ${dot.className}`}
-            animate={reduce ? undefined : { y: [0, -10, 0], opacity: [0.5, 0.95, 0.5] }}
-            transition={{ duration: 5, delay: dot.delay, repeat: Infinity, ease: 'easeInOut' }}
+            className={`lg-orb pointer-events-none absolute ${reduce ? '' : 'landing-glow-dot'} ${dot.className}`}
+            style={{ animationDelay: `${dot.delay}s` }}
           />
         ))}
 
@@ -109,14 +108,13 @@ export default function LiquidGlassHero() {
               transition={{ duration: 0.55, ease: EASE, delay: tile.delay }}
               className={`absolute z-10 ${anchor} ${tile.v}`}
             >
-              <motion.div
-                animate={reduce ? undefined : { y: [0, -8, 0] }}
-                transition={{ duration: tile.float, repeat: Infinity, ease: 'easeInOut' }}
-                className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              <div
+                style={{ animationDuration: `${tile.float}s` }}
+                className={`lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ${reduce ? '' : 'landing-skill-float'}`}
               >
                 <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
                 <span className="text-[13px] font-bold text-slate-700">{tile.label}</span>
-              </motion.div>
+              </div>
             </motion.div>
           )
         })}

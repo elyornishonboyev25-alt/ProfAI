@@ -368,11 +368,9 @@ export default function Premium() {
               {/* depth + sheen */}
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.3),transparent_42%),radial-gradient(circle_at_88%_90%,rgba(0,0,0,0.28),transparent_48%)]" />
               <div className="pointer-events-none absolute inset-0 opacity-[0.1] bg-[repeating-linear-gradient(115deg,#fff_0_1px,transparent_1px_8px)]" />
-              <motion.span
+              <span
                 aria-hidden
                 className="pointer-events-none absolute -inset-y-12 -left-1/4 w-1/4 rotate-[18deg] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)]"
-                animate={minimalMotion ? undefined : { x: ['0%', '560%'] }}
-                transition={minimalMotion ? undefined : { duration: 6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.6 }}
               />
 
               <div className="relative flex items-start justify-between">

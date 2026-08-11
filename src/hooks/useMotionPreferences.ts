@@ -1,25 +1,30 @@
-﻿import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 type NavigatorWithDeviceMemory = Navigator & {
   deviceMemory?: number
 }
 
+function detectDeviceMotionCapabilities() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return { isLowPowerDevice: false, isCoarsePointer: false }
+  }
+
+  const nav = navigator as NavigatorWithDeviceMemory
+  const deviceMemory = nav.deviceMemory ?? 8
+  const cpuCores = navigator.hardwareConcurrency ?? 8
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches
+  const compactViewport = window.matchMedia('(max-width: 900px)').matches
+
+  return {
+    isCoarsePointer,
+    isLowPowerDevice: deviceMemory <= 4 || cpuCores <= 4 || (isCoarsePointer && compactViewport),
+  }
+}
+
 export function useMotionPreferences() {
   const prefersReducedMotion = useReducedMotion()
-  const [isLowPowerDevice, setIsLowPowerDevice] = useState(false)
-  const [isCoarsePointer, setIsCoarsePointer] = useState(false)
-
-  useEffect(() => {
-    const nav = navigator as NavigatorWithDeviceMemory
-    const deviceMemory = nav.deviceMemory ?? 8
-    const cpuCores = navigator.hardwareConcurrency ?? 8
-    const coarsePointer = window.matchMedia('(pointer: coarse)').matches
-    const compactViewport = window.matchMedia('(max-width: 900px)').matches
-
-    setIsCoarsePointer(coarsePointer)
-    setIsLowPowerDevice(deviceMemory <= 4 || cpuCores <= 4 || (coarsePointer && compactViewport))
-  }, [])
+  const [{ isLowPowerDevice, isCoarsePointer }] = useState(detectDeviceMotionCapabilities)
 
   const reducedMotion = Boolean(prefersReducedMotion)
   const minimalMotion = reducedMotion || isLowPowerDevice
@@ -32,4 +37,3 @@ export function useMotionPreferences() {
     allowHoverMotion,
   }
 }
-

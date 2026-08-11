@@ -554,7 +554,7 @@ export default function SATMockRun() {
             Question {questionIndex + 1} of {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
           </button>
           <div className="flex items-center justify-end gap-2">
-            <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#8fa0e8] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg">Back</button>
+            <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg">Back</button>
             {questionIndex < currentModule.questions.length - 1 ? (
               <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg">Next</button>
             ) : (

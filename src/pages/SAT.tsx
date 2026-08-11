@@ -18,7 +18,7 @@ import {
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
+import { getSATSectionTest, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 
@@ -213,7 +213,16 @@ export default function SAT() {
   }))
 
   const answeredBySection = (section: 'math' | 'reading-writing') => {
-    const latest = attempts[0]
+    const sectionAttempts = Object.values(SAT_TEST_CATALOG)
+      .map((test) => {
+        const sectionTest = getSATSectionTest(test.mockId, section)
+        const attempt = loadSATAttempt(sectionTest.id)
+        return attempt ? { test: sectionTest, attempt } : null
+      })
+      .filter((item): item is AttemptWithTest => Boolean(item))
+    const latest = [...attempts, ...sectionAttempts]
+      .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
+      .find(({ test }) => test.modules.some((module) => module.section === section))
     if (!latest) return section === 'math' ? 45 : 60
     const questions = latest.test.modules.flatMap((module) => module.questions).filter((question) => question.section === section)
     const answered = questions.filter((question) => latest.attempt.answers[question.id]?.trim()).length
@@ -264,14 +273,14 @@ export default function SAT() {
             topics={['Algebra', 'Problem Solving', 'Advanced Math']}
             progress={answeredBySection('math')}
             subject="math"
-            onStart={() => navigate(`/mock/sat/${availableTests[0]?.mockId ?? 4}`)}
+            onStart={() => navigate('/sat/math')}
           />
           <SubjectCard
             title="SAT Reading & Writing"
             topics={['Evidence', 'Grammar', 'Revision']}
             progress={answeredBySection('reading-writing')}
             subject="reading"
-            onStart={() => navigate(`/mock/sat/${availableTests[availableTests.length - 1]?.mockId ?? 17}`)}
+            onStart={() => navigate('/sat/reading-writing')}
           />
 
           <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">

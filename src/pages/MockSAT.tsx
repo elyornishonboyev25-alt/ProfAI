@@ -17,14 +17,14 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import {
   createSATAttempt,
   type SATMode,
 } from '@/features/sat/practiceTest4'
-import { getSATTest } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
 import {
   clearSATAttempt,
   loadSATAttempt,
@@ -57,7 +57,12 @@ const modeCards = [
 export default function MockSAT() {
   const navigate = useNavigate()
   const { mockId = '4' } = useParams<{ mockId: string }>()
-  const test = getSATTest(mockId)
+  const [searchParams] = useSearchParams()
+  const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
+  const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
+  const sectionQuery = section ? `?section=${section}` : ''
+  const backPath = section ? `/sat/${section}` : '/sat'
+  const isSectionPractice = Boolean(section)
   const { supported: fullscreenSupported, enter } = useFullscreen()
   const [selectedMode, setSelectedMode] = useState<SATMode>('practice')
   const [existingAttempt, setExistingAttempt] = useState(() => loadSATAttempt(test.id))
@@ -91,7 +96,7 @@ export default function MockSAT() {
       const attempt = createSATAttempt(test.id, test.modules, mode)
       saveSATAttempt(attempt)
     }
-    navigate(`/sat/mock/${test.mockId}/run`)
+    navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)
   }
 
   const activeAttempt = existingAttempt?.status === 'active'
@@ -109,10 +114,10 @@ export default function MockSAT() {
           />
           <button
             type="button"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(backPath)}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600 shadow-sm hover:border-red-200 hover:text-red-600"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Dashboard
+            <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : 'SAT Prep'}
           </button>
         </header>
 
@@ -131,7 +136,7 @@ export default function MockSAT() {
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              Your real SAT,
+              Your {section === 'math' ? 'SAT Math' : section === 'reading-writing' ? 'SAT Reading & Writing' : 'real SAT'},
               <span className="block bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-transparent">
                 beautifully simulated.
               </span>
@@ -144,9 +149,9 @@ export default function MockSAT() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 [String(test.questionCount), 'Questions'],
-                ['4', 'Modules'],
-                ['2h 14m', 'Exam time'],
-                ['400–1600', 'Score range'],
+                [String(test.modules.length), 'Modules'],
+                [`${Math.round(test.totalDurationSeconds / 60)}m`, 'Exam time'],
+                [isSectionPractice ? '200–800' : '400–1600', 'Score range'],
               ].map(([value, label]) => (
                 <div key={label} className="rounded-2xl border border-white bg-white/85 p-3 shadow-sm">
                   <p className="text-xl font-black tracking-tight text-slate-950">{value}</p>
@@ -293,7 +298,7 @@ export default function MockSAT() {
             {finishedAttempt ? (
               <button
                 type="button"
-                onClick={() => navigate(`/sat/mock/${test.mockId}/run`)}
+                onClick={() => navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)}
                 className="mt-4 flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-left"
               >
                 <span>

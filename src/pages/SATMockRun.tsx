@@ -24,7 +24,7 @@ import {
   X,
   ZoomIn,
 } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
@@ -39,7 +39,7 @@ import {
   loadSATAttempt,
   saveSATAttempt,
 } from '@/features/sat/attemptStorage'
-import { getSATTest } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 
@@ -60,7 +60,11 @@ function fullscreenElement() {
 export default function SATMockRun() {
   const navigate = useNavigate()
   const { mockId = '4' } = useParams<{ mockId: string }>()
-  const test = getSATTest(mockId)
+  const [searchParams] = useSearchParams()
+  const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
+  const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
+  const sectionQuery = section ? `?section=${section}` : ''
+  const backPath = section ? `/sat/${section}` : '/sat'
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
   const { isFullscreen, enter, exit } = useFullscreen()
@@ -329,7 +333,7 @@ export default function SATMockRun() {
           <ShieldAlert className="mx-auto h-10 w-10 text-red-600" />
           <h1 className="mt-4 text-2xl font-black">No SAT attempt found</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Choose Practice or Exam Mode before opening the test.</p>
-          <button type="button" onClick={() => navigate(`/mock/sat/${test.mockId}`)} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
+          <button type="button" onClick={() => navigate(`/mock/sat/${test.mockId}${sectionQuery}`)} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
             Choose test mode
           </button>
         </div>
@@ -344,7 +348,7 @@ export default function SATMockRun() {
         test={test}
         onStartAgain={() => {
           clearSATAttempt(test.id)
-          navigate(`/mock/sat/${test.mockId}`)
+          navigate(`/mock/sat/${test.mockId}${sectionQuery}`)
         }}
       />
     )
@@ -372,7 +376,7 @@ export default function SATMockRun() {
             type="button"
             onClick={() => {
               clearSATAttempt(test.id)
-              navigate('/sat')
+              navigate(backPath)
             }}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
           >
@@ -488,7 +492,7 @@ export default function SATMockRun() {
               ) : null}
               <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.15).toFixed(2))))} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><ZoomIn className="h-4 w-4" /> Zoom in ({Math.round(zoom * 100)}%)</button>
               <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
-              <button type="button" onClick={() => navigate('/sat')} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Exit test</button>
+              <button type="button" onClick={() => navigate(backPath)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Exit test</button>
             </div>
           ) : null}
         </div>

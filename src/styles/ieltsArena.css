@@ -290,7 +290,179 @@
 }
 
 .ielts-arena-icon svg { width: 31px; height: 31px; stroke-width: 1.8; }
-.ielts-arena-skill-icon { width: 60px; height: 60px; }
+.ielts-arena-skill-icon {
+  isolation: isolate;
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+  perspective: 240px;
+  background:
+    radial-gradient(circle at 29% 19%, rgba(255,255,255,.98) 0 9%, transparent 31%),
+    linear-gradient(145deg, rgba(255,255,255,.88), rgba(255,218,219,.55) 58%, rgba(255,255,255,.48));
+  box-shadow:
+    0 15px 27px rgba(218,38,43,.17),
+    0 4px 9px rgba(58,67,83,.08),
+    inset 1px 2px 1px rgba(255,255,255,.98),
+    inset -3px -5px 10px rgba(214,52,56,.08);
+  transform: translateZ(0);
+  transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.ielts-arena-skill-icon::before {
+  position: absolute;
+  z-index: -1;
+  inset: 5px;
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: inherit;
+  content: "";
+  background: radial-gradient(circle at 50% 80%, rgba(232,47,52,.13), transparent 58%);
+  box-shadow: inset 0 0 12px rgba(255,255,255,.52);
+}
+
+.ielts-arena-skill-icon::after {
+  position: absolute;
+  z-index: -1;
+  inset: -5px;
+  border: 1px solid rgba(224,47,51,.28);
+  border-right-color: transparent;
+  border-radius: 50%;
+  content: "";
+  opacity: 0;
+  transform: scale(.72) rotate(-35deg);
+  transition: opacity 220ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
+}
+
+.ielts-arena-emblem-halo {
+  position: absolute;
+  z-index: -1;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239,56,60,.2), transparent 68%);
+  opacity: .55;
+  transform: scale(.82);
+  transition: opacity 240ms ease, transform 360ms cubic-bezier(.22,1,.36,1);
+}
+
+.ielts-arena-skill-icon .ielts-arena-emblem-glyph {
+  position: relative;
+  z-index: 2;
+  color: #cc2d31;
+  filter: drop-shadow(0 3px 2px rgba(160,29,34,.12));
+  transform-origin: 50% 58%;
+  transition: color 200ms ease, filter 200ms ease, transform 240ms ease;
+}
+
+.ielts-arena-emblem-detail {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  pointer-events: none;
+  opacity: .7;
+}
+
+.ielts-arena-skill-icon[data-skill="listening"] .ielts-arena-emblem-detail {
+  right: 10px;
+  bottom: 13px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ef4145;
+  box-shadow: 0 0 0 3px rgba(239,65,69,.11), 0 0 0 6px rgba(239,65,69,.06);
+}
+
+.ielts-arena-skill-icon[data-skill="reading"] .ielts-arena-emblem-detail {
+  right: 13px;
+  bottom: 14px;
+  width: 12px;
+  height: 1px;
+  border-radius: 2px;
+  background: rgba(203,45,49,.72);
+  box-shadow: 0 3px 0 rgba(203,45,49,.42);
+  transform-origin: right center;
+}
+
+.ielts-arena-skill-icon[data-skill="writing"] .ielts-arena-emblem-detail {
+  right: 9px;
+  bottom: 12px;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #cf3034, rgba(239,65,69,.08));
+  transform: scaleX(.62) rotate(-2deg);
+  transform-origin: left center;
+}
+
+.ielts-arena-skill-icon[data-skill="speaking"] .ielts-arena-emblem-detail {
+  right: 9px;
+  bottom: 13px;
+  width: 3px;
+  height: 7px;
+  border-radius: 3px;
+  background: #d83337;
+  box-shadow: 5px -3px 0 rgba(216,51,55,.72), 10px 1px 0 rgba(216,51,55,.42);
+  transform-origin: bottom;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ielts-arena-skill-card:hover .ielts-arena-skill-icon {
+    border-color: rgba(255,255,255,.98);
+    box-shadow:
+      0 19px 31px rgba(218,38,43,.23),
+      0 7px 12px rgba(58,67,83,.09),
+      inset 1px 2px 1px #fff,
+      inset -3px -5px 10px rgba(214,52,56,.11);
+    transform: translate3d(0,-3px,0) rotateX(5deg) rotateY(-5deg) scale(1.035);
+  }
+
+  .ielts-arena-skill-card:hover .ielts-arena-skill-icon::after { opacity: 1; transform: scale(1) rotate(145deg); }
+  .ielts-arena-skill-card:hover .ielts-arena-emblem-halo { opacity: 1; transform: scale(1.28); }
+  .ielts-arena-skill-card:hover .ielts-arena-emblem-glyph { color: #df292e; filter: drop-shadow(0 5px 4px rgba(160,29,34,.2)); }
+
+  .ielts-arena-skill-card--listening:hover .ielts-arena-emblem-glyph { animation: ielts-arena-listen-emblem .72s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--listening:hover .ielts-arena-emblem-detail { animation: ielts-arena-listen-signal .72s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--reading:hover .ielts-arena-emblem-glyph { animation: ielts-arena-reading-emblem .9s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--reading:hover .ielts-arena-emblem-detail { animation: ielts-arena-reading-lines .9s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--writing:hover .ielts-arena-emblem-glyph { animation: ielts-arena-writing-emblem .82s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--writing:hover .ielts-arena-emblem-detail { animation: ielts-arena-writing-line .82s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--speaking:hover .ielts-arena-emblem-glyph { animation: ielts-arena-speaking-emblem .64s ease-in-out infinite alternate; }
+  .ielts-arena-skill-card--speaking:hover .ielts-arena-emblem-detail { animation: ielts-arena-speaking-levels .64s ease-in-out infinite alternate; }
+}
+
+@keyframes ielts-arena-listen-emblem {
+  to { transform: rotate(-2deg) scale(1.055); }
+}
+
+@keyframes ielts-arena-listen-signal {
+  to { opacity: 1; box-shadow: 0 0 0 4px rgba(239,65,69,.14), 0 0 0 8px rgba(239,65,69,.04); }
+}
+
+@keyframes ielts-arena-reading-emblem {
+  from { transform: perspective(80px) rotateY(-4deg); }
+  to { transform: perspective(80px) rotateY(5deg) scale(1.035); }
+}
+
+@keyframes ielts-arena-reading-lines {
+  to { opacity: 1; transform: translateX(-2px) scaleX(.8); }
+}
+
+@keyframes ielts-arena-writing-emblem {
+  from { transform: translate3d(-1px,1px,0) rotate(-2deg); }
+  to { transform: translate3d(2px,-2px,0) rotate(3deg); }
+}
+
+@keyframes ielts-arena-writing-line {
+  to { opacity: 1; transform: scaleX(1) rotate(-2deg); }
+}
+
+@keyframes ielts-arena-speaking-emblem {
+  to { transform: translateY(-1px) scale(1.055); }
+}
+
+@keyframes ielts-arena-speaking-levels {
+  from { transform: scaleY(.65); }
+  to { opacity: 1; transform: scaleY(1.15); }
+}
 .ielts-arena-skill-description { position: relative; z-index: 1; max-width: 380px; margin: 12px 0 0; color: #3d4657; font-size: 17px; line-height: 1.22; letter-spacing: -0.03em; }
 .ielts-arena-card-footer { justify-content: space-between; gap: 18px; margin-top: auto; }
 

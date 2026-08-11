@@ -174,12 +174,16 @@ function SkillCard({
 
   return (
     <motion.article
-      className="ielts-arena-glass ielts-arena-skill-card"
+      className={`ielts-arena-glass ielts-arena-skill-card ielts-arena-skill-card--${skill.id}`}
       whileHover={animateHover ? { y: -6, scale: 1.008 } : undefined}
       transition={{ type: 'spring', stiffness: 260, damping: 22 }}
     >
       <div className="ielts-arena-card-heading">
-        <span className="ielts-arena-icon ielts-arena-skill-icon"><Icon /></span>
+        <span className="ielts-arena-icon ielts-arena-skill-icon" data-skill={skill.id}>
+          <span className="ielts-arena-emblem-halo" aria-hidden="true" />
+          <Icon className="ielts-arena-emblem-glyph" />
+          <span className="ielts-arena-emblem-detail" aria-hidden="true" />
+        </span>
         <h2>{skill.title}</h2>
       </div>
       <p className="ielts-arena-skill-description">{skill.description}</p>

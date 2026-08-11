@@ -132,6 +132,7 @@ function App() {
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && !user
+  const usesStickyWorkspaceContent = pathname === '/admission/universities'
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'
@@ -230,7 +231,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100">
+    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100 ${usesStickyWorkspaceContent ? 'app-shell-sticky-content' : ''}`}>
       <AnimatedBackground />
       <ToastViewport />
       <RegisterModal />
@@ -704,7 +705,6 @@ function App() {
 }
 
 export default App
-
 
 
 

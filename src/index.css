@@ -257,6 +257,11 @@
     background: transparent;
   }
 
+  .app-shell.app-shell-sticky-content {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
   .workspace-background {
     position: fixed !important;
     inset: 0 !important;
@@ -667,7 +672,7 @@
   }
 
   .admission-universities-layout {
-    @apply grid items-start gap-7 lg:grid-cols-[minmax(350px,0.82fr)_minmax(0,1.3fr)] xl:grid-cols-[minmax(430px,0.88fr)_minmax(0,1.32fr)] xl:gap-9;
+    @apply grid items-start gap-5 lg:grid-cols-[minmax(410px,0.94fr)_minmax(0,1.2fr)] xl:grid-cols-[minmax(520px,1fr)_minmax(0,1.12fr)] xl:gap-6;
   }
 
   .admission-universities-globe-column {
@@ -676,76 +681,15 @@
   }
 
   .university-globe-card {
-    @apply relative mx-auto w-full max-w-[42rem] pb-3 pt-1;
+    @apply relative mx-auto block w-full max-w-[48rem];
     isolation: isolate;
   }
 
-  .university-globe-red-haze {
-    position: absolute;
-    z-index: -1;
-    left: -12%;
-    bottom: 3%;
-    width: 64%;
-    aspect-ratio: 1;
-    border-radius: 9999px;
+  .university-globe-reference-image {
+    @apply block h-auto w-full select-none;
+    filter: drop-shadow(0 28px 32px rgba(71, 85, 105, 0.12));
+    mix-blend-mode: multiply;
     pointer-events: none;
-    background: radial-gradient(circle at 46% 48%, rgba(248, 113, 113, 0.94), rgba(239, 68, 68, 0.42) 42%, transparent 72%);
-    filter: blur(54px);
-    animation: universityRedHaze 8s ease-in-out infinite;
-  }
-
-  .university-globe-svg {
-    @apply block h-auto w-full overflow-visible;
-    aspect-ratio: 640 / 650;
-  }
-
-  .university-globe-drift {
-    transform-origin: 320px 292px;
-    animation: universityGlobeDrift 10s ease-in-out infinite;
-  }
-
-  .university-globe-grid {
-    opacity: 0.055;
-  }
-
-  .university-globe-land {
-    opacity: 0.86;
-  }
-
-  .university-route {
-    fill: none;
-    stroke: url(#routeRed);
-    stroke-width: 2.7;
-    stroke-linecap: round;
-    stroke-dasharray: 8 8;
-    opacity: 0;
-    animation: universityRouteDraw 1.45s var(--app-ease-smooth) forwards, universityRouteFlow 3.8s linear 1.8s infinite;
-  }
-
-  .university-hub-pulse {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: universityHubPulse 2.4s ease-out infinite;
-  }
-
-  .university-destination-pin {
-    transform-box: fill-box;
-    transform-origin: center bottom;
-    animation: universityPinFloat 3.2s ease-in-out infinite;
-  }
-
-  .university-origin-radar {
-    animation: universityRadar 2.2s ease-out infinite;
-  }
-
-  .university-country-name text {
-    fill: #111827;
-    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.035em;
-    paint-order: stroke;
-    stroke: rgba(255, 255, 255, 0.62);
-    stroke-width: 3.5px;
   }
 
   .premium-stat {
@@ -1254,8 +1198,7 @@
   }
 
   .university-globe-card {
-    max-width: 34rem;
-    padding-bottom: 0.5rem;
+    max-width: 38rem;
   }
 
 }
@@ -1263,18 +1206,17 @@
 @media (min-width: 1024px) {
   .admission-universities-globe-column {
     position: sticky;
-    top: 1.25rem;
+    top: 0;
     z-index: 10;
-    height: max-content;
-    max-height: calc(100dvh - 2.5rem);
+    display: grid;
+    width: 100%;
+    height: 100dvh;
+    place-items: center;
   }
 
   .university-globe-card {
-    max-height: calc(100dvh - 2.5rem);
-  }
-
-  .university-globe-svg {
-    max-height: calc(100dvh - 2.5rem);
+    width: min(108%, calc(100dvh - 1rem));
+    max-width: none;
   }
 }
 
@@ -1310,41 +1252,6 @@
     opacity: 0.56;
     transform: translateX(10%);
   }
-}
-
-@keyframes universityGlobeDrift {
-  0%, 100% { transform: rotate(-0.65deg) translateX(-2px); }
-  50% { transform: rotate(0.8deg) translateX(3px); }
-}
-
-@keyframes universityRedHaze {
-  0%, 100% { opacity: 0.72; transform: scale(0.96) translate3d(0, 0, 0); }
-  50% { opacity: 0.92; transform: scale(1.06) translate3d(14px, -10px, 0); }
-}
-
-@keyframes universityRouteDraw {
-  from { opacity: 0; stroke-dashoffset: 90; }
-  to { opacity: 0.9; stroke-dashoffset: 0; }
-}
-
-@keyframes universityRouteFlow {
-  from { opacity: 0.9; stroke-dashoffset: 0; }
-  to { opacity: 0.9; stroke-dashoffset: -64; }
-}
-
-@keyframes universityHubPulse {
-  0% { opacity: 0.52; transform: scale(0.65); }
-  72%, 100% { opacity: 0; transform: scale(1.75); }
-}
-
-@keyframes universityPinFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-@keyframes universityRadar {
-  0% { opacity: 0.42; transform: scale(0.65); }
-  75%, 100% { opacity: 0; transform: scale(2.1); }
 }
 
 @keyframes targetGlassShine {

@@ -7,7 +7,6 @@ import AdmissionScoreComparison from '@/components/admission/AdmissionScoreCompa
 import UniversityGlobe from '@/components/admission/UniversityGlobe'
 import { getUniversities, indicatorOrder, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
-import { useVisitorLocation } from '@/hooks/useVisitorLocation'
 
 // The two headline indicators QS prints under each ranking row.
 const ROW_KEYS = ['citationsPerFaculty', 'academicReputation'] as const
@@ -17,7 +16,6 @@ export default function AdmissionUniversities() {
   const [query, setQuery] = useState('')
   const all = getUniversities()
   const { scores } = useAdmissionScores()
-  const { location, isLocating } = useVisitorLocation()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -79,10 +77,7 @@ export default function AdmissionUniversities() {
 
         <div className="admission-universities-layout">
           <aside className="admission-universities-globe-column">
-            <UniversityGlobe
-              location={location}
-              isLocating={isLocating}
-            />
+            <UniversityGlobe />
           </aside>
 
           <div className="min-w-0">

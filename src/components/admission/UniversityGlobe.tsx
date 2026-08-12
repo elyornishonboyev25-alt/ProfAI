@@ -62,7 +62,9 @@ function drawGlobe(
   const bounds = canvas.getBoundingClientRect()
   if (!bounds.width || !bounds.height) return
 
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+  // A 1.5x cap keeps the canvas crisp without making the short entrance spin
+  // expensive on high-DPI phones and 4K displays.
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
   const width = Math.round(bounds.width * pixelRatio)
   const height = Math.round(bounds.height * pixelRatio)
   if (canvas.width !== width || canvas.height !== height) {
@@ -78,14 +80,14 @@ function drawGlobe(
 
   const cx = bounds.width / 2
   const cy = bounds.height / 2
-  const radius = Math.min(bounds.width, bounds.height) * 0.46
+  const radius = Math.min(bounds.width, bounds.height) * 0.425
 
   ctx.save()
-  ctx.shadowColor = 'rgba(225, 29, 72, 0.28)'
-  ctx.shadowBlur = radius * 0.2
+  ctx.shadowColor = 'rgba(100, 116, 139, 0.22)'
+  ctx.shadowBlur = radius * 0.16
   ctx.beginPath()
   ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(255, 250, 250, 0.84)'
+  ctx.fillStyle = 'rgba(248, 251, 255, 0.7)'
   ctx.fill()
   ctx.restore()
 
@@ -102,10 +104,10 @@ function drawGlobe(
     cy + radius * 0.08,
     radius * 1.12,
   )
-  ocean.addColorStop(0, 'rgba(255, 255, 255, 0.99)')
-  ocean.addColorStop(0.48, 'rgba(255, 247, 247, 0.96)')
-  ocean.addColorStop(0.8, 'rgba(254, 226, 226, 0.92)')
-  ocean.addColorStop(1, 'rgba(246, 205, 213, 0.94)')
+  ocean.addColorStop(0, 'rgba(255, 255, 255, 0.96)')
+  ocean.addColorStop(0.42, 'rgba(244, 249, 252, 0.9)')
+  ocean.addColorStop(0.76, 'rgba(228, 237, 244, 0.82)')
+  ocean.addColorStop(1, 'rgba(211, 222, 232, 0.82)')
   ctx.fillStyle = ocean
   ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
 
@@ -117,14 +119,14 @@ function drawGlobe(
     cy + radius * 0.72,
     radius * 1.08,
   )
-  reflectedGlow.addColorStop(0, 'rgba(239, 68, 68, 0.32)')
-  reflectedGlow.addColorStop(0.42, 'rgba(251, 113, 133, 0.12)')
+  reflectedGlow.addColorStop(0, 'rgba(239, 68, 68, 0.38)')
+  reflectedGlow.addColorStop(0.42, 'rgba(251, 113, 133, 0.14)')
   reflectedGlow.addColorStop(1, 'rgba(255, 255, 255, 0)')
   ctx.fillStyle = reflectedGlow
   ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
 
   ctx.lineWidth = Math.max(0.55, radius * 0.0022)
-  ctx.strokeStyle = 'rgba(190, 24, 93, 0.13)'
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.16)'
   for (const latitude of [-60, -30, 0, 30, 60]) {
     const latitudeRadius = Math.cos(latitude * DEG) * radius
     const y = cy - Math.sin(latitude * DEG) * radius
@@ -136,7 +138,7 @@ function drawGlobe(
   for (let longitude = -150; longitude <= 180; longitude += 30) {
     ctx.beginPath()
     let started = false
-    for (let latitude = -90; latitude <= 90; latitude += 3) {
+    for (let latitude = -90; latitude <= 90; latitude += 4) {
       const point = project(longitude, latitude, rotation, cx, cy, radius)
       if (!point.visible) {
         started = false
@@ -149,9 +151,9 @@ function drawGlobe(
     ctx.stroke()
   }
 
-  ctx.fillStyle = 'rgba(229, 213, 218, 0.92)'
-  ctx.strokeStyle = 'rgba(159, 57, 84, 0.56)'
-  ctx.lineWidth = Math.max(0.8, radius * 0.004)
+  ctx.fillStyle = 'rgba(214, 224, 233, 0.76)'
+  ctx.strokeStyle = 'rgba(123, 146, 169, 0.62)'
+  ctx.lineWidth = Math.max(0.72, radius * 0.0037)
 
   const drawPolygon = (rings: Position[][]) => {
     ctx.beginPath()
@@ -206,16 +208,22 @@ function drawGlobe(
   ctx.restore()
 
   const shine = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius)
-  shine.addColorStop(0, 'rgba(255, 255, 255, 0.76)')
-  shine.addColorStop(0.33, 'rgba(255, 255, 255, 0.06)')
+  shine.addColorStop(0, 'rgba(255, 255, 255, 0.9)')
+  shine.addColorStop(0.33, 'rgba(255, 255, 255, 0.14)')
   shine.addColorStop(0.68, 'rgba(255, 255, 255, 0)')
-  shine.addColorStop(1, 'rgba(255, 255, 255, 0.24)')
+  shine.addColorStop(1, 'rgba(255, 255, 255, 0.34)')
   ctx.beginPath()
   ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
   ctx.fillStyle = shine
   ctx.fill()
-  ctx.strokeStyle = 'rgba(190, 24, 93, 0.42)'
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)'
   ctx.lineWidth = Math.max(1, radius * 0.006)
+  ctx.stroke()
+
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius * 0.97, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.58)'
+  ctx.lineWidth = Math.max(2, radius * 0.014)
   ctx.stroke()
 }
 

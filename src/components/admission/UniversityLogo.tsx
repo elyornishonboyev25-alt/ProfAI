@@ -20,22 +20,27 @@ export default function UniversityLogo({
   rounded?: string
   website?: string
 }) {
-  const [officialIconFailed, setOfficialIconFailed] = useState(false)
-  const officialIcon = useMemo(() => {
-    if (!website) return null
+  const [officialIconIndex, setOfficialIconIndex] = useState(0)
+  const officialIcons = useMemo(() => {
+    if (!website) return []
     try {
-      return `${new URL(website).origin}/favicon.ico`
+      const origin = new URL(website).origin
+      return [
+        `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(origin)}&sz=128`,
+        `${origin}/favicon.ico`,
+      ]
     } catch {
-      return null
+      return []
     }
   }, [website])
+  const officialIcon = officialIcons[officialIconIndex]
   const vectorLogo = id ? getUniversityLogo(id) : undefined
   const len = brand.monogram.length
   const fontSize = len <= 1 ? size * 0.5 : len === 2 ? size * 0.4 : len === 3 ? size * 0.3 : size * 0.24
 
-  useEffect(() => setOfficialIconFailed(false), [officialIcon])
+  useEffect(() => setOfficialIconIndex(0), [website])
 
-  if (officialIcon && !officialIconFailed) {
+  if (officialIcon) {
     return (
       <span
         className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white ${className}`}
@@ -44,11 +49,11 @@ export default function UniversityLogo({
         <img
           src={officialIcon}
           alt={`${brand.monogram} official website emblem`}
-          className="h-[70%] w-[70%] object-contain"
+          className="h-[76%] w-[76%] object-contain"
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setOfficialIconFailed(true)}
+          onError={() => setOfficialIconIndex((index) => index + 1)}
         />
       </span>
     )

@@ -132,7 +132,7 @@ export default function AdmissionUniversities() {
         <Reveal>
           <header className="admission-hub-nav">
             <button className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
-              <span className="admission-hub-brand-mark"><BrandMark size={54} /></span>
+              <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
               <span className="admission-hub-wordmark">Prof<span>AI</span></span>
               <span className="admission-hub-divider" aria-hidden="true" />
               <span className="admission-hub-title">Admission Hub</span>
@@ -236,7 +236,7 @@ export default function AdmissionUniversities() {
                     >
                       <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
                       <div className="admission-card-topline">
-                        <UniversityLogo id={university.id} brand={university.brand} website={university.website} size={72} rounded="1rem" />
+                        <UniversityLogo id={university.id} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
                         <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
                           <small>QS rank</small>
                           <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>

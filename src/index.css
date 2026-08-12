@@ -832,18 +832,13 @@
     position: absolute;
     inset: 0;
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(36px) saturate(132%);
-    -webkit-backdrop-filter: blur(36px) saturate(132%);
   }
 
   .admission-blur-glow {
     position: absolute;
     display: block;
     border-radius: 9999px;
-    filter: blur(68px);
-    opacity: 0.72;
-    will-change: transform;
-    animation: admissionAmbientDrift 18s ease-in-out infinite alternate;
+    opacity: 0.48;
   }
 
   .admission-blur-glow-left {
@@ -860,7 +855,6 @@
     width: 42rem;
     height: 42rem;
     background: radial-gradient(circle, rgba(239, 68, 68, 0.86), rgba(251, 113, 133, 0.24) 54%, transparent 74%);
-    animation-delay: -7s;
   }
 
   .admission-blur-glow-center {
@@ -869,7 +863,6 @@
     width: 28rem;
     height: 28rem;
     background: radial-gradient(circle, rgba(125, 211, 252, 0.5), rgba(186, 230, 253, 0.18) 55%, transparent 76%);
-    animation-delay: -12s;
   }
 
   .admission-hub-nav {
@@ -891,8 +884,6 @@
       0 32px 76px rgba(51, 65, 85, 0.17),
       inset 0 1px 0 rgba(255, 255, 255, 0.92),
       inset 0 -1px 0 rgba(255, 255, 255, 0.48);
-    backdrop-filter: blur(44px) saturate(168%);
-    -webkit-backdrop-filter: blur(44px) saturate(168%);
   }
 
   .admission-hub-nav::after {
@@ -905,7 +896,7 @@
     pointer-events: none;
     transform: rotate(18deg);
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-    animation: admissionGlassSheen 9s ease-in-out infinite;
+    display: none;
   }
 
   .admission-hub-brand {
@@ -1009,7 +1000,7 @@
     isolation: isolate;
     display: block;
     width: 100%;
-    max-width: 39rem;
+    max-width: 50rem;
     margin: 0 auto;
   }
 
@@ -1068,9 +1059,6 @@
     width: 100%;
     aspect-ratio: 1;
     isolation: isolate;
-    animation: universityGlobeFloat 8s ease-in-out infinite;
-    transform-origin: 50% 54%;
-    will-change: transform;
   }
 
   .university-globe-visual::before {
@@ -1085,7 +1073,6 @@
     box-shadow:
       0 36px 70px rgba(190, 24, 93, 0.16),
       0 0 80px rgba(251, 113, 133, 0.13);
-    filter: blur(10px);
     pointer-events: none;
   }
 
@@ -1103,6 +1090,9 @@
     mix-blend-mode: multiply;
     pointer-events: none;
     transition: opacity 320ms ease;
+    inset: -9%;
+    width: 118%;
+    height: 118%;
   }
 
   .university-globe-reference-image-hidden { opacity: 0; }
@@ -1129,7 +1119,6 @@
     margin: -1.325rem 0 0 -1.325rem;
     place-items: center;
     pointer-events: none;
-    transition: left 700ms var(--app-ease-smooth), top 700ms var(--app-ease-smooth);
   }
 
   .university-globe-user-marker-ring {
@@ -1138,7 +1127,6 @@
     border-radius: 9999px;
     background: rgba(239, 68, 68, 0.2);
     box-shadow: 0 0 26px rgba(220, 38, 38, 0.48);
-    animation: universityGlobeMarkerPulse 1.8s ease-out 1.85s 2;
   }
 
   .university-globe-user-marker-pin {
@@ -1189,8 +1177,6 @@
     border-radius: 9999px;
     background: rgba(255, 250, 250, 0.88);
     box-shadow: 0 9px 22px rgba(190, 24, 93, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
   }
 
   .admission-globe-caption {
@@ -1207,14 +1193,42 @@
     color: #475569;
     background: rgba(255,255,255,0.32);
     box-shadow: 0 14px 34px rgba(71,85,105,0.12);
-    backdrop-filter: blur(26px) saturate(160%);
-    -webkit-backdrop-filter: blur(26px) saturate(160%);
     font-size: 0.75rem;
     font-weight: 700;
   }
 
   .admission-search-panel {
     margin-bottom: 2rem;
+  }
+
+  .admission-universities-results-column {
+    min-height: 0;
+  }
+
+  .admission-university-scroll {
+    min-height: 0;
+  }
+
+  .admission-dashboard-back {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(254, 202, 202, 0.9);
+    border-radius: 999px;
+    padding: 0.68rem 1rem;
+    color: #991b1b;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 24px rgba(190, 24, 93, 0.1);
+    font-size: 0.75rem;
+    font-weight: 850;
+  }
+
+  .admission-dashboard-back:hover {
+    border-color: rgba(248, 113, 113, 0.72);
+    color: #dc2626;
+    background: #fff;
+    transform: translateX(-2px);
   }
 
   .admission-search-box {
@@ -1227,8 +1241,6 @@
     padding: 0.45rem 0.45rem 0.45rem clamp(1.2rem, 2vw, 2.25rem);
     background: rgba(255,255,255,0.26);
     box-shadow: 0 22px 52px rgba(71, 85, 105, 0.13), inset 0 1px 0 rgba(255,255,255,0.92);
-    backdrop-filter: blur(38px) saturate(165%);
-    -webkit-backdrop-filter: blur(38px) saturate(165%);
     transition: border-color 180ms ease, box-shadow 180ms ease;
   }
 
@@ -1290,8 +1302,6 @@
     padding: 0 0.9rem;
     background: rgba(255,255,255,0.3);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.84), 0 9px 20px rgba(71,85,105,0.06);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
     transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
   }
 
@@ -1358,13 +1368,12 @@
     border-radius: 1.9rem;
     padding: 1.35rem;
     background:
-      linear-gradient(145deg, rgba(255,255,255,0.38), rgba(255,255,255,0.16)),
-      radial-gradient(circle at 100% 100%, rgba(186,230,253,0.3), transparent 48%);
-    box-shadow: 0 22px 52px rgba(71,85,105,0.14), inset 0 1px 0 rgba(255,255,255,0.92);
-    backdrop-filter: blur(36px) saturate(168%);
-    -webkit-backdrop-filter: blur(36px) saturate(168%);
+      linear-gradient(145deg, rgba(255,255,255,0.68), rgba(255,255,255,0.35)),
+      radial-gradient(circle at 100% 100%, rgba(186,230,253,0.24), transparent 48%);
+    box-shadow: 0 19px 44px rgba(71,85,105,0.13), inset 0 1px 0 rgba(255,255,255,0.98);
+    contain: layout paint style;
     content-visibility: auto;
-    contain-intrinsic-size: auto 25rem;
+    contain-intrinsic-size: auto 24rem;
     cursor: pointer;
     transition: border-color 240ms ease, box-shadow 240ms ease;
   }
@@ -1475,8 +1484,6 @@
     color: #64748b;
     background: rgba(255,255,255,0.5);
     box-shadow: 0 20px 50px rgba(71,85,105,0.1);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     text-align: center;
   }
   .admission-empty-state h2 { margin-top: 0.75rem; color: #0f172a; font-size: 1.15rem; font-weight: 900; }
@@ -1484,33 +1491,9 @@
   .admission-empty-state button { margin-top: 1rem; border-radius: 999px; padding: 0.55rem 0.9rem; color: white; background: #dc2626; font-size: 0.75rem; font-weight: 800; }
 
   .admission-catalog-note { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 2.2rem 0 1rem; color: #64748b; font-size: 0.7rem; font-weight: 600; text-align: center; }
-  .admission-floating-back { position: fixed; z-index: 40; right: 1.2rem; bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid rgba(255,255,255,0.9); border-radius: 999px; padding: 0.75rem; color: #475569; background: rgba(255,255,255,0.64); box-shadow: 0 16px 34px rgba(71,85,105,0.16); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); font-size: 0.7rem; font-weight: 800; }
-  .admission-floating-back span { display: none; }
-
-  @keyframes admissionAmbientDrift {
-    0% { transform: translate3d(-2%, -1%, 0) scale(0.96); }
-    100% { transform: translate3d(10%, 7%, 0) scale(1.08); }
-  }
-
-  @keyframes admissionGlassSheen {
-    0%, 58% { transform: translateX(-180%) rotate(18deg); opacity: 0; }
-    68% { opacity: 0.6; }
-    92%, 100% { transform: translateX(520%) rotate(18deg); opacity: 0; }
-  }
-
   @keyframes admissionOrbitPulse {
     0%, 100% { opacity: 0.25; }
     50% { opacity: 0.7; }
-  }
-
-  @keyframes universityGlobeMarkerPulse {
-    0% { opacity: 0.78; transform: scale(0.7); }
-    100% { opacity: 0; transform: scale(1.7); }
-  }
-
-  @keyframes universityGlobeFloat {
-    0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.2deg); }
-    50% { transform: translate3d(0, -9px, 0) rotate(0.25deg); }
   }
 
   .premium-stat {
@@ -2051,25 +2034,78 @@
 }
 
 @media (min-width: 1024px) {
+  .admission-universities-page {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+
+  .admission-universities-shell {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .admission-hub-nav {
+    min-height: 5.5rem;
+    padding-block: 0.7rem;
+  }
+
   .admission-discovery-layout {
-    grid-template-columns: minmax(24rem, 0.88fr) minmax(0, 1.2fr);
+    min-height: 0;
+    grid-template-columns: minmax(26rem, 1fr) minmax(0, 1.12fr);
+    margin-top: 1rem;
+    overflow: hidden;
   }
 
   .admission-universities-globe-column {
-    position: sticky;
-    top: 1rem;
+    position: relative;
     z-index: 10;
     display: flex;
     width: 100%;
-    min-height: calc(100dvh - 2rem);
+    min-height: 0;
     flex-direction: column;
-    justify-content: flex-start;
-    padding-top: clamp(6rem, 10vh, 8rem);
+    justify-content: center;
+    overflow: hidden;
   }
 
   .university-globe-card {
-    width: min(96%, calc(100dvh - 8rem));
-    max-width: 39rem;
+    width: min(110%, calc(100dvh - 12.5rem));
+    max-width: 55rem;
+    flex: 0 1 auto;
+    margin-inline: -5%;
+  }
+
+  .admission-dashboard-back {
+    flex: 0 0 auto;
+    margin: 0 0 0.35rem 0.75rem;
+  }
+
+  .admission-globe-caption {
+    flex: 0 0 auto;
+    margin-top: -0.2rem;
+  }
+
+  .admission-universities-results-column {
+    display: grid;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .admission-search-panel {
+    margin-bottom: 0.8rem;
+  }
+
+  .admission-university-scroll {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.25rem 0.55rem 1rem 0.15rem;
+    scrollbar-gutter: stable;
   }
 }
 
@@ -2094,7 +2130,7 @@
 }
 
 @media (min-width: 1536px) {
-  .admission-discovery-layout { grid-template-columns: minmax(30rem, 0.95fr) minmax(0, 1.28fr); }
+  .admission-discovery-layout { grid-template-columns: minmax(34rem, 1.08fr) minmax(0, 1.2fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

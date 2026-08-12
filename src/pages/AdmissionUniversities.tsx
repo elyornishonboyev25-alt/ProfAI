@@ -11,11 +11,9 @@ import {
   Search,
   Sparkles,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityGlobe from '@/components/admission/UniversityGlobe'
-import { Reveal } from '@/components/fx'
 import { getUniversities, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
@@ -128,30 +126,31 @@ export default function AdmissionUniversities() {
         <span className="admission-blur-glow admission-blur-glow-center" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[104rem]">
-        <Reveal>
-          <header className="admission-hub-nav">
-            <button className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
-              <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
-              <span className="admission-hub-wordmark">Prof<span>AI</span></span>
-              <span className="admission-hub-divider" aria-hidden="true" />
-              <span className="admission-hub-title">Admission Hub</span>
-            </button>
+      <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
+        <header className="admission-hub-nav">
+          <button className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
+            <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
+            <span className="admission-hub-wordmark">Prof<span>AI</span></span>
+            <span className="admission-hub-divider" aria-hidden="true" />
+            <span className="admission-hub-title">Admission Hub</span>
+          </button>
 
-            <nav className="admission-journey" aria-label="Admission journey">
-              <button className="is-active" onClick={() => navigate('/admission/universities')}>Choose</button>
-              <ArrowRight aria-hidden="true" />
-              <button onClick={() => navigate('/admission/lessons')}>Prepare</button>
-              <ArrowRight aria-hidden="true" />
-              <button onClick={() => navigate('/admission/lessons')}>Apply</button>
-              <ArrowRight aria-hidden="true" />
-              <button onClick={() => navigate('/admission')}>Admitted</button>
-            </nav>
-          </header>
-        </Reveal>
+          <nav className="admission-journey" aria-label="Admission journey">
+            <button className="is-active" onClick={() => navigate('/admission/universities')}>Choose</button>
+            <ArrowRight aria-hidden="true" />
+            <button onClick={() => navigate('/admission/lessons')}>Prepare</button>
+            <ArrowRight aria-hidden="true" />
+            <button onClick={() => navigate('/admission/lessons')}>Apply</button>
+            <ArrowRight aria-hidden="true" />
+            <button onClick={() => navigate('/admission')}>Admitted</button>
+          </nav>
+        </header>
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-globe-column">
+            <button onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
+              <ArrowLeft className="h-4 w-4" /> <span>Back to Dashboard</span>
+            </button>
             <UniversityGlobe />
             <div className="admission-globe-caption">
               <Globe2 className="h-4 w-4" />
@@ -159,132 +158,122 @@ export default function AdmissionUniversities() {
             </div>
           </aside>
 
-          <section className="min-w-0">
-            <Reveal delay={0.05}>
-              <div className="admission-search-panel">
-                <div className="admission-search-box">
-                  <Search aria-hidden="true" />
-                  <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Find your university"
-                    aria-label="Search universities"
-                  />
-                  <span className="admission-search-action"><Search aria-hidden="true" /></span>
-                </div>
-
-                <div className="admission-filter-row">
-                  <FilterSelect label="Country" value={country} onChange={setCountry}>
-                    <option value="all">All countries</option>
-                    {countries.map((item) => <option key={item} value={item}>{item}</option>)}
-                  </FilterSelect>
-                  <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)}>
-                    <option value="all">Any budget</option>
-                    <option value="published">Published cost</option>
-                    <option value="under-20k-usd">Under $20k / year</option>
-                  </FilterSelect>
-                  <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)}>
-                    <option value="all">Any IELTS</option>
-                    <option value="up-to-6.5">IELTS up to 6.5</option>
-                    <option value="up-to-7.0">IELTS up to 7.0</option>
-                    <option value="7.5-plus">IELTS 7.5+</option>
-                    <option value="no-cutoff">No numeric cutoff</option>
-                  </FilterSelect>
-                  <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)}>
-                    <option value="all">Any QS rank</option>
-                    <option value="top-10">QS top 10</option>
-                    <option value="top-25">QS top 25</option>
-                    <option value="top-50">QS top 50</option>
-                    <option value="unranked">Not QS ranked</option>
-                  </FilterSelect>
-                </div>
-
-                <div className="admission-results-meta">
-                  <span><Compass className="h-3.5 w-3.5" /> {filtered.length} universities found</span>
-                  <span className="hidden sm:inline">Complete QS 2027 top {QS_TOP_50_COUNT}</span>
-                  {hasFilters && (
-                    <button onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
-                  )}
-                </div>
+          <section className="admission-universities-results-column min-w-0">
+            <div className="admission-search-panel">
+              <div className="admission-search-box">
+                <Search aria-hidden="true" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Find your university"
+                  aria-label="Search universities"
+                />
+                <span className="admission-search-action"><Search aria-hidden="true" /></span>
               </div>
-            </Reveal>
 
-            {filtered.length === 0 ? (
-              <Reveal>
+              <div className="admission-filter-row">
+                <FilterSelect label="Country" value={country} onChange={setCountry}>
+                  <option value="all">All countries</option>
+                  {countries.map((item) => <option key={item} value={item}>{item}</option>)}
+                </FilterSelect>
+                <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)}>
+                  <option value="all">Any budget</option>
+                  <option value="published">Published cost</option>
+                  <option value="under-20k-usd">Under $20k / year</option>
+                </FilterSelect>
+                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)}>
+                  <option value="all">Any IELTS</option>
+                  <option value="up-to-6.5">IELTS up to 6.5</option>
+                  <option value="up-to-7.0">IELTS up to 7.0</option>
+                  <option value="7.5-plus">IELTS 7.5+</option>
+                  <option value="no-cutoff">No numeric cutoff</option>
+                </FilterSelect>
+                <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)}>
+                  <option value="all">Any QS rank</option>
+                  <option value="top-10">QS top 10</option>
+                  <option value="top-25">QS top 25</option>
+                  <option value="top-50">QS top 50</option>
+                  <option value="unranked">Not QS ranked</option>
+                </FilterSelect>
+              </div>
+
+              <div className="admission-results-meta">
+                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} universities found</span>
+                <span className="hidden sm:inline">Complete QS 2027 top {QS_TOP_50_COUNT}</span>
+                {hasFilters && (
+                  <button onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
+                )}
+              </div>
+            </div>
+
+            <div className="admission-university-scroll">
+              {filtered.length === 0 ? (
                 <div className="admission-empty-state">
                   <Search className="h-7 w-7" />
                   <h2>No universities found</h2>
                   <p>Try a wider country, score, budget or ranking filter.</p>
                   <button onClick={clearFilters}>Clear all filters</button>
                 </div>
-              </Reveal>
-            ) : (
-              <div className="admission-university-grid">
-                {filtered.map((university, index) => {
-                  const fit = scoreUniversity(university, scores)
-                  const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
-                  return (
-                    <motion.article
-                      key={university.id}
-                      className="admission-university-card"
-                      initial={{ opacity: 0, y: 28, scale: 0.97 }}
-                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                      viewport={{ once: true, margin: '80px' }}
-                      transition={{ duration: 0.5, delay: Math.min(index, 8) * 0.035, ease: [0.16, 1, 0.3, 1] }}
-                      whileHover={{ y: -7 }}
-                      onClick={() => navigate(`/admission/universities/${university.slug}`)}
-                    >
-                      <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
-                      <div className="admission-card-topline">
-                        <UniversityLogo id={university.id} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
-                        <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
-                          <small>QS rank</small>
-                          <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
-                        </span>
-                      </div>
-
-                      <div className="admission-card-copy">
-                        <p className="admission-card-kicker">{university.shortName}</p>
-                        <h2>{university.name}</h2>
-                        <p className="admission-card-location"><MapPin className="h-3.5 w-3.5" /> {university.city}, {university.country}</p>
-                      </div>
-
-                      <div className="admission-card-tags">
-                        <span>IELTS {ieltsLabel(university)}</span>
-                        {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
-                      </div>
-
-                      <div className="admission-card-footer">
-                        <div>
-                          <small>Living budget</small>
-                          <strong>{yearlyCostLabel(university)}</strong>
+              ) : (
+                <div className="admission-university-grid">
+                  {filtered.map((university) => {
+                    const fit = scoreUniversity(university, scores)
+                    const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
+                    return (
+                      <article
+                        key={university.id}
+                        className="admission-university-card"
+                        onClick={() => navigate(`/admission/universities/${university.slug}`)}
+                      >
+                        <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
+                        <div className="admission-card-topline">
+                          <UniversityLogo id={university.id} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
+                          <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
+                            <small>QS rank</small>
+                            <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
+                          </span>
                         </div>
-                        <div
-                          className="admission-match-ring"
-                          style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
-                          title={hasProfileScores ? 'Fit based on your saved scores' : 'Add your SAT or IELTS score for a more precise fit'}
-                        >
-                          <span><small>{hasProfileScores ? 'Match' : 'Fit'}</small><strong>{fit.fitPercent}%</strong></span>
-                        </div>
-                      </div>
 
-                      <button className="admission-card-open" aria-label={`Explore ${university.name}`}>
-                        Explore <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </motion.article>
-                  )
-                })}
-              </div>
-            )}
+                        <div className="admission-card-copy">
+                          <p className="admission-card-kicker">{university.shortName}</p>
+                          <h2>{university.name}</h2>
+                          <p className="admission-card-location"><MapPin className="h-3.5 w-3.5" /> {university.city}, {university.country}</p>
+                        </div>
+
+                        <div className="admission-card-tags">
+                          <span>IELTS {ieltsLabel(university)}</span>
+                          {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
+                        </div>
+
+                        <div className="admission-card-footer">
+                          <div>
+                            <small>Living budget</small>
+                            <strong>{yearlyCostLabel(university)}</strong>
+                          </div>
+                          <div
+                            className="admission-match-ring"
+                            style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
+                            title={hasProfileScores ? 'Fit based on your saved scores' : 'Add your SAT or IELTS score for a more precise fit'}
+                          >
+                            <span><small>{hasProfileScores ? 'Match' : 'Fit'}</small><strong>{fit.fitPercent}%</strong></span>
+                          </div>
+                        </div>
+
+                        <button className="admission-card-open" aria-label={`Explore ${university.name}`}>
+                          Explore <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+
+              <p className="admission-catalog-note">
+                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.
+              </p>
+            </div>
           </section>
         </main>
-
-        <p className="admission-catalog-note">
-          <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.
-        </p>
-        <button onClick={() => navigate('/dashboard')} className="admission-floating-back">
-          <ArrowLeft className="h-4 w-4" /> <span>Dashboard</span>
-        </button>
       </div>
     </div>
   )

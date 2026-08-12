@@ -208,7 +208,12 @@ export default function AdmissionUniversities() {
               </div>
             </div>
 
-            <div className="admission-university-scroll">
+            <div
+              className="admission-university-scroll"
+              role="region"
+              aria-label="University results"
+              tabIndex={0}
+            >
               {filtered.length === 0 ? (
                 <div className="admission-empty-state">
                   <Search className="h-7 w-7" />

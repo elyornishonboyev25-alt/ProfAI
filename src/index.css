@@ -2044,42 +2044,53 @@
 
 @media (min-width: 1024px) {
   .admission-universities-page {
-    height: auto;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    overflow-y: visible;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden;
   }
 
   .admission-universities-shell {
-    height: auto;
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .admission-discovery-layout {
-    grid-template-columns: minmax(24rem, 0.88fr) minmax(0, 1.2fr);
-    overflow: visible;
+    min-height: 0;
+    grid-template-columns: minmax(26rem, 1fr) minmax(0, 1.12fr);
+    align-items: stretch;
+    margin-top: clamp(0.75rem, 1.5vh, 1.25rem);
+    overflow: hidden;
   }
 
   .admission-universities-globe-column {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 10;
+    display: grid;
     width: 100%;
-    min-height: 100%;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
     align-self: stretch;
+    overflow: visible;
   }
 
   .admission-globe-sticky {
     position: sticky;
-    top: 1rem;
+    top: 0;
     display: flex;
-    min-height: calc(100vh - 2rem);
-    min-height: calc(100dvh - 2rem);
+    min-height: 0;
     flex-direction: column;
     justify-content: center;
+    overflow: visible;
   }
 
   .university-globe-card {
-    width: min(96%, calc(100dvh - 8rem));
-    max-width: 39rem;
+    width: min(112%, calc(100dvh - 10rem));
+    max-width: 56rem;
+    margin-inline: -6%;
   }
 
   .admission-dashboard-back {
@@ -2087,15 +2098,48 @@
   }
 
   .admission-universities-results-column {
-    overflow: visible;
+    display: grid;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
   }
 
   .admission-search-panel {
-    margin-bottom: 2rem;
+    margin-bottom: 0.8rem;
   }
 
   .admission-university-scroll {
-    overflow: visible;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior-y: contain;
+    padding: 0.25rem 0.7rem 1.25rem 0.15rem;
+    scroll-behavior: smooth;
+    scrollbar-color: rgba(220, 38, 38, 0.52) rgba(255, 255, 255, 0.3);
+    scrollbar-gutter: stable;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admission-university-scroll:focus-visible {
+    border-radius: 1.9rem;
+    outline: 2px solid rgba(239, 68, 68, 0.45);
+    outline-offset: 2px;
+  }
+
+  .admission-university-scroll::-webkit-scrollbar {
+    width: 0.65rem;
+  }
+
+  .admission-university-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .admission-university-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(#fb7185, #dc2626) padding-box;
   }
 }
 
@@ -2120,7 +2164,7 @@
 }
 
 @media (min-width: 1536px) {
-  .admission-discovery-layout { grid-template-columns: minmax(30rem, 0.95fr) minmax(0, 1.28fr); }
+  .admission-discovery-layout { grid-template-columns: minmax(34rem, 1.08fr) minmax(0, 1.2fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

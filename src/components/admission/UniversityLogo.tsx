@@ -1,24 +1,69 @@
+import { useEffect, useMemo, useState } from 'react'
 import type { UniversityBrand } from '@/data/admission'
+import { getUniversityLogo } from '@/components/admission/universityLogos'
 
-// Neutral identity tile. Official university marks require institution-specific
-// trademark permission, so ProfAI ships monograms until an approved asset and its
-// permitted scope are documented in public/assets/ASSET-LICENSES.md.
+// Prefer the icon published by the university's own website without bundling a
+// third-party trademark. A local brand-colour SVG/monogram keeps the UI complete
+// when a site has no root favicon or blocks the request.
 export default function UniversityLogo({
   id,
   brand,
   size = 64,
   className = '',
   rounded = '1.1rem',
+  website,
 }: {
   id?: string
   brand: UniversityBrand
   size?: number
   className?: string
   rounded?: string
+  website?: string
 }) {
-  void id
+  const [officialIconFailed, setOfficialIconFailed] = useState(false)
+  const officialIcon = useMemo(() => {
+    if (!website) return null
+    try {
+      return `${new URL(website).origin}/favicon.ico`
+    } catch {
+      return null
+    }
+  }, [website])
+  const vectorLogo = id ? getUniversityLogo(id) : undefined
   const len = brand.monogram.length
   const fontSize = len <= 1 ? size * 0.5 : len === 2 ? size * 0.4 : len === 3 ? size * 0.3 : size * 0.24
+
+  useEffect(() => setOfficialIconFailed(false), [officialIcon])
+
+  if (officialIcon && !officialIconFailed) {
+    return (
+      <span
+        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white ${className}`}
+        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
+      >
+        <img
+          src={officialIcon}
+          alt={`${brand.monogram} official website emblem`}
+          className="h-[70%] w-[70%] object-contain"
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setOfficialIconFailed(true)}
+        />
+      </span>
+    )
+  }
+
+  if (vectorLogo) {
+    return (
+      <span
+        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2 ${className}`}
+        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
+      >
+        {vectorLogo}
+      </span>
+    )
+  }
 
   return (
     <span

@@ -180,7 +180,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                   return (
                     <div key={m.university.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <UniversityLogo id={m.university.id} brand={m.university.brand} size={40} rounded="0.6rem" />
+                        <UniversityLogo id={m.university.id} brand={m.university.brand} website={m.university.website} size={40} rounded="0.6rem" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-black text-slate-900">{m.university.name}</p>
                           <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS #${m.university.rank}` : ''}</p>

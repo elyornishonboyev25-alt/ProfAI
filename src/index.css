@@ -1059,6 +1059,9 @@
     width: 100%;
     aspect-ratio: 1;
     isolation: isolate;
+    animation: universityGlobeFloat 8s ease-in-out infinite;
+    transform-origin: 50% 54%;
+    will-change: transform;
   }
 
   .university-globe-visual::before {
@@ -1090,9 +1093,6 @@
     mix-blend-mode: multiply;
     pointer-events: none;
     transition: opacity 320ms ease;
-    inset: -9%;
-    width: 118%;
-    height: 118%;
   }
 
   .university-globe-reference-image-hidden { opacity: 0; }
@@ -1119,6 +1119,7 @@
     margin: -1.325rem 0 0 -1.325rem;
     place-items: center;
     pointer-events: none;
+    transition: left 700ms var(--app-ease-smooth), top 700ms var(--app-ease-smooth);
   }
 
   .university-globe-user-marker-ring {
@@ -1127,6 +1128,7 @@
     border-radius: 9999px;
     background: rgba(239, 68, 68, 0.2);
     box-shadow: 0 0 26px rgba(220, 38, 38, 0.48);
+    animation: universityGlobeMarkerPulse 1.8s ease-out 1.85s 2;
   }
 
   .university-globe-user-marker-pin {
@@ -1371,9 +1373,6 @@
       linear-gradient(145deg, rgba(255,255,255,0.68), rgba(255,255,255,0.35)),
       radial-gradient(circle at 100% 100%, rgba(186,230,253,0.24), transparent 48%);
     box-shadow: 0 19px 44px rgba(71,85,105,0.13), inset 0 1px 0 rgba(255,255,255,0.98);
-    contain: layout paint style;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 24rem;
     cursor: pointer;
     transition: border-color 240ms ease, box-shadow 240ms ease;
   }
@@ -1494,6 +1493,16 @@
   @keyframes admissionOrbitPulse {
     0%, 100% { opacity: 0.25; }
     50% { opacity: 0.7; }
+  }
+
+  @keyframes universityGlobeMarkerPulse {
+    0% { opacity: 0.78; transform: scale(0.7); }
+    100% { opacity: 0; transform: scale(1.7); }
+  }
+
+  @keyframes universityGlobeFloat {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.2deg); }
+    50% { transform: translate3d(0, -9px, 0) rotate(0.25deg); }
   }
 
   .premium-stat {
@@ -2035,77 +2044,58 @@
 
 @media (min-width: 1024px) {
   .admission-universities-page {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 0 !important;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    overflow-y: visible;
   }
 
   .admission-universities-shell {
-    display: grid;
-    height: 100%;
-    min-height: 0;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .admission-hub-nav {
-    min-height: 5.5rem;
-    padding-block: 0.7rem;
+    height: auto;
   }
 
   .admission-discovery-layout {
-    min-height: 0;
-    grid-template-columns: minmax(26rem, 1fr) minmax(0, 1.12fr);
-    margin-top: 1rem;
-    overflow: hidden;
+    grid-template-columns: minmax(24rem, 0.88fr) minmax(0, 1.2fr);
+    overflow: visible;
   }
 
   .admission-universities-globe-column {
     position: relative;
     z-index: 10;
-    display: flex;
     width: 100%;
-    min-height: 0;
+    min-height: 100%;
+    align-self: stretch;
+  }
+
+  .admission-globe-sticky {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    min-height: calc(100vh - 2rem);
+    min-height: calc(100dvh - 2rem);
     flex-direction: column;
     justify-content: center;
-    overflow: hidden;
   }
 
   .university-globe-card {
-    width: min(110%, calc(100dvh - 12.5rem));
-    max-width: 55rem;
-    flex: 0 1 auto;
-    margin-inline: -5%;
+    width: min(96%, calc(100dvh - 8rem));
+    max-width: 39rem;
   }
 
   .admission-dashboard-back {
-    flex: 0 0 auto;
     margin: 0 0 0.35rem 0.75rem;
   }
 
-  .admission-globe-caption {
-    flex: 0 0 auto;
-    margin-top: -0.2rem;
-  }
-
   .admission-universities-results-column {
-    display: grid;
-    min-height: 0;
-    grid-template-rows: auto minmax(0, 1fr);
-    overflow: hidden;
+    overflow: visible;
   }
 
   .admission-search-panel {
-    margin-bottom: 0.8rem;
+    margin-bottom: 2rem;
   }
 
   .admission-university-scroll {
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.25rem 0.55rem 1rem 0.15rem;
-    scrollbar-gutter: stable;
+    overflow: visible;
   }
 }
 
@@ -2130,7 +2120,7 @@
 }
 
 @media (min-width: 1536px) {
-  .admission-discovery-layout { grid-template-columns: minmax(34rem, 1.08fr) minmax(0, 1.2fr); }
+  .admission-discovery-layout { grid-template-columns: minmax(30rem, 0.95fr) minmax(0, 1.28fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

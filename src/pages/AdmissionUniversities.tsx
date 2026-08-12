@@ -151,10 +151,12 @@ export default function AdmissionUniversities() {
             <button onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
               <ArrowLeft className="h-4 w-4" /> <span>Back to Dashboard</span>
             </button>
-            <UniversityGlobe />
-            <div className="admission-globe-caption">
-              <Globe2 className="h-4 w-4" />
-              <span>{UNIVERSITY_COUNT} verified university profiles</span>
+            <div className="admission-globe-sticky">
+              <UniversityGlobe />
+              <div className="admission-globe-caption">
+                <Globe2 className="h-4 w-4" />
+                <span>{UNIVERSITY_COUNT} verified university profiles</span>
+              </div>
             </div>
           </aside>
 

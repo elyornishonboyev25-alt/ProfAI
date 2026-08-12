@@ -1,4 +1,5 @@
 import type { University } from './types'
+import { QS_TOP_50_ADMISSIONS } from './qsTop50Admissions'
 
 type CoreUniversity = Pick<
   University,
@@ -22,27 +23,19 @@ type CoreUniversity = Pick<
   qsProfileUrl: string
 }
 
-const verifiedAt = '2026-08-06'
+const verifiedAt = '2026-08-12'
 
 function top50University({ admissionsUrl, qsProfileUrl, ...university }: CoreUniversity): University {
+  const admission = QS_TOP_50_ADMISSIONS[university.id]
+  if (!admission) throw new Error(`Missing SAT/IELTS admission profile: ${university.id}`)
+
   return {
     ...university,
     groups: ['qs-top-50'],
     // QS does not expose every indicator consistently on its public profile pages.
     // Keep unverified values absent instead of estimating them.
     indicators: {},
-    admission: {
-      note: 'Entry requirements vary by programme and applicant qualification. Use the linked official admissions page for the exact route that applies to you.',
-      bachelor: [
-        {
-          label: 'Requirements',
-          value: 'Programme-specific',
-          policy: 'conditional',
-          sourceUrl: admissionsUrl,
-        },
-      ],
-      verifiedAt,
-    },
+    admission: { ...admission, verifiedAt },
     campus: {
       name: `${university.shortName} main campus`,
       address: `${university.city}, ${university.country}`,

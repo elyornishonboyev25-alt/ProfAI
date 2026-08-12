@@ -58,6 +58,16 @@ function validateUniversityCatalog() {
   if (top50.some((university) => university.rankTied !== ((rankCounts.get(university.rank!) ?? 0) > 1))) {
     throw new Error('QS 2027 tied-rank markers do not match the catalog positions')
   }
+
+  if (
+    top50.some((university) => {
+      const requirements = university.admission?.bachelor ?? []
+      return !requirements.some((requirement) => requirement.label.startsWith('SAT')) ||
+        !requirements.some((requirement) => requirement.label === 'IELTS')
+    })
+  ) {
+    throw new Error('Every QS 2027 top-50 profile must include explicit SAT and IELTS policies')
+  }
 }
 
 validateUniversityCatalog()

@@ -4,7 +4,7 @@ import { QS_2027_RANKINGS, QS_2027_TOP_50_IDS } from './qs2027Rankings'
 
 // Rankings are QS World University Rankings 2027. Detailed admissions policies
 // were rechecked against university sources on 5 August 2026; the top-50 additions
-// and their official source links were checked on 6 August 2026. A numeric
+// and their official source links were checked on 12 August 2026. A numeric
 // comparison is provided only when the university itself publishes a minimum or
 // clearly-labelled competitive score.
 export const QS_EDITION = 'QS World University Rankings 2027'

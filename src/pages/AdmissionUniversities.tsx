@@ -280,7 +280,7 @@ export default function AdmissionUniversities() {
         </main>
 
         <p className="admission-catalog-note">
-          <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Admission and cost sources open from each university profile.
+          <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.
         </p>
         <button onClick={() => navigate('/dashboard')} className="admission-floating-back">
           <ArrowLeft className="h-4 w-4" /> <span>Dashboard</span>

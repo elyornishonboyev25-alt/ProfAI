@@ -139,7 +139,7 @@ export default function AdmissionUniversity() {
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">QS World Ranking</p>
                   <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank}` : 'Not ranked'}</p>
-                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS 2026 rank listed'}</p>
+                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS rank listed'}</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">Overall Score</p>

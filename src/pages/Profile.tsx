@@ -39,6 +39,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { isPremiumUser } from '@/utils/premiumAccess'
+import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
 
 function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
@@ -219,7 +220,11 @@ export default function Profile() {
     [user],
   )
   // Always resolve to a usable overview so the page never goes blank.
-  const data = fetchedData ?? buildProfileFallback(user)
+  const fallbackData = fetchedData ?? buildProfileFallback(user)
+  const data = useMemo(
+    () => (user ? mergeLocalProfilePerformance(fallbackData, user.id) : fallbackData),
+    [fallbackData, user],
+  )
   const usingFallback = !fetchedData
   const hasActivity = (data?.stats.totalAttempts ?? 0) > 0
   const premiumLocked = Boolean(user) && !isPremiumUser(user)

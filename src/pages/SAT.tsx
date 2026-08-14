@@ -196,6 +196,12 @@ export default function SAT() {
       .filter((item): item is AttemptWithTest => Boolean(item.attempt))
       .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
   ), [])
+  const sectionAttempts = useMemo<AttemptWithTest[]>(() => (
+    Object.values(SAT_TEST_CATALOG)
+      .flatMap((test) => (['math', 'reading-writing'] as const).map((section) => getSATSectionTest(test.mockId, section)))
+      .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
+      .filter((item): item is AttemptWithTest => Boolean(item.attempt))
+  ), [])
 
   const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
   const completedAttempts = attempts.filter(({ attempt }) => attempt.status === 'submitted')
@@ -213,13 +219,6 @@ export default function SAT() {
   }))
 
   const answeredBySection = (section: 'math' | 'reading-writing') => {
-    const sectionAttempts = Object.values(SAT_TEST_CATALOG)
-      .map((test) => {
-        const sectionTest = getSATSectionTest(test.mockId, section)
-        const attempt = loadSATAttempt(sectionTest.id)
-        return attempt ? { test: sectionTest, attempt } : null
-      })
-      .filter((item): item is AttemptWithTest => Boolean(item))
     const latest = [...attempts, ...sectionAttempts]
       .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
       .find(({ test }) => test.modules.some((module) => module.section === section))
@@ -230,9 +229,15 @@ export default function SAT() {
   }
 
   const activityLog = loadActivityLog(user?.id)
-  const studyMinutes = Object.values(activityLog).reduce((total, day) => (
+  const trackedStudyMinutes = Object.values(activityLog).reduce((total, day) => (
     total + (day['sat-math'] ?? 0) + (day['sat-rw'] ?? 0) + (day.mock ?? 0)
   ), 0)
+  const savedAttemptMinutes = [...attempts, ...sectionAttempts].reduce((total, { attempt, test }) => {
+    const endedAt = attempt.submittedAt ?? attempt.terminatedAt ?? attempt.updatedAt
+    const elapsedMinutes = Math.floor(Math.max(0, endedAt - attempt.startedAt) / 60_000)
+    return total + Math.min(elapsedMinutes, Math.ceil(test.totalDurationSeconds / 60))
+  }, 0)
+  const studyMinutes = Math.max(trackedStudyMinutes, savedAttemptMinutes)
   const studyHours = studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`
   const recentProgress = activeAttempt
     ? Math.round((Object.keys(activeAttempt.attempt.answers).length / activeAttempt.test.questionCount) * 100)

@@ -22,6 +22,7 @@ import {
   Trash2,
   Undo2,
   X,
+  XCircle,
   ZoomIn,
 } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -510,6 +511,7 @@ export default function SATMockRun() {
           zoom={zoom}
           onChange={changeHighlights}
           flagged={isFlagged}
+          answerState={practiceChecked ? (practiceCorrect ? 'correct' : 'incorrect') : undefined}
           onToggleFlag={() => persistUpdate((current) => ({
             ...current,
             flagged: current.flagged.includes(currentQuestion.id)
@@ -531,11 +533,11 @@ export default function SATMockRun() {
                 <Lightbulb className="h-4 w-4" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
               </button>
               {practiceChecked ? (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 rounded-xl border-2 p-4 ${practiceCorrect ? 'border-emerald-600 bg-emerald-50' : 'border-amber-500 bg-amber-50'}`}>
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 rounded-xl border-2 p-4 ${practiceCorrect ? 'border-emerald-600 bg-emerald-50' : 'border-red-600 bg-red-50'}`}>
                   <div className="flex items-start gap-3">
-                    {practiceCorrect ? <Sparkles className="mt-0.5 h-5 w-5 text-emerald-700" /> : <Lightbulb className="mt-0.5 h-5 w-5 text-amber-700" />}
+                    {practiceCorrect ? <Sparkles className="mt-0.5 h-5 w-5 text-emerald-700" /> : <XCircle className="mt-0.5 h-5 w-5 text-red-700" />}
                     <div>
-                      <p className="font-serif text-base font-bold">{practiceCorrect ? 'Correct answer' : `Correct answer: ${currentQuestion.correctAnswer}`}</p>
+                      <p className={`font-serif text-base font-bold ${practiceCorrect ? 'text-emerald-900' : 'text-red-900'}`}>{practiceCorrect ? 'Correct answer' : `Incorrect — correct answer: ${currentQuestion.correctAnswer}`}</p>
                       <p className="mt-1 text-xs font-semibold text-slate-600">Review the reasoning before moving to the next question.</p>
                     </div>
                   </div>
@@ -634,18 +636,22 @@ export default function SATMockRun() {
                   {currentModule.questions.map((question, index) => {
                     const answered = Boolean(attempt.answers[question.id]?.trim())
                     const flagged = attempt.flagged.includes(question.id)
+                    const checked = attempt.mode === 'practice' && checkedQuestions.includes(question.id)
+                    const checkedCorrect = checked && isSATAnswerCorrect(question, attempt.answers[question.id])
                     return (
                       <button
                         type="button"
                         key={question.id}
                         onClick={() => goToQuestion(index)}
                         className={`relative aspect-square rounded-xl text-xs font-black ${
-                          index === questionIndex
-                            ? 'bg-[#4053d7] text-white ring-4 ring-indigo-100'
+                          checked
+                            ? checkedCorrect
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-red-600 text-white'
                             : answered
                               ? 'bg-black text-white'
                               : 'border-2 border-slate-400 bg-white text-slate-700'
-                        }`}
+                        } ${index === questionIndex ? 'ring-4 ring-indigo-200' : ''}`}
                       >
                         {question.number}
                         {flagged ? <Flag className="absolute right-1 top-1 h-2.5 w-2.5 fill-amber-400 text-amber-500" /> : null}
@@ -654,6 +660,8 @@ export default function SATMockRun() {
                   })}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3 text-[9px] font-black text-slate-500">
+                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" /> Correct</span> : null}
+                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600" /> Incorrect</span> : null}
                   <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> Answered</span>
                   <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-slate-300 bg-slate-50" /> Unanswered</span>
                   <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> Flagged</span>

@@ -473,6 +473,7 @@ export function routeToActivityKey(pathname: string): ActivityKey | null {
   if (normalized.startsWith('/ielts/writing') || normalized.startsWith('/writing-lab')) return 'ielts-writing'
   if (normalized.startsWith('/ielts/listening') || normalized.startsWith('/test/listening')) return 'ielts-listening'
   if (normalized.startsWith('/ielts/reading') || normalized.startsWith('/test/reading')) return 'ielts-reading'
+  if (normalized.startsWith('/sat/mock/')) return 'mock'
   if (normalized.startsWith('/sat/math')) return 'sat-math'
   if (normalized.startsWith('/sat/reading-writing')) return 'sat-rw'
   if (normalized.startsWith('/mock')) return 'mock'

@@ -14,6 +14,7 @@ type Props = {
   onChange: (strokes: HighlightStroke[]) => void
   flagged: boolean
   onToggleFlag: () => void
+  answerState?: 'correct' | 'incorrect'
   practicePanel?: ReactNode
 }
 
@@ -54,6 +55,7 @@ export default function SATQuestionCanvas({
   onChange,
   flagged,
   onToggleFlag,
+  answerState,
   practicePanel,
 }: Props) {
   const activeId = useRef<string | null>(null)
@@ -208,12 +210,22 @@ export default function SATQuestionCanvas({
                     onClick={() => onAnswer(choice.key)}
                     className={`group flex w-full items-start gap-3 rounded-[0.9rem] bg-transparent px-4 py-3 text-left font-serif transition sm:px-5 ${
                       selected
-                        ? 'border-[3px] border-[#4053d7] text-[#1f2e8d]'
+                        ? answerState === 'correct'
+                          ? 'border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900'
+                          : answerState === 'incorrect'
+                            ? 'border-[3px] border-red-600 bg-red-50 text-red-900'
+                            : 'border-[3px] border-[#4053d7] text-[#1f2e8d]'
                         : 'border-2 border-black text-[#171717] hover:bg-white'
                     }`}
                   >
                     <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                      selected ? 'border-[#4053d7] bg-[#4053d7] text-white' : 'border-black bg-transparent text-black'
+                      selected
+                        ? answerState === 'correct'
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : answerState === 'incorrect'
+                            ? 'border-red-600 bg-red-600 text-white'
+                            : 'border-[#4053d7] bg-[#4053d7] text-white'
+                        : 'border-black bg-transparent text-black'
                     }`}>
                       {choice.key}
                     </span>
@@ -234,7 +246,13 @@ export default function SATQuestionCanvas({
                 onChange={(event) => onAnswer(event.target.value)}
                 inputMode="decimal"
                 placeholder="e.g. 3/10 or 0.3"
-                className="mt-3 h-16 w-full rounded-xl border-2 border-black bg-white px-5 font-serif text-xl font-bold text-black outline-none focus:border-[#4053d7] focus:ring-2 focus:ring-[#4053d7]/20"
+                className={`mt-3 h-16 w-full rounded-xl border-2 px-5 font-serif text-xl font-bold text-black outline-none ${
+                  answerState === 'correct'
+                    ? 'border-emerald-600 bg-emerald-50 focus:ring-2 focus:ring-emerald-600/20'
+                    : answerState === 'incorrect'
+                      ? 'border-red-600 bg-red-50 focus:ring-2 focus:ring-red-600/20'
+                      : 'border-black bg-white focus:border-[#4053d7] focus:ring-2 focus:ring-[#4053d7]/20'
+                }`}
               />
               <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">Fractions and equivalent decimals are accepted.</p>
             </div>

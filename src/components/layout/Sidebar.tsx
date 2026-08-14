@@ -13,7 +13,6 @@ import {
   Home,
   Library,
   Sparkles,
-  Target,
   Trophy,
   Users,
   UserRound,
@@ -45,7 +44,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
       { id: 'ai-tutor', label: 'AI Tutor', icon: Sparkles, path: '/ai-tutor' },
       { id: 'tests', label: 'Test Library', icon: Library, path: '/tests' },
-      { id: 'mock', label: 'Mock Arena', icon: Target, path: '/mock' },
       { id: 'profile', label: 'Performance', icon: BarChart3, path: '/profile' },
       { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     ],
@@ -87,10 +85,6 @@ export function Sidebar() {
     .toUpperCase()
 
   const handleNavigate = (path: string) => {
-    if (path === '/mock') {
-      navigate(path, { state: { from: location.pathname } })
-      return
-    }
     navigate(path)
   }
 

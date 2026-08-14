@@ -48,7 +48,6 @@ const SpeakingCommunity = lazy(() => import('@/pages/SpeakingCommunity'))
 const SpeakerProfile = lazy(() => import('@/pages/SpeakerProfile'))
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'))
 const Community = lazy(() => import('@/pages/Community'))
-const Mock = lazy(() => import('@/pages/Mock'))
 const MockIELTS = lazy(() => import('@/pages/MockIELTS'))
 const MockIELTSRun = lazy(() => import('@/pages/MockIELTSRun'))
 const MockSAT = lazy(() => import('@/pages/MockSAT'))
@@ -293,16 +292,7 @@ function App() {
                         }
                       />
                       <Route path="/leaderboard" element={<AnimatedRoute><Leaderboard /></AnimatedRoute>} />
-                      <Route
-                        path="/mock"
-                        element={
-                          <PremiumRoute showGuestBanner>
-                            <AnimatedRoute>
-                              <Mock />
-                            </AnimatedRoute>
-                          </PremiumRoute>
-                        }
-                      />
+                      <Route path="/mock" element={<Navigate to="/ielts" replace />} />
                       <Route
                         path="/mock/ielts"
                         element={
@@ -711,6 +701,5 @@ function App() {
 }
 
 export default App
-
 
 

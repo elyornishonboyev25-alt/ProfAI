@@ -175,13 +175,6 @@ const FEATURES: Feature[] = [
     tone: 'dark',
   },
   {
-    title: 'Mock Arena',
-    body: '30+ full, exam-mode IELTS & SAT simulations with enforced section order and auto-submit.',
-    icon: Target,
-    route: '/mock/ielts',
-    span: 'lg:col-span-1',
-  },
-  {
     title: 'Writing AI',
     body: 'Task 1 & 2 scored on the real band rubric in minutes — with line-level fixes.',
     icon: PenSquare,

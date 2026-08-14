@@ -23,19 +23,22 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
   const user = useAuthStore((state: AuthState) => state.user)
   const { minimalMotion } = useMotionPreferences()
   const [targetLabel, setTargetLabel] = useState<string | null>(null)
+  const [targetPath, setTargetPath] = useState('/ielts')
 
   useEffect(() => {
     let cancelled = false
     if (!user) {
       setTargetLabel(null)
+      setTargetPath('/ielts')
       return
     }
     fetchAccount()
       .then((account) => {
         if (cancelled) return
+        const exam = account.profile.targetExam
+        setTargetPath(exam === 'SAT' ? '/sat' : '/ielts')
         const score = account.profile.targetScore?.trim()
         if (!score) return
-        const exam = account.profile.targetExam
         const prefix = exam === 'SAT' ? 'SAT' : exam === 'BOTH' ? '' : 'IELTS'
         setTargetLabel(score.toUpperCase().includes('IELTS') || score.toUpperCase().includes('SAT') ? score : `${prefix} ${score}`.trim())
       })
@@ -100,7 +103,7 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
           </div>
 
           <button
-            onClick={() => navigate('/mock')}
+            onClick={() => navigate(targetPath)}
             className="interactive-lift mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-red-700 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-red-50"
           >
             Continue preparing

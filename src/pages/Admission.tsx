@@ -219,7 +219,7 @@ export default function Admission() {
                       className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
                     >
                       <span className="w-6 text-center text-sm font-black text-slate-400">{u.rank}</span>
-                      <UniversityLogo name={u.name} brand={u.brand} website={u.website} size={34} rounded="0.55rem" />
+                      <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={34} rounded="0.55rem" />
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">
                         {u.shortName}
                       </span>

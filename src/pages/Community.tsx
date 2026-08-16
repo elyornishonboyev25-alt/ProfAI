@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Award,
+  BarChart3,
   BadgeCheck,
+  Bot,
   ChevronDown,
   Crown,
   Flame,
@@ -13,6 +15,8 @@ import {
   Loader2,
   MapPin,
   MessageCircleMore,
+  MessagesSquare,
+  Mic,
   Radio,
   Search,
   SlidersHorizontal,
@@ -30,10 +34,24 @@ import {
 } from '@/lib/profileApi'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { cn } from '@/components/ui/utils'
+import { useCommunityTrial } from '@/hooks/useFeatureTrial'
+import AiCoach from '@/components/speaking/sections/AiCoach'
+import Debate from '@/components/speaking/sections/Debate'
+import Partner from '@/components/speaking/sections/Partner'
+import Progress from '@/components/speaking/sections/Progress'
 import '@/styles/community.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
 type SmartFilter = 'sameBand' | 'sameCountry' | 'online'
+export type CommunityMode = 'people' | 'ai' | 'debate' | 'partner' | 'progress'
+
+const COMMUNITY_MODES = [
+  { id: 'people', label: 'People', icon: Users },
+  { id: 'ai', label: 'AI Coach', icon: Bot },
+  { id: 'debate', label: 'Debate', icon: MessagesSquare },
+  { id: 'partner', label: 'Partner', icon: Mic },
+  { id: 'progress', label: 'Progress', icon: BarChart3 },
+] as const
 
 const STUDY_ROOMS = [
   { name: 'IELTS Band 7+ room', detail: 'Speaking practice', icon: Video, section: 'partner' },
@@ -75,6 +93,9 @@ function targetLabel(learner: LearnerSearchResult) {
 
 export default function Community() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedMode = searchParams.get('mode')
+  const mode: CommunityMode = COMMUNITY_MODES.some((item) => item.id === requestedMode) ? requestedMode as CommunityMode : 'people'
   const [query, setQuery] = useState('')
   const [exam, setExam] = useState<ExamFilter>('ALL')
   const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
@@ -167,15 +188,15 @@ export default function Community() {
     setSmartFilters([])
   }
 
+  const selectMode = (nextMode: CommunityMode) => {
+    const next = new URLSearchParams(searchParams)
+    if (nextMode === 'people') next.delete('mode')
+    else next.set('mode', nextMode)
+    setSearchParams(next, { replace: true })
+  }
+
   return (
     <main className="community-page min-h-screen">
-      <div className="community-aurora" aria-hidden="true">
-        <span className="community-orb community-orb-one" />
-        <span className="community-orb community-orb-two" />
-        <span className="community-orb community-orb-three" />
-        <span className="community-orb community-orb-four" />
-      </div>
-
       <div className="community-shell">
         <header className="community-header">
           <div className="community-brand-row">
@@ -186,7 +207,14 @@ export default function Community() {
             </button>
           </div>
 
-          <div className="community-search-bar">
+          <nav className="community-mode-nav" aria-label="Community modes">
+            {COMMUNITY_MODES.map((item) => {
+              const Icon = item.icon
+              return <button key={item.id} type="button" onClick={() => selectMode(item.id)} aria-current={mode === item.id ? 'page' : undefined} className={cn('community-mode-btn', mode === item.id && 'is-active')}><Icon className="h-4 w-4" /><span>{item.label}</span></button>
+            })}
+          </nav>
+
+          {mode === 'people' ? <div className="community-search-bar">
             <label className="community-search-field">
               <Search className="h-7 w-7" />
               <input
@@ -202,10 +230,10 @@ export default function Community() {
               <FilterPill active={sameCountryActive} icon={Globe2} label="Same country" onClick={toggleCountryFilter} />
               <FilterPill active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
             </div>
-          </div>
+          </div> : null}
         </header>
 
-        <section className="community-layout">
+        {mode === 'people' ? <section className="community-layout">
           <aside className="community-left-column">
             <GlassPanel title="Quick filters" open={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)}>
               <nav className="community-side-list" aria-label="Learner filters">
@@ -228,7 +256,7 @@ export default function Community() {
                 {STUDY_ROOMS.map((room) => {
                   const Icon = room.icon
                   return (
-                    <button type="button" key={room.name} onClick={() => navigate(`/speaking-community?section=${room.section}`)} className="community-room-link">
+                    <button type="button" key={room.name} onClick={() => selectMode(room.section)} className="community-room-link">
                       <span className="community-room-icon"><Icon className="h-4 w-4" /></span>
                       <span><b>{room.name}</b><small>{room.detail}</small></span>
                       <i>{onlineCount || 'Open'}</i>
@@ -293,10 +321,51 @@ export default function Community() {
               </div>
             </div>
           </aside>
-        </section>
+        </section> : <SpeakingWorkspace mode={mode} onModeChange={selectMode} />}
       </div>
     </main>
   )
+}
+
+function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode, 'people'>; onModeChange: (mode: CommunityMode) => void }) {
+  const trial = useCommunityTrial()
+  const live = mode === 'debate' || mode === 'partner'
+
+  useEffect(() => {
+    if (trial.isPremium || !live || trial.locked) return
+    const id = window.setInterval(() => {
+      if (!document.hidden) trial.addSeconds(1)
+    }, 1000)
+    return () => window.clearInterval(id)
+  }, [live, trial.addSeconds, trial.isPremium, trial.locked])
+
+  return (
+    <section className="community-speaking-workspace">
+      <div className="community-speaking-heading">
+        <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> Speaking studio</span>
+        <h1>{mode === 'ai' ? 'Practise with your AI coach.' : mode === 'debate' ? 'Join a focused debate.' : mode === 'partner' ? 'Meet a live speaking partner.' : 'Track every speaking session.'}</h1>
+        <p>AI practice, live rooms and verified progress now live in one community workspace.</p>
+      </div>
+
+      {live && !trial.isPremium ? (
+        <div className={cn('community-trial-banner', trial.locked && 'is-locked')}>
+          <span>{trial.locked ? 'Free live speaking time used up.' : `${Math.max(0, Math.ceil(trial.secondsRemaining / 60))} free minutes remaining`}</span>
+          {trial.locked ? <button type="button" onClick={() => window.location.assign('/premium')}>Unlock live rooms</button> : null}
+        </div>
+      ) : null}
+
+      <div className="community-speaking-surface">
+        {mode === 'ai' ? <AiCoach /> : null}
+        {mode === 'debate' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Debate /> : null}
+        {mode === 'partner' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Partner onExit={() => onModeChange('people')} /> : null}
+        {mode === 'progress' ? <Progress onStart={() => onModeChange('ai')} /> : null}
+      </div>
+    </section>
+  )
+}
+
+function SpeakingLocked({ onUpgrade }: { onUpgrade: () => void }) {
+  return <div className="community-empty"><span><Mic className="h-8 w-8" /></span><h2>Live practice is ready</h2><p>Upgrade for unlimited partner and debate sessions.</p><button type="button" onClick={onUpgrade}>View Premium</button></div>
 }
 
 function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {

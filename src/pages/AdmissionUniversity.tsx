@@ -116,7 +116,7 @@ export default function AdmissionUniversity() {
               </button>
 
               <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
-                <UniversityLogo name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" />
+                <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" />
                 <div className="min-w-0">
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
                     <Trophy className="h-3.5 w-3.5" />

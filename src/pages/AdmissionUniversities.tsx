@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   ChevronDown,
   Compass,
   Globe2,
@@ -50,22 +51,66 @@ function FilterSelect({
   label,
   value,
   onChange,
-  children,
+  options,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
-  children: React.ReactNode
+  options: Array<{ value: string; label: string }>
 }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const listId = useId()
+  const selected = options.find((option) => option.value === value) ?? options[0]
+  const visible = options.filter((option) => option.label.toLowerCase().includes(query.trim().toLowerCase()))
+
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [])
+
+  const choose = (nextValue: string) => {
+    onChange(nextValue)
+    setOpen(false)
+    setQuery('')
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') { setOpen(false); return }
+    if ((event.target as HTMLElement).tagName === 'INPUT' && event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      if (!open) { setOpen(true); return }
+      const delta = event.key === 'ArrowDown' ? 1 : -1
+      setActiveIndex((index) => Math.max(0, Math.min(visible.length - 1, index + delta)))
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      if (!open) setOpen(true)
+      else if (visible[activeIndex]) choose(visible[activeIndex].value)
+    }
+  }
+
   return (
-    <label className="admission-filter-control">
+    <div ref={rootRef} className="admission-filter-control admission-listbox" onKeyDown={onKeyDown}>
       <span className="admission-filter-dot" aria-hidden="true" />
       <span className="sr-only">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} aria-label={label}>
-        {children}
-      </select>
-      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
-    </label>
+      <button type="button" role="combobox" aria-label={label} aria-controls={listId} aria-expanded={open} onClick={() => { setOpen((current) => !current); setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value))) }}>
+        <span>{selected?.label}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
+      {open ? <div className="admission-listbox-popover">
+        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
+        <ul id={listId} role="listbox" aria-label={label}>
+          {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{option.label}{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
+          {!visible.length ? <li className="admission-listbox-empty">No options found</li> : null}
+        </ul>
+      </div> : null}
+    </div>
   )
 }
 
@@ -174,29 +219,10 @@ export default function AdmissionUniversities() {
               </div>
 
               <div className="admission-filter-row">
-                <FilterSelect label="Country" value={country} onChange={setCountry}>
-                  <option value="all">All countries</option>
-                  {countries.map((item) => <option key={item} value={item}>{item}</option>)}
-                </FilterSelect>
-                <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)}>
-                  <option value="all">Any budget</option>
-                  <option value="published">Published cost</option>
-                  <option value="under-20k-usd">Under $20k / year</option>
-                </FilterSelect>
-                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)}>
-                  <option value="all">Any IELTS</option>
-                  <option value="up-to-6.5">IELTS up to 6.5</option>
-                  <option value="up-to-7.0">IELTS up to 7.0</option>
-                  <option value="7.5-plus">IELTS 7.5+</option>
-                  <option value="no-cutoff">No numeric cutoff</option>
-                </FilterSelect>
-                <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)}>
-                  <option value="all">Any QS rank</option>
-                  <option value="top-10">QS top 10</option>
-                  <option value="top-25">QS top 25</option>
-                  <option value="top-50">QS top 50</option>
-                  <option value="unranked">Not QS ranked</option>
-                </FilterSelect>
+                <FilterSelect label="Country" value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
+                <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
+                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }]} />
+                <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
               </div>
 
               <div className="admission-results-meta">
@@ -227,14 +253,14 @@ export default function AdmissionUniversities() {
                     const fit = scoreUniversity(university, scores)
                     const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
                     return (
-                      <article
+                      <Link
                         key={university.id}
                         className="admission-university-card"
-                        onClick={() => navigate(`/admission/universities/${university.slug}`)}
+                        to={`/admission/universities/${university.slug}`}
                       >
                         <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
                         <div className="admission-card-topline">
-                          <UniversityLogo name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
+                          <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
                           <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
                             <small>QS rank</small>
                             <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
@@ -266,10 +292,10 @@ export default function AdmissionUniversities() {
                           </div>
                         </div>
 
-                        <button className="admission-card-open" aria-label={`Explore ${university.name}`}>
+                        <span className="admission-card-open" aria-label={`Explore ${university.name}`}>
                           Explore <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      </article>
+                        </span>
+                      </Link>
                     )
                   })}
                 </div>

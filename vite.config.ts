@@ -10,24 +10,8 @@ export default defineConfig({
       includeAssets: ['logo.svg'],
       workbox: {
         globPatterns: ['index.html', 'logo.svg', 'assets/index-*.css'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ request, url }) =>
-              url.origin === self.location.origin &&
-              (request.destination === 'script' || request.destination === 'style'),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'profai-app-assets',
-              expiration: {
-                maxEntries: 180,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
+        cleanupOutdatedCaches: true,
+        importScripts: ['/sw-cleanup.js'],
       },
       manifest: {
         name: 'ProfAI',

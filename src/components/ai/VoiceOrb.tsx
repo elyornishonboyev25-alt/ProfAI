@@ -31,8 +31,6 @@ const PALETTES: Record<AiVoiceState, { core: string; glow: string; ring: string 
   },
 }
 
-const SPARKS = [0, 1, 2, 3, 4, 5] as const
-
 export function VoiceOrb({ state = 'idle', level = 0, size = 120, className }: VoiceOrbProps) {
   const palette = PALETTES[state]
   const active = state === 'speaking' || state === 'listening'

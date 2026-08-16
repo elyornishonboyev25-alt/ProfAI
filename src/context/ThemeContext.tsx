@@ -40,8 +40,8 @@ export function useThemeContext() {
   return context
 }
 
-export function isDarkModeEnabled() {
-  const { theme } = useThemeContext();
-  return theme === 'dark';
+export function useIsDarkModeEnabled() {
+  const { theme } = useThemeContext()
+  return theme === 'dark'
 }
 

@@ -22,6 +22,12 @@ type GlobeMarkerStyle = CSSProperties & {
   '--globe-marker-y': string
 }
 
+type CanvasMetrics = {
+  width: number
+  height: number
+  pixelRatio: number
+}
+
 const DEG = Math.PI / 180
 const DEFAULT_LONGITUDE = 69.24
 const DEFAULT_LATITUDE = 41.3
@@ -37,6 +43,43 @@ function easeOutQuart(value: number) {
 
 function nearestRotation(from: number, target: number) {
   return from + ((((target - from) % 360) + 540) % 360) - 180
+}
+
+function simplifyRing(ring: Position[]) {
+  if (ring.length <= 18) return ring
+  const stride = Math.max(2, Math.ceil(ring.length / 120))
+  return ring.filter((_, index) => index % stride === 0 || index === ring.length - 1)
+}
+
+function simplifyWorld(world: WorldFeatureCollection): WorldFeatureCollection {
+  return {
+    features: world.features.map((feature) => {
+      const geometry = feature.geometry
+      if (!geometry) return feature
+      if (geometry.type === 'Polygon') {
+        return { geometry: { type: 'Polygon' as const, coordinates: geometry.coordinates.map(simplifyRing) } }
+      }
+      return {
+        geometry: {
+          type: 'MultiPolygon' as const,
+          coordinates: geometry.coordinates.map((polygon) => polygon.map(simplifyRing)),
+        },
+      }
+    }),
+  }
+}
+
+function measureCanvas(canvas: HTMLCanvasElement, lowPower: boolean): CanvasMetrics | null {
+  const bounds = canvas.getBoundingClientRect()
+  if (!bounds.width || !bounds.height) return null
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.25)
+  const width = Math.round(bounds.width * pixelRatio)
+  const height = Math.round(bounds.height * pixelRatio)
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
+  return { width: bounds.width, height: bounds.height, pixelRatio }
 }
 
 function project(longitude: number, latitude: number, rotation: number, cx: number, cy: number, radius: number) {
@@ -58,38 +101,22 @@ function drawGlobe(
   world: WorldFeatureCollection,
   rotation: number,
   origin: Position,
+  metrics: CanvasMetrics,
 ) {
-  const bounds = canvas.getBoundingClientRect()
-  if (!bounds.width || !bounds.height) return
-
-  // A 1.5x cap keeps the canvas crisp without making the short entrance spin
-  // expensive on high-DPI phones and 4K displays.
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
-  const width = Math.round(bounds.width * pixelRatio)
-  const height = Math.round(bounds.height * pixelRatio)
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width
-    canvas.height = height
-  }
-
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
-  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-  ctx.clearRect(0, 0, bounds.width, bounds.height)
+  ctx.setTransform(metrics.pixelRatio, 0, 0, metrics.pixelRatio, 0, 0)
+  ctx.clearRect(0, 0, metrics.width, metrics.height)
 
-  const cx = bounds.width / 2
-  const cy = bounds.height / 2
-  const radius = Math.min(bounds.width, bounds.height) * 0.425
+  const cx = metrics.width / 2
+  const cy = metrics.height / 2
+  const radius = Math.min(metrics.width, metrics.height) * 0.425
 
-  ctx.save()
-  ctx.shadowColor = 'rgba(100, 116, 139, 0.22)'
-  ctx.shadowBlur = radius * 0.16
   ctx.beginPath()
   ctx.arc(cx, cy, radius * 0.985, 0, Math.PI * 2)
   ctx.fillStyle = 'rgba(248, 251, 255, 0.7)'
   ctx.fill()
-  ctx.restore()
 
   ctx.save()
   ctx.beginPath()
@@ -155,8 +182,7 @@ function drawGlobe(
   ctx.strokeStyle = 'rgba(123, 146, 169, 0.62)'
   ctx.lineWidth = Math.max(0.72, radius * 0.0037)
 
-  const drawPolygon = (rings: Position[][]) => {
-    ctx.beginPath()
+  const appendPolygon = (rings: Position[][]) => {
     for (const ring of rings) {
       let started = false
       for (const [longitude, latitude] of ring) {
@@ -170,16 +196,19 @@ function drawGlobe(
         started = true
       }
     }
-    ctx.fill('evenodd')
-    ctx.stroke()
   }
 
+  // Build one compound path and paint once. Painting every country separately
+  // was the most expensive part of every animation frame.
+  ctx.beginPath()
   for (const feature of world.features) {
     const geometry = feature.geometry
     if (!geometry) continue
-    if (geometry.type === 'Polygon') drawPolygon(geometry.coordinates)
-    else for (const polygon of geometry.coordinates) drawPolygon(polygon)
+    if (geometry.type === 'Polygon') appendPolygon(geometry.coordinates)
+    else for (const polygon of geometry.coordinates) appendPolygon(polygon)
   }
+  ctx.fill('evenodd')
+  ctx.stroke()
 
   const originPoint = project(origin[0], origin[1], rotation, cx, cy, radius)
   ctx.lineCap = 'round'
@@ -234,7 +263,7 @@ export default function UniversityGlobe() {
   const [world, setWorld] = useState<WorldFeatureCollection | null>(null)
   const userId = useAuthStore((state) => state.user?.id)
   const { location, isLocating } = useVisitorLocation()
-  const { minimalMotion } = useMotionPreferences()
+  const { minimalMotion, isLowPowerDevice } = useMotionPreferences()
 
   const profileCountry = useMemo(() => loadOnboardingProfile(userId)?.country?.trim(), [userId])
   const resolvedCountry = location?.country || profileCountry || 'Your country'
@@ -259,6 +288,7 @@ export default function UniversityGlobe() {
         if (!response.ok) throw new Error('World map could not be loaded')
         return response.json() as Promise<WorldFeatureCollection>
       })
+      .then(simplifyWorld)
       .then(setWorld)
       .catch(() => undefined)
     return () => controller.abort()
@@ -272,9 +302,12 @@ export default function UniversityGlobe() {
     const firstSpin = !hasSpunRef.current
     const from = firstSpin ? targetLongitude - 360 : currentRotationRef.current
     const to = firstSpin ? targetLongitude : nearestRotation(from, targetLongitude)
-    const duration = minimalMotion ? 1 : firstSpin ? 2600 : 850
+    const duration = minimalMotion ? 1 : firstSpin ? 1450 : 650
     let frame = 0
     let start = 0
+    const initialMetrics = measureCanvas(canvas, isLowPowerDevice)
+    if (!initialMetrics) return
+    let metrics: CanvasMetrics = initialMetrics
 
     hasSpunRef.current = true
     currentRotationRef.current = from
@@ -284,19 +317,24 @@ export default function UniversityGlobe() {
       const progress = Math.min(1, (time - start) / duration)
       const rotation = from + (to - from) * easeOutQuart(progress)
       currentRotationRef.current = rotation
-      drawGlobe(canvas, world, rotation, origin)
+      drawGlobe(canvas, world, rotation, origin, metrics)
       if (progress < 1) frame = window.requestAnimationFrame(render)
     }
 
     frame = window.requestAnimationFrame(render)
-    const observer = new ResizeObserver(() => drawGlobe(canvas, world, currentRotationRef.current, origin))
+    const observer = new ResizeObserver(() => {
+      const nextMetrics = measureCanvas(canvas, isLowPowerDevice)
+      if (!nextMetrics) return
+      metrics = nextMetrics
+      drawGlobe(canvas, world, currentRotationRef.current, origin, metrics)
+    })
     observer.observe(canvas)
 
     return () => {
       window.cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [minimalMotion, targetLatitude, targetLongitude, world])
+  }, [isLowPowerDevice, minimalMotion, targetLatitude, targetLongitude, world])
 
   return (
     <motion.figure

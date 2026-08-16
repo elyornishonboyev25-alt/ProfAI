@@ -398,7 +398,6 @@ export default function ExaminerSession({
     if (cueCard && recording && speakLeft === 0) {
       handleStopRecording()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speakLeft, recording, cueCard])
 
   const beginSession = useCallback(() => {
@@ -436,7 +435,6 @@ export default function ExaminerSession({
       const text = latestTranscriptRef.current.trim()
       submitAnswer(text || '(no clear speech detected)', duration)
     }, 380)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recognition])
 
   const submitTyped = useCallback(() => {
@@ -446,7 +444,6 @@ export default function ExaminerSession({
     const duration = Math.max(20, Math.round(words / 2.3))
     setTypedAnswer('')
     submitAnswer(text, duration)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typedAnswer])
 
   const submitAnswer = useCallback(

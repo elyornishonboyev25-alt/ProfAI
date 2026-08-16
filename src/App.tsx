@@ -1,5 +1,5 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
-import { Navigate, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
+import { Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
@@ -21,6 +21,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
 import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
+import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
@@ -148,11 +149,9 @@ function App() {
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const isLanding = pathname === '/' || pathname === '/dashboard' || pathname === '/about'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
-  const usesStickyWorkspaceContent = pathname === '/admission/universities'
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'
@@ -292,7 +291,7 @@ function App() {
                   : 'min-h-screen'
               }`}
             >
-              <ErrorBoundary>
+              <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
@@ -714,5 +713,4 @@ function App() {
 }
 
 export default App
-
 

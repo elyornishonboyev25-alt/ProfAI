@@ -551,7 +551,6 @@ export default function Podcast() {
     }
     // Rebuild when the listener changes episode; the player API has no safe
     // way to swap the caption transcript and source as one atomic update.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode.youtubeId, episode.startSeconds])
 
   /* Poll time, buffered, A–B loop + throttled position save. */

@@ -164,7 +164,6 @@ function Collection({ context }: { context: VocabContext }) {
   const refresh = () => setTick((n) => n + 1)
   useEffect(() => subscribeSavedWords(refresh), [])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const words = useMemo(() => getSavedWords(context), [context, tick])
   const filtered = words.filter((w) => (filter === 'all' ? true : w.source === filter))
   const aiCount = words.filter((w) => w.source === 'ai').length

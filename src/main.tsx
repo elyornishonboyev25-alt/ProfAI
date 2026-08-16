@@ -5,17 +5,11 @@ import App from './App.tsx'
 import MotionRuntime from './components/MotionRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
+import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 
 if (typeof window !== 'undefined') {
-  window.addEventListener('vite:preloadError', (event) => {
-    event.preventDefault()
-
-    const key = 'smarttest:preload-reload-once'
-    const alreadyReloaded = window.sessionStorage.getItem(key) === '1'
-    if (alreadyReloaded) return
-
-    window.sessionStorage.setItem(key, '1')
-    window.location.reload()
+  window.addEventListener('vite:preloadError', () => {
+    void recoverFromStaleBuild(new Error('vite:preloadError'))
   })
 }
 
@@ -28,4 +22,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>,
 )
-

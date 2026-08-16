@@ -75,14 +75,6 @@ const EXAM_CARDS = [
   },
 ]
 
-const DAY_PRESETS = [
-  { label: '21 days', value: 21, badge: 'Intensive', badgeColor: 'bg-blue-100 text-blue-700' },
-  { label: '30 days', value: 30, badge: 'Focused', badgeColor: 'bg-orange-100 text-orange-700' },
-  { label: '60 days', value: 60, badge: 'Standard', badgeColor: 'bg-amber-100 text-amber-700' },
-  { label: '90 days', value: 90, badge: 'Comfortable', badgeColor: 'bg-green-100 text-green-700' },
-  { label: '180+ days', value: 180, badge: 'Long-term', badgeColor: 'bg-blue-100 text-blue-700' },
-]
-
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
 const AVATAR_PRESETS = [

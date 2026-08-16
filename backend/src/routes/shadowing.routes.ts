@@ -16,7 +16,6 @@ const router = Router()
 // the meantime and avoids coupling to the generated types.
 const prismaRuntime = prisma as unknown as Record<string, any>
 const shadowingVideo = prismaRuntime.shadowingVideo
-const shadowingSegment = prismaRuntime.shadowingSegment
 
 // Building a draft hits YouTube several times, so submissions get a tighter
 // limit than the general API to keep things polite and abuse-resistant.

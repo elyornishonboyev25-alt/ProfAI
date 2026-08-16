@@ -10,13 +10,10 @@ import {
   Clock3,
   Flame,
   GraduationCap,
-  Headphones,
   Medal,
   Mic2,
-  PenSquare,
   Settings,
   Sparkles,
-  Target,
   Trophy,
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'

@@ -284,7 +284,11 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
                 {isSupported ? (
                   <span
                     role="button"
-                    onClick={(e) => { e.stopPropagation(); speakingCurrent ? stop() : speak(current.term) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (speakingCurrent) stop()
+                      else speak(current.term)
+                    }}
                     className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
                   >
                     {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -724,7 +728,11 @@ export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
         ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') (checked ? next() : check()) }}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return
+          if (checked) next()
+          else check()
+        }}
         placeholder="Type the word…"
         disabled={checked}
         className={`mt-4 w-full rounded-xl border px-4 py-3 text-base outline-none transition ${

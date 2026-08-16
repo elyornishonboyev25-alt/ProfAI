@@ -26,7 +26,10 @@ export default function SpeakingCommunity() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const sessions = useSpeakingStore((s) => s.sessions)
-  const [section, setSection] = useState<Section>('ai')
+  const [section, setSection] = useState<Section>(() => {
+    const requested = new URLSearchParams(window.location.search).get('section')
+    return SECTIONS.some((item) => item.id === requested) ? requested as Section : 'ai'
+  })
   const [partnerKey, setPartnerKey] = useState(0)
   const communityTrial = useCommunityTrial()
   const inLiveSection = section === 'debate' || section === 'partner'

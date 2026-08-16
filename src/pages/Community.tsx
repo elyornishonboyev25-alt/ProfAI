@@ -1,54 +1,127 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  AtSign,
   Award,
-  BookOpenCheck,
-  Check,
+  BadgeCheck,
+  ChevronDown,
   Crown,
   Flame,
   Globe2,
+  GraduationCap,
   Loader2,
+  MapPin,
+  MessageCircleMore,
   Radio,
   Search,
   SlidersHorizontal,
   Sparkles,
   Target,
   Users,
+  Video,
   Zap,
 } from 'lucide-react'
-import { searchLearners, type LearnerSearchResult } from '@/lib/profileApi'
-import { AmbientBackdrop, Reveal, Stagger, StaggerItem } from '@/components/fx'
+import {
+  fetchAccount,
+  searchLearners,
+  type AccountResponse,
+  type LearnerSearchResult,
+} from '@/lib/profileApi'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { cn } from '@/components/ui/utils'
+import '@/styles/community.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
+type SmartFilter = 'sameBand' | 'sameCountry' | 'online'
+
+const STUDY_ROOMS = [
+  { name: 'IELTS Band 7+ room', detail: 'Speaking practice', icon: Video, section: 'partner' },
+  { name: 'Daily mock club', detail: 'Timed challenges', icon: GraduationCap, section: 'debate' },
+  { name: 'University 2027', detail: 'Application peers', icon: Users, section: 'debate' },
+  { name: 'Fluency builders', detail: 'Open conversation', icon: MessageCircleMore, section: 'partner' },
+] as const
 
 function initialsOf(nickname: string | null) {
   return (nickname ?? '?').slice(0, 2).toUpperCase()
 }
 
-function matchScore(learner: LearnerSearchResult, exam: ExamFilter, country: string) {
-  let score = 76
-  if (exam !== 'ALL' && learner.targetExam === exam) score += 10
-  if (country && learner.country?.toLowerCase() === country.toLowerCase()) score += 9
+function normalizeScore(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function matchScore(learner: LearnerSearchResult, account: AccountResponse | null) {
+  let score = 68
+  const ownProfile = account?.profile
+  if (ownProfile?.targetExam && learner.targetExam === ownProfile.targetExam) score += 9
+  if (
+    normalizeScore(ownProfile?.targetScore) !== null &&
+    normalizeScore(learner.targetScore) === normalizeScore(ownProfile?.targetScore)
+  ) score += 9
+  if (ownProfile?.country && learner.country?.toLowerCase() === ownProfile.country.toLowerCase()) score += 7
   if (learner.online) score += 3
-  if (learner.badgeCount > 0) score += 2
+  score += Math.min(learner.badgeCount, 2)
+  score += Math.min(learner.streak, 2)
   return Math.min(score, 99)
+}
+
+function targetLabel(learner: LearnerSearchResult) {
+  const score = normalizeScore(learner.targetScore)
+  if (!learner.targetExam) return 'Open study goal'
+  return `${learner.targetExam}${score !== null ? ` ${score}` : ''}`
 }
 
 export default function Community() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [exam, setExam] = useState<ExamFilter>('ALL')
-  const [country, setCountry] = useState('')
-  const [onlineOnly, setOnlineOnly] = useState(false)
+  const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
+  const [filtersOpen, setFiltersOpen] = useState(() => window.innerWidth > 760)
+  const [roomsOpen, setRoomsOpen] = useState(() => window.innerWidth > 760)
   const [results, setResults] = useState<LearnerSearchResult[]>([])
+  const [account, setAccount] = useState<AccountResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const debounceRef = useRef<number | null>(null)
+
+  const sameBandActive = smartFilters.includes('sameBand')
+  const sameCountryActive = smartFilters.includes('sameCountry')
+  const onlineActive = smartFilters.includes('online')
+  const toggleFilter = (filter: SmartFilter) => {
+    setSmartFilters((current) =>
+      current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter],
+    )
+  }
+  const toggleBandFilter = () => {
+    if (normalizeScore(account?.profile.targetScore) === null) {
+      navigate('/profile')
+      return
+    }
+    toggleFilter('sameBand')
+  }
+  const toggleCountryFilter = () => {
+    if (!account?.profile.country) {
+      navigate('/profile')
+      return
+    }
+    toggleFilter('sameCountry')
+  }
+
+  useEffect(() => {
+    let active = true
+    fetchAccount()
+      .then((profile) => {
+        if (active) setAccount(profile)
+      })
+      .catch(() => {
+        // Discovery remains usable when account enrichment is unavailable.
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
@@ -57,8 +130,8 @@ export default function Community() {
       try {
         const list = await searchLearners(query, {
           targetExam: exam === 'ALL' ? undefined : exam,
-          country: country.trim() || undefined,
-          online: onlineOnly || undefined,
+          country: sameCountryActive ? account?.profile.country ?? undefined : undefined,
+          online: onlineActive || undefined,
         })
         setResults(list)
         setError('')
@@ -72,283 +145,221 @@ export default function Community() {
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
     }
-  }, [country, exam, onlineOnly, query])
+  }, [account?.profile.country, exam, onlineActive, query, sameCountryActive])
 
-  const suggested = useMemo(
-    () =>
-      [...results]
-        .sort((a, b) => matchScore(b, exam, country) - matchScore(a, exam, country))
-        .slice(0, 3),
-    [country, exam, results],
+  const visibleResults = useMemo(() => {
+    if (!sameBandActive) return results
+    const ownTarget = normalizeScore(account?.profile.targetScore)
+    if (ownTarget === null) return results
+    return results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
+  }, [account?.profile.targetScore, results, sameBandActive])
+
+  const ranked = useMemo(
+    () => [...visibleResults].sort((a, b) => matchScore(b, account) - matchScore(a, account) || b.xp - a.xp),
+    [account, visibleResults],
   )
+  const topNickname = ranked[0]?.nickname ?? null
+  const suggested = ranked.slice(0, 3)
+  const onlineCount = visibleResults.filter((learner) => learner.online).length
 
-  const topLearner = results[0]?.nickname ?? null
+  const clearFilters = () => {
+    setExam('ALL')
+    setSmartFilters([])
+  }
 
   return (
-    <main className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
-      <AmbientBackdrop variant="red" />
+    <main className="community-page min-h-screen">
+      <div className="community-aurora" aria-hidden="true">
+        <span className="community-orb community-orb-one" />
+        <span className="community-orb community-orb-two" />
+        <span className="community-orb community-orb-three" />
+        <span className="community-orb community-orb-four" />
+      </div>
 
-      <div className="relative mx-auto w-full max-w-[1500px]">
-        <Reveal>
-          <header className="apple-glass-card mb-5 flex flex-col gap-4 rounded-[1.75rem] p-4 lg:flex-row lg:items-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-extrabold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700"
-            >
+      <div className="community-shell">
+        <header className="community-header">
+          <div className="community-brand-row">
+            <BrandLockup className="community-brand" />
+            <button type="button" onClick={() => navigate('/dashboard')} className="community-back-btn">
               <ArrowLeft className="h-4 w-4" />
-              Dashboard
+              <span>Dashboard</span>
             </button>
-            <BrandLockup className="hidden shrink-0 sm:flex" subtitle="Study Partner Network" />
-            <label className="flex min-h-12 flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 px-4 shadow-inner focus-within:border-red-300 focus-within:ring-4 focus-within:ring-red-100/70">
-              <Search className="h-5 w-5 text-slate-400" />
+          </div>
+
+          <div className="community-search-bar">
+            <label className="community-search-field">
+              <Search className="h-7 w-7" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value.replace(/\s/g, ''))}
-                placeholder="Find a study partner by nickname..."
-                className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
+                placeholder="Find study partners..."
+                aria-label="Find study partners by nickname"
               />
-              {loading ? <Loader2 className="h-4 w-4 animate-spin text-red-500" /> : null}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin text-red-500" /> : null}
             </label>
-            <div className="flex flex-wrap gap-2">
-              {(['ALL', 'IELTS', 'SAT'] as const).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setExam(item)}
-                  className={cn(
-                    'min-h-10 rounded-xl border px-4 text-xs font-black transition',
-                    exam === item
-                      ? 'border-red-500 bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.28)]'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:text-red-700',
-                  )}
-                >
-                  {item === 'ALL' ? 'All learners' : item}
-                </button>
-              ))}
+            <div className="community-header-filters" aria-label="Quick partner filters">
+              <FilterPill active={sameBandActive} icon={Target} label="Same target band" onClick={toggleBandFilter} />
+              <FilterPill active={sameCountryActive} icon={Globe2} label="Same country" onClick={toggleCountryFilter} />
+              <FilterPill active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
             </div>
-          </header>
-        </Reveal>
+          </div>
+        </header>
 
-        <section className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_300px]">
-          <aside className="space-y-4">
-            <Reveal>
-              <div className="apple-glass-card rounded-[1.65rem] p-5">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4 text-red-600" />
-                  <h2 className="text-sm font-black text-slate-950">Quick filters</h2>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => setOnlineOnly((value) => !value)}
-                    className={cn(
-                      'flex min-h-11 w-full items-center justify-between rounded-xl border px-3 text-left text-sm font-bold transition',
-                      onlineOnly
-                        ? 'border-red-200 bg-red-50 text-red-700'
-                        : 'border-slate-200 bg-white/80 text-slate-600 hover:border-red-200',
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Radio className="h-4 w-4" />
-                      Online now
-                    </span>
-                    {onlineOnly ? <Check className="h-4 w-4" /> : null}
-                  </button>
-                  <label className="block rounded-xl border border-slate-200 bg-white/80 p-3">
-                    <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
-                      <Globe2 className="h-4 w-4 text-red-500" />
-                      Same country
-                    </span>
-                    <input
-                      value={country}
-                      onChange={(event) => setCountry(event.target.value)}
-                      placeholder="e.g. Uzbekistan"
-                      className="mt-2 w-full bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-400"
-                    />
-                  </label>
-                </div>
-                <button
-                  onClick={() => {
-                    setExam('ALL')
-                    setCountry('')
-                    setOnlineOnly(false)
-                  }}
-                  className="mt-4 text-xs font-extrabold text-red-600 hover:text-red-800"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            </Reveal>
+        <section className="community-layout">
+          <aside className="community-left-column">
+            <GlassPanel title="Quick filters" open={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)}>
+              <nav className="community-side-list" aria-label="Learner filters">
+                <SideFilter active={exam === 'ALL' && smartFilters.length === 0} icon={SlidersHorizontal} label="All learners" onClick={clearFilters} />
+                <SideFilter active={sameBandActive} icon={Target} label={normalizeScore(account?.profile.targetScore) === null ? 'Add target band' : 'Same target band'} onClick={toggleBandFilter} />
+                <SideFilter
+                  active={sameCountryActive}
+                  icon={Globe2}
+                  label={account?.profile.country ? `Same country · ${account.profile.country}` : 'Add your country'}
+                  onClick={toggleCountryFilter}
+                />
+                <SideFilter active={exam === 'IELTS'} icon={MapPin} label="IELTS learners" onClick={() => setExam((value) => (value === 'IELTS' ? 'ALL' : 'IELTS'))} />
+                <SideFilter active={exam === 'SAT'} icon={GraduationCap} label="SAT learners" onClick={() => setExam((value) => (value === 'SAT' ? 'ALL' : 'SAT'))} />
+                <SideFilter active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
+              </nav>
+            </GlassPanel>
 
-            <Reveal delay={0.05}>
-              <div className="overflow-hidden rounded-[1.65rem] bg-gradient-to-br from-slate-950 via-slate-900 to-red-950 p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                  <BookOpenCheck className="h-5 w-5 text-red-300" />
-                </span>
-                <h3 className="mt-4 text-lg font-black">Study better together</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-300">
-                  Open a public learner profile, compare goals and continue into a focused speaking room.
-                </p>
-                <button
-                  onClick={() => navigate('/speaking-community')}
-                  className="mt-4 min-h-10 w-full rounded-xl bg-white text-xs font-black text-slate-950 transition hover:-translate-y-0.5"
-                >
-                  Open speaking community
-                </button>
-              </div>
-            </Reveal>
+            <GlassPanel title="Study rooms" open={roomsOpen} onToggle={() => setRoomsOpen((value) => !value)}>
+              <nav className="community-room-list" aria-label="Study rooms">
+                {STUDY_ROOMS.map((room) => {
+                  const Icon = room.icon
+                  return (
+                    <button type="button" key={room.name} onClick={() => navigate(`/speaking-community?section=${room.section}`)} className="community-room-link">
+                      <span className="community-room-icon"><Icon className="h-4 w-4" /></span>
+                      <span><b>{room.name}</b><small>{room.detail}</small></span>
+                      <i>{onlineCount || 'Open'}</i>
+                    </button>
+                  )
+                })}
+              </nav>
+            </GlassPanel>
           </aside>
 
-          <div>
-            <Reveal>
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-700">
-                    <Users className="h-3.5 w-3.5" />
-                    Study partner discovery
-                  </span>
-                  <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                    Learn with people who share your <span className="text-red-600">goal.</span>
-                  </h1>
-                </div>
-                <p className="text-xs font-bold text-slate-500">{loading ? 'Finding learners…' : `${results.length} public profiles`}</p>
+          <div className="community-feed">
+            <div className="community-feed-heading">
+              <div>
+                <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> Smart matching</span>
+                <h1>Find your next <em>study partner.</em></h1>
+                <p>Connect with learners who share your target, country and momentum.</p>
               </div>
-            </Reveal>
+              <div className="community-feed-meta"><span className="community-live-dot" />{loading ? 'Matching learners...' : `${visibleResults.length} profiles found`}</div>
+            </div>
 
-            {error ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-700">{error}</div>
-            ) : null}
-
-            {!loading && !error && results.length === 0 ? (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-red-200 bg-white/70 p-8 text-center backdrop-blur-xl">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 text-red-600">
-                  <AtSign className="h-7 w-7" />
-                </span>
-                <h2 className="mt-4 text-lg font-black text-slate-900">No matching public profiles yet</h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  Try a broader filter. Private profiles and email addresses never appear here.
-                </p>
+            {error ? <div className="community-error">{error}</div> : null}
+            {!loading && !error && visibleResults.length === 0 ? (
+              <div className="community-empty">
+                <span><Users className="h-8 w-8" /></span>
+                <h2>No matching learners yet</h2>
+                <p>Remove one or two filters to discover more study partners.</p>
+                <button type="button" onClick={clearFilters}>Show all learners</button>
               </div>
             ) : null}
 
-            <Stagger className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-              {results.map((learner) => {
-                const score = matchScore(learner, exam, country)
-                const isTop = learner.nickname === topLearner
-                return (
-                  <StaggerItem key={learner.nickname ?? `${learner.xp}-${learner.level}`}>
-                    <motion.article
-                      whileHover={{ y: -5 }}
-                      className={cn(
-                        'apple-glass-card relative rounded-[1.65rem] p-5 transition-shadow hover:shadow-[0_26px_58px_rgba(190,24,93,0.16)]',
-                        isTop
-                          ? '!border-amber-300/80 !bg-gradient-to-br !from-amber-50/95 !via-white/90 !to-red-50/95'
-                          : '',
-                      )}
-                    >
-                      {isTop ? (
-                        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase text-amber-950 shadow-lg">
-                          <Crown className="h-3 w-3" />
-                          Top learner
-                        </span>
-                      ) : null}
-                      <div className="flex items-start gap-4">
-                        <div className="relative">
-                          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-600 to-rose-900 text-xl font-black text-white ring-4 ring-red-100 ring-offset-2">
-                            {learner.avatarUrl ? (
-                              <img src={learner.avatarUrl} alt="" className="profile-avatar-media" />
-                            ) : (
-                              initialsOf(learner.nickname)
-                            )}
-                          </div>
-                          <span
-                            className={cn(
-                              'absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-white',
-                              learner.online ? 'bg-emerald-500' : 'bg-slate-300',
-                            )}
-                            title={learner.online ? 'Online now' : 'Offline'}
-                          />
-                        </div>
-                        <div className="min-w-0 pt-2">
-                          <p className="truncate text-base font-black text-slate-950">@{learner.nickname}</p>
-                          <p className="mt-1 flex items-center gap-1 text-xs font-bold text-slate-500">
-                            <Globe2 className="h-3.5 w-3.5" />
-                            {learner.country || 'Country not shared'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-5 grid grid-cols-2 gap-2">
-                        <span className="rounded-xl border border-red-100 bg-white/85 px-3 py-2 text-center text-xs font-black text-red-700">
-                          {learner.targetExam || 'Study'} {learner.targetScore ? learner.targetScore : ''}
-                        </span>
-                        <span className="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-xs font-black text-slate-700">
-                          {learner.targetUniversitySlug || 'University explorer'}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-white/75 py-2.5 text-center">
-                        <span><b className="block text-sm text-slate-950">{learner.xp}</b><small className="text-[10px] font-bold text-slate-500">XP</small></span>
-                        <span><b className="block text-sm text-slate-950">{learner.streak}</b><small className="text-[10px] font-bold text-slate-500">Streak</small></span>
-                        <span><b className="block text-sm text-slate-950">{learner.badgeCount}</b><small className="text-[10px] font-bold text-slate-500">Badges</small></span>
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-3">
-                        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                          <span className="text-[11px] font-black text-red-700">{score}%</span>
-                          <span className="absolute inset-0 rounded-full border-2 border-red-400" style={{ clipPath: `polygon(0 0, ${score}% 0, ${score}% 100%, 0 100%)` }} />
-                        </div>
-                        <button
-                          onClick={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
-                          className="cta-sheen min-h-11 flex-1 rounded-xl bg-gradient-to-r from-red-700 via-red-600 to-rose-600 px-4 text-sm font-black text-white shadow-[0_12px_26px_rgba(220,38,38,0.25)] transition hover:-translate-y-0.5"
-                        >
-                          View profile
-                        </button>
-                      </div>
-                    </motion.article>
-                  </StaggerItem>
-                )
-              })}
-            </Stagger>
+            <div className="community-card-grid">
+              {loading && results.length === 0
+                ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />)
+                : visibleResults.map((learner, index) => (
+                    <LearnerCard
+                      key={learner.nickname ?? `${learner.xp}-${learner.level}-${index}`}
+                      learner={learner}
+                      score={matchScore(learner, account)}
+                      featured={Boolean(topNickname && learner.nickname === topNickname)}
+                      index={index}
+                      onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
+                    />
+                  ))}
+            </div>
           </div>
 
-          <aside className="hidden xl:block">
-            <Reveal>
-              <div className="apple-glass-card sticky top-24 rounded-[1.65rem] p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-black text-slate-950">Suggested partners</h2>
-                  <Sparkles className="h-4 w-4 text-red-500" />
-                </div>
-                <p className="mt-1 text-xs leading-5 text-slate-500">Ranked from your active filters and shared study goals.</p>
-                <div className="mt-4 space-y-3">
-                  {suggested.map((learner) => (
-                    <button
-                      key={`suggested-${learner.nickname}`}
-                      onClick={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
-                      className="group flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 p-3 text-left transition hover:border-red-200 hover:shadow-md"
-                    >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-red-600 text-xs font-black text-white">
-                        {learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}
-                      </div>
-                      <span className="min-w-0 flex-1">
-                        <b className="block truncate text-xs text-slate-900">@{learner.nickname}</b>
-                        <small className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                          <Target className="h-3 w-3 text-red-500" />
-                          {learner.targetExam || 'Study goal'}
-                        </small>
-                      </span>
-                      <span className="text-xs font-black text-red-600">{matchScore(learner, exam, country)}%</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2 border-t border-slate-200 pt-4 text-center">
-                  <span><Zap className="mx-auto h-4 w-4 text-amber-500" /><small className="mt-1 block text-[9px] font-black text-slate-500">ACTIVE</small></span>
-                  <span><Flame className="mx-auto h-4 w-4 text-orange-500" /><small className="mt-1 block text-[9px] font-black text-slate-500">STREAK</small></span>
-                  <span><Award className="mx-auto h-4 w-4 text-red-500" /><small className="mt-1 block text-[9px] font-black text-slate-500">BADGES</small></span>
-                </div>
+          <aside className="community-suggestions">
+            <div className="community-glass-panel community-suggestion-panel">
+              <div className="community-suggestion-heading">
+                <div><span><Sparkles className="h-4 w-4" /> Recommended</span><h2>Suggested partners</h2></div>
+                <BadgeCheck className="h-6 w-6 text-red-500" />
               </div>
-            </Reveal>
+              <p className="community-suggestion-copy">Best matches from your active filters and study goals.</p>
+              <div className="community-suggestion-list">
+                {suggested.map((learner) => (
+                  <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)} />
+                ))}
+                {!loading && suggested.length === 0 ? <p className="community-suggestion-empty">Suggestions will appear when a learner matches.</p> : null}
+              </div>
+              <div className="community-suggestion-legend">
+                <span><Zap /><small>ACTIVE</small></span><span><Flame /><small>STREAK</small></span><span><Award /><small>BADGES</small></span>
+              </div>
+            </div>
           </aside>
         </section>
       </div>
     </main>
+  )
+}
+
+function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
+  return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-filter-pill', active && 'is-active')}><Icon className="h-5 w-5" />{label}</button>
+}
+
+function GlassPanel({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <section className="community-glass-panel community-collapsible">
+      <button type="button" onClick={onToggle} className="community-panel-title" aria-expanded={open}><span>{title}</span><ChevronDown className={cn('h-5 w-5', open && 'is-open')} /></button>
+      <div className={cn('community-collapse', open && 'is-open')}><div>{children}</div></div>
+    </section>
+  )
+}
+
+function SideFilter({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
+  return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-side-filter', active && 'is-active')}><Icon className="h-[1.15rem] w-[1.15rem]" /><span>{label}</span></button>
+}
+
+function LearnerCard({ learner, score, featured, index, onOpen }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void }) {
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 22, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay: Math.min(index * 0.045, 0.25), duration: 0.45 }}
+      whileHover={{ y: -8, scale: 1.012 }}
+      className={cn('community-learner-card', featured && 'is-featured')}
+    >
+      {featured ? <span className="community-top-badge"><Crown className="h-5 w-5" /> Top learner this week</span> : null}
+      <div className="community-avatar-ring">
+        <div className="community-avatar">{learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}</div>
+        <span className={cn('community-presence', learner.online && 'is-online')} />
+      </div>
+      <h2>@{learner.nickname ?? 'learner'}</h2>
+      <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || 'Global learner'}</p>
+      <div className="community-goal-row"><span>{targetLabel(learner)}</span><span>{learner.targetUniversitySlug || `Level ${learner.level}`}</span></div>
+      <div className="community-stat-row">
+        <span><b>{learner.xp.toLocaleString()}</b><small>XP earned</small></span>
+        <span><b>{learner.streak}</b><small>day streak</small></span>
+        <span><b>{learner.online ? 'Live' : learner.badgeCount}</b><small>{learner.online ? 'online now' : 'badges'}</small></span>
+      </div>
+      <div className="community-card-footer">
+        <span className="community-match-mini"><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} />{score}%</span>
+        <button type="button" disabled={!learner.nickname} onClick={onOpen}>View profile</button>
+      </div>
+    </motion.article>
+  )
+}
+
+function SuggestedPartner({ learner, score, onOpen }: { learner: LearnerSearchResult; score: number; onOpen: () => void }) {
+  return (
+    <button type="button" disabled={!learner.nickname} onClick={onOpen} className="community-suggested-card">
+      <span className="community-suggested-avatar">{learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}</span>
+      <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em>View match</em></span>
+      <span className="community-match-ring" style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties}><b>{score}%</b></span>
+    </button>
+  )
+}
+
+function LearnerSkeleton() {
+  return (
+    <div className="community-learner-card community-skeleton" aria-hidden="true">
+      <span className="community-skeleton-avatar" /><span className="community-skeleton-line is-short" /><span className="community-skeleton-line" /><span className="community-skeleton-block" /><span className="community-skeleton-button" />
+    </div>
   )
 }

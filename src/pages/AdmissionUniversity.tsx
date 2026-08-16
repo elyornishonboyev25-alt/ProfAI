@@ -24,6 +24,7 @@ import UniversityRadar from '@/components/admission/UniversityRadar'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
 import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
+import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 
 function money(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
@@ -40,6 +41,7 @@ export default function AdmissionUniversity() {
   const { slug } = useParams<{ slug: string }>()
   const university = slug ? getUniversityBySlug(slug) : undefined
   const { scores } = useAdmissionScores()
+  const campusImage = useUniversityCampusImage(university?.name ?? '')
 
   if (!university) {
     return (
@@ -85,11 +87,21 @@ export default function AdmissionUniversity() {
             style={{ background: u.brand.gradient }}
           >
             <img
-              src="/assets/admission/campus-hero.webp"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-35 mix-blend-luminosity"
+              key={campusImage?.src ?? 'campus-fallback'}
+              src={campusImage?.src ?? '/assets/admission/campus-hero.webp'}
+              alt={campusImage ? `${u.name} campus` : ''}
+              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-700"
+              referrerPolicy="no-referrer"
+              onError={(event) => {
+                if (!event.currentTarget.src.endsWith('/assets/admission/campus-hero.webp')) {
+                  event.currentTarget.src = '/assets/admission/campus-hero.webp'
+                }
+              }}
             />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${accent}ee 0%, ${accent}c8 46%, rgba(15,23,42,0.62) 100%)` }} />
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(90deg, ${accent}dc 0%, ${accent}a8 46%, rgba(15,23,42,0.56) 100%)` }}
+            />
             <div
               className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
               style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
@@ -163,6 +175,17 @@ export default function AdmissionUniversity() {
                 </div>
               </div>
             </div>
+            {campusImage && (
+              <a
+                href={campusImage.attributionUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="absolute bottom-2 right-4 z-10 text-[9px] font-semibold text-white/55 transition hover:text-white/90"
+                onClick={(event) => event.stopPropagation()}
+              >
+                Campus photo · Wikimedia Commons
+              </a>
+            )}
           </section>
         </Reveal>
 

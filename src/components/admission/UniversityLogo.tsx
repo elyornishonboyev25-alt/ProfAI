@@ -33,12 +33,26 @@ export default function UniversityLogo({
       return []
     }
   }, [website])
-  const officialIcon = officialIcons[officialIconIndex]
   const vectorLogo = id ? getUniversityLogo(id) : undefined
+  const officialIcon = officialIcons[officialIconIndex]
   const len = brand.monogram.length
   const fontSize = len <= 1 ? size * 0.5 : len === 2 ? size * 0.4 : len === 3 ? size * 0.3 : size * 0.24
 
   useEffect(() => setOfficialIconIndex(0), [website])
+
+  // Use our resolution-independent mark first. University favicons are often only
+  // 16–32px even when a larger Google URL is requested, which made Cambridge and
+  // NUS visibly soft at card and hero sizes.
+  if (vectorLogo) {
+    return (
+      <span
+        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2 ${className}`}
+        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
+      >
+        {vectorLogo}
+      </span>
+    )
+  }
 
   if (officialIcon) {
     return (
@@ -55,17 +69,6 @@ export default function UniversityLogo({
           referrerPolicy="no-referrer"
           onError={() => setOfficialIconIndex((index) => index + 1)}
         />
-      </span>
-    )
-  }
-
-  if (vectorLogo) {
-    return (
-      <span
-        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2 ${className}`}
-        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
-      >
-        {vectorLogo}
       </span>
     )
   }

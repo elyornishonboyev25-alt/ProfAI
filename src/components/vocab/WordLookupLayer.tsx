@@ -1,6 +1,7 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { VocabContext } from '@/utils/myVocabularyStore'
+import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const WordLookupModal = lazy(() =>
   import('./WordLookupModal').then((module) => ({ default: module.WordLookupModal })),

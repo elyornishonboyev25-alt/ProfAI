@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo } from 'react'
+import { Suspense, useCallback, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bot, Lock, Sparkles, X } from 'lucide-react'
@@ -8,6 +8,7 @@ import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
 import VoiceOrb from '@/components/ai/VoiceOrb'
+import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const AIChatWindow = lazy(() => import('@/components/ai/AIChatWindow'))
 

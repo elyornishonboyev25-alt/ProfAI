@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
@@ -21,6 +21,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
 import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
+import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
@@ -283,7 +284,7 @@ function App() {
                   : 'min-h-screen'
               }`}
             >
-              <ErrorBoundary>
+              <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
@@ -709,5 +710,4 @@ function App() {
 }
 
 export default App
-
 

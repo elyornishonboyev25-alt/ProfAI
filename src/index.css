@@ -1305,8 +1305,7 @@
     box-shadow: 0 19px 44px rgba(71,85,105,0.13), inset 0 1px 0 rgba(255,255,255,0.98);
     cursor: pointer;
     transition: border-color 240ms ease, box-shadow 240ms ease;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 25rem;
+    contain: layout style;
   }
 
   .admission-university-card::after {
@@ -1350,8 +1349,6 @@
     background: linear-gradient(145deg, rgba(255,255,255,0.72), color-mix(in srgb, var(--university-accent) 8%, rgba(255,255,255,0.42)));
     box-shadow: 0 12px 28px color-mix(in srgb, var(--university-accent) 24%, transparent), inset 0 1px 0 white;
   }
-
-  .university-official-logo img { filter: drop-shadow(0 2px 3px rgba(15,23,42,0.08)); }
 
   .admission-rank-badge {
     display: flex;

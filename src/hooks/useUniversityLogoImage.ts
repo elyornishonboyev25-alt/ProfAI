@@ -22,6 +22,9 @@ type WikidataSearchResult = {
 }
 
 const logoCache = new Map<string, Promise<LogoState>>()
+const displayLogoCache = new Map<string, LogoState>()
+const displayLogoRequests = new Map<string, Promise<LogoState>>()
+const imageValidationCache = new Map<string, Promise<boolean>>()
 let queue: QueueEntry[] = []
 let queueScheduled = false
 
@@ -50,6 +53,18 @@ function chunks<T>(items: T[], size: number) {
   return result
 }
 
+function highResolutionCommonsImage(image: string) {
+  try {
+    const url = new URL(image.replace(/^http:/, 'https:'))
+    if (url.hostname === 'commons.wikimedia.org' && url.pathname.includes('/Special:FilePath/')) {
+      url.searchParams.set('width', '512')
+    }
+    return url.toString()
+  } catch {
+    return image.replace(/^http:/, 'https:')
+  }
+}
+
 async function fetchLogos(ids: string[]) {
   const logos = new Map<string, string>()
   for (const group of chunks([...new Set(ids)], 40)) {
@@ -73,7 +88,7 @@ async function fetchLogos(ids: string[]) {
     for (const binding of payload.results?.bindings ?? []) {
       const id = binding.item?.value?.match(/Q\d+$/)?.[0]
       const image = binding.coat?.value ?? binding.logo?.value
-      if (id && image && !logos.has(id)) logos.set(id, image.replace(/^http:/, 'https:'))
+      if (id && image && !logos.has(id)) logos.set(id, highResolutionCommonsImage(image))
     }
   }
   return logos
@@ -195,19 +210,110 @@ function resolveUniversityLogo(name: string) {
   return request
 }
 
-export function useUniversityLogoImage(name: string) {
-  const [logo, setLogo] = useState<LogoState | undefined>(undefined)
+function officialIconCandidates(website?: string) {
+  if (!website) return []
+  try {
+    const origin = new URL(website).origin
+    return [
+      `${origin}/favicon.svg`,
+      `${origin}/apple-touch-icon.png`,
+      `${origin}/apple-touch-icon-precomposed.png`,
+      `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(origin)}&sz=256`,
+      `${origin}/favicon.ico`,
+    ]
+  } catch {
+    return []
+  }
+}
+
+function validateLogoImage(url: string) {
+  const cached = imageValidationCache.get(url)
+  if (cached) return cached
+
+  const validation = new Promise<boolean>((resolve) => {
+    const image = new Image()
+    let settled = false
+    const finish = (valid: boolean) => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      resolve(valid)
+    }
+    const timeout = window.setTimeout(() => finish(false), 8_000)
+    image.decoding = 'async'
+    image.onload = () => {
+      const width = image.naturalWidth
+      const height = image.naturalHeight
+      const shortestSide = Math.min(width, height)
+      const aspectRatio = Math.max(width, height) / Math.max(1, shortestSide)
+      const scalableVector = new URL(url, window.location.href).pathname.toLowerCase().endsWith('.svg')
+      // Wide wordmarks become unreadable inside a square card. Tiny rasters are
+      // rejected so Safari never stretches a 16/32px favicon into a blurry mark.
+      finish(aspectRatio <= 1.9 && (scalableVector || shortestSide >= 96))
+    }
+    image.onerror = () => finish(false)
+    image.referrerPolicy = 'no-referrer'
+    image.src = url
+  })
+  imageValidationCache.set(url, validation)
+  return validation
+}
+
+function displayKey(name: string, website?: string) {
+  let origin = website ?? ''
+  try {
+    origin = website ? new URL(website).origin : ''
+  } catch {
+    // Keep the raw value when a future catalog record has a non-absolute URL.
+  }
+  return `${universityKey(name)}|${origin}`
+}
+
+export function hasCachedUniversityLogo(name: string, website?: string) {
+  return displayLogoCache.has(displayKey(name, website))
+}
+
+function resolveDisplayLogo(name: string, website?: string) {
+  const key = displayKey(name, website)
+  if (displayLogoCache.has(key)) return Promise.resolve(displayLogoCache.get(key) ?? null)
+  const pending = displayLogoRequests.get(key)
+  if (pending) return pending
+
+  const request = (async () => {
+    const wikimediaLogo = await resolveUniversityLogo(name)
+    const candidates = [wikimediaLogo, ...officialIconCandidates(website)]
+      .filter((candidate): candidate is string => Boolean(candidate))
+    for (const candidate of [...new Set(candidates)]) {
+      if (await validateLogoImage(candidate)) {
+        displayLogoCache.set(key, candidate)
+        return candidate
+      }
+    }
+    displayLogoCache.set(key, null)
+    return null
+  })().finally(() => displayLogoRequests.delete(key))
+
+  displayLogoRequests.set(key, request)
+  return request
+}
+
+export function useUniversityLogoImage(name: string, website?: string) {
+  const key = displayKey(name, website)
+  const [logo, setLogo] = useState<LogoState | undefined>(() => (
+    displayLogoCache.has(key) ? (displayLogoCache.get(key) ?? null) : undefined
+  ))
 
   useEffect(() => {
     let active = true
-    setLogo(undefined)
+    if (displayLogoCache.has(key)) setLogo(displayLogoCache.get(key) ?? null)
+    else setLogo(undefined)
     if (!name.trim()) return () => { active = false }
 
-    void resolveUniversityLogo(name).then((image) => {
+    void resolveDisplayLogo(name, website).then((image) => {
       if (active) setLogo(image)
     })
     return () => { active = false }
-  }, [name])
+  }, [key, name, website])
 
   return logo
 }

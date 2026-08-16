@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Landmark } from 'lucide-react'
 import type { UniversityBrand } from '@/data/admission'
-import { useUniversityLogoImage } from '@/hooks/useUniversityLogoImage'
+import { hasCachedUniversityLogo, useUniversityLogoImage } from '@/hooks/useUniversityLogoImage'
 
 // Prefer the icon published by the university's own website without bundling a
 // third-party trademark. A local brand-colour SVG/monogram keeps the UI complete
@@ -21,52 +21,55 @@ export default function UniversityLogo({
   rounded?: string
   website?: string
 }) {
-  const [officialIconIndex, setOfficialIconIndex] = useState(0)
-  const [wikimediaLogoFailed, setWikimediaLogoFailed] = useState(false)
-  const wikimediaLogo = useUniversityLogoImage(name)
-  const officialIcons = useMemo(() => {
-    if (!website) return []
-    try {
-      const origin = new URL(website).origin
-      return [
-        `${origin}/favicon.svg`,
-        `${origin}/apple-touch-icon.png`,
-        `${origin}/apple-touch-icon-precomposed.png`,
-        `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(origin)}&sz=256`,
-        `${origin}/favicon.ico`,
-      ]
-    } catch {
-      return []
-    }
-  }, [website])
-  const officialIcon = officialIcons[officialIconIndex]
+  const rootRef = useRef<HTMLSpanElement>(null)
+  const [shouldLoad, setShouldLoad] = useState(() => (
+    hasCachedUniversityLogo(name, website)
+    || typeof window === 'undefined'
+    || !('IntersectionObserver' in window)
+  ))
+  const [logoFailed, setLogoFailed] = useState(false)
+  const officialLogo = useUniversityLogoImage(shouldLoad ? name : '', shouldLoad ? website : undefined)
   useEffect(() => {
-    setOfficialIconIndex(0)
-    setWikimediaLogoFailed(false)
-  }, [website, wikimediaLogo])
+    if (shouldLoad) return
+    const element = rootRef.current
+    if (!element) return
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      setShouldLoad(true)
+      observer.disconnect()
+    }, { rootMargin: '480px' })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [shouldLoad])
+  useEffect(() => {
+    setLogoFailed(false)
+  }, [officialLogo])
 
-  if (wikimediaLogo && !wikimediaLogoFailed) {
+  if (officialLogo && !logoFailed) {
     return (
       <span
+        ref={rootRef}
         className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2.5 ${className}`}
         style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
       >
         <img
-          src={wikimediaLogo}
+          src={officialLogo}
           alt={`${name} official logo`}
           className="h-full w-full object-contain"
-          loading="lazy"
+          loading="eager"
           decoding="async"
+          fetchPriority="low"
           referrerPolicy="no-referrer"
-          onError={() => setWikimediaLogoFailed(true)}
+          onError={() => setLogoFailed(true)}
         />
       </span>
     )
   }
 
-  if (wikimediaLogo === undefined) {
+  if (officialLogo === undefined) {
     return (
       <span
+        ref={rootRef}
         className={`university-official-logo relative inline-flex flex-shrink-0 animate-pulse overflow-hidden bg-white/80 ${className}`}
         style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
         aria-label={`Loading ${name} logo`}
@@ -74,27 +77,9 @@ export default function UniversityLogo({
     )
   }
 
-  if (officialIcon) {
-    return (
-      <span
-        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white ${className}`}
-        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
-      >
-        <img
-          src={officialIcon}
-          alt={`${name} official website logo`}
-          className="h-[76%] w-[76%] object-contain"
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          onError={() => setOfficialIconIndex((index) => index + 1)}
-        />
-      </span>
-    )
-  }
-
   return (
     <span
+      ref={rootRef}
       className={`relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden ${className}`}
       style={{
         width: size,

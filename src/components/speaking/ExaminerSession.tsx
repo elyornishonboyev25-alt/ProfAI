@@ -60,18 +60,28 @@ type Stage = {
 
 type Phase = 'idle' | 'examiner_speaking' | 'awaiting_answer' | 'preparing' | 'thinking' | 'evaluating' | 'result'
 
+function uniqueQuestionMoves(questions: readonly string[]): Move[] {
+  const seen = new Set<string>()
+  const unique = questions.filter((question) => {
+    const key = question.trim().toLowerCase().replace(/\s+/g, ' ')
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  const moves: Move[] = []
+  if (unique[0]) moves.push({ type: 'seed', text: unique[0] }, { type: 'followup' })
+  if (unique[1]) moves.push({ type: 'seed', text: unique[1] })
+  if (unique[2]) moves.push({ type: 'seed', text: unique[2] }, { type: 'followup' })
+  return moves
+}
+
 function buildStages(config: SessionConfig): Stage[] {
   const part1StageFrom = (questions: string[]): Stage => ({
     part: 1,
     label: PART_LABELS[1],
     intro: 'Let’s begin with some questions about you.',
-    moves: [
-      { type: 'seed', text: questions[0] },
-      { type: 'followup' },
-      { type: 'seed', text: questions[1] ?? questions[0] },
-      { type: 'seed', text: questions[2] ?? questions[questions.length - 1] },
-      { type: 'followup' },
-    ],
+    moves: uniqueQuestionMoves(questions),
   })
   const part2StageFrom = (card: CueCard): Stage => ({
     part: 2,
@@ -86,13 +96,7 @@ function buildStages(config: SessionConfig): Stage[] {
     part: 3,
     label: PART_LABELS[3],
     intro: `We’ve been talking about ${pickRandom(PART2_THEME_WORDS)}. I’d like to discuss some broader questions.`,
-    moves: [
-      { type: 'seed', text: questions[0] },
-      { type: 'followup' },
-      { type: 'seed', text: questions[1] ?? questions[0] },
-      { type: 'seed', text: questions[2] ?? questions[questions.length - 1] },
-      { type: 'followup' },
-    ],
+    moves: uniqueQuestionMoves(questions),
   })
 
   const part1Stage = (): Stage => part1StageFrom(pickRandom(PART1_TOPICS).questions)

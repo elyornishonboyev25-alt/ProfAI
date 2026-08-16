@@ -7,7 +7,7 @@ import {
   PART3_THEMES,
   PART_LABELS,
   type Part2Card,
-} from '@/data/ieltsSpeakingBank'
+} from '@/data/ieltsSpeakingQuestionBank'
 
 type Part = 1 | 2 | 3
 

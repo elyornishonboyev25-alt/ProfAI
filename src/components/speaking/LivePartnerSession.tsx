@@ -38,10 +38,30 @@ function getGuestId(): string {
   return id
 }
 
-function livePrompt(part: number): string {
-  if (part === 2) return `Cue card: ${pickRandom(CUE_CARDS).title}`
-  if (part === 3) return pickRandom(pickRandom(PART3_THEMES).questions)
-  return pickRandom(pickRandom(PART1_TOPICS).questions)
+function livePromptOptions(part: number): string[] {
+  if (part === 2) {
+    return CUE_CARDS.map(
+      (card) => `Cue card: ${card.title}. You should say: ${card.bullets.join('; ')}.`,
+    )
+  }
+  if (part === 3) return PART3_THEMES.flatMap((theme) => theme.questions)
+  return PART1_TOPICS.flatMap((topic) => topic.questions)
+}
+
+function nextLivePrompt(part: number, usedPrompts: Set<string>): string {
+  const options = livePromptOptions(part)
+  let available = options.filter((option) => !usedPrompts.has(option))
+
+  // A normal partner session will never exhaust the bank. If it does, start a
+  // fresh cycle for this part only instead of repeating an immediate prompt.
+  if (available.length === 0) {
+    options.forEach((option) => usedPrompts.delete(option))
+    available = options
+  }
+
+  const prompt = pickRandom(available)
+  usedPrompts.add(prompt)
+  return prompt
 }
 
 export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
@@ -76,6 +96,7 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
   const audioElRef = useRef<HTMLAudioElement | null>(null)
   const partRef = useRef(part)
   const phaseRef = useRef<Phase>('setup')
+  const usedPromptsRef = useRef(new Set<string>())
   // Buffer WebRTC signals that arrive before the peer connection is built (race-safe).
   const pendingSignalsRef = useRef<unknown[]>([])
 
@@ -137,7 +158,7 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
             setPhase('connected')
             // Caller seeds the first shared prompt.
             if (isCallerRef.current) {
-              const first = livePrompt(partRef.current)
+              const first = nextLivePrompt(partRef.current, usedPromptsRef.current)
               setPrompt(first)
               transportRef.current?.sendSignal({ app: 'prompt', text: first })
             }
@@ -160,7 +181,9 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
     if (event.type === 'signal') {
       const data = event.data as { app?: string; text?: string }
       if (data && data.app === 'prompt') {
-        setPrompt(data.text ?? '')
+        const sharedPrompt = data.text ?? ''
+        if (sharedPrompt) usedPromptsRef.current.add(sharedPrompt)
+        setPrompt(sharedPrompt)
         return
       }
       // If the peer connection isn't built yet, buffer the SDP/ICE for replay.
@@ -217,7 +240,7 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
   }, [muted])
 
   const nextPrompt = useCallback(() => {
-    const p = livePrompt(part)
+    const p = nextLivePrompt(part, usedPromptsRef.current)
     setPrompt(p)
     transportRef.current?.sendSignal({ app: 'prompt', text: p })
   }, [part])

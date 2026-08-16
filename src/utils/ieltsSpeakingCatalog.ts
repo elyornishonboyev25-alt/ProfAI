@@ -7,23 +7,15 @@
 // Day roadmap and every full mock have completely distinct questions.
 
 import {
-  CUE_CARDS as BASE_CUE_CARDS,
-  PART1_TOPICS as BASE_PART1_TOPICS,
-  PART3_THEMES as BASE_PART3_THEMES,
+  CUE_CARDS,
+  PART1_TOPICS,
+  PART3_THEMES,
   type Part1Topic,
   type Part2Card,
   type Part3Theme,
-} from '@/data/ieltsSpeakingBank'
-import {
-  EXTRA_CUE_CARDS,
-  EXTRA_PART1_TOPICS,
-  EXTRA_PART3_THEMES,
-} from '@/data/ieltsSpeakingBankExtra'
+} from '@/data/ieltsSpeakingQuestionBank'
 
 // 30 of each part: first 10 feed the Days, the remaining 20 feed the mocks.
-const PART1_TOPICS: Part1Topic[] = [...BASE_PART1_TOPICS, ...EXTRA_PART1_TOPICS]
-const CUE_CARDS: Part2Card[] = [...BASE_CUE_CARDS, ...EXTRA_CUE_CARDS]
-const PART3_THEMES: Part3Theme[] = [...BASE_PART3_THEMES, ...EXTRA_PART3_THEMES]
 const DAY_BANK_SIZE = 10
 
 export type SpeakingPart = 1 | 2 | 3

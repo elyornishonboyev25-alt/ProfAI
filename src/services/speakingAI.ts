@@ -34,6 +34,7 @@ function buildExaminerSystemPrompt(persona: string): string {
 VOICE & MANNER:
 - Warm, calm, professional. British English. Speak naturally, as if face to face.
 - Ask ONE question at a time. Keep each turn SHORT (1–2 sentences, max ~35 words) because it will be read aloud.
+- Never repeat or paraphrase a question that already appears in the conversation history.
 - NEVER give feedback, scores, corrections, or praise about their English during the test. Stay in role as the examiner.
 - Use the candidate's own words to ask genuine, adaptive follow-ups (e.g. they say "I play football" → "What position do you play, and why?").
 - Remember everything said earlier in the conversation and occasionally refer back to it ("You mentioned earlier that…").
@@ -57,6 +58,7 @@ VOICE & MANNER:
 - Keep each turn SHORT (1–2 sentences, max ~35 words) because it is read aloud.
 - React to what they say first ("Oh nice!", "That makes sense"), share a brief opinion or relatable comment, THEN ask one natural follow-up question to keep the chat flowing.
 - Build on earlier things they mentioned, like a friend who remembers.
+- Never repeat or paraphrase a question that already appears in the conversation history.
 - Do NOT correct their grammar or give feedback during the chat — just keep the conversation enjoyable and flowing.
 - No markdown, no emojis, no stage directions. Output ONLY the words you would say aloud.
 
@@ -71,6 +73,17 @@ function historyToText(history: ExaminerTurn[], candidateName?: string): string 
     .slice(-12)
     .map((t) => `${t.role === 'examiner' ? 'Examiner' : who}: ${t.text}`)
     .join('\n')
+}
+
+function normalizeExaminerQuestion(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function wasAlreadyAsked(reply: string, history: ExaminerTurn[]): boolean {
+  const normalizedReply = normalizeExaminerQuestion(reply)
+  return history.some(
+    (turn) => turn.role === 'examiner' && normalizeExaminerQuestion(turn.text) === normalizedReply,
+  )
 }
 
 /** Generate the examiner's next spoken line. Falls back to a scripted line on error. */
@@ -99,7 +112,7 @@ Respond with JSON only: { "reply": "<what you say next>" }`
     const raw = await callGeminiAPI(system, userMessage, 256)
     const parsed = JSON.parse(extractJSON(raw)) as { reply?: string }
     const reply = (parsed.reply ?? '').trim()
-    if (reply) return reply
+    if (reply && !wasAlreadyAsked(reply, params.history)) return reply
   } catch {
     // fall through to scripted fallback
   }
@@ -114,8 +127,17 @@ function fallbackExaminerLine(params: ExaminerReplyParams): string {
     'Why do you think that is?',
     'Can you give me an example?',
     'How did that make you feel?',
+    'What led you to that view?',
+    'Has your opinion about that changed over time?',
   ]
-  return generic[Math.floor(Math.random() * generic.length)]
+  const asked = new Set(
+    params.history
+      .filter((turn) => turn.role === 'examiner')
+      .map((turn) => normalizeExaminerQuestion(turn.text)),
+  )
+  const unused = generic.filter((question) => !asked.has(normalizeExaminerQuestion(question)))
+  const choices = unused.length > 0 ? unused : generic
+  return choices[Math.floor(Math.random() * choices.length)]
 }
 
 // ── Band scoring ────────────────────────────────────────────────────────────

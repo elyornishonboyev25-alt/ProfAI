@@ -128,8 +128,10 @@ function ArenaBrandMark() {
     <svg viewBox="0 0 120 96" role="img" aria-label="IELTS Arena graduation cap">
       <path d="M8 34.5 60 9l52 25.5L60 60 8 34.5Z" />
       <path d="M28 49.5v22c0 9 14.3 16.5 32 16.5s32-7.5 32-16.5v-22L60 65 28 49.5Z" />
-      <path className="ielts-arena-tassel" d="M105 39v29" />
-      <circle className="ielts-arena-tassel" cx="105" cy="74" r="4.5" />
+      <g className="ielts-arena-tassel">
+        <path d="M105 39v29" />
+        <circle cx="105" cy="74" r="4.5" />
+      </g>
     </svg>
   )
 }
@@ -299,14 +301,18 @@ export default function IELTS() {
             >
               <ArrowLeft /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
             </button>
-            <span className="ielts-arena-hero-label">
-              <span className="ielts-arena-hero-mark"><ArenaBrandMark /></span>
-              <Sparkles /> IELTS preparation
+            <span className="ielts-arena-hero-identity">
+              <span className="ielts-arena-hero-logo"><ArenaBrandMark /></span>
+              <span className="ielts-arena-hero-label">
+                <Sparkles /> <span>IELTS preparation</span>
+              </span>
             </span>
           </div>
 
           <div className="ielts-arena-hero-copy">
-            <h1>IELTS <em>Arena</em></h1>
+            <div className="ielts-arena-title-glass">
+              <h1>IELTS <em>Arena</em></h1>
+            </div>
             <p>Listening + Reading + Writing + Speaking — your path to Band 8+</p>
             <div className="ielts-arena-hero-actions">
               <button type="button" className="ielts-arena-hero-primary" onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}>

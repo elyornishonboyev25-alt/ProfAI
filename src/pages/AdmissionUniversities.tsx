@@ -234,7 +234,7 @@ export default function AdmissionUniversities() {
                       >
                         <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
                         <div className="admission-card-topline">
-                          <UniversityLogo id={university.id} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
+                          <UniversityLogo name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
                           <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
                             <small>QS rank</small>
                             <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>

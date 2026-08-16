@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Landmark } from 'lucide-react'
 import type { UniversityBrand } from '@/data/admission'
-import { getUniversityLogo } from '@/components/admission/universityLogos'
+import { useUniversityLogoImage } from '@/hooks/useUniversityLogoImage'
 
 // Prefer the icon published by the university's own website without bundling a
 // third-party trademark. A local brand-colour SVG/monogram keeps the UI complete
 // when a site has no root favicon or blocks the request.
 export default function UniversityLogo({
-  id,
+  name,
   brand,
   size = 64,
   className = '',
   rounded = '1.1rem',
   website,
 }: {
-  id?: string
+  name: string
   brand: UniversityBrand
   size?: number
   className?: string
@@ -21,36 +22,55 @@ export default function UniversityLogo({
   website?: string
 }) {
   const [officialIconIndex, setOfficialIconIndex] = useState(0)
+  const [wikimediaLogoFailed, setWikimediaLogoFailed] = useState(false)
+  const wikimediaLogo = useUniversityLogoImage(name)
   const officialIcons = useMemo(() => {
     if (!website) return []
     try {
       const origin = new URL(website).origin
       return [
-        `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(origin)}&sz=128`,
+        `${origin}/favicon.svg`,
+        `${origin}/apple-touch-icon.png`,
+        `${origin}/apple-touch-icon-precomposed.png`,
+        `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(origin)}&sz=256`,
         `${origin}/favicon.ico`,
       ]
     } catch {
       return []
     }
   }, [website])
-  const vectorLogo = id ? getUniversityLogo(id) : undefined
   const officialIcon = officialIcons[officialIconIndex]
-  const len = brand.monogram.length
-  const fontSize = len <= 1 ? size * 0.5 : len === 2 ? size * 0.4 : len === 3 ? size * 0.3 : size * 0.24
+  useEffect(() => {
+    setOfficialIconIndex(0)
+    setWikimediaLogoFailed(false)
+  }, [website, wikimediaLogo])
 
-  useEffect(() => setOfficialIconIndex(0), [website])
-
-  // Use our resolution-independent mark first. University favicons are often only
-  // 16–32px even when a larger Google URL is requested, which made Cambridge and
-  // NUS visibly soft at card and hero sizes.
-  if (vectorLogo) {
+  if (wikimediaLogo && !wikimediaLogoFailed) {
     return (
       <span
-        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2 ${className}`}
+        className={`university-official-logo relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden bg-white p-2.5 ${className}`}
         style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
       >
-        {vectorLogo}
+        <img
+          src={wikimediaLogo}
+          alt={`${name} official logo`}
+          className="h-full w-full object-contain"
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setWikimediaLogoFailed(true)}
+        />
       </span>
+    )
+  }
+
+  if (wikimediaLogo === undefined) {
+    return (
+      <span
+        className={`university-official-logo relative inline-flex flex-shrink-0 animate-pulse overflow-hidden bg-white/80 ${className}`}
+        style={{ width: size, height: size, borderRadius: rounded, '--university-accent': brand.accent } as React.CSSProperties}
+        aria-label={`Loading ${name} logo`}
+      />
     )
   }
 
@@ -62,7 +82,7 @@ export default function UniversityLogo({
       >
         <img
           src={officialIcon}
-          alt={`${brand.monogram} official website emblem`}
+          alt={`${name} official website logo`}
           className="h-[76%] w-[76%] object-contain"
           loading="lazy"
           decoding="async"
@@ -92,17 +112,7 @@ export default function UniversityLogo({
             'radial-gradient(circle at 26% 18%, rgba(255,255,255,0.38), transparent 44%), linear-gradient(145deg, transparent 48%, rgba(255,255,255,0.12) 49%, transparent 76%)',
         }}
       />
-      <span
-        className="relative font-black leading-none tracking-tight"
-        style={{
-          color: brand.ink,
-          fontSize,
-          fontFamily: 'Georgia, "Times New Roman", serif',
-          textShadow: '0 1px 2px rgba(0,0,0,0.28)',
-        }}
-      >
-        {brand.monogram}
-      </span>
+      <Landmark className="relative h-[46%] w-[46%]" style={{ color: brand.ink }} aria-hidden="true" />
     </span>
   )
 }

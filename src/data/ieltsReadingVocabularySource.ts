@@ -1,4 +1,3 @@
-/* eslint-disable */
 // Auto-generated from IELTS_Vocabulary_All_Passages.docx and IELTS_Vocabulary_TEST3.docx
 export type ReadingVocabularySeed = {
   term: string

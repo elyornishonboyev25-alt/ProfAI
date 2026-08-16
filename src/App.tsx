@@ -142,7 +142,6 @@ function App() {
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const isLanding = pathname === '/' || pathname === '/dashboard' || pathname === '/about'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user

@@ -1,5 +1,5 @@
 import type { University, QSIndicators, AdmissionLesson, LessonPhase } from './types'
-import { universities, QS_EDITION } from './universities'
+import { universities } from './universities'
 import { QS_2027_TOP_50_IDS } from './qs2027Rankings'
 import { lessons, lessonPhases } from './lessons'
 

@@ -9,7 +9,6 @@ import {
   Bot,
   CheckCircle2,
   ChevronRight,
-  Flame,
   Globe2,
   GraduationCap,
   Headphones,

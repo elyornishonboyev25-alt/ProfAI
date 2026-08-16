@@ -14,14 +14,8 @@ const routeTargetSchema = z.enum([
   'AI_ANALYSIS',
   'ACCOUNT',
 ])
-const chatLocaleSchema = z.enum(['en', 'uz'])
-const contextModeSchema = z.enum([
-  'analysis',
-  'general',
-  'exam',
-  'training_reading',
-  'training_listening',
-])
+type ChatLocale = 'en' | 'uz'
+type ContextMode = 'analysis' | 'general' | 'exam' | 'training_reading' | 'training_listening'
 const openTestTrackSchema = z.enum(['reading', 'listening'])
 const openTestModeSchema = z.enum(['practice', 'simulation', 'full-test'])
 const speakingModeSchema = z.enum(['conversation', 'mock'])
@@ -48,8 +42,8 @@ export type AiChatAction =
 export type AiChatRequest = {
   message: string
   history: Array<{ role: 'user' | 'assistant'; content: string }>
-  locale?: z.infer<typeof chatLocaleSchema>
-  contextMode?: z.infer<typeof contextModeSchema>
+  locale?: ChatLocale
+  contextMode?: ContextMode
   uiContext?: { pathname?: string }
 }
 export type AiChatResponse = {
@@ -57,14 +51,14 @@ export type AiChatResponse = {
   actions: AiChatAction[]
   meta: {
     source: 'openai' | 'hf' | 'fallback'
-    locale: z.infer<typeof chatLocaleSchema>
+    locale: ChatLocale
   }
 }
 
 type AiChatContext = {
   weakTrack: string | null
   preferredName: string | null
-  preferredLocale: z.infer<typeof chatLocaleSchema>
+  preferredLocale: ChatLocale
   fullName: string | null
 }
 
@@ -134,7 +128,7 @@ function containsAny(input: string, tokens: string[]) {
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
-function normalizeLocale(input?: string | null): z.infer<typeof chatLocaleSchema> {
+function normalizeLocale(input?: string | null): ChatLocale {
   if (!input) return 'en'
   return input.toLowerCase().startsWith('uz') ? 'uz' : 'en'
 }
@@ -161,7 +155,7 @@ function scoreSimilarity(a: string, b: string) {
   const union = left.size + right.size - inter
   return union === 0 ? 1 : inter / union
 }
-function varyReply(userId: string, reply: string, locale: z.infer<typeof chatLocaleSchema>, name?: string | null) {
+function varyReply(userId: string, reply: string, locale: ChatLocale, name?: string | null) {
   const current = replyHistory.get(userId) ?? []
   const duplicated = current.some((prev) => scoreSimilarity(prev, reply) >= 0.9)
   if (!duplicated) {
@@ -176,7 +170,7 @@ function varyReply(userId: string, reply: string, locale: z.infer<typeof chatLoc
   return fallback
 }
 
-function detectLocaleByMessage(message: string, fallback: z.infer<typeof chatLocaleSchema>) {
+function detectLocaleByMessage(message: string, fallback: ChatLocale) {
   const normalized = message.toLowerCase()
   if (containsAny(normalized, ['salom', 'rahmat', 'iltimos', 'lugat', 'imtihon'])) return 'uz'
   if (containsAny(normalized, ['hello', 'thanks', 'please', 'exam', 'speaking'])) return 'en'
@@ -200,11 +194,11 @@ function extractConversationTopic(message: string) {
   return null
 }
 function buildAdaptiveFallbackReply(params: {
-  locale: z.infer<typeof chatLocaleSchema>
+  locale: ChatLocale
   preferredName: string | null
   message: string
   weakTrack: string | null
-  contextMode: z.infer<typeof contextModeSchema> | 'general'
+  contextMode: ContextMode
 }) {
   const { locale, preferredName, message, weakTrack, contextMode } = params
   const normalized = message.toLowerCase()
@@ -389,7 +383,7 @@ async function requestHfChat(systemPrompt: string, userPrompt: string) {
   return content
 }
 
-async function persistMemory(userId: string, locale: z.infer<typeof chatLocaleSchema>, detectedName: string | null) {
+async function persistMemory(userId: string, locale: ChatLocale, detectedName: string | null) {
   if (typeof userAiPreferenceDelegate?.upsert === 'function') {
     await userAiPreferenceDelegate
       .upsert({

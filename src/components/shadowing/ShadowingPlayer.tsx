@@ -32,7 +32,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react'
-import { loadYouTubeApi, formatClock, type YTPlayer } from '@/lib/youtube'
+import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import type { ShadowingVideoDetail } from '@/services/shadowing'
 
@@ -224,7 +224,6 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
       }
       playerRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video.youtubeId])
 
   const goToSegment = useCallback(

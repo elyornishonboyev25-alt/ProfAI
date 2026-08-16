@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { memo, useCallback, useDeferredValue, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -17,7 +17,7 @@ import UniversityGlobe from '@/components/admission/UniversityGlobe'
 import { getUniversities, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
-import { useAdmissionScores } from '@/hooks/useAdmissionScores'
+import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
 
 type BudgetFilter = 'all' | 'published' | 'under-20k-usd'
 type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
@@ -45,6 +45,68 @@ function ieltsLabel(university: University) {
     ?? requirements.find((item) => item.label === 'IELTS')
   return requirement?.value ?? 'No IELTS cutoff'
 }
+
+const UniversityCard = memo(function UniversityCard({
+  university,
+  scores,
+  onOpen,
+}: {
+  university: University
+  scores: AdmissionScores
+  onOpen: (slug: string) => void
+}) {
+  const fit = scoreUniversity(university, scores)
+  const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
+
+  return (
+    <article
+      className="admission-university-card"
+      onClick={() => onOpen(university.slug)}
+    >
+      <div
+        className="admission-card-glow"
+        style={{ '--university-accent': university.brand.accent } as React.CSSProperties}
+        aria-hidden="true"
+      />
+      <div className="admission-card-topline">
+        <UniversityLogo name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
+        <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
+          <small>QS rank</small>
+          <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
+        </span>
+      </div>
+
+      <div className="admission-card-copy">
+        <p className="admission-card-kicker">{university.shortName}</p>
+        <h2>{university.name}</h2>
+        <p className="admission-card-location"><MapPin className="h-3.5 w-3.5" /> {university.city}, {university.country}</p>
+      </div>
+
+      <div className="admission-card-tags">
+        <span>IELTS {ieltsLabel(university)}</span>
+        {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
+      </div>
+
+      <div className="admission-card-footer">
+        <div>
+          <small>Living budget</small>
+          <strong>{yearlyCostLabel(university)}</strong>
+        </div>
+        <div
+          className="admission-match-ring"
+          style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
+          title={hasProfileScores ? 'Fit based on your saved scores' : 'Add your SAT or IELTS score for a more precise fit'}
+        >
+          <span><small>{hasProfileScores ? 'Match' : 'Fit'}</small><strong>{fit.fitPercent}%</strong></span>
+        </div>
+      </div>
+
+      <button className="admission-card-open" aria-label={`Explore ${university.name}`}>
+        Explore <ArrowRight className="h-3.5 w-3.5" />
+      </button>
+    </article>
+  )
+})
 
 function FilterSelect({
   label,
@@ -75,13 +137,14 @@ export default function AdmissionUniversities() {
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
   const { scores } = useAdmissionScores()
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
   const [country, setCountry] = useState('all')
   const [budget, setBudget] = useState<BudgetFilter>('all')
   const [ielts, setIelts] = useState<IeltsFilter>('all')
   const [rank, setRank] = useState<RankFilter>('all')
 
   const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+    const normalizedQuery = deferredQuery.trim().toLowerCase()
     return all.filter((university) => {
       const matchesQuery = !normalizedQuery || [university.name, university.shortName, university.city, university.country]
         .some((value) => value.toLowerCase().includes(normalizedQuery))
@@ -107,7 +170,11 @@ export default function AdmissionUniversities() {
 
       return matchesQuery && matchesCountry && matchesBudget && matchesIelts && matchesRank
     })
-  }, [all, budget, country, ielts, query, rank])
+  }, [all, budget, country, deferredQuery, ielts, rank])
+
+  const openUniversity = useCallback((universitySlug: string) => {
+    navigate(`/admission/universities/${universitySlug}`)
+  }, [navigate])
 
   const hasFilters = Boolean(query || country !== 'all' || budget !== 'all' || ielts !== 'all' || rank !== 'all')
   const clearFilters = () => {
@@ -223,55 +290,9 @@ export default function AdmissionUniversities() {
                 </div>
               ) : (
                 <div className="admission-university-grid">
-                  {filtered.map((university) => {
-                    const fit = scoreUniversity(university, scores)
-                    const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
-                    return (
-                      <article
-                        key={university.id}
-                        className="admission-university-card"
-                        onClick={() => navigate(`/admission/universities/${university.slug}`)}
-                      >
-                        <div className="admission-card-glow" style={{ background: university.brand.accent }} aria-hidden="true" />
-                        <div className="admission-card-topline">
-                          <UniversityLogo name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
-                          <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
-                            <small>QS rank</small>
-                            <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
-                          </span>
-                        </div>
-
-                        <div className="admission-card-copy">
-                          <p className="admission-card-kicker">{university.shortName}</p>
-                          <h2>{university.name}</h2>
-                          <p className="admission-card-location"><MapPin className="h-3.5 w-3.5" /> {university.city}, {university.country}</p>
-                        </div>
-
-                        <div className="admission-card-tags">
-                          <span>IELTS {ieltsLabel(university)}</span>
-                          {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
-                        </div>
-
-                        <div className="admission-card-footer">
-                          <div>
-                            <small>Living budget</small>
-                            <strong>{yearlyCostLabel(university)}</strong>
-                          </div>
-                          <div
-                            className="admission-match-ring"
-                            style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
-                            title={hasProfileScores ? 'Fit based on your saved scores' : 'Add your SAT or IELTS score for a more precise fit'}
-                          >
-                            <span><small>{hasProfileScores ? 'Match' : 'Fit'}</small><strong>{fit.fitPercent}%</strong></span>
-                          </div>
-                        </div>
-
-                        <button className="admission-card-open" aria-label={`Explore ${university.name}`}>
-                          Explore <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      </article>
-                    )
-                  })}
+                  {filtered.map((university) => (
+                    <UniversityCard key={university.id} university={university} scores={scores} onOpen={openUniversity} />
+                  ))}
                 </div>
               )}
 

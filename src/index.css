@@ -992,9 +992,7 @@
     width: 100%;
     aspect-ratio: 1;
     isolation: isolate;
-    animation: universityGlobeFloat 8s ease-in-out infinite;
     transform-origin: 50% 54%;
-    will-change: transform;
   }
 
   .university-globe-visual::before {
@@ -1038,7 +1036,6 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    filter: drop-shadow(0 28px 34px rgba(71, 85, 105, 0.16));
   }
 
   .university-globe-user-marker {
@@ -1308,6 +1305,8 @@
     box-shadow: 0 19px 44px rgba(71,85,105,0.13), inset 0 1px 0 rgba(255,255,255,0.98);
     cursor: pointer;
     transition: border-color 240ms ease, box-shadow 240ms ease;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 25rem;
   }
 
   .admission-university-card::after {
@@ -1340,8 +1339,8 @@
     width: 9rem;
     height: 9rem;
     border-radius: 50%;
-    opacity: 0.12;
-    filter: blur(28px);
+    opacity: 0.1;
+    background: radial-gradient(circle, var(--university-accent), transparent 70%);
   }
 
   .admission-card-topline { display: flex; min-height: 5.8rem; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
@@ -1350,8 +1349,6 @@
     border: 1px solid rgba(255,255,255,0.82);
     background: linear-gradient(145deg, rgba(255,255,255,0.72), color-mix(in srgb, var(--university-accent) 8%, rgba(255,255,255,0.42)));
     box-shadow: 0 12px 28px color-mix(in srgb, var(--university-accent) 24%, transparent), inset 0 1px 0 white;
-    backdrop-filter: blur(22px) saturate(145%);
-    -webkit-backdrop-filter: blur(22px) saturate(145%);
   }
 
   .university-official-logo img { filter: drop-shadow(0 2px 3px rgba(15,23,42,0.08)); }
@@ -1380,7 +1377,7 @@
   .admission-card-location { display: flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem; color: #64748b; font-size: 0.7rem; font-weight: 600; }
 
   .admission-card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.95rem; }
-  .admission-card-tags span { border: 1px solid rgba(255,255,255,0.72); border-radius: 999px; padding: 0.35rem 0.65rem; color: #334155; background: rgba(255,255,255,0.28); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-size: 0.67rem; font-weight: 700; }
+  .admission-card-tags span { border: 1px solid rgba(255,255,255,0.78); border-radius: 999px; padding: 0.35rem 0.65rem; color: #334155; background: rgba(255,255,255,0.72); font-size: 0.67rem; font-weight: 700; }
 
   .admission-card-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.7rem; margin-top: auto; padding-top: 1.15rem; }
   .admission-card-footer > div:first-child { min-width: 0; }
@@ -1398,7 +1395,7 @@
     box-shadow: 0 12px 24px color-mix(in srgb, var(--university-accent) 24%, transparent);
   }
 
-  .admission-match-ring > span { display: flex; width: 3.35rem; height: 3.35rem; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.68); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .admission-match-ring > span { display: flex; width: 3.35rem; height: 3.35rem; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.9); }
   .admission-match-ring small { color: #64748b; font-size: 0.56rem; font-weight: 700; }
   .admission-match-ring strong { color: #0f172a; font-size: 1rem; line-height: 1; }
 
@@ -1948,7 +1945,7 @@
     overflow-y: scroll;
     overscroll-behavior-y: contain;
     padding: 0.25rem 0.7rem 1.25rem 0.15rem;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     scrollbar-color: rgba(220, 38, 38, 0.52) rgba(255, 255, 255, 0.3);
     scrollbar-gutter: stable;
     touch-action: pan-y;

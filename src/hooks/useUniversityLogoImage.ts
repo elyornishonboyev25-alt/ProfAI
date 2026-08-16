@@ -15,15 +15,6 @@ type WikiPage = {
 
 type WikiAlias = { from: string; to: string }
 
-type WikidataClaim = {
-  rank?: 'preferred' | 'normal' | 'deprecated'
-  mainsnak?: { datavalue?: { value?: unknown } }
-}
-
-type WikidataEntity = {
-  claims?: Record<string, WikidataClaim[] | undefined>
-}
-
 type WikidataSearchResult = {
   id: string
   label?: string
@@ -53,45 +44,39 @@ function wikipediaTitle(name: string) {
     .trim()
 }
 
-function logoFromClaims(entity?: WikidataEntity) {
-  // These tiles are close to square, so a coat of arms is clearer than a very
-  // wide wordmark. If no crest exists, use the institution's official logo.
-  for (const property of ['P94', 'P154']) {
-    const claims = entity?.claims?.[property] ?? []
-    const claim = claims.find((item) => item.rank === 'preferred')
-      ?? claims.find((item) => item.rank !== 'deprecated')
-    const filename = claim?.mainsnak?.datavalue?.value
-    if (typeof filename === 'string' && filename.trim()) {
-      const encoded = encodeURIComponent(filename).replace(/%2F/gi, '/')
-      return `https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}`
-    }
-  }
-  return null
-}
-
 function chunks<T>(items: T[], size: number) {
   const result: T[][] = []
   for (let index = 0; index < items.length; index += size) result.push(items.slice(index, index + size))
   return result
 }
 
-async function fetchEntities(ids: string[]) {
-  const entities = new Map<string, WikidataEntity>()
+async function fetchLogos(ids: string[]) {
+  const logos = new Map<string, string>()
   for (const group of chunks([...new Set(ids)], 40)) {
     if (group.length === 0) continue
+    const query = `SELECT ?item ?coat ?logo WHERE { VALUES ?item { ${group.map((id) => `wd:${id}`).join(' ')} } OPTIONAL { ?item wdt:P94 ?coat. } OPTIONAL { ?item wdt:P154 ?logo. } }`
     const params = new URLSearchParams({
-      action: 'wbgetentities',
+      query,
       format: 'json',
-      origin: '*',
-      props: 'claims',
-      ids: group.join('|'),
     })
-    const response = await fetch(`https://www.wikidata.org/w/api.php?${params}`)
+    const response = await fetch(`https://query.wikidata.org/sparql?${params}`)
     if (!response.ok) continue
-    const payload = await response.json() as { entities?: Record<string, WikidataEntity> }
-    Object.entries(payload.entities ?? {}).forEach(([id, entity]) => entities.set(id, entity))
+    const payload = await response.json() as {
+      results?: {
+        bindings?: Array<{
+          item?: { value?: string }
+          coat?: { value?: string }
+          logo?: { value?: string }
+        }>
+      }
+    }
+    for (const binding of payload.results?.bindings ?? []) {
+      const id = binding.item?.value?.match(/Q\d+$/)?.[0]
+      const image = binding.coat?.value ?? binding.logo?.value
+      if (id && image && !logos.has(id)) logos.set(id, image.replace(/^http:/, 'https:'))
+    }
   }
-  return entities
+  return logos
 }
 
 async function searchLogo(name: string): Promise<LogoState> {
@@ -119,9 +104,9 @@ async function searchLogo(name: string): Promise<LogoState> {
     }
     return score(b) - score(a)
   })
-  const entities = await fetchEntities(candidates.map((candidate) => candidate.id))
+  const logos = await fetchLogos(candidates.map((candidate) => candidate.id))
   for (const candidate of candidates) {
-    const logo = logoFromClaims(entities.get(candidate.id))
+    const logo = logos.get(candidate.id)
     if (logo) return logo
   }
   return null
@@ -174,12 +159,14 @@ async function fetchLogoBatch(entries: QueueEntry[]) {
     }
   }
 
-  const entities = await fetchEntities([...itemByInputKey.values()])
+  const logos = await fetchLogos([...itemByInputKey.values()])
   await Promise.all(entries.map(async (entry) => {
     const title = titleByKey.get(universityKey(entry.name)) ?? wikipediaTitle(entry.name)
     const item = itemByInputKey.get(universityKey(title))
-    const logo = logoFromClaims(item ? entities.get(item) : undefined)
-    entry.resolve(logo ?? await searchLogo(entry.name))
+    // An exact Wikipedia/Wikidata match without a published logo should fall
+    // straight through to the university's own icon chain. Only title misses
+    // need the more expensive entity search fallback.
+    entry.resolve(item ? (logos.get(item) ?? null) : await searchLogo(entry.name))
   }))
 }
 

@@ -23,6 +23,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
@@ -121,19 +122,6 @@ function localToday() {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const day = String(now.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
-}
-
-function ArenaBrandMark() {
-  return (
-    <svg viewBox="0 0 120 96" role="img" aria-label="IELTS Arena graduation cap">
-      <path d="M8 34.5 60 9l52 25.5L60 60 8 34.5Z" />
-      <path d="M28 49.5v22c0 9 14.3 16.5 32 16.5s32-7.5 32-16.5v-22L60 65 28 49.5Z" />
-      <g className="ielts-arena-tassel">
-        <path d="M105 39v29" />
-        <circle cx="105" cy="74" r="4.5" />
-      </g>
-    </svg>
-  )
 }
 
 function formatBand(score: number) {
@@ -302,7 +290,9 @@ export default function IELTS() {
               <ArrowLeft /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
             </button>
             <span className="ielts-arena-hero-identity">
-              <span className="ielts-arena-hero-logo"><ArenaBrandMark /></span>
+              <span className="ielts-arena-hero-logo">
+                <BrandMark size={50} className="ielts-arena-main-mark" />
+              </span>
               <span className="ielts-arena-hero-label">
                 <Sparkles /> <span>IELTS preparation</span>
               </span>

@@ -62,7 +62,7 @@ export function BrandMark({ size = 44, className }: BrandMarkProps) {
         <path d="M32 8.4 59.4 21.4 32 34.4 4.6 21.4Z" stroke="white" strokeOpacity="0.55" strokeWidth="0.9" />
 
         {/* World map on the board — simplified continents (study abroad) */}
-        <g clipPath={`url(#${boardClipId})`} fill="white" fillOpacity="0.94">
+        <g className="profai-brand-world-map" clipPath={`url(#${boardClipId})`} fill="white" fillOpacity="0.94">
           {/* North & Central America */}
           <path d="M18.6 19.1c1.4-1 3.1-1.1 4.2-.3.9.7.5 1.7-.3 2.3-.7.5-.4 1.3.3 1.6.9.4.6 1.4-.5 1.7-1.7.5-3.6-.2-4.4-1.4-.8-1.2-.4-2.9.7-3.5Z" />
           {/* South America */}

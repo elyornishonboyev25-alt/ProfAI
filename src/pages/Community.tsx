@@ -179,7 +179,6 @@ export default function Community() {
     () => [...visibleResults].sort((a, b) => matchScore(b, account) - matchScore(a, account) || b.xp - a.xp),
     [account, visibleResults],
   )
-  const topNickname = ranked[0]?.nickname ?? null
   const suggested = ranked.slice(0, 3)
   const onlineCount = visibleResults.filter((learner) => learner.online).length
 
@@ -277,29 +276,31 @@ export default function Community() {
               <div className="community-feed-meta"><span className="community-live-dot" />{loading ? 'Matching learners...' : `${visibleResults.length} profiles found`}</div>
             </div>
 
-            {error ? <div className="community-error">{error}</div> : null}
-            {!loading && !error && visibleResults.length === 0 ? (
-              <div className="community-empty">
-                <span><Users className="h-8 w-8" /></span>
-                <h2>No matching learners yet</h2>
-                <p>Remove one or two filters to discover more study partners.</p>
-                <button type="button" onClick={clearFilters}>Show all learners</button>
-              </div>
-            ) : null}
+            <div className="community-card-viewport" role="region" aria-label="Study partner profiles" tabIndex={0}>
+              {error ? <div className="community-error">{error}</div> : null}
+              {!loading && !error && visibleResults.length === 0 ? (
+                <div className="community-empty">
+                  <span><Users className="h-8 w-8" /></span>
+                  <h2>No matching learners yet</h2>
+                  <p>Remove one or two filters to discover more study partners.</p>
+                  <button type="button" onClick={clearFilters}>Show all learners</button>
+                </div>
+              ) : null}
 
-            <div className="community-card-grid">
-              {loading && results.length === 0
-                ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />)
-                : visibleResults.map((learner, index) => (
-                    <LearnerCard
-                      key={learner.nickname ?? `${learner.xp}-${learner.level}-${index}`}
-                      learner={learner}
-                      score={matchScore(learner, account)}
-                      featured={Boolean(topNickname && learner.nickname === topNickname)}
-                      index={index}
-                      onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
-                    />
-                  ))}
+              <div className="community-card-grid">
+                {loading && results.length === 0
+                  ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />)
+                  : visibleResults.map((learner, index) => (
+                      <LearnerCard
+                        key={learner.nickname ?? `${learner.xp}-${learner.level}-${index}`}
+                        learner={learner}
+                        score={matchScore(learner, account)}
+                        featured={learner.weeklyChampion === true}
+                        index={index}
+                        onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
+                      />
+                    ))}
+              </div>
             </div>
           </div>
 
@@ -388,7 +389,7 @@ function SideFilter({ active, icon: Icon, label, onClick }: { active: boolean; i
 function LearnerCard({ learner, score, featured, index, onOpen }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void }) {
   return (
     <motion.article
-      initial={{ opacity: 0, y: 22, scale: 0.97 }}
+      initial={{ opacity: 1, y: 22, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.045, 0.25), duration: 0.45 }}
       whileHover={{ y: -8, scale: 1.012 }}

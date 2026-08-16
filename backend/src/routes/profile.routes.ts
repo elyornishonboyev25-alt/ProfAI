@@ -1794,6 +1794,7 @@ router.get(
         OR: [{ profile: { is: null } }, { profile: { isPublic: true } }],
       },
       select: {
+        id: true,
         nickname: true,
         avatarUrl: true,
         level: true,
@@ -1813,6 +1814,18 @@ router.get(
       take: 24,
       orderBy: { xp: 'desc' },
     })
+
+    // The community champion is driven by the same validated rolling seven-day
+    // leaderboard as the main Leaderboard page. It is intentionally independent
+    // of search/filter order, so the special card cannot jump between learners
+    // merely because somebody changes a discovery filter.
+    const weeklyBoard = await generateLeaderboard({
+      period: 'week',
+      currentUserId: req.user!.id,
+    }).catch(() => null)
+    const weeklyChampionId = weeklyBoard?.weeklyPremiumWinner?.userId ?? null
+    const weeklyChampionScore = weeklyBoard?.weeklyPremiumWinner?.rankingScore ?? 0
+
     return res.json({
       results: users.map((u) => ({
         nickname: u.nickname,
@@ -1826,6 +1839,8 @@ router.get(
         targetScore: u.profile?.targetScore ?? null,
         targetUniversitySlug: u.profile?.targetUniversitySlug ?? null,
         online: Boolean(u.lastActiveDate && u.lastActiveDate >= activeSince),
+        weeklyChampion: u.id === weeklyChampionId,
+        weeklyScore: u.id === weeklyChampionId ? weeklyChampionScore : 0,
       })),
     })
   }),

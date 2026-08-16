@@ -1,164 +1,510 @@
-import { ArrowRight, BookOpen, BrainCircuit, Headphones, Mic2, PenSquare, Sparkles } from 'lucide-react'
-import { motion } from 'framer-motion'
+import {
+  BookOpen,
+  BookOpenText,
+  CalendarDays,
+  CalendarCheck,
+  Check,
+  Clock3,
+  FileCheck2,
+  FileText,
+  Headphones,
+  Mic2,
+  Music2,
+  Pencil,
+  PenLine,
+  Target,
+  ExternalLink,
+  X,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
-import ExamCountdown from '@/components/exam/ExamCountdown'
-import CatalogHero from '@/components/catalog/CatalogHero'
-import { useAuthStore, type AuthState } from '@/store/authStore'
-import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
+import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
+import { loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
+import '@/styles/ieltsArena.css'
 
-const sections = [
-  {
-    id: 'reading',
-    index: '01',
-    title: 'Reading',
-    description: 'Master passage navigation, inference precision and exam pacing with guided review.',
-    icon: BookOpen,
-    chips: ['3 passages', '60 minutes', 'AI review'],
-  },
+const skills = [
   {
     id: 'listening',
-    index: '02',
     title: 'Listening',
-    description: 'Build concentration, control distractors and sharpen answer-transfer accuracy.',
+    description: 'Understand spoken English in various contexts.',
+    tests: 15,
     icon: Headphones,
-    chips: ['4 sections', 'audio mode', 'mistake map'],
+    hoverIcon: Music2,
+  },
+  {
+    id: 'reading',
+    title: 'Reading',
+    description: 'Analyze and comprehend diverse texts.',
+    tests: 12,
+    icon: BookOpen,
+    hoverIcon: BookOpenText,
   },
   {
     id: 'writing',
-    index: '03',
     title: 'Writing',
-    description: 'Plan and write Task 1 and Task 2 responses with clear band-focused feedback.',
-    icon: PenSquare,
-    chips: ['task studio', 'band hints', 'timed mode'],
+    description: 'Express ideas clearly in written form.',
+    tests: 10,
+    icon: PenLine,
+    hoverIcon: null,
   },
   {
     id: 'speaking',
-    index: '04',
     title: 'Speaking',
-    description: 'Practise all three parts with recording, replay and fluency-focused analysis.',
+    description: 'Communicate effectively in interviews.',
+    tests: 8,
     icon: Mic2,
-    chips: ['3 parts', 'voice mode', 'AI feedback'],
+    hoverIcon: null,
   },
 ] as const
+
+type SkillId = (typeof skills)[number]['id']
+type SkillScore = Record<SkillId, number>
+
+const DAY_MS = 86_400_000
+
+function examDateOverrideKey(userId?: string) {
+  return `smarttest:ielts-exam-date:${userId?.trim() || 'guest'}`
+}
+
+function examTimeOverrideKey(userId?: string) {
+  return `smarttest:ielts-exam-time:${userId?.trim() || 'guest'}`
+}
+
+function loadExamDate(userId?: string) {
+  if (typeof window === 'undefined') return ''
+  const stored = window.localStorage.getItem(examDateOverrideKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+  return stored >= localToday() ? stored : ''
+}
+
+function loadExamTime(userId?: string) {
+  if (typeof window === 'undefined') return '08:00'
+  return window.localStorage.getItem(examTimeOverrideKey(userId)) || '08:00'
+}
+
+function saveExamDate(date: string, time: string, userId?: string) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(examDateOverrideKey(userId), date)
+  window.localStorage.setItem(examTimeOverrideKey(userId), time)
+  const profile = loadOnboardingProfile(userId)
+  if (!profile) return
+  const examAt = new Date(`${date}T${time}:00`).getTime()
+  saveOnboardingProfile({
+    ...profile,
+    ieltsExamDate: date,
+    daysToExam: Math.max(0, Math.ceil((examAt - Date.now()) / DAY_MS)),
+  }, userId)
+}
+
+function remainingUntil(date: string, time: string, now: number) {
+  if (!date) return null
+  const distance = Math.max(0, new Date(`${date}T${time}:00`).getTime() - now)
+  return {
+    days: Math.floor(distance / DAY_MS),
+    hours: Math.floor((distance / 3_600_000) % 24),
+    minutes: Math.floor((distance / 60_000) % 60),
+    seconds: Math.floor((distance / 1000) % 60),
+    finished: distance === 0,
+  }
+}
+
+function localToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function ArenaBrandMark() {
+  return (
+    <svg viewBox="0 0 120 96" role="img" aria-label="IELTS Arena graduation cap">
+      <path d="M8 34.5 60 9l52 25.5L60 60 8 34.5Z" />
+      <path d="M28 49.5v22c0 9 14.3 16.5 32 16.5s32-7.5 32-16.5v-22L60 65 28 49.5Z" />
+      <path className="ielts-arena-tassel" d="M105 39v29" />
+      <circle className="ielts-arena-tassel" cx="105" cy="74" r="4.5" />
+    </svg>
+  )
+}
+
+function formatBand(score: number) {
+  return score.toFixed(1)
+}
+
+function validBand(score: unknown): number {
+  return typeof score === 'number' && Number.isFinite(score) && score > 0 && score <= 9 ? score : 0
+}
+
+function isListeningAttempt(testId: string, testTitle: string) {
+  return `${testId} ${testTitle}`.toLowerCase().includes('listening')
+}
+
+function calculateOverallBand(scores: SkillScore) {
+  const completedBands = Object.values(scores).filter((score) => score > 0)
+  if (completedBands.length === 0) return 0
+  const average = completedBands.reduce((sum, score) => sum + score, 0) / completedBands.length
+  return Math.round(average * 2) / 2
+}
+
+function MiniBand({ score }: { score: number }) {
+  const degrees = Math.min(360, Math.max(0, (score / 9) * 360))
+
+  return (
+    <div
+      className="ielts-arena-mini-band"
+      style={{ '--band-degrees': `${degrees}deg` } as React.CSSProperties}
+      aria-label={`Band ${formatBand(score)}`}
+    >
+      <div>
+        <span>Band</span>
+        <strong>{formatBand(score)}</strong>
+      </div>
+    </div>
+  )
+}
+
+function SkillCard({
+  skill,
+  onOpen,
+  animateHover,
+}: {
+  skill: (typeof skills)[number] & { score: number }
+  onOpen: (id: SkillId) => void
+  animateHover: boolean
+}) {
+  const Icon = skill.icon
+  const HoverIcon = skill.hoverIcon
+
+  return (
+    <motion.article
+      className={`ielts-arena-glass ielts-arena-skill-card ielts-arena-skill-card--${skill.id}`}
+      whileHover={animateHover ? { y: -6, scale: 1.008 } : undefined}
+      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+    >
+      <div className="ielts-arena-card-heading">
+        <span className="ielts-arena-icon ielts-arena-skill-icon" data-skill={skill.id}>
+          <span className="ielts-arena-emblem-halo" aria-hidden="true" />
+          <Icon className="ielts-arena-emblem-glyph" />
+          {HoverIcon ? <HoverIcon className="ielts-arena-emblem-hover-glyph" aria-hidden="true" /> : null}
+          <span className="ielts-arena-emblem-detail" aria-hidden="true" />
+        </span>
+        <h2>{skill.title}</h2>
+      </div>
+      <p className="ielts-arena-skill-description">{skill.description}</p>
+      <div className="ielts-arena-card-footer">
+        <MiniBand score={skill.score} />
+        <div className="ielts-arena-card-action">
+          <p>{skill.tests} Tests Available</p>
+          <button type="button" onClick={() => onOpen(skill.id)} aria-label={`Practice ${skill.title}`}>
+            Practice
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  )
+}
 
 export default function IELTS() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const { allowHoverMotion } = useMotionPreferences()
-  const profile = loadOnboardingProfile(user?.id)
+  const speakingSessions = useSpeakingStore((state) => state.sessions)
+  const { minimalMotion, allowHoverMotion } = useMotionPreferences()
+  const [examDate, setExamDate] = useState(() => loadExamDate(user?.id))
+  const [examTime, setExamTime] = useState(() => loadExamTime(user?.id))
+  const [draftExamDate, setDraftExamDate] = useState(() => loadExamDate(user?.id))
+  const [draftExamTime, setDraftExamTime] = useState(() => loadExamTime(user?.id))
+  const [editingExamDate, setEditingExamDate] = useState(false)
+  const [now, setNow] = useState(Date.now())
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const mockFrom = navigationState?.from ?? 'tests'
+  const skillScores = useMemo<SkillScore>(() => {
+    const objectiveHistory = getReadingAnalysisHistory(user?.id)
+    const latestListening = objectiveHistory.find((entry) => isListeningAttempt(entry.testId, entry.testTitle))
+    const latestReading = objectiveHistory.find((entry) => !isListeningAttempt(entry.testId, entry.testTitle))
+    const latestWriting = getWritingAnalysisHistory(user?.id)[0]
+    const userSpeakingSessions = selectUserSessions(speakingSessions, user?.id ?? null)
+    const latestSpeaking = userSpeakingSessions[userSpeakingSessions.length - 1]
 
-  const openSection = (id: (typeof sections)[number]['id']) => {
-    const target = id === 'writing' ? '/ielts/writing/tests' : `/ielts/${id}`
+    return {
+      listening: validBand(latestListening?.bandScore),
+      reading: validBand(latestReading?.bandScore),
+      writing: validBand(latestWriting?.overallBand),
+      speaking: validBand(latestSpeaking?.overallBand),
+    }
+  }, [speakingSessions, user?.id])
+  const scoredSkills = skills.map((skill) => ({ ...skill, score: skillScores[skill.id] }))
+  const overallBand = calculateOverallBand(skillScores)
+  const completedSkillCount = Object.values(skillScores).filter((score) => score > 0).length
+  const overallDegrees = Math.min(360, Math.max(0, (overallBand / 9) * 360))
+  const remaining = useMemo(() => remainingUntil(examDate, examTime, now), [examDate, examTime, now])
+  const examDateObject = examDate ? new Date(`${examDate}T${examTime}:00`) : null
+  const formattedExamDate = examDateObject
+    ? examDateObject.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    : 'No exam date selected'
+
+  useEffect(() => {
+    const storedDate = loadExamDate(user?.id)
+    const storedTime = loadExamTime(user?.id)
+    setExamDate(storedDate)
+    setExamTime(storedTime)
+    setDraftExamDate(storedDate)
+    setDraftExamTime(storedTime)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!examDate) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [examDate])
+
+  const confirmExamDate = () => {
+    if (!draftExamDate) return
+    saveExamDate(draftExamDate, draftExamTime, user?.id)
+    setExamDate(draftExamDate)
+    setExamTime(draftExamTime)
+    setNow(Date.now())
+    setEditingExamDate(false)
+  }
+
+  const openSection = (id: SkillId) => {
+    const target = id === 'writing' ? '/ielts/writing/tests' : id === 'speaking' ? '/ielts/speaking/tests' : `/ielts/${id}`
     navigate(target, {
       state: fromMock ? { entry: 'mock-ielts', from: mockFrom } : { entry: 'ielts-hub' },
     })
   }
 
+  const scrollToFeatures = () => {
+    document.getElementById('ielts-arena-features')?.scrollIntoView({ behavior: minimalMotion ? 'auto' : 'smooth' })
+  }
+
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
-      <div className="relative mx-auto w-full max-w-[92rem] space-y-5">
-        <CatalogHero
-          tone="blue"
-          backLabel={fromMock ? 'Mock IELTS' : 'Dashboard'}
-          onBack={() => fromMock ? navigate('/mock/ielts', { state: { from: mockFrom } }) : navigate('/dashboard')}
-          eyebrow="IELTS Master Track"
-          title={<>One clear path to your <span className="bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">best IELTS band.</span></>}
-          subtitle="Reading, Listening, Writing and Speaking follow the same focused workflow: practise, review mistakes, then improve with precise feedback."
-          filters={sections.map((section) => ({ id: section.id, label: section.title }))}
-          activeFilter=""
-          onFilterChange={(id) => openSection(id as (typeof sections)[number]['id'])}
-          summary={[
-            { label: 'Exam sections', value: '4' },
-            { label: 'Full test', value: '2h 45m' },
-          ]}
-          actions={(
-            <>
-              <button onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 px-4 text-xs font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5">
-                Start full IELTS mock <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-              <button onClick={() => navigate('/analyze-mistakes')} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-xs font-black text-blue-700 shadow-sm transition-colors hover:bg-blue-50">
-                <BrainCircuit className="h-3.5 w-3.5" /> Open Review Lab
-              </button>
-            </>
-          )}
-        />
+    <div className="ielts-arena-page">
+      <div className="ielts-arena-ambient" aria-hidden="true">
+        <span className="ielts-arena-ambient-blue" />
+        <span className="ielts-arena-ambient-peach" />
+        <span className="ielts-arena-ambient-bottom" />
+      </div>
 
-        <ExamCountdown
-          exam="IELTS"
-          tone="blue"
-          date={profile?.ieltsExamDate}
-          currentScore={profile?.currentIeltsScore}
-          targetScore={profile?.targetIeltsScore}
-        />
+      <div className="ielts-arena-shell">
+        <motion.header
+          className="ielts-arena-header"
+          aria-label="IELTS Arena navigation"
+          initial={minimalMotion ? false : { opacity: 0, y: -18, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <button
+            type="button"
+            className="ielts-arena-brand"
+            onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard', fromMock ? { state: { from: mockFrom } } : undefined)}
+            aria-label={fromMock ? 'Back to Mock IELTS' : 'Back to dashboard'}
+          >
+            <span className="ielts-arena-brand-mark"><ArenaBrandMark /></span>
+            <span className="ielts-arena-brand-copy">
+              <strong>IELTS <em>Arena</em></strong>
+              <small>Master all four skills</small>
+            </span>
+          </button>
 
-        <Reveal delay={0.04}>
-          <section className="relative isolate overflow-hidden rounded-[1.6rem] border border-blue-100 bg-white p-5 shadow-[0_14px_34px_rgba(37,99,235,0.08)] sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.2)]">
-                  <BrainCircuit className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">IELTS Review Lab</p>
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-600">AI feedback</span>
-                    <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-bold text-indigo-600">Saved reviews</span>
-                  </div>
-                  <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Turn every mistake into your next score gain.</h2>
-                  <p className="mt-1 max-w-3xl text-xs font-medium leading-5 text-slate-500 sm:text-sm">See repeated Reading and Writing patterns, understand why answers failed, and build a focused recovery queue.</p>
-                </div>
+          <nav className="ielts-arena-nav" aria-label="Main links">
+            <button type="button" className="is-active" onClick={scrollToFeatures}>Features</button>
+            <button type="button" onClick={() => navigate('/premium')}>Pricing</button>
+            <button type="button" onClick={() => navigate('/about')}>About</button>
+            <a href="mailto:support@profai.uz">Contact</a>
+          </nav>
+
+          <button
+            type="button"
+            className="ielts-arena-login"
+            onClick={() => navigate(user ? '/dashboard' : '/login')}
+          >
+            {user ? 'Dashboard' : 'Login'}
+          </button>
+        </motion.header>
+
+        <motion.section
+          className="ielts-arena-countdown"
+          initial={minimalMotion ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          aria-label="IELTS exam countdown"
+        >
+          <span className="ielts-arena-countdown-glow" aria-hidden="true" />
+          <div className="ielts-arena-countdown-date">
+            <span className="ielts-arena-countdown-icon"><CalendarDays /></span>
+            <div>
+              <span className="ielts-arena-kicker">Your booked IELTS exam</span>
+              <strong>{formattedExamDate}</strong>
+              <small>{examDate ? (remaining?.finished ? 'Exam day has arrived' : `${examTime} local · booking-confirmed time`) : 'Use the exact date and time from your booking'}</small>
+            </div>
+            <button
+              type="button"
+              className="ielts-arena-date-edit"
+              onClick={() => {
+                setDraftExamDate(examDate)
+                setDraftExamTime(examTime)
+                setEditingExamDate((value) => !value)
+              }}
+            >
+              <Pencil /> {examDate ? 'Change' : 'Set date'}
+            </button>
+          </div>
+
+          <div className="ielts-arena-countdown-units" aria-live="polite">
+            {([
+              ['Days', remaining?.days ?? 0],
+              ['Hours', remaining?.hours ?? 0],
+              ['Minutes', remaining?.minutes ?? 0],
+              ['Seconds', remaining?.seconds ?? 0],
+            ] as const).map(([label, value]) => (
+              <div className="ielts-arena-countdown-unit" key={label}>
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.strong
+                    key={value}
+                    initial={minimalMotion ? false : { opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={minimalMotion ? undefined : { opacity: 0, y: 6 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    {remaining ? String(value).padStart(2, '0') : '—'}
+                  </motion.strong>
+                </AnimatePresence>
+                <span>{label}</span>
               </div>
-              <button onClick={() => navigate('/analyze-mistakes')} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.16)] transition-colors hover:bg-blue-700">
-                Analyze mistakes <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+            ))}
+          </div>
+
+          <div className="ielts-arena-countdown-progress">
+            <span className="ielts-arena-countdown-icon"><Target /></span>
+            <div>
+              <span className="ielts-arena-kicker">Verified score data</span>
+              <strong>{overallBand > 0 ? formatBand(overallBand) : '—'} <small>Overall</small></strong>
+              <p>{completedSkillCount} of 4 skills scored</p>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {editingExamDate ? (
+              <motion.div
+                className="ielts-arena-date-editor"
+                initial={minimalMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={minimalMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Clock3 />
+                <div className="ielts-arena-date-editor-label">
+                  <label htmlFor="ielts-exam-date">Booking-confirmed exam</label>
+                  <a href="https://www.britishcouncil.uz/en/exam/ielts/test-dates-fees-location" target="_blank" rel="noreferrer">
+                    Official dates <ExternalLink />
+                  </a>
+                </div>
+                <input
+                  id="ielts-exam-date"
+                  type="date"
+                  min={localToday()}
+                  value={draftExamDate}
+                  onChange={(event) => setDraftExamDate(event.target.value)}
+                />
+                <input
+                  aria-label="IELTS exam start time"
+                  type="time"
+                  value={draftExamTime}
+                  onChange={(event) => setDraftExamTime(event.target.value)}
+                />
+                <button type="button" className="ielts-arena-date-save" onClick={confirmExamDate} disabled={!draftExamDate}>
+                  <Check /> Save date
+                </button>
+                <button type="button" className="ielts-arena-date-cancel" onClick={() => setEditingExamDate(false)} aria-label="Cancel date editing">
+                  <X />
+                </button>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.section>
+
+        <motion.main
+          id="ielts-arena-features"
+          className="ielts-arena-dashboard"
+          initial={minimalMotion ? false : { opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <section className="ielts-arena-skills" aria-label="IELTS skills">
+            {scoredSkills.map((skill) => <SkillCard key={skill.id} skill={skill} onOpen={openSection} animateHover={allowHoverMotion} />)}
+          </section>
+
+          <section className="ielts-arena-glass ielts-arena-overview" aria-labelledby="ielts-overview-title">
+            <h1 id="ielts-overview-title">Your IELTS<br />overview</h1>
+            <div
+              className="ielts-arena-overall-band"
+              style={{ '--overall-degrees': `${overallDegrees}deg` } as React.CSSProperties}
+              aria-label={`${formatBand(overallBand)} overall band`}
+            >
+              <div>
+                <strong>{formatBand(overallBand)}</strong>
+                <span>Overall Band</span>
+              </div>
+            </div>
+
+            <div className="ielts-arena-bars" aria-label="Skill band comparison">
+              {scoredSkills.map((skill) => (
+                <div className="ielts-arena-bar-item" key={skill.id}>
+                  <span>{formatBand(skill.score)}</span>
+                  <div className="ielts-arena-bar-track">
+                    <i style={{ height: `${(skill.score / 9) * 100}%` }} />
+                  </div>
+                  <small>{skill.title}</small>
+                </div>
+              ))}
             </div>
           </section>
-        </Reveal>
 
-        <div className="flex items-end justify-between gap-4 px-1">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">Choose a skill</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Your four-section IELTS workspace</h2>
-          </div>
-          <span className="hidden items-center gap-1 text-[11px] font-bold text-slate-400 sm:inline-flex"><Sparkles className="h-3.5 w-3.5 text-blue-500" /> One structure, zero confusion</span>
-        </div>
+          <aside className="ielts-arena-recommendations" aria-label="Recommended IELTS activities">
+            <motion.button
+              type="button"
+              className="ielts-arena-glass ielts-arena-recommendation ielts-arena-reading-next"
+              onClick={() => openSection('reading')}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
+            >
+              <h2>Recommended next</h2>
+              <div className="ielts-arena-recommendation-title">
+                <span className="ielts-arena-icon"><FileText /></span>
+                <strong>Task 1 reading</strong>
+              </div>
+              <p>Complete a focused reading set and review every missed answer.</p>
+            </motion.button>
 
-        <Stagger className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sections.map((section) => {
-            const Icon = section.icon
-            return (
-              <StaggerItem key={section.id} className="h-full">
-                <Tilt3D className="h-full rounded-[1.7rem]" max={4}>
-                  <motion.button
-                    type="button"
-                    onClick={() => openSection(section.id)}
-                    whileHover={allowHoverMotion ? { y: -4 } : undefined}
-                    className="group relative isolate flex h-full min-h-[19rem] w-full flex-col overflow-hidden rounded-[1.7rem] border border-white/90 bg-white/76 p-5 text-left shadow-[0_18px_46px_rgba(37,99,235,0.09)] backdrop-blur-2xl transition hover:border-blue-200"
-                  >
-                    <span className="pointer-events-none absolute -right-12 -top-14 -z-10 h-40 w-40 rounded-full bg-blue-100/80 blur-3xl transition duration-700 group-hover:scale-125" />
-                    <div className="flex items-start justify-between">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-[0_10px_24px_rgba(37,99,235,0.25)]"><Icon className="h-5 w-5" /></span>
-                      <span className="text-3xl font-black tracking-[-0.08em] text-slate-100">{section.index}</span>
-                    </div>
-                    <p className="mt-5 text-[9px] font-black uppercase tracking-[0.17em] text-blue-600">IELTS section</p>
-                    <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{section.title}</h3>
-                    <p className="mt-2 text-xs font-medium leading-5 text-slate-500">{section.description}</p>
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {section.chips.map((chip) => <span key={chip} className="rounded-full border border-slate-100 bg-white px-2.5 py-1 text-[9px] font-bold text-slate-500">{chip}</span>)}
-                    </div>
-                    <span className="mt-auto inline-flex items-center gap-1 pt-5 text-xs font-black text-blue-700">Open studio <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></span>
-                  </motion.button>
-                </Tilt3D>
-              </StaggerItem>
-            )
-          })}
-        </Stagger>
+            <motion.button
+              type="button"
+              className="ielts-arena-glass ielts-arena-recommendation ielts-arena-mock-next"
+              onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
+            >
+              <h2>Recommended next</h2>
+              <div className="ielts-arena-recommendation-row">
+                <span className="ielts-arena-icon"><CalendarCheck /></span>
+                <p>Complete a Full Mock task</p>
+              </div>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              className="ielts-arena-glass ielts-arena-recommendation ielts-arena-full-mock"
+              onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}
+              whileHover={allowHoverMotion ? { y: -3 } : undefined}
+            >
+              <span className="ielts-arena-icon"><FileCheck2 /></span>
+              <span><strong>Full-Mock</strong><small>Take a Full Mock Test</small></span>
+            </motion.button>
+          </aside>
+        </motion.main>
       </div>
     </div>
   )

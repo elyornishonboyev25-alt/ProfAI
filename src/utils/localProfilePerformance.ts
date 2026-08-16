@@ -2,9 +2,10 @@ import { getSATSectionTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
 import { useSpeakingStore } from '@/store/speakingStore'
-import type { Difficulty, ProfileOverview, TestCategory } from '@/types/platform'
+import type { DashboardOverview, Difficulty, ProfileOverview, TestCategory } from '@/types/platform'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { loadActivityLog } from '@/utils/weeklyPlanner'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 
 type TrackKey = ProfileOverview['skillAnalytics']['trackBreakdown'][number]['key']
@@ -190,6 +191,72 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
 
   return [...readingAttempts, ...writingAttempts, ...speakingAttempts, ...satAttempts]
     .sort((left, right) => new Date(left.completedAt).getTime() - new Date(right.completedAt).getTime())
+}
+
+function localDateKey(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function dashboardAttemptAlreadySynced(attempt: LocalAttempt, overview: DashboardOverview) {
+  if (attempt.synced) return true
+  const normalizedTitle = attempt.title.trim().toLowerCase()
+  return overview.activityTimeline.some((item) => (
+    item.type === 'attempt' &&
+    item.title.trim().toLowerCase().includes(normalizedTitle) &&
+    Math.abs(new Date(item.date).getTime() - new Date(attempt.completedAt).getTime()) <= 120_000
+  ))
+}
+
+export function mergeLocalDashboardPerformance(overview: DashboardOverview, userId: string): DashboardOverview {
+  const localAttempts = buildLocalAttempts(userId)
+  const hasServerHistory = overview.metrics.totalTests > 0
+  const unsyncedAttempts = localAttempts.filter((attempt) => (
+    !hasServerHistory || !dashboardAttemptAlreadySynced(attempt, overview)
+  ))
+  const activityLog = loadActivityLog(userId)
+
+  const serverCount = overview.metrics.totalTests
+  const totalTests = serverCount + unsyncedAttempts.length
+  const localScoreTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.finalScore, 0)
+  const averageScore = totalTests > 0
+    ? (overview.metrics.averageScore * serverCount + localScoreTotal) / totalTests
+    : 0
+
+  const weeklyProgress = overview.weeklyProgress.map((day) => {
+    const dateKey = day.date.slice(0, 10)
+    const dailyAttempts = unsyncedAttempts.filter((attempt) => localDateKey(attempt.completedAt) === dateKey)
+    const trackedMinutes = Object.values(activityLog[dateKey] ?? {}).reduce(
+      (total, minutes) => total + (minutes ?? 0),
+      0,
+    )
+    const localAttemptSeconds = dailyAttempts.reduce((total, attempt) => total + attempt.timeSpentSec, 0)
+    const studyTimeSec = Math.max(day.studyTimeSec ?? 0, trackedMinutes * 60, localAttemptSeconds)
+
+    return {
+      ...day,
+      testsCompleted: day.testsCompleted + dailyAttempts.length,
+      questionsAnswered: day.questionsAnswered + dailyAttempts.reduce((total, attempt) => total + attempt.totalQuestions, 0),
+      studyTimeSec,
+      active: day.active || dailyAttempts.length > 0 || studyTimeSec > 0,
+    }
+  })
+  const weeklyStudySeconds = weeklyProgress.reduce((total, day) => total + day.studyTimeSec, 0)
+
+  return {
+    ...overview,
+    metrics: {
+      ...overview.metrics,
+      totalTests,
+      averageScore: Number(averageScore.toFixed(2)),
+      weeklyStudySeconds,
+    },
+    weeklyProgress,
+  }
 }
 
 function isRepresentedByBackend(attempt: LocalAttempt, overview: ProfileOverview) {

@@ -39,6 +39,7 @@ export type DashboardOverview = {
   metrics: {
     totalTests: number
     averageScore: number
+    weeklyStudySeconds: number
     currentRank: number | null
     currentStreak: number
   }
@@ -47,6 +48,7 @@ export type DashboardOverview = {
     label: string
     testsCompleted: number
     questionsAnswered: number
+    studyTimeSec: number
     active: boolean
   }>
   recommendedTests: TestSummary[]

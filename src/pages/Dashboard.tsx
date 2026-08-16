@@ -27,19 +27,29 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
+import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
+const emptyWeek = Array.from({ length: 7 }, (_, index) => {
+  const date = new Date()
+  date.setHours(12, 0, 0, 0)
+  date.setDate(date.getDate() - (6 - index))
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return {
+    date: `${year}-${month}-${day}`,
+    label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+    testsCompleted: 0,
+    questionsAnswered: 0,
+    studyTimeSec: 0,
+    active: false,
+  }
+})
+
 const EMPTY_OVERVIEW: DashboardOverview = {
-  metrics: { totalTests: 0, averageScore: 0, currentRank: null, currentStreak: 0 },
-  weeklyProgress: [
-    { date: '', label: 'Mon', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Tue', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Wed', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Thu', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Fri', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Sat', testsCompleted: 0, questionsAnswered: 0, active: false },
-    { date: '', label: 'Sun', testsCompleted: 0, questionsAnswered: 0, active: false },
-  ],
+  metrics: { totalTests: 0, averageScore: 0, weeklyStudySeconds: 0, currentRank: null, currentStreak: 0 },
+  weeklyProgress: emptyWeek,
   recommendedTests: [],
   activityTimeline: [],
   miniLeaderboard: [],
@@ -94,7 +104,11 @@ export default function Dashboard() {
     [user?.id],
   )
 
-  const overview = data ?? EMPTY_OVERVIEW
+  const baseOverview = data ?? EMPTY_OVERVIEW
+  const overview = useMemo(
+    () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
+    [baseOverview, user],
+  )
   const targetExam = profile?.targetExam ?? 'IELTS'
   const ieltsCurrent = profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
   const satCurrent = profile?.currentSatScore ?? 1050
@@ -115,15 +129,13 @@ export default function Dashboard() {
     () =>
       overview.weeklyProgress.map((day) => ({
         ...day,
-        activity: Math.max(day.testsCompleted * 12, Math.min(40, day.questionsAnswered)),
+        activity: Number(((day.studyTimeSec ?? 0) / 3600).toFixed(2)),
       })),
     [overview.weeklyProgress],
   )
 
-  const weeklyHours = useMemo(
-    () => (chartData.reduce((total, day) => total + day.activity, 0) / 10).toFixed(1),
-    [chartData],
-  )
+  const weeklyHours = overview.metrics.weeklyStudySeconds / 3600
+  const weeklyHoursLabel = weeklyHours > 0 && weeklyHours < 0.1 ? '<0.1h' : `${weeklyHours.toFixed(1)}h`
 
   const leaderboard = overview.miniLeaderboard.length
     ? overview.miniLeaderboard.slice(0, 5)
@@ -231,7 +243,7 @@ export default function Dashboard() {
 
           <div className="min-w-0 space-y-5">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Study hours" value={`${weeklyHours}h`} note="This week" icon={Clock3} />
+              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} />
               <StatCard label="Tests done" value={String(overview.metrics.totalTests)} note="All-time attempts" icon={CheckCircle2} />
               <StatCard label="Average" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Across practice" icon={BarChart3} />
               <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} />

@@ -131,22 +131,31 @@ router.get(
     })
 
     const sevenDays = buildSevenDayWindow(now)
-    const activities = await prisma.dailyActivity.findMany({
+    const weeklyAttempts = await prisma.testAttempt.findMany({
       where: {
         userId,
-        activityDate: {
+        completedAt: {
           gte: sevenDays[0],
-          lte: sevenDays[6],
+          lt: addUtcDays(sevenDays[6], 1),
         },
       },
       select: {
-        activityDate: true,
-        testsCompleted: true,
-        questionsAnswered: true,
+        completedAt: true,
+        timeSpentSec: true,
+        totalQuestions: true,
       },
     })
 
-    const activityMap = new Map(activities.map((activity) => [startOfUtcDay(activity.activityDate).toISOString(), activity]))
+    const activityMap = new Map<string, { testsCompleted: number; questionsAnswered: number; studyTimeSec: number }>()
+    for (const attempt of weeklyAttempts) {
+      const key = startOfUtcDay(attempt.completedAt).toISOString()
+      const previous = activityMap.get(key) ?? { testsCompleted: 0, questionsAnswered: 0, studyTimeSec: 0 }
+      activityMap.set(key, {
+        testsCompleted: previous.testsCompleted + 1,
+        questionsAnswered: previous.questionsAnswered + attempt.totalQuestions,
+        studyTimeSec: previous.studyTimeSec + attempt.timeSpentSec,
+      })
+    }
 
     const weeklyProgress = sevenDays.map((day) => {
       const key = startOfUtcDay(day).toISOString()
@@ -157,9 +166,12 @@ router.get(
         label: formatDayLabel(day),
         testsCompleted: activity?.testsCompleted ?? 0,
         questionsAnswered: activity?.questionsAnswered ?? 0,
+        studyTimeSec: activity?.studyTimeSec ?? 0,
         active: Boolean((activity?.testsCompleted ?? 0) > 0),
       }
     })
+
+    const weeklyStudySeconds = weeklyProgress.reduce((total, day) => total + day.studyTimeSec, 0)
 
     const activityTimeline = [
       ...recentAttempts.map((attempt) => ({
@@ -184,6 +196,7 @@ router.get(
       metrics: {
         totalTests: attemptsCount,
         averageScore: Number((attemptAggregate._avg.finalScore ?? 0).toFixed(2)),
+        weeklyStudySeconds,
         currentRank: leaderboard.currentUserRank,
         currentStreak: user.currentStreak,
       },

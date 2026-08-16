@@ -78,7 +78,7 @@ export type LearnerSearchResult = {
   targetScore: number | null
   targetUniversitySlug: string | null
   online: boolean
-  /** True only for the validated rolling seven-day leaderboard winner. */
+  /** True for the current or last confirmed weekly community champion. */
   weeklyChampion?: boolean
   weeklyScore?: number
 }

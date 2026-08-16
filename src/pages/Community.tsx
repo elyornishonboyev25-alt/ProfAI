@@ -395,7 +395,12 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
       whileHover={{ y: -8, scale: 1.012 }}
       className={cn('community-learner-card', featured && 'is-featured')}
     >
-      {featured ? <span className="community-top-badge"><Crown className="h-5 w-5" /> Top learner this week</span> : null}
+      {featured ? (
+        <span className="community-top-badge">
+          <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
+          <span>Top learner this week</span>
+        </span>
+      ) : null}
       <div className="community-avatar-ring">
         <div className="community-avatar">{learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}</div>
         <span className={cn('community-presence', learner.online && 'is-online')} />

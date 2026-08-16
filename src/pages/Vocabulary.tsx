@@ -147,12 +147,6 @@ export default function Vocabulary() {
     return <Navigate to="/vocabulary" replace />
   }
 
-  // SAT Vocabulary now lives inside the unified SAT command center. The
-  // standalone vocabulary entry opens the IELTS track directly.
-  if (!trackParam) {
-    return <Navigate to="/vocabulary/ielts" replace />
-  }
-
   if (!routeTrack) {
     return (
       <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
@@ -175,19 +169,19 @@ export default function Vocabulary() {
                     </motion.button>
                     <span className="premium-top-chip gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Vocabulary Lab
+                      Vocabulary Arena
                     </span>
                   </div>
                   <h1 className="mt-4 text-4xl font-black leading-tight text-[#0f172a] sm:text-5xl">
-                    Choose your <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent">Vocabulary Arena</span>
+                    Build a stronger <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-red-500 bg-clip-text text-transparent">vocabulary.</span>
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                    IELTS and SAT now run as separate immersive pages. Each track includes smooth accordion navigation and passage-level activity views.
+                    Four focused tracks. Choose one and start practising.
                   </p>
                 </div>
                 <div className="relative overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(37,99,235,0.18)]">
                   <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-200/55 blur-2xl" />
-                  <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-orange-200/45 blur-2xl" />
+                  <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-red-200/45 blur-2xl" />
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Total Terms</p>
                   <p className="mt-1 text-4xl font-black text-slate-900">
                     <CountUp value={ieltsStats.words + satStats.words} />
@@ -254,9 +248,9 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/articles')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-orange-100/70 p-6 text-left shadow-[0_18px_36px_rgba(245,158,11,0.16)]"
+                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-red-200 bg-gradient-to-br from-white via-red-50/60 to-blue-100/55 p-6 text-left shadow-[0_18px_36px_rgba(220,38,38,0.12)]"
                 >
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-semibold text-amber-700">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
                     <BookOpenCheck className="h-3.5 w-3.5" />
                     Articles Track
                   </div>
@@ -268,7 +262,7 @@ export default function Vocabulary() {
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.length} articles</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.reduce((s, a) => s + a.vocabulary.length, 0)} terms</span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-amber-700 transition group-hover:translate-x-1">Open Articles page -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-red-700 transition group-hover:translate-x-1">Open Articles page -&gt;</p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -277,9 +271,9 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/my-words')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-teal-100/70 p-6 text-left shadow-[0_18px_36px_rgba(16,185,129,0.16)]"
+                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-red-100/45 p-6 text-left shadow-[0_18px_36px_rgba(37,99,235,0.13)]"
                 >
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-semibold text-emerald-700">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Bookmark className="h-3.5 w-3.5" />
                     Personal Track
                   </div>
@@ -293,7 +287,7 @@ export default function Vocabulary() {
                       {countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')} saved
                     </span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-emerald-700 transition group-hover:translate-x-1">Open My Words -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open My Words -&gt;</p>
                 </button>
               </Tilt3D>
             </StaggerItem>

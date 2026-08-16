@@ -100,7 +100,7 @@ export function FloatingAIAssistant() {
   const showOrbLauncher = !isLegacyTestMode && !isOpen && hasPremium
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[120] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="pointer-events-none fixed bottom-24 right-4 z-[120] flex flex-col items-end gap-3 lg:bottom-6 lg:right-6">
       <AnimatePresence>
         {isOpen && !assistantBlocked ? (
           <motion.div
@@ -117,10 +117,8 @@ export function FloatingAIAssistant() {
         ) : null}
       </AnimatePresence>
 
-      <motion.button
+      <button
         type="button"
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.96 }}
         onClick={() => {
           if (assistantBlocked) return
           if (isOpen) {
@@ -130,12 +128,12 @@ export function FloatingAIAssistant() {
           open()
         }}
         aria-label={isOpen ? 'Close AI tutor' : 'Open ProfAI tutor'}
-        className={`pointer-events-auto group relative inline-flex h-14 w-14 items-center justify-center rounded-[20px] border shadow-[0_14px_34px_-12px_rgba(15,23,42,0.52)] ring-1 ring-white/80 backdrop-blur-xl transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 active:shadow-[0_8px_22px_-12px_rgba(15,23,42,0.5)] dark:ring-white/10 dark:focus-visible:ring-offset-slate-950 ${
+        className={`pointer-events-auto group relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition-colors ${
           showOrbLauncher
-            ? 'border-slate-200/80 bg-white/90 hover:border-rose-200 hover:bg-white dark:border-white/10 dark:bg-slate-900/90 dark:hover:border-rose-400/40 dark:hover:bg-slate-900'
+            ? 'border-blue-200/80 bg-white'
             : isLegacyTestMode
-              ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600'
-              : 'border-rose-400/50 bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white hover:border-rose-300'
+              ? 'border-slate-700 bg-slate-900 text-slate-200'
+              : 'border-blue-400/60 bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-700 text-white'
         }`}
       >
         {!isOpen ? (
@@ -147,7 +145,7 @@ export function FloatingAIAssistant() {
           </span>
         ) : null}
         {showOrbLauncher ? (
-          <VoiceOrb state={voiceState} level={voiceLevel} size={42} />
+          <VoiceOrb state={voiceState} level={voiceLevel} size={46} />
         ) : (
           <span className="relative">{isOpen ? <X className="h-5 w-5" /> : <Bot className="h-5 w-5" />}</span>
         )}
@@ -160,7 +158,7 @@ export function FloatingAIAssistant() {
             <Sparkles className="h-2 w-2 text-white" />
           </span>
         ) : null}
-      </motion.button>
+      </button>
     </div>
   )
 }

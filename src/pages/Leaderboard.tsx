@@ -59,7 +59,7 @@ function getMovement(row: LeaderboardRow) {
     label: `${up ? '+' : '-'}${Math.abs(row.rankDelta)}`,
     className: up
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : 'border-red-200 bg-red-50 text-red-700',
+      : 'border-blue-200 bg-blue-50 text-blue-700',
   }
 }
 
@@ -92,14 +92,14 @@ function podiumTheme(rank: number) {
     }
   }
   return {
-    cardBg: 'from-orange-100 via-orange-50/40 to-red-100/60',
+    cardBg: 'from-orange-100 via-orange-50/40 to-blue-100/60',
     cardBorder: 'border-orange-300/70',
     cardShadow: 'shadow-[0_22px_44px_rgba(234,88,12,0.22)]',
     ringFrom: '#FB923C',
     ringTo: '#C2410C',
     crown: 'text-orange-600',
     label: 'Bronze',
-    labelBg: 'bg-gradient-to-r from-orange-400 to-red-500',
+    labelBg: 'bg-gradient-to-r from-orange-400 to-blue-500',
     barH: 'h-20',
   }
 }
@@ -178,7 +178,7 @@ export default function Leaderboard() {
       <div className="relative mx-auto w-full max-w-7xl">
       {/* ── Hero ──────────────────────────────────────────────── */}
       <Reveal>
-        <section className="relative overflow-hidden rounded-[2rem] border border-red-100 bg-[radial-gradient(circle_at_8%_12%,rgba(252,165,165,0.35),transparent_38%),radial-gradient(circle_at_90%_10%,rgba(251,113,133,0.25),transparent_42%),linear-gradient(150deg,#fff,#fff5f5)] p-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">
+        <section className="relative overflow-hidden rounded-[2rem] border border-blue-100 bg-[radial-gradient(circle_at_8%_12%,rgba(147,197,253,0.35),transparent_38%),radial-gradient(circle_at_90%_10%,rgba(251,113,133,0.25),transparent_42%),linear-gradient(150deg,#fff,#fff5f5)] p-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">
 
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -212,7 +212,7 @@ export default function Leaderboard() {
                     </p>
                     <p className="mt-0.5 text-[11px] font-semibold text-slate-600">
                       Rank{' '}
-                      <span className="text-red-700">
+                      <span className="text-blue-700">
                         #{data?.currentUserRank ?? '--'}
                       </span>
                     </p>
@@ -224,8 +224,8 @@ export default function Leaderboard() {
 
           {/* Filters */}
           <div className="relative z-10 mt-6 grid gap-3 lg:grid-cols-2">
-            <div className="rounded-2xl border border-red-100 bg-white p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-600">Period</p>
+            <div className="rounded-2xl border border-blue-100 bg-white p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600">Period</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {periods.map((item) => (
                   <button
@@ -234,8 +234,8 @@ export default function Leaderboard() {
                     onClick={() => setPeriod(item.value)}
                     className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                       period === item.value
-                        ? 'cta-sheen bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]'
-                        : 'border border-red-100 bg-white text-slate-600 hover:text-red-700'
+                        ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
+                        : 'border border-blue-100 bg-white text-slate-600 hover:text-blue-700'
                     }`}
                   >
                     {item.label}
@@ -244,8 +244,8 @@ export default function Leaderboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-red-100 bg-white p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-600">Track</p>
+            <div className="rounded-2xl border border-blue-100 bg-white p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600">Track</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {categories.map((item) => (
                   <button
@@ -254,8 +254,8 @@ export default function Leaderboard() {
                     onClick={() => setCategory(item.value)}
                     className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                       category === item.value
-                        ? 'cta-sheen bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]'
-                        : 'border border-red-100 bg-white text-slate-600 hover:text-red-700'
+                        ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
+                        : 'border border-blue-100 bg-white text-slate-600 hover:text-blue-700'
                     }`}
                   >
                     {item.label}
@@ -268,7 +268,7 @@ export default function Leaderboard() {
       </Reveal>
 
       {error ? (
-        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+        <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">{error}</div>
       ) : null}
 
       {/* ── Podium ────────────────────────────────────────────── */}
@@ -289,7 +289,7 @@ export default function Leaderboard() {
             <Skeleton className="h-72 w-full rounded-3xl" />
           </div>
         ) : visualPodium.length === 0 ? (
-          <div className="rounded-2xl border border-red-100 bg-white p-6 text-sm text-slate-600">
+          <div className="rounded-2xl border border-blue-100 bg-white p-6 text-sm text-slate-600">
             Be the first to complete a test and claim the top spot.
           </div>
         ) : (
@@ -404,7 +404,7 @@ export default function Leaderboard() {
             description="Access the live XP table, rank movement, accuracy and streak comparisons."
           >
           <article className="surface-card relative overflow-hidden p-5 sm:p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <FeatureSticker icon={Medal} tone="rose" />
@@ -442,22 +442,22 @@ export default function Leaderboard() {
                       <div
                         className={`group grid grid-cols-[40px_minmax(0,1.5fr)_0.6fr_0.6fr_0.5fr] items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
                           row.isCurrentUser
-                            ? 'border-red-300 bg-gradient-to-r from-red-50/70 to-rose-50/40 shadow-[0_8px_18px_rgba(220,38,38,0.1)]'
-                            : 'border-slate-100 bg-white hover:border-red-200 hover:bg-red-50/30'
+                            ? 'border-blue-300 bg-gradient-to-r from-blue-50/70 to-indigo-50/40 shadow-[0_8px_18px_rgba(37,99,235,0.1)]'
+                            : 'border-slate-100 bg-white hover:border-blue-200 hover:bg-blue-50/30'
                         }`}
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-xs font-black text-slate-600">
                           {isTopThree ? <Crown className={`h-4 w-4 ${medalColor}`} /> : `#${row.rank}`}
                         </span>
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-100 bg-gradient-to-br from-red-50 to-rose-50 text-[11px] font-bold text-red-700">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-[11px] font-bold text-blue-700">
                             {getInitials(row.fullName)}
                           </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-slate-900">
                               {row.fullName}
                               {row.isCurrentUser ? (
-                                <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700">YOU</span>
+                                <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">YOU</span>
                               ) : null}
                             </p>
                             <p className="text-[10px] font-medium text-slate-500">{row.testsCompleted} tests · {row.accuracy.toFixed(0)}% acc</p>
@@ -489,7 +489,7 @@ export default function Leaderboard() {
                 })}
               </Stagger>
             ) : (
-              <div className="rounded-xl border border-red-100 bg-red-50/30 p-5 text-sm text-slate-600">
+              <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-5 text-sm text-slate-600">
                 No verified rankings yet for this filter. Be the first to climb!
               </div>
             )}
@@ -514,7 +514,7 @@ export default function Leaderboard() {
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, Math.max(16, ((11 - Math.min(10, data?.currentUserRank ?? 10)) / 10) * 100))}%` }}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                  className="h-3 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 shadow-[0_0_18px_rgba(245,158,11,.48)]"
+                  className="h-3 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-blue-500 shadow-[0_0_18px_rgba(245,158,11,.48)]"
                 />
               </div>
               <p className="mt-4 text-center text-sm font-black text-slate-800">Top 10 advance to Platinum</p>
@@ -548,9 +548,9 @@ export default function Leaderboard() {
                   <p className="font-bold text-amber-700">Medium</p>
                   <p className="text-amber-900">up to 70 XP</p>
                 </div>
-                <div className="rounded-lg border border-red-100 bg-red-50/50 px-2 py-1.5">
-                  <p className="font-bold text-red-700">Hard</p>
-                  <p className="text-red-900">up to 100 XP</p>
+                <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-2 py-1.5">
+                  <p className="font-bold text-blue-700">Hard</p>
+                  <p className="text-blue-900">up to 100 XP</p>
                 </div>
                 <div className="rounded-lg border border-violet-100 bg-violet-50/50 px-2 py-1.5">
                   <p className="font-bold text-violet-700">Olympiad</p>
@@ -567,7 +567,7 @@ export default function Leaderboard() {
           <Reveal delay={0.06}>
             <PremiumFeatureLock locked={premiumLocked} title="Unlock Weekly Champion" compact>
             <article className="surface-card relative overflow-hidden p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
               <div className="flex items-center gap-2">
                 <FeatureSticker icon={Trophy} tone="rose" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">Weekly Champion</h3>
@@ -591,20 +591,20 @@ export default function Leaderboard() {
             <Reveal delay={0.1}>
               <PremiumFeatureLock locked={premiumLocked} title="Unlock Board Snapshot" compact>
               <article className="surface-card relative overflow-hidden p-5">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
                 <div className="flex items-center gap-2">
                   <FeatureSticker icon={Users} tone="red" />
                   <h3 className="text-base font-black tracking-tight text-slate-900">Board Snapshot</h3>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Players</p>
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Players</p>
                     <p className="mt-1 text-lg font-black text-slate-900">
                       <CountUp value={summary.players} />
                     </p>
                   </div>
-                  <div className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Avg Accuracy</p>
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Avg Accuracy</p>
                     <p className="mt-1 text-lg font-black text-slate-900">
                       <CountUp value={summary.avgAccuracy} decimals={1} suffix="%" />
                     </p>

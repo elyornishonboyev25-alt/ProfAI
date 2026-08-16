@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { 
@@ -209,7 +209,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { name: 'School Tests', href: '/tests', icon: BookOpenIcon, color: 'from-blue-500 to-blue-600' },
-              { name: 'SAT Prep', href: '/sat', icon: AcademicCapIcon, color: 'from-red-500 to-red-600' },
+              { name: 'SAT Prep', href: '/sat', icon: AcademicCapIcon, color: 'from-blue-500 to-blue-600' },
               { name: 'IELTS Prep', href: '/ielts', icon: GlobeAltIcon, color: 'from-green-500 to-green-600' },
               { name: 'Writing Lab', href: '/writing-lab', icon: TrophyIcon, color: 'from-purple-500 to-purple-600' }
             ].map((category) => (

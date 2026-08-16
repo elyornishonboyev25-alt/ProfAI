@@ -78,7 +78,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
   const meta = TRACK_META[track]
   const Icon = ICONS[meta?.icon ?? 'BookOpen'] ?? BookOpen
   const isIelts = meta?.group === 'IELTS'
-  const accent = isIelts ? '#DC2626' : '#2563EB'
+  const accent = isIelts ? '#2563EB' : '#2563EB'
 
   if (!tier) {
     // No badge earned (band < 6). Render a muted, locked placeholder.

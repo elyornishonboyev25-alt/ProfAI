@@ -13,7 +13,7 @@ type Props = { open: boolean; onClose: () => void }
 const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; chip: string }> = {
   safety: { label: 'Safety', chip: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
   match: { label: 'Match', chip: 'bg-amber-100 text-amber-700 border-amber-200' },
-  reach: { label: 'Reach', chip: 'bg-rose-100 text-rose-700 border-rose-200' },
+  reach: { label: 'Reach', chip: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
 }
 
 const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
@@ -92,11 +92,11 @@ export default function UniversityMatcher({ open, onClose }: Props) {
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-red-100 bg-white shadow-[0_40px_90px_rgba(127,29,29,0.25)]"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-[0_40px_90px_rgba(30,64,175,0.25)]"
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-rose-600 text-white">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
               <Target className="h-5 w-5" />
             </span>
             <div>
@@ -119,7 +119,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                     <button
                       key={d}
                       onClick={() => setDegreeLevel(d)}
-                      className={`rounded-xl border-2 py-3 text-sm font-bold capitalize transition ${degreeLevel === d ? 'border-red-500 bg-red-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-red-200'}`}
+                      className={`rounded-xl border-2 py-3 text-sm font-bold capitalize transition ${degreeLevel === d ? 'border-blue-500 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200'}`}
                     >
                       {d}
                     </button>
@@ -193,7 +193,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                       <ul className="mt-2 space-y-0.5">
                         {m.reasons.slice(0, 3).map((r, i) => (
                           <li key={i} className="flex items-start gap-1.5 text-[11px] text-slate-600">
-                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-red-400" />
+                            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-400" />
                             {r}
                           </li>
                         ))}
@@ -202,7 +202,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                         <button
                           onClick={() => void setAsTarget(m.university.slug)}
                           disabled={savingSlug === m.university.slug || isSaved}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
                         >
                           {isSaved ? <Check className="h-3.5 w-3.5" /> : savingSlug === m.university.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Target className="h-3.5 w-3.5" />}
                           {isSaved ? 'Saved as target' : 'Set as target'}
@@ -233,11 +233,11 @@ export default function UniversityMatcher({ open, onClose }: Props) {
           )}
 
           {step < 3 ? (
-            <button onClick={() => setStep((s) => s + 1)} className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-2.5 text-sm font-black text-white">
+            <button onClick={() => setStep((s) => s + 1)} className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white">
               Continue <ArrowRight className="h-4 w-4" />
             </button>
           ) : step === 3 ? (
-            <button onClick={computeAndShow} className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-2.5 text-sm font-black text-white">
+            <button onClick={computeAndShow} className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white">
               <Sparkles className="h-4 w-4" /> See my matches
             </button>
           ) : (

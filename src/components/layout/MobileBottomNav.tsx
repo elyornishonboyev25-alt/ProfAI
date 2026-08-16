@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { BookOpen, Bot, GraduationCap, Home, UserRound, type LucideIcon } from 'lucide-react'
 
 const TABS: Array<{ key: string; label: string; icon: LucideIcon; path: string; match: (path: string) => boolean }> = [
@@ -22,7 +21,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-red-100 bg-white/95 pb-[max(env(safe-area-inset-bottom),0.4rem)] pt-1.5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-100 bg-white/98 pb-[max(env(safe-area-inset-bottom),0.4rem)] pt-1.5 shadow-[0_-10px_30px_rgba(30,64,175,0.08)] md:hidden"
     >
       <div className="mx-auto flex max-w-md items-end justify-around px-2">
         {TABS.map((tab) => {
@@ -34,9 +33,8 @@ export default function MobileBottomNav() {
                 key={tab.key}
                 onClick={() => navigate(tab.path)}
                 aria-label="AI Tutor"
-                className="relative -mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DC2626] via-[#E11D48] to-[#B91C1C] text-white shadow-[0_14px_28px_rgba(220,38,38,0.4)] transition active:scale-95"
+                className="relative -mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)] active:opacity-90"
               >
-                <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-2xl bg-red-400/30 [animation-duration:2.6s]" />
                 <Icon className="h-6 w-6" />
               </button>
             )
@@ -50,14 +48,10 @@ export default function MobileBottomNav() {
               className="relative flex min-w-[3.6rem] flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition active:scale-95"
             >
               {active ? (
-                <motion.span
-                  layoutId="mobile-nav-pill"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  className="absolute inset-0 rounded-xl bg-red-50"
-                />
+                <span className="absolute inset-0 rounded-xl bg-blue-50" />
               ) : null}
-              <Icon className={`relative h-5 w-5 ${active ? 'text-red-600' : 'text-slate-400'}`} />
-              <span className={`relative text-[10px] font-bold ${active ? 'text-red-700' : 'text-slate-400'}`}>{tab.label}</span>
+              <Icon className={`relative h-5 w-5 ${active ? 'text-blue-600' : 'text-slate-400'}`} />
+              <span className={`relative text-[10px] font-bold ${active ? 'text-blue-700' : 'text-slate-400'}`}>{tab.label}</span>
             </button>
           )
         })}

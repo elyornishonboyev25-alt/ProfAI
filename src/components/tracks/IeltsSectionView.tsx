@@ -208,15 +208,15 @@ export function IeltsSectionView({
 
             <div className="grid gap-2 sm:grid-cols-3 xl:w-[28rem]">
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">{content.heroMetricLabel}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.heroMetricLabel}</p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{renderHeroMetric(content.heroMetricValue)}</p>
               </div>
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">{content.modeLabel}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.modeLabel}</p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{content.modeValue}</p>
               </div>
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">{content.feedbackLabel}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.feedbackLabel}</p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{content.feedbackValue}</p>
               </div>
             </div>
@@ -228,7 +228,7 @@ export function IeltsSectionView({
               <Sparkles className="ml-2 h-4 w-4" />
             </button>
             <button className="arena-secondary-btn" onClick={handleSecondaryAction}>
-              <TimerReset className="mr-2 h-4 w-4 text-red-600" />
+              <TimerReset className="mr-2 h-4 w-4 text-blue-600" />
               {content.secondaryAction}
             </button>
           </div>
@@ -242,7 +242,7 @@ export function IeltsSectionView({
             <StaggerItem key={item.title} className="h-full">
               <Tilt3D className="h-full rounded-3xl" max={6}>
                 <article className="surface-card h-full p-5">
-                  <div className="mb-3 inline-flex rounded-xl bg-red-100 p-2 text-red-700">
+                  <div className="mb-3 inline-flex rounded-xl bg-blue-100 p-2 text-blue-700">
                     <Icon className="h-4 w-4" />
                   </div>
                   <h2 className="text-lg font-semibold text-slate-900">{item.title}</h2>
@@ -258,13 +258,13 @@ export function IeltsSectionView({
         <StaggerItem>
           <div className="surface-card p-5">
             <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              <CheckCircle2 className="h-4 w-4 text-red-600" />
+              <CheckCircle2 className="h-4 w-4 text-blue-600" />
               Practice Workflow
             </h3>
             <p className="mt-2 text-sm text-slate-700">
               Timed mode, error-log sync, and coaching cues are active for this section.
             </p>
-            <div className="mt-3 inline-flex items-center text-xs font-semibold text-red-600">
+            <div className="mt-3 inline-flex items-center text-xs font-semibold text-blue-600">
               <CheckCircle2 className="mr-1 h-4 w-4" />
               Practice pipeline ready
             </div>
@@ -273,11 +273,11 @@ export function IeltsSectionView({
         <StaggerItem>
           <div className="surface-card p-5">
             <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              {section === 'listening' ? <Headphones className="h-4 w-4 text-red-700" /> : <Sparkles className="h-4 w-4 text-red-700" />}
+              {section === 'listening' ? <Headphones className="h-4 w-4 text-blue-700" /> : <Sparkles className="h-4 w-4 text-blue-700" />}
               {content.insightTitle}
             </h3>
             <p className="mt-2 text-sm text-slate-700">{content.insightDescription}</p>
-            <div className="mt-3 inline-flex items-center text-xs font-semibold text-red-700">
+            <div className="mt-3 inline-flex items-center text-xs font-semibold text-blue-700">
               <Sparkles className="mr-1 h-4 w-4" />
               Insight channel active
             </div>

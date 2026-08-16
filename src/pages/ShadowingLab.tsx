@@ -39,7 +39,7 @@ const SUGGESTED: Array<{ label: string; url: string }> = [
 
 function levelBadge(level: string) {
   if (level === 'Beginner') return 'border-emerald-200 bg-emerald-50 text-emerald-700'
-  if (level === 'Advanced') return 'border-rose-200 bg-rose-50 text-rose-700'
+  if (level === 'Advanced') return 'border-indigo-200 bg-indigo-50 text-indigo-700'
   return 'border-amber-200 bg-amber-50 text-amber-700'
 }
 
@@ -224,20 +224,20 @@ export default function ShadowingLab() {
               }}
             >
               <div className="relative flex-1">
-                <Youtube className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+                <Youtube className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-500" />
                 <input
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste a YouTube link — youtube.com/watch?v=… or youtu.be/…"
                   disabled={submitting}
-                  className="w-full rounded-2xl border border-red-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-200 disabled:opacity-60"
+                  className="w-full rounded-2xl border border-blue-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 disabled:opacity-60"
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting || !url.trim()}
-                className="cta-sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(220,38,38,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="cta-sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {submitting ? 'Analyzing…' : 'Add & shadow'}
@@ -245,13 +245,13 @@ export default function ShadowingLab() {
             </form>
 
             {submitting ? (
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2 text-xs font-semibold text-red-700">
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs font-semibold text-blue-700">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Reading the English captions and slicing them into shadowing lines… this can take a few seconds.
               </div>
             ) : null}
             {submitError ? (
-              <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+              <p className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700">
                 {submitError}
               </p>
             ) : null}
@@ -271,7 +271,7 @@ export default function ShadowingLab() {
                   type="button"
                   disabled={submitting}
                   onClick={() => void handleSubmit(s.url)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[11px] font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50"
                 >
                   <Sparkles className="h-3 w-3" />
                   {s.label}
@@ -290,7 +290,7 @@ export default function ShadowingLab() {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-xl font-bold text-slate-900">
-              <Layers className="h-5 w-5 text-red-600" />
+              <Layers className="h-5 w-5 text-blue-600" />
               Community library
             </h2>
             <span className="soft-chip">{videos.length} clip{videos.length === 1 ? '' : 's'}</span>
@@ -299,19 +299,19 @@ export default function ShadowingLab() {
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-60 animate-pulse rounded-2xl border border-red-100 bg-white/70" />
+                <div key={i} className="h-60 animate-pulse rounded-2xl border border-blue-100 bg-white/70" />
               ))}
             </div>
           ) : loadError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
-              <p className="text-sm font-semibold text-rose-700">{loadError}</p>
+            <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-6 text-center">
+              <p className="text-sm font-semibold text-indigo-700">{loadError}</p>
               <button onClick={() => void refresh()} className="premium-back-btn-sm mt-3">
                 <Loader2 className="h-3.5 w-3.5" />
                 Retry
               </button>
             </div>
           ) : videos.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-red-200 bg-white/70 p-10 text-center">
+            <div className="rounded-2xl border border-dashed border-blue-200 bg-white/70 p-10 text-center">
               <BrandIcon icon={AudioLines} soft />
               <h3 className="mt-3 text-base font-bold text-slate-900">The library is empty.</h3>
               <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
@@ -331,7 +331,7 @@ export default function ShadowingLab() {
                         type="button"
                         onClick={() => void openVideo(v.youtubeId)}
                         disabled={isOpening}
-                        className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-red-100 bg-white text-left shadow-[0_10px_26px_rgba(225,29,72,0.08)] transition hover:border-red-200 hover:shadow-[0_16px_34px_rgba(225,29,72,0.14)]"
+                        className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-blue-100 bg-white text-left shadow-[0_10px_26px_rgba(225,29,72,0.08)] transition hover:border-blue-200 hover:shadow-[0_16px_34px_rgba(225,29,72,0.14)]"
                       >
                         <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                           {v.thumbnailUrl ? (
@@ -342,12 +342,12 @@ export default function ShadowingLab() {
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-100 to-rose-100">
-                              <AudioLines className="h-8 w-8 text-red-400" />
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+                              <AudioLines className="h-8 w-8 text-blue-400" />
                             </div>
                           )}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
-                            <span className="flex h-12 w-12 scale-90 items-center justify-center rounded-full bg-white/90 text-red-600 opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
+                            <span className="flex h-12 w-12 scale-90 items-center justify-center rounded-full bg-white/90 text-blue-600 opacity-0 shadow-lg transition group-hover:scale-100 group-hover:opacity-100">
                               {isOpening ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mic className="h-5 w-5" />}
                             </span>
                           </div>
@@ -364,11 +364,11 @@ export default function ShadowingLab() {
                           {v.author ? <p className="mt-0.5 line-clamp-1 text-[11px] font-medium text-slate-500">{v.author}</p> : null}
                           <div className="mt-auto flex items-center gap-3 pt-3 text-[11px] font-semibold text-slate-500">
                             <span className="inline-flex items-center gap-1">
-                              <Layers className="h-3.5 w-3.5 text-red-500" />
+                              <Layers className="h-3.5 w-3.5 text-blue-500" />
                               {v.segmentCount} lines
                             </span>
                             <span className="inline-flex items-center gap-1">
-                              <Globe className="h-3.5 w-3.5 text-red-500" />
+                              <Globe className="h-3.5 w-3.5 text-blue-500" />
                               {v.captionKind === 'manual' ? 'Subtitles' : 'Auto'}
                             </span>
                           </div>

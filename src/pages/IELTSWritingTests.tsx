@@ -133,14 +133,14 @@ export default function IELTSWritingTests() {
       />
 
       <section className="mt-5 grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-3xl border border-rose-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(190,24,93,0.1)] lg:sticky lg:top-5">
-          <div className="rounded-2xl border border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-700">
+        <aside className="h-fit rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(79,70,229,0.1)] lg:sticky lg:top-5">
+          <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-700">
               Day Pattern
             </p>
             <div className="mt-2 space-y-1.5 text-xs text-slate-600">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-rose-200 bg-rose-100 text-[10px] font-black text-rose-700">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-indigo-200 bg-indigo-100 text-[10px] font-black text-indigo-700">
                   1
                 </span>
                 <span>Task 1 — Visual Report</span>
@@ -163,31 +163,31 @@ export default function IELTSWritingTests() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75 p-3">
+          <div className="mt-4 rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75 p-3">
             <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-rose-600" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-700">
+              <Target className="h-4 w-4 text-indigo-600" />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-700">
                 Writing Tips
               </p>
             </div>
             <ul className="mt-2 space-y-1 text-xs text-slate-600">
               <li className="flex items-start gap-1.5">
-                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-rose-500" />
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-indigo-500" />
                 Task 1: 150+ words, 20 minutes
               </li>
               <li className="flex items-start gap-1.5">
-                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-rose-500" />
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-indigo-500" />
                 Task 2: 250+ words, 40 minutes
               </li>
               <li className="flex items-start gap-1.5">
-                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-rose-500" />
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-indigo-500" />
                 Task 2 is worth 2x Task 1 score
               </li>
             </ul>
           </div>
         </aside>
 
-        <div className="rounded-3xl border border-rose-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
+        <div className="rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Writing Roadmap</h2>
@@ -210,12 +210,12 @@ export default function IELTSWritingTests() {
           </div>
 
           <label className="relative mt-4 block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search day or test number..."
-              className="h-11 w-full rounded-xl border border-rose-100 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+              className="h-11 w-full rounded-xl border border-indigo-100 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
             />
           </label>
 
@@ -236,7 +236,7 @@ export default function IELTSWritingTests() {
                         : 'Full Test'
                   const badgeColor =
                     row.badge === 'task1'
-                      ? 'border-rose-200 bg-rose-100 text-rose-700'
+                      ? 'border-indigo-200 bg-indigo-100 text-indigo-700'
                       : row.badge === 'task2'
                         ? 'border-violet-200 bg-violet-100 text-violet-700'
                         : 'border-sky-200 bg-sky-100 text-sky-700'
@@ -252,15 +252,15 @@ export default function IELTSWritingTests() {
                       transition={
                         minimalMotion ? { duration: 0.12 } : { duration: 0.24, ease: CARD_EASE }
                       }
-                      className="relative px-3 py-2 hover:bg-rose-50/45 sm:px-4"
+                      className="relative px-3 py-2 hover:bg-indigo-50/45 sm:px-4"
                     >
                       <div className="absolute bottom-0 left-3 top-0 w-px">
-                        <span className="block h-full w-px bg-gradient-to-b from-rose-200 via-rose-100 to-transparent" />
+                        <span className="block h-full w-px bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent" />
                       </div>
                       <span
                         className={`absolute left-[6px] top-4 inline-flex h-5 w-5 items-center justify-center rounded-full border ${
                           row.available
-                            ? 'border-rose-300 bg-white text-rose-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]'
+                            ? 'border-indigo-300 bg-white text-indigo-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]'
                             : 'border-slate-300 bg-slate-100 text-slate-400'
                         }`}
                       >
@@ -312,7 +312,7 @@ export default function IELTSWritingTests() {
                           onClick={() => handleLaunch(row)}
                           className={`inline-flex min-w-[9.5rem] items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition ${
                             row.available
-                              ? 'border-rose-600 bg-gradient-to-r from-rose-600 via-red-500 to-red-600 text-white hover:brightness-105'
+                              ? 'border-indigo-600 bg-gradient-to-r from-indigo-600 via-blue-500 to-blue-600 text-white hover:brightness-105'
                               : 'cursor-not-allowed border-amber-300 bg-amber-100 text-amber-900'
                           }`}
                         >

@@ -12,18 +12,6 @@ const SKILL_TILES = [
   { icon: Mic2, label: 'Speaking', edge: 'right', v: 'bottom-[12%]', delay: 0.6, float: 5.4 },
 ] as const
 
-// Small red glow dots peeking around the tiles (concept: 3-Dashboard close-up).
-const GLOW_DOTS = [
-  { className: 'left-[3%] top-[30%] h-3 w-3', delay: 0 },
-  { className: 'left-[22%] top-[22%] h-2 w-2', delay: 0.7 },
-  { className: 'left-[-4%] bottom-[26%] h-9 w-9', delay: 1.3 },
-  { className: 'left-[26%] bottom-[20%] h-2.5 w-2.5', delay: 0.4 },
-  { className: 'right-[4%] top-[26%] h-2.5 w-2.5', delay: 1.0 },
-  { className: 'right-[24%] top-[40%] h-2 w-2', delay: 1.6 },
-  { className: 'right-[2%] bottom-[24%] h-3.5 w-3.5', delay: 0.9 },
-  { className: 'right-[-3%] top-[46%] h-7 w-7', delay: 1.9 },
-] as const
-
 /**
  * The "Dashboard" band-score composition from the ProfAI landing concept — one
  * tilted liquid-glass panel with an animated 7.5 Overall Band ring, and four
@@ -42,15 +30,6 @@ export default function LiquidGlassHero() {
     <div className="relative mx-auto h-[440px] w-full max-w-[600px] [perspective:1600px]">
       {/* the composition: panel is the positioning context so tiles hug its edges */}
       <div className="absolute left-1/2 top-1/2 h-[330px] w-[430px] -translate-x-1/2 -translate-y-1/2">
-        {/* glow dots + spheres around the tiles */}
-        {GLOW_DOTS.map((dot, i) => (
-          <span
-            key={i}
-            className={`lg-orb pointer-events-none absolute ${reduce ? '' : 'landing-glow-dot'} ${dot.className}`}
-            style={{ animationDelay: `${dot.delay}s` }}
-          />
-        ))}
-
         {/* tilted glass panel */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 24 }}
@@ -62,7 +41,7 @@ export default function LiquidGlassHero() {
 
           {/* band ring + score, centred */}
           <div className="absolute inset-0 grid place-items-center">
-            <svg viewBox="0 0 280 280" className="h-[238px] w-[238px] -rotate-90 drop-shadow-[0_10px_22px_rgba(220,38,38,0.2)]">
+            <svg viewBox="0 0 280 280" className="h-[238px] w-[238px] -rotate-90 drop-shadow-[0_10px_22px_rgba(37,99,235,0.2)]">
               <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.16)" strokeWidth="17" />
               <motion.circle
                 cx="140"
@@ -79,8 +58,8 @@ export default function LiquidGlassHero() {
               />
               <defs>
                 <linearGradient id="lg-band" x1="1" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="50%" stopColor="#b91c1c" />
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#1d4ed8" />
                   <stop offset="100%" stopColor="#1e293b" />
                 </linearGradient>
               </defs>
@@ -109,10 +88,9 @@ export default function LiquidGlassHero() {
               className={`absolute z-10 ${anchor} ${tile.v}`}
             >
               <div
-                style={{ animationDuration: `${tile.float}s` }}
-                className={`lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ${reduce ? '' : 'landing-skill-float'}`}
+                className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
               >
-                <Icon className="h-7 w-7 text-red-600" strokeWidth={1.8} />
+                <Icon className="h-7 w-7 text-blue-600" strokeWidth={1.8} />
                 <span className="text-[13px] font-bold text-slate-700">{tile.label}</span>
               </div>
             </motion.div>
@@ -157,9 +135,9 @@ export function LiquidGlassHeroMobile() {
             />
             <defs>
               <linearGradient id="lg-band-m" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#7f1d1d" />
-                <stop offset="45%" stopColor="#b91c1c" />
-                <stop offset="100%" stopColor="#f43f5e" />
+                  <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="45%" stopColor="#1d4ed8" />
+                <stop offset="100%" stopColor="#6366f1" />
               </linearGradient>
             </defs>
           </svg>
@@ -176,7 +154,7 @@ export function LiquidGlassHeroMobile() {
                 key={tile.label}
                 className="lg-glass lg-glass-sheen flex items-center gap-2.5 rounded-2xl px-3 py-3"
               >
-                <Icon className="h-5 w-5 shrink-0 text-red-600" strokeWidth={1.8} />
+                <Icon className="h-5 w-5 shrink-0 text-blue-600" strokeWidth={1.8} />
                 <span className="text-sm font-bold text-slate-700">{tile.label}</span>
               </div>
             )

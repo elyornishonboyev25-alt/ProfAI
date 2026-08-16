@@ -133,7 +133,7 @@ export function WordLookupLayer() {
           data-word-lookup-pill
           onClick={openModal}
           style={{ position: 'fixed', left: pill.x, top: pill.y, transform: 'translate(-50%, -100%)' }}
-          className="z-[115] inline-flex items-center gap-1.5 rounded-full border border-red-300/60 bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_24px_rgba(220,38,38,0.4)] transition hover:brightness-110"
+          className="z-[115] inline-flex items-center gap-1.5 rounded-full border border-blue-300/60 bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.4)] transition hover:brightness-110"
         >
           <Sparkles className="h-3.5 w-3.5" />
           Ask AI

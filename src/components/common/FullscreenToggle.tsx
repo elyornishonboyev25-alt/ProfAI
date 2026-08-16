@@ -14,13 +14,13 @@ export default function FullscreenToggle() {
   if (!supported) return null
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-20 z-[120] print:hidden sm:bottom-6 sm:right-[5.5rem]">
+    <div className="pointer-events-none fixed bottom-24 right-[4.5rem] z-[120] print:hidden lg:bottom-6 lg:right-[5.25rem]">
       <button
         type="button"
         onClick={toggle}
         aria-label={label}
         aria-pressed={isFullscreen}
-        className="group pointer-events-auto relative inline-flex h-12 w-12 items-center justify-center rounded-[18px] border border-slate-200/80 bg-white/85 text-slate-600 shadow-[0_10px_30px_-14px_rgba(15,23,42,0.55)] ring-1 ring-white/80 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-200 hover:bg-white hover:text-rose-600 hover:shadow-[0_14px_34px_-14px_rgba(225,29,72,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 active:translate-y-0 dark:border-white/10 dark:bg-slate-900/85 dark:text-slate-300 dark:ring-white/10 dark:hover:border-rose-400/40 dark:hover:bg-slate-900 dark:hover:text-rose-400 dark:focus-visible:ring-offset-slate-950"
+        className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-blue-200 bg-white text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.16)] transition-colors hover:border-blue-300 hover:bg-blue-50"
       >
         <span
           aria-hidden="true"

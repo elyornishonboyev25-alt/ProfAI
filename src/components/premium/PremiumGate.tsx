@@ -56,9 +56,9 @@ export default function PremiumGate({
           initial={minimalMotion ? false : { opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: minimalMotion ? 0.16 : 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200/80 bg-white/95 p-7 text-center shadow-[0_30px_70px_rgba(127,29,29,0.22)]"
+          className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200/80 bg-white/95 p-7 text-center shadow-[0_30px_70px_rgba(30,64,175,0.22)]"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-red-500 to-rose-500" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-blue-500 to-indigo-500" />
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-amber-200/40 blur-3xl" />
 
           <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
@@ -90,7 +90,7 @@ export default function PremiumGate({
             <button
               type="button"
               onClick={() => navigate('/premium')}
-              className="cta-sheen interactive-lift inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
+              className="cta-sheen interactive-lift inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
             >
               <Crown className="h-4 w-4" />
               Subscribe to Premium

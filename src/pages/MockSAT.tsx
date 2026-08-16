@@ -114,8 +114,8 @@ export default function MockSAT() {
           />
           <button
             type="button"
-            onClick={() => navigate(backPath)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600 shadow-sm hover:border-red-200 hover:text-red-600"
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600 shadow-sm hover:border-blue-200 hover:text-blue-600"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : 'SAT Prep'}
           </button>
@@ -128,16 +128,16 @@ export default function MockSAT() {
             className="overflow-hidden rounded-[2rem] border border-white/90 bg-white/74 p-5 shadow-[0_28px_70px_rgba(15,23,42,.1)] backdrop-blur-2xl sm:p-8"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-red-600">
-                <Sparkles className="h-3.5 w-3.5" /> Available SAT mock
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">
+                <Sparkles className="h-3.5 w-3.5" /> New official mock
               </span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
                 {test.badge}
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              Your {section === 'math' ? 'SAT Math' : section === 'reading-writing' ? 'SAT Reading & Writing' : 'real SAT'},
-              <span className="block bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-transparent">
+              Your real SAT,
+              <span className="block bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400 bg-clip-text text-transparent">
                 beautifully simulated.
               </span>
             </h1>
@@ -190,7 +190,7 @@ export default function MockSAT() {
             className="rounded-[2rem] border border-white/90 bg-white/78 p-4 shadow-[0_28px_70px_rgba(15,23,42,.1)] backdrop-blur-2xl sm:p-6"
           >
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600">Before you begin</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Before you begin</p>
               <h2 className="mt-1 text-2xl font-black tracking-tight">Choose your test mode</h2>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
                 You can choose again when starting a fresh attempt.
@@ -209,14 +209,14 @@ export default function MockSAT() {
                     className={`relative w-full overflow-hidden rounded-[1.4rem] border p-4 text-left transition ${
                       selected
                         ? mode.color === 'red'
-                          ? 'border-red-300 bg-gradient-to-br from-red-50 to-rose-100/70 shadow-[0_14px_32px_rgba(220,38,38,.12)]'
+                          ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-100/70 shadow-[0_14px_32px_rgba(37,99,235,.12)]'
                           : 'border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-100/60 shadow-[0_14px_32px_rgba(37,99,235,.12)]'
                         : 'border-slate-200 bg-white/75 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-                        mode.color === 'red' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                        mode.color === 'red' ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
                       }`}>
                         <Icon className="h-5 w-5" />
                       </span>
@@ -224,14 +224,14 @@ export default function MockSAT() {
                         <div className="flex items-center justify-between gap-2">
                           <div>
                             <p className={`text-[9px] font-black uppercase tracking-[0.14em] ${
-                              mode.color === 'red' ? 'text-red-600' : 'text-blue-600'
+                              mode.color === 'red' ? 'text-blue-600' : 'text-blue-600'
                             }`}>{mode.eyebrow}</p>
                             <p className="mt-0.5 text-lg font-black text-slate-950">{mode.title}</p>
                           </div>
                           <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${
                             selected
                               ? mode.color === 'red'
-                                ? 'border-red-600 bg-red-600 text-white'
+                                ? 'border-blue-600 bg-blue-600 text-white'
                                 : 'border-blue-600 bg-blue-600 text-white'
                               : 'border-slate-300 bg-white text-transparent'
                           }`}>
@@ -254,7 +254,7 @@ export default function MockSAT() {
             </div>
 
             {fullscreenError ? (
-              <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700">
+              <p role="alert" className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-700">
                 {fullscreenError}
               </p>
             ) : null}
@@ -314,7 +314,7 @@ export default function MockSAT() {
               onClick={() => void openRunner(selectedMode)}
               className={`mt-4 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-black text-white shadow-[0_18px_36px_rgba(15,23,42,.18)] transition hover:-translate-y-0.5 ${
                 selectedMode === 'exam'
-                  ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-700'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700'
                   : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700'
               }`}
             >

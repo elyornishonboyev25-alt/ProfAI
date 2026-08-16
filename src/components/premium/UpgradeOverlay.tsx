@@ -38,7 +38,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-4 top-4 rounded-xl border border-red-100 bg-white p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-700"
+            className="absolute right-4 top-4 rounded-xl border border-blue-100 bg-white p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-700"
           >
             <X className="h-4 w-4" />
           </button>
@@ -63,7 +63,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
           <button
             type="button"
             onClick={() => navigate('/premium')}
-            className="cta-sheen interactive-lift inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.32)]"
+            className="cta-sheen interactive-lift inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.32)]"
           >
             <Crown className="h-4 w-4" />
             View Plans
@@ -72,7 +72,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center rounded-xl border border-red-200 bg-white px-5 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-50"
+              className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
             >
               Maybe later
             </button>

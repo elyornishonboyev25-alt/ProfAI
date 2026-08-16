@@ -36,12 +36,12 @@ const CARD_EASE = [0.22, 1, 0.36, 1] as const
 function levelTone(level: Row['difficulty']) {
   if (level === 'Easy') return 'text-emerald-700 bg-emerald-100 border-emerald-200'
   if (level === 'Medium') return 'text-amber-700 bg-amber-100 border-amber-200'
-  return 'text-rose-700 bg-rose-100 border-rose-200'
+  return 'text-indigo-700 bg-indigo-100 border-indigo-200'
 }
 
 function partTone(part: 'day' | 'full', badgeLabel: string) {
   if (part === 'full') return 'border-violet-200 bg-violet-50 text-violet-700'
-  if (badgeLabel.includes('Part 1')) return 'border-rose-200 bg-rose-50 text-rose-700'
+  if (badgeLabel.includes('Part 1')) return 'border-indigo-200 bg-indigo-50 text-indigo-700'
   if (badgeLabel.includes('Part 2')) return 'border-amber-200 bg-amber-50 text-amber-700'
   return 'border-sky-200 bg-sky-50 text-sky-700'
 }
@@ -149,9 +149,9 @@ export default function IELTSSpeakingTests() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={{ duration: 0.3, ease: CARD_EASE }}
-              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(127,29,29,0.28)]"
+              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(30,64,175,0.28)]"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-red-500 to-rose-500" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-blue-500 to-indigo-500" />
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
                 <Crown className="h-8 w-8" />
               </div>
@@ -168,7 +168,7 @@ export default function IELTSSpeakingTests() {
                 <button
                   type="button"
                   onClick={() => navigate('/premium')}
-                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
+                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
                 >
                   <Crown className="h-4 w-4" />
                   Subscribe to Premium
@@ -214,9 +214,9 @@ export default function IELTSSpeakingTests() {
 
       {/* Layout */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-3xl border border-rose-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(190,24,93,0.1)] lg:sticky lg:top-5">
-          <div className="rounded-2xl border border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75 p-3 text-xs">
-            <p className="font-semibold uppercase tracking-[0.14em] text-rose-600">How the cycle works</p>
+        <aside className="h-fit rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(79,70,229,0.1)] lg:sticky lg:top-5">
+          <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75 p-3 text-xs">
+            <p className="font-semibold uppercase tracking-[0.14em] text-indigo-600">How the cycle works</p>
             <p className="mt-2 text-slate-600">
               Day 1 = Part 1 · Day 2 = Part 2 · Day 3 = Part 3. The cycle repeats — Day 4 is Part 1 again — across the
               full 30-day roadmap.
@@ -224,7 +224,7 @@ export default function IELTSSpeakingTests() {
           </div>
         </aside>
 
-        <div className="rounded-3xl border border-rose-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
+        <div className="rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Speaking Roadmap</h2>
@@ -238,12 +238,12 @@ export default function IELTSSpeakingTests() {
           </div>
 
           <label className="relative mt-4 block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search day, part, or topic..."
-              className="h-11 w-full rounded-xl border border-rose-100 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+              className="h-11 w-full rounded-xl border border-indigo-100 bg-white pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
             />
           </label>
 
@@ -264,12 +264,12 @@ export default function IELTSSpeakingTests() {
                     exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
                     whileHover={allowHoverMotion ? { scale: 1.01 } : undefined}
                     transition={minimalMotion ? { duration: 0.12 } : { duration: 0.24, ease: CARD_EASE }}
-                    className="relative px-3 py-2 hover:bg-rose-50/45 sm:px-4"
+                    className="relative px-3 py-2 hover:bg-indigo-50/45 sm:px-4"
                   >
                     <div className="absolute left-3 top-0 bottom-0 w-px">
-                      <span className="block h-full w-px bg-gradient-to-b from-rose-200 via-rose-100 to-transparent" />
+                      <span className="block h-full w-px bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent" />
                     </div>
-                    <span className="absolute left-[6px] top-4 inline-flex h-5 w-5 items-center justify-center rounded-full border border-rose-300 bg-white text-rose-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]">
+                    <span className="absolute left-[6px] top-4 inline-flex h-5 w-5 items-center justify-center rounded-full border border-indigo-300 bg-white text-indigo-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]">
                       <span className="h-1.5 w-1.5 rounded-full bg-current" />
                     </span>
 
@@ -295,7 +295,7 @@ export default function IELTSSpeakingTests() {
                             <Clock3 className="h-3.5 w-3.5" />
                             {row.durationMinutes} min
                           </span>
-                          <span className="inline-flex items-center gap-1 text-rose-700">
+                          <span className="inline-flex items-center gap-1 text-indigo-700">
                             <Sparkles className="h-3.5 w-3.5" />
                             AI feedback
                           </span>
@@ -306,7 +306,7 @@ export default function IELTSSpeakingTests() {
                         type="button"
                         whileTap={minimalMotion ? undefined : { scale: 0.98 }}
                         onClick={() => handleLaunch(row)}
-                        className="inline-flex min-w-[9.5rem] items-center justify-center gap-2 rounded-xl border border-rose-600 bg-gradient-to-r from-rose-600 via-red-500 to-red-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-105"
+                        className="inline-flex min-w-[9.5rem] items-center justify-center gap-2 rounded-xl border border-indigo-600 bg-gradient-to-r from-indigo-600 via-blue-500 to-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:brightness-105"
                       >
                         <PlayCircle className="h-4 w-4" />
                         {row.badge === 'full' ? 'Start mock' : 'Start day'}

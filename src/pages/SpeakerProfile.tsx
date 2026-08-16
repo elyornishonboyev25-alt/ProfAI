@@ -104,7 +104,7 @@ export default function SpeakerProfile() {
     return (
       <Shell onBack={() => navigate('/dashboard')}>
         <div className="surface-card flex flex-col items-center p-10 text-center">
-          <AtSign className="h-10 w-10 text-red-400" />
+          <AtSign className="h-10 w-10 text-blue-400" />
           <h2 className="mt-3 text-xl font-black text-slate-900">Choose a nickname first</h2>
           <p className="mt-1 max-w-sm text-sm text-slate-600">Your public profile uses your nickname. Set one to appear in the community and share your progress.</p>
         </div>
@@ -124,7 +124,7 @@ export default function SpeakerProfile() {
         <section className="premium-hero p-6 sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(220,38,38,0.32)]">
+              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]">
                 {initialsOf(p.displayName)}
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -132,9 +132,9 @@ export default function SpeakerProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-3xl font-black tracking-tight text-slate-900">{p.displayName}</h1>
-                {isSelf ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">YOU</span> : null}
+                {isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">YOU</span> : null}
                 {p.nickname ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-2 py-0.5 text-xs font-semibold text-red-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-xs font-semibold text-blue-700">
                     <BadgeCheck className="h-3.5 w-3.5" /> @{p.nickname}
                   </span>
                 ) : null}
@@ -151,8 +151,8 @@ export default function SpeakerProfile() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center rounded-3xl border border-red-100 bg-white/80 p-4">
-              <ProgressRing value={percentile ?? 0} size={104} from="#f59e0b" to="#dc2626">
+            <div className="flex flex-col items-center rounded-3xl border border-blue-100 bg-white/80 p-4">
+              <ProgressRing value={percentile ?? 0} size={104} from="#f59e0b" to="#2563eb">
                 <div className="text-center leading-none">
                   <p className="text-xl font-black text-slate-900">{p.rank ? `#${p.rank}` : '—'}</p>
                   <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">of {p.totalSpeakers}</p>
@@ -166,7 +166,7 @@ export default function SpeakerProfile() {
 
       {records.length === 0 ? (
         <div className="surface-card mt-5 flex flex-col items-center p-10 text-center">
-          <Headphones className="h-10 w-10 text-red-300" />
+          <Headphones className="h-10 w-10 text-blue-300" />
           <h2 className="mt-3 text-xl font-black text-slate-900">No speaking sessions yet</h2>
           <p className="mt-1 text-sm text-slate-600">{isSelf ? 'Take a Full Mock to start building your profile.' : 'This speaker hasn’t completed a graded session yet.'}</p>
         </div>
@@ -195,42 +195,42 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Band Trend" icon={<BarChart3 className="h-4 w-4 text-red-600" />}>
+          <ChartCard title="Band Trend" icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={bandTrend} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#fee2e2" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dbeafe" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis domain={[0, 9]} tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <Tooltip />
-                <Line type="monotone" dataKey="band" stroke="#dc2626" strokeWidth={3} dot={{ r: 4, fill: '#dc2626' }} />
+                <Line type="monotone" dataKey="band" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb' }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Skill Radar" icon={<RadarIcon className="h-4 w-4 text-red-600" />}>
+          <ChartCard title="Skill Radar" icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <RadarChart data={skillRadar}>
-                <PolarGrid stroke="#fecaca" />
+                <PolarGrid stroke="#bfdbfe" />
                 <PolarAngleAxis dataKey="skill" tick={{ fontSize: 11, fill: '#64748b' }} />
-                <Radar dataKey="band" stroke="#dc2626" fill="#ef4444" fillOpacity={0.45} />
+                <Radar dataKey="band" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.45} />
                 <Tooltip />
               </RadarChart>
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Speaking Activity (7 days)" icon={<BarChart3 className="h-4 w-4 text-red-600" />}>
+          <ChartCard title="Speaking Activity (7 days)" icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dailyActivity} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#fee2e2" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dbeafe" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <Tooltip />
-                <Bar dataKey="minutes" radius={[6, 6, 0, 0]} fill="#f43f5e" />
+                <Bar dataKey="minutes" radius={[6, 6, 0, 0]} fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Criteria Breakdown" icon={<RadarIcon className="h-4 w-4 text-red-600" />}>
+          <ChartCard title="Criteria Breakdown" icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <RadialBarChart data={criteria} innerRadius="25%" outerRadius="100%" startAngle={90} endAngle={-270}>
                 <RadialBar background dataKey="band" cornerRadius={8} />
@@ -249,16 +249,16 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
 
         <div className="surface-card p-5">
           <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-            <Headphones className="h-4 w-4 text-red-600" /> Recent Sessions
+            <Headphones className="h-4 w-4 text-blue-600" /> Recent Sessions
           </h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {recent.map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-xl border border-red-50 bg-white px-3 py-2">
+              <div key={s.id} className="flex items-center justify-between rounded-xl border border-blue-50 bg-white px-3 py-2">
                 <div>
                   <p className="text-sm font-bold text-slate-900">{s.modeLabel}</p>
                   <p className="text-[11px] text-slate-500">{new Date(s.date).toLocaleDateString()} · {Math.round(s.durationSec / 60)} min</p>
                 </div>
-                <span className="rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 text-sm font-black text-white">
+                <span className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-sm font-black text-white">
                   {s.overallBand.toFixed(1)}
                 </span>
               </div>
@@ -289,8 +289,8 @@ function Info({ text }: { text: string }) {
 
 function Pill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white px-3 py-1 text-xs font-bold text-slate-700">
-      <span className="text-red-600">{icon}</span> {label}
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700">
+      <span className="text-blue-600">{icon}</span> {label}
     </span>
   )
 }
@@ -298,7 +298,7 @@ function Pill({ icon, label }: { icon: React.ReactNode; label: string }) {
 function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
     <div className="surface-card p-4">
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-red-600">{icon} {label}</span>
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-blue-600">{icon} {label}</span>
       <p className="mt-1 text-2xl font-black text-slate-900">{value}</p>
     </div>
   )

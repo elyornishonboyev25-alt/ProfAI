@@ -61,7 +61,7 @@ export default function Admission() {
                   {lessonPhases.map((phase) => (
                     <span
                       key={phase.id}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-red-200/70 bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-blue-200/70 bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-slate-700"
                     >
                       <span
                         className="inline-flex h-5 w-5 items-center justify-center rounded-md text-white"
@@ -104,18 +104,18 @@ export default function Admission() {
         <Reveal delay={0.03}>
           <button
             onClick={() => setMatcherOpen(true)}
-            className="cta-sheen group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] border border-red-300/60 bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#b91c1c] p-6 text-left shadow-[0_22px_55px_rgba(220,38,38,0.3)]"
+            className="cta-sheen group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] border border-blue-300/60 bg-gradient-to-r from-[#7f1d1d] via-[#2563eb] to-[#1d4ed8] p-6 text-left shadow-[0_22px_55px_rgba(37,99,235,0.3)]"
           >
             <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
               <Target className="h-7 w-7" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-lg font-black text-white">Find my best-fit university</p>
-              <p className="mt-0.5 text-sm font-medium text-red-50/90">
+              <p className="mt-0.5 text-sm font-medium text-blue-50/90">
                 Answer a few questions about your SAT, IELTS, GPA and goals — we’ll rank the QS universities by how well they fit you.
               </p>
             </div>
-            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-red-700 transition group-hover:gap-2 sm:inline-flex">
+            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
               Start <ArrowRight className="h-4 w-4" />
             </span>
           </button>
@@ -188,22 +188,22 @@ export default function Admission() {
             <Tilt3D className="h-full rounded-[1.8rem]" max={6} lift={14}>
               <button
                 onClick={() => navigate('/admission/universities')}
-                className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-red-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(220,38,38,0.12)] transition hover:border-red-200 hover:shadow-[0_30px_70px_rgba(220,38,38,0.2)]"
+                className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-blue-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(37,99,235,0.12)] transition hover:border-blue-200 hover:shadow-[0_30px_70px_rgba(37,99,235,0.2)]"
               >
                 <img src="/assets/admission/international-students.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.08] transition duration-700 group-hover:scale-105 group-hover:opacity-[0.13]" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
-                  style={{ background: 'radial-gradient(circle,#ef4444,transparent 70%)' }}
+                  style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}
                 />
                 <div className="relative flex items-center justify-between">
                   <span
                     className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
-                    style={{ background: 'linear-gradient(135deg,#7f1d1d,#dc2626)' }}
+                    style={{ background: 'linear-gradient(135deg,#7f1d1d,#2563eb)' }}
                   >
                     <Trophy className="h-8 w-8" />
                   </span>
-                  <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-red-700">
-                    {UNIVERSITY_COUNT} verified profiles
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
+                    Top {UNIVERSITY_COUNT} · QS 2026
                   </span>
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Universities</h2>
@@ -233,7 +233,7 @@ export default function Admission() {
                     <Globe2 className="h-4 w-4" />
                     {UNIVERSITY_COUNT} live profiles
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-red-600 transition group-hover:gap-2">
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">
                     Open rankings
                     <ArrowRight className="h-4 w-4" />
                   </span>
@@ -245,9 +245,9 @@ export default function Admission() {
 
         {/* ----------------------- How it works strip ----------------------- */}
         <Reveal delay={0.05}>
-          <section className="rounded-[1.6rem] border border-red-100 bg-white/90 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8">
+          <section className="rounded-[1.6rem] border border-blue-100 bg-white/90 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-red-600" />
+              <BookOpen className="h-5 w-5 text-blue-600" />
               <h3 className="text-lg font-black tracking-tight text-slate-900">How the journey works</h3>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -269,7 +269,7 @@ export default function Admission() {
                 },
               ].map((item) => (
                 <div key={item.step} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
-                  <span className="text-2xl font-black text-red-200">{item.step}</span>
+                  <span className="text-2xl font-black text-blue-200">{item.step}</span>
                   <h4 className="mt-1 text-base font-bold text-slate-900">{item.title}</h4>
                   <p className="mt-1.5 text-[13px] leading-6 text-slate-600">{item.text}</p>
                 </div>

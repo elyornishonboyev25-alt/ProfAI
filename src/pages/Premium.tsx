@@ -68,7 +68,7 @@ const PLANS: Plan[] = [
     tokens: '1,000,000 tokens',
     tagline: 'The best balance of practice, feedback and analytics.',
     icon: Rocket,
-    accent: 'from-[#EF4444] via-[#DC2626] to-[#B91C1C]',
+    accent: 'from-[#3B82F6] via-[#2563EB] to-[#1D4ED8]',
     badge: 'MOST POPULAR',
     highlighted: true,
     features: [
@@ -105,7 +105,7 @@ const PLANS: Plan[] = [
     tokens: '8,000,000 tokens',
     tagline: 'Maximum AI capacity and priority support for intensive prep.',
     icon: Crown,
-    accent: 'from-amber-500 via-orange-500 to-red-600',
+    accent: 'from-amber-500 via-orange-500 to-blue-600',
     badge: 'PREMIUM',
     features: [
       '8M AI tokens every month',
@@ -158,7 +158,7 @@ export default function Premium() {
       <div className="relative mx-auto w-full max-w-6xl">
         <button
           onClick={() => navigate('/dashboard')}
-          className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-red-100 bg-white/85 px-4 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-red-700"
+          className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-blue-100 bg-white/85 px-4 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-blue-700"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
@@ -170,20 +170,20 @@ export default function Premium() {
           transition={{ duration: minimalMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-red-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-700 shadow-[0_8px_20px_rgba(220,38,38,0.12)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-blue-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700 shadow-[0_8px_20px_rgba(37,99,235,0.12)]">
             <Crown className="h-3.5 w-3.5 text-amber-500" />
             ProfAI Premium
           </span>
           <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1F2937] sm:text-5xl">
             Unlock your{' '}
-            <span className="bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-amber-500 bg-clip-text text-transparent">
               full potential
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-[#6B7280]">
             Invest in adaptive feedback, mistake intelligence and a plan that changes with your progress—not access
-            to basic exam information. Built for targets up to <span className="font-bold text-red-600">IELTS 9.0</span>{' '}
-            and <span className="font-bold text-red-600">SAT 1600</span>.
+            to basic exam information. Built for targets up to <span className="font-bold text-blue-600">IELTS 9.0</span>{' '}
+            and <span className="font-bold text-blue-600">SAT 1600</span>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
@@ -194,7 +194,7 @@ export default function Premium() {
             ].map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white/80 px-3.5 py-1.5 text-xs font-bold text-red-700 shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/80 px-3.5 py-1.5 text-xs font-bold text-blue-700 shadow-sm"
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
@@ -216,14 +216,14 @@ export default function Premium() {
                 whileHover={minimalMotion ? undefined : { y: -6 }}
                 className={`group relative flex flex-col rounded-[1.6rem] border p-6 ${
                   plan.highlighted
-                    ? 'border-red-300 bg-gradient-to-b from-white to-red-50/60 shadow-[0_30px_70px_rgba(220,38,38,0.22)] lg:scale-[1.03]'
-                    : 'border-red-100/80 bg-white/95 shadow-[0_18px_44px_rgba(15,23,42,0.08)]'
+                    ? 'border-blue-300 bg-gradient-to-b from-white to-blue-50/60 shadow-[0_30px_70px_rgba(37,99,235,0.22)] lg:scale-[1.03]'
+                    : 'border-blue-100/80 bg-white/95 shadow-[0_18px_44px_rgba(15,23,42,0.08)]'
                 }`}
               >
                 {plan.highlighted ? (
                   <span
                     aria-hidden
-                    className="fx-glow-breath pointer-events-none absolute -inset-[2px] -z-10 rounded-[1.7rem] bg-gradient-to-br from-red-400/50 via-rose-300/30 to-red-400/50 blur-md"
+                    className="fx-glow-breath pointer-events-none absolute -inset-[2px] -z-10 rounded-[1.7rem] bg-gradient-to-br from-blue-400/50 via-indigo-300/30 to-blue-400/50 blur-md"
                   />
                 ) : null}
                 {plan.badge ? (
@@ -248,7 +248,7 @@ export default function Premium() {
                   <span className="mb-1 text-xs font-semibold text-slate-400">{plan.period}</span>
                 </div>
 
-                <div className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full bg-red-50 px-3 py-1 text-[11px] font-bold text-red-700">
+                <div className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
                   <Sparkles className="h-3 w-3" />
                   {plan.tokens}
                 </div>
@@ -257,7 +257,7 @@ export default function Premium() {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-[13px] leading-5 text-slate-700">
                       <CheckCircle2
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${plan.highlighted ? 'text-red-500' : 'text-emerald-500'}`}
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${plan.highlighted ? 'text-blue-500' : 'text-emerald-500'}`}
                       />
                       <span>{feature}</span>
                     </li>
@@ -270,8 +270,8 @@ export default function Premium() {
                   rel="noreferrer"
                   className={`interactive-lift mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                     plan.highlighted
-                      ? 'cta-sheen bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] text-white shadow-[0_14px_28px_rgba(220,38,38,0.36)] hover:shadow-[0_18px_36px_rgba(220,38,38,0.46)]'
-                      : 'border border-red-200 bg-white text-red-700 hover:bg-red-50'
+                      ? 'cta-sheen bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] text-white shadow-[0_14px_28px_rgba(37,99,235,0.36)] hover:shadow-[0_18px_36px_rgba(37,99,235,0.46)]'
+                      : 'border border-blue-200 bg-white text-blue-700 hover:bg-blue-50'
                   }`}
                 >
                   Choose {plan.name}
@@ -310,12 +310,12 @@ export default function Premium() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="panel-surface relative mt-12 overflow-hidden rounded-[2rem] border border-red-100/90 bg-white/95 p-7 shadow-[0_28px_70px_rgba(127,29,29,0.16)] sm:p-9"
+          className="panel-surface relative mt-12 overflow-hidden rounded-[2rem] border border-blue-100/90 bg-white/95 p-7 shadow-[0_28px_70px_rgba(30,64,175,0.16)] sm:p-9"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
 
           <div className="text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-red-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-700">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
               <ShieldCheck className="h-3 w-3" />
               How to activate premium
             </span>
@@ -332,13 +332,13 @@ export default function Premium() {
               const Icon = step.icon
               return (
                 <div key={step.title} className="relative">
-                  <div className="relative h-full overflow-hidden rounded-2xl border border-red-100 bg-gradient-to-b from-white to-red-50/40 p-5 shadow-[0_12px_28px_rgba(127,29,29,0.08)]">
-                    <span className="pointer-events-none absolute -right-3 -top-4 text-6xl font-black text-red-50">{index + 1}</span>
+                  <div className="relative h-full overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-b from-white to-blue-50/40 p-5 shadow-[0_12px_28px_rgba(30,64,175,0.08)]">
+                    <span className="pointer-events-none absolute -right-3 -top-4 text-6xl font-black text-blue-50">{index + 1}</span>
                     <div className="relative flex items-center justify-between">
-                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#EF4444] to-[#B91C1C] text-white shadow-[0_10px_22px_rgba(220,38,38,0.3)]">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8] text-white shadow-[0_10px_22px_rgba(37,99,235,0.3)]">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-white text-xs font-black text-red-600">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-200 bg-white text-xs font-black text-blue-600">
                         {index + 1}
                       </span>
                     </div>
@@ -347,7 +347,7 @@ export default function Premium() {
                   </div>
                   {index < PAYMENT_STEPS.length - 1 ? (
                     <span className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 md:flex">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-red-100 bg-white text-red-400 shadow-sm">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-100 bg-white text-blue-400 shadow-sm">
                         <ArrowRight className="h-3.5 w-3.5" />
                       </span>
                     </span>
@@ -363,7 +363,7 @@ export default function Premium() {
             <motion.div
               whileHover={minimalMotion ? undefined : { y: -5 }}
               transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-              className="group relative flex aspect-[1.74/1] flex-col justify-between overflow-hidden rounded-[1.6rem] bg-[linear-gradient(135deg,#7F1D1D_0%,#B91C1C_40%,#DC2626_68%,#991B1B_100%)] p-6 text-white shadow-[0_30px_60px_rgba(127,29,29,0.5)]"
+              className="group relative flex aspect-[1.74/1] flex-col justify-between overflow-hidden rounded-[1.6rem] bg-[linear-gradient(135deg,#7F1D1D_0%,#1D4ED8_40%,#2563EB_68%,#991B1B_100%)] p-6 text-white shadow-[0_30px_60px_rgba(30,64,175,0.5)]"
             >
               {/* depth + sheen */}
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(255,255,255,0.3),transparent_42%),radial-gradient(circle_at_88%_90%,rgba(0,0,0,0.28),transparent_48%)]" />
@@ -441,7 +441,7 @@ export default function Premium() {
             </motion.div>
 
             {/* Telegram receipt */}
-            <div className="relative flex flex-col justify-between overflow-hidden rounded-[1.6rem] border border-red-100 bg-gradient-to-br from-white to-sky-50/40 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.07)]">
+            <div className="relative flex flex-col justify-between overflow-hidden rounded-[1.6rem] border border-blue-100 bg-gradient-to-br from-white to-sky-50/40 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.07)]">
               <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-sky-200/35 blur-2xl" />
               <div className="relative">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-[0_12px_24px_rgba(37,99,235,0.32)]">
@@ -450,7 +450,7 @@ export default function Premium() {
                 <h3 className="mt-3.5 text-lg font-black text-[#1F2937]">Send your receipt</h3>
                 <p className="mt-1.5 text-sm leading-6 text-[#6B7280]">
                   After paying, send the receipt screenshot to{' '}
-                  <span className="font-bold text-red-600">@{TELEGRAM_USERNAME}</span> on Telegram. Premium is usually
+                  <span className="font-bold text-blue-600">@{TELEGRAM_USERNAME}</span> on Telegram. Premium is usually
                   activated within a few hours.
                 </p>
 
@@ -480,7 +480,7 @@ export default function Premium() {
           </div>
 
           <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-red-400" />
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
             Secure manual verification • Your data stays private
           </p>
         </motion.section>

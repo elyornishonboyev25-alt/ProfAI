@@ -105,15 +105,15 @@ export default function MockIELTS() {
                   exam order. Open a mock to run its sections one by one under real test timing.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Clock3 className="h-3.5 w-3.5" />
                     Full-length timing
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Target className="h-3.5 w-3.5" />
                     4 sections per mock
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Official exam order
                   </span>
@@ -148,7 +148,7 @@ export default function MockIELTS() {
         </Reveal>
 
         <Reveal>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-white/80 bg-white/75 p-3 shadow-[0_18px_38px_rgba(127,29,29,0.1)] backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-white/80 bg-white/75 p-3 shadow-[0_18px_38px_rgba(30,64,175,0.1)] backdrop-blur-xl">
             <div className="flex flex-wrap gap-2">
               {([
                 ['all', 'All 30'],
@@ -162,8 +162,8 @@ export default function MockIELTS() {
                   onClick={() => setFilter(value)}
                   className={`rounded-full px-4 py-2 text-xs font-black transition ${
                     filter === value
-                      ? 'cta-sheen bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_9px_20px_rgba(220,38,38,0.28)]'
-                      : 'border border-red-100 bg-white text-slate-600 hover:border-red-200 hover:text-red-700'
+                      ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_9px_20px_rgba(37,99,235,0.28)]'
+                      : 'border border-blue-100 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700'
                   }`}
                 >
                   {label}
@@ -186,11 +186,11 @@ export default function MockIELTS() {
                 <Tilt3D className="h-full rounded-[1.6rem]" max={5}>
                   <button
                     onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'mock' } })}
-                    className="interactive-lift group flex h-full w-full flex-col rounded-[1.6rem] border border-red-200 bg-gradient-to-br from-white via-rose-50 to-red-100/60 p-5 text-left shadow-[0_16px_32px_rgba(220,38,38,0.13)]"
+                    className="interactive-lift group flex h-full w-full flex-col rounded-[1.6rem] border border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/60 p-5 text-left shadow-[0_16px_32px_rgba(37,99,235,0.13)]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-600">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
                           Full Mock {mock.index}
                         </p>
                         <h2 className="mt-1 text-2xl font-black text-slate-900">Mock {mock.index}</h2>
@@ -236,12 +236,12 @@ export default function MockIELTS() {
                     {inProgress ? (
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-red-700">Resume · {doneCount}/{MOCK_SECTION_COUNT} done</span>
+                          <span className="text-blue-700">Resume · {doneCount}/{MOCK_SECTION_COUNT} done</span>
                           <span className="text-slate-400">{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span>
                         </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100">
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-blue-100">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#DC2626] to-[#E11D48] transition-[width] duration-700"
+                            className="h-full rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] transition-[width] duration-700"
                             style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }}
                           />
                         </div>
@@ -258,7 +258,7 @@ export default function MockIELTS() {
                         <Clock3 className="h-3.5 w-3.5" />
                         {formatMockDuration(mock.totalMinutes)} session
                       </span>
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-red-700 transition group-hover:translate-x-0.5">
+                      <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-700 transition group-hover:translate-x-0.5">
                         {inProgress ? 'Resume' : finished ? 'Review' : 'Open'}
                         <ChevronRight className="h-4 w-4" />
                       </span>

@@ -57,15 +57,6 @@ const HERO_PILLS = [
 ] as const
 
 // Ambient floating red spheres scattered behind/in front of the glass at varied depth.
-const LANDING_SPHERES: Array<{ style: CSSProperties; delay: number; dur: number }> = [
-  { style: { top: '14%', right: '6%', width: 26, height: 26, opacity: 0.75 }, delay: 0, dur: 8 },
-  { style: { top: '30%', right: '30%', width: 14, height: 14, opacity: 0.55 }, delay: 1.4, dur: 10 },
-  { style: { top: '46%', left: '3%', width: 44, height: 44, opacity: 0.4 }, delay: 0.6, dur: 11 },
-  { style: { bottom: '22%', right: '12%', width: 90, height: 90, opacity: 0.32 }, delay: 2.1, dur: 12 },
-  { style: { top: '62%', right: '4%', width: 18, height: 18, opacity: 0.6 }, delay: 1.1, dur: 9 },
-  { style: { top: '20%', left: '18%', width: 20, height: 20, opacity: 0.5 }, delay: 0.3, dur: 10.5 },
-]
-
 const STATS = [
   { value: 30, suffix: '+', label: 'Full timed mocks' },
   { value: 10000, suffix: '+', label: 'Practice items' },
@@ -99,7 +90,7 @@ const fadeUp = {
 }
 
 function SectionTag({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-red-600">{children}</span>
+  return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-blue-600">{children}</span>
 }
 
 /* ── Bento feature data ────────────────────────────────────────────────── */
@@ -135,7 +126,7 @@ function RubricVisual() {
               whileInView={{ width: `${w}%` }}
               viewport={{ once: true }}
               transition={{ duration: 0.9, delay: i * 0.1, ease: EASE }}
-              className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-400"
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-400"
             />
           </div>
         </div>
@@ -152,7 +143,7 @@ function WaveVisual() {
       {WAVE_BARS.map((peak, i) => (
         <span
           key={i}
-          className="landing-wave-bar h-full w-1 flex-1 rounded-full bg-gradient-to-t from-red-500/70 to-rose-400/70"
+          className="landing-wave-bar h-full w-1 flex-1 rounded-full bg-gradient-to-t from-blue-500/70 to-indigo-400/70"
           style={{
             transformOrigin: 'center',
             animationDuration: `${1.2 + (i % 5) * 0.18}s`,
@@ -323,16 +314,16 @@ function ReviewCard({ review }: { review: LandingReview }) {
           <div className="flex items-center gap-1.5 text-sm font-black">
             <span className="rounded-md bg-slate-100 px-2 py-0.5 text-slate-500">{review.bandBefore}</span>
             <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
-            <span className="rounded-md bg-red-500 px-2 py-0.5 text-white">{review.bandAfter}</span>
+            <span className="rounded-md bg-blue-500 px-2 py-0.5 text-white">{review.bandAfter}</span>
           </div>
         ) : (
-          <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-black text-red-600">{review.exam}</span>
+          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-600">{review.exam}</span>
         )}
-        <Quote className="h-5 w-5 text-red-200" />
+        <Quote className="h-5 w-5 text-blue-200" />
       </div>
 
       <div className="mt-3 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-sm font-black text-white">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white">
           {initials(review.name) || 'A'}
         </span>
         <div>
@@ -440,20 +431,8 @@ export default function Landing() {
   const track = TRACKS.find((t) => t.id === activeTrack)!
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(120deg,#eef2fb_0%,#f7f6f8_45%,#fdf3f3_100%)] text-slate-900">
+    <div className="relative min-h-screen w-full overflow-x-clip bg-transparent text-slate-900">
       {/* frosted ambient wash — white base, pale red top-right, faint cool blue left */}
-      <div className="pointer-events-none fixed inset-0 -z-0">
-        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-[radial-gradient(closest-side,rgba(252,165,165,0.5),transparent)] blur-2xl" />
-        <div className="absolute -left-48 top-32 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(191,210,255,0.4),transparent)] blur-2xl" />
-        {/* floating glossy red spheres at varying depths */}
-        {LANDING_SPHERES.map((s, i) => (
-          <span
-            key={i}
-            className="lg-orb lg-sphere-float absolute"
-            style={{ ...s.style, animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s` }}
-          />
-        ))}
-      </div>
       <div className="relative z-10">
       {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
       <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
@@ -463,9 +442,9 @@ export default function Landing() {
           }`}
         >
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="relative flex items-center gap-2.5">
-            <BrandMark size={46} className="drop-shadow-[0_6px_12px_rgba(220,38,38,0.28)]" />
+            <BrandMark size={46} className="drop-shadow-[0_6px_12px_rgba(37,99,235,0.28)]" />
             <span className="text-2xl font-black tracking-tight">
-              Prof<span className="text-red-600">AI</span>
+              Prof<span className="text-blue-600">AI</span>
             </span>
           </button>
 
@@ -488,10 +467,10 @@ export default function Landing() {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => navigate('/login')}
-              className="lg-glass lg-hover hidden rounded-full px-7 py-2.5 text-[15px] font-bold text-red-600 sm:block"
+              className="lg-glass lg-hover hidden rounded-full px-7 py-2.5 text-[15px] font-bold text-blue-600 sm:block"
               style={{
-                border: '1.5px solid rgba(220,38,38,0.45)',
-                boxShadow: '0 0 0 4px rgba(220,38,38,0.06), 0 8px 22px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
+                border: '1.5px solid rgba(37,99,235,0.45)',
+                boxShadow: '0 0 0 4px rgba(37,99,235,0.06), 0 8px 22px rgba(37,99,235,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
               }}
             >
               Login
@@ -593,11 +572,11 @@ export default function Landing() {
                 className="lg-glass lg-glass-sheen lg-hover group flex items-center gap-3.5 overflow-hidden rounded-full px-6 py-4 text-left"
               >
                 <span
-                  className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-red-600"
+                  className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-blue-600"
                   style={{
                     background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(254,226,226,0.85))',
-                    boxShadow: '0 4px 12px rgba(220,38,38,0.16), inset 0 1px 0 rgba(255,255,255,0.95)',
-                    border: '1px solid rgba(254,202,202,0.9)',
+                    boxShadow: '0 4px 12px rgba(37,99,235,0.16), inset 0 1px 0 rgba(255,255,255,0.95)',
+                    border: '1px solid rgba(191,219,254,0.9)',
                   }}
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.8} />
@@ -667,16 +646,16 @@ export default function Landing() {
                   className={`group relative flex flex-col overflow-hidden rounded-3xl border p-6 text-left transition ${f.span} ${
                     dark
                       ? 'border-white/10 bg-slate-900 text-white shadow-[0_30px_70px_rgba(15,23,42,0.3)]'
-                      : 'border-black/5 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(220,38,38,0.12)]'
+                      : 'border-black/5 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(37,99,235,0.12)]'
                   }`}
                 >
                   {dark && (
-                    <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-red-600/40 blur-3xl" />
+                    <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/40 blur-3xl" />
                   )}
                   <div className="relative flex items-center justify-between">
                     <span
                       className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                        dark ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white'
+                        dark ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'
                       } transition`}
                     >
                       <Icon className="h-5 w-5" />
@@ -693,7 +672,7 @@ export default function Landing() {
                   <p className={`relative mt-1.5 text-sm leading-6 ${dark ? 'text-slate-300' : 'text-slate-500'}`}>{f.body}</p>
                   {f.visual}
                   {dark && (
-                    <div className="relative mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-red-300">
+                    <div className="relative mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-blue-300">
                       Meet your coach <ChevronRight className="h-4 w-4" />
                     </div>
                   )}
@@ -723,7 +702,7 @@ export default function Landing() {
                   onClick={() => setActiveTrack(t.id)}
                   className={`inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition ${
                     active
-                      ? 'border-red-300 bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.28)]'
+                      ? 'border-blue-300 bg-blue-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)]'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                   }`}
                 >
@@ -760,9 +739,9 @@ export default function Landing() {
                   return (
                     <div
                       key={it.name}
-                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-red-100 hover:bg-white"
+                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-blue-100 hover:bg-white"
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <Icon className="h-4 w-4" />
                       </span>
                       <div>
@@ -789,7 +768,7 @@ export default function Landing() {
           </div>
 
           <div className="relative mt-12 grid gap-4 lg:grid-cols-4">
-            <div className="pointer-events-none absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-red-200 to-transparent lg:block" />
+            <div className="pointer-events-none absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent lg:block" />
             {STEPS.map((s, i) => {
               const Icon = s.icon
               return (
@@ -802,7 +781,7 @@ export default function Landing() {
                   className="relative rounded-3xl border border-black/5 bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+                    <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="text-3xl font-black text-slate-100">{s.n}</span>
@@ -872,7 +851,7 @@ export default function Landing() {
                           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                           placeholder="e.g. Aziza K."
                           maxLength={60}
-                          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
+                          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                         />
                       </div>
 
@@ -886,7 +865,7 @@ export default function Landing() {
                               onClick={() => setForm((f) => ({ ...f, exam: ex }))}
                               className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
                                 form.exam === ex
-                                  ? 'border-red-300 bg-red-50 text-red-600'
+                                  ? 'border-blue-300 bg-blue-50 text-blue-600'
                                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                               }`}
                             >
@@ -904,7 +883,7 @@ export default function Landing() {
                             onChange={(e) => setForm((f) => ({ ...f, bandBefore: e.target.value }))}
                             placeholder="5.5"
                             maxLength={12}
-                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
+                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                           />
                         </div>
                         <ArrowRight className="mb-3 h-4 w-4 shrink-0 text-slate-300" />
@@ -915,7 +894,7 @@ export default function Landing() {
                             onChange={(e) => setForm((f) => ({ ...f, bandAfter: e.target.value }))}
                             placeholder="7.5"
                             maxLength={12}
-                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
+                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                           />
                         </div>
                       </div>
@@ -935,7 +914,7 @@ export default function Landing() {
                           placeholder="What changed for you? How did the mocks, AI coach and route help?"
                           rows={4}
                           maxLength={600}
-                          className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
+                          className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                         />
                         <p className="mt-1 text-right text-[11px] text-slate-400">{form.text.length}/600</p>
                       </div>
@@ -944,7 +923,7 @@ export default function Landing() {
                         <button
                           onClick={handleSubmit}
                           disabled={!formValid || submitting}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.32)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.32)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {submitting ? (
                             <>
@@ -996,10 +975,10 @@ export default function Landing() {
           transition={{ duration: 0.7, ease: EASE }}
           className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-slate-900 px-8 py-14 text-center sm:px-14 sm:py-20"
         >
-          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-600/30 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-rose-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-600/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
           <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-red-300">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-blue-300">
               <Sparkles className="h-3.5 w-3.5" /> Start free — no card required
             </span>
             <h2 className="mt-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
@@ -1013,7 +992,7 @@ export default function Landing() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => navigate('/register')}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(220,38,38,0.4)] transition hover:-translate-y-0.5 hover:bg-red-700"
+                className="group inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.4)] transition hover:-translate-y-0.5 hover:bg-blue-700"
               >
                 Create free account
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -1035,7 +1014,7 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <BrandMark size={28} />
             <span className="font-black tracking-tight">
-              Prof<span className="text-red-600">AI</span>
+              Prof<span className="text-blue-600">AI</span>
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">

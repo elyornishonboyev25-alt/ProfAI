@@ -40,11 +40,11 @@ export default function PremiumRoute({ children, showGuestBanner = false }: Prem
           initial={minimalMotion ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={minimalMotion ? { duration: 0.12 } : { duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-          className="sticky top-0 z-[45] border-b border-red-200/70 bg-[linear-gradient(92deg,rgba(254,226,226,0.9),rgba(255,244,245,0.92),rgba(254,226,226,0.9))] shadow-[0_8px_20px_rgba(220,38,38,0.12)]"
+          className="sticky top-0 z-[45] border-b border-blue-200/70 bg-[linear-gradient(92deg,rgba(254,226,226,0.9),rgba(255,244,245,0.92),rgba(254,226,226,0.9))] shadow-[0_8px_20px_rgba(37,99,235,0.12)]"
         >
           <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-700">Guest Preview</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">Guest Preview</p>
               <p className="text-sm font-medium text-slate-700">
                 Explore all sections freely. Create an account to save progress across devices.
               </p>
@@ -52,14 +52,14 @@ export default function PremiumRoute({ children, showGuestBanner = false }: Prem
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => openRegisterModal()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(220,38,38,0.3)] transition hover:opacity-95"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] transition hover:opacity-95"
               >
                 <UserPlus className="h-4 w-4" />
                 Register
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-white/95 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-white/95 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
               >
                 <LogIn className="h-4 w-4" />
                 Sign In

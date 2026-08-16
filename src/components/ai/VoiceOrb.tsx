@@ -1,38 +1,33 @@
-import type { CSSProperties } from 'react'
 import type { AiVoiceState } from '@/store/aiAssistantStore'
 
 type VoiceOrbProps = {
   state?: AiVoiceState
-  /** Live amplitude 0–1 — makes the core pulse with the voice. */
+  /** Live amplitude from 0 to 1. */
   level?: number
   size?: number
   className?: string
 }
 
-const PALETTES: Record<AiVoiceState, { core: string; glow: string; ring: string; spark: string }> = {
+const PALETTES: Record<AiVoiceState, { core: string; glow: string; ring: string }> = {
   idle: {
-    core: 'radial-gradient(circle at 32% 28%, #fecdd3 0%, #fb7185 38%, #e11d48 72%, #9f1239 100%)',
-    glow: 'rgba(244,63,94,0.45)',
-    ring: 'rgba(251,113,133,0.55)',
-    spark: '#fda4af',
+    core: 'radial-gradient(circle at 32% 28%, #dbeafe 0%, #60a5fa 38%, #2563eb 72%, #1e3a8a 100%)',
+    glow: 'rgba(37,99,235,0.34)',
+    ring: 'rgba(96,165,250,0.58)',
   },
   listening: {
-    core: 'radial-gradient(circle at 32% 28%, #a7f3d0 0%, #34d399 38%, #10b981 72%, #047857 100%)',
-    glow: 'rgba(16,185,129,0.5)',
-    ring: 'rgba(52,211,153,0.6)',
-    spark: '#6ee7b7',
+    core: 'radial-gradient(circle at 32% 28%, #bfdbfe 0%, #38bdf8 38%, #0284c7 72%, #075985 100%)',
+    glow: 'rgba(2,132,199,0.42)',
+    ring: 'rgba(56,189,248,0.66)',
   },
   thinking: {
-    core: 'radial-gradient(circle at 32% 28%, #fde68a 0%, #fbbf24 36%, #f59e0b 70%, #b45309 100%)',
-    glow: 'rgba(245,158,11,0.48)',
-    ring: 'rgba(251,191,36,0.6)',
-    spark: '#fcd34d',
+    core: 'radial-gradient(circle at 32% 28%, #e0e7ff 0%, #a5b4fc 36%, #6366f1 70%, #3730a3 100%)',
+    glow: 'rgba(99,102,241,0.4)',
+    ring: 'rgba(129,140,248,0.62)',
   },
   speaking: {
-    core: 'radial-gradient(circle at 32% 28%, #fecaca 0%, #fb7185 34%, #ef4444 66%, #be123c 100%)',
-    glow: 'rgba(239,68,68,0.6)',
-    ring: 'rgba(251,113,133,0.7)',
-    spark: '#fca5a5',
+    core: 'radial-gradient(circle at 32% 28%, #e0e7ff 0%, #818cf8 34%, #4f46e5 66%, #312e81 100%)',
+    glow: 'rgba(79,70,229,0.48)',
+    ring: 'rgba(129,140,248,0.68)',
   },
 }
 
@@ -41,64 +36,54 @@ const SPARKS = [0, 1, 2, 3, 4, 5] as const
 export function VoiceOrb({ state = 'idle', level = 0, size = 120, className }: VoiceOrbProps) {
   const palette = PALETTES[state]
   const active = state === 'speaking' || state === 'listening'
-  const animated = state !== 'idle'
-  const coreScale = active ? 1 + Math.min(0.22, level * 0.35) : 1
+  const coreScale = active ? 1 + Math.min(0.2, level * 0.32) : 1
 
   return (
-    <div
-      className={`voice-orb ${animated ? 'voice-orb--animated' : ''} ${className ?? ''}`}
+    <span
+      className={className}
       style={{ width: size, height: size, position: 'relative', display: 'inline-flex' }}
       aria-hidden="true"
     >
-      <div
-        className={`voice-orb-glow ${active ? 'voice-orb-glow--active' : ''}`}
-        style={{ background: `radial-gradient(circle, ${palette.glow} 0%, transparent 68%)` }}
+      <span
+        style={{
+          position: 'absolute',
+          inset: '-18%',
+          borderRadius: '9999px',
+          background: `radial-gradient(circle, ${palette.glow} 0%, transparent 68%)`,
+          filter: 'blur(7px)',
+          opacity: active ? 0.72 : 0.5,
+        }}
       />
 
-      {active
-        ? [0, 1].map((ring) => (
-            <span
-              key={ring}
-              className="voice-orb-ring"
-              style={{ borderColor: palette.ring, animationDelay: `${ring * 0.9}s` }}
-            />
-          ))
-        : null}
+      {active ? (
+        <span
+          className="voice-orb-active-ring"
+          style={{ position: 'absolute', inset: '5%', borderRadius: '9999px', border: `2px solid ${palette.ring}` }}
+        />
+      ) : null}
 
-      <div className={`voice-orb-halo ${state === 'thinking' ? 'voice-orb-halo--thinking' : ''}`}>
-        {SPARKS.map((spark) => {
-          const angle = (spark / SPARKS.length) * Math.PI * 2
-          const radius = size * 0.46
-          const x = Math.cos(angle) * radius + size / 2
-          const y = Math.sin(angle) * radius + size / 2
-          const sparkSize = Math.max(3, size * 0.035)
-          const sparkStyle: CSSProperties = {
-            left: x,
-            top: y,
-            width: sparkSize,
-            height: sparkSize,
-            marginLeft: -size * 0.0175,
-            marginTop: -size * 0.0175,
-            background: palette.spark,
-            boxShadow: `0 0 ${size * 0.06}px ${palette.spark}`,
-            animationDelay: `${spark * 0.22}s`,
-          }
-
-          return <span key={spark} className="voice-orb-spark" style={sparkStyle} />
-        })}
-      </div>
-
-      <div
-        className={`voice-orb-core ${active ? 'voice-orb-core--active' : 'voice-orb-core--rest'} ${state === 'speaking' ? 'voice-orb-core--speaking' : ''}`}
+      <span
+        className="transition-transform duration-150"
         style={{
           background: palette.core,
-          boxShadow: `inset 0 ${size * 0.04}px ${size * 0.09}px rgba(255,255,255,0.55), inset 0 -${size * 0.05}px ${size * 0.12}px rgba(0,0,0,0.28), 0 ${size * 0.08}px ${size * 0.18}px ${palette.glow}`,
-          transform: active ? `scale(${coreScale})` : undefined,
+          boxShadow: `inset 0 ${size * 0.04}px ${size * 0.09}px rgba(255,255,255,0.55), inset 0 -${size * 0.05}px ${size * 0.12}px rgba(15,23,42,0.24), 0 ${size * 0.08}px ${size * 0.18}px ${palette.glow}`,
+          transform: `scale(${coreScale})`,
         }}
       >
-        <span className="voice-orb-highlight" />
-      </div>
-    </div>
+        <span
+          style={{
+            position: 'absolute',
+            top: '14%',
+            left: '20%',
+            width: '38%',
+            height: '30%',
+            borderRadius: '9999px',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)',
+            filter: 'blur(2px)',
+          }}
+        />
+      </span>
+    </span>
   )
 }
 

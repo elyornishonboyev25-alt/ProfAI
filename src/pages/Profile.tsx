@@ -190,10 +190,10 @@ function buildProfileFallback(user: AuthUser | null): ProfileOverview {
 }
 
 const tickStyle = { fill: '#64748B', fontSize: 11 }
-const gridColor = '#FEE2E2'
+const gridColor = '#DBEAFE'
 const tooltipStyle = {
   borderRadius: 12,
-  borderColor: '#FECACA',
+  borderColor: '#BFDBFE',
   boxShadow: '0 14px 30px rgba(15,23,42,0.12)',
   fontSize: 12,
   fontWeight: 600,
@@ -202,7 +202,7 @@ const tooltipStyle = {
 function ChartEmpty({ label }: { label: string }) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
         <Activity className="h-5 w-5" />
       </span>
       <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
@@ -250,23 +250,23 @@ export default function Profile() {
         value: data.stats.totalAttempts,
         format: (v: number) => v.toString(),
         icon: Activity,
-        accent: 'from-red-500 to-rose-600',
-        ring: 'rgba(244,63,94,0.35)',
+        accent: 'from-blue-500 to-indigo-600',
+        ring: 'rgba(99,102,241,0.35)',
       },
       {
         label: 'Average Accuracy',
         value: data.stats.averageAccuracy,
         format: (v: number) => `${v.toFixed(1)}%`,
         icon: Target,
-        accent: 'from-rose-500 to-red-600',
-        ring: 'rgba(220,38,38,0.4)',
+        accent: 'from-indigo-500 to-blue-600',
+        ring: 'rgba(37,99,235,0.4)',
       },
       {
         label: 'Streak',
         value: data.profile.currentStreak,
         format: (v: number) => `${v} d`,
         icon: Flame,
-        accent: 'from-orange-500 to-red-500',
+        accent: 'from-orange-500 to-blue-500',
         ring: 'rgba(249,115,22,0.4)',
       },
     ]
@@ -323,9 +323,9 @@ export default function Profile() {
                     </span>
                   </div>
                   {data.competitive && data.competitive.rank > 0 ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1.5">
-                      <Trophy className="h-4 w-4 text-red-600" />
-                      <span className="text-sm font-bold text-red-700">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1.5">
+                      <Trophy className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-bold text-blue-700">
                         Rank #<CountUp value={data.competitive.rank} />
                       </span>
                       {data.competitive.rankTrend === 'up' && data.competitive.rankDelta !== 0 ? (
@@ -333,7 +333,7 @@ export default function Profile() {
                           <ArrowUpRight className="h-3 w-3" />+{Math.abs(data.competitive.rankDelta)}
                         </span>
                       ) : data.competitive.rankTrend === 'down' && data.competitive.rankDelta !== 0 ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
                           <ArrowDownRight className="h-3 w-3" />-{Math.abs(data.competitive.rankDelta)}
                         </span>
                       ) : null}
@@ -344,7 +344,7 @@ export default function Profile() {
 
               {/* XP gem progress card */}
               <Tilt3D className="rounded-3xl" max={5}>
-                <div className="relative overflow-hidden rounded-3xl border border-red-100/80 bg-gradient-to-br from-white via-amber-50/30 to-rose-50/50 p-5 shadow-[0_18px_44px_rgba(220,38,38,0.12)]">
+                <div className="relative overflow-hidden rounded-3xl border border-blue-100/80 bg-gradient-to-br from-white via-amber-50/30 to-indigo-50/50 p-5 shadow-[0_18px_44px_rgba(37,99,235,0.12)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -376,16 +376,16 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => navigate('/register')}
-            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-red-200/80 bg-gradient-to-r from-red-50 via-white to-rose-50 p-4 text-left shadow-[0_10px_24px_rgba(220,38,38,0.1)]"
+            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4 text-left shadow-[0_10px_24px_rgba(37,99,235,0.1)]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
               <Sparkles className="h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black text-slate-900">Preview mode</span>
               <span className="block text-[12px] text-slate-500">Create an account to track real XP, ranking and saved attempts.</span>
             </span>
-            <ArrowUpRight className="h-5 w-5 shrink-0 text-red-500" />
+            <ArrowUpRight className="h-5 w-5 shrink-0 text-blue-500" />
           </button>
         </Reveal>
       ) : usingFallback && premiumLocked && !loading ? (
@@ -425,8 +425,8 @@ export default function Profile() {
                     title={`Unlock ${card.label}`}
                     compact
                   >
-                  <article className="group relative h-full overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_20px_40px_rgba(220,38,38,0.12)]">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-300/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <article className="group relative h-full overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_20px_40px_rgba(37,99,235,0.12)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
                       <span
@@ -446,7 +446,7 @@ export default function Profile() {
                       )}
                     </p>
                     <div className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                      <span className="fx-pulse-dot h-1.5 w-1.5 rounded-full bg-red-400" />
+                      <span className="fx-pulse-dot h-1.5 w-1.5 rounded-full bg-blue-400" />
                       Live data
                     </div>
                   </article>
@@ -466,15 +466,15 @@ export default function Profile() {
             description="See IELTS and SAT skill power, track-by-track strengths and precision trends."
           >
           <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                   <BrainCircuit className="h-4 w-4" />
                 </span>
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Skill Matrix</h2>
               </div>
-              <span className="rounded-full border border-red-100 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
+              <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
                 IELTS + SAT
               </span>
             </div>
@@ -487,13 +487,13 @@ export default function Profile() {
                   {!hasActivity ? <ChartEmpty label="No skill data yet" /> : null}
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={data.skillAnalytics.radar}>
-                      <PolarGrid stroke="#FECACA" />
+                      <PolarGrid stroke="#BFDBFE" />
                       <PolarAngleAxis dataKey="label" tick={{ fill: '#64748B', fontSize: 10 }} />
                       <Radar
                         name="Skill Power"
                         dataKey="skillPower"
-                        stroke="#DC2626"
-                        fill="#DC2626"
+                        stroke="#2563EB"
+                        fill="#2563EB"
                         fillOpacity={0.32}
                         animationDuration={900}
                       />
@@ -502,7 +502,7 @@ export default function Profile() {
                   </ResponsiveContainer>
                 </div>
                 <div className="space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-700">IELTS Tracks</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">IELTS Tracks</p>
                   {ieltsSkills.map((skill) => (
                     <div key={skill.key}>
                       <div className="mb-1 flex items-center justify-between">
@@ -536,9 +536,9 @@ export default function Profile() {
             description="Reveal verified accuracy, average score and test-based XP analytics."
           >
           <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                 <Target className="h-4 w-4" />
               </span>
               <h2 className="text-lg font-black tracking-tight text-slate-900">Accuracy Score</h2>
@@ -557,8 +557,8 @@ export default function Profile() {
                   </div>
                 </ProgressRing>
                 <div className="mt-5 grid w-full grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-red-100 bg-red-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-red-600">Avg Score</p>
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Avg Score</p>
                     <p className="mt-1 text-lg font-black text-slate-900">
                       <CountUp value={data.stats.averageScore} decimals={1} suffix="%" />
                     </p>
@@ -586,10 +586,10 @@ export default function Profile() {
           description="Explore your cumulative XP curve and understand how every attempt changes your trajectory."
         >
         <article className="surface-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                 <TrendingUp className="h-4 w-4" />
               </span>
               <div>
@@ -608,8 +608,8 @@ export default function Profile() {
                 <AreaChart data={data.skillAnalytics.xpMomentum} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="xpGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#EF4444" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#EF4444" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -619,7 +619,7 @@ export default function Profile() {
                   <Area
                     type="monotone"
                     dataKey="xp"
-                    stroke="#DC2626"
+                    stroke="#2563EB"
                     strokeWidth={2.5}
                     fill="url(#xpGradient)"
                     animationDuration={900}
@@ -641,9 +641,9 @@ export default function Profile() {
             description="Compare daily XP, consistency and study intensity across your week."
           >
           <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-rose-400/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                 <Activity className="h-4 w-4" />
               </span>
               <div>
@@ -661,12 +661,12 @@ export default function Profile() {
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis dataKey="label" axisLine={false} tickLine={false} tick={tickStyle} />
                     <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={tickStyle} />
-                    <Tooltip cursor={{ fill: 'rgba(220,38,38,0.06)' }} contentStyle={tooltipStyle} />
+                    <Tooltip cursor={{ fill: 'rgba(37,99,235,0.06)' }} contentStyle={tooltipStyle} />
                     <Bar dataKey="xpEarned" radius={[10, 10, 4, 4]} fill="url(#weeklyXpGradient)" animationDuration={700} />
                     <defs>
                       <linearGradient id="weeklyXpGradient" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0%" stopColor="#F59E0B" />
-                        <stop offset="100%" stopColor="#DC2626" />
+                        <stop offset="100%" stopColor="#2563EB" />
                       </linearGradient>
                     </defs>
                   </BarChart>
@@ -726,10 +726,10 @@ export default function Profile() {
       {/* ── Recent attempts ─────────────────────────────────────── */}
       <Reveal className="mt-6">
         <article className="surface-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.32)]">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
                 <Activity className="h-4 w-4" />
               </span>
               <h2 className="text-lg font-black tracking-tight text-slate-900">Recent Attempts</h2>
@@ -747,7 +747,7 @@ export default function Profile() {
                 <StaggerItem key={attempt.id}>
                   <motion.div
                     whileHover={{ y: -2 }}
-                    className="group rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-red-200 hover:shadow-[0_10px_22px_rgba(220,38,38,0.1)]"
+                    className="group rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(37,99,235,0.1)]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-bold text-slate-900">{attempt.test.title}</p>
@@ -763,9 +763,9 @@ export default function Profile() {
                         {attempt.percentage.toFixed(1)}% ({attempt.finalScore.toFixed(1)}%)
                       </span>
                     </div>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-red-100/60">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-blue-100/60">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500"
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
                         style={{ width: `${Math.max(2, Math.min(100, attempt.percentage))}%` }}
                       />
                     </div>
@@ -782,8 +782,8 @@ export default function Profile() {
               ))}
             </Stagger>
           ) : (
-            <div className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/40 px-4 py-10 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600">
+            <div className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-10 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                 <Activity className="h-5 w-5" />
               </span>
               <p className="mt-3 text-sm font-bold text-slate-700">No attempts yet</p>
@@ -791,7 +791,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]"
+                className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]"
               >
                 Browse tests
                 <ArrowUpRight className="h-4 w-4" />

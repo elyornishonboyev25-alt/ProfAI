@@ -10,7 +10,7 @@ import type { LessonBlock } from '@/data/admission'
 const LEVEL_TONE: Record<string, string> = {
   Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   Intermediate: 'bg-amber-50 text-amber-700 border-amber-200',
-  Advanced: 'bg-rose-50 text-rose-700 border-rose-200',
+  Advanced: 'bg-indigo-50 text-indigo-700 border-indigo-200',
 }
 
 function Block({ block, accent }: { block: LessonBlock; accent: string }) {
@@ -84,7 +84,7 @@ export default function AdmissionLesson() {
     return (
       <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
         <AmbientBackdrop variant="red" />
-        <div className="relative mx-auto max-w-3xl rounded-2xl border border-red-100 bg-white p-10 text-center">
+        <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
           <h1 className="text-2xl font-black text-slate-900">Lesson not found</h1>
           <p className="mt-2 text-slate-500">This lesson doesn’t exist or hasn’t been added yet.</p>
           <button onClick={() => navigate('/admission/lessons')} className="premium-back-btn mt-6">
@@ -213,7 +213,7 @@ export default function AdmissionLesson() {
                 className={`interactive-lift rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                   completed
                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                    : 'cta-sheen bg-gradient-to-r from-[#DC2626] to-[#B91C1C] text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]'
+                    : 'cta-sheen bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
                 }`}
               >
                 {completed ? 'Completed ✓' : 'Mark as complete'}

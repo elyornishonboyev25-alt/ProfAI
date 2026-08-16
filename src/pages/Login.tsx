@@ -156,14 +156,14 @@ export default function Login() {
 
         <div className="relative flex">
         {/* Soft glow halo behind the card */}
-        <div className="pointer-events-none absolute -inset-[1.5px] -z-10 rounded-[1.95rem] bg-gradient-to-br from-red-300/45 via-rose-200/25 to-orange-200/40 blur-md" />
+        <div className="pointer-events-none absolute -inset-[1.5px] -z-10 rounded-[1.95rem] bg-gradient-to-br from-blue-300/45 via-indigo-200/25 to-orange-200/40 blur-md" />
 
-        <div className="panel-surface relative flex w-full flex-col justify-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/84 px-6 py-7 shadow-[0_34px_90px_rgba(127,29,29,0.2)] backdrop-blur-3xl sm:px-8 lg:px-10 lg:py-9">
+        <div className="panel-surface relative flex w-full flex-col justify-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/84 px-6 py-7 shadow-[0_34px_90px_rgba(30,64,175,0.2)] backdrop-blur-3xl sm:px-8 lg:px-10 lg:py-9">
           {/* Top accent line */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
 
           <div className="mb-7 grid grid-cols-2 rounded-2xl border border-slate-200/70 bg-slate-100/70 p-1.5 shadow-inner">
-            <span className="flex min-h-11 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-red-700 shadow-[0_8px_22px_rgba(220,38,38,0.12)] ring-1 ring-red-100">
+            <span className="flex min-h-11 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-blue-700 shadow-[0_8px_22px_rgba(37,99,235,0.12)] ring-1 ring-blue-100">
               Sign in
             </span>
             <Link
@@ -180,16 +180,16 @@ export default function Login() {
               <motion.span
                 aria-hidden
                 initial={minimalMotion ? false : { opacity: 0.5, scale: 0.92 }}
-                animate={{ opacity: 0.55, scale: 1 }}
-                transition={{ duration: minimalMotion ? 0 : 0.35 }}
-                className="absolute inset-0 -z-10 rounded-2xl bg-red-500/25 blur-xl"
+                animate={minimalMotion ? undefined : { opacity: [0.45, 0.75, 0.45], scale: [0.96, 1.06, 0.96] }}
+                transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 -z-10 rounded-2xl bg-blue-500/25 blur-xl"
               />
-              <span className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white bg-white/90 shadow-[0_18px_38px_rgba(220,38,38,.24)]">
+              <span className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white bg-white/90 shadow-[0_18px_38px_rgba(37,99,235,.24)]">
                 <BrandMark size={50} />
               </span>
             </div>
 
-            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-red-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-700">
+            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
               <Sparkles className="h-3 w-3" />
               Your progress is ready
             </span>
@@ -232,7 +232,7 @@ export default function Login() {
                       onClick={() =>
                         navigate('/register', notFound.email ? { state: { email: notFound.email } } : undefined)
                       }
-                      className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)] transition hover:opacity-95"
+                      className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)] transition hover:opacity-95"
                     >
                       <UserPlus className="h-4 w-4" />
                       Create an account
@@ -257,17 +257,17 @@ export default function Login() {
                 Gmail address
               </label>
               <div className="group relative">
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400 transition-colors group-focus-within:text-red-500" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
                 <input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  className="input h-12 rounded-2xl border-red-100 bg-white/95 pl-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
+                  className="input h-12 rounded-2xl border-blue-100 bg-white/95 pl-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(37,99,235,0.12)]"
                   placeholder="name@gmail.com"
                   {...register('email')}
                 />
               </div>
-              {errors.email ? <p className="mt-1 text-xs font-medium text-red-600">{errors.email.message}</p> : null}
+              {errors.email ? <p className="mt-1 text-xs font-medium text-error-600">{errors.email.message}</p> : null}
             </div>
 
             <div>
@@ -275,12 +275,12 @@ export default function Login() {
                 Password
               </label>
               <div className="group relative">
-                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400 transition-colors group-focus-within:text-red-500" />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  className="input h-12 rounded-2xl border-red-100 bg-white/95 pl-11 pr-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(220,38,38,0.12)]"
+                  className="input h-12 rounded-2xl border-blue-100 bg-white/95 pl-11 pr-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(37,99,235,0.12)]"
                   placeholder="Enter your password"
                   {...register('password')}
                 />
@@ -293,7 +293,7 @@ export default function Login() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password ? <p className="mt-1 text-xs font-medium text-red-600">{errors.password.message}</p> : null}
+              {errors.password ? <p className="mt-1 text-xs font-medium text-error-600">{errors.password.message}</p> : null}
             </div>
 
             <motion.button
@@ -301,7 +301,7 @@ export default function Login() {
               whileTap={minimalMotion ? undefined : { scale: 0.985 }}
               disabled={isSubmitting}
               type="submit"
-              className="interactive-lift cta-sheen group mt-1 flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#B91C1C] via-[#EF3333] to-[#C5162E] px-4 text-sm font-black text-white shadow-[0_16px_32px_rgba(220,38,38,0.34)] transition hover:shadow-[0_20px_42px_rgba(220,38,38,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="interactive-lift cta-sheen group mt-1 flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#1D4ED8] via-[#EF3333] to-[#C5162E] px-4 text-sm font-black text-white shadow-[0_16px_32px_rgba(37,99,235,0.34)] transition hover:shadow-[0_20px_42px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
@@ -319,27 +319,27 @@ export default function Login() {
 
           {/* Divider */}
           <div className="my-4 flex items-center gap-3">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-red-100 to-red-200/70" />
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-100 to-blue-200/70" />
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
               or continue with
             </span>
-            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-red-100 to-red-200/70" />
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-blue-100 to-blue-200/70" />
           </div>
 
           {/* Google */}
           <GoogleAuthButton mode="signin" onCredential={handleGoogleCredential} />
 
           <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-red-400" />
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
             Use your existing Google account — no password needed.
           </p>
 
           {/* Gamified trust chips */}
-          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-red-50 pt-4">
+          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-blue-50 pt-4">
             {TRUST_CHIPS.map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-red-100/80 bg-red-50/70 px-2 py-1 text-center text-[9.5px] font-bold text-red-700/90"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-blue-100/80 bg-blue-50/70 px-2 py-1 text-center text-[9.5px] font-bold text-blue-700/90"
               >
                 <Icon className="h-3 w-3" />
                 {label}
@@ -349,7 +349,7 @@ export default function Login() {
 
           <p className="mt-4 text-center text-[13px] text-[#6B7280]">
             New account?{' '}
-            <Link to="/register" className="font-bold text-red-600 transition-colors hover:text-red-700">
+            <Link to="/register" className="font-bold text-blue-600 transition-colors hover:text-blue-700">
               Create one now
             </Link>
           </p>

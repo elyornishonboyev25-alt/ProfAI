@@ -62,7 +62,7 @@ function toneClass(tone: TrackCard['tone']) {
     return 'border-blue-200 bg-gradient-to-br from-white via-blue-50 to-indigo-100/75 shadow-[0_18px_36px_rgba(37,99,235,0.16)]'
   }
   if (tone === 'rose') {
-    return 'border-rose-200 bg-gradient-to-br from-white via-rose-50 to-pink-100/70 shadow-[0_18px_36px_rgba(244,63,94,0.16)]'
+    return 'border-indigo-200 bg-gradient-to-br from-white via-indigo-50 to-pink-100/70 shadow-[0_18px_36px_rgba(99,102,241,0.16)]'
   }
   if (tone === 'amber') {
     return 'border-orange-200 bg-gradient-to-br from-white via-amber-50 to-orange-100/70 shadow-[0_18px_36px_rgba(217,119,6,0.16)]'
@@ -70,23 +70,23 @@ function toneClass(tone: TrackCard['tone']) {
   if (tone === 'teal') {
     return 'border-teal-200 bg-gradient-to-br from-white via-teal-50 to-cyan-100/70 shadow-[0_18px_36px_rgba(13,148,136,0.16)]'
   }
-  return 'border-red-200 bg-gradient-to-br from-white via-red-50 to-rose-100/70 shadow-[0_18px_36px_rgba(220,38,38,0.16)]'
+  return 'border-blue-200 bg-gradient-to-br from-white via-blue-50 to-indigo-100/70 shadow-[0_18px_36px_rgba(37,99,235,0.16)]'
 }
 
 function iconToneClass(tone: TrackCard['tone']) {
   if (tone === 'blue') return 'border-blue-200 text-blue-700'
-  if (tone === 'rose') return 'border-rose-200 text-rose-700'
+  if (tone === 'rose') return 'border-indigo-200 text-indigo-700'
   if (tone === 'amber') return 'border-orange-200 text-orange-700'
   if (tone === 'teal') return 'border-teal-200 text-teal-700'
-  return 'border-red-200 text-red-700'
+  return 'border-blue-200 text-blue-700'
 }
 
 function linkToneClass(tone: TrackCard['tone']) {
   if (tone === 'blue') return 'text-blue-700'
-  if (tone === 'rose') return 'text-rose-700'
+  if (tone === 'rose') return 'text-indigo-700'
   if (tone === 'amber') return 'text-orange-700'
   if (tone === 'teal') return 'text-teal-700'
-  return 'text-red-700'
+  return 'text-blue-700'
 }
 
 export default function Tests() {
@@ -97,8 +97,8 @@ export default function Tests() {
       <Reveal>
         <section className="premium-hero p-6 sm:p-9">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-14 top-0 h-52 w-52 rounded-full bg-red-200/35 blur-3xl" />
-            <div className="absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-rose-200/35 blur-3xl" />
+            <div className="absolute -left-14 top-0 h-52 w-52 rounded-full bg-blue-200/35 blur-3xl" />
+            <div className="absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-indigo-200/35 blur-3xl" />
           </div>
 
           <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
@@ -143,6 +143,12 @@ export default function Tests() {
           <p className="mt-1">
             New sets will be added next. For now, continue via IELTS/SAT section pages and shared Writing/Speaking studios.
           </p>
+          <button
+            onClick={() => navigate('/mock', { state: { from: 'tests' } })}
+            className="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700 transition hover:bg-blue-50"
+          >
+            Open Mock Arena
+          </button>
         </section>
       </Reveal>
 
@@ -181,14 +187,14 @@ export default function Tests() {
       </Stagger>
 
       <Reveal delay={0.08} className="mt-6">
-        <section className="rounded-2xl border border-red-100 bg-white/90 p-4">
-          <p className="inline-flex items-center gap-2 text-sm font-semibold text-red-700">
+        <section className="rounded-2xl border border-blue-100 bg-white/90 p-4">
+          <p className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700">
             <Sparkles className="h-4 w-4" />
             Vocabulary Arena remains available as a separate immersive track.
           </p>
           <button
             onClick={() => navigate('/vocabulary')}
-            className="mt-3 inline-flex items-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+            className="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
           >
             <BookOpen className="mr-2 h-4 w-4" />
             Open Vocabulary Arena

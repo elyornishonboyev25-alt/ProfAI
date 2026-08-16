@@ -10,7 +10,7 @@ import { CountUp } from '@/components/fx'
 import SkillBadge from './SkillBadge'
 import { TIER_NAME, TRACK_META, formatBand, tierForBand } from './badgeMeta'
 
-const CONFETTI_COLORS = ['#F59E0B', '#DC2626', '#FB7185', '#FDE68A', '#F97316', '#FBBF24']
+const CONFETTI_COLORS = ['#F59E0B', '#2563EB', '#818CF8', '#FDE68A', '#F97316', '#FBBF24']
 
 export default function AchievementCelebration() {
   const current = useCelebrationStore((state) => state.current)
@@ -45,7 +45,7 @@ export default function AchievementCelebration() {
 
   const meta = TRACK_META[current.track]
   const tier = tierForBand(current.band)
-  const accent = meta?.group === 'SAT' ? '#2563EB' : '#DC2626'
+  const accent = meta?.group === 'SAT' ? '#2563EB' : '#2563EB'
   const scoreProgress = Math.min(
     100,
     Math.max(4, meta?.group === 'SAT' ? (current.band / 1600) * 100 : (current.band / 9) * 100),
@@ -120,7 +120,7 @@ export default function AchievementCelebration() {
           className="relative my-auto w-full max-w-lg overflow-hidden rounded-[2.25rem] border border-amber-200/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(255,249,231,0.97),rgba(255,241,242,0.97))] p-7 text-center shadow-[0_45px_110px_rgba(0,0,0,0.5)] sm:p-9"
         >
           <div className="pointer-events-none absolute left-1/2 top-28 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-300/55 blur-3xl" />
-          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-red-300/35 blur-3xl" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-300/35 blur-3xl" />
           <button
             onClick={dismiss}
             className="absolute right-4 top-4 z-20 rounded-xl border border-slate-200 bg-white/85 p-2 text-slate-400 transition hover:text-slate-950"
@@ -179,7 +179,7 @@ export default function AchievementCelebration() {
                 initial={{ width: 0 }}
                 animate={{ width: `${scoreProgress}%` }}
                 transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-400 to-red-500"
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-400 to-blue-500"
               />
             </div>
             <p className="mt-2 text-xs font-semibold text-slate-500">Saved to your ProfAI achievement collection.</p>
@@ -196,7 +196,7 @@ export default function AchievementCelebration() {
             </button>
             <button
               onClick={() => void shareAchievement()}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-5 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,0.3)] transition hover:-translate-y-0.5"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-blue-500 px-5 text-sm font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5"
             >
               <Share2 className="h-4 w-4" />
               Share

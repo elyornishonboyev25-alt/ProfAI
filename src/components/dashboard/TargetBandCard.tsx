@@ -59,11 +59,11 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-8% 0px' }}
       transition={minimalMotion ? { duration: 0.15 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#DC2626] via-[#E11D48] to-[#B91C1C] p-6 text-white shadow-[0_22px_50px_rgba(220,38,38,0.35)] sm:p-7"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2563EB] via-[#4F46E5] to-[#1D4ED8] p-6 text-white shadow-[0_22px_50px_rgba(37,99,235,0.35)] sm:p-7"
     >
       {/* ambient glow orbs */}
       <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-rose-300/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-indigo-300/20 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
 
       <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -73,7 +73,7 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
             Your Target
           </p>
           <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">{targetLabel ?? 'IELTS 7.5'}</h2>
-          <p className="mt-1.5 max-w-md text-sm font-medium text-red-50/90">
+          <p className="mt-1.5 max-w-md text-sm font-medium text-blue-50/90">
             Keep your streak alive — every practice session moves this ring forward.
           </p>
 
@@ -89,10 +89,10 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
                 className={`flex h-9 w-9 flex-col items-center justify-center rounded-xl border text-[9px] font-bold uppercase ${
                   day.active
                     ? 'border-white/40 bg-white/20 text-white shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
-                    : 'border-white/15 bg-white/5 text-red-100/70'
+                    : 'border-white/15 bg-white/5 text-blue-100/70'
                 }`}
               >
-                <Flame className={`h-3.5 w-3.5 ${day.active ? 'text-amber-300' : 'text-red-100/40'}`} />
+                <Flame className={`h-3.5 w-3.5 ${day.active ? 'text-amber-300' : 'text-blue-100/40'}`} />
                 {day.label.slice(0, 2)}
               </motion.span>
             ))}
@@ -103,8 +103,8 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
           </div>
 
           <button
-            onClick={() => navigate(targetPath)}
-            className="interactive-lift mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-red-700 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-red-50"
+            onClick={() => navigate('/mock')}
+            className="interactive-lift mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-blue-50"
           >
             Continue preparing
             <ArrowRight className="h-4 w-4" />
@@ -117,14 +117,14 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
             size={132}
             stroke={11}
             from="#FFFFFF"
-            to="#FECACA"
+            to="#BFDBFE"
             trackColor="rgba(255,255,255,0.18)"
           >
             <div className="text-center">
               <p className="text-2xl font-black leading-none">
                 <CountUp value={progress} suffix="%" />
               </p>
-              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-red-100">Overall</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-blue-100">Overall</p>
             </div>
           </ProgressRing>
         </div>

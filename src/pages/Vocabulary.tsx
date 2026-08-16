@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Gem, Sparkles, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -159,7 +159,7 @@ export default function Vocabulary() {
 
         <div className="relative mx-auto w-full max-w-6xl space-y-6">
           <Reveal>
-            <section className="rounded-[2rem] border border-red-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-9">
+            <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-9">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <div className="premium-top-controls">
@@ -179,21 +179,21 @@ export default function Vocabulary() {
                     </span>
                   </div>
                   <h1 className="mt-4 text-4xl font-black leading-tight text-[#0f172a] sm:text-5xl">
-                    Choose your <span className="bg-gradient-to-r from-red-700 via-rose-600 to-orange-500 bg-clip-text text-transparent">Vocabulary Arena</span>
+                    Choose your <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent">Vocabulary Arena</span>
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                     IELTS and SAT now run as separate immersive pages. Each track includes smooth accordion navigation and passage-level activity views.
                   </p>
                 </div>
-                <div className="relative overflow-hidden rounded-3xl border border-red-200 bg-gradient-to-br from-white via-rose-50/70 to-red-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(220,38,38,0.18)]">
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-red-200/55 blur-2xl" />
+                <div className="relative overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(37,99,235,0.18)]">
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-200/55 blur-2xl" />
                   <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-orange-200/45 blur-2xl" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Total Terms</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Total Terms</p>
                   <p className="mt-1 text-4xl font-black text-slate-900">
                     <CountUp value={ieltsStats.words + satStats.words} />
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-semibold">
-                    <div className="rounded-xl border border-red-100 bg-white/90 px-2 py-1.5 text-red-700">{ieltsStats.words} IELTS</div>
+                    <div className="rounded-xl border border-blue-100 bg-white/90 px-2 py-1.5 text-blue-700">{ieltsStats.words} IELTS</div>
                     <div className="rounded-xl border border-blue-100 bg-white/90 px-2 py-1.5 text-blue-700">{satStats.words} SAT</div>
                   </div>
                 </div>
@@ -206,9 +206,9 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/ielts')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-red-200 bg-gradient-to-br from-white via-rose-50 to-red-100/70 p-6 text-left shadow-[0_18px_36px_rgba(244,63,94,0.16)]"
+                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/70 p-6 text-left shadow-[0_18px_36px_rgba(99,102,241,0.16)]"
                 >
-                  <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <BookOpen className="h-3.5 w-3.5" />
                     IELTS Academic Track
                   </div>
@@ -221,7 +221,7 @@ export default function Vocabulary() {
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.tests} tests</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.passages} passages</span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-red-700 transition group-hover:translate-x-1">Open IELTS page -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open IELTS page -&gt;</p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -309,7 +309,7 @@ export default function Vocabulary() {
 
         <div className="relative mx-auto w-full max-w-6xl space-y-6">
           <Reveal>
-            <section className="rounded-[2rem] border border-red-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-8">
+            <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="premium-top-controls">
@@ -327,10 +327,10 @@ export default function Vocabulary() {
                     Reading vocabulary by roadmap: Day 1-30 and Full Test 1-20. Opening one test automatically closes the previous one.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50 to-white px-4 py-3 text-right shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-600">IELTS Stats</p>
+                <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">IELTS Stats</p>
                   <p className="mt-1 text-lg font-extrabold text-slate-900">{ieltsStats.tests} tests / {ieltsStats.passages} passages</p>
-                  <p className="text-sm font-semibold text-red-700">
+                  <p className="text-sm font-semibold text-blue-700">
                     <CountUp value={ieltsStats.words} /> terms
                   </p>
                 </div>
@@ -344,18 +344,18 @@ export default function Vocabulary() {
               return (
                 <StaggerItem
                   key={book.id}
-                  className="overflow-hidden rounded-[1.4rem] border border-red-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+                  className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
                 >
                   <button
                     onClick={() => toggleIeltsBook(book.id)}
-                    className={`group flex w-full items-center justify-between px-5 py-4 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'bg-gradient-to-r from-red-50 to-rose-50' : 'bg-white hover:bg-red-50/55'}`}
+                    className={`group flex w-full items-center justify-between px-5 py-4 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-white hover:bg-blue-50/55'}`}
                   >
                     <div>
                       <p className="text-xl font-bold text-slate-900">{book.title}</p>
                       <p className="text-xs font-semibold text-slate-500">{book.tests.length} tests available</p>
                     </div>
                     <ChevronDown
-                      className={`h-5 w-5 text-red-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'rotate-180' : ''}`}
+                      className={`h-5 w-5 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
 
@@ -363,20 +363,20 @@ export default function Vocabulary() {
                     isOpen={bookOpen}
                     minimalMotion={minimalMotion}
                     lazy
-                    className="bg-gradient-to-b from-white via-red-50/30 to-red-50/45"
+                    className="bg-gradient-to-b from-white via-blue-50/30 to-blue-50/45"
                   >
-                    <div className="space-y-2 border-t border-red-100 px-3 py-3">
+                    <div className="space-y-2 border-t border-blue-100 px-3 py-3">
                       {book.tests.map((test) => {
                         const testKey = `${book.id}::${test.id}`
                         const testOpen = openIeltsTestKey === testKey
                         return (
                           <div
                             key={test.id}
-                            className="overflow-hidden rounded-xl border border-red-100 bg-white"
+                            className="overflow-hidden rounded-xl border border-blue-100 bg-white"
                           >
                             <button
                               onClick={() => toggleIeltsTest(book.id, test.id)}
-                              className={`flex w-full items-center justify-between px-4 py-3 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'bg-red-50' : 'hover:bg-red-50/65'}`}
+                              className={`flex w-full items-center justify-between px-4 py-3 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'bg-blue-50' : 'hover:bg-blue-50/65'}`}
                             >
                               <div>
                                 <p className="text-base font-bold text-slate-900">{test.title}</p>
@@ -391,17 +391,17 @@ export default function Vocabulary() {
                                 </p>
                               </div>
                               <ChevronDown
-                                className={`h-4 w-4 text-red-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'rotate-180' : ''}`}
+                                className={`h-4 w-4 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'rotate-180' : ''}`}
                               />
                             </button>
 
                             <CollapsiblePanel isOpen={testOpen} minimalMotion={minimalMotion} lazy className="bg-white">
                               {() => (
-                                <div className="grid gap-3 border-t border-red-100 p-3 sm:grid-cols-3">
+                                <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-3">
                                   {test.sections.map((section, sectionIndex) => (
                                     <div
                                       key={section.id}
-                                      className={`rounded-xl border border-red-100 bg-gradient-to-br from-white to-red-50/70 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
+                                      className={`rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
                                     >
                                       <p className="text-sm font-bold text-slate-900">{section.title}</p>
                                       <p className="mt-1 text-xs text-slate-500">{section.entries.length} terms</p>
@@ -411,10 +411,10 @@ export default function Vocabulary() {
                                           navigate(`/vocabulary/ielts/${book.id}/${test.id}/${section.id}`)
                                         }}
                                         disabled={test.available === false}
-                                        className={`mt-3 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold shadow-[0_8px_20px_rgba(239,68,68,0.32)] ${
+                                        className={`mt-3 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold shadow-[0_8px_20px_rgba(59,130,246,0.32)] ${
                                           test.available === false
                                             ? 'cursor-not-allowed border border-amber-300 bg-amber-100 text-amber-800 shadow-none'
-                                            : 'bg-gradient-to-r from-red-600 to-rose-600 text-white'
+                                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
                                         }`}
                                       >
                                         {test.available === false ? 'Coming soon' : `Start Passage ${sectionIndex + 1}`}

@@ -9,7 +9,7 @@ import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionP
 const LEVEL_TONE: Record<string, string> = {
   Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   Intermediate: 'bg-amber-50 text-amber-700 border-amber-200',
-  Advanced: 'bg-rose-50 text-rose-700 border-rose-200',
+  Advanced: 'bg-indigo-50 text-indigo-700 border-indigo-200',
 }
 
 export default function AdmissionLessons() {

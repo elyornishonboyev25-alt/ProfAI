@@ -178,7 +178,7 @@ function addToDiamondBank(amount: number) {
 
 // ================================================================ ActivityPicker
 const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; icon: typeof Layers; tint: string }> = [
-  { mode: 'flashcards', title: 'Flashcards', desc: '3D flip cards with audio, shuffle & mastery tracking.', icon: Layers, tint: 'from-red-500 to-rose-600' },
+  { mode: 'flashcards', title: 'Flashcards', desc: '3D flip cards with audio, shuffle & mastery tracking.', icon: Layers, tint: 'from-blue-500 to-indigo-600' },
   { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', icon: Link2, tint: 'from-amber-500 to-orange-600' },
   { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', icon: CheckCircle2, tint: 'from-emerald-500 to-teal-600' },
   { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with live letter-by-letter feedback.', icon: Keyboard, tint: 'from-sky-500 to-indigo-600' },
@@ -198,15 +198,15 @@ export function ActivityPicker({ basePath, entriesCount }: { basePath: string; e
           >
             <Link
               to={`${basePath}/${card.mode}`}
-              className="group relative block overflow-hidden rounded-2xl border border-red-100 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(220,38,38,0.16)]"
+              className="group relative block overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(37,99,235,0.16)]"
             >
-              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-red-100/60 blur-2xl transition group-hover:scale-125" />
+              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-100/60 blur-2xl transition group-hover:scale-125" />
               <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.tint} text-white shadow-md`}>
                 <Icon className="h-5 w-5" />
               </span>
               <h4 className="mt-3 text-lg font-black text-slate-900">{card.title}</h4>
               <p className="mt-1 text-sm leading-6 text-slate-600">{card.desc}</p>
-              <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-red-600 transition group-hover:gap-2">
+              <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-600 transition group-hover:gap-2">
                 Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" />
               </p>
             </Link>
@@ -259,13 +259,13 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
 
   return (
     <div className="space-y-5">
-      <section className="mx-auto w-full max-w-4xl rounded-2xl border border-red-100 bg-white p-4 shadow-[0_14px_28px_rgba(15,23,42,0.06)]">
+      <section className="mx-auto w-full max-w-4xl rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_14px_28px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between text-sm font-semibold">
           <p className="text-slate-700">Card {index + 1} / {deck.length}</p>
           <p className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> {masteredCount} mastered</p>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-red-100">
-          <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.36, ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-orange-500" />
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-blue-100">
+          <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.36, ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500" />
         </div>
       </section>
 
@@ -277,15 +277,15 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
         >
           <motion.div animate={{ rotateY: flipped ? 180 : 0 }} transition={FLIP} style={{ transformStyle: 'preserve-3d' }} className="relative h-full w-full">
             {/* front */}
-            <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-red-100 bg-gradient-to-br from-white via-red-50/70 to-rose-100/70 p-7 shadow-[0_24px_52px_rgba(244,63,94,0.2)]">
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-red-200/45 blur-2xl" />
+            <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(99,102,241,0.2)]">
+              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-red-700">Term</span>
+                <span className="inline-flex items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Term</span>
                 {isSupported ? (
                   <span
                     role="button"
                     onClick={(e) => { e.stopPropagation(); speakingCurrent ? stop() : speak(current.term) }}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
                   >
                     {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                     {speakingCurrent ? 'Stop' : 'Listen'}
@@ -333,9 +333,9 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <button onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-red-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
-        <button onClick={() => { setDeck((p) => shuffle(p)); setIndex(0); setFlipped(false) }} className="inline-flex items-center rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(244,63,94,0.35)]"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
-        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-red-50">Next <ArrowRight className="ml-1 h-4 w-4" /></button>
+        <button onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
+        <button onClick={() => { setDeck((p) => shuffle(p)); setIndex(0); setFlipped(false) }} className="inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.35)]"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
+        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">Next <ArrowRight className="ml-1 h-4 w-4" /></button>
       </div>
     </div>
   )
@@ -453,20 +453,20 @@ export function MatchingActivity({ entries, rewardKey }: { entries: VocabularyEn
     matched
       ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
       : wrong
-        ? 'border-red-500 bg-red-50 text-red-700 animate-[shake_0.4s]'
+        ? 'border-blue-500 bg-blue-50 text-blue-700 animate-[shake_0.4s]'
         : selected
-          ? 'border-red-500 bg-red-50 text-red-700 ring-2 ring-red-200'
-          : 'border-slate-200 bg-white hover:border-red-300 hover:bg-red-50/40'
+          ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
+          : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
 
   return (
     <div className="space-y-4">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-100 bg-gradient-to-br from-white via-red-50/40 to-rose-100/40 p-4 shadow-[0_16px_34px_rgba(244,63,94,0.12)]">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-white via-blue-50/40 to-indigo-100/40 p-4 shadow-[0_16px_34px_rgba(99,102,241,0.12)]">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-600">Matching · +1 / group · +5 all-clear</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Matching · +1 / group · +5 all-clear</p>
           <p className="mt-1 text-sm font-semibold text-slate-700">{replayMode ? 'Replay mode — rewards already collected.' : `Earned here: ${sectionReward.totalDiamonds} diamonds`}</p>
         </div>
-        <div className="rounded-xl border border-red-200 bg-white px-3 py-2 text-right shadow-sm">
-          <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-red-600"><Gem className="h-3.5 w-3.5" /> Wallet</p>
+        <div className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-right shadow-sm">
+          <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-blue-600"><Gem className="h-3.5 w-3.5" /> Wallet</p>
           <p className="text-2xl font-black text-slate-900">{diamondBank}</p>
         </div>
       </section>
@@ -477,7 +477,7 @@ export function MatchingActivity({ entries, rewardKey }: { entries: VocabularyEn
             const done = Boolean(completedGroups[i])
             const claimed = sectionReward.awardedGroups.includes(i)
             return (
-              <button key={i} onClick={() => setActiveGroupIndex(i)} className={`rounded-xl border px-4 py-3 text-left transition ${activeGroupIndex === i ? 'border-red-400 bg-red-50 shadow-sm' : 'border-slate-200 bg-white hover:border-red-300'}`}>
+              <button key={i} onClick={() => setActiveGroupIndex(i)} className={`rounded-xl border px-4 py-3 text-left transition ${activeGroupIndex === i ? 'border-blue-400 bg-blue-50 shadow-sm' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
                 <p className="text-sm font-bold text-slate-900">Group {i + 1}</p>
                 <p className={`mt-1 text-xs font-semibold ${done ? 'text-emerald-600' : claimed ? 'text-amber-600' : 'text-slate-500'}`}>{done ? 'Solved now' : claimed ? 'Reward claimed' : `${group.length} pairs`}</p>
               </button>
@@ -486,10 +486,10 @@ export function MatchingActivity({ entries, rewardKey }: { entries: VocabularyEn
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-red-100 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)]">
+      <section className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-lg font-black text-slate-900">Group {activeGroupIndex + 1} board</h3>
-          <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-sm font-bold text-red-700">{activeMatchedCount} / {activeGroup.length}</span>
+          <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">{activeMatchedCount} / {activeGroup.length}</span>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-2">
@@ -584,23 +584,23 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
     return (
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-red-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-blue-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
         <Burst count={24} play={pct >= 70} />
         <ScoreRing pct={pct} />
         <h3 className="mt-4 text-3xl font-black text-slate-900">{pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practising'}</h3>
-        <p className="mt-1 text-lg text-slate-600">You scored <span className="font-bold text-red-600">{score}</span> / {questions.length}</p>
-        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]"><RotateCcw className="h-4 w-4" /> Try again</button>
+        <p className="mt-1 text-lg text-slate-600">You scored <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
+        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]"><RotateCcw className="h-4 w-4" /> Try again</button>
       </motion.section>
     )
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-red-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
-        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-600" />
+        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
       </div>
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-xl font-bold text-slate-900">What does <span className="text-red-600">“{current.term}”</span> mean?</h3>
+        <h3 className="text-xl font-bold text-slate-900">What does <span className="text-blue-600">“{current.term}”</span> mean?</h3>
         <AnimatePresence>
           {combo >= 2 ? (
             <motion.span
@@ -616,7 +616,7 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
           ) : null}
         </AnimatePresence>
         {isSupported ? (
-          <button onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
+          <button onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
         ) : null}
@@ -633,9 +633,9 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
               whileTap={!locked ? { scale: 0.99 } : undefined}
               className={`flex w-full items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition ${
                 state === 'correct' ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                  : state === 'wrong' ? 'border-red-500 bg-red-50 text-red-700'
+                  : state === 'wrong' ? 'border-blue-500 bg-blue-50 text-blue-700'
                   : state === 'dim' ? 'border-slate-200 bg-slate-50 text-slate-400'
-                  : 'border-slate-200 bg-white hover:border-red-300 hover:bg-red-50/40'
+                  : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
               }`}
             >
               <span>{opt}</span>
@@ -646,7 +646,7 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
       </div>
       <div className="mt-5 flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-500">Question {index + 1} / {questions.length}</p>
-        <button onClick={next} disabled={!locked} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">
+        <button onClick={next} disabled={!locked} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">
           {index === questions.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
@@ -659,9 +659,9 @@ function ScoreRing({ pct }: { pct: number }) {
   return (
     <div className="relative mx-auto h-32 w-32">
       <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="#fee2e2" strokeWidth="10" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke="#dbeafe" strokeWidth="10" />
         <motion.circle cx="60" cy="60" r={r} fill="none" stroke="url(#qg)" strokeWidth="10" strokeLinecap="round" strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c - (c * pct) / 100 }} transition={{ duration: 0.9, ease: EASE }} />
-        <defs><linearGradient id="qg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#dc2626" /><stop offset="100%" stopColor="#f97316" /></linearGradient></defs>
+        <defs><linearGradient id="qg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2563eb" /><stop offset="100%" stopColor="#f97316" /></linearGradient></defs>
       </svg>
       <div className="absolute inset-0 grid place-items-center"><span className="text-3xl font-black text-slate-900">{pct}%</span></div>
     </div>
@@ -700,17 +700,17 @@ export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
     return (
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-2xl rounded-2xl border border-red-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
         <ScoreRing pct={pct} />
         <h3 className="mt-4 text-3xl font-black text-slate-900">Typing complete</h3>
-        <p className="mt-1 text-lg text-slate-600">Accuracy <span className="font-bold text-red-600">{score}</span> / {questions.length}</p>
-        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
+        <p className="mt-1 text-lg text-slate-600">Accuracy <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
+        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
       </motion.section>
     )
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-red-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
         <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600" />
       </div>
@@ -728,14 +728,14 @@ export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
         placeholder="Type the word…"
         disabled={checked}
         className={`mt-4 w-full rounded-xl border px-4 py-3 text-base outline-none transition ${
-          checked ? (correct ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : 'border-red-400 bg-red-50 text-red-700') : 'border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100'
+          checked ? (correct ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100'
         }`}
       />
 
       <AnimatePresence>
         {checked ? (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+            <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>
               {correct ? '✓ Correct!' : <>Answer: <span className="font-black">{current.term}</span></>}
             </div>
           </motion.div>
@@ -754,7 +754,7 @@ export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
         {checked ? (
           <button onClick={next} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white">{index === questions.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-4 w-4" /></button>
         ) : (
-          <button onClick={check} disabled={!value.trim()} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"><Check className="h-4 w-4" /> Check</button>
+          <button onClick={check} disabled={!value.trim()} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"><Check className="h-4 w-4" /> Check</button>
         )}
       </div>
     </section>

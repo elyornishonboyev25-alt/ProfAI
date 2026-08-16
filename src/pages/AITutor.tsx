@@ -71,7 +71,7 @@ export default function AITutor() {
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <span className="relative inline-flex">
-              <span className="absolute inset-0 rounded-full bg-red-500/40 blur-lg" />
+              <span className="absolute inset-0 rounded-full bg-blue-500/40 blur-lg" />
               <BrandMark size={44} className="relative" />
             </span>
             <div className="min-w-0">
@@ -113,7 +113,7 @@ export default function AITutor() {
               <div className="mt-4 flex flex-wrap gap-2">
                 {CAPABILITIES.map(({ icon: Icon, label }) => (
                   <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-600">
-                    <Icon className="h-3 w-3 text-red-500" />
+                    <Icon className="h-3 w-3 text-blue-500" />
                     {label}
                   </span>
                 ))}
@@ -122,7 +122,7 @@ export default function AITutor() {
 
             <section className="rounded-3xl border border-slate-200/80 bg-white/92 p-2.5 shadow-sm backdrop-blur-xl">
               <div className="flex items-center gap-2 px-2 pb-3 pt-1">
-                <BrainCircuit className="h-4 w-4 text-red-600" />
+                <BrainCircuit className="h-4 w-4 text-blue-600" />
                 <div>
                   <h2 className="text-sm font-black text-slate-950">Conversation mode</h2>
                   <p className="text-[10px] font-medium text-slate-500">Sets ProfAI’s focus — no page change</p>
@@ -140,18 +140,18 @@ export default function AITutor() {
                     aria-pressed={selected}
                     className={`group flex min-h-14 w-[176px] shrink-0 items-center gap-2.5 rounded-2xl border p-2.5 text-left transition lg:w-full ${
                       selected
-                        ? 'border-red-200 bg-red-50/80 shadow-sm'
+                        ? 'border-blue-200 bg-blue-50/80 shadow-sm'
                         : 'border-transparent bg-white hover:border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <b className="block truncate text-xs text-slate-950">{workspace.title}</b>
                       <small className="mt-0.5 block truncate text-[10px] font-semibold text-slate-500 lg:block">{workspace.detail}</small>
                     </span>
-                    {selected ? <Check className="h-4 w-4 shrink-0 text-red-600" /> : null}
+                    {selected ? <Check className="h-4 w-4 shrink-0 text-blue-600" /> : null}
                   </button>
                   )
                 })}

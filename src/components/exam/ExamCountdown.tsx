@@ -29,8 +29,8 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
   const [nowTick, setNowTick] = useState(0)
   const remaining = useMemo(() => getRemaining(date), [date, nowTick])
   const blue = tone === 'blue'
-  const accent = blue ? 'text-blue-600' : 'text-red-600'
-  const soft = blue ? 'border-blue-100 bg-blue-50/65' : 'border-red-100 bg-red-50/65'
+  const accent = blue ? 'text-blue-600' : 'text-blue-600'
+  const soft = blue ? 'border-blue-100 bg-blue-50/65' : 'border-blue-100 bg-blue-50/65'
 
   useEffect(() => {
     if (!date) return
@@ -50,7 +50,7 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
             <p className="mt-0.5 text-xs text-slate-500">Activate a live countdown and personal score target.</p>
           </div>
         </div>
-        <button onClick={() => navigate('/onboarding')} className={`min-h-10 shrink-0 rounded-xl px-4 text-xs font-black text-white shadow-sm ${blue ? 'bg-blue-600' : 'bg-red-600'}`}>
+        <button onClick={() => navigate('/onboarding')} className={`min-h-10 shrink-0 rounded-xl px-4 text-xs font-black text-white shadow-sm ${blue ? 'bg-blue-600' : 'bg-blue-600'}`}>
           Set exam profile
         </button>
       </section>
@@ -68,9 +68,9 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
     <motion.section
       initial={minimalMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative isolate overflow-hidden rounded-[1.45rem] border bg-white/82 p-3.5 shadow-[0_16px_42px_rgba(15,23,42,0.08)] backdrop-blur-2xl sm:p-4 ${blue ? 'border-blue-100' : 'border-red-100'}`}
+      className={`relative isolate overflow-hidden rounded-[1.45rem] border bg-white/82 p-3.5 shadow-[0_16px_42px_rgba(15,23,42,0.08)] backdrop-blur-2xl sm:p-4 ${blue ? 'border-blue-100' : 'border-blue-100'}`}
     >
-      <span className={`pointer-events-none absolute -right-16 -top-20 -z-10 h-48 w-48 rounded-full blur-3xl ${blue ? 'bg-blue-200/45' : 'bg-red-200/45'}`} />
+      <span className={`pointer-events-none absolute -right-16 -top-20 -z-10 h-48 w-48 rounded-full blur-3xl ${blue ? 'bg-blue-200/45' : 'bg-blue-200/45'}`} />
       <div className="grid gap-3 xl:grid-cols-[minmax(12rem,.72fr)_minmax(25rem,1.45fr)_minmax(12rem,.72fr)] xl:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-[0_8px_20px_rgba(15,23,42,0.08)] ${accent}`}>
@@ -89,7 +89,7 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
 
         <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {units.map(([label, value]) => (
-            <div key={label} className={`relative overflow-hidden rounded-xl border bg-white px-1.5 py-2 text-center shadow-sm ${blue ? 'border-blue-100/80' : 'border-red-100/80'}`}>
+            <div key={label} className={`relative overflow-hidden rounded-xl border bg-white px-1.5 py-2 text-center shadow-sm ${blue ? 'border-blue-100/80' : 'border-blue-100/80'}`}>
               <motion.p
                 key={`${label}-${value}`}
                 initial={minimalMotion ? false : { opacity: 0, y: -7 }}

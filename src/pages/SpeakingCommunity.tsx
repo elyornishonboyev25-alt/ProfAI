@@ -98,11 +98,11 @@ export default function SpeakingCommunity() {
                 onClick={() => setSection(s.id)}
                 className={`flex shrink-0 items-center gap-2 rounded-2xl border px-4 py-3 text-left transition ${
                   isActive
-                    ? 'border-red-300 bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-[0_12px_26px_rgba(220,38,38,0.3)]'
-                    : 'border-red-100 bg-white/90 text-slate-700 hover:border-red-300'
+                    ? 'border-blue-300 bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.3)]'
+                    : 'border-blue-100 bg-white/90 text-slate-700 hover:border-blue-300'
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-red-600'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-blue-600'}`} />
                 <span>
                   <span className="block text-sm font-bold leading-tight">{s.label}</span>
                   <span className={`block text-[10px] font-medium ${isActive ? 'text-white/80' : 'text-slate-400'}`}>{s.tag}</span>
@@ -115,12 +115,12 @@ export default function SpeakingCommunity() {
         {/* Active section */}
         <div className="min-h-[40vh]">
           <p className="mb-3 inline-flex items-center gap-2 text-lg font-black text-slate-900">
-            <active.icon className="h-5 w-5 text-red-600" /> {active.label}
+            <active.icon className="h-5 w-5 text-blue-600" /> {active.label}
           </p>
           {inLiveSection && !communityTrial.isPremium ? (
             <div
               className={`mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold ${
-                communityTrial.locked ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-700'
+                communityTrial.locked ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-amber-200 bg-amber-50 text-amber-700'
               }`}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -132,7 +132,7 @@ export default function SpeakingCommunity() {
               <button
                 type="button"
                 onClick={() => navigate('/premium')}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm"
               >
                 <Crown className="h-3.5 w-3.5" /> Go Premium
               </button>
@@ -167,7 +167,7 @@ function formatRemaining(seconds: number) {
 
 function CommunityLockedCard({ onUpgrade }: { onUpgrade: () => void }) {
   return (
-    <div className="rounded-[1.6rem] border border-amber-200 bg-white p-8 text-center shadow-[0_18px_44px_rgba(127,29,29,0.12)]">
+    <div className="rounded-[1.6rem] border border-amber-200 bg-white p-8 text-center shadow-[0_18px_44px_rgba(30,64,175,0.12)]">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
         <Crown className="h-8 w-8" />
       </div>
@@ -183,7 +183,7 @@ function CommunityLockedCard({ onUpgrade }: { onUpgrade: () => void }) {
       <button
         type="button"
         onClick={onUpgrade}
-        className="cta-sheen mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
+        className="cta-sheen mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
       >
         <Crown className="h-4 w-4" />
         Subscribe to Premium

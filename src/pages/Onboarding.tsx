@@ -27,8 +27,6 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
-import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
-import { universities } from '@/data/admission'
 import {
   generateWeeklyPlan,
   loadOnboardingProfile,
@@ -44,7 +42,7 @@ type Gender = 'FEMALE' | 'MALE' | 'PREFER_NOT_TO_SAY'
 
 const GRADE_LEVELS = ['8th grade', '9th grade', '10th grade', '11th grade', '12th grade', 'Gap year', 'University'] as const
 
-const CORE_DESTINATIONS = [
+const DESTINATIONS = [
   { value: 'United States', flag: '🇺🇸' },
   { value: 'United Kingdom', flag: '🇬🇧' },
   { value: 'Canada', flag: '🇨🇦' },
@@ -52,21 +50,6 @@ const CORE_DESTINATIONS = [
   { value: 'Germany', flag: '🇩🇪' },
   { value: 'Singapore', flag: '🇸🇬' },
 ] as const
-
-const universityCountryCounts = universities
-  .reduce<Map<string, { flag: string; count: number }>>((counts, university) => {
-    const current = counts.get(university.country)
-    counts.set(university.country, { flag: university.countryEmoji, count: (current?.count ?? 0) + 1 })
-    return counts
-  }, new Map())
-
-const DESTINATIONS = [
-  ...CORE_DESTINATIONS,
-  ...Array.from(universityCountryCounts.entries())
-    .filter(([country]) => !CORE_DESTINATIONS.some((destination) => destination.value === country))
-    .sort(([, a], [, b]) => b.count - a.count)
-    .map(([value, data]) => ({ value, flag: data.flag })),
-]
 
 const EXAM_CARDS = [
   {
@@ -93,7 +76,7 @@ const EXAM_CARDS = [
 ]
 
 const DAY_PRESETS = [
-  { label: '21 days', value: 21, badge: 'Intensive', badgeColor: 'bg-red-100 text-red-700' },
+  { label: '21 days', value: 21, badge: 'Intensive', badgeColor: 'bg-blue-100 text-blue-700' },
   { label: '30 days', value: 30, badge: 'Focused', badgeColor: 'bg-orange-100 text-orange-700' },
   { label: '60 days', value: 60, badge: 'Standard', badgeColor: 'bg-amber-100 text-amber-700' },
   { label: '90 days', value: 90, badge: 'Comfortable', badgeColor: 'bg-green-100 text-green-700' },
@@ -102,19 +85,15 @@ const DAY_PRESETS = [
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
-function normalizeSatScore(score: number) {
-  return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
-}
-
 const AVATAR_PRESETS = [
-  { name: 'aziza', file: 'aziza.svg' },
-  { name: 'miran', file: 'miran.png' },
-  { name: 'nargiza', file: 'nargiza.png' },
-  { name: 'amara', file: 'amara.png' },
-  { name: 'malika', file: 'malika.svg' },
-  { name: 'javohir', file: 'javohir.svg' },
-  { name: 'zarina', file: 'zarina.svg' },
-  { name: 'temur', file: 'temur.svg' },
+  'aziza',
+  'kamron',
+  'dilnoza',
+  'sardor',
+  'malika',
+  'javohir',
+  'zarina',
+  'temur',
 ] as const
 
 // College Board weekend dates for the 2026–27 international testing year.
@@ -172,7 +151,6 @@ export default function Onboarding() {
   const setUserAvatar = useAuthStore((state: AuthState) => state.setUserAvatar)
   const setUserFullName = useAuthStore((state: AuthState) => state.setUserFullName)
   const setOnboardingCompleted = useAuthStore((state: AuthState) => state.setOnboardingCompleted)
-  const clearSession = useAuthStore((state: AuthState) => state.clearSession)
   const { minimalMotion } = useMotionPreferences()
 
   const [step, setStep] = useState<StepId>(1)
@@ -191,9 +169,9 @@ export default function Onboarding() {
   const [dailyHours, setDailyHours] = useState(3)
   const [ieltsExamDate, setIeltsExamDate] = useState('')
   const [satExamDate, setSatExamDate] = useState<string>(SAT_TEST_DATES[0].value)
-  const [currentIeltsScore, setCurrentIeltsScore] = useState<number | null>(null)
+  const [currentIeltsScore, setCurrentIeltsScore] = useState(6)
   const [targetIeltsScore, setTargetIeltsScore] = useState(7.5)
-  const [currentSatScore, setCurrentSatScore] = useState<number | null>(null)
+  const [currentSatScore, setCurrentSatScore] = useState(1050)
   const [targetSatScore, setTargetSatScore] = useState(1450)
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
   const [messageIndex, setMessageIndex] = useState(0)
@@ -220,14 +198,14 @@ export default function Onboarding() {
     }
   }
 
-  const choosePreset = async (fileName: string) => {
-    const src = `/assets/avatars/${fileName}`
+  const choosePreset = async (name: string) => {
+    const src = `/assets/avatars/${name}.svg`
     setAvatarPreview(src)
     setUserAvatar(src)
     try {
       const response = await fetch(src)
       const blob = await response.blob()
-      await saveAvatarFile(new File([blob], fileName, { type: blob.type || 'image/png' }))
+      await saveAvatarFile(new File([blob], `${name}.svg`, { type: blob.type || 'image/svg+xml' }))
     } catch {
       // The local preset remains available even when the profile API is offline.
     }
@@ -250,9 +228,9 @@ export default function Onboarding() {
       setDailyHours(existing.dailyHours)
       setIeltsExamDate(existing.ieltsExamDate ?? '')
       setSatExamDate(existing.satExamDate ?? SAT_TEST_DATES[0].value)
-      setCurrentIeltsScore(existing.currentIeltsScore ?? null)
+      setCurrentIeltsScore(existing.currentIeltsScore ?? 6)
       setTargetIeltsScore(existing.targetIeltsScore ?? 7.5)
-      setCurrentSatScore(existing.currentSatScore ?? null)
+      setCurrentSatScore(existing.currentSatScore ?? 1050)
       setTargetSatScore(existing.targetSatScore ?? 1450)
       return
     }
@@ -294,7 +272,7 @@ export default function Onboarding() {
   const planIntensity = useMemo(
     () =>
       resolvedDays <= 21
-        ? { label: 'Intensive', color: 'text-red-700 bg-red-50' }
+        ? { label: 'Intensive', color: 'text-blue-700 bg-blue-50' }
         : resolvedDays <= 60
           ? { label: 'Focused', color: 'text-orange-700 bg-orange-50' }
           : { label: 'Standard', color: 'text-green-700 bg-green-50' },
@@ -305,12 +283,10 @@ export default function Onboarding() {
   const nameReady = firstName.trim().length > 0 && lastName.trim().length > 0
   const examProfileReady =
     targetExam === 'IELTS'
-      ? Boolean(ieltsExamDate) && (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore)
+      ? Boolean(ieltsExamDate) && targetIeltsScore >= currentIeltsScore
       : targetExam === 'SAT'
-        ? Boolean(satExamDate) && (currentSatScore === null || targetSatScore >= currentSatScore)
-        : Boolean(ieltsExamDate && satExamDate) &&
-          (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore) &&
-          (currentSatScore === null || targetSatScore >= currentSatScore)
+        ? Boolean(satExamDate) && targetSatScore >= currentSatScore
+        : Boolean(ieltsExamDate && satExamDate) && targetIeltsScore >= currentIeltsScore && targetSatScore >= currentSatScore
   const backgroundReady = country.trim().length >= 2 && gradeLevel.trim().length > 0
   const destinationReady = targetCountries.length > 0 && fieldOfStudy.trim().length >= 2
   const canContinue =
@@ -335,28 +311,7 @@ export default function Onboarding() {
 
   const handleBack = () => {
     if (step > 1) goTo((step - 1) as StepId, 'back')
-    else {
-      clearSession()
-      navigate('/', { replace: true })
-    }
-  }
-
-  const handleSkip = () => {
-    if (step < 6) {
-      goTo((step + 1) as StepId, 'forward')
-      return
-    }
-
-    const onboardingCompletedAt = new Date().toISOString()
-    setOnboardingCompleted(true)
-    void updateAccount({ onboardingCompletedAt }).catch(() => {
-      setFlashToast({
-        type: 'info',
-        title: 'You can finish your profile later',
-        message: 'Your profile is editable from Account settings at any time.',
-      })
-    })
-    navigate('/dashboard', { replace: true })
+    else navigate('/dashboard')
   }
 
   const generatePlan = () => {
@@ -378,9 +333,9 @@ export default function Onboarding() {
         dailyHours: Math.max(3, dailyHours),
         ieltsExamDate: targetExam === 'SAT' ? undefined : ieltsExamDate || undefined,
         satExamDate: targetExam === 'IELTS' ? undefined : satExamDate || undefined,
-        currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore ?? undefined,
+        currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore,
         targetIeltsScore: targetExam === 'SAT' ? undefined : targetIeltsScore,
-        currentSatScore: targetExam === 'IELTS' ? undefined : currentSatScore ?? undefined,
+        currentSatScore: targetExam === 'IELTS' ? undefined : currentSatScore,
         targetSatScore: targetExam === 'IELTS' ? undefined : targetSatScore,
         createdAt: new Date().toISOString(),
       }
@@ -440,9 +395,9 @@ export default function Onboarding() {
     <div className="workspace-page relative flex min-h-screen flex-col overflow-hidden px-4 py-8 sm:py-12">
       {/* Ambient backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-[8%] top-[10%] h-72 w-72 rounded-full bg-red-300/25 blur-3xl" />
+        <div className="absolute left-[8%] top-[10%] h-72 w-72 rounded-full bg-blue-300/25 blur-3xl" />
         <div className="absolute bottom-[8%] right-[10%] h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,113,113,0.05)_1px,transparent_1px),linear-gradient(180deg,rgba(248,113,113,0.05)_1px,transparent_1px)] bg-[size:42px_42px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(96,165,250,0.05)_1px,transparent_1px),linear-gradient(180deg,rgba(96,165,250,0.05)_1px,transparent_1px)] bg-[size:42px_42px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
@@ -451,12 +406,12 @@ export default function Onboarding() {
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition hover:bg-red-50/80"
+            className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition hover:bg-blue-50/80"
           >
-            <BrandMark size={40} className="shadow-[0_10px_22px_rgba(220,38,38,0.32)]" />
+            <BrandMark size={40} className="shadow-[0_10px_22px_rgba(37,99,235,0.32)]" />
             <span className="text-sm font-black tracking-tight text-slate-900">ProfAI</span>
           </button>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-red-700 shadow-sm backdrop-blur">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm backdrop-blur">
             <Sparkles className="h-3 w-3" />
             Smart onboarding
           </span>
@@ -473,20 +428,20 @@ export default function Onboarding() {
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black transition-all ${
                       active
-                        ? 'bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-[0_6px_14px_rgba(220,38,38,0.4)]'
+                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_6px_14px_rgba(37,99,235,0.4)]'
                         : done
-                          ? 'bg-red-100 text-red-600'
+                          ? 'bg-blue-100 text-blue-600'
                           : 'bg-white text-slate-400 ring-1 ring-slate-200'
                     }`}
                   >
                     {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : item.id}
                   </span>
-                  <span className={`hidden text-xs font-bold sm:block ${active ? 'text-slate-900' : done ? 'text-red-600' : 'text-slate-400'}`}>
+                  <span className={`hidden text-xs font-bold sm:block ${active ? 'text-slate-900' : done ? 'text-blue-600' : 'text-slate-400'}`}>
                     {item.label}
                   </span>
                 </div>
                 {index < STEP_META.length - 1 ? (
-                  <span className={`h-[3px] flex-1 rounded-full transition-colors ${done ? 'bg-red-300' : 'bg-slate-200'}`} />
+                  <span className={`h-[3px] flex-1 rounded-full transition-colors ${done ? 'bg-blue-300' : 'bg-slate-200'}`} />
                 ) : null}
               </div>
             )
@@ -498,14 +453,14 @@ export default function Onboarding() {
           initial={minimalMotion ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: minimalMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="panel-surface relative mt-6 flex-1 overflow-hidden rounded-[2rem] border border-red-100/90 bg-white/95 shadow-[0_30px_80px_rgba(127,29,29,0.16)]"
+          className="panel-surface relative mt-6 flex-1 overflow-hidden rounded-[2rem] border border-blue-100/90 bg-white/95 shadow-[0_30px_80px_rgba(30,64,175,0.16)]"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
 
           <div className="px-6 pb-6 pt-7 sm:px-9 sm:pb-9">
             {/* Heading */}
             <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-50 to-rose-100 text-red-600">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600">
                 {step === 1 ? (
                   <User className="h-5 w-5" />
                 ) : step === 2 ? (
@@ -521,7 +476,7 @@ export default function Onboarding() {
                 )}
               </span>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-600">{meta.eyebrow}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">{meta.eyebrow}</p>
                 <h1 className="mt-0.5 text-[1.6rem] font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
                   {meta.title}
                 </h1>
@@ -542,10 +497,10 @@ export default function Onboarding() {
                 >
                   {step === 1 ? (
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="sm:col-span-2 rounded-[1.5rem] border border-red-100 bg-gradient-to-br from-white via-rose-50/60 to-red-50 p-4">
+                      <div className="sm:col-span-2 rounded-[1.5rem] border border-blue-100 bg-gradient-to-br from-white via-indigo-50/60 to-blue-50 p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                           <div className="relative mx-auto shrink-0 sm:mx-0">
-                            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gradient-to-br from-red-500 to-rose-700 text-2xl font-black text-white shadow-[0_14px_30px_rgba(220,38,38,0.3)] ring-4 ring-red-200">
+                            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gradient-to-br from-blue-500 to-indigo-700 text-2xl font-black text-white shadow-[0_14px_30px_rgba(37,99,235,0.3)] ring-4 ring-blue-200">
                               {avatarPreview ? (
                                 <img src={avatarPreview} alt="Selected avatar" className="h-full w-full object-cover" />
                               ) : (
@@ -562,7 +517,7 @@ export default function Onboarding() {
                                 <p className="text-sm font-black text-slate-900">Choose your avatar</p>
                                 <p className="text-[11px] text-slate-500">Pick a style or upload your own photo.</p>
                               </div>
-                              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-[11px] font-black text-red-700 shadow-sm transition hover:bg-red-50">
+                              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-2 text-[11px] font-black text-blue-700 shadow-sm transition hover:bg-blue-50">
                                 <Upload className="h-3.5 w-3.5" />
                                 {avatarUploading ? 'Saving…' : 'Upload photo'}
                                 <input
@@ -579,17 +534,17 @@ export default function Onboarding() {
                               </label>
                             </div>
                             <div className="mt-3 grid grid-cols-8 gap-1.5">
-                              {AVATAR_PRESETS.map((avatar) => {
-                                const src = `/assets/avatars/${avatar.file}`
-                                const active = avatarPreview.includes(`/${avatar.file}`)
+                              {AVATAR_PRESETS.map((name) => {
+                                const src = `/assets/avatars/${name}.svg`
+                                const active = avatarPreview.includes(`/${name}.svg`)
                                 return (
                                   <button
-                                    key={avatar.name}
+                                    key={name}
                                     type="button"
-                                    aria-label={`Choose ${avatar.name} avatar`}
-                                    onClick={() => void choosePreset(avatar.file)}
+                                    aria-label={`Choose ${name} avatar`}
+                                    onClick={() => void choosePreset(name)}
                                     className={`aspect-square overflow-hidden rounded-full border-2 bg-white p-0.5 transition hover:-translate-y-0.5 ${
-                                      active ? 'border-red-500 shadow-[0_5px_14px_rgba(220,38,38,0.25)]' : 'border-white ring-1 ring-red-100'
+                                      active ? 'border-blue-500 shadow-[0_5px_14px_rgba(37,99,235,0.25)]' : 'border-white ring-1 ring-blue-100'
                                     }`}
                                   >
                                     <img src={src} alt="" className="h-full w-full rounded-full object-cover" />
@@ -603,14 +558,14 @@ export default function Onboarding() {
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">First name</span>
                         <div className="relative">
-                          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
                             ref={firstNameRef}
                             value={firstName}
                             onChange={(event) => setFirstName(event.target.value)}
                             onKeyDown={(event) => event.key === 'Enter' && nameReady && handleContinue()}
                             placeholder="Enter first name"
-                            className="h-12 w-full rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                            className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
                         </div>
                       </label>
@@ -630,11 +585,11 @@ export default function Onboarding() {
                               onClick={() => setGender(value)}
                               className={`rounded-2xl border px-3 py-3 text-left transition ${
                                 gender === value
-                                  ? 'border-red-500 bg-red-50 shadow-[0_8px_20px_rgba(220,38,38,0.12)]'
-                                  : 'border-slate-200 bg-white hover:border-red-200'
+                                  ? 'border-blue-500 bg-blue-50 shadow-[0_8px_20px_rgba(37,99,235,0.12)]'
+                                  : 'border-slate-200 bg-white hover:border-blue-200'
                               }`}
                             >
-                              <span className={`text-sm font-black ${gender === value ? 'text-red-700' : 'text-slate-800'}`}>{label}</span>
+                              <span className={`text-sm font-black ${gender === value ? 'text-blue-700' : 'text-slate-800'}`}>{label}</span>
                               <span className="mt-0.5 block text-[10px] text-slate-500">{detail}</span>
                             </button>
                           ))}
@@ -647,11 +602,11 @@ export default function Onboarding() {
                           onChange={(event) => setLastName(event.target.value)}
                           onKeyDown={(event) => event.key === 'Enter' && nameReady && handleContinue()}
                           placeholder="Enter last name"
-                          className="h-12 w-full rounded-2xl border border-red-100 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                          className="h-12 w-full rounded-2xl border border-blue-100 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                         />
                       </label>
-                      <div className="sm:col-span-2 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/60 p-4">
-                        <Flame className="h-5 w-5 shrink-0 text-red-500" />
+                      <div className="sm:col-span-2 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+                        <Flame className="h-5 w-5 shrink-0 text-blue-500" />
                         <p className="text-xs leading-relaxed text-slate-600">
                           Your plan, XP, streaks and certificates are saved to your account — pick up exactly where you left off on any device.
                         </p>
@@ -666,20 +621,13 @@ export default function Onboarding() {
                           Country
                         </span>
                         <div className="relative">
-                          <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
-                            list="world-country-options"
                             value={country}
                             onChange={(event) => setCountry(event.target.value)}
-                            placeholder="Start typing a country..."
-                            autoComplete="off"
-                            className="h-12 w-full rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                            placeholder="Uzbekistan"
+                            className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
-                          <datalist id="world-country-options">
-                            {WORLD_COUNTRIES.map((option) => (
-                              <option key={option.code} value={option.name} label={`${option.flag} ${option.name}`} />
-                            ))}
-                          </datalist>
                         </div>
                       </label>
                       <label className="block">
@@ -687,17 +635,17 @@ export default function Onboarding() {
                           Current grade
                         </span>
                         <div className="relative">
-                          <School className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <School className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <select
                             value={gradeLevel}
                             onChange={(event) => setGradeLevel(event.target.value)}
-                            className="h-12 w-full appearance-none rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                            className="h-12 w-full appearance-none rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           >
                             {GRADE_LEVELS.map((grade) => <option key={grade}>{grade}</option>)}
                           </select>
                         </div>
                       </label>
-                      <div className="sm:col-span-2 rounded-[1.5rem] border border-red-100 bg-gradient-to-br from-white to-red-50/70 p-5">
+                      <div className="sm:col-span-2 rounded-[1.5rem] border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 p-5">
                         <p className="text-sm font-black text-slate-900">Why we ask this</p>
                         <p className="mt-1 text-sm leading-6 text-slate-600">
                           Your school stage changes the balance between exam preparation, university research and application deadlines. This information stays private.
@@ -718,8 +666,8 @@ export default function Onboarding() {
                             onClick={() => setTargetExam(card.key)}
                             className={`group relative overflow-hidden rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                               selected
-                                ? 'border-red-500 bg-gradient-to-br from-red-600 to-rose-600 shadow-[0_12px_28px_rgba(220,38,38,0.32)]'
-                                : 'border-slate-200 bg-white hover:border-red-200 hover:shadow-md'
+                                ? 'border-blue-500 bg-gradient-to-br from-blue-600 to-indigo-600 shadow-[0_12px_28px_rgba(37,99,235,0.32)]'
+                                : 'border-slate-200 bg-white hover:border-blue-200 hover:shadow-md'
                             }`}
                           >
                             {selected ? (
@@ -732,11 +680,11 @@ export default function Onboarding() {
                                 <CheckCircle2 className="h-4 w-4 text-white/85" />
                               </motion.div>
                             ) : null}
-                            <span className={`mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${selected ? 'bg-white/20' : 'bg-red-50'}`}>
-                              <Icon className={`h-5 w-5 ${selected ? 'text-white' : 'text-red-600'}`} />
+                            <span className={`mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${selected ? 'bg-white/20' : 'bg-blue-50'}`}>
+                              <Icon className={`h-5 w-5 ${selected ? 'text-white' : 'text-blue-600'}`} />
                             </span>
                             <p className={`text-lg font-black ${selected ? 'text-white' : 'text-slate-900'}`}>{card.label}</p>
-                            <p className={`mt-0.5 text-[11px] font-medium leading-tight ${selected ? 'text-red-100' : 'text-slate-500'}`}>{card.subtitle}</p>
+                            <p className={`mt-0.5 text-[11px] font-medium leading-tight ${selected ? 'text-blue-100' : 'text-slate-500'}`}>{card.subtitle}</p>
                             <div className="mt-2.5 flex flex-wrap gap-1">
                               {card.modules.map((mod) => (
                                 <span
@@ -757,9 +705,9 @@ export default function Onboarding() {
                     <div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {targetExam !== 'SAT' ? (
-                          <div className="rounded-2xl border border-red-100 bg-red-50/45 p-4">
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50/45 p-4">
                             <div className="flex items-center gap-2">
-                              <BookOpen className="h-4 w-4 text-red-600" />
+                              <BookOpen className="h-4 w-4 text-blue-600" />
                               <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700">IELTS profile</p>
                             </div>
                             <label className="mt-3 block">
@@ -772,29 +720,17 @@ export default function Onboarding() {
                                   setIeltsExamDate(event.target.value)
                                   setUseCustomDays(false)
                                 }}
-                                className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                                className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                               />
                             </label>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
-                                <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
-                                  Current band
-                                  <button type="button" onClick={() => setCurrentIeltsScore(null)} className="text-red-600 hover:text-red-700">Not taken yet</button>
-                                </span>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={9}
-                                  step={0.5}
-                                  value={currentIeltsScore ?? ''}
-                                  onChange={(event) => setCurrentIeltsScore(event.target.value === '' ? null : Number(event.target.value))}
-                                  placeholder="N/A"
-                                  className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-sm font-black text-slate-800 outline-none placeholder:text-slate-400 focus:border-red-300"
-                                />
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current band</span>
+                                <input type="number" min={0} max={9} step={0.5} value={currentIeltsScore} onChange={(event) => setCurrentIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
                               </label>
                               <label>
                                 <span className="mb-1 block text-[10px] font-bold text-slate-400">Target band</span>
-                                <input type="number" min={0} max={9} step={0.5} value={targetIeltsScore} onChange={(event) => setTargetIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-red-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-red-300" />
+                                <input type="number" min={0} max={9} step={0.5} value={targetIeltsScore} onChange={(event) => setTargetIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
                               </label>
                             </div>
                           </div>
@@ -821,34 +757,12 @@ export default function Onboarding() {
                             </label>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
-                                <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
-                                  Current score
-                                  <button type="button" onClick={() => setCurrentSatScore(null)} className="text-blue-600 hover:text-blue-700">Not taken yet</button>
-                                </span>
-                                <input
-                                  type="number"
-                                  min={400}
-                                  max={1600}
-                                  step={50}
-                                  value={currentSatScore ?? ''}
-                                  onChange={(event) => setCurrentSatScore(event.target.value === '' ? null : Number(event.target.value))}
-                                  onBlur={() => currentSatScore !== null && setCurrentSatScore(normalizeSatScore(currentSatScore))}
-                                  placeholder="N/A"
-                                  className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300"
-                                />
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current score</span>
+                                <input type="number" min={400} max={1600} step={10} value={currentSatScore} onChange={(event) => setCurrentSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
                               </label>
                               <label>
                                 <span className="mb-1 block text-[10px] font-bold text-slate-400">Target score</span>
-                                <input
-                                  type="number"
-                                  min={400}
-                                  max={1600}
-                                  step={50}
-                                  value={targetSatScore}
-                                  onChange={(event) => setTargetSatScore(Number(event.target.value))}
-                                  onBlur={() => setTargetSatScore(normalizeSatScore(targetSatScore))}
-                                  className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300"
-                                />
+                                <input type="number" min={400} max={1600} step={10} value={targetSatScore} onChange={(event) => setTargetSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
                               </label>
                             </div>
                           </div>
@@ -857,7 +771,7 @@ export default function Onboarding() {
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <CalendarRange className="h-4 w-4 text-red-500" />
+                          <CalendarRange className="h-4 w-4 text-blue-500" />
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Study runway</p>
                             <p className="text-sm font-black text-slate-800">{resolvedDays} days until the nearest exam</p>
@@ -874,7 +788,7 @@ export default function Onboarding() {
                                 setCustomDays(event.target.value)
                                 setUseCustomDays(true)
                               }}
-                              className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-800 outline-none focus:border-red-300"
+                              className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-800 outline-none focus:border-blue-300"
                             />
                             days
                           </label>
@@ -893,11 +807,11 @@ export default function Onboarding() {
                               type="button"
                               onClick={() => setDailyHours(hours)}
                               className={`flex h-14 w-16 flex-col items-center justify-center rounded-xl border-2 transition-all duration-150 ${
-                                active ? 'border-red-500 bg-red-600 shadow-[0_6px_16px_rgba(220,38,38,0.28)]' : 'border-slate-200 bg-white hover:border-red-200'
+                                active ? 'border-blue-500 bg-blue-600 shadow-[0_6px_16px_rgba(37,99,235,0.28)]' : 'border-slate-200 bg-white hover:border-blue-200'
                               }`}
                             >
                               <span className={`text-lg font-black ${active ? 'text-white' : 'text-slate-800'}`}>{hours}h</span>
-                              <span className={`text-[9px] font-semibold uppercase ${active ? 'text-red-100' : 'text-slate-400'}`}>
+                              <span className={`text-[9px] font-semibold uppercase ${active ? 'text-blue-100' : 'text-slate-400'}`}>
                                 {hours === 3 ? 'min' : hours === 4 ? 'good' : hours === 5 ? 'great' : 'max'}
                               </span>
                             </button>
@@ -928,61 +842,40 @@ export default function Onboarding() {
                               }
                               className={`rounded-2xl border p-3 text-left transition ${
                                 active
-                                  ? 'border-red-500 bg-red-50 shadow-[0_8px_20px_rgba(220,38,38,0.12)]'
-                                  : 'border-slate-200 bg-white hover:border-red-200'
+                                  ? 'border-blue-500 bg-blue-50 shadow-[0_8px_20px_rgba(37,99,235,0.12)]'
+                                  : 'border-slate-200 bg-white hover:border-blue-200'
                               }`}
                             >
                               <span className="text-xl">{destination.flag}</span>
-                              <span className={`mt-1 block text-xs font-black ${active ? 'text-red-700' : 'text-slate-800'}`}>
+                              <span className={`mt-1 block text-xs font-black ${active ? 'text-blue-700' : 'text-slate-800'}`}>
                                 {destination.value}
                               </span>
                             </button>
                           )
                         })}
                       </div>
-                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations. Options include every country represented in the Top Universities catalog.</p>
+                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations.</p>
                       <label className="mt-5 block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
                           Intended field of study
                         </span>
                         <div className="relative">
-                          <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                          <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
-                            list="popular-study-fields"
                             value={fieldOfStudy}
                             onChange={(event) => setFieldOfStudy(event.target.value)}
-                            placeholder="Type or choose a study field..."
-                            autoComplete="off"
-                            className="h-12 w-full rounded-2xl border border-red-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
+                            placeholder="Computer Science, Economics, Medicine..."
+                            className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
-                          <datalist id="popular-study-fields">
-                            {POPULAR_STUDY_FIELDS.map((field) => <option key={field} value={field} />)}
-                          </datalist>
                         </div>
                       </label>
-                      <div className="mt-3 flex flex-wrap gap-2" aria-label="Popular fields of study">
-                        {POPULAR_STUDY_FIELDS.slice(0, 9).map((field) => (
-                          <button
-                            key={field}
-                            type="button"
-                            onClick={() => setFieldOfStudy(field)}
-                            className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
-                              fieldOfStudy === field
-                                ? 'border-red-500 bg-red-50 text-red-700'
-                                : 'border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:text-red-600'
-                            }`}
-                          >
-                            {field}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   ) : null}
 
                   {step === 6 ? (
                     <div>
                       <div className="overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white shadow-sm">
-                        <div className="h-1 w-full bg-gradient-to-r from-red-600 to-rose-500" />
+                        <div className="h-1 w-full bg-gradient-to-r from-blue-600 to-indigo-500" />
                         <div className="grid gap-3 p-5 sm:grid-cols-2">
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Learner</p>
@@ -1003,10 +896,10 @@ export default function Onboarding() {
                             <p className="mt-1 text-base font-black text-slate-900">{selectedExamCard.label}</p>
                             <p className="text-[11px] text-slate-500">
                               {targetExam === 'IELTS'
-                                ? `${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} band`
+                                ? `${currentIeltsScore} → ${targetIeltsScore} band`
                                 : targetExam === 'SAT'
-                                  ? `${currentSatScore ?? 'Not taken yet'} → ${targetSatScore} score`
-                                  : `IELTS ${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} · SAT ${currentSatScore ?? 'Not taken yet'} → ${targetSatScore}`}
+                                  ? `${currentSatScore} → ${targetSatScore} score`
+                                  : `IELTS ${currentIeltsScore} → ${targetIeltsScore} · SAT ${currentSatScore} → ${targetSatScore}`}
                             </p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -1024,7 +917,7 @@ export default function Onboarding() {
                         </div>
                       </div>
                       <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500">
-                        <Clock3 className="h-4 w-4 text-red-400" />
+                        <Clock3 className="h-4 w-4 text-blue-400" />
                         Your rolling 7-day plan auto-updates every Monday and completes tasks as you study.
                       </p>
                     </div>
@@ -1044,46 +937,36 @@ export default function Onboarding() {
                 {step === 1 ? 'Exit' : 'Back'}
               </button>
 
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              {step < 6 ? (
                 <button
                   type="button"
-                  onClick={handleSkip}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                  onClick={handleContinue}
+                  disabled={!canContinue}
+                  className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.34)] transition hover:shadow-[0_16px_32px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Skip for now
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
                 </button>
-                {step < 6 ? (
-                  <button
-                    type="button"
-                    onClick={handleContinue}
-                    disabled={!canContinue}
-                    className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(220,38,38,0.34)] transition hover:shadow-[0_16px_32px_rgba(220,38,38,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-end">
-                    <motion.button
-                      type="button"
-                      onClick={generatePlan}
-                      disabled={stage !== 'idle'}
-                      whileHover={stage === 'idle' && !minimalMotion ? { scale: 1.02 } : undefined}
-                      whileTap={stage === 'idle' && !minimalMotion ? { scale: 0.98 } : undefined}
-                      className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(220,38,38,0.36)] transition hover:shadow-[0_16px_34px_rgba(220,38,38,0.46)] disabled:cursor-wait disabled:opacity-75"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
-                    </motion.button>
-                    {saveError ? (
-                      <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-xs font-bold text-red-700">
-                        {saveError}
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div className="flex flex-col items-end">
+                <motion.button
+                  type="button"
+                  onClick={generatePlan}
+                  disabled={stage !== 'idle'}
+                  whileHover={stage === 'idle' && !minimalMotion ? { scale: 1.02 } : undefined}
+                  whileTap={stage === 'idle' && !minimalMotion ? { scale: 0.98 } : undefined}
+                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.36)] transition hover:shadow-[0_16px_34px_rgba(37,99,235,0.46)] disabled:cursor-wait disabled:opacity-75"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
+                </motion.button>
+                {saveError ? (
+                  <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-700">
+                    {saveError}
+                  </p>
+                ) : null}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1100,7 +983,7 @@ export default function Onboarding() {
                   initial={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.94 }}
                   animate={minimalMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="mx-5 w-full max-w-md rounded-[2rem] border border-red-100 bg-white p-7 text-center shadow-[0_36px_90px_rgba(127,29,29,0.22)]"
+                  className="mx-5 w-full max-w-md rounded-[2rem] border border-blue-100 bg-white p-7 text-center shadow-[0_36px_90px_rgba(30,64,175,0.22)]"
                 >
                   <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
                     {stage === 'generating' ? (
@@ -1108,11 +991,11 @@ export default function Onboarding() {
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-                          className="absolute inset-0 rounded-full bg-[conic-gradient(from_90deg,rgba(220,38,38,0),rgba(220,38,38,0.16),rgba(220,38,38,0.95),rgba(251,146,60,0.75),rgba(220,38,38,0))] p-[3px]"
+                          className="absolute inset-0 rounded-full bg-[conic-gradient(from_90deg,rgba(37,99,235,0),rgba(37,99,235,0.16),rgba(37,99,235,0.95),rgba(251,146,60,0.75),rgba(37,99,235,0))] p-[3px]"
                         >
                           <div className="h-full w-full rounded-full bg-white" />
                         </motion.div>
-                        <Sparkles className="relative h-8 w-8 text-red-600" />
+                        <Sparkles className="relative h-8 w-8 text-blue-600" />
                       </>
                     ) : (
                       <motion.div

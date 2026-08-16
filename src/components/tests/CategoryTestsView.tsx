@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { BookOpenCheck, Layers3, Rocket } from 'lucide-react'
@@ -45,12 +45,12 @@ const categoryTheme: Record<
   },
   IELTS: {
     badge: 'IELTS Academic Track',
-    badgeClass: 'border-red-200 bg-red-50 text-red-700',
-    borderClass: 'border-red-100/90',
-    orbLeftClass: 'bg-red-200/35',
-    orbRightClass: 'bg-rose-200/35',
-    chipClass: 'border-red-100 bg-white text-red-700',
-    modeIconClass: 'text-red-600',
+    badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    borderClass: 'border-blue-100/90',
+    orbLeftClass: 'bg-blue-200/35',
+    orbRightClass: 'bg-indigo-200/35',
+    chipClass: 'border-blue-100 bg-white text-blue-700',
+    modeIconClass: 'text-blue-600',
   },
   OLYMPIAD: {
     badge: 'Olympiad Master Track',
@@ -123,7 +123,7 @@ export default function CategoryTestsView({ category, title, subtitle }: Categor
         <div className="pointer-events-none absolute inset-0">
           <div className={`absolute -left-14 top-0 h-52 w-52 rounded-full blur-3xl ${theme.orbLeftClass}`} />
           <div className={`absolute -right-16 bottom-0 h-56 w-56 rounded-full blur-3xl ${theme.orbRightClass}`} />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-200/80 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200/80 to-transparent" />
         </div>
 
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -156,7 +156,7 @@ export default function CategoryTestsView({ category, title, subtitle }: Categor
         </div>
       </motion.section>
 
-      {error ? <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+      {error ? <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">{error}</div> : null}
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {loading
@@ -168,7 +168,7 @@ export default function CategoryTestsView({ category, title, subtitle }: Categor
                 className="surface-card p-5"
               >
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full bg-red-50 px-2.5 py-1 font-semibold text-red-700">{test.difficulty}</span>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">{test.difficulty}</span>
                   <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">
                     Open Access
                   </span>
@@ -180,7 +180,7 @@ export default function CategoryTestsView({ category, title, subtitle }: Categor
                 </div>
                 <button
                   onClick={() => navigate(`/tests/${test.id}/attempt`)}
-                  className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-[#DC2626] to-[#B91C1C] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-200"
+                  className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-200"
                 >
                   <Rocket className="mr-2 h-4 w-4" />
                   Start Test

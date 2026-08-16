@@ -58,7 +58,7 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
           <h2 className="text-xl font-semibold text-slate-900">Daily Learning Path</h2>
           <p className="mt-1 text-sm text-slate-600">Vocabulary - Reading - Listening flow is preserved. New modules are visual placeholders.</p>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
           Path
         </span>
@@ -66,16 +66,16 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
 
       <div className="mt-4 space-y-4">
         {days.map((day) => (
-          <article key={day.id} className="rounded-2xl border border-red-100 bg-white/85 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+          <article key={day.id} className="rounded-2xl border border-blue-100 bg-white/85 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-red-700">{day.label}</p>
-              <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-blue-700">{day.label}</p>
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
                 6 nodes
               </span>
             </div>
 
             <div className="relative">
-              <div className="pointer-events-none absolute left-5 top-6 h-[calc(100%-3rem)] w-px bg-red-100" />
+              <div className="pointer-events-none absolute left-5 top-6 h-[calc(100%-3rem)] w-px bg-blue-100" />
               <div className="space-y-2.5">
                 {coreModules.map((module) => {
                   const unlocked = isUnlocked(day, module.key)
@@ -91,7 +91,7 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
                       whileHover={allowHoverMotion && unlocked ? { y: -2 } : undefined}
                       className={`relative flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
                         unlocked
-                          ? 'border-red-200 bg-gradient-to-r from-white to-red-50/70'
+                          ? 'border-blue-200 bg-gradient-to-r from-white to-blue-50/70'
                           : 'cursor-not-allowed border-slate-200 bg-slate-100/85 text-slate-500'
                       }`}
                     >
@@ -100,7 +100,7 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
                           completed
                             ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
                             : unlocked
-                              ? 'border-red-200 bg-red-100 text-red-700'
+                              ? 'border-blue-200 bg-blue-100 text-blue-700'
                               : 'border-slate-300 bg-slate-200 text-slate-500'
                         }`}
                       >

@@ -1,6 +1,5 @@
-import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
-import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { Suspense, lazy, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { Navigate, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
@@ -17,7 +16,6 @@ import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
 import { sendHeartbeat } from '@/lib/speakingApi'
-import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
@@ -133,23 +131,7 @@ function DeferredAchievementCelebration() {
 }
 
 function AnimatedRoute({ children }: { children: ReactNode }) {
-  const { minimalMotion } = useMotionPreferences()
-
-  if (minimalMotion) {
-    return <div className="h-full">{children}</div>
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-      className="h-full"
-    >
-      {children}
-    </motion.div>
-  )
+  return <div className="h-full">{children}</div>
 }
 
 function App() {
@@ -189,20 +171,29 @@ function App() {
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
 
+  const pathParts = pathname.split('/').filter(Boolean)
+  const isFocusContentMode =
+    pathname === '/onboarding' ||
+    pathname.startsWith('/ielts/speaking/test/') ||
+    pathname.startsWith('/ielts/writing/test/') ||
+    (pathname.startsWith('/articles/') && pathParts.length > 1) ||
+    (pathname.startsWith('/vocabulary/') && pathParts.length > 2) ||
+    (pathname.startsWith('/admission/lessons/') && pathParts.length > 2) ||
+    (pathname.startsWith('/admission/universities/') && pathParts.length > 2)
+
   // Authenticated pages use one persistent workspace sidebar. The old dashboard
   // top bar duplicated the same destinations and made the layout jump between
   // sections, so it is intentionally kept only out of the app workspace.
   // `/` renders the authenticated dashboard too. Keep it inside the same
   // workspace shell so opening the site never flashes the standalone version.
-  const sidebarRoutes = new Set(['/', '/dashboard', '/tests', '/ai-tutor'])
   const showSidebar =
     Boolean(user) &&
     !isAuthPage &&
     !isGuestLanding &&
     !isTestMode &&
-    sidebarRoutes.has(pathname)
-  // Standalone prep/content screens expose their own Dashboard back action.
+    !isFocusContentMode
   const showMobileNav = Boolean(user) && showSidebar
+  const showAmbientBackground = !isTestMode && !isFocusContentMode
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)
@@ -238,8 +229,8 @@ function App() {
   }
 
   return (
-    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100 ${usesStickyWorkspaceContent ? 'app-shell-sticky-content' : ''}`}>
-      {!isGuestLanding ? <AnimatedBackground /> : null}
+    <div className="app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100">
+      {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       <DeferredRegisterModal />
       <NicknameGate />
@@ -255,9 +246,7 @@ function App() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <div className="flex flex-1">
-          <AnimatePresence initial={false}>
-            {showSidebar ? <Sidebar key="workspace-sidebar" /> : null}
-          </AnimatePresence>
+          {showSidebar ? <Sidebar /> : null}
 
           <main
             className={`w-full flex-1 transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -275,8 +264,7 @@ function App() {
             >
               <ErrorBoundary>
                 <Suspense fallback={<RouteLoader />}>
-                  <AnimatePresence mode="wait" initial={false}>
-                    <Routes location={location} key={location.pathname}>
+                    <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/dashboard" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
                       <Route path="/about" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
@@ -681,7 +669,6 @@ function App() {
                       />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
                     </Routes>
-                  </AnimatePresence>
                 </Suspense>
               </ErrorBoundary>
 

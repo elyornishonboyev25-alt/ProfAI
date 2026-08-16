@@ -98,7 +98,7 @@ function PrivacyToggle({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-start justify-between gap-3 rounded-xl border border-red-200 bg-white/90 px-3 py-2.5 text-left"
+      className="flex w-full items-start justify-between gap-3 rounded-xl border border-blue-200 bg-white/90 px-3 py-2.5 text-left"
     >
       <div>
         <p className="text-sm font-semibold text-slate-900">{label}</p>
@@ -349,7 +349,7 @@ export default function AccountProfile() {
               type="button"
               onClick={() => void signOut()}
               disabled={signingOut}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 bg-white/80 px-4 text-xs font-black text-red-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-red-50 disabled:opacity-60"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white/80 px-4 text-xs font-black text-blue-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-blue-50 disabled:opacity-60"
             >
               {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
               Log out
@@ -360,21 +360,21 @@ export default function AccountProfile() {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-red-600 to-rose-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(239,68,68,0.82),0_20px_44px_rgba(220,38,38,0.34)]">
+                <div className="relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]">
                   {avatarUrl ? <img src={avatarUrl} alt="Profile" className="profile-avatar-media profile-avatar-media--hero" /> : initials}
                 </div>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-white text-red-600 shadow-md transition hover:bg-red-50 disabled:opacity-60"
+                  className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-white text-blue-600 shadow-md transition hover:bg-blue-50 disabled:opacity-60"
                   title="Change photo"
                 >
                   {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                 </button>
               </div>
               {avatarUrl ? (
-                <button onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-red-600">
+                <button onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-600">
                   <Trash2 className="h-3 w-3" /> Remove
                 </button>
               ) : null}
@@ -385,7 +385,7 @@ export default function AccountProfile() {
               <h1 className="text-3xl font-black tracking-tight text-slate-900">{user?.fullName ?? 'Learner'}</h1>
               <div className="mt-1 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                 {savedNickname ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-2.5 py-0.5 text-sm font-bold text-red-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-2.5 py-0.5 text-sm font-bold text-blue-700">
                     <AtSign className="h-3.5 w-3.5" />
                     {savedNickname}
                   </span>
@@ -435,7 +435,7 @@ export default function AccountProfile() {
               <a
                 key={href}
                 href={href}
-                className="min-h-10 shrink-0 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+                className="min-h-10 shrink-0 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
               >
                 {label}
               </a>
@@ -444,15 +444,15 @@ export default function AccountProfile() {
           {/* Nickname */}
           <section id="identity" className="mt-6 scroll-mt-24 surface-card p-6">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-              <AtSign className="h-5 w-5 text-red-600" />
+              <AtSign className="h-5 w-5 text-blue-600" />
               Public nickname
             </h2>
             <p className="mt-2 text-sm text-slate-600">
               Other learners only ever see this handle — never your email. It is how people find you in the Community.
             </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-red-200 bg-white px-3">
-                <span className="text-lg font-bold text-red-500">@</span>
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3">
+                <span className="text-lg font-bold text-blue-500">@</span>
                 <input
                   value={nicknameDraft}
                   onChange={(e) => setNicknameDraft(e.target.value.replace(/\s/g, ''))}
@@ -473,15 +473,15 @@ export default function AccountProfile() {
                 Save nickname
               </button>
             </div>
-            {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-red-600">Already taken — try another.</p> : null}
-            {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-red-600">3–20 chars: letters, numbers or underscore, starting with a letter.</p> : null}
+            {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-error-600">Already taken — try another.</p> : null}
+            {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-error-600">3–20 chars: letters, numbers or underscore, starting with a letter.</p> : null}
           </section>
 
           {/* Personal + targets */}
           <section id="targets" className="mt-6 scroll-mt-24 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="surface-card p-6">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-                <UserRound className="h-5 w-5 text-red-600" />
+                <UserRound className="h-5 w-5 text-blue-600" />
                 Personal & exam targets
               </h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -589,7 +589,7 @@ export default function AccountProfile() {
               {/* Privacy */}
               <article id="privacy" className="scroll-mt-24 surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-                  <ShieldCheck className="h-5 w-5 text-red-600" />
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
                   Privacy & visibility
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">Control exactly what other learners can see. Your email is never shown to anyone.</p>
@@ -603,7 +603,7 @@ export default function AccountProfile() {
               {/* Target university */}
               <article className="surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-                  <GraduationCap className="h-5 w-5 text-red-600" />
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
                   Target university
                 </h2>
                 {targetUniversity ? (
@@ -612,7 +612,7 @@ export default function AccountProfile() {
                       <p className="truncate text-sm font-bold text-slate-900">{targetUniversity.name}</p>
                       <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS #${targetUniversity.rank}` : ''}</p>
                     </div>
-                    <button onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)} className="shrink-0 text-xs font-bold text-red-600 hover:underline">
+                    <button onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)} className="shrink-0 text-xs font-bold text-blue-600 hover:underline">
                       View
                     </button>
                   </div>
@@ -630,7 +630,7 @@ export default function AccountProfile() {
           <section id="achievements" className="mt-6 scroll-mt-24 surface-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-                <Sparkles className="h-5 w-5 text-red-600" />
+                <Sparkles className="h-5 w-5 text-blue-600" />
                 Achievement badges
               </h2>
               <span className="soft-chip">Earned from mock / exam results</span>
@@ -642,16 +642,16 @@ export default function AccountProfile() {
 
           <section
             id="danger"
-            className="relative mt-6 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-red-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,.9),rgba(254,242,242,.88))] p-5 shadow-[0_20px_48px_rgba(127,29,29,.1)] backdrop-blur-2xl sm:p-6"
+            className="relative mt-6 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-error-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,.94),rgba(254,242,242,.9))] p-5 shadow-[0_20px_48px_rgba(127,29,29,.08)] sm:p-6"
           >
-            <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-red-200/45 blur-3xl" />
+            <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-blue-200/45 blur-3xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 text-red-700 ring-1 ring-red-200">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-orange-100 text-blue-700 ring-1 ring-blue-200">
                   <ShieldAlert className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600">Danger zone</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-error-600">Danger zone</p>
                   <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">Permanently delete account</h2>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
                     Removes your profile, results, XP, saved vocabulary, AI history and every personal learning record. This action cannot be reversed.
@@ -661,7 +661,7 @@ export default function AccountProfile() {
               <button
                 type="button"
                 onClick={() => setDeleteDialogOpen(true)}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-red-300 bg-white px-4 text-xs font-black text-red-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-400 hover:bg-red-50 hover:shadow-[0_12px_26px_rgba(185,28,28,.14)]"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-error-300 bg-white px-4 text-xs font-black text-error-700 shadow-sm hover:border-error-400 hover:bg-error-50"
               >
                 <Trash2 className="h-4 w-4" /> Delete account
               </button>
@@ -677,15 +677,15 @@ export default function AccountProfile() {
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-red-700">Profile complete</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Profile complete</p>
               <p className="mt-1 text-2xl font-black text-slate-900"><CountUp value={completion} suffix="%" /></p>
             </div>
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-red-700">Account level</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Account level</p>
               <p className="mt-1 text-2xl font-black text-slate-900">{user?.level ?? 1}</p>
             </div>
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-red-700">Visibility</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Visibility</p>
               <p className="mt-1 text-2xl font-black text-slate-900">{form.isPublic ? 'Public' : 'Private'}</p>
             </div>
           </div>

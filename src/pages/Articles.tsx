@@ -99,8 +99,8 @@ export default function Articles() {
                     onClick={() => setActive(category)}
                     className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
                       isActive
-                        ? 'border-red-300 bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)]'
-                        : 'border-red-200 bg-white text-slate-700 hover:border-red-300 hover:text-red-700'
+                        ? 'border-blue-300 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
+                        : 'border-blue-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700'
                     }`}
                   >
                     {category}
@@ -114,14 +114,14 @@ export default function Articles() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search articles…"
-                className="h-11 w-full rounded-xl border border-red-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                className="h-11 w-full rounded-xl border border-blue-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </div>
         </Reveal>
 
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-red-100 bg-white p-10 text-center text-slate-500">
+          <div className="rounded-2xl border border-blue-100 bg-white p-10 text-center text-slate-500">
             No articles match your search yet.
           </div>
         ) : (
@@ -134,12 +134,12 @@ export default function Articles() {
                 <Tilt3D className="h-full rounded-[1.5rem]" max={5}>
                   <button
                     onClick={() => navigate(`/articles/${article.slug}`)}
-                    className="group flex h-full w-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-red-200 hover:shadow-[0_24px_50px_rgba(220,38,38,0.14)]"
+                    className="group flex h-full w-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-blue-200 hover:shadow-[0_24px_50px_rgba(37,99,235,0.14)]"
                   >
                     <ArticleCover article={article} variant="card" className="h-40 w-full" />
                     <div className="flex flex-1 flex-col p-5">
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-red-700">
+                        <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
                           {article.category}
                         </span>
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
@@ -155,7 +155,7 @@ export default function Articles() {
                         ) : readPct > 0 ? (
                           <span className="ml-auto">
                             <ProgressRing value={readPct} size={26} stroke={3.5}>
-                              <span className="text-[8px] font-black text-red-600">{readPct}</span>
+                              <span className="text-[8px] font-black text-blue-600">{readPct}</span>
                             </ProgressRing>
                           </span>
                         ) : null}
@@ -169,7 +169,7 @@ export default function Articles() {
                           <BookOpen className="h-3.5 w-3.5" />
                           {articleWordCount(article).toLocaleString()} words · {article.vocabulary.length} vocab
                         </span>
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 transition group-hover:gap-2">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 transition group-hover:gap-2">
                           {isRead ? 'Read again' : readPct > 0 ? 'Continue' : 'Read'}
                           <ArrowRight className="h-3.5 w-3.5" />
                         </span>

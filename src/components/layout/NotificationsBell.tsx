@@ -131,13 +131,13 @@ export default function NotificationsBell() {
         onClick={() => setOpen((value) => !value)}
         aria-label="Notifications"
         aria-expanded={open}
-        className="interactive-lift relative rounded-xl border border-red-200 bg-white/90 p-2 text-slate-700 transition hover:bg-red-50 hover:text-red-700"
+        className="interactive-lift relative rounded-xl border border-blue-200 bg-white/90 p-2 text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 || (streak > 0 && !todayActive) ? (
           <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
           </span>
         ) : null}
       </button>
@@ -163,9 +163,9 @@ export default function NotificationsBell() {
               role="dialog"
               aria-modal="true"
               aria-label="Notifications panel"
-              className="fixed bottom-4 left-4 right-4 top-[4.75rem] z-[120] flex min-h-0 flex-col overflow-hidden rounded-[1.6rem] border border-red-100 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.28)] sm:left-auto sm:w-[25rem]"
+              className="fixed bottom-4 left-4 right-4 top-[4.75rem] z-[120] flex min-h-0 flex-col overflow-hidden rounded-[1.6rem] border border-blue-100 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.28)] sm:left-auto sm:w-[25rem]"
             >
-            <div className="flex shrink-0 items-center justify-between border-b border-red-100 bg-gradient-to-r from-white via-rose-50/60 to-white px-4 py-3.5">
+            <div className="flex shrink-0 items-center justify-between border-b border-blue-100 bg-gradient-to-r from-white via-indigo-50/60 to-white px-4 py-3.5">
               <div>
                 <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>
                 <p className="text-[10px] font-bold text-slate-400">{unreadCount ? `${unreadCount} unread` : 'You are all caught up'}</p>
@@ -174,7 +174,7 @@ export default function NotificationsBell() {
               {unreadCount ? (
                 <button
                   onClick={() => void markAllRead()}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-black text-red-600 transition hover:bg-red-50"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-black text-blue-600 transition hover:bg-blue-50"
                 >
                   <CheckCheck className="h-3.5 w-3.5" />
                   Mark all read
@@ -183,7 +183,7 @@ export default function NotificationsBell() {
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close notifications"
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                className="rounded-lg p-1 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -192,7 +192,7 @@ export default function NotificationsBell() {
 
             <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
               {/* Streak card */}
-              <div className="relative overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#ef4444] via-[#dc2626] to-[#991b1b] p-4 text-white shadow-[0_18px_38px_rgba(220,38,38,0.24)]">
+              <div className="relative overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#991b1b] p-4 text-white shadow-[0_18px_38px_rgba(37,99,235,0.24)]">
                 <span className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
                 <div className="flex items-center gap-2">
                   <Flame className="h-5 w-5 text-amber-300" />
@@ -200,7 +200,7 @@ export default function NotificationsBell() {
                     {streak > 0 ? `${streak}-day streak` : 'Start your streak today'}
                   </p>
                 </div>
-                <p className="mt-1 text-[12px] leading-5 text-red-100">
+                <p className="mt-1 text-[12px] leading-5 text-blue-100">
                   {streak > 0 && !todayActive
                     ? 'Practice today to keep it alive!'
                     : streak > 0
@@ -213,10 +213,10 @@ export default function NotificationsBell() {
                       <span
                         key={day.date}
                         className={`flex aspect-square min-w-0 flex-col items-center justify-center rounded-lg border text-[8px] font-bold uppercase ${
-                          day.active ? 'border-white/40 bg-white/20 text-white' : 'border-white/15 bg-white/5 text-red-100/60'
+                          day.active ? 'border-white/40 bg-white/20 text-white' : 'border-white/15 bg-white/5 text-blue-100/60'
                         }`}
                       >
-                        <Flame className={`h-3 w-3 ${day.active ? 'text-amber-300' : 'text-red-100/40'}`} />
+                        <Flame className={`h-3 w-3 ${day.active ? 'text-amber-300' : 'text-blue-100/40'}`} />
                         {day.label.slice(0, 2)}
                       </span>
                     ))}
@@ -235,10 +235,10 @@ export default function NotificationsBell() {
                         className={`relative flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
                           notification.readAt
                             ? 'border-slate-100 bg-white'
-                            : 'border-red-100 bg-gradient-to-r from-red-50/90 to-white'
+                            : 'border-blue-100 bg-gradient-to-r from-blue-50/90 to-white'
                         }`}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                           <Bell className="h-4 w-4" />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -246,7 +246,7 @@ export default function NotificationsBell() {
                           <span className="mt-0.5 line-clamp-2 block text-[11px] leading-4 text-slate-500">{notification.message}</span>
                           <span className="mt-1 block text-[9px] font-bold uppercase tracking-wide text-slate-400">{relativeTime(notification.createdAt)}</span>
                         </span>
-                        {!notification.readAt ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-red-500" /> : null}
+                        {!notification.readAt ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-500" /> : null}
                       </button>
                     ))}
                   </div>
@@ -267,7 +267,7 @@ export default function NotificationsBell() {
                           setOpen(false)
                           navigate('/account')
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-left transition hover:border-red-200 hover:bg-red-50/40"
+                        className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
                       >
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_6px_14px_rgba(245,158,11,0.3)]">
                           <Award className="h-4 w-4" />
@@ -294,9 +294,9 @@ export default function NotificationsBell() {
                   setOpen(false)
                   navigate('/mock/ielts')
                 }}
-                className="flex w-full items-center gap-3 rounded-xl border border-red-100 bg-gradient-to-r from-red-50/80 to-rose-50/50 px-3 py-2.5 text-left transition hover:border-red-200"
+                className="flex w-full items-center gap-3 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 px-3 py-2.5 text-left transition hover:border-blue-200"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">

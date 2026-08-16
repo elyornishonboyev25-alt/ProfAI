@@ -120,7 +120,7 @@ export default function Register() {
           initial={minimalMotion ? false : { opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-red-300/25 blur-3xl"
+          className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-blue-300/25 blur-3xl"
         />
         <motion.div
           initial={minimalMotion ? false : { opacity: 0, scale: 0.9 }}
@@ -128,22 +128,22 @@ export default function Register() {
           transition={{ delay: 0.08, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="absolute bottom-[8%] right-[10%] h-72 w-72 rounded-full bg-orange-200/30 blur-3xl"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,113,113,0.06)_1px,transparent_1px),linear-gradient(180deg,rgba(248,113,113,0.06)_1px,transparent_1px)] bg-[size:36px_36px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(96,165,250,0.06)_1px,transparent_1px),linear-gradient(180deg,rgba(96,165,250,0.06)_1px,transparent_1px)] bg-[size:36px_36px]" />
       </div>
 
       <motion.div
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: minimalMotion ? 0.14 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="panel-surface relative grid w-full max-w-5xl overflow-hidden rounded-[2.2rem] border border-red-100/90 bg-white/95 shadow-[0_30px_90px_rgba(127,29,29,0.18)] lg:grid-cols-[0.92fr_1.08fr]"
+        className="panel-surface relative grid w-full max-w-5xl overflow-hidden rounded-[2.2rem] border border-blue-100/90 bg-white/95 shadow-[0_30px_90px_rgba(30,64,175,0.18)] lg:grid-cols-[0.92fr_1.08fr]"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[3px] bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
         <div
           className="relative hidden min-h-[520px] overflow-hidden bg-slate-950 bg-cover bg-center p-8 text-white lg:block"
           style={{ backgroundImage: "url('/assets/auth/students-collaborating.webp')" }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/78 via-slate-950/68 to-red-950/92" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(220,38,38,0.3),transparent_36%),radial-gradient(circle_at_82%_76%,rgba(225,29,72,0.22),transparent_40%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/78 via-slate-950/68 to-blue-950/92" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(37,99,235,0.3),transparent_36%),radial-gradient(circle_at_82%_76%,rgba(225,29,72,0.22),transparent_40%)]" />
           <motion.div
             initial={minimalMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -151,7 +151,7 @@ export default function Register() {
             className="relative z-10 flex h-full flex-col justify-between"
           >
             <div>
-              <BrandMark size={58} className="shadow-[0_18px_34px_rgba(127,29,29,0.35)]" />
+              <BrandMark size={58} className="shadow-[0_18px_34px_rgba(30,64,175,0.35)]" />
               <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
                 <Sparkles className="h-3.5 w-3.5" />
                 Study abroad with AI
@@ -178,8 +178,8 @@ export default function Register() {
 
         <div className="relative p-6 sm:p-8 lg:p-10">
           <div className="mb-7 text-center lg:text-left">
-            <BrandMark size={54} className="mx-auto shadow-[0_14px_26px_rgba(220,38,38,0.32)] lg:hidden" />
-            <p className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-red-700">
+            <BrandMark size={54} className="mx-auto shadow-[0_14px_26px_rgba(37,99,235,0.32)] lg:hidden" />
+            <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
               <ShieldCheck className="h-3.5 w-3.5" />
               Password sign-up
             </p>
@@ -193,47 +193,47 @@ export default function Register() {
             <label className="block">
               <span className="mb-1.5 block text-sm font-bold text-slate-700">Gmail address</span>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                 <input
                   type="email"
                   autoComplete="email"
-                  className="input h-12 rounded-2xl border-red-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                  className="input h-12 rounded-2xl border-blue-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                   placeholder="name@gmail.com"
                   {...register('email')}
                 />
               </div>
-              {errors.email ? <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.email.message}</p> : null}
+              {errors.email ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.email.message}</p> : null}
             </label>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-slate-700">Password</span>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                   <input
                     type="password"
                     autoComplete="new-password"
-                    className="input h-12 rounded-2xl border-red-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                    className="input h-12 rounded-2xl border-blue-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                     placeholder="Minimum 8 characters"
                     {...register('password')}
                   />
                 </div>
-                {errors.password ? <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.password.message}</p> : null}
+                {errors.password ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.password.message}</p> : null}
               </label>
 
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold text-slate-700">Confirm password</span>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-400" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                   <input
                     type="password"
                     autoComplete="new-password"
-                    className="input h-12 rounded-2xl border-red-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                    className="input h-12 rounded-2xl border-blue-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                     placeholder="Repeat password"
                     {...register('confirmPassword')}
                   />
                 </div>
-                {errors.confirmPassword ? <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.confirmPassword.message}</p> : null}
+                {errors.confirmPassword ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.confirmPassword.message}</p> : null}
               </label>
             </div>
 
@@ -242,7 +242,7 @@ export default function Register() {
               whileTap={minimalMotion ? undefined : { scale: 0.985 }}
               disabled={isSubmitting}
               type="submit"
-              className="interactive-lift cta-sheen flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-4 text-sm font-black text-white shadow-[0_18px_36px_rgba(220,38,38,0.34)] transition hover:shadow-[0_22px_44px_rgba(220,38,38,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="interactive-lift cta-sheen flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.34)] transition hover:shadow-[0_22px_44px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
@@ -256,17 +256,17 @@ export default function Register() {
           </form>
 
           <div className="my-5 flex items-center gap-4">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-red-100 to-red-200/70" />
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-100 to-blue-200/70" />
             <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
               or sign up with
             </span>
-            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-red-100 to-red-200/70" />
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-blue-100 to-blue-200/70" />
           </div>
 
           <GoogleAuthButton mode="signup" onCredential={handleGoogleCredential} />
 
-          <div className="mt-5 rounded-2xl border border-red-100 bg-red-50/60 px-4 py-3 text-xs text-slate-700">
-            <p className="inline-flex items-center gap-1.5 font-black text-red-700">
+          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-slate-700">
+            <p className="inline-flex items-center gap-1.5 font-black text-blue-700">
               <ShieldCheck className="h-3.5 w-3.5" />
               Secure sign-up
             </p>
@@ -277,7 +277,7 @@ export default function Register() {
 
           <p className="mt-6 text-center text-sm text-[#6B7280]">
             Already have an account?{' '}
-            <Link to="/login" className="font-black text-red-600 transition-colors hover:text-red-700">
+            <Link to="/login" className="font-black text-blue-600 transition-colors hover:text-blue-700">
               Sign in
             </Link>
           </p>

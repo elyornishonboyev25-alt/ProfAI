@@ -34,7 +34,7 @@ function cardToneClass(tone: (typeof tracks)[number]['tone']) {
     return 'border-blue-200 bg-gradient-to-br from-white via-blue-50 to-indigo-100/75 shadow-[0_20px_40px_rgba(37,99,235,0.16)]'
   }
 
-  return 'border-red-200 bg-gradient-to-br from-white via-rose-50 to-red-100/70 shadow-[0_20px_40px_rgba(220,38,38,0.16)]'
+  return 'border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/70 shadow-[0_20px_40px_rgba(37,99,235,0.16)]'
 }
 
 function labelToneClass(tone: (typeof tracks)[number]['tone']) {
@@ -42,7 +42,7 @@ function labelToneClass(tone: (typeof tracks)[number]['tone']) {
     return 'border-blue-200 text-blue-700'
   }
 
-  return 'border-red-200 text-red-700'
+  return 'border-blue-200 text-blue-700'
 }
 
 function linkToneClass(tone: (typeof tracks)[number]['tone']) {
@@ -50,7 +50,7 @@ function linkToneClass(tone: (typeof tracks)[number]['tone']) {
     return 'text-blue-700'
   }
 
-  return 'text-red-700'
+  return 'text-blue-700'
 }
 
 export default function Mock() {
@@ -87,9 +87,9 @@ export default function Mock() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(127,29,29,0.28)]"
+              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(30,64,175,0.28)]"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-red-500 to-rose-500" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-blue-500 to-indigo-500" />
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
                 <Crown className="h-8 w-8" />
               </div>
@@ -106,7 +106,7 @@ export default function Mock() {
                 <button
                   type="button"
                   onClick={() => navigate('/premium')}
-                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
+                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
                 >
                   <Crown className="h-4 w-4" />
                   Subscribe to Premium
@@ -130,7 +130,7 @@ export default function Mock() {
           backLabel="Dashboard"
           onBack={() => navigate('/dashboard')}
           eyebrow="Mock Exam Center"
-          title={<>Real exam pressure. <span className="bg-gradient-to-r from-red-700 via-rose-600 to-orange-500 bg-clip-text text-transparent">Clear controlled practice.</span></>}
+          title={<>Real exam pressure. <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent">Clear controlled practice.</span></>}
           subtitle="Choose IELTS or Digital SAT and enter a distraction-free simulation with official pacing, locked section flow and actionable review."
           filters={tracks.map((track) => ({ id: track.id, label: track.id === 'ielts' ? 'IELTS full mock' : 'Digital SAT mock' }))}
           activeFilter=""
@@ -149,9 +149,9 @@ export default function Mock() {
           ) : undefined}
           actions={(
             <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Clock3 className="h-3.5 w-3.5 text-red-600" /> Full-length timing</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Target className="h-3.5 w-3.5 text-red-600" /> Real exam pressure</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><ShieldCheck className="h-3.5 w-3.5 text-red-600" /> Section lock flow</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Clock3 className="h-3.5 w-3.5 text-blue-600" /> Full-length timing</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Target className="h-3.5 w-3.5 text-blue-600" /> Real exam pressure</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> Section lock flow</span>
             </div>
           )}
         />
@@ -164,9 +164,9 @@ export default function Mock() {
                   onClick={() => launchMock(track.path)}
                   className={`interactive-lift group relative isolate flex min-h-[24rem] h-full w-full flex-col overflow-hidden rounded-[1.85rem] border p-6 text-left ${cardToneClass(track.tone)}`}
                 >
-                  <span className={`pointer-events-none absolute -right-16 -top-20 -z-10 h-64 w-64 rounded-full blur-3xl ${track.tone === 'blue' ? 'bg-blue-200/70' : 'bg-red-200/70'}`} />
+                  <span className={`pointer-events-none absolute -right-16 -top-20 -z-10 h-64 w-64 rounded-full blur-3xl ${track.tone === 'blue' ? 'bg-blue-200/70' : 'bg-blue-200/70'}`} />
                   <div className="flex items-start justify-between gap-3">
-                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg ${track.tone === 'blue' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 'bg-gradient-to-br from-red-600 to-rose-700'}`}>
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg ${track.tone === 'blue' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 'bg-gradient-to-br from-blue-600 to-indigo-700'}`}>
                       <Headphones className="h-5 w-5" />
                     </span>
                     <span className="text-5xl font-black tracking-[-0.08em] text-white/80">0{index + 1}</span>

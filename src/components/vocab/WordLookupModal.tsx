@@ -134,10 +134,10 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 24, scale: 0.97, opacity: 0 }}
             transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full max-w-lg overflow-hidden rounded-[1.6rem] border border-red-100 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.32)]"
+            className="relative z-10 w-full max-w-lg overflow-hidden rounded-[1.6rem] border border-blue-100 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.32)]"
           >
             {/* header */}
-            <div className="relative overflow-hidden border-b border-red-100 bg-gradient-to-br from-red-600 via-rose-600 to-orange-500 px-5 py-4 text-white">
+            <div className="relative overflow-hidden border-b border-blue-100 bg-gradient-to-br from-blue-600 via-indigo-600 to-orange-500 px-5 py-4 text-white">
               <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -179,8 +179,8 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                   onClick={() => setLanguage(chip.code)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                     language === chip.code
-                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm'
-                      : 'border border-slate-200 bg-white text-slate-600 hover:border-red-300 hover:text-red-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
+                      : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700'
                   }`}
                 >
                   {chip.label}
@@ -194,7 +194,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                     if (e.key === 'Enter') applyCustomLanguage()
                   }}
                   placeholder="Other…"
-                  className="h-7 w-20 rounded-full border border-slate-200 bg-white px-3 text-xs outline-none focus:border-red-300"
+                  className="h-7 w-20 rounded-full border border-slate-200 bg-white px-3 text-xs outline-none focus:border-blue-300"
                 />
               </div>
             </div>
@@ -203,16 +203,16 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
             <div className="max-h-[52vh] overflow-y-auto px-5 py-4">
               {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                  <Loader2 className="h-7 w-7 animate-spin text-red-500" />
+                  <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
                   <p className="text-sm font-medium text-slate-500">AI is explaining this word…</p>
                 </div>
               ) : error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+                <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">{error}</div>
               ) : result ? (
                 <div className="space-y-3.5">
                   {result.explanation ? (
-                    <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50/80 to-white px-4 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600">Simple explanation</p>
+                    <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-white px-4 py-3">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-600">Simple explanation</p>
                       <p className="mt-1.5 text-[15px] leading-7 text-slate-800">{result.explanation}</p>
                     </div>
                   ) : null}
@@ -225,7 +225,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
                         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Synonym</p>
-                        <p className="mt-1 text-sm font-semibold leading-6 text-red-700">{result.synonym || '—'}</p>
+                        <p className="mt-1 text-sm font-semibold leading-6 text-blue-700">{result.synonym || '—'}</p>
                       </div>
                     </div>
                   ) : null}
@@ -249,7 +249,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                 className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition ${
                   saved
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_10px_22px_rgba(220,38,38,0.28)] hover:brightness-110 disabled:opacity-40'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)] hover:brightness-110 disabled:opacity-40'
                 }`}
               >
                 {saved ? <Check className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}

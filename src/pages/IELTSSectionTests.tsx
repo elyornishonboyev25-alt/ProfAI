@@ -97,40 +97,40 @@ const MILESTONES = [1, 2, 3, 5, 8, 12]
 const TRACK_THEMES: Record<IeltsTrackType, TrackTheme> = {
   reading: {
     heroPanel:
-      'border-rose-100/85 bg-[linear-gradient(142deg,rgba(255,255,255,0.99),rgba(255,244,247,0.95))] shadow-[0_24px_56px_rgba(190,24,93,0.14)]',
-    heroGlowPrimary: 'bg-rose-200/55',
+      'border-indigo-100/85 bg-[linear-gradient(142deg,rgba(255,255,255,0.99),rgba(255,244,247,0.95))] shadow-[0_24px_56px_rgba(79,70,229,0.14)]',
+    heroGlowPrimary: 'bg-indigo-200/55',
     heroGlowSecondary: 'bg-orange-200/45',
     accentTitle: 'arena-title-accent-red',
-    accentText: 'text-rose-700',
-    chip: 'border-rose-200 bg-rose-50/80 text-rose-700',
+    accentText: 'text-indigo-700',
+    chip: 'border-indigo-200 bg-indigo-50/80 text-indigo-700',
     backButton:
-      'border-rose-200 bg-white/90 text-rose-700 shadow-[0_8px_18px_rgba(190,24,93,0.14)] hover:border-rose-300 hover:bg-rose-50',
-    metricCard: 'border-rose-100/85 bg-white/90 shadow-[0_12px_28px_rgba(190,24,93,0.11)]',
-    metricLabel: 'text-rose-600',
-    sidebarPanel: 'border-rose-100/85 bg-white/95 shadow-[0_18px_42px_rgba(190,24,93,0.1)]',
-    sidebarSwitchWrap: 'border-rose-100 bg-rose-50/45',
-    filterHeading: 'text-rose-600',
+      'border-indigo-200 bg-white/90 text-indigo-700 shadow-[0_8px_18px_rgba(79,70,229,0.14)] hover:border-indigo-300 hover:bg-indigo-50',
+    metricCard: 'border-indigo-100/85 bg-white/90 shadow-[0_12px_28px_rgba(79,70,229,0.11)]',
+    metricLabel: 'text-indigo-600',
+    sidebarPanel: 'border-indigo-100/85 bg-white/95 shadow-[0_18px_42px_rgba(79,70,229,0.1)]',
+    sidebarSwitchWrap: 'border-indigo-100 bg-indigo-50/45',
+    filterHeading: 'text-indigo-600',
     filterActive:
-      'border-rose-500 bg-gradient-to-r from-rose-600 via-red-500 to-orange-500 text-white shadow-[0_16px_30px_rgba(190,24,93,0.24)]',
-    filterInactive: 'border-rose-100 text-slate-700 hover:border-rose-300 hover:bg-rose-50/45',
-    filterIconInactive: 'border-rose-100 bg-rose-50 text-rose-700',
-    roadmapPanel: 'border-rose-100/85 bg-white/95 shadow-[0_20px_46px_rgba(15,23,42,0.08)]',
-    continueCard: 'border-rose-200/85 bg-gradient-to-r from-rose-50/85 via-white to-orange-50/80',
-    progressCard: 'border-rose-200/80 bg-gradient-to-br from-white to-rose-50/75',
-    searchInput: 'border-rose-100 focus:border-rose-300 focus:ring-rose-100',
-    searchIcon: 'text-rose-400',
-    timelineRail: 'bg-gradient-to-b from-rose-200 via-rose-100 to-transparent',
-    timelineNode: 'border-rose-300 bg-white text-rose-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]',
+      'border-indigo-500 bg-gradient-to-r from-indigo-600 via-blue-500 to-orange-500 text-white shadow-[0_16px_30px_rgba(79,70,229,0.24)]',
+    filterInactive: 'border-indigo-100 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/45',
+    filterIconInactive: 'border-indigo-100 bg-indigo-50 text-indigo-700',
+    roadmapPanel: 'border-indigo-100/85 bg-white/95 shadow-[0_20px_46px_rgba(15,23,42,0.08)]',
+    continueCard: 'border-indigo-200/85 bg-gradient-to-r from-indigo-50/85 via-white to-orange-50/80',
+    progressCard: 'border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75',
+    searchInput: 'border-indigo-100 focus:border-indigo-300 focus:ring-indigo-100',
+    searchIcon: 'text-indigo-400',
+    timelineRail: 'bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent',
+    timelineNode: 'border-indigo-300 bg-white text-indigo-600 shadow-[0_0_0_4px_rgba(255,241,242,1)]',
     timelineNodeDone:
       'border-emerald-300 bg-emerald-500 text-white shadow-[0_0_0_4px_rgba(236,253,245,1)]',
-    rowHover: 'hover:bg-rose-50/45',
+    rowHover: 'hover:bg-indigo-50/45',
     neutralBadge: 'border-slate-200 bg-white text-slate-600',
     recommendedBadge: 'border-fuchsia-200 bg-fuchsia-100 text-fuchsia-700',
     newBadge: 'border-sky-200 bg-sky-100 text-sky-700',
     actionReady:
-      'border-rose-600 bg-gradient-to-r from-rose-600 via-red-500 to-red-600 text-white hover:brightness-105',
+      'border-indigo-600 bg-gradient-to-r from-indigo-600 via-blue-500 to-blue-600 text-white hover:brightness-105',
     actionDisabled: 'border-amber-300 bg-amber-100 text-amber-900',
-    skeletonTint: 'from-rose-100/45 via-white to-rose-100/45',
+    skeletonTint: 'from-indigo-100/45 via-white to-indigo-100/45',
   },
   listening: {
     heroPanel:
@@ -230,7 +230,7 @@ function levelTone(level: CatalogRow['level'], track: IeltsTrackType) {
   if (level === 'EASY') return 'text-emerald-700 bg-emerald-100 border-emerald-200'
   if (level === 'MEDIUM') return 'text-amber-700 bg-amber-100 border-amber-200'
   if (track === 'listening') return 'text-cyan-700 bg-cyan-100 border-cyan-200'
-  return 'text-rose-700 bg-rose-100 border-rose-200'
+  return 'text-indigo-700 bg-indigo-100 border-indigo-200'
 }
 
 function dayDistance(fromIso: string, toIso: string): number {
@@ -253,7 +253,7 @@ function ProgressRing({ value, track }: { value: number; track: IeltsTrackType }
   const radius = 22
   const circumference = 2 * Math.PI * radius
   const strokeOffset = circumference - (safeValue / 100) * circumference
-  const ringColor = track === 'reading' ? '#e11d48' : '#0284c7'
+  const ringColor = track === 'reading' ? '#4f46e5' : '#0284c7'
 
   return (
     <div className="relative h-14 w-14 shrink-0">
@@ -621,10 +621,10 @@ export default function IELTSSectionTests() {
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0, y: 12, scale: 0.96, filter: 'blur(6px)' }}
               transition={{ duration: 0.28, ease: CARD_EASE }}
-              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-100 bg-[linear-gradient(145deg,#fff,#fff7f7_58%,#fffaf8)] p-6 text-center shadow-[0_34px_78px_rgba(127,29,29,0.28)]"
+              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-indigo-100 bg-[linear-gradient(145deg,#fff,#fff7f7_58%,#fffaf8)] p-6 text-center shadow-[0_34px_78px_rgba(30,64,175,0.28)]"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-rose-600 via-red-500 to-orange-400" />
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-100 bg-white text-rose-600 shadow-[0_18px_34px_rgba(225,29,72,0.18)]">
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-600 via-blue-500 to-orange-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-100 bg-white text-indigo-600 shadow-[0_18px_34px_rgba(225,29,72,0.18)]">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
               <h3 className="mt-4 text-2xl font-black text-slate-950">Remove completion mark?</h3>
@@ -643,7 +643,7 @@ export default function IELTSSectionTests() {
                 <button
                   type="button"
                   onClick={confirmUnmarkComplete}
-                  className="rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_26px_rgba(225,29,72,0.26)] hover:brightness-105"
+                  className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_26px_rgba(225,29,72,0.26)] hover:brightness-105"
                 >
                   Remove mark
                 </button>
@@ -668,12 +668,12 @@ export default function IELTSSectionTests() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={{ duration: 0.26, ease: CARD_EASE }}
-              className="relative w-full max-w-lg overflow-hidden rounded-[30px] border border-red-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] p-7 text-center shadow-[0_38px_86px_rgba(220,38,38,0.26)]"
+              className="relative w-full max-w-lg overflow-hidden rounded-[30px] border border-blue-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] p-7 text-center shadow-[0_38px_86px_rgba(37,99,235,0.26)]"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400" />
-              <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-rose-200/45 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-indigo-200/45 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-20 left-4 h-40 w-40 rounded-full bg-orange-200/30 blur-3xl" />
-              <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-red-200 bg-white text-red-600 shadow-[0_14px_30px_rgba(220,38,38,0.18)]">
+              <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
                 <PlayCircle className="h-8 w-8" />
               </div>
               <h3 className="relative mt-5 text-2xl font-black tracking-tight text-slate-950">
@@ -697,7 +697,7 @@ export default function IELTSSectionTests() {
                     setCompletionGuardRow(null)
                     handleRowLaunch(row)
                   }}
-                  className="rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(220,38,38,0.32)] transition hover:brightness-105"
+                  className="rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,99,235,0.32)] transition hover:brightness-105"
                 >
                   Start test
                 </button>
@@ -722,9 +722,9 @@ export default function IELTSSectionTests() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               transition={{ duration: 0.3, ease: CARD_EASE }}
-              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(127,29,29,0.28)]"
+              className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border border-amber-200 bg-white p-7 text-center shadow-[0_34px_78px_rgba(30,64,175,0.28)]"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-red-500 to-rose-500" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-blue-500 to-indigo-500" />
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
                 <Crown className="h-8 w-8" />
               </div>
@@ -741,7 +741,7 @@ export default function IELTSSectionTests() {
                 <button
                   type="button"
                   onClick={() => navigate('/premium')}
-                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
+                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
                 >
                   <Crown className="h-4 w-4" />
                   Subscribe to Premium
@@ -804,8 +804,8 @@ export default function IELTSSectionTests() {
               }
               className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
                 track === 'reading'
-                  ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-[0_10px_20px_rgba(225,29,72,0.25)]'
-                  : 'bg-white text-slate-700 hover:bg-rose-50'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-[0_10px_20px_rgba(225,29,72,0.25)]'
+                  : 'bg-white text-slate-700 hover:bg-indigo-50'
               }`}
             >
               Reading

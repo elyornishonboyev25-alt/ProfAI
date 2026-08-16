@@ -102,8 +102,8 @@ export default function BadgeShelf() {
 
   if (badges.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/40 px-4 py-10 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-10 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
           <Sparkles className="h-6 w-6" />
         </span>
         <p className="mt-3 text-sm font-bold text-slate-700">No badges yet</p>
@@ -155,7 +155,7 @@ export default function BadgeShelf() {
               <button
                 onClick={() => void removeBadge(badge)}
                 disabled={busyId === badge.id}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-red-100 hover:text-red-600 disabled:opacity-50"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-blue-100 hover:text-blue-600 disabled:opacity-50"
                 title="Remove badge"
               >
                 <Trash2 className="h-3.5 w-3.5" />

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
@@ -213,7 +213,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
             className="flex min-h-[36px] items-center justify-center"
           />
         ) : (
-          <div className="flex min-h-[36px] items-center justify-center rounded-full border border-dashed border-red-200 bg-red-50/45 px-4 py-2 text-center text-[11px] font-semibold text-red-700">
+          <div className="flex min-h-[36px] items-center justify-center rounded-full border border-dashed border-blue-200 bg-blue-50/45 px-4 py-2 text-center text-[11px] font-semibold text-blue-700">
             {isResolvingClientId ? 'Resolving Google OAuth...' : 'Google OAuth is not configured yet.'}
           </div>
         )}
@@ -228,8 +228,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
         ) : null}
       </div>
 
-      {setupMessage ? <p className="text-center text-xs text-red-600">{setupMessage}</p> : null}
+      {setupMessage ? <p className="text-center text-xs text-error-600">{setupMessage}</p> : null}
     </div>
   )
 }
-

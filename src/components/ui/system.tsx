@@ -10,7 +10,7 @@ export function FocusShell({ className, ...props }: HTMLAttributes<HTMLDivElemen
 }
 
 export function Surface({ className, ...props }: HTMLAttributes<HTMLElement>) {
-  return <section className={cn('ui-surface', className)} {...props} />
+  return <section className={cn('arena-surface ui-surface', className)} {...props} />
 }
 
 export function PageHeader({ className, ...props }: HTMLAttributes<HTMLElement>) {
@@ -18,7 +18,19 @@ export function PageHeader({ className, ...props }: HTMLAttributes<HTMLElement>)
 }
 
 export function PageHero({ className, ...props }: HTMLAttributes<HTMLElement>) {
-  return <section className={cn('ui-page-hero', className)} {...props} />
+  return <section className={cn('arena-hero ui-page-hero', className)} {...props} />
+}
+
+export function ArenaCard({ className, ...props }: HTMLAttributes<HTMLElement>) {
+  return <article className={cn('arena-card', className)} {...props} />
+}
+
+export function LoadingState({ rows = 3, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={cn('arena-loading', className)} role="status" aria-label="Loading content">
+      {Array.from({ length: rows }, (_, index) => <span key={index} style={{ '--row': index } as React.CSSProperties} />)}
+    </div>
+  )
 }
 
 type ActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

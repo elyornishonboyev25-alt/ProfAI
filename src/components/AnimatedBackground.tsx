@@ -4,14 +4,15 @@ import { memo } from 'react'
 export const AnimatedBackground = memo(function AnimatedBackground() {
   return (
     <div
-      className="workspace-background fixed inset-0 z-0 pointer-events-none overflow-hidden"
+      className="sphere-field workspace-background fixed inset-0 z-0 pointer-events-none overflow-hidden"
       aria-hidden="true"
     >
       <div className="ambient-mesh" />
       <div className="ambient-grid" />
-      <span className="ambient-sphere ambient-sphere-a" />
-      <span className="ambient-sphere ambient-sphere-b" />
-      <span className="ambient-sphere ambient-sphere-c" />
+      <span className="ambient-sphere ambient-sphere-a"><i /></span>
+      <span className="ambient-sphere ambient-sphere-b"><i /></span>
+      <span className="ambient-sphere ambient-sphere-c"><i /></span>
+      <span className="ambient-sphere ambient-sphere-d"><i /></span>
     </div>
   )
 })

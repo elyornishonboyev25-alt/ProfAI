@@ -177,7 +177,7 @@ const FEATURES: Feature[] = [
     title: 'Speaking Community',
     body: 'Voice-only partner practice over live WebRTC, plus an AI examiner that scores fluency.',
     icon: Mic2,
-    route: '/speaking-community',
+    route: '/community?mode=ai',
     span: 'lg:col-span-1',
   },
   {

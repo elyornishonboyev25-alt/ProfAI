@@ -50,7 +50,7 @@ export default function Footer() {
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
               <li><Link to="/tests" className="transition-colors hover:text-blue-700">Practice Tests</Link></li>
               <li><Link to="/mock" className="transition-colors hover:text-blue-700">Mock Arena</Link></li>
-              <li><Link to="/speaking-community" className="transition-colors hover:text-blue-700">Speaking Community</Link></li>
+              <li><Link to="/community?mode=ai" className="transition-colors hover:text-blue-700">Speaking Community</Link></li>
               <li><Link to="/shadowing-lab" className="transition-colors hover:text-blue-700">Shadowing Lab</Link></li>
               <li><Link to="/vocabulary" className="transition-colors hover:text-blue-700">Vocabulary Arena</Link></li>
               <li><Link to="/articles" className="transition-colors hover:text-blue-700">Articles</Link></li>

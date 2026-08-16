@@ -27,8 +27,8 @@ export default function MotionRuntime({ children }: { children: ReactNode }) {
 
   return (
     <MotionConfig
-      reducedMotion="always"
-      transition={{ duration: 0.14, ease: PREMIUM_EASE }}
+      reducedMotion="user"
+      transition={{ duration: minimalMotion ? 0.01 : 0.22, ease: PREMIUM_EASE }}
     >
       {children}
     </MotionConfig>

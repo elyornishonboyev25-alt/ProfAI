@@ -2,6 +2,7 @@
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
+import MotionRuntime from './components/MotionRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
 
@@ -21,7 +22,9 @@ if (typeof window !== 'undefined') {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <MotionRuntime>
+        <App />
+      </MotionRuntime>
     </BrowserRouter>
   </React.StrictMode>,
 )

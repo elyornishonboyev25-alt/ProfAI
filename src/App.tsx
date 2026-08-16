@@ -42,7 +42,6 @@ const ArticlesVocabulary = lazy(() => import('@/pages/ArticlesVocabulary'))
 const MyWordsVocabulary = lazy(() => import('@/pages/MyWordsVocabulary'))
 const WritingLab = lazy(() => import('@/pages/WritingLab'))
 const SpeakingLab = lazy(() => import('@/pages/SpeakingLab'))
-const SpeakingCommunity = lazy(() => import('@/pages/SpeakingCommunity'))
 const SpeakerProfile = lazy(() => import('@/pages/SpeakerProfile'))
 const PublicProfile = lazy(() => import('@/pages/PublicProfile'))
 const Community = lazy(() => import('@/pages/Community'))
@@ -131,7 +130,15 @@ function DeferredAchievementCelebration() {
 }
 
 function AnimatedRoute({ children }: { children: ReactNode }) {
-  return <div className="h-full">{children}</div>
+  const location = useLocation()
+  return <div key={location.pathname} className="arena-route h-full">{children}</div>
+}
+
+function LegacySpeakingRedirect() {
+  const { search } = useLocation()
+  const legacy = new URLSearchParams(search).get('section')
+  const mode = legacy === 'ai' || legacy === 'debate' || legacy === 'partner' || legacy === 'progress' ? legacy : 'people'
+  return <Navigate to={mode === 'people' ? '/community' : `/community?mode=${mode}`} replace />
 }
 
 function App() {
@@ -171,6 +178,8 @@ function App() {
     /^\/sat\/mock\/\d+\/run$/.test(pathname)
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
+  const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
+  const isLiveCommunityMode = communityMode === 'debate' || communityMode === 'partner'
 
   const pathParts = pathname.split('/').filter(Boolean)
   const isFocusContentMode =
@@ -198,7 +207,7 @@ function App() {
     !isTestMode &&
     !isFocusContentMode
   const showMobileNav = Boolean(user) && showSidebar
-  const showAmbientBackground = !isTestMode && !isFocusContentMode
+  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)
@@ -233,7 +242,7 @@ function App() {
     return (
       <div className="app-shell relative min-h-screen text-[#1E293B]">
         <AnimatedBackground />
-        <div className="relative z-10 flex min-h-screen items-center justify-center">
+        <div className="relative z-10 flex min-h-screen min-w-0 items-center justify-center">
           <BrandPageLoader />
         </div>
       </div>
@@ -270,7 +279,7 @@ function App() {
           {showSidebar ? <Sidebar /> : null}
 
           <main
-            className={`w-full flex-1 transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
               showSidebar ? 'lg:ml-64' : 'ml-0'
             }`}
           >
@@ -494,11 +503,7 @@ function App() {
                       <Route
                         path="/speaking-community"
                         element={
-                          <PremiumRoute showGuestBanner>
-                            <AnimatedRoute>
-                              <SpeakingCommunity />
-                            </AnimatedRoute>
-                          </PremiumRoute>
+                          <AnimatedRoute><LegacySpeakingRedirect /></AnimatedRoute>
                         }
                       />
                       <Route

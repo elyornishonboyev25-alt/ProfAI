@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
-import { Navigate, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
+import { Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
@@ -145,7 +145,6 @@ function App() {
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
-  const usesStickyWorkspaceContent = pathname === '/admission/universities'
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'

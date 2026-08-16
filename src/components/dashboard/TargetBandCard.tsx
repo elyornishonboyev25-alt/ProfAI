@@ -103,7 +103,7 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
           </div>
 
           <button
-            onClick={() => navigate('/mock')}
+            onClick={() => navigate(targetPath)}
             className="interactive-lift mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:bg-blue-50"
           >
             Continue preparing

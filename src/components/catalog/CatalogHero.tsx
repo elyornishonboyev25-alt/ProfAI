@@ -39,21 +39,21 @@ const TONES: Record<CatalogTone, {
 }> = {
   rose: {
     accent: 'text-blue-600',
-    active: 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]',
+    active: 'border-red-600 bg-gradient-to-r from-red-500 to-red-700 text-white shadow-[0_10px_24px_rgba(220,38,38,0.24)]',
     focus: 'focus-visible:ring-blue-300',
     sheen: 'via-blue-100/70',
     summaryGlow: 'shadow-[0_10px_24px_rgba(37,99,235,0.1)]',
   },
   sky: {
     accent: 'text-blue-600',
-    active: 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]',
+    active: 'border-red-600 bg-gradient-to-r from-red-500 to-red-700 text-white shadow-[0_10px_24px_rgba(220,38,38,0.24)]',
     focus: 'focus-visible:ring-blue-300',
     sheen: 'via-blue-100/70',
     summaryGlow: 'shadow-[0_10px_24px_rgba(37,99,235,0.1)]',
   },
   blue: {
     accent: 'text-blue-600',
-    active: 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]',
+    active: 'border-red-600 bg-gradient-to-r from-red-500 to-red-700 text-white shadow-[0_10px_24px_rgba(220,38,38,0.24)]',
     focus: 'focus-visible:ring-blue-300',
     sheen: 'via-blue-100/70',
     summaryGlow: 'shadow-[0_12px_32px_rgba(37,99,235,0.12)]',

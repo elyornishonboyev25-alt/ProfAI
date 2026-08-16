@@ -33,7 +33,7 @@ export default function MobileBottomNav() {
                 key={tab.key}
                 onClick={() => navigate(tab.path)}
                 aria-label="AI Tutor"
-                className="relative -mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)] active:opacity-90"
+                className="relative -mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-[0_14px_28px_rgba(220,38,38,0.28)] active:opacity-90"
               >
                 <Icon className="h-6 w-6" />
               </button>
@@ -48,10 +48,10 @@ export default function MobileBottomNav() {
               className="relative flex min-w-[3.6rem] flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition active:scale-95"
             >
               {active ? (
-                <span className="absolute inset-0 rounded-xl bg-blue-50" />
+                <span className="absolute inset-0 rounded-xl bg-red-50" />
               ) : null}
-              <Icon className={`relative h-5 w-5 ${active ? 'text-blue-600' : 'text-slate-400'}`} />
-              <span className={`relative text-[10px] font-bold ${active ? 'text-blue-700' : 'text-slate-400'}`}>{tab.label}</span>
+              <Icon className={`relative h-5 w-5 ${active ? 'text-red-600' : 'text-slate-400'}`} />
+              <span className={`relative text-[10px] font-bold ${active ? 'text-red-700' : 'text-slate-400'}`}>{tab.label}</span>
             </button>
           )
         })}

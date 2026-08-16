@@ -8,21 +8,21 @@
   --app-bg: #f7f9ff;
   --app-bg-soft: #eef4ff;
   --app-text: #0f172a;
-  --app-red: #2563eb;
-  --app-red-deep: #1d4ed8;
-  --app-rose: #4f46e5;
-  --app-amber: #0ea5e9;
-  --app-border: rgba(96, 165, 250, 0.25);
-  --app-shadow: 0 22px 52px rgba(30, 64, 175, 0.1);
-  --app-shadow-soft: 0 12px 28px rgba(30, 64, 175, 0.08);
-  --app-shadow-premium: 0 28px 68px rgba(30, 64, 175, 0.13);
+  --app-red: #e52b32;
+  --app-red-deep: #b91c1c;
+  --app-rose: #ef4444;
+  --app-amber: #2563eb;
+  --app-border: rgba(148, 163, 184, 0.24);
+  --app-shadow: 0 22px 52px rgba(30, 41, 59, 0.1);
+  --app-shadow-soft: 0 12px 28px rgba(30, 41, 59, 0.075);
+  --app-shadow-premium: 0 28px 68px rgba(30, 41, 59, 0.12);
   --app-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --app-duration: 160ms;
-  --ui-primary: #2563eb;
-  --ui-primary-strong: #1d4ed8;
-  --ui-primary-soft: #eff6ff;
-  --ui-indigo: #4f46e5;
-  --ui-border: #dbeafe;
+  --ui-primary: #e52b32;
+  --ui-primary-strong: #b91c1c;
+  --ui-primary-soft: #fef2f2;
+  --ui-indigo: #2563eb;
+  --ui-border: #dbe5f2;
   --ui-surface: rgba(255, 255, 255, 0.94);
   --ui-muted: #64748b;
   --ui-danger: #dc2626;
@@ -2571,7 +2571,7 @@
 
 /* --------------------------------------------------------------------------
    ProfAI unified interface system
-   One cool-blue visual language, one fixed ambient scene, and no decorative
+   SAT Arena visual language: red action, blue guidance, white glass surfaces.
    JavaScript motion. These rules intentionally come last while legacy pages
    are migrated onto the shared primitives above.
    -------------------------------------------------------------------------- */
@@ -2579,9 +2579,9 @@
 body {
   background-color: var(--app-bg);
   background-image:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(242, 247, 255, 0.96)),
-    radial-gradient(circle at 10% 8%, rgba(96, 165, 250, 0.18), transparent 38%),
-    radial-gradient(circle at 84% 14%, rgba(99, 102, 241, 0.14), transparent 42%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.96)),
+    radial-gradient(circle at 8% 8%, rgba(248, 113, 113, 0.12), transparent 34%),
+    radial-gradient(circle at 86% 15%, rgba(59, 130, 246, 0.16), transparent 40%);
 }
 
 .workspace-background {
@@ -2589,16 +2589,17 @@ body {
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(circle at 15% 10%, rgba(191, 219, 254, 0.5), transparent 34%),
-    radial-gradient(circle at 88% 24%, rgba(199, 210, 254, 0.42), transparent 32%),
-    linear-gradient(145deg, #f9fbff 0%, #f3f7ff 50%, #f8f9ff 100%);
+    radial-gradient(circle at 8% 12%, rgba(254, 202, 202, 0.32), transparent 31%),
+    radial-gradient(circle at 88% 20%, rgba(191, 219, 254, 0.52), transparent 35%),
+    radial-gradient(circle at 46% 92%, rgba(224, 231, 255, 0.34), transparent 38%),
+    linear-gradient(145deg, #fbfcff 0%, #f3f7fc 52%, #f9fbff 100%);
 }
 
 .workspace-background .ambient-mesh {
   background:
-    radial-gradient(circle at 10% 15%, rgba(96, 165, 250, 0.16), transparent 36%),
-    radial-gradient(circle at 88% 18%, rgba(99, 102, 241, 0.13), transparent 34%),
-    radial-gradient(circle at 74% 86%, rgba(14, 165, 233, 0.1), transparent 38%);
+    radial-gradient(circle at 8% 16%, rgba(239, 68, 68, 0.09), transparent 34%),
+    radial-gradient(circle at 90% 18%, rgba(37, 99, 235, 0.13), transparent 35%),
+    radial-gradient(circle at 72% 88%, rgba(99, 102, 241, 0.08), transparent 38%);
 }
 
 .workspace-background .ambient-grid {
@@ -2615,15 +2616,31 @@ body {
   display: block;
   border-radius: 9999px;
   background:
-    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.98) 0 7%, rgba(219, 234, 254, 0.96) 13%, transparent 26%),
-    radial-gradient(circle at 34% 30%, #60a5fa 0%, #3b82f6 38%, #4f46e5 72%, #312e81 100%);
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.98) 0 7%, rgba(255, 255, 255, 0.58) 13%, transparent 25%),
+    radial-gradient(circle at 70% 72%, rgba(239, 68, 68, 0.23), transparent 35%),
+    radial-gradient(circle at 28% 70%, rgba(37, 99, 235, 0.28), transparent 39%),
+    linear-gradient(142deg, rgba(255,255,255,.72), rgba(219,234,254,.24) 48%, rgba(254,226,226,.3));
+  border: 1px solid rgba(255, 255, 255, 0.82);
   box-shadow:
-    inset -12px -15px 24px rgba(30, 58, 138, 0.3),
-    inset 8px 9px 18px rgba(255, 255, 255, 0.38),
-    0 18px 44px rgba(37, 99, 235, 0.22);
-  opacity: 0.68;
+    inset -18px -22px 32px rgba(37, 99, 235, 0.12),
+    inset 14px 12px 25px rgba(255, 255, 255, 0.72),
+    inset 5px -8px 22px rgba(239, 68, 68, 0.1),
+    0 22px 54px rgba(37, 99, 235, 0.13);
+  opacity: 0.76;
+  filter: saturate(1.08);
   will-change: transform;
   animation: ambientSphereDrift 22s ease-in-out infinite;
+}
+
+.ambient-sphere::after {
+  position: absolute;
+  inset: 3%;
+  border-radius: inherit;
+  background: conic-gradient(from 205deg, rgba(37,99,235,.2), rgba(255,255,255,.05), rgba(239,68,68,.18), rgba(255,255,255,.35), rgba(37,99,235,.2));
+  content: '';
+  opacity: .72;
+  -webkit-mask: radial-gradient(circle, transparent 57%, #000 73%);
+  mask: radial-gradient(circle, transparent 57%, #000 73%);
 }
 
 .ambient-sphere-a {
@@ -2697,8 +2714,8 @@ body {
 .premium-hero,
 .hero-metric-card,
 .card {
-  border: 1px solid rgba(219, 234, 254, 0.95);
-  background: var(--ui-surface);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.9);
   background-image: none;
   box-shadow: var(--app-shadow-soft);
   backdrop-filter: none;
@@ -2716,10 +2733,15 @@ body {
 }
 
 .ui-page-hero {
+  position: relative;
   overflow: hidden;
   border-radius: 2rem;
   padding: clamp(1.4rem, 3vw, 2.4rem);
   box-shadow: var(--app-shadow);
+  background:
+    radial-gradient(circle at 3% 12%, rgba(239,68,68,.1), transparent 28%),
+    radial-gradient(circle at 96% 16%, rgba(37,99,235,.14), transparent 33%),
+    rgba(255,255,255,.9);
 }
 
 .ui-action {
@@ -2737,10 +2759,10 @@ body {
 }
 
 .ui-action-primary {
-  border: 1px solid #2563eb;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  border: 1px solid #dc2626;
+  background: linear-gradient(135deg, #ef3b42, #c91f27);
   color: white;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 11px 25px rgba(220, 38, 38, 0.24);
 }
 
 .ui-action-secondary {
@@ -2844,11 +2866,11 @@ body {
 .arena-primary-btn-blue,
 .btn-primary,
 .target-glass-card {
-  border-color: #2563eb;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  background-image: linear-gradient(135deg, #2563eb, #4f46e5);
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #ef3b42, #c91f27);
+  background-image: linear-gradient(135deg, #ef3b42, #c91f27);
   color: white;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 12px 28px rgba(220, 38, 38, 0.24);
 }
 
 .premium-stat,
@@ -2965,6 +2987,38 @@ html[data-motion='minimal'] .ambient-sphere {
 
 .voice-orb-active-ring {
   animation: voiceOrbFeedback 1.4s ease-in-out infinite;
+}
+
+/* Red is the action colour; blue remains navigation, information and focus. */
+.workspace-page :where(button, a):not(.ui-action-secondary):not(.ui-action-quiet):not(.ui-action-danger)[class*='bg-blue-600'],
+.workspace-page :where(button, a):not(.ui-action-secondary):not(.ui-action-quiet):not(.ui-action-danger)[class*='from-blue-600'] {
+  border-color: rgba(220, 38, 38, .72) !important;
+  background: linear-gradient(135deg, #ef3b42, #c91f27) !important;
+  color: #fff !important;
+  box-shadow: 0 11px 25px rgba(220, 38, 38, .23) !important;
+}
+
+.workspace-page :where(button, a)[class*='border-blue-200'][class*='text-blue-'] {
+  background-color: rgba(255,255,255,.94);
+}
+
+.ui-page-header,
+.ui-page-hero,
+.ui-surface,
+.premium-hero,
+.hero-metric-card,
+.card {
+  box-shadow: 0 18px 46px rgba(30,41,59,.08), inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.ui-page-hero h1,
+.premium-hero h1 {
+  color: #11131d;
+}
+
+.ui-page-hero :where(.text-blue-600, .text-blue-700),
+.premium-hero :where(.text-blue-600, .text-blue-700) {
+  color: #dc2626 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

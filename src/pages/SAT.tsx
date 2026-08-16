@@ -244,11 +244,7 @@ export default function SAT() {
     : completedAttempts.length ? 100 : 0
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden bg-[#eef2f8] px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,.96),transparent_30%),radial-gradient(circle_at_78%_18%,rgba(204,226,244,.72),transparent_35%),radial-gradient(circle_at_50%_78%,rgba(220,225,240,.72),transparent_42%),linear-gradient(135deg,#f3eff4_0%,#edf4f8_48%,#e5edf6_100%)]" />
-      <div className="pointer-events-none absolute -left-24 top-[48%] -z-10 h-72 w-72 rounded-full border border-white/60 bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.95),rgba(201,234,240,.28)_40%,rgba(238,113,161,.16)_66%,rgba(255,255,255,.1)_75%)] shadow-[inset_-18px_-20px_44px_rgba(125,164,197,.22),inset_10px_8px_28px_rgba(255,255,255,.86)]" />
-      <div className="pointer-events-none absolute -right-28 -top-24 -z-10 h-[28rem] w-[28rem] rounded-full border border-white/60 bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.96),rgba(204,232,240,.24)_42%,rgba(239,118,183,.14)_68%,rgba(255,255,255,.08)_76%)] shadow-[inset_-24px_-28px_60px_rgba(122,160,197,.2),inset_14px_10px_34px_rgba(255,255,255,.9)]" />
-
+    <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
       <div className="relative mx-auto max-w-[112rem]">
         <button
           type="button"

@@ -95,7 +95,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="app-panel fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-blue-100 lg:flex"
+      className="app-panel fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 lg:flex"
     >
       <div className="flex h-full flex-col px-3 py-4">
         {/* Brand */}
@@ -106,7 +106,7 @@ export function Sidebar() {
           <BrandMark size={36} className="rounded-lg shadow-[0_8px_18px_rgba(37,99,235,0.28)]" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-black tracking-tight text-slate-900">
-              Prof<span className="text-blue-600">AI</span>
+              Prof<span className="text-red-600">AI</span>
             </p>
             <p className="truncate text-[10px] font-medium text-slate-500">Universities Abroad</p>
           </div>
@@ -136,17 +136,17 @@ export function Sidebar() {
                       className={cn(
                         'group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold transition-colors',
                         active
-                          ? 'bg-blue-50 text-blue-800'
+                          ? 'bg-red-50 text-red-800'
                           : 'text-slate-600 hover:bg-blue-50/70 hover:text-slate-900',
                       )}
                     >
                       {active ? (
-                        <span className="absolute inset-y-[5px] left-0 w-[3px] rounded-full bg-blue-600" />
+                        <span className="absolute inset-y-[5px] left-0 w-[3px] rounded-full bg-red-600" />
                       ) : null}
                       <Icon
                         className={cn(
                           'h-[18px] w-[18px] shrink-0 transition-colors',
-                          active ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500',
+                          active ? 'text-red-600' : 'text-slate-400 group-hover:text-blue-500',
                         )}
                       />
                       <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>

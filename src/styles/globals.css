@@ -4,9 +4,9 @@
 
 /* Custom CSS Variables */
 :root {
-  --color-primary: 37 99 235;
+  --color-primary: 229 43 50;
   --color-primary-foreground: 255 255 255;
-  --color-secondary: 30 58 138;
+  --color-secondary: 37 99 235;
   --color-secondary-foreground: 255 255 255;
   --color-background: 255 255 255;
   --color-foreground: 0 0 0;
@@ -14,16 +14,16 @@
   --color-muted-foreground: 107 114 128;
   --color-border: 229 231 235;
   --color-input: 255 255 255;
-  --color-ring: 37 99 235;
+  --color-ring: 239 68 68;
   --color-success: 34 197 94;
   --color-warning: 251 146 60;
   --color-error: 239 68 68;
 }
 
 .dark {
-  --color-primary: 59 130 246;
+  --color-primary: 248 113 113;
   --color-primary-foreground: 255 255 255;
-  --color-secondary: 30 58 138;
+  --color-secondary: 59 130 246;
   --color-secondary-foreground: 255 255 255;
   --color-background: 17 24 39;
   --color-foreground: 243 244 246;
@@ -31,7 +31,7 @@
   --color-muted-foreground: 156 163 175;
   --color-border: 55 65 81;
   --color-input: 31 41 55;
-  --color-ring: 59 130 246;
+  --color-ring: 248 113 113;
   --color-success: 34 197 94;
   --color-warning: 251 146 60;
   --color-error: 239 68 68;

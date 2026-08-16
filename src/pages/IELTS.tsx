@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowRight,
   BookOpen,
   BookOpenText,
   CalendarDays,
@@ -12,6 +14,7 @@ import {
   Music2,
   Pencil,
   PenLine,
+  Sparkles,
   Target,
   ExternalLink,
   X,
@@ -279,53 +282,46 @@ export default function IELTS() {
     })
   }
 
-  const scrollToFeatures = () => {
-    document.getElementById('ielts-arena-features')?.scrollIntoView({ behavior: minimalMotion ? 'auto' : 'smooth' })
-  }
-
   return (
     <div className="ielts-arena-page">
-      <div className="ielts-arena-ambient" aria-hidden="true">
-        <span className="ielts-arena-ambient-blue" />
-        <span className="ielts-arena-ambient-peach" />
-        <span className="ielts-arena-ambient-bottom" />
-      </div>
-
       <div className="ielts-arena-shell">
         <motion.header
-          className="ielts-arena-header"
-          aria-label="IELTS Arena navigation"
-          initial={minimalMotion ? false : { opacity: 0, y: -18, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="ielts-arena-hero"
+          initial={minimalMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
-          <button
-            type="button"
-            className="ielts-arena-brand"
-            onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard', fromMock ? { state: { from: mockFrom } } : undefined)}
-            aria-label={fromMock ? 'Back to Mock IELTS' : 'Back to dashboard'}
-          >
-            <span className="ielts-arena-brand-mark"><ArenaBrandMark /></span>
-            <span className="ielts-arena-brand-copy">
-              <strong>IELTS <em>Arena</em></strong>
-              <small>Master all four skills</small>
+          <div className="ielts-arena-hero-topline">
+            <button
+              type="button"
+              className="ielts-arena-hero-back"
+              onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard', fromMock ? { state: { from: mockFrom } } : undefined)}
+            >
+              <ArrowLeft /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
+            </button>
+            <span className="ielts-arena-hero-label">
+              <span className="ielts-arena-hero-mark"><ArenaBrandMark /></span>
+              <Sparkles /> IELTS preparation
             </span>
-          </button>
+          </div>
 
-          <nav className="ielts-arena-nav" aria-label="Main links">
-            <button type="button" className="is-active" onClick={scrollToFeatures}>Features</button>
-            <button type="button" onClick={() => navigate('/premium')}>Pricing</button>
-            <button type="button" onClick={() => navigate('/about')}>About</button>
-            <a href="mailto:support@profai.uz">Contact</a>
-          </nav>
-
-          <button
-            type="button"
-            className="ielts-arena-login"
-            onClick={() => navigate(user ? '/dashboard' : '/login')}
-          >
-            {user ? 'Dashboard' : 'Login'}
-          </button>
+          <div className="ielts-arena-hero-copy">
+            <h1>IELTS <em>Arena</em></h1>
+            <p>Listening + Reading + Writing + Speaking — your path to Band 8+</p>
+            <div className="ielts-arena-hero-actions">
+              <button type="button" className="ielts-arena-hero-primary" onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })}>
+                Start full mock <ArrowRight />
+              </button>
+              <button type="button" className="ielts-arena-hero-secondary" onClick={() => navigate('/analyze-mistakes')}>
+                Review mistakes
+              </button>
+            </div>
+            <div className="ielts-arena-hero-metrics" aria-label="IELTS overview summary">
+              <span><small>Skills</small><strong>4</strong></span>
+              <span><small>Overall band</small><strong>{overallBand > 0 ? formatBand(overallBand) : '—'}</strong></span>
+              <span><small>Completed</small><strong>{completedSkillCount}/4</strong></span>
+            </div>
+          </div>
         </motion.header>
 
         <motion.section

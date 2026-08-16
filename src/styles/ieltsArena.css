@@ -4,11 +4,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   color: #11172b;
-  background:
-    radial-gradient(circle at 10% 14%, rgba(202, 244, 248, 0.88), transparent 30%),
-    radial-gradient(circle at 90% 10%, rgba(255, 229, 198, 0.82), transparent 32%),
-    radial-gradient(circle at 52% 84%, rgba(205, 240, 250, 0.76), transparent 34%),
-    linear-gradient(135deg, #f8fcfd 0%, #f7f6fa 51%, #fff9f1 100%);
+  background: transparent;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -17,21 +13,8 @@
   inset: 0;
   content: "";
   pointer-events: none;
-  opacity: 0.22;
-  background-image: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.82) 51%, transparent 66%);
+  opacity: 0;
 }
-
-.ielts-arena-ambient,
-.ielts-arena-ambient span {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.ielts-arena-ambient span { opacity: .9; }
-.ielts-arena-ambient-blue { inset: 2% auto auto 0 !important; width: 38rem; height: 34rem; background: radial-gradient(circle, rgba(178,235,244,.64), transparent 70%); }
-.ielts-arena-ambient-peach { inset: 0 0 auto auto !important; width: 38rem; height: 38rem; background: radial-gradient(circle, rgba(255,215,177,.6), transparent 70%); }
-.ielts-arena-ambient-bottom { inset: auto 22% -16% 20% !important; height: 30rem; background: radial-gradient(circle, rgba(176,229,244,.57), transparent 70%); }
 
 .ielts-arena-shell {
   position: relative;
@@ -40,6 +23,50 @@
   margin: 0 auto;
   padding: 24px 0 34px;
 }
+
+.ielts-arena-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 330px;
+  padding: 22px 28px 30px;
+  border: 1px solid rgba(255,255,255,.94);
+  border-radius: 42px;
+  background:
+    radial-gradient(circle at 2% 10%, rgba(239,68,68,.12), transparent 28%),
+    radial-gradient(circle at 98% 12%, rgba(37,99,235,.17), transparent 32%),
+    linear-gradient(135deg, rgba(255,255,255,.95), rgba(245,248,253,.9));
+  box-shadow: 0 28px 68px rgba(30,41,59,.1), inset 0 1px 0 #fff;
+}
+
+.ielts-arena-hero::after {
+  content: none;
+}
+
+.ielts-arena-hero-topline { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ielts-arena-hero-back,
+.ielts-arena-hero-label { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 15px; padding: 0 15px; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.ielts-arena-hero-back { border: 1px solid #dbeafe; color: #334155; background: rgba(255,255,255,.9); box-shadow: 0 8px 20px rgba(30,41,59,.07); }
+.ielts-arena-hero-back svg { width: 15px; height: 15px; color: #2563eb; }
+.ielts-arena-hero-label { border: 1px solid #fee2e2; color: #c81e27; background: rgba(255,255,255,.78); }
+.ielts-arena-hero-label > svg { width: 14px; height: 14px; }
+.ielts-arena-hero-mark { display: grid; width: 27px; height: 27px; place-items: center; }
+.ielts-arena-hero-mark svg { width: 27px; height: 24px; overflow: visible; fill: #dc2626; }
+.ielts-arena-hero-mark .ielts-arena-tassel { fill: #dc2626; stroke: #dc2626; stroke-width: 5; }
+.ielts-arena-hero-copy { position: relative; z-index: 1; display: grid; justify-items: center; padding-top: 22px; text-align: center; }
+.ielts-arena-hero-copy h1 { margin: 0; color: #11131d; font-size: clamp(3rem, 6vw, 5.6rem); font-weight: 800; line-height: .95; letter-spacing: -.065em; }
+.ielts-arena-hero-copy h1 em { color: #dc2626; font-style: normal; }
+.ielts-arena-hero-copy > p { margin: 14px 0 0; color: #273248; font-size: clamp(1rem, 2vw, 1.65rem); font-weight: 550; letter-spacing: -.03em; }
+.ielts-arena-hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 22px; }
+.ielts-arena-hero-primary,
+.ielts-arena-hero-secondary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 9px; border-radius: 999px; padding: 0 24px; font-size: 13px; font-weight: 800; }
+.ielts-arena-hero-primary { border: 1px solid #dc2626; color: #fff; background: linear-gradient(135deg,#ef3b42,#c91f27); box-shadow: 0 13px 28px rgba(220,38,38,.25), inset 0 1px 0 rgba(255,255,255,.45); }
+.ielts-arena-hero-primary svg { width: 16px; height: 16px; }
+.ielts-arena-hero-secondary { border: 1px solid #bfdbfe; color: #1d4ed8; background: #fff; }
+.ielts-arena-hero-metrics { display: flex; align-items: stretch; margin-top: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.94); border-radius: 20px; background: rgba(255,255,255,.72); box-shadow: 0 10px 26px rgba(30,41,59,.07); }
+.ielts-arena-hero-metrics span { display: grid; min-width: 112px; gap: 3px; padding: 10px 18px; }
+.ielts-arena-hero-metrics span + span { border-left: 1px solid #e2e8f0; }
+.ielts-arena-hero-metrics small { color: #64748b; font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.ielts-arena-hero-metrics strong { color: #111827; font-size: 17px; font-weight: 800; }
 
 .ielts-arena-header {
   position: relative;
@@ -243,9 +270,38 @@
   border-bottom-color: rgba(255, 255, 255, 0.96);
   background: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,.12));
   box-shadow: 0 24px 48px rgba(62, 72, 90, 0.1), 0 4px 12px rgba(62,72,90,.035), inset 0 1px 0 rgba(255,255,255,.92), inset 0 -1px 0 rgba(148,163,184,.08);
-  backdrop-filter: blur(24px) saturate(142%);
-  -webkit-backdrop-filter: blur(24px) saturate(142%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   contain: paint;
+}
+
+.ielts-arena-page .ielts-arena-countdown,
+.ielts-arena-page .ielts-arena-countdown-unit,
+.ielts-arena-page .ielts-arena-date-editor {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.ielts-arena-page .ielts-arena-countdown::before {
+  animation: none;
+  opacity: 0;
+}
+
+@media (max-width: 720px) {
+  .ielts-arena-shell { width: calc(100% - 24px); padding-top: 12px; }
+  .ielts-arena-hero { min-height: 0; padding: 14px 15px 22px; border-radius: 28px; }
+  .ielts-arena-hero-topline { align-items: stretch; }
+  .ielts-arena-hero-back,
+  .ielts-arena-hero-label { min-height: 40px; padding-inline: 11px; font-size: 9px; letter-spacing: .07em; }
+  .ielts-arena-hero-label { max-width: 52%; }
+  .ielts-arena-hero-copy { padding-top: 24px; }
+  .ielts-arena-hero-copy h1 { font-size: clamp(2.7rem, 15vw, 4rem); }
+  .ielts-arena-hero-copy > p { max-width: 28rem; font-size: 1rem; line-height: 1.55; }
+  .ielts-arena-hero-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
+  .ielts-arena-hero-primary,
+  .ielts-arena-hero-secondary { width: 100%; }
+  .ielts-arena-hero-metrics { width: 100%; }
+  .ielts-arena-hero-metrics span { min-width: 0; flex: 1; padding-inline: 8px; }
 }
 
 .ielts-arena-glass::after {

@@ -30,9 +30,11 @@ export class ApiError extends Error {
   }
 }
 
-let refreshInFlight: Promise<boolean> | null = null
+type RefreshResult = 'refreshed' | 'rejected' | 'unavailable'
 
-async function ensureRefreshed(refreshToken: string): Promise<boolean> {
+let refreshInFlight: Promise<RefreshResult> | null = null
+
+async function ensureRefreshed(refreshToken: string): Promise<RefreshResult> {
   if (!refreshInFlight) {
     refreshInFlight = refreshSession(refreshToken).finally(() => {
       refreshInFlight = null
@@ -65,13 +67,20 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (response.status === 401 && auth) {
     if (retryOnUnauthorized && authState.refreshToken) {
-      const refreshed = await ensureRefreshed(authState.refreshToken)
+      const refreshResult = await ensureRefreshed(authState.refreshToken)
 
-      if (refreshed) {
+      if (refreshResult === 'refreshed') {
         return request<T>(path, {
           ...options,
           retryOnUnauthorized: false,
         })
+      }
+
+      // A temporary network/backend failure must never destroy a valid local
+      // session. The next request can retry the refresh once connectivity is
+      // restored; only an explicit token rejection is a real logout signal.
+      if (refreshResult === 'unavailable') {
+        throw new Error('Backend is temporarily unavailable. Your session is saved and will retry automatically.')
       }
     }
 
@@ -91,7 +100,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json() as Promise<T>
 }
 
-async function refreshSession(refreshToken: string): Promise<boolean> {
+async function refreshSession(refreshToken: string): Promise<RefreshResult> {
   try {
     const payload = await request<AuthResponse>('/auth/refresh', {
       method: 'POST',
@@ -101,9 +110,12 @@ async function refreshSession(refreshToken: string): Promise<boolean> {
     })
 
     useAuthStore.getState().setSession(payload)
-    return true
-  } catch {
-    return false
+    return 'refreshed'
+  } catch (error) {
+    if (error instanceof ApiError && [400, 401, 403].includes(error.status)) {
+      return 'rejected'
+    }
+    return 'unavailable'
   }
 }
 
@@ -118,4 +130,3 @@ export const apiClient = {
   delete: <T>(path: string, options: Omit<RequestOptions, 'method'> = {}) =>
     request<T>(path, { ...options, method: 'DELETE' }),
 }
-

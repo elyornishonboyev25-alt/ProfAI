@@ -12,6 +12,7 @@ import {
   Headset,
   Home,
   Library,
+  LogIn,
   Sparkles,
   Trophy,
   Users,
@@ -160,47 +161,64 @@ export function Sidebar() {
 
         {/* Account is a stable bottom anchor instead of another scrolling item. */}
         <div className="mt-3 shrink-0 border-t border-blue-100 pt-3">
-          {!premium ? (
-            <button
-              type="button"
-              onClick={() => navigate('/premium')}
-              className="mb-2 flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-left text-[11px] font-bold text-amber-800 transition hover:bg-amber-100"
-            >
-              <span className="inline-flex items-center gap-1.5">
-                <Crown className="h-3.5 w-3.5" />
-                Upgrade to Premium
-              </span>
-              <Sparkles className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => navigate('/account')}
-            aria-current={location.pathname.startsWith('/account') ? 'page' : undefined}
-            className={cn(
-              'group flex w-full items-center gap-2.5 rounded-2xl border p-2.5 text-left transition',
-              location.pathname.startsWith('/account')
-                ? 'border-blue-200 bg-blue-50 shadow-[0_10px_24px_rgba(37,99,235,0.1)]'
-                : 'border-slate-100 bg-white/90 hover:border-blue-200 hover:bg-blue-50/70',
-            )}
-          >
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(37,99,235,0.25)]">
-              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
-              {premium ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white">
-                  <Crown className="h-2.5 w-2.5" />
-                </span>
+          {user ? (
+            <>
+              {!premium ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/premium')}
+                  className="mb-2 flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-left text-[11px] font-bold text-amber-800 transition hover:bg-amber-100"
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5" />
+                    Upgrade to Premium
+                  </span>
+                  <Sparkles className="h-3.5 w-3.5" />
+                </button>
               ) : null}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-black text-slate-900">{user?.fullName || 'My Profile'}</span>
-              <span className="block truncate text-[10px] font-semibold text-slate-500">
-                Level {user?.level ?? 1} · {(user?.xp ?? 0).toLocaleString('en-US')} XP
-              </span>
-            </span>
-            <UserRound className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
-          </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/account')}
+                aria-current={location.pathname.startsWith('/account') ? 'page' : undefined}
+                className={cn(
+                  'group flex w-full items-center gap-2.5 rounded-2xl border p-2.5 text-left transition',
+                  location.pathname.startsWith('/account')
+                    ? 'border-blue-200 bg-blue-50 shadow-[0_10px_24px_rgba(37,99,235,0.1)]'
+                    : 'border-slate-100 bg-white/90 hover:border-blue-200 hover:bg-blue-50/70',
+                )}
+              >
+                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(37,99,235,0.25)]">
+                  {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
+                  {premium ? (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white">
+                      <Crown className="h-2.5 w-2.5" />
+                    </span>
+                  ) : null}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-black text-slate-900">{user.fullName || 'My Profile'}</span>
+                  <span className="block truncate text-[10px] font-semibold text-slate-500">
+                    Level {user.level ?? 1} · {(user.xp ?? 0).toLocaleString('en-US')} XP
+                  </span>
+                </span>
+                <UserRound className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
+              </button>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-red-100 bg-white/95 p-3 shadow-[0_10px_24px_rgba(30,41,59,0.06)]">
+              <p className="text-[12px] font-black text-slate-900">Save your progress</p>
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">Sign in to sync scores, streaks and practice history.</p>
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="mt-2.5 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-700 px-3 text-[11px] font-black text-white shadow-[0_8px_18px_rgba(220,38,38,0.22)]"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Sign in
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </aside>

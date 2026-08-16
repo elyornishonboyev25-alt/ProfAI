@@ -138,12 +138,13 @@ function App() {
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
+  const hydrated = useAuthStore((state: AuthState) => state.hydrated)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
   const isLanding = pathname === '/' || pathname === '/dashboard' || pathname === '/about'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
-  const isGuestLanding = pathname === '/' && !user
+  const isGuestLanding = pathname === '/' && hydrated && !user
   const usesStickyWorkspaceContent = pathname === '/admission/universities'
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isProfileStandalone = pathname === '/profile'
@@ -181,15 +182,19 @@ function App() {
     (pathname.startsWith('/admission/lessons/') && pathParts.length > 2) ||
     (pathname.startsWith('/admission/universities/') && pathParts.length > 2)
 
-  // Authenticated pages use one persistent workspace sidebar. The old dashboard
-  // top bar duplicated the same destinations and made the layout jump between
-  // sections, so it is intentionally kept only out of the app workspace.
-  // `/` renders the authenticated dashboard too. Keep it inside the same
-  // workspace shell so opening the site never flashes the standalone version.
+  const isPublicStandalone =
+    isAuthPage ||
+    isGuestLanding ||
+    pathname === '/premium' ||
+    pathname.startsWith('/shared/results/') ||
+    pathname.startsWith('/speaker/')
+
+  // The workspace shell is route-owned, not auth-owned. This keeps its geometry
+  // stable if a request is refreshing the session or if a session expires while
+  // the learner is already on a workspace page. Public and focused experiences
+  // intentionally keep their standalone layouts.
   const showSidebar =
-    Boolean(user) &&
-    !isAuthPage &&
-    !isGuestLanding &&
+    !isPublicStandalone &&
     !isTestMode &&
     !isFocusContentMode
   const showMobileNav = Boolean(user) && showSidebar
@@ -218,6 +223,22 @@ function App() {
     }, 60000)
     return () => window.clearInterval(id)
   }, [user?.id])
+
+  // Persisted auth hydrates asynchronously. Rendering a route before that
+  // completes briefly treats a signed-in learner as a guest, removes the
+  // sidebar and expands the page to full width. Keep one neutral shell visible
+  // until the session state is authoritative so that layout can never flash or
+  // settle into the wrong mode.
+  if (!hydrated) {
+    return (
+      <div className="app-shell relative min-h-screen text-[#1E293B]">
+        <AnimatedBackground />
+        <div className="relative z-10 flex min-h-screen items-center justify-center">
+          <BrandPageLoader />
+        </div>
+      </div>
+    )
+  }
 
   // New accounts enter onboarding once. Completing the review or skipping its
   // final step persists the flag, so learners can edit their profile later.

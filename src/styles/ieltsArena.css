@@ -123,24 +123,77 @@
 
 .ielts-arena-brand-mark {
   display: grid;
-  width: 76px;
-  height: 60px;
+  width: 86px;
+  height: 68px;
   place-items: center;
   color: #d92a2a;
   filter: drop-shadow(0 11px 9px rgba(219, 36, 36, 0.25));
-  animation: ielts-arena-brand-settle .7s .16s cubic-bezier(.22,1,.36,1) both;
+  animation:
+    ielts-arena-brand-settle .82s .12s cubic-bezier(.22,1,.36,1) both,
+    ielts-arena-brand-float 3.8s 1.05s ease-in-out infinite;
 }
 
-.ielts-arena-brand-mark svg { width: 73px; height: 63px; overflow: visible; fill: #d92626; }
+.ielts-arena-brand-mark svg { width: 83px; height: 71px; overflow: visible; fill: #d92626; }
 .ielts-arena-brand-mark .ielts-arena-tassel { fill: #d92626; stroke: #d92626; stroke-width: 5; stroke-linecap: round; }
 .ielts-arena-brand-copy { display: flex; flex-direction: column; margin-left: 9px; }
-.ielts-arena-brand-copy strong { font-size: 34px; line-height: 1; letter-spacing: -0.045em; font-style: normal; font-weight: 750; white-space: nowrap; }
+.ielts-arena-brand-copy strong { font-size: 29px; line-height: 1; letter-spacing: -0.045em; font-style: normal; font-weight: 750; white-space: nowrap; }
 .ielts-arena-brand-copy em { color: #dd2b2e; font-style: normal; }
 .ielts-arena-brand-copy small { margin-top: 4px; color: #4b5365; font-size: 17px; line-height: 1; letter-spacing: -0.035em; }
 
 @keyframes ielts-arena-brand-settle {
-  from { opacity: .25; transform: translate3d(-9px,5px,0) rotate(-4deg) scale(.92); }
-  to { opacity: 1; transform: translate3d(0,0,0) rotate(0) scale(1); }
+  from { opacity: .2; filter: blur(13px) drop-shadow(0 2px 2px rgba(219,36,36,0)); transform: translate3d(-9px,5px,0) rotate(-4deg) scale(.88); }
+  to { opacity: 1; filter: blur(0) drop-shadow(0 11px 9px rgba(219,36,36,.25)); transform: translate3d(0,0,0) rotate(0) scale(1); }
+}
+
+@keyframes ielts-arena-brand-float {
+  0%, 100% { transform: translate3d(0,0,0) rotate(0); }
+  50% { transform: translate3d(0,-3px,0) rotate(1.2deg); }
+}
+
+/* A soft, one-time blur reveal keeps every text group readable after it enters. */
+.ielts-arena-brand-copy,
+.ielts-arena-nav > *,
+.ielts-arena-login,
+.ielts-arena-countdown-date > div,
+.ielts-arena-date-edit,
+.ielts-arena-countdown-unit > span,
+.ielts-arena-countdown-progress > div,
+.ielts-arena-card-heading > h2,
+.ielts-arena-skill-description,
+.ielts-arena-card-action,
+.ielts-arena-overview > h1,
+.ielts-arena-overall-band > div,
+.ielts-arena-bar-item > span,
+.ielts-arena-bar-item > small,
+.ielts-arena-recommendation > h2,
+.ielts-arena-recommendation-title > strong,
+.ielts-arena-reading-next > p,
+.ielts-arena-recommendation-row > p,
+.ielts-arena-full-mock > span:last-child {
+  animation: ielts-arena-text-blur-in .82s cubic-bezier(.22,1,.36,1) both;
+}
+
+.ielts-arena-nav > *:nth-child(2),
+.ielts-arena-countdown-date > div,
+.ielts-arena-skill-card:nth-child(2) .ielts-arena-card-heading > h2,
+.ielts-arena-skill-card:nth-child(2) .ielts-arena-skill-description,
+.ielts-arena-skill-card:nth-child(2) .ielts-arena-card-action { animation-delay: .08s; }
+
+.ielts-arena-nav > *:nth-child(3),
+.ielts-arena-login,
+.ielts-arena-countdown-progress > div,
+.ielts-arena-skill-card:nth-child(3) .ielts-arena-card-heading > h2,
+.ielts-arena-skill-card:nth-child(3) .ielts-arena-skill-description,
+.ielts-arena-skill-card:nth-child(3) .ielts-arena-card-action { animation-delay: .14s; }
+
+.ielts-arena-nav > *:nth-child(4),
+.ielts-arena-skill-card:nth-child(4) .ielts-arena-card-heading > h2,
+.ielts-arena-skill-card:nth-child(4) .ielts-arena-skill-description,
+.ielts-arena-skill-card:nth-child(4) .ielts-arena-card-action { animation-delay: .2s; }
+
+@keyframes ielts-arena-text-blur-in {
+  from { opacity: 0; filter: blur(12px); }
+  to { opacity: 1; filter: blur(0); }
 }
 
 .ielts-arena-nav { display: flex; align-items: center; gap: 3px; }
@@ -636,9 +689,9 @@
   .ielts-arena-shell { width: 92%; padding-top: 20px; }
   .ielts-arena-header { grid-template-columns: minmax(300px, 1fr) auto minmax(130px, 1fr); min-height: 84px; }
   .ielts-arena-brand { min-height: 62px; padding-right: 15px; }
-  .ielts-arena-brand-mark { width: 65px; height: 54px; }
-  .ielts-arena-brand-mark svg { width: 63px; height: 56px; }
-  .ielts-arena-brand-copy strong { font-size: 30px; }
+  .ielts-arena-brand-mark { width: 74px; height: 62px; }
+  .ielts-arena-brand-mark svg { width: 72px; height: 64px; }
+  .ielts-arena-brand-copy strong { font-size: 26px; }
   .ielts-arena-brand-copy small { font-size: 15px; }
   .ielts-arena-nav button, .ielts-arena-nav a { min-height: 48px; padding: 0 17px; font-size: 18px; }
   .ielts-arena-login { min-width: 120px; min-height: 54px; font-size: 18px; }
@@ -659,9 +712,9 @@
   .ielts-arena-shell { padding-top: 12px; padding-bottom: 18px; }
   .ielts-arena-header { min-height: 76px; }
   .ielts-arena-brand { min-height: 56px; }
-  .ielts-arena-brand-mark { width: 58px; height: 48px; }
-  .ielts-arena-brand-mark svg { width: 56px; height: 50px; }
-  .ielts-arena-brand-copy strong { font-size: 27px; }
+  .ielts-arena-brand-mark { width: 66px; height: 55px; }
+  .ielts-arena-brand-mark svg { width: 64px; height: 57px; }
+  .ielts-arena-brand-copy strong { font-size: 24px; }
   .ielts-arena-brand-copy small { font-size: 14px; }
   .ielts-arena-countdown { min-height: 84px; margin-top: 10px; padding-block: 9px; }
   .ielts-arena-countdown-unit { min-height: 56px; }
@@ -699,10 +752,10 @@
   .ielts-arena-page { width: 100%; max-width: 100vw; }
   .ielts-arena-shell { width: min(92%, 560px); padding: 20px 0 38px; }
   .ielts-arena-header { width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; min-height: 82px; padding: 11px 13px 11px 16px; overflow: hidden; border-radius: 30px; }
-  .ielts-arena-brand-mark { width: 49px; height: 49px; }
-  .ielts-arena-brand-mark svg { width: 48px; height: 48px; }
+  .ielts-arena-brand-mark { width: 55px; height: 52px; }
+  .ielts-arena-brand-mark svg { width: 54px; height: 52px; }
   .ielts-arena-brand-copy { margin-left: 7px; }
-  .ielts-arena-brand-copy strong { font-size: 23px; }
+  .ielts-arena-brand-copy strong { font-size: 20px; }
   .ielts-arena-brand-copy small { margin-top: 4px; font-size: 13px; }
   .ielts-arena-login { min-width: 82px; min-height: 49px; padding: 0 14px; border-width: 2px; font-size: 15px; }
   .ielts-arena-countdown { display: flex; width: 100%; min-height: 0; flex-direction: column; align-items: stretch; gap: 14px; margin-top: 16px; padding: 16px; border-radius: 27px; }
@@ -756,5 +809,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ielts-arena-page *, .ielts-arena-page *::before, .ielts-arena-page *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  .ielts-arena-page *, .ielts-arena-page *::before, .ielts-arena-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

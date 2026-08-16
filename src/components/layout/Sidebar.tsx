@@ -10,7 +10,6 @@ import {
   GraduationCap,
   Headphones,
   Home,
-  Library,
   LogIn,
   Sparkles,
   Trophy,
@@ -41,7 +40,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
       { id: 'ai-tutor', label: 'AI Tutor', icon: Sparkles, path: '/ai-tutor' },
-      { id: 'tests', label: 'Test Library', icon: Library, path: '/tests' },
       { id: 'profile', label: 'Performance', icon: BarChart3, path: '/profile' },
       { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     ],

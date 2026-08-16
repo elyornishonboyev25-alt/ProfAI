@@ -14,6 +14,7 @@ import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import { takeFlashToast } from '@/utils/authFlash'
 import type { AuthUser } from '@/types/platform'
+import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 
 const loginSchema = z.object({
   email: z
@@ -48,6 +49,7 @@ export default function Login() {
   // inline "create an account" call-to-action below. `email` is omitted for the
   // Google path (we don't decode the token client-side).
   const [notFound, setNotFound] = useState<{ email?: string } | null>(null)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
 
   // Show the one-shot toast stashed before a hard redirect (e.g. after logout).
   useEffect(() => {
@@ -59,15 +61,17 @@ export default function Login() {
     const state = location.state as { from?: { pathname?: string } } | null
     return state?.from?.pathname ?? '/dashboard'
   }, [location.state])
+  const initialEmail = (location.state as { email?: string } | null)?.email ?? ''
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      email: initialEmail,
       password: '',
     },
   })
@@ -271,9 +275,10 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1 block text-[13px] font-semibold text-slate-700">
-                Password
-              </label>
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <label htmlFor="password" className="text-[13px] font-semibold text-slate-700">Password</label>
+                <button type="button" onClick={() => setRecoveryOpen(true)} className="text-[11px] font-bold text-blue-600 transition hover:text-blue-800">Forgot password?</button>
+              </div>
               <div className="group relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
                 <input
@@ -356,6 +361,7 @@ export default function Login() {
         </div>
         </div>
       </motion.div>
+      <PasswordRecoveryDialog open={recoveryOpen} initialEmail={getValues('email')} onClose={() => setRecoveryOpen(false)} />
     </div>
   )
 }

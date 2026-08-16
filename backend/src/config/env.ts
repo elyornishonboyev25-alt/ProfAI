@@ -21,6 +21,8 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
   GOOGLE_CLIENT_ID: z.string().default(''),
   VITE_GOOGLE_CLIENT_ID: z.string().default(''),
+  RESEND_API_KEY: z.string().default(''),
+  AUTH_EMAIL_FROM: z.string().default('ProfAI <accounts@profai.uz>'),
   HF_ACCESS_TOKEN: z.string().default(''),
   HF_API_BASE: z.string().url().default('https://router.huggingface.co/v1'),
   HF_MODEL: z.string().default('Qwen/Qwen2.5-7B-Instruct'),

@@ -28,7 +28,6 @@ const AchievementCelebration = lazy(() => import('@/components/achievements/Achi
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
-const Tests = lazy(() => import('@/pages/Tests'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
@@ -183,6 +182,8 @@ function App() {
   const pathParts = pathname.split('/').filter(Boolean)
   const isFocusContentMode =
     pathname === '/onboarding' ||
+    pathname.startsWith('/sat/') ||
+    pathname.startsWith('/ielts/') ||
     pathname.startsWith('/ielts/speaking/test/') ||
     pathname.startsWith('/ielts/writing/test/') ||
     (pathname.startsWith('/articles/') && pathParts.length > 1) ||
@@ -309,7 +310,7 @@ function App() {
                       <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/dashboard" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
                       <Route path="/about" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
-                      <Route path="/tests" element={<AnimatedRoute><Tests /></AnimatedRoute>} />
+                      <Route path="/tests" element={<Navigate to="/ielts" replace />} />
                       <Route
                         path="/tests/:id/attempt"
                         element={
@@ -611,13 +612,7 @@ function App() {
                         path="/articles"
                         element={
                           <AnimatedRoute>
-                            <PremiumOnly
-                              title="Reading Library is Premium"
-                              description="A curated library of articles with a professional reader and AI vocabulary help is part of ProfAI Premium."
-                              perks={['Curated reading library', 'Highlight, notes & contrast modes', 'Ask-AI vocabulary help']}
-                            >
-                              <Articles />
-                            </PremiumOnly>
+                            <Articles />
                           </AnimatedRoute>
                         }
                       />
@@ -625,13 +620,7 @@ function App() {
                         path="/articles/:slug"
                         element={
                           <AnimatedRoute>
-                            <PremiumOnly
-                              title="Reading Library is Premium"
-                              description="Open the full professional reader with AI vocabulary help on ProfAI Premium."
-                              perks={['Professional reader', 'Highlight & notes', 'Ask-AI vocabulary help']}
-                            >
-                              <ArticleReader />
-                            </PremiumOnly>
+                            <ArticleReader />
                           </AnimatedRoute>
                         }
                       />
@@ -639,13 +628,7 @@ function App() {
                         path="/shadowing-lab"
                         element={
                           <AnimatedRoute>
-                            <PremiumOnly
-                              title="Shadowing Lab is Premium"
-                              description="Turn any English YouTube video into line-by-line shadowing practice on ProfAI Premium."
-                              perks={['Paste any English YouTube link', 'AI splits it into shadowing lines', 'Loop, slow down, record & compare']}
-                            >
-                              <ShadowingLab />
-                            </PremiumOnly>
+                            <ShadowingLab />
                           </AnimatedRoute>
                         }
                       />
@@ -653,13 +636,7 @@ function App() {
                         path="/podcast"
                         element={
                           <AnimatedRoute>
-                            <PremiumOnly
-                              title="English Podcasts are Premium"
-                              description="Build listening with subtitled English podcasts, speed control and A-B repeat on ProfAI Premium."
-                              perks={['English captions', 'Adjustable playback speed', 'A-B loop repeat']}
-                            >
-                              <Podcast />
-                            </PremiumOnly>
+                            <Podcast />
                           </AnimatedRoute>
                         }
                       />

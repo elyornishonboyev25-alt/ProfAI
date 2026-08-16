@@ -28,13 +28,13 @@ import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
 import {
-  generateWeeklyPlan,
   loadOnboardingProfile,
   saveOnboardingProfile,
   saveWeeklyPlan,
   type ExamTarget,
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
+import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -332,7 +332,7 @@ export default function Onboarding() {
         createdAt: new Date().toISOString(),
       }
 
-      const plan = generateWeeklyPlan(profile, new Date())
+      const plan = await generateAdaptiveWeeklyPlan(profile, undefined, new Date())
       saveOnboardingProfile(profile, user?.id)
       saveWeeklyPlan(plan, user?.id)
       saveToAccountProfile(profile.firstName, profile.lastName, targetExam)

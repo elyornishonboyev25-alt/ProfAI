@@ -11,6 +11,7 @@ export type SkillTrackKey =
   | 'IELTS_SPEAKING'
   | 'SAT_MATH'
   | 'SAT_ENGLISH'
+  | 'SAT_OVERALL'
 
 export type ExamTargetKey = 'IELTS' | 'SAT' | 'BOTH'
 

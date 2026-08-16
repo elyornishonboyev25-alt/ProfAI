@@ -23,7 +23,6 @@ import { useRegisterModalStore, type RegisterModalState } from '@/store/register
 import {
   addCustomTaskToDay,
   ensureRollingWeek,
-  generateWeeklyPlan,
   loadActivityLog,
   loadOnboardingProfile,
   loadWeeklyPlan,
@@ -35,6 +34,9 @@ import {
   type OnboardingProfile,
   type WeeklyPlan,
 } from '@/utils/weeklyPlanner'
+import { apiClient } from '@/lib/apiClient'
+import type { ProfileOverview } from '@/types/platform'
+import { buildPlannerPerformanceContext, generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
 
 function toDateISO(date: Date) {
   const year = date.getFullYear()
@@ -174,11 +176,12 @@ export default function WeeklyPlannerLab() {
   const planSectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
+    let cancelled = false
     if (!user) {
       setProfile(null)
       setPlan(null)
       setShowOnboarding(false)
-      return
+      return () => { cancelled = true }
     }
 
     const storedProfile = loadOnboardingProfile(user?.id)
@@ -189,10 +192,11 @@ export default function WeeklyPlannerLab() {
       setProfile(null)
       setPlan(null)
       setShowOnboarding(false)
-      return
+      return () => { cancelled = true }
     }
     const storedPlan = loadWeeklyPlan(user?.id)
     const rollingPlan = ensureRollingWeek(storedProfile, storedPlan, new Date())
+    const needsMondayRefresh = !storedPlan || storedPlan.weekStartISO !== rollingPlan.weekStartISO
     const defaultDayId = resolveDefaultDayId(rollingPlan)
     setProfile(storedProfile)
     setPlan(rollingPlan)
@@ -200,6 +204,22 @@ export default function WeeklyPlannerLab() {
     setCustomDayId(defaultDayId ?? '')
     saveWeeklyPlan(rollingPlan, user?.id)
     setShowOnboarding(false)
+
+    if (needsMondayRefresh) {
+      void (async () => {
+        const overview = await apiClient.get<ProfileOverview>('/profile/overview').catch(() => null)
+        const performance = buildPlannerPerformanceContext(overview, storedPlan, loadActivityLog(user.id))
+        const adaptivePlan = await generateAdaptiveWeeklyPlan(storedProfile, performance, new Date())
+        if (cancelled) return
+        saveWeeklyPlan(adaptivePlan, user.id)
+        setPlan(adaptivePlan)
+        const adaptiveDefaultDayId = resolveDefaultDayId(adaptivePlan)
+        setSelectedDayId(adaptiveDefaultDayId)
+        setCustomDayId(adaptiveDefaultDayId ?? '')
+      })()
+    }
+
+    return () => { cancelled = true }
   }, [user?.id])
 
   useEffect(() => {
@@ -265,7 +285,7 @@ export default function WeeklyPlannerLab() {
 
     setGenerationStage('generating')
 
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       const nextProfile: OnboardingProfile = {
         firstName: safeFirst,
         lastName: safeLast,
@@ -275,7 +295,7 @@ export default function WeeklyPlannerLab() {
         createdAt: new Date().toISOString(),
       }
 
-      const nextPlan = generateWeeklyPlan(nextProfile, new Date())
+      const nextPlan = await generateAdaptiveWeeklyPlan(nextProfile, undefined, new Date())
       const defaultDayId = resolveDefaultDayId(nextPlan)
 
       saveOnboardingProfile(nextProfile, user?.id)

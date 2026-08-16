@@ -11,7 +11,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import SkillBadge from './SkillBadge'
-import { TIER_NAME, TRACK_META, formatBand } from './badgeMeta'
+import { TIER_NAME, TRACK_META, formatAchievementScore } from './badgeMeta'
 
 // Owner-facing badge manager: shows every earned badge and lets the learner pin the
 // ones they want on their public profile (or remove an old, lower one). Falls back to
@@ -108,7 +108,7 @@ export default function BadgeShelf() {
         </span>
         <p className="mt-3 text-sm font-bold text-slate-700">No badges yet</p>
         <p className="mt-1 max-w-xs text-xs text-slate-500">
-          Finish an IELTS skill or SAT section in <strong>mock / exam mode</strong> with band 6.0+ to earn your first professional badge.
+          Reach IELTS band 7.0+ or score 1400+ in a complete Digital SAT mock to earn your first professional badge.
         </p>
       </div>
     )
@@ -138,7 +138,7 @@ export default function BadgeShelf() {
             <SkillBadge track={badge.track} band={badge.band} size={104} showBand />
             <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[badge.track]?.short}</p>
             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              {TIER_NAME[badge.tier]} · {formatBand(badge.band)}
+              {TIER_NAME[badge.tier]} · {formatAchievementScore(badge.track, badge.band)}
             </p>
 
             <div className="mt-2 flex items-center gap-1.5">

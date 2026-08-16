@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,6 +25,8 @@ import {
 } from '@/features/sat/practiceTest4'
 import type { SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
+import { useAuthStore } from '@/store/authStore'
+import { useBadgeStore } from '@/store/badgeStore'
 
 type ReviewFilter = 'all' | 'correct' | 'incorrect' | 'unanswered' | 'flagged'
 
@@ -127,6 +129,8 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
 
 export default function SATReview({ attempt, test, onStartAgain }: Props) {
   const navigate = useNavigate()
+  const userId = useAuthStore((state) => state.user?.id ?? null)
+  const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const modules = test.modules
   const report = useMemo(() => scoreSATModules(modules, attempt.answers), [attempt.answers, modules])
   const allQuestions = useMemo(() => modules.flatMap((module) => module.questions), [modules])
@@ -177,6 +181,17 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
   const displayedMidpoint = Math.round((displayedRange[0] + displayedRange[1]) / 2)
   const weakest = domainStats[0]
   const elapsed = formatDuration(Math.max(0, ((attempt.submittedAt ?? attempt.updatedAt) - attempt.startedAt) / 1000))
+
+  useEffect(() => {
+    if (onlySection || displayedMidpoint < 1400) return
+    awardBadge({
+      userId,
+      track: 'SAT_OVERALL',
+      band: displayedMidpoint,
+      mode: attempt.mode,
+      source: 'mock',
+    })
+  }, [attempt.mode, awardBadge, displayedMidpoint, onlySection, userId])
   const headline = displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (

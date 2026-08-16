@@ -27,7 +27,7 @@ import { fetchPublicProfile, type PublicProfilePayload } from '@/lib/profileApi'
 import { getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 import SkillBadge from '@/components/achievements/SkillBadge'
-import { TIER_NAME, TRACK_META, formatBand } from '@/components/achievements/badgeMeta'
+import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
 
 function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
   return (
@@ -251,7 +251,7 @@ export default function PublicProfile() {
                 <div key={b.id} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-3">
                   <SkillBadge track={b.track} band={b.band} size={104} showBand />
                   <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[b.track]?.short}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{TIER_NAME[b.tier]} · {formatBand(b.band)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{TIER_NAME[b.tier]} · {formatAchievementScore(b.track, b.band)}</p>
                 </div>
               ))}
             </div>

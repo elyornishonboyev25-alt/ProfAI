@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckCircle2, Loader2, Lock, Mail, ShieldCheck, Sparkles, X } from 'lucide-react'
-import { apiClient } from '@/lib/apiClient'
+import { CheckCircle2, KeyRound, Loader2, Lock, Mail, RefreshCw, ShieldCheck, Sparkles, X } from 'lucide-react'
+import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useRegisterModalStore, type RegisterModalState } from '@/store/registerModalStore'
@@ -34,6 +35,12 @@ type AuthSessionPayload = {
   refreshToken: string
 }
 
+type VerificationResponse = {
+  message: string
+  expiresInSec: number
+  developmentCode?: string
+}
+
 export default function RegisterModal() {
   const navigate = useNavigate()
   const setSession = useAuthStore((state: AuthState) => state.setSession)
@@ -41,11 +48,15 @@ export default function RegisterModal() {
   const isOpen = useRegisterModalStore((state: RegisterModalState) => state.isOpen)
   const closeRegisterModal = useRegisterModalStore((state: RegisterModalState) => state.closeRegisterModal)
   const { minimalMotion } = useMotionPreferences()
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
 
   const {
     register,
     handleSubmit,
     reset,
+    getValues,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -56,13 +67,48 @@ export default function RegisterModal() {
     },
   })
 
+  const requestVerificationCode = async () => {
+    const valid = await trigger('email')
+    if (!valid) return
+    const email = getValues('email').trim().toLowerCase()
+    try {
+      const response = await apiClient.post<VerificationResponse>(
+        '/auth/verification/request',
+        { email, purpose: 'REGISTER' },
+        { auth: false },
+      )
+      setVerificationSent(true)
+      if (response.developmentCode) setVerificationCode(response.developmentCode)
+      pushToast({ type: 'success', title: 'Check your Gmail', message: response.message })
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'ACCOUNT_EXISTS') {
+        reset()
+        closeRegisterModal()
+        navigate('/login', { state: { email } })
+        pushToast({ type: 'info', title: 'Account already exists', message: 'Sign in to continue with your existing ProfAI account.' })
+        return
+      }
+      pushToast({ type: 'error', title: 'Code not sent', message: error instanceof Error ? error.message : 'Please try again.' })
+    }
+  }
+
   const onSubmit = async (values: RegisterFormValues) => {
+    if (!verificationSent) {
+      await requestVerificationCode()
+      return
+    }
+    if (!/^\d{6}$/.test(verificationCode)) {
+      pushToast({ type: 'error', title: 'Verification required', message: 'Enter the 6-digit code sent to your Gmail.' })
+      return
+    }
+
     try {
       const payload = await apiClient.post<AuthSessionPayload>(
         '/auth/register',
         {
           email: values.email.trim().toLowerCase(),
           password: values.password,
+          verificationCode,
         },
         { auth: false },
       )
@@ -74,6 +120,8 @@ export default function RegisterModal() {
         message: 'Welcome to ProfAI.',
       })
       reset()
+      setVerificationCode('')
+      setVerificationSent(false)
       closeRegisterModal()
       navigate('/onboarding', { replace: true })
     } catch (error) {
@@ -87,11 +135,15 @@ export default function RegisterModal() {
 
   const handleClose = () => {
     reset()
+    setVerificationCode('')
+    setVerificationSent(false)
     closeRegisterModal()
   }
 
   const handleLoginRedirect = () => {
     reset()
+    setVerificationCode('')
+    setVerificationSent(false)
     closeRegisterModal()
     navigate('/login')
   }
@@ -148,7 +200,12 @@ export default function RegisterModal() {
                       autoComplete="email"
                       className="input h-12 rounded-2xl border-blue-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                       placeholder="name@gmail.com"
-                      {...register('email')}
+                      {...register('email', {
+                        onChange: () => {
+                          setVerificationSent(false)
+                          setVerificationCode('')
+                        },
+                      })}
                     />
                   </div>
                   {errors.email ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.email.message}</p> : null}
@@ -186,6 +243,18 @@ export default function RegisterModal() {
                   </label>
                 </div>
 
+                {verificationSent ? (
+                  <label className="block">
+                    <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-bold text-slate-700">
+                      <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" />Verification code</span>
+                      <button type="button" onClick={() => void requestVerificationCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
+                        <RefreshCw className="h-3 w-3" /> Resend
+                      </button>
+                    </span>
+                    <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" className="input h-12 rounded-2xl border-blue-200 bg-blue-50/50 text-center text-xl font-black tracking-[0.35em]" placeholder="000000" />
+                  </label>
+                ) : null}
+
                 <motion.button
                   whileTap={minimalMotion ? undefined : { scale: 0.985 }}
                   disabled={isSubmitting}
@@ -195,10 +264,10 @@ export default function RegisterModal() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      {verificationSent ? 'Verifying...' : 'Sending code...'}
                     </>
                   ) : (
-                    'Create Account'
+                    verificationSent ? 'Verify & create account' : 'Send Gmail verification code'
                   )}
                 </motion.button>
               </form>

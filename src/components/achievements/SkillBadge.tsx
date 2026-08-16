@@ -3,8 +3,8 @@ import { BookOpen, Headphones, Mic, PenLine, Sigma, Type, type LucideIcon } from
 import {
   TRACK_META,
   TIER_NAME,
-  formatBand,
-  tierForBand,
+  formatAchievementScore,
+  tierForAchievement,
   type SkillTrackKey,
 } from './badgeMeta'
 
@@ -74,7 +74,7 @@ export type SkillBadgeProps = {
 export default function SkillBadge({ track, band, size = 120, showBand = true, showLabel = false, className }: SkillBadgeProps) {
   const rawId = useId()
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, '')
-  const tier = tierForBand(band)
+  const tier = tierForAchievement(track, band)
   const meta = TRACK_META[track]
   const Icon = ICONS[meta?.icon ?? 'BookOpen'] ?? BookOpen
   const isIelts = meta?.group === 'IELTS'
@@ -130,7 +130,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
 
   return (
     <div className={className} style={{ width: size, height: (size * 144) / 120, lineHeight: 0 }}>
-      <svg viewBox="0 0 120 144" width="100%" height="100%" role="img" aria-label={`${meta?.label ?? track} band ${formatBand(band)}`}>
+      <svg viewBox="0 0 120 144" width="100%" height="100%" role="img" aria-label={`${meta?.label ?? track} score ${formatAchievementScore(track, band)}`}>
         <defs>
           <linearGradient id={metalId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={s.stops[0]} />
@@ -202,7 +202,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
         {/* Band number */}
         {showBand ? (
           <text x="60" y={isIelts ? 108 : 100} textAnchor="middle" fontSize="22" fontWeight="900" fill={s.ink} style={{ paintOrder: 'stroke' }} stroke={s.panel[1]} strokeWidth="0.6">
-            {formatBand(band)}
+            {formatAchievementScore(track, band)}
           </text>
         ) : null}
       </svg>

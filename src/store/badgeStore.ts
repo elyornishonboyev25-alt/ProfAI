@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { tierForBand, type SkillTrackKey } from '@/components/achievements/badgeMeta'
+import { tierForAchievement, type SkillTrackKey } from '@/components/achievements/badgeMeta'
 import { upsertBadge } from '@/lib/profileApi'
 import { useCelebrationStore } from './celebrationStore'
 
@@ -51,7 +51,7 @@ export const useBadgeStore = create<BadgeState>()(
       clearForUser: (userId) => set((state) => ({ records: state.records.filter((record) => record.userId !== userId) })),
       awardIfEligible: ({ userId, track, band, mode, source }) => {
         if (!isEligibleMode(mode)) return { celebrated: false, tier: null }
-        const tier = tierForBand(band)
+        const tier = tierForAchievement(track, band)
         if (!tier) return { celebrated: false, tier: null }
 
         const prevBest = get().bestBand(userId, track)

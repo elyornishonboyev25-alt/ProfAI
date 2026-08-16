@@ -165,7 +165,9 @@ export default function Leaderboard() {
   }, [rows])
 
   const topTen = rows.slice(0, 10)
-  const premiumLocked = Boolean(user) && !isPremiumUser(user)
+  // Competition and progress visibility are core learning features. Keep the
+  // complete board free for every signed-in learner.
+  const premiumLocked = false
 
   // Re-order podium so #1 is in the middle: [#2, #1, #3]
   const visualPodium = useMemo(() => {

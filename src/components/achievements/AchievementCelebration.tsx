@@ -8,7 +8,7 @@ import { playAchievementFanfare } from '@/utils/sound'
 import { fetchBadges, pinBadge } from '@/lib/profileApi'
 import { CountUp } from '@/components/fx'
 import SkillBadge from './SkillBadge'
-import { TIER_NAME, TRACK_META, formatBand, tierForBand } from './badgeMeta'
+import { TIER_NAME, TRACK_META, formatAchievementScore, tierForAchievement } from './badgeMeta'
 
 const CONFETTI_COLORS = ['#F59E0B', '#2563EB', '#818CF8', '#FDE68A', '#F97316', '#FBBF24']
 
@@ -44,7 +44,7 @@ export default function AchievementCelebration() {
   if (!current) return null
 
   const meta = TRACK_META[current.track]
-  const tier = tierForBand(current.band)
+  const tier = tierForAchievement(current.track, current.band)
   const accent = meta?.group === 'SAT' ? '#2563EB' : '#2563EB'
   const scoreProgress = Math.min(
     100,
@@ -75,7 +75,7 @@ export default function AchievementCelebration() {
 
   const shareAchievement = async () => {
     const prefix = meta?.group === 'SAT' ? 'Score' : 'Band'
-    const text = `I unlocked ${meta?.label ?? 'a ProfAI achievement'} — ${prefix} ${formatBand(current.band)} on ProfAI.`
+    const text = `I unlocked ${meta?.label ?? 'a ProfAI achievement'} — ${prefix} ${formatAchievementScore(current.track, current.band)} on ProfAI.`
     try {
       if (navigator.share) {
         await navigator.share({ title: 'ProfAI Achievement', text, url: window.location.origin })
@@ -165,7 +165,9 @@ export default function AchievementCelebration() {
               {meta?.group === 'SAT' ? 'SAT score' : 'Band score'}
             </p>
             <p className="text-5xl font-black text-slate-950">
-              {minimalMotion ? formatBand(current.band) : <CountUp value={current.band} decimals={1} />}
+              {minimalMotion
+                ? formatAchievementScore(current.track, current.band)
+                : <CountUp value={current.band} decimals={current.track === 'SAT_OVERALL' ? 0 : 1} />}
             </p>
           </div>
 

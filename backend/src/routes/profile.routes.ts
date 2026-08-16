@@ -1506,6 +1506,7 @@ const SKILL_TRACKS = [
   'IELTS_SPEAKING',
   'SAT_MATH',
   'SAT_ENGLISH',
+  'SAT_OVERALL',
 ] as const
 
 const accountUpdateSchema = z.object({
@@ -1603,6 +1604,16 @@ function tierForBand(band: number) {
   return Math.max(6, Math.min(9, Math.floor(band)))
 }
 
+function tierForAchievement(track: (typeof SKILL_TRACKS)[number], score: number) {
+  if (track === 'SAT_OVERALL') {
+    if (score >= 1600) return 9
+    if (score >= 1550) return 8
+    if (score >= 1500) return 7
+    return 6
+  }
+  return tierForBand(score)
+}
+
 router.get(
   '/account',
   requireAuth,
@@ -1685,7 +1696,7 @@ router.delete(
 
 const badgeUpsertSchema = z.object({
   track: z.enum(SKILL_TRACKS),
-  band: z.coerce.number().min(0).max(9),
+  band: z.coerce.number().min(0).max(1600),
   source: z.string().max(40).optional(),
 })
 const badgePinSchema = z.object({
@@ -1710,10 +1721,14 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const { track, band, source } = badgeUpsertSchema.parse(req.body ?? {})
-    if (band < 6) {
-      return res.status(400).json({ message: 'Badges are awarded for band 6.0 and above only.' })
+    if (track === 'SAT_OVERALL' ? band < 1400 : band < 7 || band > 9) {
+      return res.status(400).json({
+        message: track === 'SAT_OVERALL'
+          ? 'SAT achievements are awarded for complete mock scores of 1400 and above only.'
+          : 'IELTS achievements are awarded for band 7.0 and above only.',
+      })
     }
-    const tier = tierForBand(band)
+    const tier = tierForAchievement(track, band)
     const existing = await prisma.skillBadge.findUnique({
       where: { userId_track_tier: { userId: req.user!.id, track, tier } },
     })

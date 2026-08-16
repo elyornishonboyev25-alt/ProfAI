@@ -79,6 +79,7 @@ enum SkillTrack {
   IELTS_SPEAKING
   SAT_MATH
   SAT_ENGLISH
+  SAT_OVERALL
 }
 
 model User {
@@ -121,6 +122,22 @@ model User {
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+// Short-lived, single-use codes for password registration and recovery. Codes
+// are hashed at rest; only the email provider ever receives the plain value.
+model AuthVerificationCode {
+  id         String    @id @default(cuid())
+  email      String
+  purpose    String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, purpose, createdAt])
+  @@index([expiresAt])
 }
 
 // A deliberately small, public-safe snapshot of a submitted result. Raw answers,
@@ -191,7 +208,7 @@ model UserProfile {
 // One earned skill badge per (user, track, tier). Keeping tier in the unique key
 // lets a learner hold several badges for the same track (e.g. Writing 6 AND 8) and
 // pin whichever they want onto their public profile. `band` stores the best actual
-// band that earned this tier (e.g. 8.5 for tier 8).
+// result that earned this tier (IELTS band or SAT total score).
 model SkillBadge {
   id         String     @id @default(cuid())
   userId     String

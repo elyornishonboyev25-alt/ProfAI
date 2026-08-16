@@ -60,9 +60,11 @@ export type WeeklyPlan = {
   weekEndISO: string
   updatedAt: string
   days: WeeklyPlanDay[]
+  source?: 'adaptive-ai' | 'smart-fallback'
+  strategySummary?: string
 }
 
-type ActivityLog = Record<string, Partial<Record<ActivityKey, number>>>
+export type ActivityLog = Record<string, Partial<Record<ActivityKey, number>>>
 
 const ONBOARDING_KEY_PREFIX = 'smarttest-onboarding-v2'
 const WEEKLY_PLAN_KEY_PREFIX = 'smarttest-weekly-plan-v2'
@@ -356,6 +358,7 @@ export function generateWeeklyPlan(profile: OnboardingProfile, now = new Date())
     weekEndISO: toDateISO(weekEnd),
     updatedAt: new Date().toISOString(),
     days,
+    source: 'smart-fallback',
   }
 }
 

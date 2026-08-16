@@ -169,10 +169,16 @@ export default function Community() {
   }, [account?.profile.country, exam, onlineActive, query, sameCountryActive])
 
   const visibleResults = useMemo(() => {
-    if (!sameBandActive) return results
     const ownTarget = normalizeScore(account?.profile.targetScore)
-    if (ownTarget === null) return results
-    return results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
+    const filtered = sameBandActive && ownTarget !== null
+      ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
+      : results
+
+    // The weekly crown owns the first discovery slot for as long as the
+    // champion is present in the current search/filter result.
+    return [...filtered].sort(
+      (left, right) => Number(right.weeklyChampion === true) - Number(left.weeklyChampion === true),
+    )
   }, [account?.profile.targetScore, results, sameBandActive])
 
   const ranked = useMemo(

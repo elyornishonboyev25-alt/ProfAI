@@ -1,4 +1,4 @@
-import { type ComponentType } from 'react'
+import { type ComponentType, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AudioLines,
@@ -66,11 +66,19 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
-export function Sidebar() {
+export function Sidebar({ concealed = false }: { concealed?: boolean }) {
+  const sidebarRef = useRef<HTMLElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
   const premium = isPremiumUser(user)
+
+  useEffect(() => {
+    const element = sidebarRef.current
+    if (!element) return
+    if (concealed) element.setAttribute('inert', '')
+    else element.removeAttribute('inert')
+  }, [concealed])
   const initials = (user?.fullName || 'Learner')
     .split(/\s+/)
     .filter(Boolean)
@@ -93,7 +101,12 @@ export function Sidebar() {
 
   return (
     <aside
-      className="app-panel fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 lg:flex"
+      ref={sidebarRef}
+      aria-hidden={concealed}
+      className={cn(
+        'app-panel fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none lg:flex',
+        concealed ? '-translate-x-[104%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100',
+      )}
     >
       <div className="flex h-full flex-col px-3 py-4">
         {/* Brand */}

@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
+import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
 
@@ -242,32 +243,28 @@ export default function Profile() {
         value: data.profile.xp,
         format: (v: number) => v.toLocaleString('en-US'),
         icon: Zap,
-        accent: 'from-amber-400 to-orange-500',
-        ring: 'rgba(251,191,36,0.45)',
+        tone: 'amber' as const,
       },
       {
         label: 'Tests Completed',
         value: data.stats.totalAttempts,
         format: (v: number) => v.toString(),
         icon: Activity,
-        accent: 'from-blue-500 to-indigo-600',
-        ring: 'rgba(99,102,241,0.35)',
+        tone: 'blue' as const,
       },
       {
         label: 'Average Accuracy',
         value: data.stats.averageAccuracy,
         format: (v: number) => `${v.toFixed(1)}%`,
         icon: Target,
-        accent: 'from-indigo-500 to-blue-600',
-        ring: 'rgba(37,99,235,0.4)',
+        tone: 'indigo' as const,
       },
       {
         label: 'Streak',
         value: data.profile.currentStreak,
         format: (v: number) => `${v} d`,
         icon: Flame,
-        accent: 'from-orange-500 to-blue-500',
-        ring: 'rgba(249,115,22,0.4)',
+        tone: 'red' as const,
       },
     ]
   }, [data])
@@ -378,9 +375,7 @@ export default function Profile() {
             onClick={() => navigate('/register')}
             className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4 text-left shadow-[0_10px_24px_rgba(37,99,235,0.1)]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-              <Sparkles className="h-5 w-5" />
-            </span>
+            <ArenaMetricMark icon={Sparkles} tone="blue" size="sm" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black text-slate-900">Preview mode</span>
               <span className="block text-[12px] text-slate-500">Create an account to track real XP, ranking and saved attempts.</span>
@@ -395,9 +390,7 @@ export default function Profile() {
             onClick={() => navigate('/premium')}
             className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-4 text-left shadow-[0_10px_24px_rgba(245,158,11,0.12)]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
-              <BrainCircuit className="h-5 w-5" />
-            </span>
+            <ArenaMetricMark icon={BrainCircuit} tone="amber" size="sm" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black text-slate-900">Live AI analytics are Premium</span>
               <span className="block text-[12px] text-slate-500">
@@ -419,24 +412,18 @@ export default function Profile() {
             const Icon = card.icon
             return (
               <StaggerItem key={card.label} className="h-full">
-                <Tilt3D className="h-full rounded-3xl" max={6}>
-                  <PremiumFeatureLock
+                <PremiumFeatureLock
                     locked={premiumLocked && (card.label === 'Tests Completed' || card.label === 'Average Accuracy')}
                     title={`Unlock ${card.label}`}
                     compact
                   >
-                  <article className="group relative h-full overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_20px_40px_rgba(37,99,235,0.12)]">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-300/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <article className="group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/72 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] backdrop-blur-md transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${card.accent} text-white`}
-                        style={{ boxShadow: `0 10px 22px ${card.ring}` }}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </span>
+                      <ArenaMetricMark icon={Icon} tone={card.tone} />
                     </div>
-                    <p className="mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
+                    <p className="relative mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
                       {card.label === 'Average Accuracy' ? (
                         <CountUp value={card.value} decimals={1} suffix="%" />
                       ) : card.label === 'Streak' ? (
@@ -445,13 +432,12 @@ export default function Profile() {
                         <CountUp value={card.value} />
                       )}
                     </p>
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                      <span className="fx-pulse-dot h-1.5 w-1.5 rounded-full bg-blue-400" />
+                    <div className="relative mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
                       Live data
                     </div>
                   </article>
                   </PremiumFeatureLock>
-                </Tilt3D>
               </StaggerItem>
             )
           })}
@@ -469,9 +455,7 @@ export default function Profile() {
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                  <BrainCircuit className="h-4 w-4" />
-                </span>
+                <ArenaMetricMark icon={BrainCircuit} tone="blue" size="sm" />
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Skill Matrix</h2>
               </div>
               <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
@@ -538,9 +522,7 @@ export default function Profile() {
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                <Target className="h-4 w-4" />
-              </span>
+              <ArenaMetricMark icon={Target} tone="indigo" size="sm" />
               <h2 className="text-lg font-black tracking-tight text-slate-900">Accuracy Score</h2>
             </div>
 
@@ -589,9 +571,7 @@ export default function Profile() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                <TrendingUp className="h-4 w-4" />
-              </span>
+              <ArenaMetricMark icon={TrendingUp} tone="blue" size="sm" />
               <div>
                 <h2 className="text-lg font-black tracking-tight text-slate-900">XP Momentum</h2>
                 <p className="text-[11px] font-medium text-slate-500">Cumulative XP earned over recent attempts</p>
@@ -643,9 +623,7 @@ export default function Profile() {
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                <Activity className="h-4 w-4" />
-              </span>
+              <ArenaMetricMark icon={Activity} tone="indigo" size="sm" />
               <div>
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Weekly Activity</h2>
                 <p className="text-[11px] font-medium text-slate-500">Tests and XP earned each day</p>
@@ -681,9 +659,7 @@ export default function Profile() {
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-[0_10px_22px_rgba(245,158,11,0.32)]">
-                <Sparkles className="h-4 w-4" />
-              </span>
+              <ArenaMetricMark icon={Sparkles} tone="amber" size="sm" />
               <h2 className="text-lg font-black tracking-tight text-slate-900">Achievements</h2>
             </div>
             {loading ? (
@@ -729,9 +705,7 @@ export default function Profile() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                <Activity className="h-4 w-4" />
-              </span>
+              <ArenaMetricMark icon={Activity} tone="blue" size="sm" />
               <h2 className="text-lg font-black tracking-tight text-slate-900">Recent Attempts</h2>
             </div>
           </div>

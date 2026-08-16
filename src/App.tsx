@@ -197,6 +197,17 @@ function App() {
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')
 
+  const isImmersiveHub = [
+    '/ielts',
+    '/sat',
+    '/articles',
+    '/podcast',
+    '/shadowing-lab',
+    '/admission/universities',
+    '/vocabulary',
+    '/community',
+  ].includes(pathname)
+
   // The workspace shell is route-owned, not auth-owned. This keeps its geometry
   // stable if a request is refreshing the session or if a session expires while
   // the learner is already on a workspace page. Public and focused experiences
@@ -205,7 +216,8 @@ function App() {
     !isPublicStandalone &&
     !isTestMode &&
     !isFocusContentMode
-  const showMobileNav = Boolean(user) && showSidebar
+  const sidebarVisible = showSidebar && !isImmersiveHub
+  const showMobileNav = Boolean(user) && sidebarVisible
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
 
   useEffect(() => {
@@ -275,11 +287,11 @@ function App() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <div className="flex flex-1">
-          {showSidebar ? <Sidebar /> : null}
+          {showSidebar ? <Sidebar concealed={isImmersiveHub} /> : null}
 
           <main
             className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              showSidebar ? 'lg:ml-64' : 'ml-0'
+              sidebarVisible ? 'lg:ml-64' : 'ml-0'
             }`}
           >
             <div

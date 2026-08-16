@@ -26,6 +26,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
+import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 
 const emptyWeek = Array.from({ length: 7 }, (_, index) => {
   const date = new Date()
@@ -65,17 +66,17 @@ function StatCard({
   value,
   note,
   icon: Icon,
+  tone = 'blue',
 }: {
   label: string
   value: string
   note: string
   icon: typeof Clock3
+  tone?: 'red' | 'blue' | 'indigo' | 'amber'
 }) {
   return (
-    <article className="apple-glass-card group rounded-[1.35rem] p-4 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_22px_48px_rgba(37,99,235,0.14)]">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-        <Icon className="h-4.5 w-4.5" />
-      </span>
+    <article className="apple-glass-card group rounded-[1.5rem] p-4 transition-shadow hover:border-blue-200 hover:shadow-[0_22px_48px_rgba(37,99,235,0.14)]">
+      <ArenaMetricMark icon={Icon} tone={tone} className="-ml-1 -mt-1" />
       <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
       <p className="mt-1 text-2xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-[11px] font-semibold text-slate-500">{note}</p>
@@ -240,10 +241,10 @@ export default function Dashboard() {
 
           <div className="min-w-0 space-y-5">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} />
-              <StatCard label="Tests done" value={String(overview.metrics.totalTests)} note="All-time attempts" icon={CheckCircle2} />
-              <StatCard label="Average" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Across practice" icon={BarChart3} />
-              <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} />
+              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} tone="amber" />
+              <StatCard label="Tests done" value={String(overview.metrics.totalTests)} note="All-time attempts" icon={CheckCircle2} tone="blue" />
+              <StatCard label="Average" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Across practice" icon={BarChart3} tone="indigo" />
+              <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} tone="red" />
             </div>
 
             <article className="apple-glass-card rounded-[1.8rem] p-5">

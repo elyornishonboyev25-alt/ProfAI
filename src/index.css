@@ -2605,6 +2605,40 @@ body {
 .feature-illustration-chart { position: absolute; z-index: 1; right: 0; bottom: .45rem; width: 5rem; fill: rgba(239,53,61,.18); stroke: #565d6c; stroke-width: 1.5; }
 .feature-illustration-spark { position: absolute; z-index: 3; right: .2rem; top: .2rem; width: 1.4rem; color: var(--arena-red); }
 .feature-illustration-glow { position: absolute; left: .6rem; bottom: .3rem; width: 5.5rem; height: 3.5rem; border-radius: 999px; background: rgba(239,68,68,.18); filter: blur(18px); }
+
+.arena-metric-mark {
+  --mark-color: #2563eb;
+  --mark-soft: rgba(37, 99, 235, .13);
+  position: relative;
+  display: inline-grid;
+  width: 3.35rem;
+  height: 3.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--mark-color);
+}
+.arena-metric-mark-orbit { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.15; opacity: .28; }
+.arena-metric-mark-orbit path { stroke-linecap: round; opacity: .75; }
+.arena-metric-mark-core {
+  position: relative;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--mark-color) 24%, white);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,255,255,.98), var(--mark-soft));
+  box-shadow: 0 10px 25px var(--mark-soft), inset 0 1px 0 #fff;
+}
+.arena-metric-mark-core svg { width: 1.12rem; height: 1.12rem; }
+.arena-metric-mark > i { position: absolute; right: .08rem; top: .58rem; width: .42rem; height: .42rem; border: 2px solid white; border-radius: 999px; background: var(--mark-color); box-shadow: 0 3px 10px var(--mark-soft); }
+.arena-metric-mark-sm { width: 2.7rem; height: 2.7rem; }
+.arena-metric-mark-sm .arena-metric-mark-core { width: 1.9rem; height: 1.9rem; }
+.arena-metric-mark-sm .arena-metric-mark-core svg { width: .95rem; height: .95rem; }
+.arena-metric-mark-sm > i { right: 0; top: .42rem; width: .36rem; height: .36rem; }
+.arena-metric-mark-red { --mark-color: #dc2626; --mark-soft: rgba(220, 38, 38, .14); }
+.arena-metric-mark-indigo { --mark-color: #4f46e5; --mark-soft: rgba(79, 70, 229, .14); }
+.arena-metric-mark-amber { --mark-color: #d97706; --mark-soft: rgba(217, 119, 6, .14); }
 .arena-loading { display: grid; gap: .7rem; padding: 1rem; }
 .arena-loading > span { height: .8rem; width: calc(100% - var(--row) * 14%); border-radius: 999px; background: linear-gradient(90deg, rgba(226,232,240,.82), rgba(241,245,249,.92)); }
 .arena-loader-progress { animation: arenaLoaderProgress 1.25s var(--app-ease-smooth) infinite; will-change: transform; }

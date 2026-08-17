@@ -292,7 +292,7 @@ function App() {
 
           <main
             className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              sidebarVisible ? 'lg:ml-64' : 'ml-0'
+              sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
             }`}
           >
             <div
@@ -702,4 +702,3 @@ function App() {
 }
 
 export default App
-

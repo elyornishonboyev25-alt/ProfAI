@@ -10,8 +10,16 @@ export default defineConfig({
       injectRegister: 'script-defer',
       includeAssets: ['logo.svg'],
       workbox: {
-        globPatterns: ['index.html', 'logo.svg', 'assets/index-*.css'],
+        // HTML must always come from the server. Precaching index.html can leave
+        // an older deployment pointing at JavaScript chunks that no longer
+        // exist, which strands the browser on the static boot screen.
+        globPatterns: ['logo.svg', 'assets/index-*.css'],
+        navigateFallback: null,
         cleanupOutdatedCaches: true,
+        // injectRegister is explicitly deferred, so these autoUpdate defaults
+        // need to be explicit as well.
+        skipWaiting: true,
+        clientsClaim: true,
         importScripts: ['/sw-cleanup.js'],
       },
       manifest: {

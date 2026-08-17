@@ -314,7 +314,7 @@ function buildModule(meta: (typeof MODULE_META)[number]): SATModule {
     durationSeconds: meta.durationSeconds,
     questions: meta.drafts.map((draft, index) => ({
       ...draft,
-      id: `smarttest-mock-1-${meta.id}-${index + 1}`,
+      id: `smarttest-mock-3-${meta.id}-${index + 1}`,
       moduleId: meta.id,
       number: index + 1,
       section: meta.section,
@@ -325,18 +325,18 @@ function buildModule(meta: (typeof MODULE_META)[number]): SATModule {
   }
 }
 
-export const SAT_SMARTTEST_MOCK_1_MODULES: SATModule[] = MODULE_META.map(buildModule)
+export const SAT_SMARTTEST_MOCK_3_MODULES: SATModule[] = MODULE_META.map(buildModule)
 
-export const SAT_SMARTTEST_MOCK_1 = {
-  id: 'smarttest-sat-mock-1' as const,
-  title: 'SmartTest Digital SAT Mock 1',
+export const SAT_SMARTTEST_MOCK_3 = {
+  id: 'smarttest-sat-mock-3' as const,
+  title: 'SmartTest Digital SAT Mock 3',
   subtitle: 'Original full-length upper-route simulation',
   questionCount: 98,
-  totalDurationSeconds: SAT_SMARTTEST_MOCK_1_MODULES.reduce(
+  totalDurationSeconds: SAT_SMARTTEST_MOCK_3_MODULES.reduce(
     (sum, module) => sum + module.durationSeconds,
     0,
   ),
-  modules: SAT_SMARTTEST_MOCK_1_MODULES,
+  modules: SAT_SMARTTEST_MOCK_3_MODULES,
 }
 
 function countByDomain(questions: SATQuestion[]) {
@@ -346,12 +346,12 @@ function countByDomain(questions: SATQuestion[]) {
   }, {})
 }
 
-export function validateSmartTestMock1(): string[] {
+export function validateSmartTestMock3(): string[] {
   const errors: string[] = []
   const expectedLengths: Record<SATModuleId, number> = { rw1: 27, rw2: 27, math1: 22, math2: 22 }
-  const allQuestions = SAT_SMARTTEST_MOCK_1_MODULES.flatMap((module) => module.questions)
+  const allQuestions = SAT_SMARTTEST_MOCK_3_MODULES.flatMap((module) => module.questions)
 
-  SAT_SMARTTEST_MOCK_1_MODULES.forEach((module) => {
+  SAT_SMARTTEST_MOCK_3_MODULES.forEach((module) => {
     if (module.questions.length !== expectedLengths[module.id]) {
       errors.push(`${module.id}: expected ${expectedLengths[module.id]} questions, received ${module.questions.length}`)
     }
@@ -435,7 +435,7 @@ export function validateSmartTestMock1(): string[] {
   return errors
 }
 
-const validationErrors = validateSmartTestMock1()
+const validationErrors = validateSmartTestMock3()
 if (validationErrors.length) {
-  throw new Error(`Invalid SmartTest SAT Mock 1:\n${validationErrors.join('\n')}`)
+  throw new Error(`Invalid SmartTest SAT Mock 3:\n${validationErrors.join('\n')}`)
 }

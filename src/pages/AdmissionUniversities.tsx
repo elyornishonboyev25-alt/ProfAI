@@ -19,6 +19,7 @@ import { getUniversities, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
 import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
+import { prefetchUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 
 type BudgetFilter = 'all' | 'published' | 'under-20k-usd'
 type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
@@ -50,9 +51,11 @@ function ieltsLabel(university: University) {
 const UniversityCard = memo(function UniversityCard({
   university,
   scores,
+  priority = false,
 }: {
   university: University
   scores: AdmissionScores
+  priority?: boolean
 }) {
   const fit = scoreUniversity(university, scores)
   const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
@@ -61,6 +64,9 @@ const UniversityCard = memo(function UniversityCard({
     <Link
       className="admission-university-card"
       to={`/admission/universities/${university.slug}`}
+      onPointerEnter={() => prefetchUniversityCampusImage(university.name)}
+      onPointerDown={() => prefetchUniversityCampusImage(university.name)}
+      onFocus={() => prefetchUniversityCampusImage(university.name)}
     >
       <div
         className="admission-card-glow"
@@ -68,7 +74,7 @@ const UniversityCard = memo(function UniversityCard({
         aria-hidden="true"
       />
       <div className="admission-card-topline">
-        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
+        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" priority={priority} />
         <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
           <small>QS rank</small>
           <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
@@ -157,7 +163,7 @@ function FilterSelect({
   }
 
   return (
-    <div ref={rootRef} className="admission-filter-control admission-listbox" onKeyDown={onKeyDown}>
+    <div ref={rootRef} className={`admission-filter-control admission-listbox${open ? ' is-open' : ''}`} onKeyDown={onKeyDown}>
       <span className="admission-filter-dot" aria-hidden="true" />
       <span className="sr-only">{label}</span>
       <button type="button" role="combobox" aria-label={label} aria-controls={listId} aria-expanded={open} onClick={() => { setOpen((current) => !current); setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value))) }}>
@@ -254,9 +260,9 @@ export default function AdmissionUniversities() {
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-globe-column">
-            <button onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
+            <Link to="/dashboard" className="admission-dashboard-back">
               <ArrowLeft className="h-4 w-4" /> <span>Back to Dashboard</span>
-            </button>
+            </Link>
             <div className="admission-globe-sticky">
               <UniversityGlobe />
               <div className="admission-globe-caption">
@@ -310,8 +316,8 @@ export default function AdmissionUniversities() {
                 </div>
               ) : (
                 <div className="admission-university-grid">
-                  {filtered.map((university) => (
-                    <UniversityCard key={university.id} university={university} scores={scores} />
+                  {filtered.map((university, index) => (
+                    <UniversityCard key={university.id} university={university} scores={scores} priority={index < 4} />
                   ))}
                 </div>
               )}

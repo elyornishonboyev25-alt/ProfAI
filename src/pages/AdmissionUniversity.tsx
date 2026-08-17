@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -35,6 +36,38 @@ const PERIOD_LABELS = {
   'calendar-year': 'year',
   month: 'month',
 } as const
+
+function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<typeof useUniversityCampusImage> }) {
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    setLoaded(false)
+  }, [image?.src])
+
+  return (
+    <>
+      <img
+        src="/assets/admission/campus-hero.webp"
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover opacity-80"
+        decoding="async"
+        fetchPriority="high"
+      />
+      {image ? (
+        <img
+          src={image.src}
+          alt={`${name} campus`}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-80' : 'opacity-0'}`}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          referrerPolicy="no-referrer"
+          onLoad={() => setLoaded(true)}
+        />
+      ) : null}
+    </>
+  )
+}
 
 export default function AdmissionUniversity() {
   const navigate = useNavigate()
@@ -86,18 +119,7 @@ export default function AdmissionUniversity() {
             className="relative overflow-hidden rounded-[2rem] border border-white/10 p-6 text-white shadow-[0_30px_70px_rgba(15,23,42,0.28)] sm:p-9"
             style={{ background: u.brand.gradient }}
           >
-            <img
-              key={campusImage?.src ?? 'campus-fallback'}
-              src={campusImage?.src ?? '/assets/admission/campus-hero.webp'}
-              alt={campusImage ? `${u.name} campus` : ''}
-              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-700"
-              referrerPolicy="no-referrer"
-              onError={(event) => {
-                if (!event.currentTarget.src.endsWith('/assets/admission/campus-hero.webp')) {
-                  event.currentTarget.src = '/assets/admission/campus-hero.webp'
-                }
-              }}
-            />
+            <CampusHeroMedia name={u.name} image={campusImage} />
             <div
               className="absolute inset-0"
               style={{ background: `linear-gradient(90deg, ${accent}dc 0%, ${accent}a8 46%, rgba(15,23,42,0.56) 100%)` }}
@@ -116,7 +138,7 @@ export default function AdmissionUniversity() {
               </button>
 
               <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
-                <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" />
+                <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" priority />
                 <div className="min-w-0">
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
                     <Trophy className="h-3.5 w-3.5" />

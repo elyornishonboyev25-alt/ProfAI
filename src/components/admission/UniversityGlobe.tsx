@@ -36,6 +36,19 @@ const UNIVERSITY_PINS: Position[] = [
   [-0.13, 51.51],
   [103.82, 1.35],
 ]
+let worldRequest: Promise<WorldFeatureCollection> | null = null
+
+function loadWorld() {
+  if (!worldRequest) {
+    worldRequest = fetch('/assets/countries.geo.json', { cache: 'force-cache' })
+      .then((response) => {
+        if (!response.ok) throw new Error('World map could not be loaded')
+        return response.json() as Promise<WorldFeatureCollection>
+      })
+      .then(simplifyWorld)
+  }
+  return worldRequest
+}
 
 function easeOutQuart(value: number) {
   return 1 - (1 - value) ** 4
@@ -47,7 +60,7 @@ function nearestRotation(from: number, target: number) {
 
 function simplifyRing(ring: Position[]) {
   if (ring.length <= 18) return ring
-  const stride = Math.max(2, Math.ceil(ring.length / 120))
+  const stride = Math.max(2, Math.ceil(ring.length / 48))
   return ring.filter((_, index) => index % stride === 0 || index === ring.length - 1)
 }
 
@@ -72,7 +85,7 @@ function simplifyWorld(world: WorldFeatureCollection): WorldFeatureCollection {
 function measureCanvas(canvas: HTMLCanvasElement, lowPower: boolean): CanvasMetrics | null {
   const bounds = canvas.getBoundingClientRect()
   if (!bounds.width || !bounds.height) return null
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.25)
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 0.85 : 1)
   const width = Math.round(bounds.width * pixelRatio)
   const height = Math.round(bounds.height * pixelRatio)
   if (canvas.width !== width || canvas.height !== height) {
@@ -261,6 +274,7 @@ export default function UniversityGlobe() {
   const currentRotationRef = useRef(DEFAULT_LONGITUDE - 360)
   const hasSpunRef = useRef(false)
   const [world, setWorld] = useState<WorldFeatureCollection | null>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
   const userId = useAuthStore((state) => state.user?.id)
   const { location, isLocating } = useVisitorLocation()
   const { minimalMotion, isLowPowerDevice } = useMotionPreferences()
@@ -282,16 +296,13 @@ export default function UniversityGlobe() {
   }
 
   useEffect(() => {
-    const controller = new AbortController()
-    fetch('/assets/countries.geo.json', { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error('World map could not be loaded')
-        return response.json() as Promise<WorldFeatureCollection>
+    let active = true
+    void loadWorld()
+      .then((nextWorld) => {
+        if (active) setWorld(nextWorld)
       })
-      .then(simplifyWorld)
-      .then(setWorld)
       .catch(() => undefined)
-    return () => controller.abort()
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
@@ -300,24 +311,32 @@ export default function UniversityGlobe() {
 
     const origin: Position = [targetLongitude, targetLatitude]
     const firstSpin = !hasSpunRef.current
-    const from = firstSpin ? targetLongitude - 360 : currentRotationRef.current
+    const from = firstSpin ? targetLongitude - 160 : currentRotationRef.current
     const to = firstSpin ? targetLongitude : nearestRotation(from, targetLongitude)
-    const duration = minimalMotion ? 1 : firstSpin ? 1450 : 650
+    const duration = minimalMotion ? 1 : firstSpin ? 1050 : 520
     let frame = 0
     let start = 0
+    let lastPaint = -Infinity
     const initialMetrics = measureCanvas(canvas, isLowPowerDevice)
     if (!initialMetrics) return
     let metrics: CanvasMetrics = initialMetrics
 
     hasSpunRef.current = true
     currentRotationRef.current = from
+    drawGlobe(canvas, world, from, origin, metrics)
+    setCanvasReady(true)
 
     const render = (time: number) => {
       if (!start) start = time
       const progress = Math.min(1, (time - start) / duration)
       const rotation = from + (to - from) * easeOutQuart(progress)
       currentRotationRef.current = rotation
-      drawGlobe(canvas, world, rotation, origin, metrics)
+      // A steady 50fps budget feels smoother than missed 60fps frames on
+      // integrated GPUs and leaves the main thread free for cards and filters.
+      if (time - lastPaint >= 20 || progress === 1) {
+        drawGlobe(canvas, world, rotation, origin, metrics)
+        lastPaint = time
+      }
       if (progress < 1) frame = window.requestAnimationFrame(render)
     }
 
@@ -346,20 +365,21 @@ export default function UniversityGlobe() {
     >
       <div className="university-globe-visual">
         <img
-          src="/assets/university-globe-glass-clean.png"
+          src="/assets/university-globe-glass-clean-920.png"
           alt=""
-          className={`university-globe-reference-image ${world ? 'university-globe-reference-image-hidden' : ''}`}
+          className={`university-globe-reference-image ${canvasReady ? 'university-globe-reference-image-hidden' : ''}`}
           draggable={false}
           decoding="async"
+          fetchPriority="high"
         />
-        <canvas ref={canvasRef} className="university-globe-canvas" aria-hidden="true" />
+        <canvas ref={canvasRef} className={`university-globe-canvas ${canvasReady ? 'is-ready' : ''}`} aria-hidden="true" />
 
         <motion.span
           className="university-globe-user-marker"
           style={markerStyle}
           initial={{ opacity: 0, scale: 0.3, y: -16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0.01 : 0.45, delay: minimalMotion ? 0 : 2.35, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: minimalMotion ? 0.01 : 0.4, delay: minimalMotion ? 0 : 1.25, ease: [0.16, 1, 0.3, 1] }}
           aria-hidden="true"
         >
           <span className="university-globe-user-marker-ring" />

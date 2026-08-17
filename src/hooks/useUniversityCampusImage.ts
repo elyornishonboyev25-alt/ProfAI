@@ -42,6 +42,9 @@ type CommonsPage = {
 }
 
 const imageCache = new Map<string, Promise<UniversityCampusImage | null>>()
+const warmedImages = new Set<string>()
+const SESSION_CACHE_PREFIX = 'profai:campus-image:v2:'
+const CAMPUS_IMAGE_WIDTH = '1280'
 
 function normalizedUniversityName(name: string) {
   return name
@@ -54,7 +57,7 @@ function normalizedUniversityName(name: string) {
 function commonsImage(filename: string): UniversityCampusImage {
   const encodedFilename = encodeURIComponent(filename).replace(/%2F/gi, '/')
   return {
-    src: `https://commons.wikimedia.org/wiki/Special:Redirect/file/${encodedFilename}?width=1920`,
+    src: `https://commons.wikimedia.org/wiki/Special:Redirect/file/${encodedFilename}?width=${CAMPUS_IMAGE_WIDTH}`,
     attributionUrl: `https://commons.wikimedia.org/wiki/File:${encodedFilename}`,
   }
 }
@@ -84,7 +87,7 @@ async function fetchWikidataCampusImage(name: string): Promise<UniversityCampusI
     limit: '5',
     search: query,
   })
-  const searchResponse = await fetch(`https://www.wikidata.org/w/api.php?${searchParams}`)
+  const searchResponse = await fetch(`https://www.wikidata.org/w/api.php?${searchParams}`, { cache: 'force-cache' })
   if (!searchResponse.ok) return null
 
   const searchPayload = await searchResponse.json() as { search?: WikidataSearchResult[] }
@@ -100,7 +103,7 @@ async function fetchWikidataCampusImage(name: string): Promise<UniversityCampusI
     props: 'claims',
     ids: candidates.map((candidate) => candidate.id).join('|'),
   })
-  const entityResponse = await fetch(`https://www.wikidata.org/w/api.php?${entityParams}`)
+  const entityResponse = await fetch(`https://www.wikidata.org/w/api.php?${entityParams}`, { cache: 'force-cache' })
   if (!entityResponse.ok) return null
 
   const entityPayload = await entityResponse.json() as { entities?: Record<string, WikidataEntity> }
@@ -127,9 +130,9 @@ async function fetchCommonsCampusImage(name: string): Promise<UniversityCampusIm
     gsrlimit: '16',
     prop: 'imageinfo',
     iiprop: 'url|mime|size',
-    iiurlwidth: '1920',
+    iiurlwidth: CAMPUS_IMAGE_WIDTH,
   })
-  const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`)
+  const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, { cache: 'force-cache' })
   if (!response.ok) return null
 
   const payload = await response.json() as { query?: { pages?: Record<string, CommonsPage> } }
@@ -153,16 +156,80 @@ async function fetchCommonsCampusImage(name: string): Promise<UniversityCampusIm
   return src && attributionUrl ? { src, attributionUrl } : null
 }
 
+function readSessionImage(cacheKey: string) {
+  try {
+    const stored = window.sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${cacheKey}`)
+    if (!stored) return null
+    const parsed = JSON.parse(stored) as UniversityCampusImage
+    return parsed.src && parsed.attributionUrl ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeSessionImage(cacheKey: string, image: UniversityCampusImage) {
+  try {
+    window.sessionStorage.setItem(`${SESSION_CACHE_PREFIX}${cacheKey}`, JSON.stringify(image))
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
+}
+
+function firstAvailable(requests: Array<Promise<UniversityCampusImage | null>>) {
+  return new Promise<UniversityCampusImage | null>((resolve) => {
+    let remaining = requests.length
+    for (const request of requests) {
+      void request
+        .catch(() => null)
+        .then((image) => {
+          if (image) {
+            resolve(image)
+            return
+          }
+          remaining -= 1
+          if (remaining === 0) resolve(null)
+        })
+    }
+  })
+}
+
+function warmImage(image: UniversityCampusImage | null) {
+  if (!image || warmedImages.has(image.src) || typeof Image === 'undefined') return
+  warmedImages.add(image.src)
+  const preload = new Image()
+  preload.decoding = 'async'
+  preload.src = image.src
+}
+
 function resolveUniversityCampusImage(name: string) {
   const cacheKey = normalizedUniversityName(name).toLowerCase()
   const cached = imageCache.get(cacheKey)
   if (cached) return cached
 
-  const request = fetchWikidataCampusImage(name)
-    .then((image) => image ?? fetchCommonsCampusImage(name))
-    .catch(() => null)
+  const stored = readSessionImage(cacheKey)
+  if (stored) {
+    const request = Promise.resolve(stored)
+    imageCache.set(cacheKey, request)
+    return request
+  }
+
+  // Wikidata usually provides the canonical institutional image, while the
+  // Commons search is a fast fallback. Running them together removes an entire
+  // network round trip from profile navigation.
+  const request = firstAvailable([
+    fetchWikidataCampusImage(name),
+    fetchCommonsCampusImage(name),
+  ]).then((image) => {
+    if (image) writeSessionImage(cacheKey, image)
+    return image
+  })
   imageCache.set(cacheKey, request)
   return request
+}
+
+export function prefetchUniversityCampusImage(name: string) {
+  if (!name.trim()) return
+  void resolveUniversityCampusImage(name).then(warmImage)
 }
 
 export function useUniversityCampusImage(name: string) {
@@ -174,6 +241,7 @@ export function useUniversityCampusImage(name: string) {
     if (!name.trim()) return () => { active = false }
 
     void resolveUniversityCampusImage(name).then((nextImage) => {
+      warmImage(nextImage)
       if (active) setImage(nextImage)
     })
 

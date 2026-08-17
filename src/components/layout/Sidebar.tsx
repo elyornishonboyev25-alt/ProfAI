@@ -26,7 +26,7 @@ type NavItem = {
 const PRIMARY_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge, path: '/dashboard' },
   { id: 'ielts', label: 'IELTS Mock', icon: BookOpenText, path: '/mock/ielts', aliases: ['/ielts'] },
-  { id: 'sat', label: 'SAT Mock', icon: GraduationCap, path: '/mock/sat', aliases: ['/sat'] },
+  { id: 'sat', label: 'SAT Mock', icon: GraduationCap, path: '/sat', aliases: ['/mock/sat'] },
   {
     id: 'admission',
     label: 'Admission Hub',

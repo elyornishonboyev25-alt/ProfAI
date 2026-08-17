@@ -54,7 +54,7 @@ const EMPTY_OVERVIEW: DashboardOverview = {
 
 const learningCards = [
   { title: 'IELTS Mock', subtitle: 'Full exam simulation', path: '/mock/ielts', icon: BookOpen, progress: 68 },
-  { title: 'SAT Mock', subtitle: 'Official-style practice', path: '/mock/sat', icon: CheckCircle2, progress: 45 },
+  { title: 'SAT Mock', subtitle: 'Official-style practice', path: '/sat', icon: CheckCircle2, progress: 45 },
   { title: 'Admission Hub', subtitle: 'Explore top universities', path: '/admission/universities', icon: GraduationCap, progress: 27 },
   { title: 'Speaking Practice', subtitle: 'Build confidence', path: '/speaking-community', icon: Mic2, progress: 52 },
   { title: 'Vocabulary', subtitle: 'Daily word set', path: '/vocabulary', icon: Sparkles, progress: 80 },
@@ -231,7 +231,7 @@ export default function Dashboard() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(targetExam === 'SAT' ? '/mock/sat' : '/mock/ielts')}
+              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
               className="relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5"
             >
               Continue preparing <ArrowRight className="h-3.5 w-3.5" />

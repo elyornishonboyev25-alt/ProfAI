@@ -4,7 +4,7 @@ import { BookOpen, Building2, GraduationCap, Home, type LucideIcon } from 'lucid
 const TABS: Array<{ key: string; label: string; icon: LucideIcon; path: string; match: (path: string) => boolean }> = [
   { key: 'home', label: 'Dashboard', icon: Home, path: '/dashboard', match: (p) => p === '/' || p === '/dashboard' },
   { key: 'ielts', label: 'IELTS', icon: BookOpen, path: '/mock/ielts', match: (p) => p.startsWith('/ielts') || p.startsWith('/mock/ielts') },
-  { key: 'sat', label: 'SAT', icon: GraduationCap, path: '/mock/sat', match: (p) => p.startsWith('/sat') || p.startsWith('/mock/sat') },
+  { key: 'sat', label: 'SAT', icon: GraduationCap, path: '/sat', match: (p) => p.startsWith('/sat') || p.startsWith('/mock/sat') },
   { key: 'admission', label: 'Admission', icon: Building2, path: '/admission/universities', match: (p) => p.startsWith('/admission') },
 ]
 

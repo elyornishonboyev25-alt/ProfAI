@@ -17,6 +17,8 @@ const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; ch
 }
 
 const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
+const DEFAULT_GPA = '3.5'
+const DEFAULT_YEARLY_BUDGET = '20000'
 
 export default function UniversityMatcher({ open, onClose }: Props) {
   const navigate = useNavigate()
@@ -27,8 +29,8 @@ export default function UniversityMatcher({ open, onClose }: Props) {
   const [fieldOfStudy, setFieldOfStudy] = useState('')
   const [sat, setSat] = useState('')
   const [ielts, setIelts] = useState('')
-  const [gpa, setGpa] = useState('')
-  const [budget, setBudget] = useState('')
+  const [gpa, setGpa] = useState(DEFAULT_GPA)
+  const [budget, setBudget] = useState(DEFAULT_YEARLY_BUDGET)
   const [preferredCountry, setPreferredCountry] = useState('')
   const [results, setResults] = useState<UniversityMatch[]>([])
   const [savingSlug, setSavingSlug] = useState<string | null>(null)
@@ -39,6 +41,8 @@ export default function UniversityMatcher({ open, onClose }: Props) {
     if (!open) return
     setStep(1)
     setSavedSlug(null)
+    setGpa(DEFAULT_GPA)
+    setBudget(DEFAULT_YEARLY_BUDGET)
     fetchAccount()
       .then((data) => {
         const p = data.profile
@@ -163,11 +167,11 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                 <p className="text-sm font-bold text-slate-700">Academics & budget</p>
                 <label className="block text-sm font-medium text-slate-700">
                   GPA (0–4)
-                  <input type="number" min={0} max={4} step={0.01} value={gpa} onChange={(e) => setGpa(e.target.value)} className="input mt-1" placeholder="e.g. 3.8" />
+                  <input type="number" min={0} max={4} step={0.1} value={gpa} onChange={(e) => setGpa(e.target.value)} className="input mt-1" placeholder="e.g. 3.5" />
                 </label>
                 <label className="block text-sm font-medium text-slate-700">
                   Yearly living budget in USD (optional)
-                  <input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} className="input mt-1" placeholder="e.g. 25000" />
+                  <input type="number" min={0} step={500} value={budget} onChange={(e) => setBudget(e.target.value)} className="input mt-1" placeholder="e.g. 20000" />
                 </label>
               </motion.div>
             ) : null}

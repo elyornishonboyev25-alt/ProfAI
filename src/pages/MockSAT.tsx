@@ -268,7 +268,7 @@ export default function MockSAT() {
                       {completedQuestions} of {test.questionCount} answered
                     </p>
                     <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                      {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · autosaved
+                      {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · timer paused · autosaved
                     </p>
                   </div>
                   <RotateCcw className="h-4 w-4 text-amber-600" />

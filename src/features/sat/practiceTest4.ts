@@ -47,6 +47,7 @@ export type HighlightStroke = {
   color: string
   width: number
   points: HighlightPoint[]
+  surface?: 'passage' | 'question' | 'source'
 }
 
 export type SATAttempt = {
@@ -67,7 +68,9 @@ export type SATAttempt = {
   terminationReason?: string
   moduleStartedAt: Record<string, number>
   moduleDeadlines: Record<string, number>
+  /** Remaining exam seconds, or elapsed practice seconds, while the runner is closed. */
   pausedModuleSeconds?: number
+  timerPausedAt?: number
 }
 
 type ManifestEntry = {

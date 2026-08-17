@@ -77,11 +77,8 @@
       }
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
     <style>
-      #profai-boot{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 18% 20%,rgba(248,113,113,.18),transparent 30%),radial-gradient(circle at 82% 76%,rgba(251,146,60,.14),transparent 30%),#f8fafc;font-family:Inter,system-ui,sans-serif;color:#0f172a}
+      #profai-boot{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 18% 20%,rgba(248,113,113,.18),transparent 30%),radial-gradient(circle at 82% 76%,rgba(251,146,60,.14),transparent 30%),#f8fafc;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#0f172a}
       .profai-boot-card{width:min(84vw,390px);padding:36px;border:1px solid rgba(255,255,255,.95);border-radius:32px;background:rgba(255,255,255,.78);box-shadow:0 28px 80px rgba(127,29,29,.14);backdrop-filter:blur(22px);text-align:center}
       .profai-boot-logo{width:84px;height:84px;filter:drop-shadow(0 18px 24px rgba(220,38,38,.25));animation:profaiFloat 2.4s ease-in-out infinite}
       .profai-boot-title{margin:18px 0 4px;font-size:17px;font-weight:900}.profai-boot-copy{margin:0;font-size:12px;color:#64748b}
@@ -89,12 +86,19 @@
       @keyframes profaiFloat{50%{transform:translateY(-8px) rotate(1.5deg)}}@keyframes profaiLoad{from{transform:translateX(-115%)}to{transform:translateX(265%)}}
       @media(prefers-reduced-motion:reduce){.profai-boot-logo,.profai-boot-bar{animation:none}}
     </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-36BQS8GWPQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-36BQS8GWPQ');
+
+      // Keep analytics out of the critical application-loading path.
+      window.addEventListener('load', function () {
+        var analytics = document.createElement('script');
+        analytics.async = true;
+        analytics.src = 'https://www.googletagmanager.com/gtag/js?id=G-36BQS8GWPQ';
+        document.head.appendChild(analytics);
+      }, { once: true });
     </script>
   </head>
   <body>

@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script-defer',
       includeAssets: ['logo.svg'],
       workbox: {
         globPatterns: ['index.html', 'logo.svg', 'assets/index-*.css'],

@@ -191,6 +191,7 @@ export type ProfileOverview = {
     testsCompleted: number
     questionsAnswered: number
     xpEarned: number
+    studyMinutes?: number
     active: boolean
   }>
   achievements: Array<{

@@ -5,7 +5,7 @@ import { useSpeakingStore } from '@/store/speakingStore'
 import type { DashboardOverview, Difficulty, ProfileOverview, TestCategory } from '@/types/platform'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
-import { loadActivityLog } from '@/utils/weeklyPlanner'
+import { loadActivityLog, type ActivityKey, type ActivityLog } from '@/utils/weeklyPlanner'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 
 type TrackKey = ProfileOverview['skillAnalytics']['trackBreakdown'][number]['key']
@@ -43,6 +43,19 @@ const TRACKS: Array<{
   { key: 'SAT_READING_WRITING', label: 'SAT Reading/Writing', radarLabel: 'SAT R/W', group: 'SAT' },
 ]
 
+const LEVEL_THRESHOLDS = [
+  0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200,
+  4000, 5000, 6200, 7600, 9200, 11000, 13000, 15200, 17600, 20200,
+]
+
+const INDEPENDENT_STUDY_KEYS = new Set<ActivityKey>([
+  'vocabulary',
+  'articles',
+  'podcast',
+  'shadowing',
+  'admission',
+])
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.min(max, Math.max(min, Number.isFinite(value) ? value : 0))
 }
@@ -78,15 +91,90 @@ function earnedXp(accuracy: number, explicitXp?: number) {
   return Math.round(100 * ratio * ratio)
 }
 
+function safeRead<T>(reader: () => T[], fallback: T[] = []): T[] {
+  try {
+    return reader()
+  } catch {
+    return fallback
+  }
+}
+
+function uniqueBy<T>(values: T[], keyOf: (value: T) => string): T[] {
+  return [...new Map(values.map((value) => [keyOf(value), value])).values()]
+}
+
+function mergeActivityLogs(...logs: ActivityLog[]): ActivityLog {
+  const merged: ActivityLog = {}
+
+  logs.forEach((log) => {
+    Object.entries(log).forEach(([dateKey, activity]) => {
+      const current = merged[dateKey] ?? {}
+      Object.entries(activity).forEach(([key, value]) => {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return
+        const activityKey = key as ActivityKey
+        current[activityKey] = (current[activityKey] ?? 0) + value
+      })
+      merged[dateKey] = current
+    })
+  })
+
+  return merged
+}
+
+export function getCombinedActivityLog(userId: string): ActivityLog {
+  const accountLog = safeRead(() => [loadActivityLog(userId)])[0] ?? {}
+  const deviceLog = safeRead(() => [loadActivityLog(undefined)])[0] ?? {}
+  return mergeActivityLogs(accountLog, deviceLog)
+}
+
+function trackedMinutes(activity: ActivityLog[string], keys?: Set<ActivityKey>) {
+  return Object.entries(activity ?? {}).reduce((total, [key, value]) => (
+    !keys || keys.has(key as ActivityKey) ? total + (value ?? 0) : total
+  ), 0)
+}
+
+/** Independent learning earns a small, deterministic 2 XP per five active minutes. */
+export function calculateTrackedStudyXp(minutes: number) {
+  return Math.floor(Math.max(0, minutes) / 5) * 2
+}
+
+function resolveLocalLevelProgress(xp: number) {
+  let level = 1
+  LEVEL_THRESHOLDS.forEach((threshold, index) => {
+    if (xp >= threshold) level = index + 1
+  })
+  const currentLevelThreshold = LEVEL_THRESHOLDS[level - 1] ?? 0
+  const nextLevelThreshold = LEVEL_THRESHOLDS[level] ?? currentLevelThreshold + 3000
+  const levelSpan = Math.max(1, nextLevelThreshold - currentLevelThreshold)
+  const xpIntoCurrent = Math.max(0, xp - currentLevelThreshold)
+
+  return {
+    level,
+    currentLevelThreshold,
+    nextLevelThreshold,
+    xpIntoCurrent,
+    levelSpan,
+    progressPercent: clamp((xpIntoCurrent / levelSpan) * 100),
+  }
+}
+
 function isReadingAttemptSynced(userId: string, scope: 'reading' | 'listening', sourceKey: string) {
   if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(`smarttest-${scope}-sync:${userId}:${sourceKey}`) === 'ok'
+  try {
+    return window.localStorage.getItem(`smarttest-${scope}-sync:${userId}:${sourceKey}`) === 'ok'
+  } catch {
+    return false
+  }
 }
 
 export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt[] {
   if (typeof window === 'undefined') return []
 
-  const readingAttempts: LocalDashboardAttempt[] = getReadingAnalysisHistory(userId)
+  const readingHistory = uniqueBy([
+    ...safeRead(() => getReadingAnalysisHistory(userId)),
+    ...safeRead(() => getReadingAnalysisHistory()),
+  ], (entry) => entry.attemptKey)
+  const readingAttempts: LocalDashboardAttempt[] = readingHistory
     .filter((entry) => entry.totalQuestions > 0)
     .map((entry) => {
       const test = resolveIeltsTestById(entry.testId)
@@ -107,12 +195,16 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
         timeSpentSec: Math.max(1, entry.timeSpent),
         totalQuestions: entry.totalQuestions,
         tracks: [isListening ? 'IELTS_LISTENING' : 'IELTS_READING'],
-        synced: isReadingAttemptSynced(userId, scope, entry.attemptKey),
+        synced: isReadingAttemptSynced(userId, scope, entry.attemptKey) || isReadingAttemptSynced('guest', scope, entry.attemptKey),
         examScore: entry.bandScore,
       }
     })
 
-  const writingAttempts: LocalDashboardAttempt[] = getWritingAnalysisHistory(userId).map((entry) => {
+  const writingHistory = uniqueBy([
+    ...safeRead(() => getWritingAnalysisHistory(userId)),
+    ...safeRead(() => getWritingAnalysisHistory()),
+  ], (entry) => entry.attemptKey)
+  const writingAttempts: LocalDashboardAttempt[] = writingHistory.map((entry) => {
     const accuracy = clamp((entry.overallBand / 9) * 100)
     const durationSec = entry.taskType === 'task1' ? 20 * 60 : 40 * 60
     return {
@@ -134,8 +226,8 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
     }
   })
 
-  const speakingAttempts: LocalDashboardAttempt[] = useSpeakingStore.getState().sessions
-    .filter((session) => session.userId === userId)
+  const speakingAttempts: LocalDashboardAttempt[] = safeRead(() => useSpeakingStore.getState().sessions)
+    .filter((session) => session.userId === userId || session.userId === null)
     .map((session) => {
       const accuracy = clamp((session.overallBand / 9) * 100)
       return {
@@ -195,7 +287,10 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
     }]
   })
 
-  return [...readingAttempts, ...writingAttempts, ...speakingAttempts, ...satAttempts]
+  return uniqueBy(
+    [...readingAttempts, ...writingAttempts, ...speakingAttempts, ...satAttempts],
+    (attempt) => `${attempt.category}:${attempt.sourceKey}`,
+  )
     .sort((left, right) => new Date(left.completedAt).getTime() - new Date(right.completedAt).getTime())
 }
 
@@ -244,7 +339,7 @@ export function mergeLocalDashboardPerformance(overview: DashboardOverview, user
   const unsyncedAttempts = localAttempts.filter((attempt) => (
     !hasServerHistory || !dashboardAttemptAlreadySynced(attempt, overview)
   ))
-  const activityLog = loadActivityLog(userId)
+  const activityLog = getCombinedActivityLog(userId)
 
   const serverCount = overview.metrics.totalTests
   const totalTests = serverCount + unsyncedAttempts.length
@@ -337,21 +432,23 @@ function combineMetric(
 
 export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: string): ProfileOverview {
   const localAttempts = getLocalDashboardAttempts(userId)
-  if (!localAttempts.length) return overview
-
   const hasServerHistory = overview.stats.totalAttempts > 0
   const unsyncedAttempts = localAttempts.filter((attempt) => (
     !hasServerHistory || (!attempt.synced && !isRepresentedByBackend(attempt, overview))
   ))
-  if (!unsyncedAttempts.length) return overview
+  const activityLog = getCombinedActivityLog(userId)
 
   const serverCount = overview.stats.totalAttempts
   const totalAttempts = serverCount + unsyncedAttempts.length
   const localAccuracyTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.accuracy, 0)
   const localScoreTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.finalScore, 0)
   const localXp = unsyncedAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0)
-  const averageAccuracy = (overview.stats.averageAccuracy * serverCount + localAccuracyTotal) / totalAttempts
-  const averageScore = (overview.stats.averageScore * serverCount + localScoreTotal) / totalAttempts
+  const averageAccuracy = totalAttempts
+    ? (overview.stats.averageAccuracy * serverCount + localAccuracyTotal) / totalAttempts
+    : 0
+  const averageScore = totalAttempts
+    ? (overview.stats.averageScore * serverCount + localScoreTotal) / totalAttempts
+    : 0
   const trackBreakdown = TRACKS.map((definition) => {
     const serverMetric = overview.skillAnalytics.trackBreakdown.find((metric) => metric.key === definition.key) ?? {
       key: definition.key,
@@ -394,7 +491,13 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     .sort((left, right) => new Date(right.completedAt).getTime() - new Date(left.completedAt).getTime())
     .slice(0, 8)
 
-  const momentumSource = [...overview.recentAttempts, ...localRecent]
+  const activityEvents = Object.entries(activityLog).flatMap(([dateKey, activity]) => {
+    const xpEarned = calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS))
+    return xpEarned > 0
+      ? [{ completedAt: `${dateKey}T12:00:00`, xpEarned, finalScore: 0, percentage: 0 }]
+      : []
+  })
+  const momentumSource = [...overview.recentAttempts, ...localRecent, ...activityEvents]
     .sort((left, right) => new Date(left.completedAt).getTime() - new Date(right.completedAt).getTime())
     .slice(-10)
   let cumulativeXp = 0
@@ -403,7 +506,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     return {
       label: momentumSource.length <= 5
         ? new Date(attempt.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : `T${index + 1}`,
+        : `A${index + 1}`,
       xp: cumulativeXp,
       score: Number(attempt.finalScore.toFixed(2)),
       accuracy: Number(attempt.percentage.toFixed(2)),
@@ -411,23 +514,112 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
   })
   const weeklyActivity = overview.weeklyActivity.map((day) => {
     const dateKey = day.date.slice(0, 10)
-    const dailyAttempts = unsyncedAttempts.filter((attempt) => attempt.completedAt.slice(0, 10) === dateKey)
+    const dailyAttempts = unsyncedAttempts.filter((attempt) => localDateKey(attempt.completedAt) === dateKey)
+    const dayLog = activityLog[dateKey] ?? {}
+    const studyMinutes = Math.round(trackedMinutes(dayLog))
+    const studyXp = calculateTrackedStudyXp(trackedMinutes(dayLog, INDEPENDENT_STUDY_KEYS))
     return {
       ...day,
       testsCompleted: day.testsCompleted + dailyAttempts.length,
       questionsAnswered: day.questionsAnswered + dailyAttempts.reduce((total, attempt) => total + attempt.totalQuestions, 0),
-      xpEarned: day.xpEarned + dailyAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0),
-      active: day.active || dailyAttempts.length > 0,
+      xpEarned: day.xpEarned + dailyAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0) + studyXp,
+      studyMinutes,
+      active: day.active || dailyAttempts.length > 0 || studyMinutes > 0,
     }
   })
 
-  const totalXp = Math.max(overview.profile.xp, overview.profile.xp + localXp)
-  const level = Math.max(overview.profile.level, Math.floor(totalXp / 200) + 1)
-  const levelStart = (level - 1) * 200
+  const totalStudyMinutes = Object.values(activityLog).reduce(
+    (total, activity) => total + trackedMinutes(activity),
+    0,
+  )
+  const studyXp = Object.values(activityLog).reduce(
+    (total, activity) => total + calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS)),
+    0,
+  )
+  const totalXp = overview.profile.xp + localXp + studyXp
+  const levelProgress = resolveLocalLevelProgress(totalXp)
+  const activeDates = new Set<string>()
+  localAttempts.forEach((attempt) => {
+    const dateKey = localDateKey(attempt.completedAt)
+    if (dateKey) activeDates.add(dateKey)
+  })
+  Object.entries(activityLog).forEach(([dateKey, activity]) => {
+    if (trackedMinutes(activity) > 0) activeDates.add(dateKey)
+  })
+  weeklyActivity.forEach((day) => {
+    if (day.active) activeDates.add(day.date.slice(0, 10))
+  })
+  const currentStreak = Math.max(overview.profile.currentStreak, calculateActivityStreak(activeDates))
+
+  const localAchievements: ProfileOverview['achievements'] = [
+    totalAttempts >= 1
+      ? {
+          unlockedAt: recentAttempts[0]?.completedAt ?? new Date().toISOString(),
+          achievement: {
+            id: 'local-first-practice',
+            slug: 'first-practice',
+            title: 'First scored practice',
+            description: 'Completed the first scored IELTS or SAT practice.',
+            icon: 'activity',
+            xpReward: 0,
+          },
+        }
+      : null,
+    totalAttempts >= 5
+      ? {
+          unlockedAt: recentAttempts[0]?.completedAt ?? new Date().toISOString(),
+          achievement: {
+            id: 'local-five-practices',
+            slug: 'five-practices',
+            title: 'Practice momentum',
+            description: 'Completed five scored practice sessions.',
+            icon: 'target',
+            xpReward: 0,
+          },
+        }
+      : null,
+    totalStudyMinutes >= 60
+      ? {
+          unlockedAt: new Date().toISOString(),
+          achievement: {
+            id: 'local-study-hour',
+            slug: 'study-hour',
+            title: 'Focused learner',
+            description: 'Recorded at least one hour of focused learning activity.',
+            icon: 'clock',
+            xpReward: 0,
+          },
+        }
+      : null,
+    currentStreak >= 3
+      ? {
+          unlockedAt: new Date().toISOString(),
+          achievement: {
+            id: 'local-three-day-streak',
+            slug: 'three-day-streak',
+            title: 'Consistency builder',
+            description: 'Built a three-day learning streak.',
+            icon: 'flame',
+            xpReward: 0,
+          },
+        }
+      : null,
+  ].filter((entry): entry is ProfileOverview['achievements'][number] => entry !== null)
+  const serverAchievementSlugs = new Set(overview.achievements.map((entry) => entry.achievement.slug))
+  const achievements = [
+    ...overview.achievements,
+    ...localAchievements.filter((entry) => !serverAchievementSlugs.has(entry.achievement.slug)),
+  ]
 
   return {
     ...overview,
-    profile: { ...overview.profile, xp: totalXp, level },
+    profile: {
+      ...overview.profile,
+      xp: totalXp,
+      level: Math.max(overview.profile.level, levelProgress.level),
+      currentStreak,
+      longestStreak: Math.max(overview.profile.longestStreak, currentStreak),
+    },
     stats: {
       totalAttempts,
       averageScore: Number(averageScore.toFixed(2)),
@@ -435,11 +627,11 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
       totalXpFromAttempts: overview.stats.totalXpFromAttempts + localXp,
     },
     levelProgress: {
-      currentLevelThreshold: levelStart,
-      nextLevelThreshold: level * 200,
-      xpIntoCurrent: totalXp - levelStart,
-      levelSpan: 200,
-      progressPercent: clamp(((totalXp - levelStart) / 200) * 100),
+      currentLevelThreshold: levelProgress.currentLevelThreshold,
+      nextLevelThreshold: levelProgress.nextLevelThreshold,
+      xpIntoCurrent: levelProgress.xpIntoCurrent,
+      levelSpan: levelProgress.levelSpan,
+      progressPercent: levelProgress.progressPercent,
     },
     skillAnalytics: {
       ...overview.skillAnalytics,
@@ -449,15 +641,18 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
       },
       radar,
       trackBreakdown,
-      xpMomentum,
-      insights: [{
-        id: 'local-history-restored',
-        type: 'success',
-        title: 'Saved activity restored',
-        message: 'Your locally saved IELTS and SAT attempts are included together with synced account results.',
-      }, ...overview.skillAnalytics.insights.filter((insight) => insight.id !== 'guest-tip-register')],
+      xpMomentum: xpMomentum.length ? xpMomentum : overview.skillAnalytics.xpMomentum,
+      insights: localAttempts.length || totalStudyMinutes > 0
+        ? [{
+            id: 'local-history-restored',
+            type: 'success',
+            title: 'Saved activity restored',
+            message: 'Your account, device and older guest learning history are included together.',
+          }, ...overview.skillAnalytics.insights.filter((insight) => insight.id !== 'guest-tip-register')]
+        : overview.skillAnalytics.insights,
     },
     weeklyActivity,
+    achievements,
     recentAttempts,
   }
 }

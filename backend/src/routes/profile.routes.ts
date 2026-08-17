@@ -374,6 +374,7 @@ router.get(
           level: true,
           currentStreak: true,
           longestStreak: true,
+          lastActiveDate: true,
           createdAt: true,
         },
       }),
@@ -476,6 +477,10 @@ router.get(
 
     const levelProgress = getLevelProgress(user.xp, user.level)
     const competitiveRow = leaderboardSnapshot.rows.find((row) => row.userId === userId) ?? null
+    const daysSinceActivity = user.lastActiveDate
+      ? Math.floor((startOfUtcDay(now).getTime() - startOfUtcDay(user.lastActiveDate).getTime()) / 86_400_000)
+      : Number.POSITIVE_INFINITY
+    const currentStreak = daysSinceActivity <= 1 ? user.currentStreak : 0
 
     return res.json({
       profile: {
@@ -484,7 +489,7 @@ router.get(
         email: user.email,
         level: user.level,
         xp: user.xp,
-        currentStreak: user.currentStreak,
+        currentStreak,
         longestStreak: user.longestStreak,
         memberSince: user.createdAt,
       },

@@ -46,6 +46,23 @@ function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
 }
 
+function buildEmptyWeeklyActivity(now = new Date()): ProfileOverview['weeklyActivity'] {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now)
+    date.setHours(12, 0, 0, 0)
+    date.setDate(date.getDate() - (6 - index))
+    return {
+      date: date.toISOString(),
+      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      testsCompleted: 0,
+      questionsAnswered: 0,
+      xpEarned: 0,
+      studyMinutes: 0,
+      active: false,
+    }
+  })
+}
+
 const guestProfilePreview: ProfileOverview = {
   profile: {
     id: 'guest-preview',
@@ -145,15 +162,7 @@ const guestProfilePreview: ProfileOverview = {
       },
     ],
   },
-  weeklyActivity: [
-    { date: '2026-04-11', label: 'Sat', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-12', label: 'Sun', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-13', label: 'Mon', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-14', label: 'Tue', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-15', label: 'Wed', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-16', label: 'Thu', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-    { date: '2026-04-17', label: 'Fri', testsCompleted: 0, questionsAnswered: 0, xpEarned: 0, active: false },
-  ],
+  weeklyActivity: buildEmptyWeeklyActivity(),
   achievements: [],
   recentAttempts: [],
 }
@@ -187,6 +196,7 @@ function buildProfileFallback(user: AuthUser | null): ProfileOverview {
       levelSpan: span,
       progressPercent: Math.round((intoCurrent / span) * 100),
     },
+    weeklyActivity: buildEmptyWeeklyActivity(),
   }
 }
 
@@ -200,14 +210,14 @@ const tooltipStyle = {
   fontWeight: 600,
 }
 
-function ChartEmpty({ label }: { label: string }) {
+function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill in.' }: { label: string; hint?: string }) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
         <Activity className="h-5 w-5" />
       </span>
       <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
-      <p className="text-[11px] text-slate-400">Complete a test to see this fill in.</p>
+      <p className="text-[11px] text-slate-400">{hint}</p>
     </div>
   )
 }
@@ -227,7 +237,9 @@ export default function Profile() {
     [fallbackData, user],
   )
   const usingFallback = !fetchedData
-  const hasActivity = (data?.stats.totalAttempts ?? 0) > 0
+  const hasSkillActivity = data?.skillAnalytics.trackBreakdown.some((item) => item.attempts > 0) ?? false
+  const hasXpHistory = data?.skillAnalytics.xpMomentum.some((item) => item.xp > 0) ?? false
+  const hasWeeklyActivity = data?.weeklyActivity.some((item) => item.active || item.xpEarned > 0 || (item.studyMinutes ?? 0) > 0) ?? false
   const premiumLocked = Boolean(user) && !isPremiumUser(user)
 
   const xpToNext = useMemo(() => {
@@ -468,7 +480,7 @@ export default function Profile() {
             ) : data ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr]">
                 <div className="relative h-64">
-                  {!hasActivity ? <ChartEmpty label="No skill data yet" /> : null}
+                  {!hasSkillActivity ? <ChartEmpty label="No scored skill data yet" /> : null}
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={data.skillAnalytics.radar}>
                       <PolarGrid stroke="#BFDBFE" />
@@ -583,7 +595,7 @@ export default function Profile() {
             <Skeleton className="mt-4 h-72 w-full rounded-2xl" />
           ) : data ? (
             <div className="relative mt-4 h-72 w-full">
-              {!hasActivity ? <ChartEmpty label="No XP history yet" /> : null}
+              {!hasXpHistory ? <ChartEmpty label="No XP history yet" hint="Study or complete a scored practice to build this chart." /> : null}
               <ResponsiveContainer>
                 <AreaChart data={data.skillAnalytics.xpMomentum} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <defs>
@@ -626,14 +638,14 @@ export default function Profile() {
               <ArenaMetricMark icon={Activity} tone="indigo" size="sm" />
               <div>
                 <h2 className="text-lg font-black tracking-tight text-slate-900">Weekly Activity</h2>
-                <p className="text-[11px] font-medium text-slate-500">Tests and XP earned each day</p>
+                <p className="text-[11px] font-medium text-slate-500">Practice, focused study time and XP earned each day</p>
               </div>
             </div>
             {loading ? (
               <Skeleton className="mt-4 h-64 w-full rounded-2xl" />
             ) : data ? (
               <div className="relative mt-4 h-64 w-full">
-                {!hasActivity ? <ChartEmpty label="No activity this week" /> : null}
+                {!hasWeeklyActivity ? <ChartEmpty label="No activity this week" hint="Active learning minutes will appear here automatically." /> : null}
                 <ResponsiveContainer>
                   <BarChart data={data.weeklyActivity}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -641,6 +653,7 @@ export default function Profile() {
                     <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={tickStyle} />
                     <Tooltip cursor={{ fill: 'rgba(37,99,235,0.06)' }} contentStyle={tooltipStyle} />
                     <Bar dataKey="xpEarned" radius={[10, 10, 4, 4]} fill="url(#weeklyXpGradient)" animationDuration={700} />
+                    <Bar dataKey="studyMinutes" name="Study minutes" radius={[10, 10, 4, 4]} fill="#60A5FA" animationDuration={700} />
                     <defs>
                       <linearGradient id="weeklyXpGradient" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0%" stopColor="#F59E0B" />
@@ -679,9 +692,15 @@ export default function Profile() {
                         <p className="truncate text-sm font-bold text-slate-900">{entry.achievement.title}</p>
                         <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">{entry.achievement.description}</p>
                       </div>
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                        <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />+{entry.achievement.xpReward}
-                      </span>
+                      {entry.achievement.xpReward > 0 ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                          <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />+{entry.achievement.xpReward}
+                        </span>
+                      ) : (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <CheckCircle2 className="h-3 w-3" /> Earned
+                        </span>
+                      )}
                     </div>
                   </StaggerItem>
                 ))}

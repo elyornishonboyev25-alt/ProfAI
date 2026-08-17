@@ -67,6 +67,13 @@ export type DashboardOverview = {
     rankTrend: 'up' | 'down' | 'same'
     isCurrentUser: boolean
   }>
+  targets?: {
+    targetExam: 'IELTS' | 'SAT' | 'BOTH' | null
+    currentIeltsScore: number | null
+    targetIeltsScore: number | null
+    currentSatScore: number | null
+    targetSatScore: number | null
+  }
 }
 
 export type ProfileOverview = {

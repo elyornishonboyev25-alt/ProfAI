@@ -10,7 +10,7 @@ import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 
 type TrackKey = ProfileOverview['skillAnalytics']['trackBreakdown'][number]['key']
 
-type LocalAttempt = {
+export type LocalDashboardAttempt = {
   id: string
   sourceKey: string
   title: string
@@ -25,6 +25,8 @@ type LocalAttempt = {
   totalQuestions: number
   tracks: TrackKey[]
   synced: boolean
+  /** Native exam scale when available: IELTS band or full SAT score. */
+  examScore?: number
 }
 
 const TRACKS: Array<{
@@ -81,10 +83,10 @@ function isReadingAttemptSynced(userId: string, scope: 'reading' | 'listening', 
   return window.localStorage.getItem(`smarttest-${scope}-sync:${userId}:${sourceKey}`) === 'ok'
 }
 
-function buildLocalAttempts(userId: string): LocalAttempt[] {
+export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt[] {
   if (typeof window === 'undefined') return []
 
-  const readingAttempts: LocalAttempt[] = getReadingAnalysisHistory(userId)
+  const readingAttempts: LocalDashboardAttempt[] = getReadingAnalysisHistory(userId)
     .filter((entry) => entry.totalQuestions > 0)
     .map((entry) => {
       const test = resolveIeltsTestById(entry.testId)
@@ -106,10 +108,11 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
         totalQuestions: entry.totalQuestions,
         tracks: [isListening ? 'IELTS_LISTENING' : 'IELTS_READING'],
         synced: isReadingAttemptSynced(userId, scope, entry.attemptKey),
+        examScore: entry.bandScore,
       }
     })
 
-  const writingAttempts: LocalAttempt[] = getWritingAnalysisHistory(userId).map((entry) => {
+  const writingAttempts: LocalDashboardAttempt[] = getWritingAnalysisHistory(userId).map((entry) => {
     const accuracy = clamp((entry.overallBand / 9) * 100)
     const durationSec = entry.taskType === 'task1' ? 20 * 60 : 40 * 60
     return {
@@ -127,10 +130,11 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
       totalQuestions: 1,
       tracks: ['IELTS_WRITING'],
       synced: false,
+      examScore: entry.overallBand,
     }
   })
 
-  const speakingAttempts: LocalAttempt[] = useSpeakingStore.getState().sessions
+  const speakingAttempts: LocalDashboardAttempt[] = useSpeakingStore.getState().sessions
     .filter((session) => session.userId === userId)
     .map((session) => {
       const accuracy = clamp((session.overallBand / 9) * 100)
@@ -149,6 +153,7 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
         totalQuestions: 1,
         tracks: ['IELTS_SPEAKING'],
         synced: false,
+        examScore: session.overallBand,
       }
     })
 
@@ -157,7 +162,7 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
     getSATSectionTest(test.mockId, 'math'),
     getSATSectionTest(test.mockId, 'reading-writing'),
   ])
-  const satAttempts: LocalAttempt[] = satDefinitions.flatMap((test) => {
+  const satAttempts: LocalDashboardAttempt[] = satDefinitions.flatMap((test) => {
     const attempt = loadSATAttempt(test.id)
     if (!attempt || attempt.status !== 'submitted') return []
     const report = scoreSATModules(test.modules, attempt.answers)
@@ -186,6 +191,7 @@ function buildLocalAttempts(userId: string): LocalAttempt[] {
       totalQuestions: test.questionCount,
       tracks,
       synced: false,
+      examScore: report.midpoint,
     }]
   })
 
@@ -202,7 +208,27 @@ function localDateKey(value: string | Date) {
   return `${year}-${month}-${day}`
 }
 
-function dashboardAttemptAlreadySynced(attempt: LocalAttempt, overview: DashboardOverview) {
+export function calculateActivityStreak(activeDates: Iterable<string>, now = new Date()) {
+  const dates = new Set(activeDates)
+  const cursor = new Date(now)
+  cursor.setHours(12, 0, 0, 0)
+
+  // A streak remains current throughout the following day, matching the
+  // learner-facing grace period used by Speaking analytics.
+  if (!dates.has(localDateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1)
+    if (!dates.has(localDateKey(cursor))) return 0
+  }
+
+  let streak = 0
+  while (dates.has(localDateKey(cursor))) {
+    streak += 1
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}
+
+function dashboardAttemptAlreadySynced(attempt: LocalDashboardAttempt, overview: DashboardOverview) {
   if (attempt.synced) return true
   const normalizedTitle = attempt.title.trim().toLowerCase()
   return overview.activityTimeline.some((item) => (
@@ -213,7 +239,7 @@ function dashboardAttemptAlreadySynced(attempt: LocalAttempt, overview: Dashboar
 }
 
 export function mergeLocalDashboardPerformance(overview: DashboardOverview, userId: string): DashboardOverview {
-  const localAttempts = buildLocalAttempts(userId)
+  const localAttempts = getLocalDashboardAttempts(userId)
   const hasServerHistory = overview.metrics.totalTests > 0
   const unsyncedAttempts = localAttempts.filter((attempt) => (
     !hasServerHistory || !dashboardAttemptAlreadySynced(attempt, overview)
@@ -246,6 +272,20 @@ export function mergeLocalDashboardPerformance(overview: DashboardOverview, user
     }
   })
   const weeklyStudySeconds = weeklyProgress.reduce((total, day) => total + day.studyTimeSec, 0)
+  const activeDates = new Set<string>()
+  localAttempts.forEach((attempt) => {
+    const dateKey = localDateKey(attempt.completedAt)
+    if (dateKey) activeDates.add(dateKey)
+  })
+  Object.entries(activityLog).forEach(([dateKey, activity]) => {
+    const minutes = Object.values(activity).reduce((total, value) => total + (value ?? 0), 0)
+    if (minutes > 0) activeDates.add(dateKey)
+  })
+  weeklyProgress.forEach((day) => {
+    if (day.active || day.studyTimeSec > 0) activeDates.add(day.date.slice(0, 10))
+  })
+
+  const currentStreak = calculateActivityStreak(activeDates)
 
   return {
     ...overview,
@@ -254,12 +294,13 @@ export function mergeLocalDashboardPerformance(overview: DashboardOverview, user
       totalTests,
       averageScore: Number(averageScore.toFixed(2)),
       weeklyStudySeconds,
+      currentStreak: Math.max(overview.metrics.currentStreak, currentStreak),
     },
     weeklyProgress,
   }
 }
 
-function isRepresentedByBackend(attempt: LocalAttempt, overview: ProfileOverview) {
+function isRepresentedByBackend(attempt: LocalDashboardAttempt, overview: ProfileOverview) {
   return overview.recentAttempts.some((serverAttempt) => (
     serverAttempt.test.category === attempt.category &&
     serverAttempt.test.title.trim().toLowerCase() === attempt.title.trim().toLowerCase() &&
@@ -269,7 +310,7 @@ function isRepresentedByBackend(attempt: LocalAttempt, overview: ProfileOverview
 
 function combineMetric(
   serverMetric: ProfileOverview['skillAnalytics']['trackBreakdown'][number],
-  localAttempts: LocalAttempt[],
+  localAttempts: LocalDashboardAttempt[],
 ) {
   const matching = localAttempts.filter((attempt) => attempt.tracks.includes(serverMetric.key))
   if (!matching.length) return serverMetric
@@ -295,7 +336,7 @@ function combineMetric(
 }
 
 export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: string): ProfileOverview {
-  const localAttempts = buildLocalAttempts(userId)
+  const localAttempts = getLocalDashboardAttempts(userId)
   if (!localAttempts.length) return overview
 
   const hasServerHistory = overview.stats.totalAttempts > 0

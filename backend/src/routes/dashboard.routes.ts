@@ -39,6 +39,15 @@ router.get(
           level: true,
           currentStreak: true,
           longestStreak: true,
+          profile: {
+            select: {
+              targetExam: true,
+              currentIeltsScore: true,
+              targetIeltsScore: true,
+              currentSatScore: true,
+              targetSatScore: true,
+            },
+          },
         },
       }),
       prisma.testAttempt.aggregate({
@@ -172,6 +181,13 @@ router.get(
     })
 
     const weeklyStudySeconds = weeklyProgress.reduce((total, day) => total + day.studyTimeSec, 0)
+    const latestAttemptDate = recentAttempts[0]?.completedAt ?? null
+    const lastAttemptDay = latestAttemptDate ? startOfUtcDay(latestAttemptDate) : null
+    const currentDay = startOfUtcDay(now)
+    const daysSinceAttempt = lastAttemptDay
+      ? Math.round((currentDay.getTime() - lastAttemptDay.getTime()) / (24 * 60 * 60 * 1000))
+      : Number.POSITIVE_INFINITY
+    const currentStreak = daysSinceAttempt <= 1 ? user.currentStreak : 0
 
     const activityTimeline = [
       ...recentAttempts.map((attempt) => ({
@@ -198,12 +214,21 @@ router.get(
         averageScore: Number((attemptAggregate._avg.finalScore ?? 0).toFixed(2)),
         weeklyStudySeconds,
         currentRank: leaderboard.currentUserRank,
-        currentStreak: user.currentStreak,
+        currentStreak,
       },
       weeklyProgress,
       recommendedTests,
       activityTimeline,
       miniLeaderboard,
+      targets: {
+        targetExam: user.profile?.targetExam === 'IELTS' || user.profile?.targetExam === 'SAT' || user.profile?.targetExam === 'BOTH'
+          ? user.profile.targetExam
+          : null,
+        currentIeltsScore: user.profile?.currentIeltsScore ?? null,
+        targetIeltsScore: user.profile?.targetIeltsScore ?? null,
+        currentSatScore: user.profile?.currentSatScore ?? null,
+        targetSatScore: user.profile?.targetSatScore ?? null,
+      },
     })
   }),
 )

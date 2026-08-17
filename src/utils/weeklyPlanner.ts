@@ -29,6 +29,10 @@ export type ActivityKey =
   | 'sat-rw'
   | 'vocabulary'
   | 'mock'
+  | 'articles'
+  | 'podcast'
+  | 'shadowing'
+  | 'admission'
 
 export type GeneratedTask = {
   id: string
@@ -472,7 +476,7 @@ export function routeToActivityKey(pathname: string): ActivityKey | null {
   const normalized = pathname.toLowerCase()
 
   if (normalized.startsWith('/vocabulary')) return 'vocabulary'
-  if (normalized.startsWith('/speaking-community') || normalized.startsWith('/speaking-lab') || normalized.startsWith('/ielts/speaking')) return 'ielts-speaking'
+  if (normalized === '/community' || normalized.startsWith('/speaking-community') || normalized.startsWith('/speaking-lab') || normalized.startsWith('/ielts/speaking')) return 'ielts-speaking'
   if (normalized.startsWith('/ielts/writing') || normalized.startsWith('/writing-lab')) return 'ielts-writing'
   if (normalized.startsWith('/ielts/listening') || normalized.startsWith('/test/listening')) return 'ielts-listening'
   if (normalized.startsWith('/ielts/reading') || normalized.startsWith('/test/reading')) return 'ielts-reading'
@@ -480,6 +484,10 @@ export function routeToActivityKey(pathname: string): ActivityKey | null {
   if (normalized.startsWith('/sat/math')) return 'sat-math'
   if (normalized.startsWith('/sat/reading-writing')) return 'sat-rw'
   if (normalized.startsWith('/mock')) return 'mock'
+  if (normalized.startsWith('/articles')) return 'articles'
+  if (normalized.startsWith('/podcast')) return 'podcast'
+  if (normalized.startsWith('/shadowing-lab')) return 'shadowing'
+  if (normalized.startsWith('/admission')) return 'admission'
 
   return null
 }

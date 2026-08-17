@@ -24,6 +24,12 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
+import {
+  getDashboardExamScores,
+  getDashboardLearningMetrics,
+  getNextDashboardAchievement,
+  type DashboardLearningKey,
+} from '@/utils/dashboardMetrics'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
@@ -53,12 +59,24 @@ const EMPTY_OVERVIEW: DashboardOverview = {
 }
 
 const learningCards = [
-  { title: 'IELTS Mock', subtitle: 'Full exam simulation', path: '/mock/ielts', icon: BookOpen, progress: 68 },
-  { title: 'SAT Mock', subtitle: 'Official-style practice', path: '/sat', icon: CheckCircle2, progress: 45 },
-  { title: 'Admission Hub', subtitle: 'Explore top universities', path: '/admission/universities', icon: GraduationCap, progress: 27 },
-  { title: 'Speaking Practice', subtitle: 'Build confidence', path: '/speaking-community', icon: Mic2, progress: 52 },
-  { title: 'Vocabulary', subtitle: 'Daily word set', path: '/vocabulary', icon: Sparkles, progress: 80 },
+  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
+  { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
+  { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap },
+  { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2 },
+  { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
 ] as const
+
+function bestAvailableScore(...scores: Array<number | null | undefined>) {
+  const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
+  return available.length ? Math.max(...available) : 0
+}
+
+function achievementProgressLabel(current: number, target: number, unit: 'count' | 'days' | 'minutes' | 'percent') {
+  if (unit === 'minutes') return `${(current / 60).toFixed(1)} / ${(target / 60).toFixed(0)}h`
+  if (unit === 'percent') return `${current}% / ${target}%`
+  if (unit === 'days') return `${current} / ${target} days`
+  return `${current} / ${target} complete`
+}
 
 function initials(name: string) {
   return name
@@ -114,21 +132,37 @@ export default function Dashboard() {
     () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
     [baseOverview, user],
   )
-  const targetExam = profile?.targetExam ?? 'IELTS'
-  const ieltsCurrent = profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
-  const satCurrent = profile?.currentSatScore ?? 1050
+  const localMetrics = useMemo(
+    () => user ? getDashboardLearningMetrics(user.id) : null,
+    [overview, user],
+  )
+  const measuredScores = useMemo(
+    () => user ? getDashboardExamScores(user.id) : { ielts: null, sat: null },
+    [overview, user],
+  )
+  const nextAchievement = useMemo(() => getNextDashboardAchievement(overview), [overview])
+  const targetExam = overview.targets?.targetExam ?? profile?.targetExam ?? 'IELTS'
+  const ieltsCurrent = bestAvailableScore(
+    measuredScores.ielts,
+    overview.targets?.currentIeltsScore,
+    profile?.currentIeltsScore,
+  )
+  const satCurrent = bestAvailableScore(
+    measuredScores.sat,
+    overview.targets?.currentSatScore,
+    profile?.currentSatScore,
+  )
   const examTargets = [
     ...(targetExam !== 'SAT'
-      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: profile?.targetIeltsScore ?? 7.5 }]
+      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: overview.targets?.targetIeltsScore ?? profile?.targetIeltsScore ?? 7.5 }]
       : []),
     ...(targetExam !== 'IELTS'
-      ? [{ label: 'SAT' as const, current: satCurrent, target: profile?.targetSatScore ?? 1450 }]
+      ? [{ label: 'SAT' as const, current: satCurrent, target: overview.targets?.targetSatScore ?? profile?.targetSatScore ?? 1450 }]
       : []),
   ]
-  const targetProgress = Math.max(
-    8,
-    Math.min(100, Math.round(examTargets.reduce((sum, exam) => sum + exam.current / exam.target, 0) / examTargets.length * 100)),
-  )
+  const targetProgress = Math.max(0, Math.min(100, Math.round(
+    examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
+  )))
 
   const chartData = useMemo(
     () => overview.weeklyProgress.map((day) => ({ ...day, activity: Number(((day.studyTimeSec ?? 0) / 3600).toFixed(2)) })),
@@ -136,14 +170,15 @@ export default function Dashboard() {
   )
   const weeklyHours = overview.metrics.weeklyStudySeconds / 3600
   const weeklyHoursLabel = weeklyHours > 0 && weeklyHours < 0.1 ? '<0.1h' : `${weeklyHours.toFixed(1)}h`
-  const leaderboard = overview.miniLeaderboard.length
-    ? overview.miniLeaderboard.slice(0, 3)
-    : [
-        { rank: 1, fullName: firstName, totalXp: user?.xp ?? 2436, accuracy: 0, rankTrend: 'same' as const, isCurrentUser: true },
-        { rank: 2, fullName: 'Amina', totalXp: 1430, accuracy: 91, rankTrend: 'up' as const, isCurrentUser: false },
-        { rank: 3, fullName: 'Daniel', totalXp: 1379, accuracy: 88, rankTrend: 'same' as const, isCurrentUser: false },
-      ]
-  const podium = [leaderboard[1], leaderboard[0], leaderboard[2]].filter(Boolean)
+  const leaderboard = overview.miniLeaderboard.slice(0, 3)
+  const podium = [
+    { row: leaderboard[1], place: 2 },
+    { row: leaderboard[0], place: 1 },
+    { row: leaderboard[2], place: 3 },
+  ].filter((item): item is { row: NonNullable<typeof item.row>; place: number } => Boolean(item.row))
+  const currentRank = overview.metrics.currentRank
+    ?? overview.miniLeaderboard.find((row) => row.isCurrentUser)?.rank
+    ?? null
 
   return (
     <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
@@ -169,7 +204,7 @@ export default function Dashboard() {
             </div>
             <span className="dashboard-streak hidden sm:inline-flex" title="Current streak">
               <Flame className="h-5 w-5 fill-current" />
-              <strong>{overview.metrics.currentStreak || user?.currentStreak || 0}</strong>
+              <strong>{overview.metrics.currentStreak}</strong>
             </span>
           </div>
 
@@ -225,7 +260,7 @@ export default function Dashboard() {
               {examTargets.map((exam) => (
                 <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
                   <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
-                  <strong className="mt-0.5 block text-base">{exam.current}</strong>
+                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
                 </div>
               ))}
             </div>
@@ -241,9 +276,14 @@ export default function Dashboard() {
           <div className="min-w-0 space-y-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} />
-              <StatCard label="Mocks completed" value={String(overview.metrics.totalTests)} note="All attempts" icon={CheckCircle2} />
-              <StatCard label="Average score" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="All practice" icon={BarChart3} />
-              <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} />
+              <StatCard
+                label="Practices completed"
+                value={String(overview.metrics.totalTests)}
+                note={`${localMetrics?.completedMocks ?? 0} full mocks`}
+                icon={CheckCircle2}
+              />
+              <StatCard label="Average score" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Scored practice" icon={BarChart3} />
+              <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
             </div>
 
             <article className="dashboard-glass-card p-5">
@@ -272,7 +312,11 @@ export default function Dashboard() {
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                      <Tooltip contentStyle={{ border: '1px solid #fecdd3', borderRadius: 14, fontSize: 12 }} cursor={{ fill: 'rgba(244,63,94,.05)' }} />
+                      <Tooltip
+                        formatter={(value) => [`${Number(value).toFixed(2)}h`, 'Study time']}
+                        contentStyle={{ border: '1px solid #fecdd3', borderRadius: 14, fontSize: 12 }}
+                        cursor={{ fill: 'rgba(244,63,94,.05)' }}
+                      />
                       <Bar dataKey="activity" fill="url(#dashboardBars)" radius={[10, 10, 3, 3]} maxBarSize={42} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -292,8 +336,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-5 flex items-end justify-center gap-2">
-                {podium.map((row, index) => {
-                  const place = index === 1 ? 1 : index === 0 ? 2 : 3
+                {podium.map(({ row, place }) => {
                   return (
                     <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
                       <div className={`dashboard-podium-avatar dashboard-podium-${place}`}>{initials(row.fullName)}</div>
@@ -303,16 +346,22 @@ export default function Dashboard() {
                 })}
               </div>
 
-              <div className="mt-5 divide-y divide-slate-200/75">
-                {leaderboard.map((row) => (
-                  <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
-                    <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-slate-200 text-[9px] font-black text-slate-700">{initials(row.fullName)}</span>
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
-                    <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')}</span>
-                  </button>
-                ))}
-              </div>
+              {leaderboard.length ? (
+                <div className="mt-5 divide-y divide-slate-200/75">
+                  {leaderboard.map((row) => (
+                    <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
+                      <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-slate-200 text-[9px] font-black text-slate-700">{initials(row.fullName)}</span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
+                      <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-5 rounded-xl bg-slate-50 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+                  Complete a scored practice to join the board.
+                </p>
+              )}
             </article>
 
             <article className="dashboard-glass-card p-5">
@@ -320,13 +369,15 @@ export default function Dashboard() {
                 <span className="dashboard-medal-icon"><Award className="h-5 w-5" /></span>
                 <div>
                   <p className="text-sm font-black text-slate-900">Next achievement</p>
-                  <p className="text-[10px] font-semibold text-slate-500">Complete 3 practice sessions</p>
+                  <p className="text-[10px] font-semibold text-slate-500">{nextAchievement.description}</p>
                 </div>
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
-                <motion.div initial={{ width: 0 }} animate={{ width: '66%' }} className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-300" />
+                <motion.div initial={{ width: 0 }} animate={{ width: `${nextAchievement.progress}%` }} className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-300" />
               </div>
-              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">2 / 3 complete</p>
+              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
+                {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
+              </p>
             </article>
           </div>
         </section>
@@ -346,16 +397,22 @@ export default function Dashboard() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {learningCards.map((card) => {
               const Icon = card.icon
+              const metric = localMetrics?.learning[card.key as DashboardLearningKey] ?? {
+                progress: 0,
+                completed: 0,
+                total: 1,
+                detail: 'No activity yet',
+              }
               return (
                 <button key={card.title} type="button" onClick={() => navigate(card.path)} className="dashboard-learning-card group">
                   <div className="flex items-start justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600"><Icon className="h-4 w-4" /></span>
-                    <span className="text-[10px] font-black text-red-600">{card.progress}%</span>
+                    <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
                   </div>
                   <h3 className="mt-3 text-sm font-black text-slate-900">{card.title}</h3>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{card.subtitle}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
-                    <div className="h-full rounded-full bg-gradient-to-r from-red-900 via-red-500 to-rose-300" style={{ width: `${card.progress}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-red-900 via-red-500 to-rose-300" style={{ width: `${metric.progress}%` }} />
                   </div>
                   <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
                     Continue <ArrowRight className="h-3 w-3" />

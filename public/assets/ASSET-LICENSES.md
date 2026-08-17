@@ -33,8 +33,8 @@ Files: `avatars/aziza.svg`, `kamron.svg`, `dilnoza.svg`, `sardor.svg`, `malika.s
 
 ## University identity policy
 
-University names are used nominatively for educational comparison. No third-party official university logo files are bundled. The interface uses neutral text/monogram identity tiles based on each university name and colour metadata.
+University names and marks are used nominatively for educational comparison. No third-party official university logo files are bundled. Logo images are loaded at runtime from the institution's public website, Google's cached copy of that website icon, or a Wikimedia-hosted copy of the institutional mark. A neutral landmark tile is shown if those sources are unavailable. Display does not imply endorsement by the institution.
 
-This is intentional: official university marks are protected trademarks and some institutions restrict external use. For example, Oxford states that external logo use requires approval. See [Oxford brand guidance](https://www.ox.ac.uk/about/the-university/brand) and [logo protection guidance](https://www.ox.ac.uk/about/the-university/brand/protecting-the-university-logo).
+Official university marks remain protected trademarks and some institutions restrict external use. For example, Oxford states that external logo use requires approval. See [Oxford brand guidance](https://www.ox.ac.uk/about/the-university/brand) and [logo protection guidance](https://www.ox.ac.uk/about/the-university/brand/protecting-the-university-logo).
 
-Before replacing a neutral monogram with an official logo, obtain written permission or a licence and add the exact asset, source, permitted scope, and expiry/review date to this manifest.
+Before bundling a third-party mark in the repository, obtain written permission or a licence and add the exact asset, source, permitted scope, and expiry/review date to this manifest.

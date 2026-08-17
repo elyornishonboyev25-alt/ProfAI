@@ -79,6 +79,9 @@ export type LearnerSearchResult = {
   targetScore: number | null
   targetUniversitySlug: string | null
   online: boolean
+  /** True for the current or last confirmed weekly community champion. */
+  weeklyChampion?: boolean
+  weeklyScore?: number
 }
 
 export type PublicProfilePayload = {

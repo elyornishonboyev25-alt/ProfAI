@@ -17,7 +17,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import CatalogHero from '@/components/catalog/CatalogHero'
 
-type Filter = 'all' | 'days' | 'full-mocks'
+type Filter = 'days' | 'full-mocks'
 
 type Row = {
   id: string
@@ -53,7 +53,7 @@ export default function IELTSSpeakingTests() {
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
 
-  const [activeFilter, setActiveFilter] = useState<Filter>('all')
+  const [activeFilter, setActiveFilter] = useState<Filter>('days')
   const [searchTerm, setSearchTerm] = useState('')
   const speakingTrial = useFeatureTrial('speakingDaily')
   const [showTrialGate, setShowTrialGate] = useState(false)
@@ -96,10 +96,8 @@ export default function IELTSSpeakingTests() {
   const allRows = useMemo<Row[]>(() => [...dayRows, ...mockRows], [dayRows, mockRows])
 
   const filteredRows = useMemo(() => {
-    if (activeFilter === 'days') return dayRows
-    if (activeFilter === 'full-mocks') return mockRows
-    return allRows
-  }, [activeFilter, allRows, dayRows, mockRows])
+    return activeFilter === 'full-mocks' ? mockRows : dayRows
+  }, [activeFilter, dayRows, mockRows])
 
   const visibleRows = useMemo(() => {
     const q = searchTerm.trim().toLowerCase()
@@ -194,9 +192,8 @@ export default function IELTSSpeakingTests() {
         title={<>Speak with confidence. <span className="arena-title-accent-red">Score with proof.</span></>}
         subtitle="A focused 30-day speaking roadmap with realistic full mocks, AI examiner feedback, grammar correction and Band 8+ model answers."
         filters={[
-          { id: 'all', label: 'All sessions', count: counts.all },
-          { id: 'days', label: 'Daily practice', count: counts.days },
-          { id: 'full-mocks', label: 'Full mocks', count: counts.mocks },
+          { id: 'days', label: 'Day Tests', count: counts.days },
+          { id: 'full-mocks', label: 'Full Tests', count: counts.mocks },
         ]}
         activeFilter={activeFilter}
         onFilterChange={(id) => setActiveFilter(id as Filter)}
@@ -214,7 +211,7 @@ export default function IELTSSpeakingTests() {
 
       {/* Layout */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(79,70,229,0.1)] lg:sticky lg:top-5">
+        <aside className="h-fit rounded-3xl border border-white/75 bg-white/62 p-4 shadow-[0_22px_54px_rgba(79,70,229,0.12)] backdrop-blur-2xl lg:sticky lg:top-5">
           <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75 p-3 text-xs">
             <p className="font-semibold uppercase tracking-[0.14em] text-indigo-600">How the cycle works</p>
             <p className="mt-2 text-slate-600">
@@ -224,12 +221,12 @@ export default function IELTSSpeakingTests() {
           </div>
         </aside>
 
-        <div className="rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
+        <div className="rounded-3xl border border-white/75 bg-white/62 p-4 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Speaking Roadmap</h2>
               <p className="text-sm text-slate-500">
-                {activeFilter === 'days' ? 'Day-by-day question lineup' : activeFilter === 'full-mocks' ? 'Full mock simulation' : 'Daily questions + full mocks'}
+                {activeFilter === 'days' ? 'Focused day-by-day practice' : 'Complete exam simulations'}
               </p>
             </div>
             <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
@@ -247,7 +244,7 @@ export default function IELTSSpeakingTests() {
             />
           </label>
 
-          <div className="mt-3 max-h-[68vh] divide-y divide-slate-200/70 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white">
+          <div className="mt-3 max-h-[68vh] divide-y divide-white/70 overflow-y-auto rounded-2xl border border-white/80 bg-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
             {visibleRows.length === 0 ? (
               <div className="px-4 py-10 text-center">
                 <p className="text-sm font-semibold text-slate-700">No tests match</p>

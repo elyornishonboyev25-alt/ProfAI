@@ -1809,6 +1809,7 @@ router.get(
         OR: [{ profile: { is: null } }, { profile: { isPublic: true } }],
       },
       select: {
+        id: true,
         nickname: true,
         avatarUrl: true,
         level: true,
@@ -1828,6 +1829,46 @@ router.get(
       take: 24,
       orderBy: { xp: 'desc' },
     })
+
+    // Prefer the validated rolling seven-day winner, but never let the community
+    // crown disappear during a quiet week. LeaderboardState keeps the last
+    // confirmed rank-one learner until a newly calculated board replaces them.
+    const weeklyBoard = await generateLeaderboard({
+      period: 'week',
+      currentUserId: req.user!.id,
+    }).catch(() => null)
+    const visibleUserIds = new Set(users.map((user) => user.id))
+    const liveChampion = weeklyBoard?.weeklyPremiumWinner
+    const visibleWeeklyLeader = liveChampion && visibleUserIds.has(liveChampion.userId)
+      ? liveChampion
+      : weeklyBoard?.rows.find((row) => visibleUserIds.has(row.userId)) ?? null
+
+    const persistedChampion = visibleWeeklyLeader
+      ? null
+      : await prisma.leaderboardState.findFirst({
+          where: {
+            period: 'WEEK',
+            categoryKey: 'ALL',
+            rank: 1,
+            userId: { in: [...visibleUserIds] },
+          },
+          orderBy: { updatedAt: 'desc' },
+          select: { userId: true, score: true },
+        })
+
+    // A brand-new installation may not have leaderboard history yet. In that
+    // case the highest-XP public learner owns the crown until real weekly data
+    // produces a replacement.
+    const fallbackChampion = users[0] ?? null
+    const weeklyChampionId = visibleWeeklyLeader?.userId
+      ?? persistedChampion?.userId
+      ?? fallbackChampion?.id
+      ?? null
+    const weeklyChampionScore = visibleWeeklyLeader?.rankingScore
+      ?? persistedChampion?.score
+      ?? fallbackChampion?.xp
+      ?? 0
+
     return res.json({
       results: users.map((u) => ({
         nickname: u.nickname,
@@ -1841,6 +1882,8 @@ router.get(
         targetScore: u.profile?.targetScore ?? null,
         targetUniversitySlug: u.profile?.targetUniversitySlug ?? null,
         online: Boolean(u.lastActiveDate && u.lastActiveDate >= activeSince),
+        weeklyChampion: u.id === weeklyChampionId,
+        weeklyScore: u.id === weeklyChampionId ? weeklyChampionScore : 0,
       })),
     })
   }),

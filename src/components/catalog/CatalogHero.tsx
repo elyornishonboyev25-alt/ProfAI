@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ClipboardCheck, Sparkles } from 'lucide-react'
 import { PageHero } from '@/components/ui/system'
 
 type CatalogTone = 'rose' | 'sky' | 'blue'
@@ -75,6 +75,7 @@ export default function CatalogHero({
   actions,
 }: CatalogHeroProps) {
   const theme = TONES[tone]
+  const usesSplitTestNavigation = filters.length === 2
 
   return (
     <PageHero className="w-full min-w-0 max-w-full px-5 py-6 sm:px-7 sm:py-7 lg:px-9">
@@ -120,27 +121,63 @@ export default function CatalogHero({
         </div>
       </div>
 
-      <div className="mt-6 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        className={`mt-6 w-full min-w-0 max-w-full ${
+          usesSplitTestNavigation
+            ? 'grid gap-2 rounded-[1.75rem] border border-white/80 bg-white/38 p-2 shadow-[0_18px_46px_rgba(30,64,175,0.11),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl sm:max-w-2xl sm:grid-cols-2'
+            : 'flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+        }`}
+        aria-label={usesSplitTestNavigation ? "Choose test collection" : undefined}
+      >
         {filters.map((filter) => {
           const selected = activeFilter === filter.id
+          const isFullTests = filter.id.toLowerCase().includes('full') || filter.id.toLowerCase().includes('mock')
+          const FilterIcon = isFullTests ? ClipboardCheck : CalendarDays
           return (
             <button
               key={filter.id}
               type="button"
               aria-pressed={selected}
               onClick={() => onFilterChange(filter.id)}
-              className={`group relative isolate inline-flex min-h-12 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full border px-5 text-sm font-bold transition duration-300 focus-visible:outline-none focus-visible:ring-2 ${theme.focus} ${
+              className={`group relative isolate inline-flex shrink-0 items-center overflow-hidden border text-sm font-bold transition duration-300 focus-visible:outline-none focus-visible:ring-2 ${theme.focus} ${
+                usesSplitTestNavigation
+                  ? 'min-h-[4.6rem] justify-start gap-3 rounded-[1.25rem] px-4 text-left'
+                  : 'min-h-12 justify-center gap-2 rounded-full px-5'
+              } ${
                 selected
                   ? theme.active
-                  : 'border-white/95 bg-white/52 text-slate-700 shadow-[0_8px_22px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl hover:-translate-y-0.5 hover:bg-white/82'
+                  : 'border-white/95 bg-white/58 text-slate-700 shadow-[0_8px_22px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl hover:-translate-y-0.5 hover:bg-white/86'
               }`}
             >
-              <span className="relative">{filter.label}</span>
-              {typeof filter.count === 'number' ? (
-                <span className={`relative rounded-full px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/18 text-white' : 'bg-slate-900/5 text-slate-500'}`}>
-                  {filter.count}
-                </span>
-              ) : null}
+              {usesSplitTestNavigation ? (
+                <>
+                  <span className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${selected ? 'border-white/20 bg-white/16 text-white' : 'border-blue-100/80 bg-blue-50/70 text-blue-600'}`}>
+                    <FilterIcon className="h-[1.15rem] w-[1.15rem]" />
+                  </span>
+                  <span className="relative min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate">{filter.label}</span>
+                      {typeof filter.count === 'number' ? (
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/18 text-white' : 'bg-slate-900/5 text-slate-500'}`}>
+                          {filter.count}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className={`mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] ${selected ? 'text-white/75' : 'text-slate-400'}`}>
+                      {isFullTests ? 'Complete exam simulation' : 'Focused daily practice'}
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="relative">{filter.label}</span>
+                  {typeof filter.count === 'number' ? (
+                    <span className={`relative rounded-full px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/18 text-white' : 'bg-slate-900/5 text-slate-500'}`}>
+                      {filter.count}
+                    </span>
+                  ) : null}
+                </>
+              )}
             </button>
           )
         })}

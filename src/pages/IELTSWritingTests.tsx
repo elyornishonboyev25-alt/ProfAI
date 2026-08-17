@@ -19,7 +19,7 @@ import {
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import CatalogHero from '@/components/catalog/CatalogHero'
 
-type CatalogFilter = 'all' | 'daily' | 'full-tests'
+type CatalogFilter = 'daily' | 'full-tests'
 
 type CatalogRow = {
   id: string
@@ -40,7 +40,7 @@ export default function IELTSWritingTests() {
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
 
-  const [activeFilter, setActiveFilter] = useState<CatalogFilter>('all')
+  const [activeFilter, setActiveFilter] = useState<CatalogFilter>('daily')
   const [searchTerm, setSearchTerm] = useState('')
 
   const dayCatalog = useMemo(() => getWritingDayCatalog(), [])
@@ -77,10 +77,8 @@ export default function IELTSWritingTests() {
   const allRows = useMemo(() => [...dayRows, ...fullTestRows], [dayRows, fullTestRows])
 
   const filteredRows = useMemo(() => {
-    if (activeFilter === 'daily') return dayRows
-    if (activeFilter === 'full-tests') return fullTestRows
-    return allRows
-  }, [activeFilter, allRows, dayRows, fullTestRows])
+    return activeFilter === 'full-tests' ? fullTestRows : dayRows
+  }, [activeFilter, dayRows, fullTestRows])
 
   const visibleRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()
@@ -120,9 +118,8 @@ export default function IELTSWritingTests() {
         title={<>30 days to sharper <span className="arena-title-accent-red">IELTS Writing.</span></>}
         subtitle="Build exam-ready Task 1 reports and Task 2 essays through a clear daily roadmap, then prove your progress in full mock simulations."
         filters={[
-          { id: 'all', label: 'All tests', count: counts.all },
-          { id: 'daily', label: 'Daily practice', count: counts.daily },
-          { id: 'full-tests', label: 'Full mocks', count: counts.fullTests },
+          { id: 'daily', label: 'Day Tests', count: counts.daily },
+          { id: 'full-tests', label: 'Full Tests', count: counts.fullTests },
         ]}
         activeFilter={activeFilter}
         onFilterChange={(id) => setActiveFilter(id as CatalogFilter)}
@@ -133,7 +130,7 @@ export default function IELTSWritingTests() {
       />
 
       <section className="mt-5 grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_18px_42px_rgba(79,70,229,0.1)] lg:sticky lg:top-5">
+        <aside className="h-fit rounded-3xl border border-white/75 bg-white/62 p-4 shadow-[0_22px_54px_rgba(79,70,229,0.12)] backdrop-blur-2xl lg:sticky lg:top-5">
           <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75 p-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-700">
               Day Pattern
@@ -187,16 +184,12 @@ export default function IELTSWritingTests() {
           </div>
         </aside>
 
-        <div className="rounded-3xl border border-indigo-100/85 bg-white/95 p-4 shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
+        <div className="rounded-3xl border border-white/75 bg-white/62 p-4 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black text-slate-900">Writing Roadmap</h2>
               <p className="text-sm text-slate-500">
-                {activeFilter === 'daily'
-                  ? 'Daily practice lineup'
-                  : activeFilter === 'full-tests'
-                    ? 'Full mock test lineup'
-                    : 'Complete writing lineup'}
+                {activeFilter === 'daily' ? 'Focused day-by-day practice' : 'Complete exam simulations'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
@@ -219,7 +212,7 @@ export default function IELTSWritingTests() {
             />
           </label>
 
-          <div className="mt-3 max-h-[68vh] divide-y divide-slate-200/70 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white">
+          <div className="mt-3 max-h-[68vh] divide-y divide-white/70 overflow-y-auto rounded-2xl border border-white/80 bg-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
             {visibleRows.length === 0 ? (
               <div className="px-4 py-10 text-center">
                 <p className="text-sm font-semibold text-slate-700">No tests found</p>

@@ -326,9 +326,11 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
   // Guard so onEnd fires exactly once, whether via onend, onerror or the watchdog.
   let finished = false
   let watchdog = 0
+  let startTimer = 0
   const finish = () => {
     if (finished) return
     finished = true
+    window.clearTimeout(startTimer)
     window.clearTimeout(watchdog)
     options.onEnd?.()
   }
@@ -356,10 +358,13 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
 
   // Chrome needs a brief tick after cancel() before speak() takes — keep it minimal
   // so speech starts almost immediately (the long pause was perceived latency).
-  window.setTimeout(() => synth.speak(utterance), 15)
+  startTimer = window.setTimeout(() => {
+    if (!finished) synth.speak(utterance)
+  }, 15)
 
   return () => {
     finished = true
+    window.clearTimeout(startTimer)
     window.clearTimeout(watchdog)
     synth.cancel()
   }

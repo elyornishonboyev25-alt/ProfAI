@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
+import { isSpeechSynthesisSupported, speak as speakText } from '@/lib/speech'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
 
@@ -89,40 +90,38 @@ const playWin = () => {
   window.setTimeout(() => tone(1040, 220), 260)
 }
 
-function pickEnglishVoice(voices: SpeechSynthesisVoice[]) {
-  return (
-    voices.find((v) => /en[-_](us|gb|au|ca)/i.test(v.lang)) ?? voices.find((v) => /^en/i.test(v.lang)) ?? null
-  )
-}
-
 export function usePronunciation() {
   const [speakingText, setSpeakingText] = useState<string | null>(null)
-  const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
+  const stopSpeechRef = useRef<() => void>(() => {})
+  const isSupported = isSpeechSynthesisSupported()
 
   const stop = useCallback(() => {
     if (!isSupported) return
-    window.speechSynthesis.cancel()
+    stopSpeechRef.current()
+    stopSpeechRef.current = () => {}
     setSpeakingText(null)
   }, [isSupported])
 
   const speak = useCallback(
     (text: string) => {
-      if (!isSupported) return
-      window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance(text)
-      const v = pickEnglishVoice(window.speechSynthesis.getVoices())
-      if (v) u.voice = v
-      u.lang = v?.lang || 'en-US'
-      u.rate = 0.92
-      u.onend = () => setSpeakingText(null)
-      u.onerror = () => setSpeakingText(null)
-      setSpeakingText(text)
-      window.speechSynthesis.speak(u)
+      const term = text.trim()
+      if (!isSupported || !term) return
+
+      stopSpeechRef.current()
+      setSpeakingText(term)
+      stopSpeechRef.current = speakText(term, {
+        lang: 'en',
+        rate: 0.92,
+        onEnd: () => {
+          stopSpeechRef.current = () => {}
+          setSpeakingText(null)
+        },
+      })
     },
     [isSupported],
   )
 
-  useEffect(() => () => { if (isSupported) window.speechSynthesis.cancel() }, [isSupported])
+  useEffect(() => () => stopSpeechRef.current(), [])
   return { isSupported, speakingText, speak, stop }
 }
 
@@ -269,8 +268,9 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-4xl [perspective:2000px]">
+      <div className="relative mx-auto w-full max-w-4xl [perspective:2000px]">
         <motion.button
+          type="button"
           onClick={() => setFlipped((v) => !v)}
           whileTap={{ scale: 0.99 }}
           className={`relative block w-full text-left ${current.uzbek || current.exampleUzbek ? 'h-[500px] md:h-[520px]' : 'h-[360px] md:h-[400px]'}`}
@@ -279,22 +279,8 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
             {/* front */}
             <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(99,102,241,0.2)]">
               <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pr-24">
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Term</span>
-                {isSupported ? (
-                  <span
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (speakingCurrent) stop()
-                      else speak(current.term)
-                    }}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                  >
-                    {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                    {speakingCurrent ? 'Stop' : 'Listen'}
-                  </span>
-                ) : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center text-center">
                 <p className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl">{current.term}</p>
@@ -324,6 +310,20 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
             </div>
           </motion.div>
         </motion.button>
+        {isSupported ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (speakingCurrent) stop()
+              else speak(current.term)
+            }}
+            className="absolute right-7 top-7 z-20 inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`}
+          >
+            {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            {speakingCurrent ? 'Stop' : 'Listen'}
+          </button>
+        ) : null}
       </div>
 
       {/* known / review */}

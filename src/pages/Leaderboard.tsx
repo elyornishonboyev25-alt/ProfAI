@@ -19,7 +19,9 @@ import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { motion } from 'framer-motion'
-import { Burst, CountUp, CrownBadge, FeatureSticker, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
@@ -37,13 +39,6 @@ const categories: Array<{ label: string; value: TestCategory | 'ALL' }> = [
   { label: 'IELTS', value: 'IELTS' },
   { label: 'SAT', value: 'SAT' },
 ]
-
-function getInitials(fullName: string) {
-  const parts = fullName.split(' ').filter(Boolean)
-  if (parts.length === 0) return 'PL'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
-}
 
 function getMovement(row: LeaderboardRow) {
   if (row.rankTrend === 'same') {
@@ -281,7 +276,7 @@ export default function Leaderboard() {
           description="See verified leaders, rank movement, accuracy and competitive streak intelligence."
         >
         <div className="mb-3 flex items-center gap-2">
-          <FeatureSticker icon={Trophy} tone="amber" />
+          <ArenaMetricMark icon={Trophy} tone="amber" size="sm" />
           <h2 className="text-lg font-black tracking-tight text-slate-900">Podium · Top 3</h2>
         </div>
         {loading ? (
@@ -345,7 +340,7 @@ export default function Leaderboard() {
                             color: 'white',
                           }}
                         >
-                          {getInitials(row.fullName)}
+                          <ProfileAvatar src={row.avatarUrl} alt="" className="rounded-full" />
                         </div>
                         {isFirst ? (
                           <Crown
@@ -409,7 +404,7 @@ export default function Leaderboard() {
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <FeatureSticker icon={Medal} tone="rose" />
+                <ArenaMetricMark icon={Medal} tone="red" size="sm" />
                 <h3 className="text-lg font-black tracking-tight text-slate-900">Top 10 · Pure XP</h3>
               </div>
               {summary ? (
@@ -453,7 +448,7 @@ export default function Leaderboard() {
                         </span>
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-[11px] font-bold text-blue-700">
-                            {getInitials(row.fullName)}
+                            <ProfileAvatar src={row.avatarUrl} alt="" className="rounded-full" />
                           </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-slate-900">
@@ -505,7 +500,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden border-amber-200 p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
               <div className="flex items-center gap-3">
-                <FeatureSticker icon={Crown} tone="amber" size="lg" />
+                <ArenaMetricMark icon={Crown} tone="amber" />
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">Gold League</p>
                   <h3 className="text-lg font-black text-slate-900">League Promotion</h3>
@@ -532,7 +527,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <FeatureSticker icon={Zap} tone="amber" />
+                <ArenaMetricMark icon={Zap} tone="amber" size="sm" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">How XP Works</h3>
               </div>
               <p className="mt-3 text-xs leading-5 text-slate-600">
@@ -571,7 +566,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <FeatureSticker icon={Trophy} tone="rose" />
+                <ArenaMetricMark icon={Trophy} tone="red" size="sm" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">Weekly Champion</h3>
               </div>
               {data?.weeklyPremiumWinner ? (
@@ -595,7 +590,7 @@ export default function Leaderboard() {
               <article className="surface-card relative overflow-hidden p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
                 <div className="flex items-center gap-2">
-                  <FeatureSticker icon={Users} tone="red" />
+                  <ArenaMetricMark icon={Users} tone="red" size="sm" />
                   <h3 className="text-base font-black tracking-tight text-slate-900">Board Snapshot</h3>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -622,7 +617,7 @@ export default function Leaderboard() {
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/55 to-transparent" />
               <div className="flex items-center gap-2">
-                <FeatureSticker icon={Shield} tone="emerald" />
+                <ArenaMetricMark icon={Shield} tone="emerald" size="sm" />
                 <h3 className="text-base font-black tracking-tight text-slate-900">Integrity Rules</h3>
               </div>
               <div className="mt-3 space-y-2">

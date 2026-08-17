@@ -81,7 +81,7 @@ export default function AdmissionLesson() {
         <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
           <h1 className="text-2xl font-black text-slate-900">Lesson not found</h1>
           <p className="mt-2 text-slate-500">This lesson doesn’t exist or hasn’t been added yet.</p>
-          <button onClick={() => navigate('/admission/lessons')} className="premium-back-btn mt-6">
+          <button type="button" onClick={() => navigate('/admission/lessons')} className="premium-back-btn mt-6">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to lessons
           </button>

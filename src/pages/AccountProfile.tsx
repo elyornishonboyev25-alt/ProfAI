@@ -36,6 +36,7 @@ import { getUniversityBySlug } from '@/data/admission'
 import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import BadgeShelf from '@/components/achievements/BadgeShelf'
 import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
@@ -290,7 +291,6 @@ export default function AccountProfile() {
     }
   }
 
-  const initials = (savedNickname || user?.fullName || 'U').slice(0, 2).toUpperCase()
 
   const signOut = async () => {
     if (signingOut) return
@@ -361,7 +361,7 @@ export default function AccountProfile() {
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
                 <div className="relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]">
-                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="profile-avatar-media profile-avatar-media--hero" /> : initials}
+                  <ProfileAvatar src={avatarUrl} alt="Profile" className="profile-avatar-media--hero" />
                 </div>
                 <button
                   type="button"

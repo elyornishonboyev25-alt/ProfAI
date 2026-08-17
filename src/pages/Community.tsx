@@ -4,10 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Award,
-  BarChart3,
   BadgeCheck,
-  Bot,
   ChevronDown,
+  CircleHelp,
   Crown,
   Flame,
   Globe2,
@@ -15,7 +14,6 @@ import {
   Loader2,
   MapPin,
   MessageCircleMore,
-  MessagesSquare,
   Mic,
   Radio,
   Search,
@@ -23,7 +21,6 @@ import {
   Sparkles,
   Target,
   Users,
-  Video,
   Zap,
 } from 'lucide-react'
 import {
@@ -35,34 +32,24 @@ import {
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { cn } from '@/components/ui/utils'
 import { useCommunityTrial } from '@/hooks/useFeatureTrial'
-import AiCoach from '@/components/speaking/sections/AiCoach'
 import Debate from '@/components/speaking/sections/Debate'
 import Partner from '@/components/speaking/sections/Partner'
-import Progress from '@/components/speaking/sections/Progress'
+import DiscussionRoom from '@/components/community/DiscussionRoom'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import '@/styles/community.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
 type SmartFilter = 'sameBand' | 'sameCountry' | 'online'
-export type CommunityMode = 'people' | 'ai' | 'debate' | 'partner' | 'progress'
+export type CommunityMode = 'people' | 'debate' | 'partner' | 'questions' | 'admissions'
 
-const COMMUNITY_MODES = [
-  { id: 'people', label: 'People', icon: Users },
-  { id: 'ai', label: 'AI Coach', icon: Bot },
-  { id: 'debate', label: 'Debate', icon: MessagesSquare },
-  { id: 'partner', label: 'Partner', icon: Mic },
-  { id: 'progress', label: 'Progress', icon: BarChart3 },
-] as const
+const COMMUNITY_MODES: CommunityMode[] = ['people', 'debate', 'partner', 'questions', 'admissions']
 
 const STUDY_ROOMS = [
-  { name: 'IELTS Band 7+ room', detail: 'Speaking practice', icon: Video, section: 'partner' },
-  { name: 'Daily mock club', detail: 'Timed challenges', icon: GraduationCap, section: 'debate' },
-  { name: 'University 2027', detail: 'Application peers', icon: Users, section: 'debate' },
-  { name: 'Fluency builders', detail: 'Open conversation', icon: MessageCircleMore, section: 'partner' },
+  { name: 'IELTS Band 7+ room', detail: 'Live group debate', icon: Mic, section: 'debate' },
+  { name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp, section: 'questions' },
+  { name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap, section: 'admissions' },
+  { name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore, section: 'partner' },
 ] as const
-
-function initialsOf(nickname: string | null) {
-  return (nickname ?? '?').slice(0, 2).toUpperCase()
-}
 
 function normalizeScore(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === '') return null
@@ -95,7 +82,7 @@ export default function Community() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedMode = searchParams.get('mode')
-  const mode: CommunityMode = COMMUNITY_MODES.some((item) => item.id === requestedMode) ? requestedMode as CommunityMode : 'people'
+  const mode: CommunityMode = COMMUNITY_MODES.includes(requestedMode as CommunityMode) ? requestedMode as CommunityMode : 'people'
   const [query, setQuery] = useState('')
   const [exam, setExam] = useState<ExamFilter>('ALL')
   const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
@@ -106,6 +93,11 @@ export default function Community() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const debounceRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (requestedMode === 'ai') navigate('/ielts/speaking/tests?coach=1', { replace: true })
+    if (requestedMode === 'progress') setSearchParams({}, { replace: true })
+  }, [navigate, requestedMode, setSearchParams])
 
   const sameBandActive = smartFilters.includes('sameBand')
   const sameCountryActive = smartFilters.includes('sameCountry')
@@ -206,13 +198,6 @@ export default function Community() {
               <span>Dashboard</span>
             </button>
           </div>
-
-          <nav className="community-mode-nav" aria-label="Community modes">
-            {COMMUNITY_MODES.map((item) => {
-              const Icon = item.icon
-              return <button key={item.id} type="button" onClick={() => selectMode(item.id)} aria-current={mode === item.id ? 'page' : undefined} className={cn('community-mode-btn', mode === item.id && 'is-active')}><Icon className="h-4 w-4" /><span>{item.label}</span></button>
-            })}
-          </nav>
 
           {mode === 'people' ? <div className="community-search-bar">
             <label className="community-search-field">
@@ -330,6 +315,19 @@ export default function Community() {
 function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode, 'people'>; onModeChange: (mode: CommunityMode) => void }) {
   const trial = useCommunityTrial()
   const live = mode === 'debate' || mode === 'partner'
+  const heading = mode === 'debate'
+    ? 'Join the IELTS Band 7+ debate room.'
+    : mode === 'partner'
+      ? 'Meet a live speaking partner.'
+      : mode === 'questions'
+        ? 'Bring your hardest study question.'
+        : 'Talk openly about studying abroad.'
+  const eyebrow = live ? 'Speaking studio' : 'Community room'
+  const description = mode === 'questions'
+    ? 'Ask clearly, compare approaches and build the answer together in a focused text room.'
+    : mode === 'admissions'
+      ? 'Share application, scholarship, visa and university-life experience in one open group.'
+      : 'Live voice practice in one calm, focused community workspace.'
 
   useEffect(() => {
     if (trial.isPremium || !live || trial.locked) return
@@ -342,9 +340,10 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
   return (
     <section className="community-speaking-workspace">
       <div className="community-speaking-heading">
-        <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> Speaking studio</span>
-        <h1>{mode === 'ai' ? 'Practise with your AI coach.' : mode === 'debate' ? 'Join a focused debate.' : mode === 'partner' ? 'Meet a live speaking partner.' : 'Track every speaking session.'}</h1>
-        <p>AI practice, live rooms and verified progress now live in one community workspace.</p>
+        <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {eyebrow}</span>
+        <h1>{heading}</h1>
+        <p>{description}</p>
+        <button type="button" onClick={() => onModeChange('people')} className="community-back-btn mt-4"><ArrowLeft className="h-4 w-4" /> Back to Community</button>
       </div>
 
       {live && !trial.isPremium ? (
@@ -355,10 +354,10 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
       ) : null}
 
       <div className="community-speaking-surface">
-        {mode === 'ai' ? <AiCoach /> : null}
         {mode === 'debate' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Debate /> : null}
         {mode === 'partner' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Partner onExit={() => onModeChange('people')} /> : null}
-        {mode === 'progress' ? <Progress onStart={() => onModeChange('ai')} /> : null}
+        {mode === 'questions' ? <DiscussionRoom roomId="hard-questions" title="Hard Questions" description="Ask difficult questions and work through answers together." /> : null}
+        {mode === 'admissions' ? <DiscussionRoom roomId="study-abroad" title="Study Abroad Lounge" description="A shared room for applications, scholarships, visas and university life." /> : null}
       </div>
     </section>
   )
@@ -396,7 +395,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
     >
       {featured ? <span className="community-top-badge"><Crown className="h-5 w-5" /> Top learner this week</span> : null}
       <div className="community-avatar-ring">
-        <div className="community-avatar">{learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}</div>
+        <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} />
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
@@ -418,7 +417,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
 function SuggestedPartner({ learner, score, onOpen }: { learner: LearnerSearchResult; score: number; onOpen: () => void }) {
   return (
     <button type="button" disabled={!learner.nickname} onClick={onOpen} className="community-suggested-card">
-      <span className="community-suggested-avatar">{learner.avatarUrl ? <img src={learner.avatarUrl} alt="" className="profile-avatar-media" /> : initialsOf(learner.nickname)}</span>
+      <span className="community-suggested-avatar"><ProfileAvatar src={learner.avatarUrl} alt="" /></span>
       <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em>View match</em></span>
       <span className="community-match-ring" style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties}><b>{score}%</b></span>
     </button>

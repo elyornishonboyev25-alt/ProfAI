@@ -234,7 +234,7 @@ export default function AdmissionUniversities() {
 
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
         <header className="admission-hub-nav">
-          <button className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
+          <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
             <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
             <span className="admission-hub-wordmark">Prof<span>AI</span></span>
             <span className="admission-hub-divider" aria-hidden="true" />
@@ -242,19 +242,19 @@ export default function AdmissionUniversities() {
           </button>
 
           <nav className="admission-journey" aria-label="Admission journey">
-            <button className="is-active" onClick={() => navigate('/admission/universities')}>Choose</button>
+            <button type="button" className="is-active" onClick={() => navigate('/admission/universities')}>Choose</button>
             <ArrowRight aria-hidden="true" />
-            <button onClick={() => navigate('/admission/lessons')}>Prepare</button>
+            <button type="button" onClick={() => navigate('/admission/lessons')}>Prepare</button>
             <ArrowRight aria-hidden="true" />
-            <button onClick={() => navigate('/admission/lessons')}>Apply</button>
+            <button type="button" onClick={() => navigate('/admission/lessons')}>Apply</button>
             <ArrowRight aria-hidden="true" />
-            <button onClick={() => navigate('/admission')}>Admitted</button>
+            <button type="button" onClick={() => navigate('/admission')}>Admitted</button>
           </nav>
         </header>
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-globe-column">
-            <button onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
+            <button type="button" onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
               <ArrowLeft className="h-4 w-4" /> <span>Back to Dashboard</span>
             </button>
             <div className="admission-globe-sticky">
@@ -290,7 +290,7 @@ export default function AdmissionUniversities() {
                 <span><Compass className="h-3.5 w-3.5" /> {filtered.length} universities found</span>
                 <span className="hidden sm:inline">Complete QS 2027 top {QS_TOP_50_COUNT}</span>
                 {hasFilters && (
-                  <button onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
+                  <button type="button" onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
                 )}
               </div>
             </div>
@@ -306,7 +306,7 @@ export default function AdmissionUniversities() {
                   <Search className="h-7 w-7" />
                   <h2>No universities found</h2>
                   <p>Try a wider country, score, budget or ranking filter.</p>
-                  <button onClick={clearFilters}>Clear all filters</button>
+                  <button type="button" onClick={clearFilters}>Clear all filters</button>
                 </div>
               ) : (
                 <div className="admission-university-grid">

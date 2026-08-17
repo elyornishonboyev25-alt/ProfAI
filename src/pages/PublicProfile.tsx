@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import {
   ArrowLeft,
   AtSign,
@@ -114,7 +115,6 @@ export default function PublicProfile() {
 
   const p = data.profile
   const v = data.visibility
-  const initials = (p.nickname ?? 'U').slice(0, 2).toUpperCase()
 
   return (
     <Shell onBack={() => navigate('/dashboard')}>
@@ -124,7 +124,7 @@ export default function PublicProfile() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]">
-                {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
+                <ProfileAvatar src={p.avatarUrl} alt="" />
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </div>

@@ -50,7 +50,7 @@ export default function AdmissionUniversity() {
         <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
           <h1 className="text-2xl font-black text-slate-900">University not found</h1>
           <p className="mt-2 text-slate-500">This profile doesn’t exist or hasn’t been added yet.</p>
-          <button onClick={() => navigate('/admission/universities')} className="premium-back-btn mt-6">
+          <button type="button" onClick={() => navigate('/admission/universities')} className="premium-back-btn mt-6">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to rankings
           </button>
@@ -108,6 +108,7 @@ export default function AdmissionUniversity() {
             />
             <div className="relative">
               <button
+                type="button"
                 onClick={() => navigate('/admission/universities')}
                 className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
               >

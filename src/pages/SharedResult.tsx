@@ -13,6 +13,7 @@ import {
 
 import { getSharedResult, type PublicSharedResult } from '@/lib/sharedResultsApi'
 import { useToastStore } from '@/store/toastStore'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60)
@@ -110,13 +111,7 @@ export default function SharedResult() {
                 <GraduationCap className="h-4 w-4" /> Verified learning result
               </span>
               <div className="mt-5 flex items-center gap-3">
-                {result.user.avatarUrl ? (
-                  <img src={result.user.avatarUrl} alt="" className="h-12 w-12 rounded-2xl border border-white object-cover shadow-md" />
-                ) : (
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-700 text-lg font-black text-white shadow-md">
-                    {result.user.fullName.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <ProfileAvatar src={result.user.avatarUrl} alt="" className="h-12 w-12 rounded-2xl border border-white shadow-md" />
                 <div>
                   <p className="font-black text-slate-950">{learnerName}</p>
                   <p className="text-xs font-semibold text-slate-500">Shared from ProfAI</p>

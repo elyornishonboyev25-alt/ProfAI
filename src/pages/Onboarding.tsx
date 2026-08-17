@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Globe2,
   MapPin,
+  ShieldCheck,
   School,
   Sparkles,
   Target,
@@ -27,6 +28,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
+import { createAssignedAvatarDataUrl, createAvatarSeed, type LearnerGender } from '@/utils/avatarAssignment'
 import {
   loadOnboardingProfile,
   saveOnboardingProfile,
@@ -38,7 +40,7 @@ import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6
 
-type Gender = 'FEMALE' | 'MALE' | 'PREFER_NOT_TO_SAY'
+type Gender = LearnerGender
 
 const GRADE_LEVELS = ['8th grade', '9th grade', '10th grade', '11th grade', '12th grade', 'Gap year', 'University'] as const
 
@@ -76,17 +78,6 @@ const EXAM_CARDS = [
 ]
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
-
-const AVATAR_PRESETS = [
-  'aziza',
-  'kamron',
-  'dilnoza',
-  'sardor',
-  'malika',
-  'javohir',
-  'zarina',
-  'temur',
-] as const
 
 // College Board weekend dates for the 2026–27 international testing year.
 // Keeping the ISO value makes countdowns timezone-safe and easy to update.
@@ -168,10 +159,12 @@ export default function Onboarding() {
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
   const [messageIndex, setMessageIndex] = useState(0)
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? '')
+  const [avatarSource, setAvatarSource] = useState<'auto' | 'custom'>(user?.avatarUrl ? 'custom' : 'auto')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [saveError, setSaveError] = useState('')
 
   const firstNameRef = useRef<HTMLInputElement>(null)
+  const avatarSeedRef = useRef(createAvatarSeed(user?.id))
 
   const saveAvatarFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -182,6 +175,7 @@ export default function Onboarding() {
       const next = result.avatarUrl ?? dataUrl
       setAvatarPreview(next)
       setUserAvatar(next)
+      setAvatarSource('custom')
     } catch {
       const localUrl = URL.createObjectURL(file)
       setAvatarPreview(localUrl)
@@ -190,18 +184,30 @@ export default function Onboarding() {
     }
   }
 
-  const choosePreset = async (name: string) => {
-    const src = `/assets/avatars/${name}.svg`
-    setAvatarPreview(src)
-    setUserAvatar(src)
-    try {
-      const response = await fetch(src)
-      const blob = await response.blob()
-      await saveAvatarFile(new File([blob], `${name}.svg`, { type: blob.type || 'image/svg+xml' }))
-    } catch {
-      // The local preset remains available even when the profile API is offline.
+  useEffect(() => {
+    if (avatarSource !== 'auto') return
+    let active = true
+    setAvatarUploading(true)
+    createAssignedAvatarDataUrl(gender, avatarSeedRef.current)
+      .then(async (dataUrl) => {
+        if (!active) return
+        setAvatarPreview(dataUrl)
+        setUserAvatar(dataUrl)
+        try {
+          const result = await uploadAvatar(dataUrl)
+          if (active && result.avatarUrl) {
+            setAvatarPreview(result.avatarUrl)
+            setUserAvatar(result.avatarUrl)
+          }
+        } catch {
+          // The generated local avatar remains fully usable while offline.
+        }
+      })
+      .finally(() => active && setAvatarUploading(false))
+    return () => {
+      active = false
     }
-  }
+  }, [avatarSource, gender, setUserAvatar])
 
   // Prefill from an existing profile (if the learner is re-running setup) or the
   // account display name so the first step is never empty.
@@ -506,8 +512,8 @@ export default function Onboarding() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
-                                <p className="text-sm font-black text-slate-900">Choose your avatar</p>
-                                <p className="text-[11px] text-slate-500">Pick a style or upload your own photo.</p>
+                                <p className="text-sm font-black text-slate-900">Your ProfAI identity</p>
+                                <p className="text-[11px] text-slate-500">Assigned automatically, or upload your own photo.</p>
                               </div>
                               <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-2 text-[11px] font-black text-blue-700 shadow-sm transition hover:bg-blue-50">
                                 <Upload className="h-3.5 w-3.5" />
@@ -525,24 +531,9 @@ export default function Onboarding() {
                                 />
                               </label>
                             </div>
-                            <div className="mt-3 grid grid-cols-8 gap-1.5">
-                              {AVATAR_PRESETS.map((name) => {
-                                const src = `/assets/avatars/${name}.svg`
-                                const active = avatarPreview.includes(`/${name}.svg`)
-                                return (
-                                  <button
-                                    key={name}
-                                    type="button"
-                                    aria-label={`Choose ${name} avatar`}
-                                    onClick={() => void choosePreset(name)}
-                                    className={`aspect-square overflow-hidden rounded-full border-2 bg-white p-0.5 transition hover:-translate-y-0.5 ${
-                                      active ? 'border-blue-500 shadow-[0_5px_14px_rgba(37,99,235,0.25)]' : 'border-white ring-1 ring-blue-100'
-                                    }`}
-                                  >
-                                    <img src={src} alt="" className="h-full w-full rounded-full object-cover" />
-                                  </button>
-                                )
-                              })}
+                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3 py-1.5 text-[10px] font-bold text-slate-500">
+                              <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                              {avatarSource === 'custom' ? 'Your uploaded photo' : avatarUploading ? 'Creating your avatar…' : 'Private automatic avatar'}
                             </div>
                           </div>
                         </div>
@@ -563,18 +554,21 @@ export default function Onboarding() {
                       </label>
                       <div className="sm:col-span-2">
                         <span className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                          Avatar style
+                          Gender
                         </span>
                         <div className="grid gap-2 sm:grid-cols-3">
                           {([
-                            ['FEMALE', 'Girl', 'Personalizes avatar suggestions'],
-                            ['MALE', 'Boy', 'Personalizes avatar suggestions'],
-                            ['PREFER_NOT_TO_SAY', 'Prefer not to say', 'Keeps this private'],
+                            ['FEMALE', 'Girl', 'Assigns one of 10 unique avatars'],
+                            ['MALE', 'Boy', 'Assigns one of 10 unique avatars'],
+                            ['PREFER_NOT_TO_SAY', 'Prefer not to say', 'Uses one shared neutral avatar'],
                           ] as const).map(([value, label, detail]) => (
                             <button
                               key={value}
                               type="button"
-                              onClick={() => setGender(value)}
+                              onClick={() => {
+                                setGender(value)
+                                if (avatarSource !== 'custom') setAvatarSource('auto')
+                              }}
                               className={`rounded-2xl border px-3 py-3 text-left transition ${
                                 gender === value
                                   ? 'border-blue-500 bg-blue-50 shadow-[0_8px_20px_rgba(37,99,235,0.12)]'

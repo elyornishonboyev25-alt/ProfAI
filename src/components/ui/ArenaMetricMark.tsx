@@ -1,13 +1,14 @@
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/components/ui/utils'
 
-type ArenaMetricTone = 'red' | 'blue' | 'indigo' | 'amber'
+type ArenaMetricTone = 'red' | 'blue' | 'indigo' | 'amber' | 'emerald'
 
 const toneClass: Record<ArenaMetricTone, string> = {
   red: 'arena-metric-mark-red',
   blue: 'arena-metric-mark-blue',
   indigo: 'arena-metric-mark-indigo',
   amber: 'arena-metric-mark-amber',
+  emerald: 'arena-metric-mark-emerald',
 }
 
 export function ArenaMetricMark({

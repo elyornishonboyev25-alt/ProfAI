@@ -20,6 +20,7 @@ import { cn } from '../ui/utils'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 type NavItem = {
   id: string
@@ -77,14 +78,6 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
     if (concealed) element.setAttribute('inert', '')
     else element.removeAttribute('inert')
   }, [concealed])
-  const initials = (user?.fullName || 'Learner')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-
   const handleNavigate = (path: string) => {
     navigate(path)
   }
@@ -197,7 +190,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
                 )}
               >
                 <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(37,99,235,0.25)]">
-                  {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
+                  <ProfileAvatar src={user.avatarUrl} alt="" />
                   {premium ? (
                     <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white">
                       <Crown className="h-2.5 w-2.5" />

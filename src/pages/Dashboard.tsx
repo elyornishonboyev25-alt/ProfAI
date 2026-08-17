@@ -27,6 +27,7 @@ import type { DashboardOverview } from '@/types/platform'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 const emptyWeek = Array.from({ length: 7 }, (_, index) => {
   const date = new Date()
@@ -155,11 +156,7 @@ export default function Dashboard() {
           <div className="flex min-w-0 items-center gap-3.5">
             <div className="relative h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-700 p-[4px] shadow-[0_10px_28px_rgba(37,99,235,0.3)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-sm font-black text-blue-700">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="profile-avatar-media" />
-                ) : (
-                  (user?.fullName || 'PL').slice(0, 2).toUpperCase()
-                )}
+                <ProfileAvatar src={user?.avatarUrl} alt="" />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>

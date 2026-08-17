@@ -15,12 +15,15 @@ type Client = {
   bucket: string | null
   peer: Client | null
   debateRoom: DebateRoom | null
+  discussionRoom: string | null
 }
 
 type DebateRoom = { id: string; topic: string; members: Client[] }
 
 const waiting = new Map<string, Client[]>()
 const debateRooms = new Map<string, DebateRoom>()
+const discussionRooms = new Map<string, Client[]>()
+const discussionHistory = new Map<string, Array<{ id: string; name: string; text: string; createdAt: string }>>()
 
 const DEBATE_ROOM_SIZE = 5
 const DEBATE_MOTIONS = [
@@ -160,6 +163,43 @@ function relayDebateSignal(client: Client, to: string, data: unknown) {
   if (target) send(target, { type: 'debateSignal', from: client.id, data })
 }
 
+function leaveDiscussion(client: Client) {
+  const roomId = client.discussionRoom
+  if (!roomId) return
+  const remaining = (discussionRooms.get(roomId) ?? []).filter((member) => member.id !== client.id)
+  if (remaining.length) discussionRooms.set(roomId, remaining)
+  else discussionRooms.delete(roomId)
+  client.discussionRoom = null
+  for (const member of remaining) send(member, { type: 'discussionPresence', roomId, online: remaining.length })
+}
+
+function joinDiscussion(client: Client, roomId: string) {
+  leaveDiscussion(client)
+  const safeRoomId = roomId === 'hard-questions' ? roomId : 'study-abroad'
+  const members = (discussionRooms.get(safeRoomId) ?? []).filter((member) => member.ws.readyState === WebSocket.OPEN)
+  members.push(client)
+  discussionRooms.set(safeRoomId, members)
+  client.discussionRoom = safeRoomId
+  send(client, { type: 'discussionSnapshot', roomId: safeRoomId, messages: discussionHistory.get(safeRoomId) ?? [] })
+  for (const member of members) send(member, { type: 'discussionPresence', roomId: safeRoomId, online: members.length })
+}
+
+function postDiscussion(client: Client, roomId: string, text: string) {
+  if (client.discussionRoom !== roomId) return
+  const message = {
+    id: genId(),
+    name: client.name,
+    text: text.trim().slice(0, 500),
+    createdAt: new Date().toISOString(),
+  }
+  if (!message.text) return
+  const history = [...(discussionHistory.get(roomId) ?? []), message].slice(-80)
+  discussionHistory.set(roomId, history)
+  for (const member of discussionRooms.get(roomId) ?? []) {
+    send(member, { type: 'discussionMessage', roomId, message })
+  }
+}
+
 function attach(server: Server) {
   const wss = new WebSocketServer({ server, path: '/ws/speaking' })
 
@@ -172,10 +212,11 @@ function attach(server: Server) {
       bucket: null,
       peer: null,
       debateRoom: null,
+      discussionRoom: null,
     }
 
     ws.on('message', (raw) => {
-      let msg: { type?: string; userId?: string; name?: string; part?: number; level?: string; to?: string; data?: unknown }
+      let msg: { type?: string; userId?: string; name?: string; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string }
       try {
         msg = JSON.parse(raw.toString())
       } catch {
@@ -209,6 +250,15 @@ function attach(server: Server) {
         case 'leaveDebate':
           leaveDebate(client, true)
           break
+        case 'joinDiscussion':
+          if (typeof msg.roomId === 'string') joinDiscussion(client, msg.roomId)
+          break
+        case 'discussionMessage':
+          if (typeof msg.roomId === 'string' && typeof msg.text === 'string') postDiscussion(client, msg.roomId, msg.text)
+          break
+        case 'leaveDiscussion':
+          leaveDiscussion(client)
+          break
         default:
           break
       }
@@ -218,6 +268,7 @@ function attach(server: Server) {
       removeFromQueue(client)
       unpair(client, true)
       leaveDebate(client, true)
+      leaveDiscussion(client)
     }
     ws.on('close', cleanup)
     ws.on('error', cleanup)

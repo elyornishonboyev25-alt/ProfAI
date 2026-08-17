@@ -1006,6 +1006,8 @@
   }
 
   .admission-dashboard-back {
+    position: relative;
+    z-index: 30;
     display: inline-flex;
     width: fit-content;
     align-items: center;
@@ -1018,6 +1020,8 @@
     box-shadow: 0 10px 24px rgba(190, 24, 93, 0.1);
     font-size: 0.75rem;
     font-weight: 850;
+    pointer-events: auto;
+    touch-action: manipulation;
   }
 
   .admission-dashboard-back:hover {
@@ -2460,28 +2464,31 @@ body {
 }
 
 .ambient-sphere-a {
-  left: 20vw;
-  top: 24vh;
-  width: 4.5rem;
-  height: 4.5rem;
+  left: 3vw;
+  top: 16vh;
+  width: 5.2rem;
+  height: 5.2rem;
   animation-delay: -3s;
+  animation-duration: 24s;
 }
 
 .ambient-sphere-b {
-  right: 2vw;
-  top: 31vh;
-  width: 8.25rem;
-  height: 8.25rem;
-  opacity: 0.58;
+  right: 1vw;
+  top: 27vh;
+  width: 8.7rem;
+  height: 8.7rem;
+  opacity: 0.64;
   animation-delay: -11s;
+  animation-duration: 29s;
 }
 
 .ambient-sphere-c {
-  left: 28vw;
-  bottom: 9vh;
-  width: 3.2rem;
-  height: 3.2rem;
+  left: 12vw;
+  bottom: 12vh;
+  width: 4rem;
+  height: 4rem;
   animation-delay: -17s;
+  animation-duration: 26s;
 }
 
 @keyframes ambientSphereDrift {
@@ -2505,12 +2512,13 @@ body {
 }
 
 .ambient-sphere-d {
-  right: 18vw;
-  bottom: 6vh;
-  width: 2.7rem;
-  height: 2.7rem;
-  opacity: .5;
+  right: 9vw;
+  bottom: 10vh;
+  width: 3.4rem;
+  height: 3.4rem;
+  opacity: .58;
   animation-delay: -7s;
+  animation-duration: 21s;
 }
 
 .app-shell .backdrop-blur,
@@ -2639,6 +2647,7 @@ body {
 .arena-metric-mark-red { --mark-color: #dc2626; --mark-soft: rgba(220, 38, 38, .14); }
 .arena-metric-mark-indigo { --mark-color: #4f46e5; --mark-soft: rgba(79, 70, 229, .14); }
 .arena-metric-mark-amber { --mark-color: #d97706; --mark-soft: rgba(217, 119, 6, .14); }
+.arena-metric-mark-emerald { --mark-color: #059669; --mark-soft: rgba(5, 150, 105, .14); }
 .arena-loading { display: grid; gap: .7rem; padding: 1rem; }
 .arena-loading > span { height: .8rem; width: calc(100% - var(--row) * 14%); border-radius: 999px; background: linear-gradient(90deg, rgba(226,232,240,.82), rgba(241,245,249,.92)); }
 .arena-loader-progress { animation: arenaLoaderProgress 1.25s var(--app-ease-smooth) infinite; will-change: transform; }

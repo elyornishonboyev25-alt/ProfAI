@@ -16,6 +16,7 @@ import {
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import CatalogHero from '@/components/catalog/CatalogHero'
+import AiCoach from '@/components/speaking/sections/AiCoach'
 
 type Filter = 'all' | 'days' | 'full-mocks'
 
@@ -53,7 +54,7 @@ export default function IELTSSpeakingTests() {
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
 
-  const [activeFilter, setActiveFilter] = useState<Filter>('all')
+  const [activeFilter, setActiveFilter] = useState<Filter>(() => new URLSearchParams(location.search).get('coach') === '1' ? 'full-mocks' : 'all')
   const [searchTerm, setSearchTerm] = useState('')
   const speakingTrial = useFeatureTrial('speakingDaily')
   const [showTrialGate, setShowTrialGate] = useState(false)
@@ -211,6 +212,17 @@ export default function IELTSSpeakingTests() {
           </span>
         ) : undefined}
       />
+
+      {activeFilter === 'full-mocks' ? (
+        <section className="mt-5 rounded-[2rem] border border-white/90 bg-white/70 p-4 shadow-[0_24px_60px_rgba(30,64,175,.1)] backdrop-blur-md sm:p-6">
+          <div className="mb-4">
+            <p className="text-[11px] font-black uppercase tracking-[.16em] text-red-600">AI Speaking Mock</p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Practise with your AI examiner</h2>
+            <p className="mt-1 text-sm text-slate-500">Run a complete IELTS Speaking simulation or warm up with a guided conversation.</p>
+          </div>
+          <AiCoach />
+        </section>
+      ) : null}
 
       {/* Layout */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">

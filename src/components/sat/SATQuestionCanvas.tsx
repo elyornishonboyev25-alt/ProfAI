@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Bookmark, FileImage, ImageOff, ScanText, SpellCheck2 } from 'lucide-react'
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
+import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
 
 type Props = {
@@ -23,24 +24,6 @@ function toPoint(event: ReactPointerEvent<SVGSVGElement>): HighlightPoint {
     x: Math.max(0, Math.min(1000, ((event.clientX - bounds.left) / bounds.width) * 1000)),
     y: Math.max(0, Math.min(1000, ((event.clientY - bounds.top) / bounds.height) * 1000)),
   }
-}
-
-function splitPrompt(prompt: string) {
-  const clean = prompt
-    .replace(/\n(?=•)/g, '\n')
-    .replace(/(?<!•)\n(?!•)/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-  const candidates = [
-    'Which choice', 'Which equation', 'Which table', 'Which expression', 'Which of the following',
-    'Which finding', 'Which quotation', 'Which statement', 'Which claim', 'Which detail',
-    'Which conclusion', 'Which transition', 'Which revision', 'According to the text',
-    'As used in the text', 'The student wants', 'What is', 'What was', 'What does',
-    'What percentage', 'How many', 'How far', 'How does', 'For what value', 'Based on',
-  ]
-  const index = Math.max(...candidates.map((candidate) => clean.lastIndexOf(candidate)))
-  if (index <= 0) return { context: '', task: clean }
-  return { context: clean.slice(0, index).trim(), task: clean.slice(index).trim() }
 }
 
 type HighlightSurface = NonNullable<HighlightStroke['surface']>
@@ -151,7 +134,7 @@ export default function SATQuestionCanvas({
     [strokes],
   )
   const displayedStrokes = useMemo(() => (draft ? [...sourceStrokes, draft] : sourceStrokes), [draft, sourceStrokes])
-  const { context, task } = useMemo(() => splitPrompt(question.prompt), [question.prompt])
+  const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
 
   useEffect(() => {
     setVisualFailed(false)

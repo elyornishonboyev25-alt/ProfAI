@@ -23,6 +23,7 @@ import {
   type SATModuleId,
   type SATQuestion,
 } from '@/features/sat/practiceTest4'
+import { splitSATPrompt } from '@/features/sat/promptLayout'
 import type { SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
 import { useAuthStore } from '@/store/authStore'
@@ -42,13 +43,6 @@ function formatDuration(seconds: number) {
   return hours ? `${hours}h ${minutes}m` : `${Math.max(1, minutes)}m`
 }
 
-function splitPrompt(prompt: string) {
-  const clean = prompt.replace(/\n(?=•)/g, '\n').replace(/(?<!•)\n(?!•)/g, ' ').replace(/\s{2,}/g, ' ').trim()
-  const leads = ['Which choice', 'Which equation', 'Which table', 'Which expression', 'Which of the following', 'What is', 'What was', 'What percentage', 'How many', 'How far', 'For what value', 'Based on']
-  const index = Math.max(...leads.map((lead) => clean.lastIndexOf(lead)))
-  return index > 0 ? { context: clean.slice(0, index).trim(), task: clean.slice(index).trim() } : { context: '', task: clean }
-}
-
 function statusMeta(question: SATQuestion, attempt: SATAttempt) {
   const response = attempt.answers[question.id]
   if (!response?.trim()) return { label: 'Unanswered', className: 'bg-amber-50 text-amber-700', icon: CircleDashed }
@@ -57,7 +51,7 @@ function statusMeta(question: SATQuestion, attempt: SATAttempt) {
 }
 
 function ReviewQuestion({ question, response, note }: { question: SATQuestion; response?: string; note?: string }) {
-  const { context, task } = splitPrompt(question.prompt)
+  const { context, task } = splitSATPrompt(question.prompt)
   const correct = isSATAnswerCorrect(question, response)
   return (
     <div className="space-y-4">

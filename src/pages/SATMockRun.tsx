@@ -47,6 +47,8 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
+const FULLSCREEN_RECOVERY_SECONDS = 30
+const FULLSCREEN_RECOVERY_MS = FULLSCREEN_RECOVERY_SECONDS * 1000
 
 function formatTime(seconds: number) {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -196,6 +198,14 @@ export default function SATMockRun() {
     if (fullscreenElement()) void exit()
   }, [exit, persistUpdate])
 
+  const closeCalculator = useCallback(async () => {
+    const current = attemptRef.current
+    if (current?.status === 'active' && current.mode === 'exam' && !fullscreenElement()) {
+      await enter()
+    }
+    setCalculatorOpen(false)
+  }, [enter])
+
   const advanceModule = useCallback(() => {
     if (!attempt) return
     const nextModuleIndex = attempt.currentModuleIndex + 1
@@ -278,6 +288,27 @@ export default function SATMockRun() {
   useEffect(() => {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
 
+    // The official Desmos calculator is an allowed exam tool. Browsers may leave
+    // fullscreen when its external view opens, so do not start an integrity
+    // countdown while the calculator session is active.
+    if (calculatorOpen) {
+      if (violationDeadline) {
+        const remaining = attempt.pausedModuleSeconds ?? currentModule.durationSeconds
+        setViolationDeadline(null)
+        violationFrozenRef.current = false
+        persistUpdate((current) => ({
+          ...current,
+          pausedModuleSeconds: undefined,
+          timerPausedAt: undefined,
+          moduleDeadlines: {
+            ...current.moduleDeadlines,
+            [currentModule.id]: Date.now() + remaining * 1000,
+          },
+        }))
+      }
+      return
+    }
+
     if (!isFullscreen && !violationDeadline) {
       const deadline = attempt.moduleDeadlines[currentModule.id]
       const remaining = attempt.pausedModuleSeconds ?? (deadline
@@ -289,7 +320,7 @@ export default function SATMockRun() {
         pausedModuleSeconds: remaining,
         moduleDeadlines: { ...current.moduleDeadlines, [currentModule.id]: 0 },
       }))
-      setViolationDeadline(Date.now() + 10_000)
+      setViolationDeadline(Date.now() + FULLSCREEN_RECOVERY_MS)
       return
     }
 
@@ -309,6 +340,7 @@ export default function SATMockRun() {
     }
   }, [
     attempt,
+    calculatorOpen,
     currentModule.durationSeconds,
     currentModule.id,
     isFullscreen,
@@ -318,6 +350,7 @@ export default function SATMockRun() {
 
   useEffect(() => {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
+    if (calculatorOpen) return
     if (!violationDeadline || violationSeconds > 0) return
     setViolationDeadline(null)
     violationFrozenRef.current = false
@@ -328,7 +361,7 @@ export default function SATMockRun() {
       terminationReason: 'Fullscreen recovery window expired.',
     }))
     if (fullscreenElement()) void exit()
-  }, [attempt, exit, persistUpdate, violationDeadline, violationSeconds])
+  }, [attempt, calculatorOpen, exit, persistUpdate, violationDeadline, violationSeconds])
 
   useEffect(() => {
     if (
@@ -453,7 +486,7 @@ export default function SATMockRun() {
           <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">Exam integrity</p>
           <h1 className="mt-2 text-3xl font-black">Attempt ended</h1>
           <p className="mt-3 text-sm font-medium leading-6 text-white/65">
-            You did not return to fullscreen within the 10-second recovery window. This exam attempt
+            You did not return to fullscreen within the {FULLSCREEN_RECOVERY_SECONDS}-second recovery window. This exam attempt
             has been locked and cannot be resumed.
           </p>
           <button
@@ -687,7 +720,7 @@ export default function SATMockRun() {
         </div>
       </footer>
 
-      <DesmosDrawer open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
+      <DesmosDrawer open={calculatorOpen} onClose={closeCalculator} />
 
       <AnimatePresence>
         {directionsOpen ? (
@@ -928,7 +961,7 @@ export default function SATMockRun() {
               <div
                 className="relative mx-auto flex h-40 w-40 items-center justify-center rounded-full"
                 style={{
-                  background: `conic-gradient(#ef4444 ${(violationSeconds / 10) * 360}deg,rgba(255,255,255,.1) 0deg)`,
+                  background: `conic-gradient(#ef4444 ${(violationSeconds / FULLSCREEN_RECOVERY_SECONDS) * 360}deg,rgba(255,255,255,.1) 0deg)`,
                 }}
               >
                 <div className="absolute inset-2 rounded-full bg-slate-950" />

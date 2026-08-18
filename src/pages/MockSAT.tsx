@@ -50,7 +50,7 @@ const modeCards = [
       'Official module timing with a protected fullscreen environment and integrity monitoring.',
     icon: ShieldCheck,
     color: 'red',
-    points: ['Fullscreen required', 'Strict module timer', '10-second recovery window'],
+    points: ['Fullscreen required', 'Strict module timer', '30-second recovery window'],
   },
 ] as const
 

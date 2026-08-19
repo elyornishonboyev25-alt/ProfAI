@@ -27,6 +27,8 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
+import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
+import { universities } from '@/data/admission'
 import {
   loadOnboardingProfile,
   saveOnboardingProfile,
@@ -42,7 +44,7 @@ type Gender = 'FEMALE' | 'MALE' | 'PREFER_NOT_TO_SAY'
 
 const GRADE_LEVELS = ['8th grade', '9th grade', '10th grade', '11th grade', '12th grade', 'Gap year', 'University'] as const
 
-const DESTINATIONS = [
+const CORE_DESTINATIONS = [
   { value: 'United States', flag: '🇺🇸' },
   { value: 'United Kingdom', flag: '🇬🇧' },
   { value: 'Canada', flag: '🇨🇦' },
@@ -50,6 +52,20 @@ const DESTINATIONS = [
   { value: 'Germany', flag: '🇩🇪' },
   { value: 'Singapore', flag: '🇸🇬' },
 ] as const
+
+const universityCountryCounts = universities.reduce<Map<string, { flag: string; count: number }>>((counts, university) => {
+  const current = counts.get(university.country)
+  counts.set(university.country, { flag: university.countryEmoji, count: (current?.count ?? 0) + 1 })
+  return counts
+}, new Map())
+
+const DESTINATIONS = [
+  ...CORE_DESTINATIONS,
+  ...Array.from(universityCountryCounts.entries())
+    .filter(([country]) => !CORE_DESTINATIONS.some((destination) => destination.value === country))
+    .sort(([, a], [, b]) => b.count - a.count)
+    .map(([value, data]) => ({ value, flag: data.flag })),
+]
 
 const EXAM_CARDS = [
   {
@@ -78,15 +94,19 @@ const EXAM_CARDS = [
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
 const AVATAR_PRESETS = [
-  'aziza',
-  'kamron',
-  'dilnoza',
-  'sardor',
-  'malika',
-  'javohir',
-  'zarina',
-  'temur',
+  'learner-01.png',
+  'learner-02.png',
+  'learner-03.png',
+  'learner-04.png',
+  'learner-05.png',
+  'learner-06.png',
+  'learner-07.png',
+  'learner-08.png',
 ] as const
+
+function normalizeSatScore(score: number) {
+  return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
+}
 
 // College Board weekend dates for the 2026–27 international testing year.
 // Keeping the ISO value makes countdowns timezone-safe and easy to update.
@@ -143,6 +163,7 @@ export default function Onboarding() {
   const setUserAvatar = useAuthStore((state: AuthState) => state.setUserAvatar)
   const setUserFullName = useAuthStore((state: AuthState) => state.setUserFullName)
   const setOnboardingCompleted = useAuthStore((state: AuthState) => state.setOnboardingCompleted)
+  const clearSession = useAuthStore((state: AuthState) => state.clearSession)
   const { minimalMotion } = useMotionPreferences()
 
   const [step, setStep] = useState<StepId>(1)
@@ -161,9 +182,9 @@ export default function Onboarding() {
   const [dailyHours, setDailyHours] = useState(3)
   const [ieltsExamDate, setIeltsExamDate] = useState('')
   const [satExamDate, setSatExamDate] = useState<string>(SAT_TEST_DATES[0].value)
-  const [currentIeltsScore, setCurrentIeltsScore] = useState(6)
+  const [currentIeltsScore, setCurrentIeltsScore] = useState<number | null>(null)
   const [targetIeltsScore, setTargetIeltsScore] = useState(7.5)
-  const [currentSatScore, setCurrentSatScore] = useState(1050)
+  const [currentSatScore, setCurrentSatScore] = useState<number | null>(null)
   const [targetSatScore, setTargetSatScore] = useState(1450)
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
   const [messageIndex, setMessageIndex] = useState(0)
@@ -190,14 +211,14 @@ export default function Onboarding() {
     }
   }
 
-  const choosePreset = async (name: string) => {
-    const src = `/assets/avatars/${name}.svg`
+  const choosePreset = async (fileName: string) => {
+    const src = `/assets/avatars/${fileName}`
     setAvatarPreview(src)
     setUserAvatar(src)
     try {
       const response = await fetch(src)
       const blob = await response.blob()
-      await saveAvatarFile(new File([blob], `${name}.svg`, { type: blob.type || 'image/svg+xml' }))
+      await saveAvatarFile(new File([blob], fileName, { type: blob.type || 'image/png' }))
     } catch {
       // The local preset remains available even when the profile API is offline.
     }
@@ -220,9 +241,9 @@ export default function Onboarding() {
       setDailyHours(existing.dailyHours)
       setIeltsExamDate(existing.ieltsExamDate ?? '')
       setSatExamDate(existing.satExamDate ?? SAT_TEST_DATES[0].value)
-      setCurrentIeltsScore(existing.currentIeltsScore ?? 6)
+      setCurrentIeltsScore(existing.currentIeltsScore ?? null)
       setTargetIeltsScore(existing.targetIeltsScore ?? 7.5)
-      setCurrentSatScore(existing.currentSatScore ?? 1050)
+      setCurrentSatScore(existing.currentSatScore ?? null)
       setTargetSatScore(existing.targetSatScore ?? 1450)
       return
     }
@@ -275,10 +296,12 @@ export default function Onboarding() {
   const nameReady = firstName.trim().length > 0 && lastName.trim().length > 0
   const examProfileReady =
     targetExam === 'IELTS'
-      ? Boolean(ieltsExamDate) && targetIeltsScore >= currentIeltsScore
+      ? Boolean(ieltsExamDate) && (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore)
       : targetExam === 'SAT'
-        ? Boolean(satExamDate) && targetSatScore >= currentSatScore
-        : Boolean(ieltsExamDate && satExamDate) && targetIeltsScore >= currentIeltsScore && targetSatScore >= currentSatScore
+        ? Boolean(satExamDate) && (currentSatScore === null || targetSatScore >= currentSatScore)
+        : Boolean(ieltsExamDate && satExamDate) &&
+          (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore) &&
+          (currentSatScore === null || targetSatScore >= currentSatScore)
   const backgroundReady = country.trim().length >= 2 && gradeLevel.trim().length > 0
   const destinationReady = targetCountries.length > 0 && fieldOfStudy.trim().length >= 2
   const canContinue =
@@ -303,7 +326,28 @@ export default function Onboarding() {
 
   const handleBack = () => {
     if (step > 1) goTo((step - 1) as StepId, 'back')
-    else navigate('/dashboard')
+    else {
+      clearSession()
+      navigate('/', { replace: true })
+    }
+  }
+
+  const handleSkip = () => {
+    if (step < 6) {
+      goTo((step + 1) as StepId, 'forward')
+      return
+    }
+
+    const onboardingCompletedAt = new Date().toISOString()
+    setOnboardingCompleted(true)
+    void updateAccount({ onboardingCompletedAt }).catch(() => {
+      setFlashToast({
+        type: 'info',
+        title: 'You can finish your profile later',
+        message: 'Your profile is editable from Account settings at any time.',
+      })
+    })
+    navigate('/dashboard', { replace: true })
   }
 
   const generatePlan = () => {
@@ -325,9 +369,9 @@ export default function Onboarding() {
         dailyHours: Math.max(3, dailyHours),
         ieltsExamDate: targetExam === 'SAT' ? undefined : ieltsExamDate || undefined,
         satExamDate: targetExam === 'IELTS' ? undefined : satExamDate || undefined,
-        currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore,
+        currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore ?? undefined,
         targetIeltsScore: targetExam === 'SAT' ? undefined : targetIeltsScore,
-        currentSatScore: targetExam === 'IELTS' ? undefined : currentSatScore,
+        currentSatScore: targetExam === 'IELTS' ? undefined : currentSatScore ?? undefined,
         targetSatScore: targetExam === 'IELTS' ? undefined : targetSatScore,
         createdAt: new Date().toISOString(),
       }
@@ -526,15 +570,15 @@ export default function Onboarding() {
                               </label>
                             </div>
                             <div className="mt-3 grid grid-cols-8 gap-1.5">
-                              {AVATAR_PRESETS.map((name) => {
-                                const src = `/assets/avatars/${name}.svg`
-                                const active = avatarPreview.includes(`/${name}.svg`)
+                              {AVATAR_PRESETS.map((fileName, index) => {
+                                const src = `/assets/avatars/${fileName}`
+                                const active = avatarPreview.includes(`/${fileName}`)
                                 return (
                                   <button
-                                    key={name}
+                                    key={fileName}
                                     type="button"
-                                    aria-label={`Choose ${name} avatar`}
-                                    onClick={() => void choosePreset(name)}
+                                    aria-label={`Choose learner avatar ${index + 1}`}
+                                    onClick={() => void choosePreset(fileName)}
                                     className={`aspect-square overflow-hidden rounded-full border-2 bg-white p-0.5 transition hover:-translate-y-0.5 ${
                                       active ? 'border-blue-500 shadow-[0_5px_14px_rgba(37,99,235,0.25)]' : 'border-white ring-1 ring-blue-100'
                                     }`}
@@ -615,11 +659,18 @@ export default function Onboarding() {
                         <div className="relative">
                           <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
+                            list="world-country-options"
                             value={country}
                             onChange={(event) => setCountry(event.target.value)}
-                            placeholder="Uzbekistan"
+                            placeholder="Start typing a country..."
+                            autoComplete="off"
                             className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
+                          <datalist id="world-country-options">
+                            {WORLD_COUNTRIES.map((option) => (
+                              <option key={option.code} value={option.name} label={`${option.flag} ${option.name}`} />
+                            ))}
+                          </datalist>
                         </div>
                       </label>
                       <label className="block">
@@ -717,8 +768,20 @@ export default function Onboarding() {
                             </label>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
-                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current band</span>
-                                <input type="number" min={0} max={9} step={0.5} value={currentIeltsScore} onChange={(event) => setCurrentIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
+                                <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
+                                  Current band
+                                  <button type="button" onClick={() => setCurrentIeltsScore(null)} className="text-blue-600 hover:text-blue-700">Not taken yet</button>
+                                </span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={9}
+                                  step={0.5}
+                                  value={currentIeltsScore ?? ''}
+                                  onChange={(event) => setCurrentIeltsScore(event.target.value === '' ? null : Number(event.target.value))}
+                                  placeholder="N/A"
+                                  className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300"
+                                />
                               </label>
                               <label>
                                 <span className="mb-1 block text-[10px] font-bold text-slate-400">Target band</span>
@@ -749,12 +812,34 @@ export default function Onboarding() {
                             </label>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
-                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Current score</span>
-                                <input type="number" min={400} max={1600} step={10} value={currentSatScore} onChange={(event) => setCurrentSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
+                                <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
+                                  Current score
+                                  <button type="button" onClick={() => setCurrentSatScore(null)} className="text-blue-600 hover:text-blue-700">Not taken yet</button>
+                                </span>
+                                <input
+                                  type="number"
+                                  min={400}
+                                  max={1600}
+                                  step={50}
+                                  value={currentSatScore ?? ''}
+                                  onChange={(event) => setCurrentSatScore(event.target.value === '' ? null : Number(event.target.value))}
+                                  onBlur={() => currentSatScore !== null && setCurrentSatScore(normalizeSatScore(currentSatScore))}
+                                  placeholder="N/A"
+                                  className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300"
+                                />
                               </label>
                               <label>
                                 <span className="mb-1 block text-[10px] font-bold text-slate-400">Target score</span>
-                                <input type="number" min={400} max={1600} step={10} value={targetSatScore} onChange={(event) => setTargetSatScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
+                                <input
+                                  type="number"
+                                  min={400}
+                                  max={1600}
+                                  step={50}
+                                  value={targetSatScore}
+                                  onChange={(event) => setTargetSatScore(Number(event.target.value))}
+                                  onBlur={() => setTargetSatScore(normalizeSatScore(targetSatScore))}
+                                  className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300"
+                                />
                               </label>
                             </div>
                           </div>
@@ -846,7 +931,7 @@ export default function Onboarding() {
                           )
                         })}
                       </div>
-                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations.</p>
+                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations. Options include every country represented in the Top Universities catalog.</p>
                       <label className="mt-5 block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
                           Intended field of study
@@ -854,13 +939,34 @@ export default function Onboarding() {
                         <div className="relative">
                           <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
+                            list="popular-study-fields"
                             value={fieldOfStudy}
                             onChange={(event) => setFieldOfStudy(event.target.value)}
-                            placeholder="Computer Science, Economics, Medicine..."
+                            placeholder="Type or choose a study field..."
+                            autoComplete="off"
                             className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
+                          <datalist id="popular-study-fields">
+                            {POPULAR_STUDY_FIELDS.map((field) => <option key={field} value={field} />)}
+                          </datalist>
                         </div>
                       </label>
+                      <div className="mt-3 flex flex-wrap gap-2" aria-label="Popular fields of study">
+                        {POPULAR_STUDY_FIELDS.slice(0, 9).map((field) => (
+                          <button
+                            key={field}
+                            type="button"
+                            onClick={() => setFieldOfStudy(field)}
+                            className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                              fieldOfStudy === field
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                            }`}
+                          >
+                            {field}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   ) : null}
 
@@ -888,10 +994,10 @@ export default function Onboarding() {
                             <p className="mt-1 text-base font-black text-slate-900">{selectedExamCard.label}</p>
                             <p className="text-[11px] text-slate-500">
                               {targetExam === 'IELTS'
-                                ? `${currentIeltsScore} → ${targetIeltsScore} band`
+                                ? `${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} band`
                                 : targetExam === 'SAT'
-                                  ? `${currentSatScore} → ${targetSatScore} score`
-                                  : `IELTS ${currentIeltsScore} → ${targetIeltsScore} · SAT ${currentSatScore} → ${targetSatScore}`}
+                                  ? `${currentSatScore ?? 'Not taken yet'} → ${targetSatScore} score`
+                                  : `IELTS ${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} · SAT ${currentSatScore ?? 'Not taken yet'} → ${targetSatScore}`}
                             </p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -929,36 +1035,46 @@ export default function Onboarding() {
                 {step === 1 ? 'Exit' : 'Back'}
               </button>
 
-              {step < 6 ? (
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={handleContinue}
-                  disabled={!canContinue}
-                  className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.34)] transition hover:shadow-[0_16px_32px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={handleSkip}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                 >
-                  Continue
-                  <ArrowRight className="h-4 w-4" />
+                  Skip for now
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
-              ) : (
-                <div className="flex flex-col items-end">
-                <motion.button
-                  type="button"
-                  onClick={generatePlan}
-                  disabled={stage !== 'idle'}
-                  whileHover={stage === 'idle' && !minimalMotion ? { scale: 1.02 } : undefined}
-                  whileTap={stage === 'idle' && !minimalMotion ? { scale: 0.98 } : undefined}
-                  className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.36)] transition hover:shadow-[0_16px_34px_rgba(37,99,235,0.46)] disabled:cursor-wait disabled:opacity-75"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
-                </motion.button>
-                {saveError ? (
-                  <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-700">
-                    {saveError}
-                  </p>
-                ) : null}
-                </div>
-              )}
+                {step < 6 ? (
+                  <button
+                    type="button"
+                    onClick={handleContinue}
+                    disabled={!canContinue}
+                    className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.34)] transition hover:shadow-[0_16px_32px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Continue
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-end">
+                    <motion.button
+                      type="button"
+                      onClick={generatePlan}
+                      disabled={stage !== 'idle'}
+                      whileHover={stage === 'idle' && !minimalMotion ? { scale: 1.02 } : undefined}
+                      whileTap={stage === 'idle' && !minimalMotion ? { scale: 0.98 } : undefined}
+                      className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.36)] transition hover:shadow-[0_16px_34px_rgba(37,99,235,0.46)] disabled:cursor-wait disabled:opacity-75"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
+                    </motion.button>
+                    {saveError ? (
+                      <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-700">
+                        {saveError}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

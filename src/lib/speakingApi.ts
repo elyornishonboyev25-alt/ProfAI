@@ -1,4 +1,6 @@
 import { apiClient } from '@/lib/apiClient'
+import type { XpAwardResponse } from '@/lib/xpApi'
+import { markXpActivitySynced } from '@/lib/xpApi'
 
 // Thin client for the Phase B speaking backend (nickname, presence, persisted
 // sessions, community + public profiles). All of these return nicknames only and
@@ -48,6 +50,7 @@ export type SpeakerProfilePayload = {
 }
 
 export type SpeakingSessionInput = {
+  eventKey?: string
   mode: string
   modeLabel: string
   overallBand: number
@@ -75,12 +78,15 @@ export async function setNickname(nickname: string): Promise<void> {
   await apiClient.put('/profile/nickname', { nickname }, { auth: true })
 }
 
-export async function saveSpeakingSession(input: SpeakingSessionInput): Promise<void> {
+export async function saveSpeakingSession(input: SpeakingSessionInput, userId?: string): Promise<XpAwardResponse | null> {
   // Best-effort: a failure here must never break the on-device result screen.
   try {
-    await apiClient.post('/profile/speaking/session', input, { auth: true })
+    const reward = await apiClient.post<XpAwardResponse>('/profile/speaking/session', input, { auth: true })
+    if (userId && input.eventKey) markXpActivitySynced(userId, input.eventKey)
+    return reward
   } catch {
     // ignore — the session is still saved locally
+    return null
   }
 }
 
@@ -93,10 +99,11 @@ export async function fetchSpeakerByNickname(nickname: string): Promise<SpeakerP
   return apiClient.get<SpeakerProfilePayload>(`/profile/speaking/by-nickname/${encodeURIComponent(nickname)}`, { auth: true })
 }
 
-export async function sendHeartbeat(): Promise<void> {
+export async function sendHeartbeat(): Promise<XpAwardResponse | null> {
   try {
-    await apiClient.post('/profile/heartbeat', {}, { auth: true })
+    return await apiClient.post<XpAwardResponse>('/profile/heartbeat', {}, { auth: true })
   } catch {
     // ignore
+    return null
   }
 }

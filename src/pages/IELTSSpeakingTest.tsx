@@ -97,6 +97,7 @@ export default function IELTSSpeakingTest() {
   const { id } = useParams<{ id: string }>()
   const mockContext = (location.state as { mock?: { id: string; section: string } } | null)?.mock
   const user = useAuthStore((state: AuthState) => state.user)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const addSession = useSpeakingStore((s) => s.addSession)
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
 
@@ -136,7 +137,7 @@ export default function IELTSSpeakingTest() {
         mock={mode.mock}
         onExit={() => navigate('/ielts/speaking/tests')}
         onSaved={(analysis) => {
-          addSession({
+          const localSession = addSession({
             userId: user?.id ?? null,
             modeLabel: mode.mock.title,
             kind: 'examiner',
@@ -152,6 +153,7 @@ export default function IELTSSpeakingTest() {
           })
           if (user) {
             void saveSpeakingSession({
+              eventKey: localSession.id,
               mode: 'full_mock',
               modeLabel: mode.mock.title,
               overallBand: analysis.overallBand,
@@ -161,6 +163,8 @@ export default function IELTSSpeakingTest() {
               pronunciationBand: analysis.pronunciationBand,
               durationSec: analysis.stats.durationSec,
               wordCount: analysis.stats.wordCount,
+            }, user.id).then((reward) => {
+              if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level })
             })
           }
           // Full mock → award a Speaking band badge (with celebration). Daily

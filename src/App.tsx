@@ -16,6 +16,7 @@ import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
 import { sendHeartbeat } from '@/lib/speakingApi'
+import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
@@ -82,6 +83,15 @@ function toDateISO(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>): XpActivitySource | null {
+  if (activityKey === 'vocabulary') return 'STUDY_VOCABULARY'
+  if (activityKey === 'articles') return 'STUDY_ARTICLES'
+  if (activityKey === 'podcast') return 'STUDY_PODCAST'
+  if (activityKey === 'shadowing') return 'STUDY_SHADOWING'
+  if (activityKey === 'admission') return 'STUDY_ADMISSION'
+  return null
 }
 
 function RouteLoader() {
@@ -153,6 +163,7 @@ function App() {
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
@@ -242,15 +253,41 @@ function App() {
     }
   }, [pathname, user?.id])
 
+  useEffect(() => {
+    if (!user) return
+    const source = xpSourceForActivity(routeToActivityKey(pathname))
+    if (!source) return
+
+    const intervalId = window.setInterval(() => {
+      if (document.hidden) return
+      const bucket = Math.floor(Date.now() / 300_000)
+      void recordXpActivity({
+        source,
+        eventKey: `${pathname}:${bucket}`,
+        durationSec: 300,
+        metadata: { pathname, activeMinutes: 5 },
+      }).then((reward) => {
+        updateUserProgress({ xp: reward.totalXp, level: reward.level })
+      }).catch(() => {})
+    }, 300_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [pathname, updateUserProgress, user?.id])
+
   // Presence heartbeat — keeps "online now" / "last seen" accurate for the community.
   useEffect(() => {
     if (!user) return
-    void sendHeartbeat()
+    const heartbeat = () => {
+      void sendHeartbeat().then((reward) => {
+        if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level })
+      })
+    }
+    heartbeat()
     const id = window.setInterval(() => {
-      if (!document.hidden) void sendHeartbeat()
+      if (!document.hidden) heartbeat()
     }, 60000)
     return () => window.clearInterval(id)
-  }, [user?.id])
+  }, [updateUserProgress, user?.id])
 
   // Persisted auth hydrates asynchronously. Rendering a route before that
   // completes briefly treats a signed-in learner as a guest, removes the

@@ -18,12 +18,12 @@ type StreakOutput = {
 /**
  * Transparent, predictable XP rewards by difficulty.
  *
- * A perfect 100% attempt gives EXACTLY this many XP. Anything below scales
- * down quadratically — so 50% gives 25%, 70% gives 49%, etc. That curve is
+ * These are the base caps before streak/perfect bonuses. Accuracy scales the
+ * base quadratically — so 50% gives 25%, 70% gives 49%, etc. That curve is
  * what makes high scores feel rewarding: the gap between a 70% and a 100%
  * is much bigger than between 30% and 60%, which is the gamification hook.
  *
- * Examples (Hard test, baseXp=100):
+ * Examples (Hard test, cap=100, before streak/perfect bonuses):
  *   100% accuracy  -> 100 XP (perfect)
  *    90% accuracy  ->  81 XP
  *    80% accuracy  ->  64 XP
@@ -48,6 +48,15 @@ const STREAK_BONUS_MAX = 0.2 // hard cap +20%
 
 /** Tiny perfect-run kicker: rewards exact 100% with a +10% flourish. */
 const PERFECT_BONUS = 0.1
+
+export const TEST_XP_POLICY = {
+  difficultyCaps: MAX_XP_BY_DIFFICULTY,
+  accuracyExponent: 2,
+  streakBonusPerDay: STREAK_BONUS_PER_DAY,
+  maximumStreakBonus: STREAK_BONUS_MAX,
+  perfectScoreBonus: PERFECT_BONUS,
+  formula: 'round(cap × (accuracy / 100)^2 × (1 + streakBonus + perfectBonus))',
+} as const
 
 export function computeStreak(input: StreakInput): StreakOutput {
   const today = startOfUtcDay(input.now)

@@ -112,6 +112,7 @@ export type PublicProfilePayload = {
     averageScore: number
     averageAccuracy: number
   } | null
+  xpBreakdown: Array<{ source: string; amount: number }>
   skillAnalytics: PublicSkillAnalytics | null
   competitive: {
     rank: number

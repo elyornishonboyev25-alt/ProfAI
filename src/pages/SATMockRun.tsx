@@ -34,6 +34,7 @@ import SATReview from '@/components/sat/SATReview'
 import SATRichText from '@/components/sat/SATRichText'
 import {
   isSATAnswerCorrect,
+  scoreSATModules,
   type HighlightStroke,
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
@@ -45,6 +46,7 @@ import {
 import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
 const FULLSCREEN_RECOVERY_SECONDS = 30
@@ -72,6 +74,7 @@ export default function SATMockRun() {
   const backPath = section ? `/sat/${section}` : '/sat'
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const { isFullscreen, enter, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => loadSATAttempt(test.id))
   const [now, setNow] = useState(Date.now())
@@ -136,6 +139,22 @@ export default function SATMockRun() {
   }, [])
 
   attemptRef.current = attempt
+
+  useEffect(() => {
+    if (!user || !attempt || attempt.status !== 'submitted' || !attempt.submittedAt) return
+    const sourceKey = `${test.id}-${attempt.submittedAt}`
+    const report = scoreSATModules(test.modules, attempt.answers)
+    void recordXpActivity({
+      source: 'SAT_PRACTICE',
+      eventKey: sourceKey,
+      accuracy: report.percent,
+      durationSec: test.totalDurationSeconds,
+      metadata: { testId: test.id, title: test.title, score: report.midpoint, accuracy: report.percent },
+    }).then((reward) => {
+      markXpActivitySynced(user.id, sourceKey)
+      updateUserProgress({ xp: reward.totalXp, level: reward.level })
+    }).catch(() => {})
+  }, [attempt, test, updateUserProgress, user?.id])
 
   const pauseAndSaveAttempt = useCallback(() => {
     const current = attemptRef.current

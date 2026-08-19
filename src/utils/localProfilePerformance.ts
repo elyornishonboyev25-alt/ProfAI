@@ -8,6 +8,7 @@ import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { loadActivityLog, type ActivityKey, type ActivityLog } from '@/utils/weeklyPlanner'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
+import { isXpActivitySynced } from '@/lib/xpApi'
 
 type TrackKey = ProfileOverview['skillAnalytics']['trackBreakdown'][number]['key']
 
@@ -26,6 +27,7 @@ export type LocalDashboardAttempt = {
   totalQuestions: number
   tracks: TrackKey[]
   synced: boolean
+  xpSynced?: boolean
   /** Native exam scale when available: IELTS band or full SAT score. */
   examScore?: number
 }
@@ -48,14 +50,6 @@ const LEVEL_THRESHOLDS = [
   0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200,
   4000, 5000, 6200, 7600, 9200, 11000, 13000, 15200, 17600, 20200,
 ]
-
-const INDEPENDENT_STUDY_KEYS = new Set<ActivityKey>([
-  'vocabulary',
-  'articles',
-  'podcast',
-  'shadowing',
-  'admission',
-])
 
 function clamp(value: number, min = 0, max = 100) {
   return Math.min(max, Math.max(min, Number.isFinite(value) ? value : 0))
@@ -132,11 +126,6 @@ function trackedMinutes(activity: ActivityLog[string], keys?: Set<ActivityKey>) 
   return Object.entries(activity ?? {}).reduce((total, [key, value]) => (
     !keys || keys.has(key as ActivityKey) ? total + (value ?? 0) : total
   ), 0)
-}
-
-/** Independent learning earns a small, deterministic 2 XP per five active minutes. */
-export function calculateTrackedStudyXp(minutes: number) {
-  return Math.floor(Math.max(0, minutes) / 5) * 2
 }
 
 function resolveLocalLevelProgress(xp: number) {
@@ -223,6 +212,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
       totalQuestions: 1,
       tracks: ['IELTS_WRITING'],
       synced: false,
+      xpSynced: isXpActivitySynced(userId, entry.attemptKey),
       examScore: entry.overallBand,
     }
   })
@@ -246,6 +236,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
         totalQuestions: 1,
         tracks: ['IELTS_SPEAKING'],
         synced: false,
+        xpSynced: isXpActivitySynced(userId, session.id),
         examScore: session.overallBand,
       }
     })
@@ -284,6 +275,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
       totalQuestions: test.questionCount,
       tracks,
       synced: false,
+      xpSynced: isXpActivitySynced(userId, `${test.id}-${endedAt}`),
       examScore: report.midpoint,
     }]
   })
@@ -443,7 +435,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
   const totalAttempts = serverCount + unsyncedAttempts.length
   const localAccuracyTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.accuracy, 0)
   const localScoreTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.finalScore, 0)
-  const localXp = unsyncedAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0)
+  const localXp = unsyncedAttempts.reduce((total, attempt) => total + (attempt.xpSynced ? 0 : attempt.xpEarned), 0)
   const averageAccuracy = totalAttempts
     ? (overview.stats.averageAccuracy * serverCount + localAccuracyTotal) / totalAttempts
     : 0
@@ -492,13 +484,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     .sort((left, right) => new Date(right.completedAt).getTime() - new Date(left.completedAt).getTime())
     .slice(0, 8)
 
-  const activityEvents = Object.entries(activityLog).flatMap(([dateKey, activity]) => {
-    const xpEarned = calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS))
-    return xpEarned > 0
-      ? [{ completedAt: `${dateKey}T12:00:00`, xpEarned, finalScore: 0, percentage: 0 }]
-      : []
-  })
-  const momentumSource = [...overview.recentAttempts, ...localRecent, ...activityEvents]
+  const momentumSource = [...overview.recentAttempts, ...localRecent]
     .sort((left, right) => new Date(left.completedAt).getTime() - new Date(right.completedAt).getTime())
     .slice(-10)
   let cumulativeXp = 0
@@ -518,12 +504,11 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     const dailyAttempts = unsyncedAttempts.filter((attempt) => localDateKey(attempt.completedAt) === dateKey)
     const dayLog = activityLog[dateKey] ?? {}
     const studyMinutes = Math.round(trackedMinutes(dayLog))
-    const studyXp = calculateTrackedStudyXp(trackedMinutes(dayLog, INDEPENDENT_STUDY_KEYS))
     return {
       ...day,
       testsCompleted: day.testsCompleted + dailyAttempts.length,
       questionsAnswered: day.questionsAnswered + dailyAttempts.reduce((total, attempt) => total + attempt.totalQuestions, 0),
-      xpEarned: day.xpEarned + dailyAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0) + studyXp,
+      xpEarned: day.xpEarned + dailyAttempts.reduce((total, attempt) => total + (attempt.xpSynced ? 0 : attempt.xpEarned), 0),
       studyMinutes,
       active: day.active || dailyAttempts.length > 0 || studyMinutes > 0,
     }
@@ -533,11 +518,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     (total, activity) => total + trackedMinutes(activity),
     0,
   )
-  const studyXp = Object.values(activityLog).reduce(
-    (total, activity) => total + calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS)),
-    0,
-  )
-  const totalXp = overview.profile.xp + localXp + studyXp
+  const totalXp = overview.profile.xp + localXp
   const levelProgress = resolveLocalLevelProgress(totalXp)
   const activeDates = new Set<string>()
   localAttempts.forEach((attempt) => {
@@ -672,12 +653,8 @@ export function mergeLocalPublicProfilePerformance(
 
   const localAttempts = getLocalDashboardAttempts(userId).filter((attempt) => !attempt.synced)
   const activityLog = getCombinedActivityLog(userId)
-  const localXp = localAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0)
-  const studyXp = Object.values(activityLog).reduce(
-    (total, activity) => total + calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS)),
-    0,
-  )
-  const totalXp = payload.profile.xp + localXp + studyXp
+  const localXp = localAttempts.reduce((total, attempt) => total + (attempt.xpSynced ? 0 : attempt.xpEarned), 0)
+  const totalXp = payload.profile.xp + localXp
   const levelProgress = resolveLocalLevelProgress(totalXp)
 
   const activeDates = new Set<string>()
@@ -747,6 +724,9 @@ export function mergeLocalPublicProfilePerformance(
       longestStreak: Math.max(payload.profile.longestStreak, localStreak),
     },
     stats,
+    xpBreakdown: localXp > 0
+      ? [...(payload.xpBreakdown ?? []), { source: 'DEVICE_HISTORY', amount: localXp }]
+      : (payload.xpBreakdown ?? []),
     skillAnalytics: payload.visibility.showResults
       ? {
           overall: {

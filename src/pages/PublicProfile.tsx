@@ -89,6 +89,30 @@ export default function PublicProfile() {
     return [...source].sort((a, b) => b.tier - a.tier).slice(0, 8)
   }, [data?.badges])
 
+  const xpBreakdown = useMemo(() => {
+    const grouped = new Map<string, number>()
+    ;(data?.xpBreakdown ?? []).forEach((item) => {
+      const label = item.source === 'TEST'
+        ? 'Tests'
+        : item.source === 'DAILY_LOGIN'
+          ? 'Daily login'
+          : item.source.startsWith('VOCAB_') || item.source === 'STUDY_VOCABULARY'
+            ? 'Vocabulary'
+            : item.source === 'WRITING'
+              ? 'Writing'
+              : item.source === 'SPEAKING'
+                ? 'Speaking'
+                : item.source === 'DEVICE_HISTORY'
+                  ? 'Saved practice'
+                  : 'Learning activities'
+      grouped.set(label, (grouped.get(label) ?? 0) + item.amount)
+    })
+    return [...grouped.entries()]
+      .map(([label, amount]) => ({ label, amount }))
+      .filter((item) => item.amount > 0)
+      .sort((left, right) => right.amount - left.amount)
+  }, [data?.xpBreakdown])
+
   if (loading) {
     return (
       <Shell onBack={() => navigate('/dashboard')}>
@@ -171,6 +195,27 @@ export default function PublicProfile() {
               value={v.showLeaderboard && data.competitive ? `#${data.competitive.rank}` : '—'}
             />
           </div>
+        </Reveal>
+      ) : null}
+
+      {xpBreakdown.length ? (
+        <Reveal>
+          <article className="surface-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
+                <Zap className="h-4 w-4 text-amber-500" /> XP sources
+              </h3>
+              <span className="text-xs font-bold text-slate-400">Exact earned totals</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {xpBreakdown.map((item) => (
+                <div key={item.label} className="rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 px-3 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{item.label}</p>
+                  <p className="mt-1 text-lg font-black text-slate-900">{item.amount.toLocaleString()} XP</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </Reveal>
       ) : null}
 

@@ -12,6 +12,13 @@ import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { env } from '../config/env.js'
 import { getLearningStreakSnapshot } from '../services/activityStreak.service.js'
+import {
+  awardActivityXp,
+  localDateKey,
+  XP_REWARD_POLICY,
+  type XpRewardSource,
+} from '../services/xpRewards.service.js'
+import { TEST_XP_POLICY } from '../services/gamification.service.js'
 
 const router = Router()
 const aiReportBodySchema = z.object({
@@ -44,6 +51,26 @@ const aiPreferenceBodySchema = z.object({
   preferredLocale: z.enum(['en', 'uz']).optional(),
   preferredName: z.string().min(2).max(80).nullable().optional(),
   toneStyle: z.enum(['sweet', 'neutral', 'coach']).optional(),
+})
+const xpActivitySchema = z.object({
+  source: z.enum([
+    'STUDY_VOCABULARY',
+    'STUDY_ARTICLES',
+    'STUDY_PODCAST',
+    'STUDY_SHADOWING',
+    'STUDY_ADMISSION',
+    'VOCAB_FLASHCARDS',
+    'VOCAB_MATCHING',
+    'VOCAB_QUIZ',
+    'VOCAB_TYPING',
+    'WRITING',
+    'SAT_PRACTICE',
+  ]),
+  eventKey: z.string().trim().min(4).max(180),
+  accuracy: z.coerce.number().min(0).max(100).optional(),
+  band: z.coerce.number().min(0).max(9).optional(),
+  durationSec: z.coerce.number().int().min(0).max(86_400).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 })
 const vocabNotebookQuerySchema = z.object({
   testKey: z.string().min(2).max(120).optional(),
@@ -446,23 +473,34 @@ router.get(
     ])
 
     const days = getPastSevenDays(now)
-    const activityRows = await prisma.dailyActivity.findMany({
-      where: {
-        userId,
-        activityDate: {
-          gte: days[0],
-          lte: days[6],
+    const [activityRows, xpEventRows] = await Promise.all([
+      prisma.dailyActivity.findMany({
+        where: {
+          userId,
+          activityDate: {
+            gte: days[0],
+            lte: days[6],
+          },
         },
-      },
-      select: {
-        activityDate: true,
-        testsCompleted: true,
-        questionsAnswered: true,
-        xpEarned: true,
-      },
-    })
+        select: {
+          activityDate: true,
+          testsCompleted: true,
+          questionsAnswered: true,
+          xpEarned: true,
+        },
+      }),
+      prisma.xpEvent.findMany({
+        where: { userId, earnedAt: { gte: days[0], lt: addUtcDays(days[6], 1) }, amount: { gt: 0 } },
+        select: { earnedAt: true, amount: true },
+      }),
+    ])
 
     const activityMap = new Map(activityRows.map((row) => [startOfUtcDay(row.activityDate).toISOString(), row]))
+    const xpEventMap = new Map<string, number>()
+    xpEventRows.forEach((event) => {
+      const key = startOfUtcDay(event.earnedAt).toISOString()
+      xpEventMap.set(key, (xpEventMap.get(key) ?? 0) + event.amount)
+    })
 
     const weeklyActivity = days.map((day) => {
       const key = startOfUtcDay(day).toISOString()
@@ -473,8 +511,8 @@ router.get(
         label: day.toLocaleDateString('en-US', { weekday: 'short' }),
         testsCompleted: row?.testsCompleted ?? 0,
         questionsAnswered: row?.questionsAnswered ?? 0,
-        xpEarned: row?.xpEarned ?? 0,
-        active: Boolean((row?.testsCompleted ?? 0) > 0),
+        xpEarned: (row?.xpEarned ?? 0) + (xpEventMap.get(key) ?? 0),
+        active: Boolean((row?.testsCompleted ?? 0) > 0 || (xpEventMap.get(key) ?? 0) > 0),
       }
     })
 
@@ -1332,6 +1370,7 @@ const nicknameSetSchema = z.object({
 })
 
 const speakingSessionSchema = z.object({
+  eventKey: z.string().trim().min(4).max(180).optional(),
   mode: z.string().max(40),
   modeLabel: z.string().max(80),
   overallBand: z.coerce.number().min(0).max(9),
@@ -1390,8 +1429,54 @@ router.post(
   '/heartbeat',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await prisma.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: new Date() } }).catch(() => {})
-    return res.status(204).send()
+    const now = new Date()
+    const reward = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: req.user!.id },
+        select: { profile: { select: { timezone: true } } },
+      })
+      if (!user) throw new Error('User not found while recording daily login.')
+      const result = await awardActivityXp(tx, {
+        userId: req.user!.id,
+        source: 'DAILY_LOGIN',
+        eventKey: localDateKey(now, user.profile?.timezone),
+        earnedAt: now,
+        metadata: { reason: 'First active visit of the local calendar day' },
+      })
+      await tx.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: now } })
+      return result
+    })
+    return res.json(reward)
+  }),
+)
+
+router.get(
+  '/xp/policy',
+  requireAuth,
+  asyncHandler(async (_req, res) => res.json({ activity: XP_REWARD_POLICY, tests: TEST_XP_POLICY })),
+)
+
+router.post(
+  '/xp/activity',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const input = xpActivitySchema.parse(req.body ?? {})
+    const now = new Date()
+    const reward = await prisma.$transaction(async (tx) => {
+      const result = await awardActivityXp(tx, {
+        userId: req.user!.id,
+        source: input.source as XpRewardSource,
+        eventKey: input.eventKey,
+        accuracy: input.accuracy,
+        band: input.band,
+        durationSec: input.durationSec,
+        earnedAt: now,
+        metadata: input.metadata,
+      })
+      await tx.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: now } })
+      return result
+    })
+    return res.status(reward.duplicate ? 200 : 201).json(reward)
   }),
 )
 
@@ -1399,7 +1484,7 @@ router.post(
   '/speaking/session',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const data = speakingSessionSchema.parse(req.body ?? {})
+    const { eventKey, ...data } = speakingSessionSchema.parse(req.body ?? {})
     const now = new Date()
     const session = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
@@ -1411,9 +1496,40 @@ router.post(
       })
       if (!user) throw new Error('User not found while saving speaking activity.')
 
+      if (eventKey) {
+        const existing = await tx.xpEvent.findUnique({
+          where: { userId_eventKey: { userId: req.user!.id, eventKey: `SPEAKING:${eventKey}` } },
+          select: { amount: true },
+        })
+        if (existing) {
+          const current = await tx.user.findUnique({
+            where: { id: req.user!.id },
+            select: { xp: true, level: true },
+          })
+          return {
+            id: null,
+            createdAt: now,
+            duplicate: true,
+            xpEarned: 0,
+            originalXp: existing.amount,
+            totalXp: current?.xp ?? 0,
+            level: current?.level ?? 1,
+          }
+        }
+      }
+
       const created = await tx.speakingSession.create({
         data: { userId: req.user!.id, ...data, createdAt: now },
         select: { id: true, createdAt: true },
+      })
+      const reward = await awardActivityXp(tx, {
+        userId: req.user!.id,
+        source: 'SPEAKING',
+        eventKey: eventKey ?? created.id,
+        band: data.overallBand,
+        durationSec: data.durationSec,
+        earnedAt: now,
+        metadata: { mode: data.mode, modeLabel: data.modeLabel, band: data.overallBand },
       })
       const streak = await getLearningStreakSnapshot(tx, req.user!.id, user.profile?.timezone, now)
       await tx.user.update({
@@ -1424,7 +1540,7 @@ router.post(
           lastActiveDate: now,
         },
       })
-      return created
+      return { ...created, ...reward }
     })
     return res.status(201).json(session)
   }),
@@ -1943,11 +2059,11 @@ router.get(
     }
 
     // Heavy analytics are best-effort: a failure must not break the profile page.
-    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak] = await Promise.all([
+    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak, xpEvents] = await Promise.all([
       generateSkillAnalytics(user.id).catch(() => null),
       generateLeaderboard({ period: 'all', currentUserId: user.id }).catch(() => null),
       prisma.testAttempt
-        .aggregate({ where: { userId: user.id }, _avg: { finalScore: true, percentage: true } })
+        .aggregate({ where: { userId: user.id }, _avg: { finalScore: true, percentage: true }, _sum: { xpEarned: true } })
         .catch(() => null),
       prisma.testAttempt.count({ where: { userId: user.id } }).catch(() => 0),
       prisma.skillBadge.findMany({ where: { userId: user.id }, orderBy: [{ tier: 'desc' }] }).catch(() => []),
@@ -1956,6 +2072,12 @@ router.get(
         longestStreak: user.longestStreak,
         lastLearningAt: null,
       })),
+      prisma.xpEvent.groupBy({
+        by: ['source'],
+        where: { userId: user.id, amount: { gt: 0 } },
+        _sum: { amount: true },
+        orderBy: { source: 'asc' },
+      }).catch(() => []),
     ])
     const rankRow = leaderboard?.rows.find((row) => row.userId === user.id) ?? null
 
@@ -1989,6 +2111,12 @@ router.get(
             averageAccuracy: Number((attemptsAgg?._avg.percentage ?? 0).toFixed(1)),
           }
         : null,
+      xpBreakdown: [
+        ...((attemptsAgg?._sum.xpEarned ?? 0) > 0
+          ? [{ source: 'TEST', amount: attemptsAgg?._sum.xpEarned ?? 0 }]
+          : []),
+        ...xpEvents.map((event) => ({ source: event.source, amount: event._sum.amount ?? 0 })),
+      ],
       skillAnalytics: profile.showResults ? skillAnalytics : null,
       competitive:
         profile.showLeaderboard && rankRow

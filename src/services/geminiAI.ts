@@ -211,8 +211,7 @@ STRENGTHS / IMPROVEMENTS:
 
 SUMMARY: 2–3 sentences — honest overall assessment naming the biggest lever for improvement.
 
-XP CALCULATION (set xpAwarded by overall band):
-- 0–3.0: 10 | 3.5–4.5: 25 | 5.0–5.5: 45 | 6.0–6.5: 65 | 7.0–7.5: 90 | 8.0–8.5: 120 | 9.0: 150
+XP CALCULATION: the application calculates XP deterministically from the final band. Set xpAwarded to 0.
 
 RESPONSE FORMAT (strict JSON, no markdown):
 {
@@ -525,7 +524,7 @@ Evaluate this response now. Return ONLY valid JSON.`
             })
         : [],
       correctedVersion: parsed.correctedVersion || '',
-      xpAwarded: typeof parsed.xpAwarded === 'number' ? Math.round(parsed.xpAwarded) : calculateXP(parsed.overallBand),
+      xpAwarded: calculateXP(parsed.overallBand),
     }
   } catch {
     throw new Error('Failed to parse AI evaluation response. Please try again.')
@@ -610,13 +609,7 @@ function validateCategory(cat: string): WritingError['category'] {
 }
 
 function calculateXP(band: number): number {
-  if (band >= 9) return 150
-  if (band >= 8) return 120
-  if (band >= 7) return 90
-  if (band >= 6) return 65
-  if (band >= 5) return 45
-  if (band >= 3.5) return 25
-  return 10
+  return 20 + Math.round((Math.max(0, Math.min(9, band)) / 9) * 60)
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {

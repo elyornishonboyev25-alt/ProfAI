@@ -77,7 +77,7 @@ export async function getLearningStreakSnapshot(
   now = new Date(),
   additionalActivityDates: Date[] = [],
 ) {
-  const [attempts, speakingSessions] = await Promise.all([
+  const [attempts, speakingSessions, xpEvents] = await Promise.all([
     client.testAttempt.findMany({
       where: { userId },
       select: { completedAt: true },
@@ -88,12 +88,18 @@ export async function getLearningStreakSnapshot(
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     }),
+    client.xpEvent.findMany({
+      where: { userId, amount: { gt: 0 } },
+      select: { earnedAt: true },
+      orderBy: { earnedAt: 'asc' },
+    }),
   ])
 
   return calculateLearningStreak(
     [
       ...attempts.map((attempt) => attempt.completedAt),
       ...speakingSessions.map((session) => session.createdAt),
+      ...xpEvents.map((event) => event.earnedAt),
       ...additionalActivityDates,
     ],
     now,

@@ -14,20 +14,14 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react'
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts'
 import { ApiError } from '@/lib/apiClient'
 import { fetchPublicProfile, type PublicProfilePayload } from '@/lib/profileApi'
 import { getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 import SkillBadge from '@/components/achievements/SkillBadge'
 import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
+import { useAuthStore } from '@/store/authStore'
+import { mergeLocalPublicProfilePerformance } from '@/utils/localProfilePerformance'
 
 function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
   return (
@@ -55,7 +49,8 @@ function Info({ icon, title, text }: { icon: React.ReactNode; title: string; tex
 export default function PublicProfile() {
   const { nickname = '' } = useParams()
   const navigate = useNavigate()
-  const [data, setData] = useState<PublicProfilePayload | null>(null)
+  const user = useAuthStore((state) => state.user)
+  const [serverData, setServerData] = useState<PublicProfilePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<{ status: number; message: string } | null>(null)
 
@@ -63,8 +58,9 @@ export default function PublicProfile() {
     let active = true
     setLoading(true)
     setError(null)
+    setServerData(null)
     fetchPublicProfile(nickname)
-      .then((payload) => active && setData(payload))
+      .then((payload) => active && setServerData(payload))
       .catch((e) => {
         if (!active) return
         const status = e instanceof ApiError ? e.status : 0
@@ -75,6 +71,11 @@ export default function PublicProfile() {
       active = false
     }
   }, [nickname])
+
+  const data = useMemo(
+    () => (serverData && user ? mergeLocalPublicProfilePerformance(serverData, user.id) : serverData),
+    [serverData, user],
+  )
 
   const targetUniversity = useMemo(
     () => (data?.university?.slug ? getUniversityBySlug(data.university.slug) : undefined),
@@ -174,21 +175,44 @@ export default function PublicProfile() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Skill radar */}
-        {v.showResults && data.skillAnalytics?.radar?.length ? (
+        {/* Skill performance */}
+        {v.showResults ? (
           <Reveal>
             <article className="surface-card p-5">
               <h3 className="mb-2 inline-flex items-center gap-2 text-base font-black text-slate-900">
                 <BarChart3 className="h-4 w-4 text-blue-600" /> Skill averages
               </h3>
-              <ResponsiveContainer width="100%" height={260}>
-                <RadarChart data={data.skillAnalytics.radar}>
-                  <PolarGrid stroke="#bfdbfe" />
-                  <PolarAngleAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} />
-                  <Radar dataKey="skillPower" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.4} />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
+              {data.skillAnalytics?.trackBreakdown.some((metric) => metric.attempts > 0) ? (
+                <div className="mt-5 space-y-4">
+                  {data.skillAnalytics.trackBreakdown
+                    .filter((metric) => metric.attempts > 0)
+                    .map((metric) => (
+                      <div key={metric.key}>
+                        <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+                          <span className="font-bold text-slate-700">{metric.label}</span>
+                          <span className="font-black text-blue-600">{metric.accuracy.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-blue-50">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all"
+                            style={{ width: `${Math.max(0, Math.min(100, metric.accuracy))}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                          {metric.attempts} {metric.attempts === 1 ? 'attempt' : 'attempts'} · skill power {metric.skillPower.toFixed(1)}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="flex min-h-[13rem] flex-col items-center justify-center text-center">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                    <BarChart3 className="h-5 w-5" />
+                  </span>
+                  <p className="mt-3 text-sm font-bold text-slate-600">No scored practice yet</p>
+                  <p className="mt-1 max-w-xs text-xs text-slate-400">Completed IELTS and SAT results will appear here automatically.</p>
+                </div>
+              )}
             </article>
           </Reveal>
         ) : null}

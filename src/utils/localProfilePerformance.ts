@@ -3,6 +3,7 @@ import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
 import { useSpeakingStore } from '@/store/speakingStore'
 import type { DashboardOverview, Difficulty, ProfileOverview, TestCategory } from '@/types/platform'
+import type { PublicProfilePayload } from '@/lib/profileApi'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { loadActivityLog, type ActivityKey, type ActivityLog } from '@/utils/weeklyPlanner'
@@ -654,5 +655,107 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     weeklyActivity,
     achievements,
     recentAttempts,
+  }
+}
+
+/**
+ * Public-profile responses come from the shared database, while several legacy
+ * exam runners still keep their result on this device. For the profile owner we
+ * merge those unsynced records so the public preview never contradicts the main
+ * dashboard. Other learners continue to see server-verified data only.
+ */
+export function mergeLocalPublicProfilePerformance(
+  payload: PublicProfilePayload,
+  userId: string,
+): PublicProfilePayload {
+  if (!payload.profile.isSelf) return payload
+
+  const localAttempts = getLocalDashboardAttempts(userId).filter((attempt) => !attempt.synced)
+  const activityLog = getCombinedActivityLog(userId)
+  const localXp = localAttempts.reduce((total, attempt) => total + attempt.xpEarned, 0)
+  const studyXp = Object.values(activityLog).reduce(
+    (total, activity) => total + calculateTrackedStudyXp(trackedMinutes(activity, INDEPENDENT_STUDY_KEYS)),
+    0,
+  )
+  const totalXp = payload.profile.xp + localXp + studyXp
+  const levelProgress = resolveLocalLevelProgress(totalXp)
+
+  const activeDates = new Set<string>()
+  localAttempts.forEach((attempt) => {
+    const key = localDateKey(attempt.completedAt)
+    if (key) activeDates.add(key)
+  })
+  Object.entries(activityLog).forEach(([key, activity]) => {
+    if (trackedMinutes(activity) > 0) activeDates.add(key)
+  })
+  const localStreak = calculateActivityStreak(activeDates)
+
+  const stats = payload.stats
+    ? (() => {
+        const serverCount = payload.stats!.totalAttempts
+        const localCount = localAttempts.length
+        const totalAttempts = serverCount + localCount
+        const localScore = localAttempts.reduce((total, attempt) => total + attempt.finalScore, 0)
+        const localAccuracy = localAttempts.reduce((total, attempt) => total + attempt.accuracy, 0)
+        return {
+          totalAttempts,
+          averageScore: totalAttempts
+            ? Number(((payload.stats!.averageScore * serverCount + localScore) / totalAttempts).toFixed(1))
+            : 0,
+          averageAccuracy: totalAttempts
+            ? Number(((payload.stats!.averageAccuracy * serverCount + localAccuracy) / totalAttempts).toFixed(1))
+            : 0,
+        }
+      })()
+    : null
+
+  const serverTracks = payload.skillAnalytics?.trackBreakdown ?? []
+  const trackBreakdown = TRACKS.map((definition) => {
+    const serverMetric = serverTracks.find((metric) => metric.key === definition.key) ?? {
+      key: definition.key,
+      label: definition.label,
+      group: definition.group,
+      attempts: 0,
+      accuracy: 0,
+      speed: 0,
+      consistency: 0,
+      skillPower: 0,
+    }
+    return combineMetric(serverMetric, localAttempts)
+  })
+  const radar = TRACKS.map((definition) => {
+    const metric = trackBreakdown.find((entry) => entry.key === definition.key)!
+    return {
+      category: definition.group,
+      label: definition.radarLabel,
+      attempts: metric.attempts,
+      accuracy: metric.accuracy,
+      speed: metric.speed,
+      consistency: metric.consistency,
+      skillPower: metric.skillPower,
+    }
+  })
+  const activeSkillPowers = trackBreakdown.filter((metric) => metric.attempts > 0).map((metric) => metric.skillPower)
+
+  return {
+    ...payload,
+    profile: {
+      ...payload.profile,
+      xp: totalXp,
+      level: Math.max(payload.profile.level, levelProgress.level),
+      streak: Math.max(payload.profile.streak, localStreak),
+      longestStreak: Math.max(payload.profile.longestStreak, localStreak),
+    },
+    stats,
+    skillAnalytics: payload.visibility.showResults
+      ? {
+          overall: {
+            skillPower: Number(average(activeSkillPowers).toFixed(2)),
+            percentile: payload.skillAnalytics?.overall?.percentile ?? 0,
+          },
+          radar,
+          trackBreakdown,
+        }
+      : null,
   }
 }

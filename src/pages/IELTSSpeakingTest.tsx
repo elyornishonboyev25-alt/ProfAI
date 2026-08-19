@@ -34,6 +34,7 @@ import { useSpeakingStore } from '@/store/speakingStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import { markFullMockSectionComplete } from '@/utils/ieltsMockCatalog'
+import { saveSpeakingSession } from '@/lib/speakingApi'
 
 // Single test runner. There are 3 launch modes (Part 1, Part 2 cue card, Part 3)
 // for the daily roadmap, and a 4th "full mock" that delegates to the live
@@ -149,6 +150,19 @@ export default function IELTSSpeakingTest() {
             fillerCount: analysis.stats.fillerCount,
             summary: analysis.summary,
           })
+          if (user) {
+            void saveSpeakingSession({
+              mode: 'full_mock',
+              modeLabel: mode.mock.title,
+              overallBand: analysis.overallBand,
+              fluencyBand: analysis.fluencyBand,
+              lexicalBand: analysis.lexicalBand,
+              grammarBand: analysis.grammarBand,
+              pronunciationBand: analysis.pronunciationBand,
+              durationSec: analysis.stats.durationSec,
+              wordCount: analysis.stats.wordCount,
+            })
+          }
           // Full mock → award a Speaking band badge (with celebration). Daily
           // practice in DayRunner intentionally does not award badges.
           awardBadge({

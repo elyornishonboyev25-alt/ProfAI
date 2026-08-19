@@ -6,7 +6,8 @@ import { requireAuth, requireRole } from '../middleware/auth.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { calculateAttemptScore } from '../services/scoring.service.js'
-import { calculateXp, computeStreak, resolveLevelTransition } from '../services/gamification.service.js'
+import { calculateXp, resolveLevelTransition } from '../services/gamification.service.js'
+import { getLearningStreakSnapshot } from '../services/activityStreak.service.js'
 import { resolveUnlockedAchievements } from '../services/achievement.service.js'
 import { startOfUtcDay } from '../utils/date.js'
 import { invalidateLeaderboardCache } from '../services/leaderboard.service.js'
@@ -405,6 +406,7 @@ router.post(
           currentStreak: true,
           longestStreak: true,
           lastActiveDate: true,
+          profile: { select: { timezone: true } },
         },
       })
 
@@ -413,12 +415,17 @@ router.post(
       }
 
       const now = safeCompletedAt
-      const streak = computeStreak({
-        lastActiveDate: user.lastActiveDate,
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
+      const derivedStreak = await getLearningStreakSnapshot(
+        tx,
+        userId,
+        user.profile?.timezone,
         now,
-      })
+        [now],
+      )
+      const streak = {
+        ...derivedStreak,
+        longestStreak: Math.max(user.longestStreak, derivedStreak.longestStreak),
+      }
 
       const xpEarned = calculateXp({
         baseXp: test.xpReward ?? 110,
@@ -459,7 +466,7 @@ router.post(
           level: levelTransition.levelAfter,
           currentStreak: streak.currentStreak,
           longestStreak: streak.longestStreak,
-          lastActiveDate: streak.lastActiveDate,
+          lastActiveDate: new Date(),
         },
       })
 
@@ -657,6 +664,7 @@ router.post(
           currentStreak: true,
           longestStreak: true,
           lastActiveDate: true,
+          profile: { select: { timezone: true } },
         },
       })
 
@@ -665,12 +673,17 @@ router.post(
       }
 
       const now = safeCompletedAt
-      const streak = computeStreak({
-        lastActiveDate: user.lastActiveDate,
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
+      const derivedStreak = await getLearningStreakSnapshot(
+        tx,
+        userId,
+        user.profile?.timezone,
         now,
-      })
+        [now],
+      )
+      const streak = {
+        ...derivedStreak,
+        longestStreak: Math.max(user.longestStreak, derivedStreak.longestStreak),
+      }
 
       const xpEarned = calculateXp({
         baseXp: test.xpReward ?? 105,
@@ -711,7 +724,7 @@ router.post(
           level: levelTransition.levelAfter,
           currentStreak: streak.currentStreak,
           longestStreak: streak.longestStreak,
-          lastActiveDate: streak.lastActiveDate,
+          lastActiveDate: new Date(),
         },
       })
 
@@ -912,6 +925,7 @@ router.post(
             currentStreak: true,
             longestStreak: true,
             lastActiveDate: true,
+            profile: { select: { timezone: true } },
           },
         }),
         tx.testAttempt.count({ where: { userId } }),
@@ -926,12 +940,17 @@ router.post(
         throw new Error('User not found during test submission.')
       }
 
-      const streak = computeStreak({
-        lastActiveDate: user.lastActiveDate,
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
+      const derivedStreak = await getLearningStreakSnapshot(
+        tx,
+        userId,
+        user.profile?.timezone,
         now,
-      })
+        [now],
+      )
+      const streak = {
+        ...derivedStreak,
+        longestStreak: Math.max(user.longestStreak, derivedStreak.longestStreak),
+      }
 
       const baseXpEarned = calculateXp({
         baseXp: score.baseXp,
@@ -995,7 +1014,7 @@ router.post(
           level: levelTransition.levelAfter,
           currentStreak: streak.currentStreak,
           longestStreak: streak.longestStreak,
-          lastActiveDate: streak.lastActiveDate,
+          lastActiveDate: new Date(),
         },
       })
 

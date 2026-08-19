@@ -125,8 +125,25 @@ export type PublicProfilePayload = {
 
 export type PublicSkillAnalytics = {
   overall?: { skillPower: number; percentile: number }
-  radar: Array<{ category: string; label: string; skillPower: number; accuracy: number }>
-  trackBreakdown: Array<{ key: string; label: string; group: string; skillPower: number; accuracy: number }>
+  radar: Array<{
+    category: string
+    label: string
+    attempts: number
+    accuracy: number
+    speed: number
+    consistency: number
+    skillPower: number
+  }>
+  trackBreakdown: Array<{
+    key: 'IELTS_READING' | 'IELTS_LISTENING' | 'IELTS_WRITING' | 'IELTS_SPEAKING' | 'SAT_MATH' | 'SAT_READING_WRITING'
+    label: string
+    group: 'IELTS' | 'SAT'
+    attempts: number
+    accuracy: number
+    speed: number
+    consistency: number
+    skillPower: number
+  }>
 }
 
 export async function fetchAccount(): Promise<AccountResponse> {

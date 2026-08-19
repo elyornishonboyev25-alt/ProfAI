@@ -11,6 +11,7 @@ import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoa
 import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { env } from '../config/env.js'
+import { getLearningStreakSnapshot } from '../services/activityStreak.service.js'
 
 const router = Router()
 const aiReportBodySchema = z.object({
@@ -376,6 +377,7 @@ router.get(
           longestStreak: true,
           lastActiveDate: true,
           createdAt: true,
+          profile: { select: { timezone: true } },
         },
       }),
       prisma.testAttempt.aggregate({
@@ -434,12 +436,13 @@ router.get(
       })
     }
 
-    const [skillAnalytics, leaderboardSnapshot] = await Promise.all([
+    const [skillAnalytics, leaderboardSnapshot, learningStreak] = await Promise.all([
       generateSkillAnalytics(userId),
       generateLeaderboard({
         period: 'all',
         currentUserId: userId,
       }),
+      getLearningStreakSnapshot(prisma, userId, user.profile?.timezone, now),
     ])
 
     const days = getPastSevenDays(now)
@@ -477,11 +480,6 @@ router.get(
 
     const levelProgress = getLevelProgress(user.xp, user.level)
     const competitiveRow = leaderboardSnapshot.rows.find((row) => row.userId === userId) ?? null
-    const daysSinceActivity = user.lastActiveDate
-      ? Math.floor((startOfUtcDay(now).getTime() - startOfUtcDay(user.lastActiveDate).getTime()) / 86_400_000)
-      : Number.POSITIVE_INFINITY
-    const currentStreak = daysSinceActivity <= 1 ? user.currentStreak : 0
-
     return res.json({
       profile: {
         id: user.id,
@@ -489,8 +487,8 @@ router.get(
         email: user.email,
         level: user.level,
         xp: user.xp,
-        currentStreak,
-        longestStreak: user.longestStreak,
+        currentStreak: learningStreak.currentStreak,
+        longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),
         memberSince: user.createdAt,
       },
       stats: {
@@ -1402,11 +1400,32 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const data = speakingSessionSchema.parse(req.body ?? {})
-    const session = await prisma.speakingSession.create({
-      data: { userId: req.user!.id, ...data },
-      select: { id: true, createdAt: true },
+    const now = new Date()
+    const session = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: req.user!.id },
+        select: {
+          longestStreak: true,
+          profile: { select: { timezone: true } },
+        },
+      })
+      if (!user) throw new Error('User not found while saving speaking activity.')
+
+      const created = await tx.speakingSession.create({
+        data: { userId: req.user!.id, ...data, createdAt: now },
+        select: { id: true, createdAt: true },
+      })
+      const streak = await getLearningStreakSnapshot(tx, req.user!.id, user.profile?.timezone, now)
+      await tx.user.update({
+        where: { id: req.user!.id },
+        data: {
+          currentStreak: streak.currentStreak,
+          longestStreak: Math.max(user.longestStreak, streak.longestStreak),
+          lastActiveDate: now,
+        },
+      })
+      return created
     })
-    await prisma.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: new Date() } }).catch(() => {})
     return res.status(201).json(session)
   }),
 )
@@ -1924,7 +1943,7 @@ router.get(
     }
 
     // Heavy analytics are best-effort: a failure must not break the profile page.
-    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges] = await Promise.all([
+    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak] = await Promise.all([
       generateSkillAnalytics(user.id).catch(() => null),
       generateLeaderboard({ period: 'all', currentUserId: user.id }).catch(() => null),
       prisma.testAttempt
@@ -1932,6 +1951,11 @@ router.get(
         .catch(() => null),
       prisma.testAttempt.count({ where: { userId: user.id } }).catch(() => 0),
       prisma.skillBadge.findMany({ where: { userId: user.id }, orderBy: [{ tier: 'desc' }] }).catch(() => []),
+      getLearningStreakSnapshot(prisma, user.id, profile.timezone).catch(() => ({
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak,
+        lastLearningAt: null,
+      })),
     ])
     const rankRow = leaderboard?.rows.find((row) => row.userId === user.id) ?? null
 
@@ -1942,8 +1966,8 @@ router.get(
         avatarUrl: user.avatarUrl ?? null,
         level: user.level,
         xp: user.xp,
-        streak: user.currentStreak,
-        longestStreak: user.longestStreak,
+        streak: learningStreak.currentStreak,
+        longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),
         memberSince: user.createdAt,
         online: isOnline(user.lastActiveDate),
         lastSeen: user.lastActiveDate,

@@ -94,14 +94,14 @@ const EXAM_CARDS = [
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
 const AVATAR_PRESETS = [
-  'learner-01.png',
-  'learner-02.png',
-  'learner-03.png',
-  'learner-04.png',
-  'learner-05.png',
-  'learner-06.png',
-  'learner-07.png',
-  'learner-08.png',
+  'learner-v2-01.png',
+  'learner-v2-02.png',
+  'learner-v2-03.png',
+  'learner-v2-04.png',
+  'learner-v2-05.png',
+  'learner-v2-06.png',
+  'learner-v2-07.png',
+  'learner-v2-08.png',
 ] as const
 
 function normalizeSatScore(score: number) {

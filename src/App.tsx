@@ -129,9 +129,16 @@ function DeferredAchievementCelebration() {
   )
 }
 
-function AnimatedRoute({ children }: { children: ReactNode }) {
+function AnimatedRoute({ children, staticEntrance = false }: { children: ReactNode; staticEntrance?: boolean }) {
   const location = useLocation()
-  return <div key={location.pathname} className="arena-route h-full">{children}</div>
+  return (
+    <div
+      key={location.pathname}
+      className={`arena-route h-full ${staticEntrance ? 'arena-route-static' : ''}`}
+    >
+      {children}
+    </div>
+  )
 }
 
 function LegacySpeakingRedirect() {
@@ -307,9 +314,9 @@ function App() {
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
-                      <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
-                      <Route path="/dashboard" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
-                      <Route path="/about" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute staticEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
+                      <Route path="/dashboard" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/about" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/tests" element={<Navigate to="/ielts" replace />} />
                       <Route
                         path="/tests/:id/attempt"

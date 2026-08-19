@@ -66,6 +66,11 @@ const learningCards = [
   { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
 ] as const
 
+const dashboardEntrance = {
+  duration: 0.32,
+  ease: [0.22, 1, 0.36, 1],
+} as const
+
 function bestAvailableScore(...scores: Array<number | null | undefined>) {
   const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
   return available.length ? Math.max(...available) : 0
@@ -186,6 +191,7 @@ export default function Dashboard() {
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={dashboardEntrance}
           className="flex flex-wrap items-center justify-between gap-4 px-1 pb-5"
         >
           <div className="flex min-w-0 items-center gap-4">
@@ -220,6 +226,7 @@ export default function Dashboard() {
           <motion.article
             initial={minimalMotion ? false : { opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
+            transition={minimalMotion ? { duration: 0.01 } : { ...dashboardEntrance, delay: 0.05 }}
             className="dashboard-target-card"
           >
             <div className="relative z-10">
@@ -247,7 +254,7 @@ export default function Dashboard() {
                   strokeDasharray={`${2 * Math.PI * 41}`}
                   initial={{ strokeDashoffset: 2 * Math.PI * 41 }}
                   animate={{ strokeDashoffset: 2 * Math.PI * 41 * (1 - targetProgress / 100) }}
-                  transition={{ duration: minimalMotion ? 0.1 : 1.1, ease: 'easeOut' }}
+                  transition={{ duration: minimalMotion ? 0.01 : 0.75, delay: minimalMotion ? 0 : 0.12, ease: 'easeOut' }}
                 />
               </svg>
               <div className="relative text-center">
@@ -317,7 +324,13 @@ export default function Dashboard() {
                         contentStyle={{ border: '1px solid #fecdd3', borderRadius: 14, fontSize: 12 }}
                         cursor={{ fill: 'rgba(244,63,94,.05)' }}
                       />
-                      <Bar dataKey="activity" fill="url(#dashboardBars)" radius={[10, 10, 3, 3]} maxBarSize={42} />
+                      <Bar
+                        dataKey="activity"
+                        fill="url(#dashboardBars)"
+                        radius={[10, 10, 3, 3]}
+                        maxBarSize={42}
+                        isAnimationActive={false}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -373,7 +386,12 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${nextAchievement.progress}%` }} className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-300" />
+                <motion.div
+                  initial={minimalMotion ? false : { scaleX: 0 }}
+                  animate={{ scaleX: nextAchievement.progress / 100 }}
+                  transition={minimalMotion ? { duration: 0.01 } : { duration: 0.55, delay: 0.12, ease: 'easeOut' }}
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-300"
+                />
               </div>
               <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
                 {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
@@ -386,6 +404,7 @@ export default function Dashboard() {
           initial={minimalMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.12 }}
+          transition={dashboardEntrance}
           className="dashboard-glass-card mt-4 p-5"
         >
           <div className="flex flex-wrap items-end justify-between gap-3">

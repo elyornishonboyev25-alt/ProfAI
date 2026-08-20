@@ -396,6 +396,13 @@ function isRepresentedByBackend(attempt: LocalDashboardAttempt, overview: Profil
   ))
 }
 
+function unsyncedLocalXp(attempts: LocalDashboardAttempt[]) {
+  return attempts.reduce(
+    (total, attempt) => total + (!attempt.synced && !attempt.xpSynced ? attempt.xpEarned : 0),
+    0,
+  )
+}
+
 function combineMetric(
   serverMetric: ProfileOverview['skillAnalytics']['trackBreakdown'][number],
   localAttempts: LocalDashboardAttempt[],
@@ -435,7 +442,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
   const totalAttempts = serverCount + unsyncedAttempts.length
   const localAccuracyTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.accuracy, 0)
   const localScoreTotal = unsyncedAttempts.reduce((total, attempt) => total + attempt.finalScore, 0)
-  const localXp = unsyncedAttempts.reduce((total, attempt) => total + (attempt.xpSynced ? 0 : attempt.xpEarned), 0)
+  const localXp = unsyncedLocalXp(localAttempts)
   const averageAccuracy = totalAttempts
     ? (overview.stats.averageAccuracy * serverCount + localAccuracyTotal) / totalAttempts
     : 0
@@ -653,7 +660,7 @@ export function mergeLocalPublicProfilePerformance(
 
   const localAttempts = getLocalDashboardAttempts(userId).filter((attempt) => !attempt.synced)
   const activityLog = getCombinedActivityLog(userId)
-  const localXp = localAttempts.reduce((total, attempt) => total + (attempt.xpSynced ? 0 : attempt.xpEarned), 0)
+  const localXp = unsyncedLocalXp(localAttempts)
   const totalXp = payload.profile.xp + localXp
   const levelProgress = resolveLocalLevelProgress(totalXp)
 

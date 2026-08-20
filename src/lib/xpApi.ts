@@ -19,6 +19,8 @@ export type XpAwardResponse = {
   originalXp: number
   totalXp: number
   level: number
+  currentStreak?: number
+  longestStreak?: number
 }
 
 export async function recordXpActivity(input: {

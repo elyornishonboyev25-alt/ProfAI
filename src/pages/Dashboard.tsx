@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
+  AlertCircle,
   Award,
   BarChart3,
   BookOpen,
@@ -13,6 +14,7 @@ import {
   Medal,
   Mic2,
   Settings,
+  RefreshCw,
   Sparkles,
   Trophy,
 } from 'lucide-react'
@@ -121,14 +123,8 @@ export default function Dashboard() {
   const profile = loadOnboardingProfile(user?.id)
   const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
 
-  const { data, loading } = useAsyncData<DashboardOverview>(
-    async () => {
-      try {
-        return await apiClient.get('/dashboard/overview', { auth: Boolean(user) })
-      } catch {
-        return EMPTY_OVERVIEW
-      }
-    },
+  const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
+    () => apiClient.get('/dashboard/overview', { auth: Boolean(user) }),
     [user?.id],
   )
 
@@ -188,6 +184,14 @@ export default function Dashboard() {
   return (
     <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
       <div className="dashboard-main-shell mx-auto max-w-[98rem]">
+        {error ? (
+          <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> Dashboard data could not refresh. The values below may be out of date.</span>
+            <button type="button" onClick={() => void refetch()} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-black shadow-sm transition hover:bg-amber-100">
+              <RefreshCw className="h-3.5 w-3.5" /> Try again
+            </button>
+          </div>
+        ) : null}
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

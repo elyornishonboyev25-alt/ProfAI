@@ -28,6 +28,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 type BudgetFilter = 'all' | 'published' | 'under-20k-usd'
 type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
 type RankFilter = 'all' | 'top-10' | 'top-25' | 'top-50' | 'unranked'
+const UNIVERSITY_PAGE_SIZE = 12
 
 function yearlyCostLabel(university: University) {
   const cost = university.costOfLiving
@@ -218,6 +219,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
   const [budget, setBudget] = useState<BudgetFilter>('all')
   const [ielts, setIelts] = useState<IeltsFilter>('all')
   const [rank, setRank] = useState<RankFilter>('all')
+  const [visibleCount, setVisibleCount] = useState(UNIVERSITY_PAGE_SIZE)
 
   const visibleCatalog = useMemo(
     () => shortlistOnly ? all.filter((university) => shortlistedSet.has(university.slug)) : all,
@@ -252,6 +254,12 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
       return matchesQuery && matchesCountry && matchesBudget && matchesIelts && matchesRank
     })
   }, [budget, country, deferredQuery, ielts, rank, visibleCatalog])
+
+  useEffect(() => {
+    setVisibleCount(UNIVERSITY_PAGE_SIZE)
+  }, [budget, country, deferredQuery, ielts, rank, shortlistOnly])
+
+  const displayedUniversities = shortlistOnly ? filtered : filtered.slice(0, visibleCount)
 
   const handleToggleShortlist = useCallback((university: University) => {
     const added = toggleShortlist(university.slug)
@@ -384,7 +392,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                 </div>
               ) : (
                 <div className="admission-university-grid">
-                  {filtered.map((university, index) => (
+                  {displayedUniversities.map((university, index) => (
                     <UniversityCard
                       key={university.id}
                       university={university}
@@ -397,6 +405,19 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   ))}
                 </div>
               )}
+
+              {!shortlistOnly && displayedUniversities.length < filtered.length ? (
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((count) => Math.min(filtered.length, count + UNIVERSITY_PAGE_SIZE))}
+                    className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-black text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50"
+                  >
+                    Show more universities
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs">{filtered.length - displayedUniversities.length}</span>
+                  </button>
+                </div>
+              ) : null}
 
               <p className="admission-catalog-note">
                 <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.

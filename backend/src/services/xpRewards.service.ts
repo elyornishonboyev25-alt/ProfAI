@@ -28,6 +28,16 @@ export type XpRewardInput = {
   durationSec?: number
 }
 
+function validTimeZone(requestedTimeZone?: string | null) {
+  if (!requestedTimeZone) return 'UTC'
+  try {
+    new Intl.DateTimeFormat('en-CA', { timeZone: requestedTimeZone }).format(new Date())
+    return requestedTimeZone
+  } catch {
+    return 'UTC'
+  }
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, Number.isFinite(value) ? value : 0))
 }
@@ -84,6 +94,7 @@ export async function awardActivityXp(
     userId: string
     eventKey: string
     earnedAt?: Date
+    timeZone?: string | null
     metadata?: Prisma.InputJsonValue
   },
 ) {
@@ -102,20 +113,26 @@ export async function awardActivityXp(
   }
 
   const requestedAmount = calculateActivityXp(params)
-  const dayStart = new Date(earnedAt)
-  dayStart.setUTCHours(0, 0, 0, 0)
-  const dayEnd = new Date(dayStart)
-  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
-  const awardedToday = await client.xpEvent.aggregate({
+  const timeZone = validTimeZone(params.timeZone)
+  const localDay = localDateKey(earnedAt, timeZone)
+  // Time-zone boundaries can be up to 14 hours away from UTC. Fetch a safe
+  // three-day window and apply the exact local-day comparison in memory.
+  const nearbyStart = new Date(earnedAt.getTime() - 36 * 60 * 60 * 1000)
+  const nearbyEnd = new Date(earnedAt.getTime() + 36 * 60 * 60 * 1000)
+  const nearbyEvents = await client.xpEvent.findMany({
     where: {
       userId: params.userId,
       source: dailySourceFilter(params.source),
-      earnedAt: { gte: dayStart, lt: dayEnd },
+      earnedAt: { gte: nearbyStart, lt: nearbyEnd },
     },
-    _sum: { amount: true },
+    select: { earnedAt: true, amount: true },
   })
+  const awardedToday = nearbyEvents.reduce(
+    (total, event) => localDateKey(event.earnedAt, timeZone) === localDay ? total + event.amount : total,
+    0,
+  )
   const dailyCap = XP_REWARD_POLICY[params.source].dailyCap
-  const amount = Math.max(0, Math.min(requestedAmount, dailyCap - (awardedToday._sum.amount ?? 0)))
+  const amount = Math.max(0, Math.min(requestedAmount, dailyCap - awardedToday))
 
   const user = await client.user.findUnique({
     where: { id: params.userId },
@@ -134,13 +151,19 @@ export async function awardActivityXp(
     },
   })
 
-  const totalXp = user.xp + amount
-  const level = resolveLevelFromXp(totalXp)
+  let totalXp = user.xp
+  let level = user.level
   if (amount > 0) {
-    await client.user.update({
+    const updatedUser = await client.user.update({
       where: { id: params.userId },
-      data: { xp: totalXp, level },
+      data: { xp: { increment: amount } },
+      select: { xp: true },
     })
+    totalXp = updatedUser.xp
+    level = resolveLevelFromXp(totalXp)
+    if (level !== user.level) {
+      await client.user.update({ where: { id: params.userId }, data: { level } })
+    }
     if (level > user.level) {
       await client.notification.create({
         data: {

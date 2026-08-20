@@ -8,7 +8,7 @@ export type LearningStreakSnapshot = {
   lastLearningAt: Date | null
 }
 
-function safeTimeZone(timeZone?: string | null) {
+export function normalizeTimeZone(timeZone?: string | null) {
   if (!timeZone) return 'UTC'
   try {
     new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date())
@@ -39,7 +39,7 @@ export function calculateLearningStreak(
   now = new Date(),
   requestedTimeZone?: string | null,
 ): LearningStreakSnapshot {
-  const timeZone = safeTimeZone(requestedTimeZone)
+  const timeZone = normalizeTimeZone(requestedTimeZone)
   const uniqueDays = [...new Set(activityDates.map((date) => dateKey(date, timeZone)))]
     .sort((left, right) => dayNumber(left) - dayNumber(right))
 

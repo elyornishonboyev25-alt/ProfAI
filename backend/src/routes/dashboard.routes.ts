@@ -3,25 +3,21 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { addUtcDays, startOfUtcDay } from '../utils/date.js'
+import { addUtcDays } from '../utils/date.js'
 import { generateLeaderboard } from '../services/leaderboard.service.js'
-import { getLearningStreakSnapshot } from '../services/activityStreak.service.js'
+import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
+import { localDateKey } from '../services/xpRewards.service.js'
 
 const router = Router()
 
-function buildSevenDayWindow(now: Date) {
-  const days = [] as Date[]
-  const start = addUtcDays(startOfUtcDay(now), -6)
-
-  for (let index = 0; index < 7; index += 1) {
-    days.push(addUtcDays(start, index))
-  }
-
-  return days
+function buildSevenDayKeys(now: Date, timeZone: string) {
+  const [year, month, day] = localDateKey(now, timeZone).split('-').map(Number)
+  const today = new Date(Date.UTC(year, month - 1, day, 12))
+  return Array.from({ length: 7 }, (_, index) => localDateKey(addUtcDays(today, index - 6), 'UTC'))
 }
 
-function formatDayLabel(date: Date) {
-  return date.toLocaleDateString('en-US', { weekday: 'short' })
+function formatDayLabel(dateKey: string) {
+  return new Date(`${dateKey}T12:00:00.000Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })
 }
 
 router.get(
@@ -144,25 +140,35 @@ router.get(
       },
     })
 
-    const sevenDays = buildSevenDayWindow(now)
-    const weeklyAttempts = await prisma.testAttempt.findMany({
-      where: {
-        userId,
-        completedAt: {
-          gte: sevenDays[0],
-          lt: addUtcDays(sevenDays[6], 1),
+    const timeZone = normalizeTimeZone(user.profile?.timezone)
+    const sevenDays = buildSevenDayKeys(now, timeZone)
+    const broadWindowStart = addUtcDays(now, -8)
+    const broadWindowEnd = addUtcDays(now, 1)
+    const [weeklyAttempts, weeklyXpEvents] = await Promise.all([
+      prisma.testAttempt.findMany({
+        where: {
+          userId,
+          completedAt: {
+            gte: broadWindowStart,
+            lt: broadWindowEnd,
+          },
         },
-      },
-      select: {
-        completedAt: true,
-        timeSpentSec: true,
-        totalQuestions: true,
-      },
-    })
+        select: {
+          completedAt: true,
+          timeSpentSec: true,
+          totalQuestions: true,
+        },
+      }),
+      prisma.xpEvent.findMany({
+        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
+        select: { earnedAt: true, source: true, metadata: true },
+      }),
+    ])
 
     const activityMap = new Map<string, { testsCompleted: number; questionsAnswered: number; studyTimeSec: number }>()
     for (const attempt of weeklyAttempts) {
-      const key = startOfUtcDay(attempt.completedAt).toISOString()
+      const key = localDateKey(attempt.completedAt, timeZone)
+      if (!sevenDays.includes(key)) continue
       const previous = activityMap.get(key) ?? { testsCompleted: 0, questionsAnswered: 0, studyTimeSec: 0 }
       activityMap.set(key, {
         testsCompleted: previous.testsCompleted + 1,
@@ -171,17 +177,30 @@ router.get(
       })
     }
 
-    const weeklyProgress = sevenDays.map((day) => {
-      const key = startOfUtcDay(day).toISOString()
+    for (const event of weeklyXpEvents) {
+      const key = localDateKey(event.earnedAt, timeZone)
+      if (!sevenDays.includes(key)) continue
+      const previous = activityMap.get(key) ?? { testsCompleted: 0, questionsAnswered: 0, studyTimeSec: 0 }
+      const metadata = event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
+        ? event.metadata as Record<string, unknown>
+        : null
+      const activeMinutes = event.source.startsWith('STUDY_') && typeof metadata?.activeMinutes === 'number'
+        ? Math.max(0, Math.min(60, metadata.activeMinutes))
+        : 0
+      activityMap.set(key, { ...previous, studyTimeSec: previous.studyTimeSec + Math.round(activeMinutes * 60) })
+    }
+
+    const weeklyProgress = sevenDays.map((key) => {
       const activity = activityMap.get(key)
+      const hasXpActivity = weeklyXpEvents.some((event) => localDateKey(event.earnedAt, timeZone) === key)
 
       return {
-        date: key,
-        label: formatDayLabel(day),
+        date: `${key}T00:00:00.000Z`,
+        label: formatDayLabel(key),
         testsCompleted: activity?.testsCompleted ?? 0,
         questionsAnswered: activity?.questionsAnswered ?? 0,
         studyTimeSec: activity?.studyTimeSec ?? 0,
-        active: Boolean((activity?.testsCompleted ?? 0) > 0),
+        active: Boolean((activity?.testsCompleted ?? 0) > 0 || hasXpActivity),
       }
     })
 

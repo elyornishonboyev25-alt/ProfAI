@@ -99,9 +99,10 @@ export async function fetchSpeakerByNickname(nickname: string): Promise<SpeakerP
   return apiClient.get<SpeakerProfilePayload>(`/profile/speaking/by-nickname/${encodeURIComponent(nickname)}`, { auth: true })
 }
 
-export async function sendHeartbeat(): Promise<XpAwardResponse | null> {
+export async function sendHeartbeat(recalculateStreak = false): Promise<XpAwardResponse | null> {
   try {
-    return await apiClient.post<XpAwardResponse>('/profile/heartbeat', {}, { auth: true })
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return await apiClient.post<XpAwardResponse>('/profile/heartbeat', { timezone, recalculateStreak }, { auth: true })
   } catch {
     // ignore
     return null

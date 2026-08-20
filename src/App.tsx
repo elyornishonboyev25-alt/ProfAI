@@ -268,7 +268,7 @@ function App() {
         durationSec: 300,
         metadata: { pathname, activeMinutes: 5 },
       }).then((reward) => {
-        updateUserProgress({ xp: reward.totalXp, level: reward.level })
+        updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
       }).catch(() => {})
     }, 300_000)
 
@@ -278,12 +278,12 @@ function App() {
   // Presence heartbeat — keeps "online now" / "last seen" accurate for the community.
   useEffect(() => {
     if (!user) return
-    const heartbeat = () => {
-      void sendHeartbeat().then((reward) => {
-        if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level })
+    const heartbeat = (recalculateStreak = false) => {
+      void sendHeartbeat(recalculateStreak).then((reward) => {
+        if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
       })
     }
-    heartbeat()
+    heartbeat(true)
     const id = window.setInterval(() => {
       if (!document.hidden) heartbeat()
     }, 60000)

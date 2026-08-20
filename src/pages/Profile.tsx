@@ -558,7 +558,7 @@ export default function Profile() {
                     </p>
                   </div>
                   <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">From Tests</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Test XP only</p>
                     <p className="mt-1 inline-flex items-center gap-1 text-lg font-black text-slate-900">
                       <Zap className="h-4 w-4 fill-amber-400 text-amber-500" />
                       <CountUp value={data.stats.totalXpFromAttempts} />

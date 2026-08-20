@@ -3,15 +3,15 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { addUtcDays, startOfUtcDay } from '../utils/date.js'
+import { addUtcDays } from '../utils/date.js'
 import { getLevelProgress } from '../config/levelConfig.js'
-import { generateLeaderboard } from '../services/leaderboard.service.js'
+import { generateLeaderboard, invalidateLeaderboardCache } from '../services/leaderboard.service.js'
 import { generateSkillAnalytics } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
 import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { env } from '../config/env.js'
-import { getLearningStreakSnapshot } from '../services/activityStreak.service.js'
+import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
 import {
   awardActivityXp,
   localDateKey,
@@ -71,6 +71,10 @@ const xpActivitySchema = z.object({
   band: z.coerce.number().min(0).max(9).optional(),
   durationSec: z.coerce.number().int().min(0).max(86_400).optional(),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+})
+const heartbeatSchema = z.object({
+  timezone: z.string().trim().min(1).max(100).optional(),
+  recalculateStreak: z.boolean().optional(),
 })
 const vocabNotebookQuerySchema = z.object({
   testKey: z.string().min(2).max(120).optional(),
@@ -269,8 +273,11 @@ const fallbackSpeakingQuestionBank: Array<{
   },
 ]
 
-function getPastSevenDays(now: Date) {
-  return Array.from({ length: 7 }, (_, index) => addUtcDays(startOfUtcDay(now), -6 + index))
+function getPastSevenLocalDays(now: Date, timeZone?: string | null) {
+  const zone = normalizeTimeZone(timeZone)
+  const [year, month, day] = localDateKey(now, zone).split('-').map(Number)
+  const today = new Date(Date.UTC(year, month - 1, day, 12))
+  return Array.from({ length: 7 }, (_, index) => localDateKey(addUtcDays(today, index - 6), 'UTC'))
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -472,43 +479,45 @@ router.get(
       getLearningStreakSnapshot(prisma, userId, user.profile?.timezone, now),
     ])
 
-    const days = getPastSevenDays(now)
-    const [activityRows, xpEventRows] = await Promise.all([
-      prisma.dailyActivity.findMany({
-        where: {
-          userId,
-          activityDate: {
-            gte: days[0],
-            lte: days[6],
-          },
-        },
-        select: {
-          activityDate: true,
-          testsCompleted: true,
-          questionsAnswered: true,
-          xpEarned: true,
-        },
+    const timeZone = normalizeTimeZone(user.profile?.timezone)
+    const days = getPastSevenLocalDays(now, timeZone)
+    const broadWindowStart = addUtcDays(now, -8)
+    const broadWindowEnd = addUtcDays(now, 1)
+    const [weeklyAttempts, xpEventRows] = await Promise.all([
+      prisma.testAttempt.findMany({
+        where: { userId, completedAt: { gte: broadWindowStart, lt: broadWindowEnd } },
+        select: { completedAt: true, totalQuestions: true, xpEarned: true },
       }),
       prisma.xpEvent.findMany({
-        where: { userId, earnedAt: { gte: days[0], lt: addUtcDays(days[6], 1) }, amount: { gt: 0 } },
+        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
         select: { earnedAt: true, amount: true },
       }),
     ])
 
-    const activityMap = new Map(activityRows.map((row) => [startOfUtcDay(row.activityDate).toISOString(), row]))
+    const activityMap = new Map<string, { testsCompleted: number; questionsAnswered: number; xpEarned: number }>()
+    weeklyAttempts.forEach((attempt) => {
+      const key = localDateKey(attempt.completedAt, timeZone)
+      if (!days.includes(key)) return
+      const previous = activityMap.get(key) ?? { testsCompleted: 0, questionsAnswered: 0, xpEarned: 0 }
+      activityMap.set(key, {
+        testsCompleted: previous.testsCompleted + 1,
+        questionsAnswered: previous.questionsAnswered + attempt.totalQuestions,
+        xpEarned: previous.xpEarned + attempt.xpEarned,
+      })
+    })
     const xpEventMap = new Map<string, number>()
     xpEventRows.forEach((event) => {
-      const key = startOfUtcDay(event.earnedAt).toISOString()
+      const key = localDateKey(event.earnedAt, timeZone)
+      if (!days.includes(key)) return
       xpEventMap.set(key, (xpEventMap.get(key) ?? 0) + event.amount)
     })
 
-    const weeklyActivity = days.map((day) => {
-      const key = startOfUtcDay(day).toISOString()
+    const weeklyActivity = days.map((key) => {
       const row = activityMap.get(key)
 
       return {
-        date: key,
-        label: day.toLocaleDateString('en-US', { weekday: 'short' }),
+        date: `${key}T00:00:00.000Z`,
+        label: new Date(`${key}T12:00:00.000Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }),
         testsCompleted: row?.testsCompleted ?? 0,
         questionsAnswered: row?.questionsAnswered ?? 0,
         xpEarned: (row?.xpEarned ?? 0) + (xpEventMap.get(key) ?? 0),
@@ -1429,23 +1438,42 @@ router.post(
   '/heartbeat',
   requireAuth,
   asyncHandler(async (req, res) => {
+    const input = heartbeatSchema.parse(req.body ?? {})
     const now = new Date()
+    let leaderboardChanged = false
     const reward = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: req.user!.id },
-        select: { profile: { select: { timezone: true } } },
+        select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
       })
       if (!user) throw new Error('User not found while recording daily login.')
+      const timeZone = normalizeTimeZone(input.timezone ?? user.profile?.timezone)
+      if (input.timezone && timeZone === input.timezone) {
+        await tx.userProfile.updateMany({
+          where: { userId: req.user!.id },
+          data: { timezone: timeZone },
+        })
+      }
       const result = await awardActivityXp(tx, {
         userId: req.user!.id,
         source: 'DAILY_LOGIN',
-        eventKey: localDateKey(now, user.profile?.timezone),
+        eventKey: localDateKey(now, timeZone),
         earnedAt: now,
+        timeZone,
         metadata: { reason: 'First active visit of the local calendar day' },
       })
-      await tx.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: now } })
-      return result
+      const streak = input.recalculateStreak || !result.duplicate
+        ? await getLearningStreakSnapshot(tx, req.user!.id, timeZone, now)
+        : { currentStreak: user.currentStreak, longestStreak: user.longestStreak }
+      const longestStreak = Math.max(user.longestStreak, streak.longestStreak)
+      leaderboardChanged = result.xpEarned > 0 || streak.currentStreak !== user.currentStreak
+      await tx.user.update({
+        where: { id: req.user!.id },
+        data: { currentStreak: streak.currentStreak, longestStreak, lastActiveDate: now },
+      })
+      return { ...result, currentStreak: streak.currentStreak, longestStreak }
     })
+    if (leaderboardChanged) invalidateLeaderboardCache()
     return res.json(reward)
   }),
 )
@@ -1462,7 +1490,14 @@ router.post(
   asyncHandler(async (req, res) => {
     const input = xpActivitySchema.parse(req.body ?? {})
     const now = new Date()
+    let leaderboardChanged = false
     const reward = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: req.user!.id },
+        select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
+      })
+      if (!user) throw new Error('User not found while recording learning activity.')
+      const timeZone = normalizeTimeZone(user.profile?.timezone)
       const result = await awardActivityXp(tx, {
         userId: req.user!.id,
         source: input.source as XpRewardSource,
@@ -1471,11 +1506,19 @@ router.post(
         band: input.band,
         durationSec: input.durationSec,
         earnedAt: now,
+        timeZone,
         metadata: input.metadata,
       })
-      await tx.user.update({ where: { id: req.user!.id }, data: { lastActiveDate: now } })
-      return result
+      const streak = await getLearningStreakSnapshot(tx, req.user!.id, timeZone, now)
+      const longestStreak = Math.max(user.longestStreak, streak.longestStreak)
+      leaderboardChanged = result.xpEarned > 0 || streak.currentStreak !== user.currentStreak
+      await tx.user.update({
+        where: { id: req.user!.id },
+        data: { currentStreak: streak.currentStreak, longestStreak, lastActiveDate: now },
+      })
+      return { ...result, currentStreak: streak.currentStreak, longestStreak }
     })
+    if (leaderboardChanged) invalidateLeaderboardCache()
     return res.status(reward.duplicate ? 200 : 201).json(reward)
   }),
 )
@@ -1529,6 +1572,7 @@ router.post(
         band: data.overallBand,
         durationSec: data.durationSec,
         earnedAt: now,
+        timeZone: user.profile?.timezone,
         metadata: { mode: data.mode, modeLabel: data.modeLabel, band: data.overallBand },
       })
       const streak = await getLearningStreakSnapshot(tx, req.user!.id, user.profile?.timezone, now)
@@ -1542,6 +1586,7 @@ router.post(
       })
       return { ...created, ...reward }
     })
+    if (session.xpEarned > 0) invalidateLeaderboardCache()
     return res.status(201).json(session)
   }),
 )

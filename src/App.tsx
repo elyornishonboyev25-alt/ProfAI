@@ -223,6 +223,7 @@ function App() {
     '/podcast',
     '/shadowing-lab',
     '/admission/universities',
+    '/admission/shortlist',
     '/vocabulary',
     '/community',
   ].includes(pathname)
@@ -701,6 +702,7 @@ function App() {
                       <Route path="/admission/lessons" element={<AnimatedRoute><AdmissionLessons /></AnimatedRoute>} />
                       <Route path="/admission/lessons/:slug" element={<AnimatedRoute><AdmissionLesson /></AnimatedRoute>} />
                       <Route path="/admission/universities" element={<AnimatedRoute><AdmissionUniversities /></AnimatedRoute>} />
+                      <Route path="/admission/shortlist" element={<AnimatedRoute><AdmissionUniversities shortlistOnly /></AnimatedRoute>} />
                       <Route path="/admission/universities/:slug" element={<AnimatedRoute><AdmissionUniversity /></AnimatedRoute>} />
                       <Route
                         path="/ai-tutor"

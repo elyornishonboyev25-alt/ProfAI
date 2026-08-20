@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Award,
+  BookmarkPlus,
   Building2,
   CalendarDays,
   CircleDollarSign,
+  Check,
   ExternalLink,
   GraduationCap,
   Globe2,
@@ -26,6 +28,8 @@ import AdmissionScoreComparison from '@/components/admission/AdmissionScoreCompa
 import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
+import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
+import { useToastStore, type ToastState } from '@/store/toastStore'
 
 function money(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
@@ -71,10 +75,16 @@ function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<type
 
 export default function AdmissionUniversity() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { slug } = useParams<{ slug: string }>()
   const university = slug ? getUniversityBySlug(slug) : undefined
   const { scores } = useAdmissionScores()
   const campusImage = useUniversityCampusImage(university?.name ?? '')
+  const { isShortlisted, toggleShortlist } = useUniversityShortlist()
+  const pushToast = useToastStore((state: ToastState) => state.pushToast)
+  const admissionReturnTo = (location.state as { admissionReturnTo?: unknown } | null)?.admissionReturnTo === '/admission/shortlist'
+    ? '/admission/shortlist'
+    : '/admission/universities'
 
   if (!university) {
     return (
@@ -98,6 +108,18 @@ export default function AdmissionUniversity() {
   const students = u.students
   const cost = u.costOfLiving
   const hasDetailedStudents = students && typeof students.undergraduate === 'number'
+  const shortlisted = isShortlisted(u.slug)
+
+  const handleShortlist = () => {
+    const added = toggleShortlist(u.slug)
+    pushToast({
+      type: added ? 'success' : 'info',
+      title: added ? 'Added to shortlist' : 'Removed from shortlist',
+      message: added
+        ? `${u.shortName} is saved in your Admission Hub shortlist.`
+        : `${u.shortName} was removed from your shortlist.`,
+    })
+  }
 
   const keyFacts: { icon: typeof Landmark; label: string; value: string }[] = [
     { icon: CalendarDays, label: 'Founded', value: String(u.founded) },
@@ -129,13 +151,24 @@ export default function AdmissionUniversity() {
               style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
             />
             <div className="relative">
-              <button
-                onClick={() => navigate('/admission/universities')}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Universities
-              </button>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  onClick={() => navigate(admissionReturnTo)}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to Universities
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShortlist}
+                  aria-pressed={shortlisted}
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.08em] shadow-lg backdrop-blur transition hover:-translate-y-0.5 ${shortlisted ? 'border-emerald-200/80 bg-emerald-500 text-white hover:bg-emerald-400' : 'border-white/70 bg-white text-slate-900 hover:bg-white/90'}`}
+                >
+                  {shortlisted ? <Check className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
+                  {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                </button>
+              </div>
 
               <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
                 <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" priority />

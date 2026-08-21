@@ -923,6 +923,7 @@ export default function IELTSSectionTests() {
           <label className="relative mt-4 block">
             <Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${theme.searchIcon}`} />
             <input
+              type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search day or test number..."

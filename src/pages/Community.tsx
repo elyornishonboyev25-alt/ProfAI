@@ -223,6 +223,7 @@ export default function Community() {
             <label className="community-search-field">
               <Search className="h-7 w-7" />
               <input
+                type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value.replace(/\s/g, ''))}
                 placeholder="Find study partners..."

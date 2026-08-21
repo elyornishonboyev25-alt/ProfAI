@@ -201,7 +201,7 @@ function FilterSelect({
         <span>{selected?.label}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? <div className="admission-listbox-popover">
-        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
+        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
         <ul id={listId} role="listbox" aria-label={label}>
           {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{option.label}{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
           {!visible.length ? <li className="admission-listbox-empty">No options found</li> : null}
@@ -351,6 +351,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               <div className="admission-search-box">
                 <Search aria-hidden="true" />
                 <input
+                  type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={shortlistOnly ? 'Search your shortlist' : 'Find your university'}

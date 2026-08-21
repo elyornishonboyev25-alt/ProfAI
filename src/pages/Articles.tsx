@@ -67,7 +67,7 @@ export default function Articles() {
             <div className="articles-arena-search-stack">
               <label className="articles-arena-search">
                 <Search aria-hidden="true" />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles or topics" aria-label="Search articles" />
+                <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles or topics" aria-label="Search articles" />
                 {query ? <button type="button" onClick={() => setQuery('')}>Clear</button> : null}
               </label>
               <div className="articles-arena-benefits" aria-label="Reading tools">

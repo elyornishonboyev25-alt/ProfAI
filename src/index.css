@@ -1436,6 +1436,19 @@ html[data-motion='minimal'] .dashboard-learning-card {
     letter-spacing: -0.035em;
   }
 
+  .admission-search-box input,
+  .admission-search-box input:focus,
+  .admission-search-box input:focus-visible,
+  .admission-listbox-search input,
+  .admission-listbox-search input:focus,
+  .admission-listbox-search input:focus-visible {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
   .admission-search-box input::placeholder { color: #64748b; opacity: 0.8; }
 
   .admission-filter-row {
@@ -1468,6 +1481,11 @@ html[data-motion='minimal'] .dashboard-learning-card {
     background: rgba(255,255,255,0.48);
   }
 
+  .admission-filter-control:focus-within {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 0 3px rgba(254, 226, 226, 0.55), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
   .admission-filter-control select {
     width: 100%;
     min-width: 0;
@@ -1485,6 +1503,10 @@ html[data-motion='minimal'] .dashboard-learning-card {
   .admission-filter-control.admission-listbox { overflow: visible; }
   .admission-filter-control.admission-listbox.is-open { z-index: 100; border-color: rgba(248,113,113,.72); background: rgba(255,255,255,.96); }
   .admission-listbox > button { display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: .5rem; color: #0f172a; font-size: .8rem; font-weight: 700; text-align: left; }
+  .admission-listbox > button:focus,
+  .admission-listbox > button:focus-visible,
+  .admission-listbox-popover button:focus,
+  .admission-listbox-popover button:focus-visible { outline: 0 !important; box-shadow: none !important; }
   .admission-listbox > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .admission-listbox-popover { position: absolute; z-index: 80; top: calc(100% + .5rem); left: 0; width: max(100%, 15rem); max-width: min(22rem, calc(100vw - 2rem)); overflow: hidden; border: 1px solid rgba(226,232,240,.96); border-radius: 1.25rem; background: #fff; padding: .5rem; box-shadow: 0 24px 60px rgba(15,23,42,.2),inset 0 1px white; }
   .admission-filter-control:nth-child(even) .admission-listbox-popover { right: 0; left: auto; }
@@ -1572,7 +1594,7 @@ html[data-motion='minimal'] .dashboard-learning-card {
 
   .admission-university-card:hover::after { transform: translateX(110%); }
 
-  .admission-university-card > *:not(.admission-university-card-link):not(.admission-card-shortlist) {
+  .admission-university-card > *:not(.admission-university-card-link):not(.admission-card-shortlist):not(.admission-card-glow) {
     position: relative;
     z-index: 2;
     pointer-events: none;

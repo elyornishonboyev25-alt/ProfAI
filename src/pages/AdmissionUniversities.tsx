@@ -57,6 +57,7 @@ function ieltsLabel(university: University) {
 const UniversityCard = memo(function UniversityCard({
   university,
   scores,
+  preferredCountry,
   priority = false,
   shortlisted,
   onToggleShortlist,
@@ -64,12 +65,13 @@ const UniversityCard = memo(function UniversityCard({
 }: {
   university: University
   scores: AdmissionScores
+  preferredCountry?: string | null
   priority?: boolean
   shortlisted: boolean
   onToggleShortlist: (university: University) => void
   returnTo: '/admission/universities' | '/admission/shortlist'
 }) {
-  const fit = scoreUniversity(university, scores)
+  const fit = scoreUniversity(university, { ...scores, preferredCountry })
   const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
 
   return (
@@ -262,7 +264,18 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
     setVisibleCount(UNIVERSITY_PAGE_SIZE)
   }, [budget, country, deferredQuery, ielts, rank, shortlistOnly])
 
-  const displayedUniversities = shortlistOnly ? filtered : filtered.slice(0, visibleCount)
+  const suggestedUniversities = useMemo(() => {
+    const hasProfileSignals = scores.satTotal !== null || scores.ieltsOverall !== null || Boolean(profileCountry)
+    if (shortlistOnly || !hasProfileSignals) return filtered
+
+    return [...filtered].sort((a, b) => {
+      const aFit = scoreUniversity(a, { ...scores, preferredCountry: profileCountry }).fitPercent
+      const bFit = scoreUniversity(b, { ...scores, preferredCountry: profileCountry }).fitPercent
+      return bFit - aFit || (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)
+    })
+  }, [filtered, profileCountry, scores, shortlistOnly])
+
+  const displayedUniversities = shortlistOnly ? suggestedUniversities : suggestedUniversities.slice(0, visibleCount)
 
   const handleToggleShortlist = useCallback((university: University) => {
     const added = toggleShortlist(university.slug)
@@ -399,6 +412,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                       key={university.id}
                       university={university}
                       scores={scores}
+                      preferredCountry={profileCountry}
                       priority={index < 4}
                       shortlisted={shortlistedSet.has(university.slug)}
                       onToggleShortlist={handleToggleShortlist}

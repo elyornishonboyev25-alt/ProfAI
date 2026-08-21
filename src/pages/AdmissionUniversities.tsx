@@ -264,18 +264,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
     setVisibleCount(UNIVERSITY_PAGE_SIZE)
   }, [budget, country, deferredQuery, ielts, rank, shortlistOnly])
 
-  const suggestedUniversities = useMemo(() => {
-    const hasProfileSignals = scores.satTotal !== null || scores.ieltsOverall !== null || Boolean(profileCountry)
-    if (shortlistOnly || !hasProfileSignals) return filtered
-
-    return [...filtered].sort((a, b) => {
-      const aFit = scoreUniversity(a, { ...scores, preferredCountry: profileCountry }).fitPercent
-      const bFit = scoreUniversity(b, { ...scores, preferredCountry: profileCountry }).fitPercent
-      return bFit - aFit || (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)
-    })
-  }, [filtered, profileCountry, scores, shortlistOnly])
-
-  const displayedUniversities = shortlistOnly ? suggestedUniversities : suggestedUniversities.slice(0, visibleCount)
+  const displayedUniversities = shortlistOnly ? filtered : filtered.slice(0, visibleCount)
 
   const handleToggleShortlist = useCallback((university: University) => {
     const added = toggleShortlist(university.slug)

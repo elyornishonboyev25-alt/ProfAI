@@ -1416,7 +1416,13 @@ html[data-motion='minimal'] .dashboard-learning-card {
     box-shadow: 0 26px 58px rgba(220, 38, 38, 0.14), 0 0 0 4px rgba(254, 226, 226, 0.55);
   }
 
-  .admission-search-box > svg { display: none; width: 1.3rem; color: #94a3b8; }
+  .admission-search-box > svg {
+    display: block;
+    width: 1.3rem;
+    height: 1.3rem;
+    flex-shrink: 0;
+    color: #94a3b8;
+  }
 
   .admission-search-box input {
     min-width: 0;
@@ -1431,22 +1437,6 @@ html[data-motion='minimal'] .dashboard-learning-card {
   }
 
   .admission-search-box input::placeholder { color: #64748b; opacity: 0.8; }
-
-  .admission-search-action {
-    display: inline-flex;
-    width: clamp(3.5rem, 5vw, 5.1rem);
-    height: clamp(3.5rem, 5vw, 5.1rem);
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255,255,255,0.7);
-    border-radius: 50%;
-    color: white;
-    background: linear-gradient(145deg, #f45b5b, #c81e2a);
-    box-shadow: 0 15px 27px rgba(220,38,38,0.34), inset 0 2px 4px rgba(255,255,255,0.35);
-  }
-
-  .admission-search-action svg { width: 44%; height: 44%; stroke-width: 2; }
 
   .admission-filter-row {
     display: grid;
@@ -1601,10 +1591,6 @@ html[data-motion='minimal'] .dashboard-learning-card {
   }
 
   .admission-card-shortlist {
-    position: absolute;
-    z-index: 4;
-    top: 0.85rem;
-    right: 4.7rem;
     display: grid;
     width: 2.35rem;
     height: 2.35rem;
@@ -1636,6 +1622,18 @@ html[data-motion='minimal'] .dashboard-learning-card {
 
   .admission-card-topline { display: flex; min-height: 5.8rem; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
 
+  .admission-card-rank-actions {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    margin: -1.3rem -0.55rem 0 0;
+    pointer-events: auto;
+  }
+
   .university-official-logo {
     border: 1px solid rgba(255,255,255,0.82);
     background: linear-gradient(145deg, rgba(255,255,255,0.72), color-mix(in srgb, var(--university-accent) 8%, rgba(255,255,255,0.42)));
@@ -1651,7 +1649,7 @@ html[data-motion='minimal'] .dashboard-learning-card {
     justify-content: center;
     border: 1px solid rgba(255,255,255,0.72);
     border-radius: 0 0 1.75rem 1.75rem;
-    margin: -1.3rem -0.55rem 0 0;
+    margin: 0;
     color: white;
     background: linear-gradient(155deg, color-mix(in srgb, var(--university-accent) 70%, #ffffff), var(--university-accent));
     box-shadow: 0 13px 24px color-mix(in srgb, var(--university-accent) 30%, transparent), inset 0 1px 4px rgba(255,255,255,0.38);
@@ -2082,8 +2080,6 @@ html[data-motion='minimal'] .dashboard-learning-card {
   .admission-journey button { flex-shrink: 0; }
   .admission-journey button { padding: 0.55rem 0.45rem; font-size: 0.73rem; }
   .admission-journey > svg { width: 0.8rem; height: 0.8rem; }
-  .admission-search-box > svg { display: block; }
-  .admission-search-action { display: none; }
   .admission-search-box { height: 4rem; padding-left: 1rem; }
   .admission-search-box input { padding-left: 0.65rem; font-size: 1.1rem; }
   .admission-filter-row { padding: 0; }

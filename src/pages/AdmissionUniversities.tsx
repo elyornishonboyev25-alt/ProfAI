@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Compass,
   Globe2,
+  Heart,
   MapPin,
   RotateCcw,
   Search,
@@ -84,16 +85,6 @@ const UniversityCard = memo(function UniversityCard({
         aria-label={`Explore ${university.name}`}
         onFocus={() => prefetchUniversityCampusImage(university.name)}
       />
-      <button
-        type="button"
-        className={`admission-card-shortlist${shortlisted ? ' is-shortlisted' : ''}`}
-        aria-label={shortlisted ? `Remove ${university.name} from shortlist` : `Add ${university.name} to shortlist`}
-        aria-pressed={shortlisted}
-        title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-        onClick={() => onToggleShortlist(university)}
-      >
-        {shortlisted ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-      </button>
       <div
         className="admission-card-glow"
         style={{ '--university-accent': university.brand.accent } as React.CSSProperties}
@@ -101,10 +92,22 @@ const UniversityCard = memo(function UniversityCard({
       />
       <div className="admission-card-topline">
         <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" priority={priority} />
-        <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
-          <small>QS rank</small>
-          <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
-        </span>
+        <div className="admission-card-rank-actions">
+          <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
+            <small>QS rank</small>
+            <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
+          </span>
+          <button
+            type="button"
+            className={`admission-card-shortlist${shortlisted ? ' is-shortlisted' : ''}`}
+            aria-label={shortlisted ? `Remove ${university.name} from shortlist` : `Add ${university.name} to shortlist`}
+            aria-pressed={shortlisted}
+            title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+            onClick={() => onToggleShortlist(university)}
+          >
+            <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       </div>
 
       <div className="admission-card-copy">
@@ -210,7 +213,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
   const navigate = useNavigate()
   const all = useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
-  const { scores } = useAdmissionScores()
+  const { scores, country: profileCountry, loading: profileLoading } = useAdmissionScores()
   const { shortlistedSet, shortlistCount, toggleShortlist } = useUniversityShortlist()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [query, setQuery] = useState('')
@@ -331,7 +334,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                 </div>
               ) : (
                 <>
-                  <UniversityGlobe />
+                  <UniversityGlobe country={profileCountry} profileLoading={profileLoading} />
                   <div className="admission-globe-caption">
                     <Globe2 className="h-4 w-4" />
                     <span>{UNIVERSITY_COUNT} verified university profiles</span>
@@ -351,7 +354,6 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   placeholder={shortlistOnly ? 'Search your shortlist' : 'Find your university'}
                   aria-label={shortlistOnly ? 'Search shortlisted universities' : 'Search universities'}
                 />
-                <span className="admission-search-action"><Search aria-hidden="true" /></span>
               </div>
 
               <div className="admission-filter-row">

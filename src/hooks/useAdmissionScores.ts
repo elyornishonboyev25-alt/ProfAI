@@ -10,6 +10,7 @@ const EMPTY_SCORES: AdmissionScores = { satTotal: null, ieltsOverall: null }
 
 export function useAdmissionScores() {
   const [scores, setScores] = useState<AdmissionScores>(EMPTY_SCORES)
+  const [country, setCountry] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,11 +19,12 @@ export function useAdmissionScores() {
       .then(({ profile }) => {
         if (!active) return
         setScores({ satTotal: profile.currentSatScore, ieltsOverall: profile.currentIeltsScore })
+        setCountry(profile.country?.trim() || null)
       })
       .catch(() => {})
       .finally(() => active && setLoading(false))
     return () => { active = false }
   }, [])
 
-  return { scores, loading }
+  return { scores, country, loading }
 }

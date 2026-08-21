@@ -3,15 +3,13 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Award,
-  BookmarkPlus,
-  BookmarkCheck,
   Building2,
   CalendarDays,
   CircleDollarSign,
-  Check,
   ExternalLink,
   GraduationCap,
   Globe2,
+  Heart,
   Landmark,
   Leaf,
   MapPin,
@@ -136,31 +134,6 @@ export default function AdmissionUniversity() {
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-5xl space-y-6">
-        <section className="sticky top-3 z-30 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 p-3 shadow-[0_16px_45px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-          <button
-            type="button"
-            onClick={() => navigate(admissionReturnTo)}
-            className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
-          >
-            <ArrowLeft className="h-4 w-4" /> Universities
-          </button>
-          <div className="hidden min-w-0 flex-1 px-2 sm:block">
-            <p className="truncate text-sm font-black text-slate-950">{u.name}</p>
-            <button type="button" onClick={() => navigate('/admission/shortlist')} className="text-xs font-semibold text-slate-500 transition hover:text-red-600">
-              Open my shortlist
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={handleShortlist}
-            aria-pressed={shortlisted}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-black shadow-sm transition hover:-translate-y-0.5 ${shortlisted ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-red-600 text-white hover:bg-red-500'}`}
-          >
-            {shortlisted ? <BookmarkCheck className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
-            {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
-          </button>
-        </section>
-
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
           <section
@@ -189,9 +162,9 @@ export default function AdmissionUniversity() {
                   type="button"
                   onClick={handleShortlist}
                   aria-pressed={shortlisted}
-                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.08em] shadow-lg backdrop-blur transition hover:-translate-y-0.5 ${shortlisted ? 'border-emerald-200/80 bg-emerald-500 text-white hover:bg-emerald-400' : 'border-white/70 bg-white text-slate-900 hover:bg-white/90'}`}
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-white/80 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] shadow-lg backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/90 ${shortlisted ? 'text-red-600' : 'text-slate-900'}`}
                 >
-                  {shortlisted ? <Check className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
+                  <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
                   {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
                 </button>
               </div>

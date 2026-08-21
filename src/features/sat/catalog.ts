@@ -5,6 +5,10 @@ import {
   type SATSection,
 } from './practiceTest4'
 import { SAT_PAPER_17, SAT_PAPER_17_MODULES } from './paper17'
+import {
+  SAT_DECEMBER_2025_INTL,
+  SAT_DECEMBER_2025_INTL_MODULES,
+} from './december2025Intl'
 
 export type SATTestDefinition = {
   mockId: number
@@ -18,23 +22,29 @@ export type SATTestDefinition = {
 }
 
 export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
-  4: {
-    mockId: 4,
+  1: {
+    mockId: 1,
     ...SAT_PRACTICE_TEST_4,
     modules: SAT_PRACTICE_TEST_4_MODULES,
-    badge: 'College Board Practice Test 04',
+    badge: 'College Board Practice Test 1',
   },
-  17: {
-    mockId: 17,
+  2: {
+    mockId: 2,
     ...SAT_PAPER_17,
     modules: SAT_PAPER_17_MODULES,
-    badge: 'Free Test · Paper 17',
+    badge: 'Free Test · Practice Test 2',
+  },
+  3: {
+    mockId: 3,
+    ...SAT_DECEMBER_2025_INTL,
+    modules: SAT_DECEMBER_2025_INTL_MODULES,
+    badge: 'December 2025 International · Version 1',
   },
 }
 
 export function getSATTest(mockId?: string | number): SATTestDefinition {
   const parsed = Number(mockId)
-  return SAT_TEST_CATALOG[parsed] ?? SAT_TEST_CATALOG[4]
+  return SAT_TEST_CATALOG[parsed] ?? SAT_TEST_CATALOG[1]
 }
 
 export function hasSATTest(mockId?: string | number): boolean {

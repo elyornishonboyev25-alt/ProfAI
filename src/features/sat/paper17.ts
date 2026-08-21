@@ -71,7 +71,7 @@ export const SAT_PAPER_17_MODULES: SATModule[] = MODULE_META.map((module) => ({
 
 export const SAT_PAPER_17 = {
   id: 'paper-17' as const,
-  title: 'Digital SAT Paper 17',
+  title: 'Digital SAT Practice Test 2',
   subtitle: 'DSATuz Free Test · May 2026 (Hard)',
   questionCount: 98,
   totalDurationSeconds: SAT_PAPER_17_MODULES.reduce((sum, module) => sum + module.durationSeconds, 0),

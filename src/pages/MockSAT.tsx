@@ -56,7 +56,7 @@ const modeCards = [
 
 export default function MockSAT() {
   const navigate = useNavigate()
-  const { mockId = '4' } = useParams<{ mockId: string }>()
+  const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
   const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])

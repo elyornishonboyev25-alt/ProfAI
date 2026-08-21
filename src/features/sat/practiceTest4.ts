@@ -214,7 +214,7 @@ export const SAT_PRACTICE_TEST_4_MODULES: SATModule[] = MODULE_META.map((moduleM
 
 export const SAT_PRACTICE_TEST_4 = {
   id: 'practice-test-4' as const,
-  title: 'Digital SAT Practice Test 4',
+  title: 'Digital SAT Practice Test 1',
   subtitle: 'College Board paper-digital edition',
   questionCount: 120,
   totalDurationSeconds: SAT_PRACTICE_TEST_4_MODULES.reduce(

@@ -231,11 +231,26 @@
 }
 
 .dashboard-stat-card {
+  display: flex;
   min-height: 10.15rem;
+  flex-direction: column;
   padding: 1rem;
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
   transition: transform 180ms var(--app-ease-smooth);
+}
+
+.dashboard-stat-label {
+  min-height: 2.5rem;
+  margin-top: 1rem;
+}
+
+.dashboard-stat-value {
+  margin-top: 0.25rem;
+}
+
+.dashboard-stat-note {
+  margin-top: 0.5rem;
 }
 
 @media (hover: hover) and (pointer: fine) {

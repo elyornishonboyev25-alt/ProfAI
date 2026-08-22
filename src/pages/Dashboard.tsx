@@ -109,9 +109,9 @@ function StatCard({
   return (
     <article className="dashboard-stat-card group">
       <span className="dashboard-stat-icon"><Icon className="h-[18px] w-[18px]" /></span>
-      <p className="mt-4 text-[13px] font-semibold text-slate-600">{label}</p>
-      <p className="mt-1 text-[1.65rem] font-black leading-none tracking-tight text-slate-950">{value}</p>
-      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{note}</p>
+      <p className="dashboard-stat-label text-[13px] font-semibold leading-5 text-slate-600">{label}</p>
+      <p className="dashboard-stat-value text-[1.65rem] font-black leading-none tracking-tight text-slate-950">{value}</p>
+      <p className="dashboard-stat-note text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{note}</p>
     </article>
   )
 }

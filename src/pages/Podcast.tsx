@@ -1603,14 +1603,14 @@ export default function Podcast() {
               <div className="podcast-episode-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleEpisodes.map((item, index) => (
                   <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} disabled={openingPodcastId === item.youtubeId} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : index * 0.06 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
-                    <span className="relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
+                    <span className="podcast-episode-artwork relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
                       <img src={episodeArtwork(item)} onError={(event) => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                       <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
                       <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow-[0_0_22px_rgba(239,68,68,.65)] transition group-hover:opacity-100"><Play className="h-4 w-4 fill-current" /></span>
                       {item.id === episode.id ? <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white shadow-lg"><Check className="h-3.5 w-3.5" /></span> : null}
                     </span>
-                    <span className="mt-3 block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
-                    <span className="mt-2 flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : '22%' }} /></span></span>
+                    <span className="podcast-episode-title block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
+                    <span className="podcast-episode-meta flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : '22%' }} /></span></span>
                   </motion.button>
                 ))}
               </div>

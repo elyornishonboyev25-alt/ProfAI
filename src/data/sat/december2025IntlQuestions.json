@@ -944,7 +944,7 @@
     "number": 3,
     "prompt": "The familial structure of the black swan (Cygnus atratus) _: breeding pairs with shows tremendous demonstrated success in rearing cygnets (young swans) have been observed to foster those of less successful pairs, and while rearing by female-male pairs is most common, male-male pairs sometimes rear cygnets too, achieving a significantly higher rate of survival to adulthood than female-male pairs.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
     "kind": "multiple-choice",
-    "correctAnswer": "A",
+    "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
@@ -1104,7 +1104,7 @@
     "number": 8,
     "prompt": "Paintings by the Florida Highwaymen-an informal collective of prolific landscape artists active in Florida during the 1950s and '60s—are recognizable by their reiteration of the same general compositional structures and subjects: moonlit waters and poinciana trees, to name two. But there was room for individuation: Lemuel Newton's Salmon Sky Sunset, for example, may resemble other Highwaymen paintings at first glance, but his works stand out for their attention to detail and warm color palette.\n\nWhich choice best describes the overall structure of the text?",
     "kind": "multiple-choice",
-    "correctAnswer": "D",
+    "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
@@ -1684,7 +1684,7 @@
     "number": 26,
     "prompt": "While researching a topic, a student has taken the following notes: -Carbon can exist in several distinct structural forms called allotropes. -Graphite is a carbon allotrope. -Graphite is composed of stacked graphene sheets. -Each graphene sheet is composed of carbon atoms arranged in a flat honeycomb pattern. -Carbon nanotubes are carbon allotropes. -They are composed of one or more graphene sheets wrapped into a cylindrical shape.\n\nThe student wants to emphasize a difference between carbon nanotubes and graphite. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
     "kind": "multiple-choice",
-    "correctAnswer": "D",
+    "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
@@ -1980,7 +1980,7 @@
     "id": "math1-8",
     "moduleId": "math1",
     "number": 8,
-    "prompt": "The list gives the mass, in grams, of 5 ruffed lemurs:",
+    "prompt": "The list gives the mass, in grams, of 5 ruffed lemurs:\n\n3,710, 3,710, 3,130, 3,750, 3,150\n\nWhat is the mean mass, in grams, of these 5 ruffed lemurs?",
     "kind": "student-response",
     "correctAnswer": "3490",
     "choices": [],
@@ -2264,9 +2264,9 @@
     "id": "math1-17",
     "moduleId": "math1",
     "number": 17,
-    "prompt": "x?-24x -8=0 What is the sum of the solutions to the given equation?",
+    "prompt": "$$x^2 - 24x - 8 = 0$$\n\nWhat is the sum of the solutions to the given equation?",
     "kind": "multiple-choice",
-    "correctAnswer": "C",
+    "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
@@ -2374,7 +2374,7 @@
     "number": 21,
     "prompt": "In the xy-plane, line k and line t are perpendicular and intersect at the point (2,9). If line k is defined by the equation y = mx + b, where m and b are constants and m > 1, which of the following points lies on line t?",
     "kind": "multiple-choice",
-    "correctAnswer": "C",
+    "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
@@ -2714,7 +2714,7 @@
     "id": "math2-9",
     "moduleId": "math2",
     "number": 9,
-    "prompt": "The equation h = § (v - 273.15) + 32 gives the corresponding temperature h, in degrees Fahrenheit, of any substance that has a temperature of v kelvins, where v > O. If a substance has a temperature of 809.33 degrees Fahrenheit, what is the corresponding temperature, in kelvins, of this substance?",
+    "prompt": "The equation $h = \\frac{9}{5}(v - 273.15) + 32$ gives the corresponding temperature $h$, in degrees Fahrenheit, of any substance that has a temperature of $v$ kelvins, where $v>0$. If a substance has a temperature of 809.33 degrees Fahrenheit, what is the corresponding temperature, in kelvins, of this substance?",
     "kind": "student-response",
     "correctAnswer": "705",
     "choices": [],
@@ -2912,14 +2912,14 @@
     "id": "math2-15",
     "moduleId": "math2",
     "number": 15,
-    "prompt": "$$\\sqrt{p}=t$$\n\nIn the given equation, $p>1$ and $t>1$. If $t=p^{2n-1}$, where $n$ is a constant, what is the value of $n$?",
+    "prompt": "$$\\sqrt[7]{p^k}=t^k$$\n\nIn the given equation, $p>1$ and $t>1$. If $t=p^{2n-1}$, where $n$ is a constant, what is the value of $n$?",
     "kind": "student-response",
-    "correctAnswer": "3/4",
+    "correctAnswer": "4/7",
     "choices": [],
     "domain": "Math",
     "explanation": "",
     "acceptedAnswers": [
-      "3/4"
+      "4/7"
     ],
     "visual": {
       "asset": "/sat/practice-test-3/prompts/math2-15.png",

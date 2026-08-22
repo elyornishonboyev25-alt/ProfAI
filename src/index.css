@@ -231,6 +231,7 @@
 }
 
 .dashboard-stat-card {
+  container-type: inline-size;
   display: flex;
   min-height: 10.15rem;
   flex-direction: column;
@@ -247,6 +248,13 @@
 
 .dashboard-stat-value {
   margin-top: 0.25rem;
+  font-size: 1.65rem;
+}
+
+.dashboard-stat-value-long {
+  max-width: 100%;
+  font-size: clamp(1rem, 16cqi, 1.35rem);
+  white-space: nowrap;
 }
 
 .dashboard-stat-note {

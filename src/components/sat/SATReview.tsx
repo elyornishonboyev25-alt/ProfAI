@@ -26,6 +26,7 @@ import {
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import type { SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
+import SATVisual from './SATVisual'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 
@@ -62,7 +63,14 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
           <span className="ml-auto text-[9px] font-black text-slate-400">{question.difficulty}</span>
         </div>
         <div className="p-4 sm:p-7">
-          {question.visual ? <img src={question.visual.asset} alt={question.visual.alt} className="mx-auto mb-6 max-h-[28rem] max-w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 object-contain" /> : null}
+          {question.visual ? (
+            <SATVisual
+              asset={question.visual.asset}
+              alt={question.visual.alt}
+              className="mx-auto mb-6 border border-slate-200 bg-slate-50 p-3"
+              imageClassName="max-h-[28rem] max-w-full object-contain"
+            />
+          ) : null}
           {context ? <SATRichText text={context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
           <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
 

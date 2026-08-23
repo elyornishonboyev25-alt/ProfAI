@@ -3,6 +3,7 @@ import { Bookmark, FileImage, ImageOff, ScanText, SpellCheck2 } from 'lucide-rea
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
+import SATVisual from './SATVisual'
 
 type Props = {
   question: SATQuestion
@@ -219,11 +220,12 @@ export default function SATQuestionCanvas({
         <div className="mx-auto max-w-3xl">
           {question.visual && !visualFailed ? (
             <figure className="mb-7 overflow-hidden rounded-xl border border-slate-300 bg-white p-4">
-              <img
-                src={question.visual.asset}
+              <SATVisual
+                asset={question.visual.asset}
                 alt={question.visual.alt}
                 onError={() => setVisualFailed(true)}
-                className="mx-auto max-h-[28rem] w-auto max-w-full object-contain"
+                className="mx-auto"
+                imageClassName="mx-auto max-h-[28rem] w-auto max-w-full object-contain"
               />
               <figcaption className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
                 <FileImage className="h-4 w-4" /> Reference visual · not drawn to scale unless stated

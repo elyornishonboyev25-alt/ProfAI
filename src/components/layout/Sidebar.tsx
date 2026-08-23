@@ -76,10 +76,10 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
         className={cn(
           'group relative flex w-full items-center text-left transition-all duration-200',
           primary
-            ? 'min-h-[3.4rem] gap-3 rounded-[1.1rem] px-3.5 py-2.5 text-sm font-extrabold'
+            ? 'min-h-[3.25rem] gap-3 rounded-[1rem] px-3 py-2.5 text-[13px] font-bold'
             : 'min-h-11 gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold',
           primary && active
-            ? 'sidebar-primary-active text-white'
+            ? 'sidebar-primary-active text-slate-950'
             : primary
               ? 'text-slate-800 hover:bg-white/80 hover:shadow-[0_10px_24px_rgba(107,35,45,0.08)]'
               : active
@@ -92,7 +92,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
             'flex shrink-0 items-center justify-center transition-colors',
             primary ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
             primary && active
-              ? 'bg-white/20 text-white shadow-inner'
+              ? 'bg-blue-600 text-white shadow-[0_6px_16px_rgba(37,99,235,0.22)]'
               : primary
                 ? 'border border-blue-100 bg-white/75 text-blue-600'
                 : active
@@ -105,7 +105,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate">{item.label}</span>
           {item.description ? (
-            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-white/75' : 'text-slate-400')}>
+            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-slate-500' : 'text-slate-400')}>
               {item.description}
             </span>
           ) : null}
@@ -140,7 +140,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
 
         <nav className="no-scrollbar mt-5 min-h-0 flex-1 overflow-y-auto" aria-label="Primary navigation">
           <div className="sidebar-primary-cluster rounded-[1.55rem] p-2">
-            <p className="mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em] text-blue-600">Core learning</p>
+            <p className="sidebar-core-heading mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em]">Core learning</p>
             <div className="space-y-1">{PRIMARY_ITEMS.map((item) => renderItem(item, true))}</div>
           </div>
 

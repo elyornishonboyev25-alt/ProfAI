@@ -61,11 +61,11 @@ const EMPTY_OVERVIEW: DashboardOverview = {
 }
 
 const learningCards = [
-  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
-  { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
-  { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap },
-  { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2 },
-  { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
+  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen, tone: 'blue' },
+  { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2, tone: 'red' },
+  { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap, tone: 'blue' },
+  { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2, tone: 'red' },
+  { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles, tone: 'blue' },
 ] as const
 
 const dashboardEntrance = {
@@ -206,7 +206,7 @@ export default function Dashboard() {
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">Your learning dashboard</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">Your learning dashboard</p>
               <h1 className="truncate text-2xl font-black tracking-[-0.04em] text-[#101222] sm:text-4xl">
                 Welcome back, {firstName} <span aria-hidden>👋</span>
               </h1>
@@ -278,7 +278,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
-              className="relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-blue-700 shadow-lg transition hover:-translate-y-0.5"
+              className="relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5"
             >
               Continue preparing <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -317,7 +317,7 @@ export default function Dashboard() {
                         <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#1e3a8a" />
                           <stop offset="52%" stopColor="#2563eb" />
-                          <stop offset="100%" stopColor="#60a5fa" />
+                          <stop offset="100%" stopColor="#ef4444" />
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
@@ -346,7 +346,7 @@ export default function Dashboard() {
             <article className="dashboard-glass-card p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">Leaderboard</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600">Leaderboard</p>
                   <h2 className="mt-1 text-lg font-black text-slate-950">Top learners</h2>
                 </div>
                 <Medal className="h-6 w-6 text-amber-500" />
@@ -394,7 +394,7 @@ export default function Dashboard() {
                   initial={minimalMotion ? false : { scaleX: 0 }}
                   animate={{ scaleX: nextAchievement.progress / 100 }}
                   transition={minimalMotion ? { duration: 0.01 } : { duration: 0.55, delay: 0.12, ease: 'easeOut' }}
-                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-indigo-300"
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-800 via-blue-500 to-red-400"
                 />
               </div>
               <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
@@ -420,6 +420,7 @@ export default function Dashboard() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {learningCards.map((card) => {
               const Icon = card.icon
+              const redAccent = card.tone === 'red'
               const metric = localMetrics?.learning[card.key as DashboardLearningKey] ?? {
                 progress: 0,
                 completed: 0,
@@ -429,15 +430,15 @@ export default function Dashboard() {
               return (
                 <button key={card.title} type="button" onClick={() => navigate(card.path)} className="dashboard-learning-card group">
                   <div className="flex items-start justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Icon className="h-4 w-4" /></span>
-                    <span className="text-[10px] font-black text-blue-600">{metric.progress}%</span>
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${redAccent ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}><Icon className="h-4 w-4" /></span>
+                    <span className={`text-[10px] font-black ${redAccent ? 'text-red-600' : 'text-blue-600'}`}>{metric.progress}%</span>
                   </div>
                   <h3 className="mt-3 text-sm font-black text-slate-900">{card.title}</h3>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
-                    <div className="h-full rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-indigo-300" style={{ width: `${metric.progress}%` }} />
+                    <div className={`h-full rounded-full ${redAccent ? 'bg-gradient-to-r from-red-800 via-red-500 to-rose-300' : 'bg-gradient-to-r from-blue-900 via-blue-600 to-indigo-300'}`} style={{ width: `${metric.progress}%` }} />
                   </div>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-blue-700">
+                  <span className={`mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition ${redAccent ? 'group-hover:text-red-700' : 'group-hover:text-blue-700'}`}>
                     Continue <ArrowRight className="h-3 w-3" />
                   </span>
                 </button>

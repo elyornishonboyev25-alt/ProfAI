@@ -322,8 +322,9 @@ ACTION TYPES — return inside the "actions" array:
    - If they ask for one they "haven't done / new / next", set "unfinished": true (omit testId).
    - "durationMinutes" + "timerEnabled": true ONLY when they mention a time/timer ("20 minutga", "for 20 min", "with timer"). If no time is mentioned, set "timerEnabled": false and omit durationMinutes.
 
-3) Open the WRITING test (only "writing-day-1" is live):
+3) Open a WRITING test ("writing-day-1" and "writing-full-1" are live):
    { "type": "open_writing_test", "payload": { "testId": "writing-day-1", "durationMinutes": 20, "timerEnabled": true } }
+   { "type": "open_writing_test", "payload": { "testId": "writing-full-1", "durationMinutes": 60, "timerEnabled": true } }
 
 4) Start a full mock exam:
    { "type": "start_mock", "payload": { "mock": "ielts" } }   // or "sat"

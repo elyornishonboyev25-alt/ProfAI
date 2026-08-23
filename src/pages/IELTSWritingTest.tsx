@@ -1,8 +1,9 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
-import { getWritingTaskById } from '@/data/writingTestData'
+import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
+import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
 
 type WritingTestNavState = {
   autoStart?: boolean
@@ -17,9 +18,22 @@ export default function IELTSWritingTest() {
   const navState = location.state as WritingTestNavState
 
   const task = useMemo(() => (id ? getWritingTaskById(id) : null), [id])
+  const fullTest = useMemo(() => (id ? getWritingFullTestById(id) : null), [id])
 
   const handleExit = () => {
     navigate('/ielts/writing/tests')
+  }
+
+  if (fullTest?.available) {
+    return (
+      <IELTSWritingFullTestInterface
+        fullTest={fullTest}
+        onExit={handleExit}
+        autoStart={navState?.autoStart}
+        autoTimerEnabled={navState?.timerEnabled}
+        autoDurationMinutes={navState?.durationMinutes}
+      />
+    )
   }
 
   if (!task || !task.available) {
@@ -30,11 +44,11 @@ export default function IELTSWritingTest() {
             <Clock3 className="h-7 w-7" />
           </span>
           <h1 className="mt-4 text-3xl font-black text-slate-900">
-            {task ? 'Writing Test Coming Soon' : 'Test Not Found'}
+            {task || fullTest ? 'Writing Test Coming Soon' : 'Test Not Found'}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            {task
-              ? 'This writing test is currently in preview mode. Day 1 is fully live right now.'
+            {task || fullTest
+              ? 'This writing test is currently in preview mode. Day 1 and Full Writing Test 1 are fully live right now.'
               : 'The requested writing test could not be found.'}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">

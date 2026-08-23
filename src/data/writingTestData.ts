@@ -32,6 +32,10 @@ export type WritingTask = {
   maxWordCount: number
   durationMinutes: number
   chart?: WritingChartData
+  imageUrl?: string
+  promptLead?: string
+  promptQuestion?: string
+  instructions?: string
   available: boolean
 }
 
@@ -98,6 +102,55 @@ const DAY_1_TASK: WritingTask = {
   available: true,
 }
 
+const FULL_TEST_1_TASKS: WritingTask[] = [
+  {
+    id: 'writing-full-1-task-1',
+    day: null,
+    fullTestIndex: 1,
+    taskType: 'task1',
+    title: 'Full Writing Test 1',
+    subtitle: 'Task 1 · Process Diagram · Smoked fish',
+    prompt:
+      'The diagram details the process of making smoked fish.\n\nSummarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    promptLead: 'The diagram details the process of making smoked fish.',
+    instructions:
+      'Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    suggestedWordCount: { min: 150, max: 180 },
+    maxWordCount: 500,
+    durationMinutes: 20,
+    imageUrl: '/images/ielts-writing/full-writing-test-1-smoked-fish-exact.png',
+    available: true,
+  },
+  {
+    id: 'writing-full-1-task-2',
+    day: null,
+    fullTestIndex: 1,
+    taskType: 'task2',
+    title: 'Full Writing Test 1',
+    subtitle: 'Task 2 · Essay · Advertising and consumers',
+    prompt:
+      'Consumers are faced with increasing numbers of advertisements from competing companies.\n\nTo what extent do you think are consumers influenced by advertisements?\nWhat measures can be taken to protect them?\n\nGive reasons for your answer and include any relevant examples from your own knowledge and experience. Write at least 250 words.',
+    promptLead:
+      'Consumers are faced with increasing numbers of advertisements from competing companies',
+    promptQuestion:
+      'To what extent do you think are consumers influenced by advertisements?\nWhat measures can be taken to protect them?',
+    instructions:
+      'Give reasons for your answer and include any relevant examples from your own knowledge and experience. Write at least 250 words.',
+    suggestedWordCount: { min: 250, max: 280 },
+    maxWordCount: 800,
+    durationMinutes: 40,
+    available: true,
+  },
+]
+
+const FULL_TEST_1: WritingFullTest = {
+  id: 'writing-full-1',
+  index: 1,
+  title: 'Full Writing Test 1',
+  tasks: FULL_TEST_1_TASKS,
+  available: true,
+}
+
 export function getWritingDayCatalog(): WritingTask[] {
   const days: WritingTask[] = []
 
@@ -130,6 +183,11 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
   const tests: WritingFullTest[] = []
 
   for (let i = 1; i <= 30; i++) {
+    if (i === 1) {
+      tests.push(FULL_TEST_1)
+      continue
+    }
+
     tests.push({
       id: `writing-full-${i}`,
       index: i,
@@ -145,6 +203,13 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
 export function getWritingTaskById(id: string): WritingTask | null {
   if (id === 'writing-day-1') return DAY_1_TASK
 
+  const fullTestTask = FULL_TEST_1_TASKS.find((task) => task.id === id)
+  if (fullTestTask) return fullTestTask
+
   const dayCatalog = getWritingDayCatalog()
   return dayCatalog.find((task) => task.id === id) ?? null
+}
+
+export function getWritingFullTestById(id: string): WritingFullTest | null {
+  return getWritingFullTestCatalog().find((test) => test.id === id) ?? null
 }

@@ -76,36 +76,39 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
         className={cn(
           'group relative flex w-full items-center text-left transition-all duration-200',
           primary
-            ? 'min-h-[3.4rem] gap-3 rounded-[1.1rem] px-3.5 py-2.5 text-sm font-extrabold'
+            ? 'min-h-11 gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-semibold'
             : 'min-h-11 gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold',
           primary && active
-            ? 'sidebar-primary-active text-white'
+            ? 'bg-red-50 text-red-800'
             : primary
-              ? 'text-slate-800 hover:bg-white/80 hover:shadow-[0_10px_24px_rgba(107,35,45,0.08)]'
+              ? 'text-slate-600 hover:bg-blue-50/70 hover:text-slate-900'
               : active
                 ? 'bg-red-50/90 text-red-700'
                 : 'text-slate-600 hover:bg-white/70 hover:text-slate-950',
         )}
       >
+        {primary && active ? (
+          <span className="absolute inset-y-[10px] left-0 w-[3px] rounded-full bg-red-600" aria-hidden="true" />
+        ) : null}
         <span
           className={cn(
             'flex shrink-0 items-center justify-center transition-colors',
-            primary ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
+            primary ? 'h-8 w-8' : 'h-8 w-8 rounded-lg',
             primary && active
-              ? 'bg-white/20 text-white shadow-inner'
+              ? 'text-red-600'
               : primary
-                ? 'border border-red-100 bg-white/75 text-red-600'
+                ? 'text-slate-400 group-hover:text-red-500'
                 : active
                   ? 'bg-white text-red-600 shadow-sm'
                   : 'text-slate-400 group-hover:text-red-500',
           )}
         >
-          <Icon className={primary ? 'h-[19px] w-[19px]' : 'h-[18px] w-[18px]'} />
+          <Icon className="h-[18px] w-[18px]" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate">{item.label}</span>
           {item.description ? (
-            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-white/75' : 'text-slate-400')}>
+            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-red-500/75' : 'text-slate-400')}>
               {item.description}
             </span>
           ) : null}
@@ -139,9 +142,9 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
         </button>
 
         <nav className="no-scrollbar mt-5 min-h-0 flex-1 overflow-y-auto" aria-label="Primary navigation">
-          <div className="sidebar-primary-cluster rounded-[1.55rem] p-2">
-            <p className="mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em] text-red-500">Core learning</p>
-            <div className="space-y-1">{PRIMARY_ITEMS.map((item) => renderItem(item, true))}</div>
+          <div>
+            <p className="mb-1 px-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-red-500">Core learning</p>
+            <div className="space-y-0.5">{PRIMARY_ITEMS.map((item) => renderItem(item, true))}</div>
           </div>
 
           <div className="mx-3 my-4 flex items-center gap-2" aria-hidden="true">

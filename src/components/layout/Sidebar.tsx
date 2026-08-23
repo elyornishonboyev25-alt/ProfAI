@@ -2,71 +2,53 @@ import { type ComponentType, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AudioLines,
-  BarChart3,
-  BookMarked,
-  BookOpen,
-  Crown,
+  BookOpenText,
+  Building2,
   FileText,
+  Gauge,
   GraduationCap,
   Headphones,
-  Home,
-  LogIn,
-  Sparkles,
-  Trophy,
+  Languages,
   Users,
-  UserRound,
 } from 'lucide-react'
 import { cn } from '../ui/utils'
 import { BrandMark } from '@/components/brand/BrandLogo'
-import { useAuthStore, type AuthState } from '@/store/authStore'
-import { isPremiumUser } from '@/utils/premiumAccess'
 
 type NavItem = {
   id: string
   label: string
+  description?: string
   icon: ComponentType<{ className?: string }>
   path: string
   aliases?: string[]
 }
 
-type NavGroup = { heading: string; items: NavItem[] }
+const PRIMARY_ITEMS: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge, path: '/dashboard' },
+  { id: 'ielts', label: 'IELTS Mock', icon: BookOpenText, path: '/ielts', aliases: ['/mock/ielts'] },
+  { id: 'sat', label: 'SAT Mock', icon: GraduationCap, path: '/sat', aliases: ['/mock/sat'] },
+  {
+    id: 'admission',
+    label: 'Admission Hub',
+    description: 'Top universities',
+    icon: Building2,
+    path: '/admission/universities',
+    aliases: ['/admission'],
+  },
+]
 
-const NAV_GROUPS: NavGroup[] = [
-  {
-    heading: 'Main',
-    items: [
-      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-      { id: 'ai-tutor', label: 'AI Tutor', icon: Sparkles, path: '/ai-tutor' },
-      { id: 'profile', label: 'Performance', icon: BarChart3, path: '/profile' },
-      { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
-    ],
-  },
-  {
-    heading: 'Prep & Skills',
-    items: [
-      { id: 'ielts', label: 'IELTS Prep', icon: BookOpen, path: '/ielts', aliases: ['/mock/ielts'] },
-      { id: 'sat', label: 'SAT Prep', icon: GraduationCap, path: '/sat', aliases: ['/mock/sat'] },
-      { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
-      { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
-      { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
-    ],
-  },
-  {
-    heading: 'More',
-    items: [
-      { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
-      { id: 'vocabulary', label: 'Vocabulary', icon: BookMarked, path: '/vocabulary' },
-      { id: 'top-universities', label: 'Top Universities', icon: GraduationCap, path: '/admission/universities' },
-    ],
-  },
+const SECONDARY_ITEMS: NavItem[] = [
+  { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
+  { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
+  { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
+  { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
+  { id: 'vocabulary', label: 'Vocabulary', icon: Languages, path: '/vocabulary' },
 ]
 
 export function Sidebar({ concealed = false }: { concealed?: boolean }) {
   const sidebarRef = useRef<HTMLElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
-  const user = useAuthStore((state: AuthState) => state.user)
-  const premium = isPremiumUser(user)
 
   useEffect(() => {
     const element = sidebarRef.current
@@ -75,18 +57,61 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
     else element.removeAttribute('inert')
   }, [concealed])
 
-  const initials = (user?.fullName || 'Learner')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-
   const isActive = (path: string, aliases: string[] = []) => {
     if (path === '/dashboard') return location.pathname === '/' || location.pathname === '/dashboard'
     if (location.pathname.startsWith(path)) return true
     return aliases.some((alias) => location.pathname.startsWith(alias))
+  }
+
+  const renderItem = (item: NavItem, primary: boolean) => {
+    const active = isActive(item.path, item.aliases)
+    const Icon = item.icon
+
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => navigate(item.path)}
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'group relative flex w-full items-center text-left transition-all duration-200',
+          primary
+            ? 'min-h-[3.4rem] gap-3 rounded-[1.1rem] px-3.5 py-2.5 text-sm font-extrabold'
+            : 'min-h-11 gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold',
+          primary && active
+            ? 'sidebar-primary-active text-white'
+            : primary
+              ? 'text-slate-800 hover:bg-white/80 hover:shadow-[0_10px_24px_rgba(107,35,45,0.08)]'
+              : active
+                ? 'bg-blue-50/90 text-blue-700'
+                : 'text-slate-600 hover:bg-white/70 hover:text-slate-950',
+        )}
+      >
+        <span
+          className={cn(
+            'flex shrink-0 items-center justify-center transition-colors',
+            primary ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
+            primary && active
+              ? 'bg-white/20 text-white shadow-inner'
+              : primary
+                ? 'border border-blue-100 bg-white/75 text-blue-600'
+                : active
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-400 group-hover:text-blue-500',
+          )}
+        >
+          <Icon className={primary ? 'h-[19px] w-[19px]' : 'h-[18px] w-[18px]'} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate">{item.label}</span>
+          {item.description ? (
+            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-white/75' : 'text-slate-400')}>
+              {item.description}
+            </span>
+          ) : null}
+        </span>
+      </button>
+    )
   }
 
   return (
@@ -94,86 +119,43 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
       ref={sidebarRef}
       aria-hidden={concealed}
       className={cn(
-        'app-panel fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none lg:flex',
-        concealed ? '-translate-x-[104%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100',
+        'profai-sidebar fixed bottom-5 left-5 top-5 z-40 hidden w-[17.5rem] flex-col transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none lg:flex',
+        concealed ? '-translate-x-[115%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100',
       )}
     >
-      <div className="flex h-full flex-col px-3 py-4">
-        <button type="button" onClick={() => navigate('/dashboard')} className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-left hover:bg-blue-50">
-          <BrandMark size={36} className="rounded-lg shadow-[0_8px_18px_rgba(37,99,235,0.28)]" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-black tracking-tight text-slate-900">Prof<span className="text-red-600">AI</span></p>
-            <p className="truncate text-[10px] font-medium text-slate-500">Universities Abroad</p>
+      <div className="flex h-full min-h-0 flex-col px-4 py-5">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="flex min-h-16 items-center gap-3 rounded-2xl px-2.5 text-left transition hover:bg-white/65"
+        >
+          <BrandMark size={51} className="drop-shadow-[0_11px_13px_rgba(220,38,38,0.32)]" />
+          <div className="min-w-0">
+            <p className="truncate text-[1.55rem] font-black leading-none tracking-[-0.06em] text-slate-900">
+              Prof<span className="text-red-600">AI</span>
+            </p>
+            <p className="mt-1 truncate text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">Learn. Practice. Achieve.</p>
           </div>
-          {premium ? <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/70 bg-gradient-to-r from-amber-50 to-orange-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700"><Crown className="h-3 w-3" /></span> : null}
         </button>
 
-        <nav className="no-scrollbar mt-3 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5" aria-label="Primary navigation">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.heading}>
-              <p className="mb-1 px-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-blue-500">{group.heading}</p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const active = isActive(item.path, item.aliases)
-                  const Icon = item.icon
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => navigate(item.path)}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold transition-colors',
-                        active ? 'bg-red-50 text-red-800' : 'text-slate-600 hover:bg-blue-50/70 hover:text-slate-900',
-                      )}
-                    >
-                      {active ? <span className="absolute inset-y-[5px] left-0 w-[3px] rounded-full bg-red-600" /> : null}
-                      <Icon className={cn('h-[18px] w-[18px] shrink-0 transition-colors', active ? 'text-red-600' : 'text-slate-400 group-hover:text-blue-500')} />
-                      <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+        <nav className="no-scrollbar mt-5 min-h-0 flex-1 overflow-y-auto" aria-label="Primary navigation">
+          <div className="sidebar-primary-cluster rounded-[1.55rem] p-2">
+            <p className="mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em] text-blue-600">Core learning</p>
+            <div className="space-y-1">{PRIMARY_ITEMS.map((item) => renderItem(item, true))}</div>
+          </div>
+
+          <div className="mx-3 my-4 flex items-center gap-2" aria-hidden="true">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Explore</span>
+            <span className="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-200 to-transparent" />
+          </div>
+
+          <div className="space-y-0.5 px-1">{SECONDARY_ITEMS.map((item) => renderItem(item, false))}</div>
         </nav>
 
-        <div className="mt-3 shrink-0 border-t border-blue-100 pt-3">
-          {user ? (
-            <>
-              {!premium ? (
-                <button type="button" onClick={() => navigate('/premium')} className="mb-2 flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-left text-[11px] font-bold text-amber-800 transition hover:bg-amber-100">
-                  <span className="inline-flex items-center gap-1.5"><Crown className="h-3.5 w-3.5" />Upgrade to Premium</span>
-                  <Sparkles className="h-3.5 w-3.5" />
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => navigate('/account')}
-                aria-current={location.pathname.startsWith('/account') ? 'page' : undefined}
-                className={cn(
-                  'group flex w-full items-center gap-2.5 rounded-2xl border p-2.5 text-left transition',
-                  location.pathname.startsWith('/account') ? 'border-blue-200 bg-blue-50 shadow-[0_10px_24px_rgba(37,99,235,0.1)]' : 'border-slate-100 bg-white/90 hover:border-blue-200 hover:bg-blue-50/70',
-                )}
-              >
-                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-xs font-black text-white shadow-[0_8px_18px_rgba(37,99,235,0.25)]">
-                  {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials}
-                  {premium ? <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-white"><Crown className="h-2.5 w-2.5" /></span> : null}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-black text-slate-900">{user.fullName || 'My Profile'}</span>
-                  <span className="block truncate text-[10px] font-semibold text-slate-500">Level {user.level ?? 1} · {(user.xp ?? 0).toLocaleString('en-US')} XP</span>
-                </span>
-                <UserRound className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
-              </button>
-            </>
-          ) : (
-            <div className="rounded-2xl border border-red-100 bg-white/95 p-3 shadow-[0_10px_24px_rgba(30,41,59,0.06)]">
-              <p className="text-[12px] font-black text-slate-900">Save your progress</p>
-              <p className="mt-1 text-[10px] leading-4 text-slate-500">Sign in to sync scores, streaks and practice history.</p>
-              <button type="button" onClick={() => navigate('/login')} className="mt-2.5 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-700 px-3 text-[11px] font-black text-white shadow-[0_8px_18px_rgba(220,38,38,0.22)]"><LogIn className="h-3.5 w-3.5" />Sign in</button>
-            </div>
-          )}
+        <div className="mt-4 rounded-2xl border border-white/80 bg-white/45 px-3 py-2.5 text-center shadow-inner">
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Your path to</p>
+          <p className="mt-0.5 text-xs font-black text-slate-700">Top universities abroad</p>
         </div>
       </div>
     </aside>

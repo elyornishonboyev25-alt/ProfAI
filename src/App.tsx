@@ -316,7 +316,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100">
+    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       <DeferredRegisterModal />
@@ -337,7 +337,7 @@ function App() {
 
           <main
             className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              sidebarVisible ? 'lg:ml-64' : 'ml-0'
+              sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
             }`}
           >
             <div

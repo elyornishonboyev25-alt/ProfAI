@@ -42,10 +42,10 @@
 .dashboard-learning-card {
   border: 1px solid rgba(255, 255, 255, 0.88);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.83), rgba(249, 246, 248, 0.68)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(244, 248, 255, 0.72)),
     radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.96), transparent 38%);
   box-shadow:
-    0 24px 64px rgba(66, 30, 40, 0.09),
+    0 24px 64px rgba(30, 64, 175, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.98),
     inset 0 -1px 0 rgba(148, 163, 184, 0.12);
 }
@@ -54,7 +54,7 @@
   overflow: hidden;
   border-radius: 2rem;
   box-shadow:
-    0 28px 70px rgba(58, 29, 40, 0.12),
+    0 28px 70px rgba(30, 64, 175, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.98);
 }
 
@@ -65,28 +65,28 @@
   z-index: -1;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 5% 8%, rgba(186, 230, 253, 0.2), transparent 28%),
-    radial-gradient(circle at 96% 12%, rgba(254, 215, 170, 0.2), transparent 31%);
+    radial-gradient(circle at 5% 8%, rgba(147, 197, 253, 0.24), transparent 28%),
+    radial-gradient(circle at 96% 12%, rgba(199, 210, 254, 0.24), transparent 31%);
   content: '';
   pointer-events: none;
 }
 
 .sidebar-primary-cluster {
-  border: 1px solid rgba(254, 205, 211, 0.65);
-  background: linear-gradient(145deg, rgba(255, 241, 242, 0.78), rgba(255, 255, 255, 0.48));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94), 0 14px 34px rgba(159, 18, 57, 0.06);
+  border: 1px solid rgba(191, 219, 254, 0.78);
+  background: linear-gradient(145deg, rgba(239, 246, 255, 0.84), rgba(255, 255, 255, 0.52));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94), 0 14px 34px rgba(37, 99, 235, 0.08);
 }
 
 .sidebar-primary-active {
   border: 1px solid rgba(255, 255, 255, 0.4);
   background:
     linear-gradient(112deg, transparent 0 54%, rgba(255, 255, 255, 0.24) 66%, transparent 77%),
-    linear-gradient(180deg, #f86f79 0%, #e93642 48%, #c81e2a 100%);
+    linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 100%);
   box-shadow:
-    0 14px 28px rgba(220, 38, 38, 0.29),
-    0 0 24px rgba(251, 113, 133, 0.15),
+    0 14px 28px rgba(37, 99, 235, 0.28),
+    0 0 24px rgba(96, 165, 250, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.58),
-    inset 0 -3px 9px rgba(127, 29, 29, 0.27);
+    inset 0 -3px 9px rgba(30, 64, 175, 0.28);
 }
 
 .dashboard-main-shell {
@@ -126,8 +126,8 @@
   flex: 0 0 auto;
   border-radius: 9999px;
   padding: 5px;
-  background: linear-gradient(145deg, #ff5262, #df2634 55%, #991b1b);
-  box-shadow: 0 14px 30px rgba(220, 38, 38, 0.3), 0 0 24px rgba(251, 113, 133, 0.17), inset 0 1px 0 white;
+  background: linear-gradient(145deg, #60a5fa, #2563eb 55%, #3730a3);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.3), 0 0 24px rgba(96, 165, 250, 0.18), inset 0 1px 0 white;
 }
 
 .dashboard-streak,
@@ -136,7 +136,7 @@
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.68);
-  box-shadow: 0 12px 30px rgba(61, 39, 47, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 30px rgba(30, 64, 175, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
 }
 
 .dashboard-streak {
@@ -144,7 +144,7 @@
   min-height: 3rem;
   border-radius: 1rem;
   padding: 0 0.85rem;
-  color: #e52b32;
+  color: #2563eb;
 }
 
 .dashboard-icon-button {
@@ -157,9 +157,9 @@
 }
 
 .dashboard-icon-button:hover {
-  color: #dc2626;
+  color: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(220, 38, 38, 0.14), inset 0 1px 0 white;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16), inset 0 1px 0 white;
 }
 
 .profai-dashboard button[aria-label='Notifications'] {
@@ -172,12 +172,12 @@
   border-radius: 9999px;
   color: #334155;
   background: rgba(255, 255, 255, 0.68);
-  box-shadow: 0 12px 30px rgba(61, 39, 47, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 30px rgba(30, 64, 175, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
   transition: color 160ms var(--app-ease-smooth), background-color 160ms var(--app-ease-smooth), transform 160ms var(--app-ease-smooth);
 }
 
 .profai-dashboard button[aria-label='Notifications']:hover {
-  color: #dc2626;
+  color: #2563eb;
   background: rgba(255, 255, 255, 0.86);
   transform: translateY(-2px);
 }
@@ -198,12 +198,12 @@
   background:
     linear-gradient(118deg, transparent 0 54%, rgba(255, 255, 255, 0.18) 55% 67%, transparent 68%),
     radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.25), transparent 28%),
-    linear-gradient(145deg, #813240 0%, #b93645 38%, #ef4a57 74%, #fb7185 100%);
+    linear-gradient(145deg, #172554 0%, #1d4ed8 38%, #2563eb 72%, #60a5fa 100%);
   box-shadow:
-    0 26px 54px rgba(190, 24, 55, 0.27),
-    0 0 34px rgba(244, 63, 94, 0.13),
+    0 26px 54px rgba(30, 64, 175, 0.28),
+    0 0 34px rgba(59, 130, 246, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -10px 28px rgba(69, 10, 10, 0.16);
+    inset 0 -10px 28px rgba(23, 37, 84, 0.2);
 }
 
 .dashboard-target-card::before {
@@ -226,8 +226,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgba(87, 12, 28, 0.16);
-  box-shadow: inset 0 0 28px rgba(83, 8, 24, 0.18), 0 0 24px rgba(255, 255, 255, 0.12);
+  background: rgba(23, 37, 84, 0.2);
+  box-shadow: inset 0 0 28px rgba(23, 37, 84, 0.22), 0 0 24px rgba(255, 255, 255, 0.12);
 }
 
 .dashboard-stat-card {
@@ -239,6 +239,30 @@
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
   transition: transform 180ms var(--app-ease-smooth);
+}
+
+.app-shell-dashboard .workspace-background .ambient-mesh {
+  background:
+    radial-gradient(circle at 8% 16%, rgba(59, 130, 246, 0.14), transparent 34%),
+    radial-gradient(circle at 90% 18%, rgba(37, 99, 235, 0.16), transparent 35%),
+    radial-gradient(circle at 72% 88%, rgba(99, 102, 241, 0.11), transparent 38%);
+}
+
+.app-shell-dashboard .ambient-sphere {
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.98) 0 7%, rgba(255, 255, 255, 0.58) 13%, transparent 25%),
+    radial-gradient(circle at 70% 72%, rgba(96, 165, 250, 0.26), transparent 35%),
+    radial-gradient(circle at 28% 70%, rgba(79, 70, 229, 0.27), transparent 39%),
+    linear-gradient(142deg, rgba(255, 255, 255, 0.74), rgba(219, 234, 254, 0.3) 48%, rgba(224, 231, 255, 0.34));
+  box-shadow:
+    inset -18px -22px 32px rgba(37, 99, 235, 0.14),
+    inset 14px 12px 25px rgba(255, 255, 255, 0.74),
+    inset 5px -8px 22px rgba(79, 70, 229, 0.1),
+    0 22px 54px rgba(37, 99, 235, 0.14);
+}
+
+.app-shell-dashboard .ambient-sphere::after {
+  background: conic-gradient(from 205deg, rgba(37, 99, 235, 0.22), rgba(255, 255, 255, 0.05), rgba(99, 102, 241, 0.2), rgba(255, 255, 255, 0.35), rgba(37, 99, 235, 0.22));
 }
 
 .dashboard-stat-label {
@@ -274,10 +298,10 @@
   height: 2.35rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(254, 205, 211, 0.85);
+  border: 1px solid rgba(191, 219, 254, 0.9);
   border-radius: 0.8rem;
-  color: #b42332;
-  background: rgba(255, 241, 242, 0.78);
+  color: #1d4ed8;
+  background: rgba(239, 246, 255, 0.86);
   box-shadow: inset 0 1px 0 white;
 }
 
@@ -289,7 +313,7 @@
   justify-content: center;
   border: 5px solid #cbd5e1;
   border-radius: 9999px;
-  background: linear-gradient(145deg, #fff1f2, #e2e8f0);
+  background: linear-gradient(145deg, #eff6ff, #e2e8f0);
   color: #475569;
   font-size: 0.7rem;
   font-weight: 900;

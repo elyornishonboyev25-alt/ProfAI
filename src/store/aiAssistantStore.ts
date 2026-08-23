@@ -52,6 +52,7 @@ type AiAssistantState = {
   voiceLevel: number
   voiceLang: SpeechLang
   activeWorkspace: AiWorkspaceId
+  isExamModeActive: boolean
   open: () => void
   close: () => void
   toggle: () => void
@@ -61,6 +62,7 @@ type AiAssistantState = {
   setVoiceLevel: (level: number) => void
   setVoiceLang: (language: SpeechLang) => void
   setActiveWorkspace: (workspace: AiWorkspaceId) => void
+  setExamModeActive: (active: boolean) => void
   setSending: (value: boolean) => void
   setError: (value: string | null) => void
   setThreadLoading: (ownerKey: string, loading: boolean) => void
@@ -98,15 +100,29 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       voiceLevel: 0,
       voiceLang: 'en',
       activeWorkspace: 'general',
-      open: () => set({ isOpen: true }),
+      isExamModeActive: false,
+      open: () => set((state) => (state.isExamModeActive ? state : { isOpen: true })),
       close: () => set({ isOpen: false }),
-      toggle: () => set((state) => ({ isOpen: !state.isOpen })),
-      openTalk: () => set({ talkOpen: true, isOpen: false }),
+      toggle: () => set((state) => (state.isExamModeActive ? state : { isOpen: !state.isOpen })),
+      openTalk: () =>
+        set((state) => (state.isExamModeActive ? state : { talkOpen: true, isOpen: false })),
       closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
       setVoiceState: (voiceState) => set({ voiceState }),
       setVoiceLevel: (voiceLevel) => set({ voiceLevel: Math.max(0, Math.min(1, voiceLevel)) }),
       setVoiceLang: (voiceLang) => set({ voiceLang }),
       setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace }),
+      setExamModeActive: (isExamModeActive) =>
+        set(
+          isExamModeActive
+            ? {
+                isExamModeActive: true,
+                isOpen: false,
+                talkOpen: false,
+                voiceState: 'idle',
+                voiceLevel: 0,
+              }
+            : { isExamModeActive: false },
+        ),
       setSending: (isSending) => set({ isSending }),
       setError: (error) => set({ error }),
       setThreadLoading: (ownerKey, loading) =>
@@ -242,6 +258,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         isSending: false,
         error: null,
         talkOpen: false,
+        isExamModeActive: false,
         voiceState: 'idle',
         voiceLevel: 0,
         threadsLoading: {},

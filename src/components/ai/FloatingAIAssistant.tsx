@@ -40,6 +40,7 @@ export function FloatingAIAssistant() {
   const close = useAiAssistantStore((state) => state.close)
   const setReportSnapshot = useAiAssistantStore((state) => state.setReportSnapshot)
   const talkOpen = useAiAssistantStore((state) => state.talkOpen)
+  const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   const isAiAnalysisStandalone = location.pathname === '/ai-coach' || location.pathname === '/profile'
@@ -62,9 +63,9 @@ export function FloatingAIAssistant() {
   )
 
   useEffect(() => {
-    if (!assistantBlocked && !isAiAnalysisStandalone) return
+    if (!assistantBlocked && !isAiAnalysisStandalone && !isExamModeActive) return
     close()
-  }, [assistantBlocked, close, isAiAnalysisStandalone])
+  }, [assistantBlocked, close, isAiAnalysisStandalone, isExamModeActive])
 
   useEffect(() => {
     if (isAuthPage || (!isOpen && !talkOpen)) return
@@ -88,7 +89,7 @@ export function FloatingAIAssistant() {
   }, [isAuthPage, isOpen, refreshContext, talkOpen])
 
   // While the immersive talk overlay is up it owns the corner, so hide the launcher.
-  if (isAuthPage || isAiAnalysisStandalone || assistantBlocked || talkOpen) return null
+  if (isAuthPage || isAiAnalysisStandalone || assistantBlocked || isExamModeActive || talkOpen) return null
 
   return (
     <div className="pointer-events-none fixed bottom-24 right-4 z-[120] flex flex-col items-end gap-3 lg:bottom-6 lg:right-6">

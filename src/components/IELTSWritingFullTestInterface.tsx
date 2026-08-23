@@ -10,6 +10,8 @@ import {
   Clock3,
   Crown,
   Loader2,
+  Maximize2,
+  Minimize2,
   PenLine,
   RotateCcw,
   Send,
@@ -22,9 +24,11 @@ import {
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { saveWritingAnalysis } from '@/utils/writingAnalysisStorage'
 
@@ -101,6 +105,14 @@ export default function IELTSWritingFullTestInterface({
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
+  const setExamModeActive = useAiAssistantStore((state) => state.setExamModeActive)
+  const { isFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
+
+  useEffect(() => {
+    const active = phase === 'writing'
+    setExamModeActive(active)
+    return () => setExamModeActive(false)
+  }, [phase, setExamModeActive])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -518,6 +530,17 @@ export default function IELTSWritingFullTestInterface({
           <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-600"><PenLine className="h-4 w-4 text-slate-400" /> {totalWordCount} total words</div>
             <div className="flex items-center gap-2">
+              {fullscreenSupported ? (
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  aria-label={isFullscreen ? "To'liq ekrandan chiqish" : "To'liq ekran"}
+                  aria-pressed={isFullscreen}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                >
+                  {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </button>
+              ) : null}
               {activeTaskIndex < tasks.length - 1 ? (
                 <button type="button" onClick={() => setActiveTaskIndex(activeTaskIndex + 1)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/20">Next: Task 2 <ArrowRight className="h-4 w-4" /></button>
               ) : (

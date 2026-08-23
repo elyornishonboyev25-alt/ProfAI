@@ -164,6 +164,7 @@ function App() {
   const user = useAuthStore((state: AuthState) => state.user)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
+  const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
@@ -325,8 +326,8 @@ function App() {
       {!isTestMode ? (
         <>
           <FloatingAIAssistant />
-          <DeferredTalkOverlay />
-          <FullscreenToggle />
+          {!isExamModeActive ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive ? <FullscreenToggle /> : null}
           <WordLookupLayer />
         </>
       ) : null}

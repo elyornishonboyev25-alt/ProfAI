@@ -251,7 +251,7 @@
     "domain": "Reading and Writing",
     "explanation": "**Step 1:** Identify exactly what the stem asks and locate the controlling word, sentence, or data point.\n\n**Step 2:** The wavy-lined blenny is at zero in January, April, and July, exactly matching choice A.\n\n**Step 3:** Therefore the correct answer is **A**.",
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/rw1-09-graph.png",
+      "asset": "/sat/practice-test-3/visuals/rw1-09-graph.svg",
       "alt": "Line graph of three fish populations in a Taiwanese tide pool from January through October 2001"
     }
   },
@@ -1615,7 +1615,7 @@
     "domain": "Math",
     "explanation": "**Step 1:** The y-intercept occurs where $x=0$.\n\n**Step 2:** The curve crosses the y-axis at $y=1$.\n\n**Step 3:** Therefore the intercept is **(0, 1) (C)**.",
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/math1-03-graph.png",
+      "asset": "/sat/practice-test-3/visuals/math1-03-graph.svg",
       "alt": "Coordinate graph of an exponential curve crossing the y-axis at 1"
     }
   },
@@ -1983,7 +1983,7 @@
       "272.4"
     ],
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/math1-18-ramp.png",
+      "asset": "/sat/practice-test-3/visuals/math1-18-ramp.svg",
       "alt": "Right-triangle ramp diagram with horizontal length x, height, and angle theta"
     }
   },

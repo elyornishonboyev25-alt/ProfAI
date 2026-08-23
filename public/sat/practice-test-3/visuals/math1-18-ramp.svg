@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430" role="img" aria-labelledby="title description">
+  <title id="title">Ramp diagram</title>
+  <desc id="description">A right triangle showing a ramp, its horizontal run x, its height, and angle theta with the ground.</desc>
+  <rect width="900" height="430" rx="24" fill="#ffffff"/>
+  <g fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M95 290H730V105Z"/>
+    <path d="M700 290V260H730" stroke-width="4"/>
+    <path d="M155 290A60 60 0 0 1 166 254" stroke-width="4"/>
+  </g>
+  <g fill="#0f172a" font-family="Georgia, 'Times New Roman', serif" font-size="32">
+    <text x="414" y="184" text-anchor="middle" transform="rotate(-16 414 184)">length of the ramp</text>
+    <text x="150" y="274" font-style="italic">θ</text>
+    <text x="410" y="335" text-anchor="middle" font-style="italic">x</text>
+    <text x="808" y="176" text-anchor="middle" font-size="28">height of</text>
+    <text x="808" y="212" text-anchor="middle" font-size="28">the ramp</text>
+  </g>
+  <text x="450" y="390" fill="#334155" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" text-anchor="middle">Note: Figure not drawn to scale.</text>
+</svg>

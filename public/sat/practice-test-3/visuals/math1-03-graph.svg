@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="title description">
+  <title id="title">Exponential graph with y-intercept 1</title>
+  <desc id="description">A coordinate plane showing an increasing exponential curve that crosses the y-axis at 1.</desc>
+  <rect width="900" height="520" rx="24" fill="#ffffff"/>
+  <g stroke="#e2e8f0" stroke-width="1">
+    <path d="M70 40V460 M120 40V460 M170 40V460 M220 40V460 M270 40V460 M320 40V460 M370 40V460 M420 40V460 M470 40V460 M520 40V460 M570 40V460 M620 40V460 M670 40V460 M720 40V460 M770 40V460 M820 40V460"/>
+    <path d="M70 40H820 M70 70H820 M70 100H820 M70 130H820 M70 160H820 M70 190H820 M70 220H820 M70 250H820 M70 280H820 M70 310H820 M70 340H820 M70 370H820 M70 400H820 M70 430H820 M70 460H820"/>
+  </g>
+  <g stroke="#cbd5e1" stroke-width="1.5">
+    <path d="M70 100H820 M70 160H820 M70 220H820 M70 280H820 M70 340H820 M70 400H820"/>
+    <path d="M120 40V460 M220 40V460 M320 40V460 M420 40V460 M520 40V460 M620 40V460 M720 40V460 M820 40V460"/>
+  </g>
+  <g stroke="#0f172a" stroke-width="3" fill="none">
+    <path d="M70 460H840"/>
+    <path d="M570 480V28"/>
+  </g>
+  <path d="M70 459.8 C210 459.5 330 458.5 420 454 C500 450 545 440 570 430 C620 410 668 370 700 310 C742 230 765 135 785 45" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="570" cy="430" r="7" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+  <g fill="#334155" font-family="Arial, Helvetica, sans-serif" font-size="18" text-anchor="middle">
+    <text x="70" y="490">-10</text><text x="170" y="490">-8</text><text x="270" y="490">-6</text><text x="370" y="490">-4</text><text x="470" y="490">-2</text><text x="570" y="490">0</text><text x="670" y="490">2</text><text x="770" y="490">4</text>
+  </g>
+  <g fill="#334155" font-family="Arial, Helvetica, sans-serif" font-size="18" text-anchor="end">
+    <text x="558" y="436">1</text><text x="558" y="406">2</text><text x="558" y="346">4</text><text x="558" y="286">6</text><text x="558" y="226">8</text><text x="558" y="166">10</text><text x="558" y="106">12</text><text x="558" y="46">14</text>
+  </g>
+  <g fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">
+    <text x="846" y="454">x</text><text x="582" y="32">y</text>
+  </g>
+</svg>

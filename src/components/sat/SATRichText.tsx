@@ -5,6 +5,24 @@ type Props = {
   className?: string
 }
 
+const superscriptCharacters: Record<string, string> = {
+  '0': '⁰',
+  '1': '¹',
+  '2': '²',
+  '3': '³',
+  '4': '⁴',
+  '5': '⁵',
+  '6': '⁶',
+  '7': '⁷',
+  '8': '⁸',
+  '9': '⁹',
+  '-': '⁻',
+}
+
+function superscript(value: string) {
+  return [...value].map((character) => superscriptCharacters[character] ?? character).join('')
+}
+
 function normalizeMath(value: string) {
   let result = value
     .replace(/\\left|\\right/g, '')
@@ -30,6 +48,7 @@ function normalizeMath(value: string) {
     .replace(/\\text\{([^{}]+)\}/g, '$1')
     .replace(/\\triangle/g, '△')
     .replace(/\\angle/g, '∠')
+    .replace(/\\sqrt\[([^\]]+)\]\{([^{}]+)\}/g, (_match, index: string, radicand: string) => `${superscript(index)}√(${radicand})`)
 
   for (let index = 0; index < 4; index += 1) {
     result = result

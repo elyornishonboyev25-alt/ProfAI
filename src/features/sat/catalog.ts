@@ -5,7 +5,6 @@ import {
   type SATSection,
 } from './practiceTest4'
 import { SAT_PAPER_17, SAT_PAPER_17_MODULES } from './paper17'
-import { SAT_SMARTTEST_MOCK_1, SAT_SMARTTEST_MOCK_1_MODULES } from './smartTestMock1'
 
 export type SATTestDefinition = {
   mockId: number
@@ -19,12 +18,6 @@ export type SATTestDefinition = {
 }
 
 export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
-  1: {
-    mockId: 1,
-    ...SAT_SMARTTEST_MOCK_1,
-    modules: SAT_SMARTTEST_MOCK_1_MODULES,
-    badge: 'SmartTest Original - Upper Route',
-  },
   4: {
     mockId: 4,
     ...SAT_PRACTICE_TEST_4,

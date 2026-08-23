@@ -19,6 +19,7 @@ export type SATTestDefinition = {
   totalDurationSeconds: number
   modules: SATModule[]
   badge: string
+  difficulty: 'Easy' | 'Medium' | 'Hard'
 }
 
 export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
@@ -27,18 +28,21 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     ...SAT_PRACTICE_TEST_4,
     modules: SAT_PRACTICE_TEST_4_MODULES,
     badge: 'College Board Practice Test 1',
+    difficulty: 'Hard',
   },
   2: {
     mockId: 2,
     ...SAT_PAPER_17,
     modules: SAT_PAPER_17_MODULES,
     badge: 'Free Test · Practice Test 2',
+    difficulty: 'Medium',
   },
   3: {
     mockId: 3,
     ...SAT_DECEMBER_2025_INTL,
     modules: SAT_DECEMBER_2025_INTL_MODULES,
     badge: 'December 2025 International · Version 1',
+    difficulty: 'Easy',
   },
 }
 

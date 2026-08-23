@@ -7,6 +7,7 @@ import {
   BookOpenText,
   Calculator,
   Check,
+  CheckCircle2,
   ChevronDown,
   Clock3,
   FileSearch,
@@ -205,6 +206,7 @@ export default function SAT() {
 
   const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
   const completedAttempts = attempts.filter(({ attempt }) => attempt.status === 'submitted')
+  const completedTestIds = new Set(completedAttempts.map(({ test }) => test.id))
   const scoreHistory = completedAttempts
     .slice()
     .sort((a, b) => a.attempt.updatedAt - b.attempt.updatedAt)
@@ -385,26 +387,47 @@ export default function SAT() {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6">
-                    {mockSlots.map(({ displayNumber, test }) => (
-                      <button
-                        key={displayNumber}
-                        type="button"
-                        disabled={!test}
-                        onClick={() => test && navigate(`/mock/sat/${test.mockId}`)}
-                        className={`group min-h-[8.5rem] rounded-[1.35rem] border p-4 text-left ${test
-                          ? 'border-red-200/80 bg-gradient-to-br from-white to-red-50/70 shadow-[0_12px_28px_rgba(185,28,28,.1)] hover:-translate-y-1 hover:border-red-300'
-                          : 'cursor-not-allowed border-white/70 bg-white/28 opacity-70'
-                        }`}
-                      >
-                        <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-extrabold ${test ? 'bg-red-600 text-white shadow-md' : 'bg-slate-200/80 text-slate-500'}`}>
-                          {String(displayNumber).padStart(2, '0')}
-                        </span>
-                        <span className="mt-4 block text-sm font-extrabold text-[#171823]">Test {displayNumber}</span>
-                        <span className={`mt-1 inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider ${test ? 'text-emerald-700' : 'text-slate-500'}`}>
-                          {test ? <><Check className="h-3 w-3" /> Available</> : <><Lock className="h-3 w-3" /> Coming soon</>}
-                        </span>
-                      </button>
-                    ))}
+                    {mockSlots.map(({ displayNumber, test }) => {
+                      const completed = test ? completedTestIds.has(test.id) : false
+                      const difficultyStyle = test?.difficulty === 'Hard'
+                        ? 'border-rose-200 bg-rose-50 text-rose-700'
+                        : test?.difficulty === 'Medium'
+                          ? 'border-amber-200 bg-amber-50 text-amber-700'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+
+                      return (
+                        <button
+                          key={displayNumber}
+                          type="button"
+                          disabled={!test}
+                          aria-label={test ? `Practice Test ${displayNumber}, ${test.difficulty}${completed ? ', completed' : ''}` : `Practice Test ${displayNumber}, coming soon`}
+                          onClick={() => test && navigate(`/mock/sat/${test.mockId}`)}
+                          className={`group min-h-[8.5rem] rounded-[1.35rem] border p-4 text-left ${test
+                            ? 'border-red-200/80 bg-gradient-to-br from-white to-red-50/70 shadow-[0_12px_28px_rgba(185,28,28,.1)] hover:-translate-y-1 hover:border-red-300'
+                            : 'cursor-not-allowed border-white/70 bg-white/28 opacity-70'
+                          }`}
+                        >
+                          <span className="flex items-start justify-between gap-2">
+                            <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-extrabold ${test ? 'bg-red-600 text-white shadow-md' : 'bg-slate-200/80 text-slate-500'}`}>
+                              {String(displayNumber).padStart(2, '0')}
+                            </span>
+                            {test ? (
+                              <span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${difficultyStyle}`}>
+                                {test.difficulty}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="mt-4 block text-sm font-extrabold text-[#171823]">Test {displayNumber}</span>
+                          <span className={`mt-1 inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider ${completed ? 'text-emerald-700' : test ? 'text-blue-700' : 'text-slate-500'}`}>
+                            {completed
+                              ? <><CheckCircle2 className="h-3 w-3" /> Completed</>
+                              : test
+                                ? <><Check className="h-3 w-3" /> Available</>
+                                : <><Lock className="h-3 w-3" /> Coming soon</>}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </motion.article>

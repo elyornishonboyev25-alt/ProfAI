@@ -5,11 +5,10 @@ import {
   type SATSection,
 } from './practiceTest4'
 import { SAT_PAPER_17, SAT_PAPER_17_MODULES } from './paper17'
-import { SAT_SMARTTEST_MOCK_3, SAT_SMARTTEST_MOCK_3_MODULES } from './smartTestMock1'
+import { SAT_SMARTTEST_MOCK_1, SAT_SMARTTEST_MOCK_1_MODULES } from './smartTestMock1'
 
 export type SATTestDefinition = {
   mockId: number
-  displayNumber: number
   id: string
   title: string
   subtitle: string
@@ -20,26 +19,23 @@ export type SATTestDefinition = {
 }
 
 export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
+  1: {
+    mockId: 1,
+    ...SAT_SMARTTEST_MOCK_1,
+    modules: SAT_SMARTTEST_MOCK_1_MODULES,
+    badge: 'SmartTest Original - Upper Route',
+  },
   4: {
     mockId: 4,
-    displayNumber: 1,
     ...SAT_PRACTICE_TEST_4,
     modules: SAT_PRACTICE_TEST_4_MODULES,
     badge: 'College Board Practice Test 04',
   },
   17: {
     mockId: 17,
-    displayNumber: 2,
     ...SAT_PAPER_17,
     modules: SAT_PAPER_17_MODULES,
     badge: 'Free Test · Paper 17',
-  },
-  18: {
-    mockId: 18,
-    displayNumber: 3,
-    ...SAT_SMARTTEST_MOCK_3,
-    modules: SAT_SMARTTEST_MOCK_3_MODULES,
-    badge: 'SmartTest Original - Upper Route',
   },
 }
 

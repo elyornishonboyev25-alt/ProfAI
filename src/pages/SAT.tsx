@@ -212,10 +212,10 @@ export default function SAT() {
   const bestScore = scoreHistory.length ? Math.max(...scoreHistory) : (profile?.currentSatScore ?? 1050)
   const targetScore = profile?.targetSatScore ?? 1400
   const targetProgress = Math.min(100, Math.max(1, Math.round((bestScore / targetScore) * 100)))
-  const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.displayNumber - b.displayNumber)
+  const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
   const mockSlots = Array.from({ length: 30 }, (_, index) => ({
     displayNumber: index + 1,
-    test: availableTests.find((test) => test.displayNumber === index + 1),
+    test: availableTests[index],
   }))
 
   const answeredBySection = (section: 'math' | 'reading-writing') => {

@@ -31,7 +31,7 @@ export default function SATSection() {
     ? 'Only Math practice tests are shown here. Each test contains the two Math modules.'
     : 'Only Reading & Writing practice tests are shown here. Each test contains the two Reading & Writing modules.'
   const tests = Object.values(SAT_TEST_CATALOG)
-    .sort((a, b) => a.displayNumber - b.displayNumber)
+    .sort((a, b) => a.mockId - b.mockId)
     .map((test) => getSATSectionTest(test.mockId, section))
 
   return (
@@ -80,7 +80,7 @@ export default function SATSection() {
                       <span className={`inline-flex rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${isMath ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
                         {isMath ? 'Math only' : 'Reading & Writing only'}
                       </span>
-                      <h3 className="mt-3 text-xl font-black tracking-[-0.03em] text-slate-950">Practice Test {test.displayNumber}</h3>
+                      <h3 className="mt-3 text-xl font-black tracking-[-0.03em] text-slate-950">Practice Test {test.mockId}</h3>
                       <p className="mt-1 text-xs font-semibold text-slate-500">{test.badge}</p>
                     </div>
                     {attempt?.status === 'submitted' ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> : <FileQuestion className="h-6 w-6 text-slate-400" />}

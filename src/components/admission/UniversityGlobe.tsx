@@ -14,7 +14,11 @@ type WorldGeometry =
   | { type: 'MultiPolygon'; coordinates: Position[][][] }
 
 type WorldFeatureCollection = {
-  features: Array<{ geometry: WorldGeometry | null }>
+  features: Array<{
+    id?: string
+    properties?: { name?: string }
+    geometry: WorldGeometry | null
+  }>
 }
 
 type GlobeMarkerStyle = CSSProperties & {
@@ -36,6 +40,59 @@ const UNIVERSITY_PINS: Position[] = [
   [-0.13, 51.51],
   [103.82, 1.35],
 ]
+const COUNTRY_NAME_ALIASES: Record<string, string> = {
+  'bosnia & herzegovina': 'bosnia and herzegovina',
+  'congo - brazzaville': 'republic of the congo',
+  'congo - kinshasa': 'democratic republic of the congo',
+  'czechia': 'czech republic',
+  'côte d’ivoire': 'ivory coast',
+  'myanmar (burma)': 'myanmar',
+  'north macedonia': 'macedonia',
+  'palestinian territories': 'west bank',
+  'serbia': 'republic of serbia',
+  'south korea': 'south korea',
+  'tanzania': 'united republic of tanzania',
+  'türkiye': 'turkey',
+  'united states': 'united states of america',
+}
+const COUNTRY_FALLBACK_POSITIONS: Record<string, Position> = {
+  andorra: [1.52, 42.51],
+  bahrain: [50.56, 26.07],
+  barbados: [-59.54, 13.19],
+  'cape verde': [-23.6, 15.12],
+  comoros: [43.33, -11.65],
+  eswatini: [31.46, -26.52],
+  kosovo: [20.9, 42.6],
+  liechtenstein: [9.55, 47.16],
+  maldives: [73.22, 3.2],
+  malta: [14.38, 35.94],
+  mauritius: [57.55, -20.35],
+  micronesia: [158.2, 6.9],
+  monaco: [7.42, 43.74],
+  nauru: [166.93, -0.52],
+  palau: [134.58, 7.51],
+  'palestinian territories': [35.23, 31.95],
+  'san marino': [12.46, 43.94],
+  seychelles: [55.49, -4.68],
+  singapore: [103.82, 1.35],
+  'timor-leste': [125.56, -8.87],
+  tonga: [-175.2, -21.18],
+  tuvalu: [179.2, -8.52],
+  'vatican city': [12.45, 41.9],
+}
+let worldRequest: Promise<WorldFeatureCollection> | null = null
+
+function loadWorld() {
+  if (!worldRequest) {
+    worldRequest = fetch('/assets/countries.geo.json', { cache: 'force-cache' })
+      .then((response) => {
+        if (!response.ok) throw new Error('World map could not be loaded')
+        return response.json() as Promise<WorldFeatureCollection>
+      })
+      .then(simplifyWorld)
+  }
+  return worldRequest
+}
 
 function easeOutQuart(value: number) {
   return 1 - (1 - value) ** 4
@@ -47,7 +104,7 @@ function nearestRotation(from: number, target: number) {
 
 function simplifyRing(ring: Position[]) {
   if (ring.length <= 18) return ring
-  const stride = Math.max(2, Math.ceil(ring.length / 120))
+  const stride = Math.max(2, Math.ceil(ring.length / 48))
   return ring.filter((_, index) => index % stride === 0 || index === ring.length - 1)
 }
 
@@ -57,9 +114,10 @@ function simplifyWorld(world: WorldFeatureCollection): WorldFeatureCollection {
       const geometry = feature.geometry
       if (!geometry) return feature
       if (geometry.type === 'Polygon') {
-        return { geometry: { type: 'Polygon' as const, coordinates: geometry.coordinates.map(simplifyRing) } }
+        return { ...feature, geometry: { type: 'Polygon' as const, coordinates: geometry.coordinates.map(simplifyRing) } }
       }
       return {
+        ...feature,
         geometry: {
           type: 'MultiPolygon' as const,
           coordinates: geometry.coordinates.map((polygon) => polygon.map(simplifyRing)),
@@ -69,10 +127,44 @@ function simplifyWorld(world: WorldFeatureCollection): WorldFeatureCollection {
   }
 }
 
+function normalizedCountryName(value: string) {
+  return value.trim().toLocaleLowerCase('en')
+}
+
+function largestCountryRing(geometry: WorldGeometry): Position[] {
+  const rings = geometry.type === 'Polygon'
+    ? geometry.coordinates
+    : geometry.coordinates.flatMap((polygon) => polygon)
+  return rings.reduce((largest, ring) => ring.length > largest.length ? ring : largest, rings[0] ?? [])
+}
+
+function countryPosition(world: WorldFeatureCollection | null, country: string | undefined): Position | null {
+  if (!world || !country) return null
+  const normalized = normalizedCountryName(country)
+  const expectedName = COUNTRY_NAME_ALIASES[normalized] ?? normalized
+  const feature = world.features.find((item) => normalizedCountryName(item.properties?.name ?? '') === expectedName)
+  if (!feature?.geometry) return COUNTRY_FALLBACK_POSITIONS[normalized] ?? null
+
+  const ring = largestCountryRing(feature.geometry)
+  if (!ring.length) return null
+
+  // A circular mean avoids placing countries that touch the date line on the
+  // opposite side of the globe.
+  let longitudeX = 0
+  let longitudeY = 0
+  let latitude = 0
+  for (const [longitude, nextLatitude] of ring) {
+    longitudeX += Math.cos(longitude * DEG)
+    longitudeY += Math.sin(longitude * DEG)
+    latitude += nextLatitude
+  }
+  return [Math.atan2(longitudeY, longitudeX) / DEG, latitude / ring.length]
+}
+
 function measureCanvas(canvas: HTMLCanvasElement, lowPower: boolean): CanvasMetrics | null {
   const bounds = canvas.getBoundingClientRect()
   if (!bounds.width || !bounds.height) return null
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.25)
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPower ? 0.85 : 1)
   const width = Math.round(bounds.width * pixelRatio)
   const height = Math.round(bounds.height * pixelRatio)
   if (canvas.width !== width || canvas.height !== height) {
@@ -256,68 +348,82 @@ function drawGlobe(
   ctx.stroke()
 }
 
-export default function UniversityGlobe() {
+export default function UniversityGlobe({
+  country,
+  profileLoading = false,
+}: {
+  country?: string | null
+  profileLoading?: boolean
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const currentRotationRef = useRef(DEFAULT_LONGITUDE - 360)
   const hasSpunRef = useRef(false)
   const [world, setWorld] = useState<WorldFeatureCollection | null>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
   const userId = useAuthStore((state) => state.user?.id)
-  const { location, isLocating } = useVisitorLocation()
+  const localProfileCountry = useMemo(() => loadOnboardingProfile(userId)?.country?.trim(), [userId])
+  const preferredCountry = country?.trim() || localProfileCountry
+  const { location, isLocating } = useVisitorLocation(!profileLoading && !preferredCountry)
   const { minimalMotion, isLowPowerDevice } = useMotionPreferences()
 
-  const profileCountry = useMemo(() => loadOnboardingProfile(userId)?.country?.trim(), [userId])
-  const resolvedCountry = location?.country || profileCountry || 'Your country'
-  const profileCountryOption = useMemo(
-    () => WORLD_COUNTRIES.find((country) => country.name.toLowerCase() === profileCountry?.toLowerCase()),
-    [profileCountry],
+  const resolvedCountry = preferredCountry || location?.country || 'Your country'
+  const countryOption = useMemo(
+    () => WORLD_COUNTRIES.find((option) => option.name.toLowerCase() === resolvedCountry.toLowerCase()),
+    [resolvedCountry],
   )
-  const flag = location?.countryCode
-    ? getCountryFlag(location.countryCode)
-    : profileCountryOption?.flag ?? '🌍'
-  const targetLongitude = location?.longitude ?? DEFAULT_LONGITUDE
-  const targetLatitude = location?.latitude ?? DEFAULT_LATITUDE
+  const profilePosition = useMemo(() => countryPosition(world, preferredCountry), [preferredCountry, world])
+  const flag = countryOption?.flag
+    ?? (location?.countryCode ? getCountryFlag(location.countryCode) : '🌍')
+  const targetLongitude = profilePosition?.[0] ?? location?.longitude ?? DEFAULT_LONGITUDE
+  const targetLatitude = profilePosition?.[1] ?? location?.latitude ?? DEFAULT_LATITUDE
   const markerStyle: GlobeMarkerStyle = {
     '--globe-marker-x': '50%',
     '--globe-marker-y': `${50 - Math.sin(targetLatitude * DEG) * 46}%`,
   }
 
   useEffect(() => {
-    const controller = new AbortController()
-    fetch('/assets/countries.geo.json', { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error('World map could not be loaded')
-        return response.json() as Promise<WorldFeatureCollection>
+    let active = true
+    void loadWorld()
+      .then((nextWorld) => {
+        if (active) setWorld(nextWorld)
       })
-      .then(simplifyWorld)
-      .then(setWorld)
       .catch(() => undefined)
-    return () => controller.abort()
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas || !world) return
+    if (!canvas || !world || profileLoading) return
 
     const origin: Position = [targetLongitude, targetLatitude]
     const firstSpin = !hasSpunRef.current
-    const from = firstSpin ? targetLongitude - 360 : currentRotationRef.current
+    const from = firstSpin ? targetLongitude - 160 : currentRotationRef.current
     const to = firstSpin ? targetLongitude : nearestRotation(from, targetLongitude)
-    const duration = minimalMotion ? 1 : firstSpin ? 1450 : 650
+    const duration = minimalMotion ? 1 : firstSpin ? 1050 : 520
+    const paintInterval = isLowPowerDevice ? 42 : 32
     let frame = 0
     let start = 0
+    let lastPaint = -Infinity
     const initialMetrics = measureCanvas(canvas, isLowPowerDevice)
     if (!initialMetrics) return
     let metrics: CanvasMetrics = initialMetrics
 
     hasSpunRef.current = true
     currentRotationRef.current = from
+    drawGlobe(canvas, world, from, origin, metrics)
+    setCanvasReady(true)
 
     const render = (time: number) => {
       if (!start) start = time
       const progress = Math.min(1, (time - start) / duration)
       const rotation = from + (to - from) * easeOutQuart(progress)
       currentRotationRef.current = rotation
-      drawGlobe(canvas, world, rotation, origin, metrics)
+      // A capped canvas frame rate keeps filtering and scrolling responsive on
+      // tablets while the one-off entrance rotation is running.
+      if (time - lastPaint >= paintInterval || progress === 1) {
+        drawGlobe(canvas, world, rotation, origin, metrics)
+        lastPaint = time
+      }
       if (progress < 1) frame = window.requestAnimationFrame(render)
     }
 
@@ -334,7 +440,7 @@ export default function UniversityGlobe() {
       window.cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [isLowPowerDevice, minimalMotion, targetLatitude, targetLongitude, world])
+  }, [isLowPowerDevice, minimalMotion, profileLoading, targetLatitude, targetLongitude, world])
 
   return (
     <motion.figure
@@ -345,21 +451,14 @@ export default function UniversityGlobe() {
       aria-label={`Animated university globe focused on ${resolvedCountry}`}
     >
       <div className="university-globe-visual">
-        <img
-          src="/assets/university-globe-glass-clean.png"
-          alt=""
-          className={`university-globe-reference-image ${world ? 'university-globe-reference-image-hidden' : ''}`}
-          draggable={false}
-          decoding="async"
-        />
-        <canvas ref={canvasRef} className="university-globe-canvas" aria-hidden="true" />
+        <canvas ref={canvasRef} className={`university-globe-canvas ${canvasReady ? 'is-ready' : ''}`} aria-hidden="true" />
 
-        <motion.span
+        {!profileLoading ? <motion.span
           className="university-globe-user-marker"
           style={markerStyle}
           initial={{ opacity: 0, scale: 0.3, y: -16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0.01 : 0.45, delay: minimalMotion ? 0 : 2.35, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: minimalMotion ? 0.01 : 0.4, delay: minimalMotion ? 0 : 1.25, ease: [0.16, 1, 0.3, 1] }}
           aria-hidden="true"
         >
           <span className="university-globe-user-marker-ring" />
@@ -368,9 +467,9 @@ export default function UniversityGlobe() {
           </span>
           <span className="university-globe-country-readout">
             <span aria-hidden="true">{flag}</span>
-            <span>{isLocating && !profileCountry ? 'Locating you…' : resolvedCountry}</span>
+            <span>{isLocating && !preferredCountry ? 'Locating you…' : resolvedCountry}</span>
           </span>
-        </motion.span>
+        </motion.span> : null}
       </div>
     </motion.figure>
   )

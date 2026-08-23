@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Bookmark, FileImage, ImageOff, ScanText, SpellCheck2 } from 'lucide-react'
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
+import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
 
 type Props = {
@@ -10,7 +11,6 @@ type Props = {
   strokes: HighlightStroke[]
   highlightEnabled: boolean
   highlightColor: string
-  zoom: number
   onChange: (strokes: HighlightStroke[]) => void
   flagged: boolean
   onToggleFlag: () => void
@@ -26,22 +26,89 @@ function toPoint(event: ReactPointerEvent<SVGSVGElement>): HighlightPoint {
   }
 }
 
-function splitPrompt(prompt: string) {
-  const clean = prompt
-    .replace(/\n(?=•)/g, '\n')
-    .replace(/(?<!•)\n(?!•)/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-  const candidates = [
-    'Which choice', 'Which equation', 'Which table', 'Which expression', 'Which of the following',
-    'Which finding', 'Which quotation', 'Which statement', 'Which claim', 'Which detail',
-    'Which conclusion', 'Which transition', 'Which revision', 'According to the text',
-    'As used in the text', 'The student wants', 'What is', 'What was', 'What does',
-    'What percentage', 'How many', 'How far', 'How does', 'For what value', 'Based on',
-  ]
-  const index = Math.max(...candidates.map((candidate) => clean.lastIndexOf(candidate)))
-  if (index <= 0) return { context: '', task: clean }
-  return { context: clean.slice(0, index).trim(), task: clean.slice(index).trim() }
+type HighlightSurface = NonNullable<HighlightStroke['surface']>
+
+function HighlightLayer({
+  enabled,
+  surface,
+  color,
+  strokes,
+  onChange,
+}: {
+  enabled: boolean
+  surface: HighlightSurface
+  color: string
+  strokes: HighlightStroke[]
+  onChange: (strokes: HighlightStroke[]) => void
+}) {
+  const activeId = useRef<string | null>(null)
+  const draftRef = useRef<HighlightStroke | null>(null)
+  const [draft, setDraft] = useState<HighlightStroke | null>(null)
+  const surfaceStrokes = useMemo(
+    () => strokes.filter((stroke) => (stroke.surface ?? 'source') === surface),
+    [strokes, surface],
+  )
+  const displayedStrokes = draft ? [...surfaceStrokes, draft] : surfaceStrokes
+
+  const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!enabled) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    const next: HighlightStroke = {
+      id: crypto.randomUUID(),
+      color,
+      width: 28,
+      points: [toPoint(event)],
+      surface,
+    }
+    activeId.current = next.id
+    draftRef.current = next
+    setDraft(next)
+  }
+
+  const extendStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!enabled || !activeId.current || !draftRef.current) return
+    const next = { ...draftRef.current, points: [...draftRef.current.points, toPoint(event)] }
+    draftRef.current = next
+    setDraft(next)
+  }
+
+  const finishStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!activeId.current) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    if (draftRef.current?.points.length) onChange([...strokes, draftRef.current])
+    activeId.current = null
+    draftRef.current = null
+    setDraft(null)
+  }
+
+  return (
+    <svg
+      viewBox="0 0 1000 1000"
+      preserveAspectRatio="none"
+      aria-label={enabled ? 'Highlight drawing surface' : undefined}
+      className={`absolute inset-0 z-30 h-full w-full touch-none ${enabled ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'}`}
+      onPointerDown={startStroke}
+      onPointerMove={extendStroke}
+      onPointerUp={finishStroke}
+      onPointerCancel={finishStroke}
+    >
+      {displayedStrokes.map((stroke) => (
+        <polyline
+          key={stroke.id}
+          points={stroke.points.map((point) => `${point.x},${point.y}`).join(' ')}
+          fill="none"
+          stroke={stroke.color}
+          strokeWidth={stroke.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.38"
+        />
+      ))}
+    </svg>
+  )
 }
 
 export default function SATQuestionCanvas({
@@ -51,7 +118,6 @@ export default function SATQuestionCanvas({
   strokes,
   highlightEnabled,
   highlightColor,
-  zoom,
   onChange,
   flagged,
   onToggleFlag,
@@ -63,16 +129,16 @@ export default function SATQuestionCanvas({
   const [draft, setDraft] = useState<HighlightStroke | null>(null)
   const [sourceOpen, setSourceOpen] = useState(false)
   const [visualFailed, setVisualFailed] = useState(false)
-  const displayedStrokes = useMemo(() => (draft ? [...strokes, draft] : strokes), [draft, strokes])
-  const { context, task } = useMemo(() => splitPrompt(question.prompt), [question.prompt])
+  const sourceStrokes = useMemo(
+    () => strokes.filter((stroke) => (stroke.surface ?? 'source') === 'source'),
+    [strokes],
+  )
+  const displayedStrokes = useMemo(() => (draft ? [...sourceStrokes, draft] : sourceStrokes), [draft, sourceStrokes])
+  const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
 
   useEffect(() => {
     setVisualFailed(false)
   }, [question.id])
-
-  useEffect(() => {
-    if (highlightEnabled) setSourceOpen(true)
-  }, [highlightEnabled])
 
   const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (!highlightEnabled) return
@@ -82,6 +148,7 @@ export default function SATQuestionCanvas({
       color: highlightColor,
       width: 34,
       points: [toPoint(event)],
+      surface: 'source',
     }
     activeId.current = next.id
     draftRef.current = next
@@ -117,7 +184,7 @@ export default function SATQuestionCanvas({
         <div className="mt-3 overflow-auto rounded-xl border border-slate-300 bg-slate-200 p-3">
           <div
             className="relative mx-auto origin-top transition-all"
-            style={{ width: `${zoom * 100}%`, maxWidth: `${Math.max(760, question.assetWidth) * zoom}px`, aspectRatio: `${question.assetWidth} / ${question.assetHeight}` }}
+            style={{ width: '100%', maxWidth: `${Math.max(760, question.assetWidth)}px`, aspectRatio: `${question.assetWidth} / ${question.assetHeight}` }}
           >
             <img src={question.asset} alt={`Original paper layout for question ${question.number}`} draggable={false} className="h-full w-full select-none rounded-lg bg-white object-contain" />
             <svg
@@ -141,7 +208,14 @@ export default function SATQuestionCanvas({
 
   return (
     <div className="grid min-h-[calc(100vh-12.6rem)] min-w-0 bg-[#f7f8fa] md:grid-cols-2">
-      <section className="min-w-0 border-b border-slate-300 px-5 py-7 md:border-b-0 md:border-r md:px-8 md:py-8 xl:px-12">
+      <section className="relative min-w-0 border-b border-slate-300 px-5 py-7 md:border-b-0 md:border-r md:px-8 md:py-8 xl:px-12">
+        <HighlightLayer
+          enabled={highlightEnabled}
+          surface="passage"
+          color={highlightColor}
+          strokes={strokes}
+          onChange={onChange}
+        />
         <div className="mx-auto max-w-3xl">
           {question.visual && !visualFailed ? (
             <figure className="mb-7 overflow-hidden rounded-xl border border-slate-300 bg-white p-4">
@@ -175,7 +249,14 @@ export default function SATQuestionCanvas({
         </div>
       </section>
 
-      <section className="min-w-0 bg-[#f7f8fa]">
+      <section className="relative min-w-0 bg-[#f7f8fa]">
+        <HighlightLayer
+          enabled={highlightEnabled}
+          surface="question"
+          color={highlightColor}
+          strokes={strokes}
+          onChange={onChange}
+        />
         <div className="flex min-h-[4.4rem] items-stretch bg-[#ededed]">
           <span className="flex w-14 shrink-0 items-center justify-center bg-black font-serif text-2xl font-bold text-white sm:w-16">
             {question.number}

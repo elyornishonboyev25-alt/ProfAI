@@ -35,6 +35,7 @@ import { useBadgeStore } from '@/store/badgeStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import type { WritingTask, LineChartData, ChartSeries } from '@/data/writingTestData'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
+import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 
 type Props = {
   task: WritingTask
@@ -309,6 +310,7 @@ export default function IELTSWritingTestInterface({
   const launchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const user = useAuthStore((state: AuthState) => state.user)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
   const [showWritingGate, setShowWritingGate] = useState(false)
@@ -399,7 +401,7 @@ export default function IELTSWritingTestInterface({
       })
 
       const timeSpent = timerEnabled ? effectiveDuration * 60 - timeRemaining : 0
-      saveWritingAnalysis(
+      const savedEntry = saveWritingAnalysis(
         user?.id,
         task.id,
         task.title,
@@ -410,12 +412,29 @@ export default function IELTSWritingTestInterface({
         answer,
         result,
       )
+      if (user) {
+        void recordXpActivity({
+          source: 'WRITING',
+          eventKey: savedEntry.attemptKey,
+          band: result.overallBand,
+          durationSec: timeSpent,
+          metadata: {
+            testId: task.id,
+            taskType: task.taskType,
+            band: result.overallBand,
+            wordCount,
+          },
+        }).then((reward) => {
+          markXpActivitySynced(user.id, savedEntry.attemptKey)
+          updateUserProgress({ xp: reward.totalXp, level: reward.level })
+        }).catch(() => {})
+      }
     } catch (err) {
       setEvalError(err instanceof Error ? err.message : 'AI evaluation failed. Please try again.')
     } finally {
       setEvaluating(false)
     }
-  }, [answer, task, timerEnabled, timeRemaining, wordCount, user?.id, effectiveDuration, writingTrial.locked, writingTrial.consume])
+  }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, writingTrial.locked, writingTrial.consume])
 
   const handleExitConfirm = useCallback(() => {
     setShowExitConfirm(false)

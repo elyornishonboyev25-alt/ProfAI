@@ -40,12 +40,17 @@ export function getCountryFlag(countryCode: string) {
   return countryFlag(countryCode.toUpperCase())
 }
 
-export function useVisitorLocation() {
+export function useVisitorLocation(enabled = true) {
   const [location, setLocation] = useState<VisitorLocation | null>(null)
   const [isLocating, setIsLocating] = useState(true)
   const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLocating(false)
+      return
+    }
+
     let active = true
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 6500)
@@ -93,7 +98,7 @@ export function useVisitorLocation() {
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [])
+  }, [enabled])
 
   const requestPreciseLocation = useCallback(() => {
     if (!navigator.geolocation) {

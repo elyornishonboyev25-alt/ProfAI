@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   AtSign,
   BarChart3,
   Camera,
   Check,
+  ChevronDown,
   GraduationCap,
   Loader2,
   LogOut,
   Lock,
   Mail,
   Save,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -113,6 +115,126 @@ function PrivacyToggle({
         <span className="h-4 w-4 rounded-full bg-white shadow-sm" />
       </span>
     </button>
+  )
+}
+
+function CountryPicker({ value, onChange }: { value: string; onChange: (country: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState(value)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const listId = useId()
+  const normalizedQuery = query.trim().toLocaleLowerCase('en')
+  const visibleCountries = useMemo(
+    () => WORLD_COUNTRIES
+      .filter((option) => !normalizedQuery || option.name.toLocaleLowerCase('en').includes(normalizedQuery))
+      .slice(0, 80),
+    [normalizedQuery],
+  )
+  const selected = WORLD_COUNTRIES.find((option) => option.name.toLocaleLowerCase('en') === value.trim().toLocaleLowerCase('en'))
+
+  useEffect(() => {
+    if (!open) setQuery(value)
+  }, [open, value])
+
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [])
+
+  const choose = (country: string) => {
+    onChange(country)
+    setQuery(country)
+    setOpen(false)
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      setOpen(false)
+      setQuery(value)
+      return
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      setOpen(true)
+      const delta = event.key === 'ArrowDown' ? 1 : -1
+      setActiveIndex((index) => Math.max(0, Math.min(visibleCountries.length - 1, index + delta)))
+      return
+    }
+    if (event.key === 'Enter' && open && visibleCountries[activeIndex]) {
+      event.preventDefault()
+      choose(visibleCountries[activeIndex].name)
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative mt-1">
+      <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-base" aria-hidden="true">
+        {selected?.flag ?? '🌍'}
+      </span>
+      <input
+        value={query}
+        onFocus={() => setOpen(true)}
+        onChange={(event) => {
+          setQuery(event.target.value)
+          onChange(event.target.value)
+          setOpen(true)
+          setActiveIndex(0)
+        }}
+        onKeyDown={onKeyDown}
+        className="input w-full !pl-10 !pr-11"
+        placeholder="Start typing a country..."
+        autoComplete="off"
+        role="combobox"
+        aria-label="Country"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={listId}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          setOpen((current) => !current)
+          if (!open) {
+            setQuery('')
+            setActiveIndex(0)
+          }
+        }}
+        className="absolute right-1.5 top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+        aria-label={open ? 'Close country list' : 'Open country list'}
+        aria-controls={listId}
+        aria-expanded={open}
+      >
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open ? (
+        <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-[80] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_22px_55px_rgba(15,23,42,0.24)]">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-2 pb-2 text-xs font-semibold text-slate-500">
+            <Search className="h-3.5 w-3.5" /> Select your country
+          </div>
+          <ul id={listId} role="listbox" className="mt-1 max-h-56 overflow-y-auto overscroll-contain">
+            {visibleCountries.map((option, index) => (
+              <li key={option.code} role="option" aria-selected={option.name === value}>
+                <button
+                  type="button"
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => choose(option.name)}
+                  className={`flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-sm font-semibold transition ${index === activeIndex ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50'}`}
+                >
+                  <span className="text-base" aria-hidden="true">{option.flag}</span>
+                  <span className="min-w-0 flex-1 truncate">{option.name}</span>
+                  {option.name === value ? <Check className="h-4 w-4 text-emerald-500" /> : null}
+                </button>
+              </li>
+            ))}
+            {!visibleCountries.length ? <li className="px-3 py-5 text-center text-xs font-medium text-slate-500">No country found</li> : null}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -489,13 +611,10 @@ export default function AccountProfile() {
                   Phone
                   <input value={form.phone ?? ''} onChange={(e) => updateField('phone', e.target.value)} className="input mt-1" placeholder="+998 ..." />
                 </label>
-                <label className="text-sm font-medium text-slate-700">
-                  Country
-                  <input list="account-country-options" value={form.country ?? ''} onChange={(e) => updateField('country', e.target.value)} className="input mt-1" placeholder="Start typing a country..." autoComplete="off" />
-                  <datalist id="account-country-options">
-                    {WORLD_COUNTRIES.map((option) => <option key={option.code} value={option.name} label={`${option.flag} ${option.name}`} />)}
-                  </datalist>
-                </label>
+                <div className="text-sm font-medium text-slate-700">
+                  <span>Country</span>
+                  <CountryPicker value={form.country ?? ''} onChange={(country) => updateField('country', country)} />
+                </div>
                 <label className="text-sm font-medium text-slate-700">
                   Grade level
                   <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder="11th grade / Gap year" />

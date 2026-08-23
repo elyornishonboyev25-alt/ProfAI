@@ -404,7 +404,10 @@
 
 .podcast-episode-card {
   position: relative;
+  display: grid;
   overflow: hidden;
+  grid-template-rows: auto 3.25rem auto;
+  align-content: start;
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 1.65rem;
   background: rgba(255, 255, 255, 0.48);
@@ -412,6 +415,18 @@
   box-shadow: 0 16px 35px rgba(51, 65, 85, 0.1), inset 0 1px 0 white;
   backdrop-filter: blur(24px) saturate(145%);
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.podcast-episode-artwork {
+  width: 100%;
+}
+
+.podcast-episode-title {
+  margin-top: 0.75rem;
+}
+
+.podcast-episode-meta {
+  margin-top: 0.5rem;
 }
 
 .podcast-episode-card::after {

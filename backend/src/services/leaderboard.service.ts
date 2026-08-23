@@ -351,6 +351,7 @@ export function invalidateLeaderboardCache() {
 function buildUserAggregates(params: {
   attempts: UserAttemptSnapshot[]
   period: PeriodInput
+  useCanonicalXp: boolean
   usersById: Map<string, { fullName: string; nickname?: string | null; avatarUrl: string | null; xp: number; currentStreak: number }>
   focusStatsByUser: Map<string, { focusConsistency: number; dailyCompletionRate: number }>
 }) {
@@ -410,8 +411,9 @@ function buildUserAggregates(params: {
     let consistencyTotal = 0
     let improvementTotal = 0
     let difficultyTotal = 0
-    // XP sum is now the single source of truth for ranking.
-    // We still aggregate the analytics signals below for the breakdown drawer.
+    // Period/category boards use XP earned by their matching test attempts.
+    // The all-time board uses User.xp, the same canonical total shown on every
+    // profile and dashboard.
     let xpTotal = 0
 
     for (let index = 0; index < validatedAttempts.length; index += 1) {
@@ -433,6 +435,8 @@ function buildUserAggregates(params: {
 
       rollingScores.push(attempt.finalScore)
     }
+
+    if (params.useCanonicalXp) xpTotal = Math.max(0, user.xp)
 
     const testsCompleted = validatedAttempts.length
     const integrityScore = clamp((testsCompleted / Math.max(1, userAttempts.length)) * 100, 0, 100)
@@ -616,6 +620,7 @@ export async function generateLeaderboard(params: {
   const aggregatedRows = buildUserAggregates({
     attempts: attempts as UserAttemptSnapshot[],
     period: params.period,
+    useCanonicalXp: params.period === 'all' && !params.category,
     usersById: userMap,
     focusStatsByUser,
   })

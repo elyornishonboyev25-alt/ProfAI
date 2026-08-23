@@ -1,24 +1,18 @@
 import { Suspense, useCallback, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Bot, Lock, Sparkles, X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { Lock, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
+import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
-import VoiceOrb from '@/components/ai/VoiceOrb'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const AIChatWindow = lazy(() => import('@/components/ai/AIChatWindow'))
 
 const ATTEMPT_SUBMITTED_EVENT = 'smarttest:attempt-submitted'
-
-function isLegacyExamPath(pathname: string) {
-  const isCustomTestMode = /^\/tests\/[^/]+\/attempt$/.test(pathname)
-  const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/')
-  return isCustomTestMode || isClassicTestMode
-}
 
 function shouldBlockAssistant(pathname: string, search: string) {
   const isCustomTestMode = /^\/tests\/[^/]+\/attempt$/.test(pathname)
@@ -38,6 +32,7 @@ function shouldBlockAssistant(pathname: string, search: string) {
 
 export function FloatingAIAssistant() {
   const location = useLocation()
+  const reduceMotion = useReducedMotion()
   const user = useAuthStore((state: AuthState) => state.user)
   const hasPremium = hasPremiumAccess(user)
   const isOpen = useAiAssistantStore((state) => state.isOpen)
@@ -45,12 +40,9 @@ export function FloatingAIAssistant() {
   const close = useAiAssistantStore((state) => state.close)
   const setReportSnapshot = useAiAssistantStore((state) => state.setReportSnapshot)
   const talkOpen = useAiAssistantStore((state) => state.talkOpen)
-  const voiceState = useAiAssistantStore((state) => state.voiceState)
-  const voiceLevel = useAiAssistantStore((state) => state.voiceLevel)
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   const isAiAnalysisStandalone = location.pathname === '/ai-coach' || location.pathname === '/profile'
-  const isLegacyTestMode = useMemo(() => isLegacyExamPath(location.pathname), [location.pathname])
   const assistantBlocked = useMemo(
     () => shouldBlockAssistant(location.pathname, location.search),
     [location.pathname, location.search],
@@ -98,8 +90,6 @@ export function FloatingAIAssistant() {
   // While the immersive talk overlay is up it owns the corner, so hide the launcher.
   if (isAuthPage || isAiAnalysisStandalone || assistantBlocked || talkOpen) return null
 
-  const showOrbLauncher = !isLegacyTestMode && !isOpen && hasPremium
-
   return (
     <div className="pointer-events-none fixed bottom-24 right-4 z-[120] flex flex-col items-end gap-3 lg:bottom-6 lg:right-6">
       <AnimatePresence>
@@ -118,7 +108,7 @@ export function FloatingAIAssistant() {
         ) : null}
       </AnimatePresence>
 
-      <button
+      <motion.button
         type="button"
         onClick={() => {
           if (assistantBlocked) return
@@ -129,12 +119,13 @@ export function FloatingAIAssistant() {
           open()
         }}
         aria-label={isOpen ? 'Close AI tutor' : 'Open ProfAI tutor'}
-        className={`pointer-events-auto group relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition-colors ${
-          showOrbLauncher
-            ? 'border-blue-200/80 bg-white'
-            : isLegacyTestMode
-              ? 'border-slate-700 bg-slate-900 text-slate-200'
-              : 'border-blue-400/60 bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-700 text-white'
+        whileHover={reduceMotion ? undefined : { y: -2, scale: 1.035 }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 330, damping: 22 }}
+        className={`pointer-events-auto group relative inline-flex h-14 w-14 items-center justify-center rounded-[1.25rem] border backdrop-blur-xl transition-colors ${
+          isOpen
+            ? 'border-slate-700/80 bg-slate-900/90 text-white shadow-[0_14px_32px_rgba(15,23,42,0.28)]'
+            : 'border-white/80 bg-white/55 text-slate-900 shadow-[0_14px_34px_rgba(37,99,235,0.18),inset_0_1px_0_rgba(255,255,255,0.96),inset_0_-1px_0_rgba(148,163,184,0.16)] hover:border-white hover:bg-white/70'
         }`}
       >
         {!isOpen ? (
@@ -145,21 +136,37 @@ export function FloatingAIAssistant() {
             ProfAI tutor
           </span>
         ) : null}
-        {showOrbLauncher ? (
-          <VoiceOrb state={voiceState} level={voiceLevel} size={46} />
-        ) : (
-          <span className="relative">{isOpen ? <X className="h-5 w-5" /> : <Bot className="h-5 w-5" />}</span>
-        )}
+        {!isOpen ? (
+          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
+            <span className="absolute inset-[4px] rounded-[1rem] bg-gradient-to-br from-white/80 via-white/24 to-blue-100/35" />
+            <motion.span
+              className="absolute -bottom-3 -top-3 w-5 rotate-[18deg] bg-gradient-to-r from-transparent via-white/90 to-transparent blur-[1px]"
+              initial={{ left: '-45%' }}
+              animate={reduceMotion ? { left: '-45%' } : { left: ['-45%', '125%'] }}
+              transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2.2 }}
+            />
+          </span>
+        ) : null}
+
+        <span className="relative z-10">
+          {isOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <motion.span
+              className="flex drop-shadow-[0_7px_9px_rgba(220,38,38,0.24)]"
+              animate={reduceMotion ? undefined : { y: [0, -1.5, 0], scale: [1, 1.025, 1] }}
+              transition={{ duration: 3.2, ease: 'easeInOut', repeat: Infinity }}
+            >
+              <BrandMark size={45} />
+            </motion.span>
+          )}
+        </span>
         {!hasPremium && !assistantBlocked ? (
           <span className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-slate-100">
             <Lock className="h-2.5 w-2.5" />
           </span>
-        ) : !isOpen && !showOrbLauncher ? (
-          <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-emerald-400">
-            <Sparkles className="h-2 w-2 text-white" />
-          </span>
         ) : null}
-      </button>
+      </motion.button>
     </div>
   )
 }

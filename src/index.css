@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +32,333 @@
   --arena-glass-strong: rgba(255, 255, 255, 0.88);
   --arena-border: rgba(255, 255, 255, 0.88);
   --arena-shadow: 0 24px 64px rgba(30, 41, 59, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+/* Dashboard concept — warm liquid glass with a crimson ProfAI accent. */
+.profai-sidebar,
+.dashboard-main-shell,
+.dashboard-glass-card,
+.dashboard-stat-card,
+.dashboard-learning-card {
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.83), rgba(249, 246, 248, 0.68)),
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.96), transparent 38%);
+  box-shadow:
+    0 24px 64px rgba(66, 30, 40, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1px 0 rgba(148, 163, 184, 0.12);
+}
+
+.profai-sidebar {
+  overflow: hidden;
+  border-radius: 2rem;
+  box-shadow:
+    0 28px 70px rgba(58, 29, 40, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+.profai-sidebar::before,
+.dashboard-main-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 5% 8%, rgba(186, 230, 253, 0.2), transparent 28%),
+    radial-gradient(circle at 96% 12%, rgba(254, 215, 170, 0.2), transparent 31%);
+  content: '';
+  pointer-events: none;
+}
+
+.sidebar-primary-cluster {
+  border: 1px solid rgba(254, 205, 211, 0.65);
+  background: linear-gradient(145deg, rgba(255, 241, 242, 0.78), rgba(255, 255, 255, 0.48));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94), 0 14px 34px rgba(159, 18, 57, 0.06);
+}
+
+.sidebar-primary-active {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background:
+    linear-gradient(112deg, transparent 0 54%, rgba(255, 255, 255, 0.24) 66%, transparent 77%),
+    linear-gradient(180deg, #f86f79 0%, #e93642 48%, #c81e2a 100%);
+  box-shadow:
+    0 14px 28px rgba(220, 38, 38, 0.29),
+    0 0 24px rgba(251, 113, 133, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 -3px 9px rgba(127, 29, 29, 0.27);
+}
+
+.dashboard-main-shell {
+  position: relative;
+  isolation: isolate;
+  contain: paint;
+  min-height: calc(100vh - 2.5rem);
+  overflow: hidden;
+  border-radius: 2rem;
+  padding: clamp(1rem, 1.8vw, 1.75rem);
+}
+
+.dashboard-glass-card,
+.dashboard-stat-card,
+.dashboard-learning-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.55rem;
+}
+
+.dashboard-glass-card::after,
+.dashboard-stat-card::after,
+.dashboard-learning-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.6), transparent 42%);
+  content: '';
+  pointer-events: none;
+}
+
+.dashboard-avatar-ring {
+  position: relative;
+  width: 4.6rem;
+  height: 4.6rem;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  padding: 5px;
+  background: linear-gradient(145deg, #ff5262, #df2634 55%, #991b1b);
+  box-shadow: 0 14px 30px rgba(220, 38, 38, 0.3), 0 0 24px rgba(251, 113, 133, 0.17), inset 0 1px 0 white;
+}
+
+.dashboard-streak,
+.dashboard-icon-button {
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 12px 30px rgba(61, 39, 47, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+.dashboard-streak {
+  gap: 0.35rem;
+  min-height: 3rem;
+  border-radius: 1rem;
+  padding: 0 0.85rem;
+  color: #e52b32;
+}
+
+.dashboard-icon-button {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  color: #334155;
+  transition: color 160ms var(--app-ease-smooth), transform 160ms var(--app-ease-smooth), box-shadow 160ms var(--app-ease-smooth);
+}
+
+.dashboard-icon-button:hover {
+  color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(220, 38, 38, 0.14), inset 0 1px 0 white;
+}
+
+.profai-dashboard button[aria-label='Notifications'] {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 12px 30px rgba(61, 39, 47, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  transition: color 160ms var(--app-ease-smooth), background-color 160ms var(--app-ease-smooth), transform 160ms var(--app-ease-smooth);
+}
+
+.profai-dashboard button[aria-label='Notifications']:hover {
+  color: #dc2626;
+  background: rgba(255, 255, 255, 0.86);
+  transform: translateY(-2px);
+}
+
+.profai-dashboard button[aria-label='Notifications'] span span {
+  background-color: #ef4444;
+}
+
+.dashboard-target-card {
+  position: relative;
+  isolation: isolate;
+  min-height: 28rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 1.7rem;
+  padding: 1.35rem;
+  color: white;
+  background:
+    linear-gradient(118deg, transparent 0 54%, rgba(255, 255, 255, 0.18) 55% 67%, transparent 68%),
+    radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.25), transparent 28%),
+    linear-gradient(145deg, #813240 0%, #b93645 38%, #ef4a57 74%, #fb7185 100%);
+  box-shadow:
+    0 26px 54px rgba(190, 24, 55, 0.27),
+    0 0 34px rgba(244, 63, 94, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -10px 28px rgba(69, 10, 10, 0.16);
+}
+
+.dashboard-target-card::before {
+  position: absolute;
+  right: -4rem;
+  bottom: -5rem;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  content: '';
+}
+
+.dashboard-progress-orbit {
+  position: relative;
+  display: flex;
+  width: 11.5rem;
+  height: 11.5rem;
+  margin: 2rem auto 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(87, 12, 28, 0.16);
+  box-shadow: inset 0 0 28px rgba(83, 8, 24, 0.18), 0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-stat-card {
+  container-type: inline-size;
+  display: flex;
+  min-height: 10.15rem;
+  flex-direction: column;
+  padding: 1rem;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  transition: transform 180ms var(--app-ease-smooth);
+}
+
+.dashboard-stat-label {
+  min-height: 2.5rem;
+  margin-top: 1rem;
+}
+
+.dashboard-stat-value {
+  margin-top: 0.25rem;
+  font-size: 1.65rem;
+}
+
+.dashboard-stat-value-long {
+  max-width: 100%;
+  font-size: clamp(1rem, 16cqi, 1.35rem);
+  white-space: nowrap;
+}
+
+.dashboard-stat-note {
+  margin-top: 0.5rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-stat-card:hover,
+  .dashboard-learning-card:hover {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+.dashboard-stat-icon {
+  display: flex;
+  width: 2.35rem;
+  height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(254, 205, 211, 0.85);
+  border-radius: 0.8rem;
+  color: #b42332;
+  background: rgba(255, 241, 242, 0.78);
+  box-shadow: inset 0 1px 0 white;
+}
+
+.dashboard-podium-avatar {
+  display: flex;
+  width: 3.25rem;
+  height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid #cbd5e1;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, #fff1f2, #e2e8f0);
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 900;
+  box-shadow: 0 10px 20px rgba(51, 65, 85, 0.15), inset 0 1px 0 white;
+}
+
+.dashboard-podium-1 {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-color: #f8c84a;
+  color: #92400e;
+  background: linear-gradient(145deg, #fffbea, #fde68a);
+  box-shadow: 0 12px 24px rgba(217, 119, 6, 0.22), 0 0 22px rgba(250, 204, 21, 0.18), inset 0 1px 0 white;
+}
+
+.dashboard-podium-3 {
+  border-color: #d39166;
+  color: #7c2d12;
+  background: linear-gradient(145deg, #fff7ed, #fed7aa);
+}
+
+.dashboard-medal-icon {
+  display: flex;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 0.9rem;
+  color: #d97706;
+  background: linear-gradient(145deg, #fffbeb, #fde68a);
+  box-shadow: 0 10px 22px rgba(217, 119, 6, 0.14), inset 0 1px 0 white;
+}
+
+.dashboard-learning-card {
+  min-height: 10.5rem;
+  padding: 1rem;
+  text-align: left;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  transition: transform 180ms var(--app-ease-smooth);
+}
+
+html[data-motion='minimal'] .dashboard-stat-card,
+html[data-motion='minimal'] .dashboard-learning-card {
+  transform: none;
+  transition: none;
+}
+
+@media (max-width: 1279px) {
+  .dashboard-target-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-main-shell {
+    border-radius: 1.5rem;
+  }
+
+  .dashboard-avatar-ring {
+    width: 3.7rem;
+    height: 3.7rem;
+  }
+
+  .dashboard-stat-card {
+    min-height: 9.5rem;
+  }
 }
 
 /* Article Reader — warm paper workspace inspired by a focused study desk. */
@@ -236,7 +561,7 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Sora', 'Plus Jakarta Sans', sans-serif;
+    font-family: ui-rounded, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     letter-spacing: -0.025em;
     text-wrap: balance;
   }
@@ -778,6 +1103,55 @@
     -webkit-backdrop-filter: blur(20px);
   }
 
+  .admission-shortlist-count {
+    display: inline-grid;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    margin-left: 0.25rem;
+    place-items: center;
+    border-radius: 999px;
+    padding: 0 0.32rem;
+    color: white;
+    background: linear-gradient(145deg, #fb7185, #dc2626);
+    box-shadow: 0 6px 14px rgba(220, 38, 38, 0.24);
+    font-size: 0.65rem;
+    font-weight: 900;
+  }
+
+  .admission-shortlist-summary {
+    position: relative;
+    width: min(92%, 32rem);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    border-radius: 2.5rem;
+    margin: auto;
+    padding: clamp(2rem, 4vw, 3.5rem);
+    background:
+      radial-gradient(circle at 96% 4%, rgba(251, 113, 133, 0.34), transparent 42%),
+      radial-gradient(circle at 0% 100%, rgba(125, 211, 252, 0.32), transparent 44%),
+      rgba(255, 255, 255, 0.55);
+    box-shadow: 0 30px 70px rgba(71, 85, 105, 0.15), inset 0 1px 0 white;
+    backdrop-filter: blur(18px);
+  }
+
+  .admission-shortlist-summary-icon {
+    display: inline-grid;
+    width: 4.5rem;
+    height: 4.5rem;
+    place-items: center;
+    border-radius: 1.5rem;
+    color: white;
+    background: linear-gradient(145deg, #fb7185, #be123c);
+    box-shadow: 0 18px 34px rgba(225, 29, 72, 0.3), inset 0 1px 0 rgba(255,255,255,0.45);
+  }
+
+  .admission-shortlist-summary-icon svg { width: 2rem; height: 2rem; }
+  .admission-shortlist-summary-kicker { margin-top: 1.5rem; color: #dc2626; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+  .admission-shortlist-summary h1 { max-width: 24rem; margin-top: 0.4rem; color: #0f172a; font-size: clamp(2rem, 4vw, 3.35rem); font-weight: 950; line-height: 0.98; letter-spacing: -0.065em; }
+  .admission-shortlist-summary > p:not(.admission-shortlist-summary-kicker) { max-width: 25rem; margin-top: 1.1rem; color: #64748b; font-size: 0.86rem; font-weight: 600; line-height: 1.65; }
+  .admission-shortlist-summary button { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; border-radius: 999px; padding: 0.75rem 1rem; color: white; background: #0f172a; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18); font-size: 0.75rem; font-weight: 850; transition: transform 180ms ease, background 180ms ease; }
+  .admission-shortlist-summary button:hover { background: #dc2626; transform: translateY(-2px); }
+
   .admission-discovery-layout {
     position: relative;
     z-index: 10;
@@ -799,6 +1173,7 @@
     width: 100%;
     max-width: 50rem;
     margin: 0 auto;
+    pointer-events: none;
   }
 
   .university-globe-reference-image {
@@ -899,8 +1274,12 @@
     display: block;
     width: 100%;
     height: 100%;
+    opacity: 0;
     pointer-events: none;
+    transition: opacity 220ms ease;
   }
+
+  .university-globe-canvas.is-ready { opacity: 1; }
 
   .university-globe-user-marker {
     position: absolute;
@@ -994,6 +1373,8 @@
   }
 
   .admission-search-panel {
+    position: relative;
+    z-index: 40;
     margin-bottom: 2rem;
   }
 
@@ -1002,12 +1383,14 @@
   }
 
   .admission-university-scroll {
+    position: relative;
+    z-index: 1;
     min-height: 0;
   }
 
   .admission-dashboard-back {
     position: relative;
-    z-index: 30;
+    z-index: 100;
     display: inline-flex;
     width: fit-content;
     align-items: center;
@@ -1022,6 +1405,7 @@
     font-weight: 850;
     pointer-events: auto;
     touch-action: manipulation;
+    transition: border-color 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
   }
 
   .admission-dashboard-back:hover {
@@ -1029,6 +1413,12 @@
     color: #dc2626;
     background: #fff;
     transform: translateX(-2px);
+  }
+
+  .admission-dashboard-back:focus-visible,
+  .admission-listbox > button:focus-visible {
+    outline: 3px solid rgba(239, 68, 68, 0.28);
+    outline-offset: 3px;
   }
 
   .admission-search-box {
@@ -1049,7 +1439,13 @@
     box-shadow: 0 26px 58px rgba(220, 38, 38, 0.14), 0 0 0 4px rgba(254, 226, 226, 0.55);
   }
 
-  .admission-search-box > svg { display: none; width: 1.3rem; color: #94a3b8; }
+  .admission-search-box > svg {
+    display: block;
+    width: 1.3rem;
+    height: 1.3rem;
+    flex-shrink: 0;
+    color: #94a3b8;
+  }
 
   .admission-search-box input {
     min-width: 0;
@@ -1063,23 +1459,20 @@
     letter-spacing: -0.035em;
   }
 
-  .admission-search-box input::placeholder { color: #64748b; opacity: 0.8; }
-
-  .admission-search-action {
-    display: inline-flex;
-    width: clamp(3.5rem, 5vw, 5.1rem);
-    height: clamp(3.5rem, 5vw, 5.1rem);
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255,255,255,0.7);
-    border-radius: 50%;
-    color: white;
-    background: linear-gradient(145deg, #f45b5b, #c81e2a);
-    box-shadow: 0 15px 27px rgba(220,38,38,0.34), inset 0 2px 4px rgba(255,255,255,0.35);
+  .admission-search-box input,
+  .admission-search-box input:focus,
+  .admission-search-box input:focus-visible,
+  .admission-listbox-search input,
+  .admission-listbox-search input:focus,
+  .admission-listbox-search input:focus-visible {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    appearance: none;
+    -webkit-appearance: none;
   }
 
-  .admission-search-action svg { width: 44%; height: 44%; stroke-width: 2; }
+  .admission-search-box input::placeholder { color: #64748b; opacity: 0.8; }
 
   .admission-filter-row {
     display: grid;
@@ -1111,6 +1504,11 @@
     background: rgba(255,255,255,0.48);
   }
 
+  .admission-filter-control:focus-within {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 0 3px rgba(254, 226, 226, 0.55), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
   .admission-filter-control select {
     width: 100%;
     min-width: 0;
@@ -1126,9 +1524,15 @@
   }
 
   .admission-filter-control.admission-listbox { overflow: visible; }
+  .admission-filter-control.admission-listbox.is-open { z-index: 100; border-color: rgba(248,113,113,.72); background: rgba(255,255,255,.96); }
   .admission-listbox > button { display: flex; width: 100%; min-width: 0; align-items: center; justify-content: space-between; gap: .5rem; color: #0f172a; font-size: .8rem; font-weight: 700; text-align: left; }
+  .admission-listbox > button:focus,
+  .admission-listbox > button:focus-visible,
+  .admission-listbox-popover button:focus,
+  .admission-listbox-popover button:focus-visible { outline: 0 !important; box-shadow: none !important; }
   .admission-listbox > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .admission-listbox-popover { position: absolute; z-index: 80; top: calc(100% + .5rem); left: 0; width: max(100%, 15rem); overflow: hidden; border: 1px solid rgba(255,255,255,.92); border-radius: 1.25rem; background: rgba(255,255,255,.96); padding: .5rem; box-shadow: 0 24px 60px rgba(15,23,42,.18),inset 0 1px white; backdrop-filter: blur(16px) saturate(130%); }
+  .admission-listbox-popover { position: absolute; z-index: 80; top: calc(100% + .5rem); left: 0; width: max(100%, 15rem); max-width: min(22rem, calc(100vw - 2rem)); overflow: hidden; border: 1px solid rgba(226,232,240,.96); border-radius: 1.25rem; background: #fff; padding: .5rem; box-shadow: 0 24px 60px rgba(15,23,42,.2),inset 0 1px white; }
+  .admission-filter-control:nth-child(even) .admission-listbox-popover { right: 0; left: auto; }
   .admission-listbox-search { display: flex; min-height: 42px; align-items: center; gap: .5rem; border: 1px solid #dbeafe; border-radius: .9rem; padding: 0 .7rem; color: #64748b; background: #f8fbff; }
   .admission-listbox-search input { width: 100%; min-width: 0; background: transparent; color: #0f172a; font-size: .75rem; outline: none; }
   .admission-listbox-popover ul { max-height: min(17rem, 45vh); overflow-y: auto; padding-top: .35rem; }
@@ -1187,6 +1591,8 @@
     cursor: pointer;
     transition: border-color 240ms ease, box-shadow 240ms ease;
     contain: layout style;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 25rem;
   }
 
   .admission-university-card::after {
@@ -1211,6 +1617,42 @@
 
   .admission-university-card:hover::after { transform: translateX(110%); }
 
+  .admission-university-card > *:not(.admission-university-card-link):not(.admission-card-shortlist):not(.admission-card-glow) {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .admission-university-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+
+  .admission-university-card-link:focus-visible {
+    outline: 3px solid rgba(220, 38, 38, 0.58);
+    outline-offset: -5px;
+  }
+
+  .admission-card-shortlist {
+    display: grid;
+    width: 2.35rem;
+    height: 2.35rem;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 10px 22px rgba(71, 85, 105, 0.16);
+    backdrop-filter: blur(12px);
+    transition: color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .admission-card-shortlist:hover { color: #dc2626; background: white; transform: translateY(-2px) scale(1.04); }
+  .admission-card-shortlist.is-shortlisted { color: white; background: linear-gradient(145deg, #fb7185, #dc2626); box-shadow: 0 12px 25px rgba(220, 38, 38, 0.3); }
+  .admission-card-shortlist:focus-visible { outline: 3px solid rgba(220, 38, 38, 0.35); outline-offset: 3px; }
+
   .admission-card-glow {
     position: absolute;
     z-index: -2;
@@ -1224,6 +1666,18 @@
   }
 
   .admission-card-topline { display: flex; min-height: 5.8rem; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+
+  .admission-card-rank-actions {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    margin: -1.3rem -0.55rem 0 0;
+    pointer-events: auto;
+  }
 
   .university-official-logo {
     border: 1px solid rgba(255,255,255,0.82);
@@ -1240,7 +1694,7 @@
     justify-content: center;
     border: 1px solid rgba(255,255,255,0.72);
     border-radius: 0 0 1.75rem 1.75rem;
-    margin: -1.3rem -0.55rem 0 0;
+    margin: 0;
     color: white;
     background: linear-gradient(155deg, color-mix(in srgb, var(--university-accent) 70%, #ffffff), var(--university-accent));
     box-shadow: 0 13px 24px color-mix(in srgb, var(--university-accent) 30%, transparent), inset 0 1px 4px rgba(255,255,255,0.38);
@@ -1296,6 +1750,7 @@
   .admission-empty-state h2 { margin-top: 0.75rem; color: #0f172a; font-size: 1.15rem; font-weight: 900; }
   .admission-empty-state p { margin-top: 0.25rem; font-size: 0.8rem; }
   .admission-empty-state button { margin-top: 1rem; border-radius: 999px; padding: 0.55rem 0.9rem; color: white; background: #dc2626; font-size: 0.75rem; font-weight: 800; }
+  .admission-shortlist-empty > svg { color: #e11d48; }
 
   .admission-catalog-note { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 2.2rem 0 1rem; color: #64748b; font-size: 0.7rem; font-weight: 600; text-align: center; }
   @keyframes admissionOrbitPulse {
@@ -1670,8 +2125,6 @@
   .admission-journey button { flex-shrink: 0; }
   .admission-journey button { padding: 0.55rem 0.45rem; font-size: 0.73rem; }
   .admission-journey > svg { width: 0.8rem; height: 0.8rem; }
-  .admission-search-box > svg { display: block; }
-  .admission-search-action { display: none; }
   .admission-search-box { height: 4rem; padding-left: 1rem; }
   .admission-search-box input { padding-left: 0.65rem; font-size: 1.1rem; }
   .admission-filter-row { padding: 0; }
@@ -1683,6 +2136,8 @@
 
 @media (max-width: 480px) {
   .admission-filter-row { grid-template-columns: minmax(0, 1fr); }
+  .admission-listbox-popover,
+  .admission-filter-control:nth-child(even) .admission-listbox-popover { right: auto; left: 0; width: 100%; max-width: 100%; }
   .admission-results-meta { padding-inline: 0.35rem; }
   .admission-globe-caption { margin-top: -0.25rem; font-size: 0.68rem; }
 }
@@ -2029,7 +2484,7 @@
 .day1-reading-prose {
   max-width: 78ch;
   color: #334155;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .ielts-reading-prose p,
@@ -2048,7 +2503,7 @@
 }
 
 .reading-shell.reading-scale-120 .reading-pane {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .reading-shell.reading-scale-120 #reading-passage-pane {
@@ -2083,7 +2538,7 @@
 
 .reading-shell.reading-scale-120 .reading-question-typography {
   color: #334155;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .reading-shell.reading-scale-120 .reading-question-typography section {
@@ -2363,7 +2818,7 @@
 .reading-shell.reading-font-serif .ielts-reading-prose p,
 .reading-shell.reading-font-serif .day1-reading-prose p,
 .reading-shell.reading-font-serif #reading-passage-pane h2 {
-  font-family: 'Georgia', 'Times New Roman', 'Plus Jakarta Sans', serif !important;
+  font-family: 'Georgia', 'Times New Roman', serif !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -2588,6 +3043,7 @@ body {
 }
 
 .arena-route { animation: arenaRouteIn 230ms var(--app-ease-smooth) both; }
+.arena-route-static { animation: none; }
 
 @keyframes arenaRouteIn {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
@@ -2811,6 +3267,12 @@ body {
 .app-shell :where(a, button, input, textarea, select, [role='button']):focus-visible {
   outline: 3px solid rgba(59, 130, 246, 0.42);
   outline-offset: 2px;
+}
+
+.app-shell input[type='search']:focus,
+.app-shell input[type='search']:focus-visible {
+  outline: none;
+  outline-offset: 0;
 }
 
 .app-shell :where(button, a, [role='button']) {

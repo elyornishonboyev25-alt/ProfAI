@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
+import { isSpeechSynthesisSupported, speak as speakText } from '@/lib/speech'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
 
@@ -89,40 +90,38 @@ const playWin = () => {
   window.setTimeout(() => tone(1040, 220), 260)
 }
 
-function pickEnglishVoice(voices: SpeechSynthesisVoice[]) {
-  return (
-    voices.find((v) => /en[-_](us|gb|au|ca)/i.test(v.lang)) ?? voices.find((v) => /^en/i.test(v.lang)) ?? null
-  )
-}
-
 export function usePronunciation() {
   const [speakingText, setSpeakingText] = useState<string | null>(null)
-  const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
+  const stopSpeechRef = useRef<() => void>(() => {})
+  const isSupported = isSpeechSynthesisSupported()
 
   const stop = useCallback(() => {
     if (!isSupported) return
-    window.speechSynthesis.cancel()
+    stopSpeechRef.current()
+    stopSpeechRef.current = () => {}
     setSpeakingText(null)
   }, [isSupported])
 
   const speak = useCallback(
     (text: string) => {
-      if (!isSupported) return
-      window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance(text)
-      const v = pickEnglishVoice(window.speechSynthesis.getVoices())
-      if (v) u.voice = v
-      u.lang = v?.lang || 'en-US'
-      u.rate = 0.92
-      u.onend = () => setSpeakingText(null)
-      u.onerror = () => setSpeakingText(null)
-      setSpeakingText(text)
-      window.speechSynthesis.speak(u)
+      const term = text.trim()
+      if (!isSupported || !term) return
+
+      stopSpeechRef.current()
+      setSpeakingText(term)
+      stopSpeechRef.current = speakText(term, {
+        lang: 'en',
+        rate: 0.92,
+        onEnd: () => {
+          stopSpeechRef.current = () => {}
+          setSpeakingText(null)
+        },
+      })
     },
     [isSupported],
   )
 
-  useEffect(() => () => { if (isSupported) window.speechSynthesis.cancel() }, [isSupported])
+  useEffect(() => () => stopSpeechRef.current(), [])
   return { isSupported, speakingText, speak, stop }
 }
 
@@ -177,11 +176,11 @@ function addToDiamondBank(amount: number) {
 }
 
 // ================================================================ ActivityPicker
-const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; icon: typeof Layers; tint: string }> = [
-  { mode: 'flashcards', title: 'Flashcards', desc: '3D flip cards with audio, shuffle & mastery tracking.', icon: Layers, tint: 'from-blue-500 to-indigo-600' },
-  { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', icon: Link2, tint: 'from-amber-500 to-orange-600' },
-  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', icon: CheckCircle2, tint: 'from-emerald-500 to-teal-600' },
-  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with live letter-by-letter feedback.', icon: Keyboard, tint: 'from-sky-500 to-indigo-600' },
+const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; xp: string; icon: typeof Layers; tint: string }> = [
+  { mode: 'flashcards', title: 'Flashcards', desc: '3D flip cards with audio, shuffle & mastery tracking.', xp: '+12 XP', icon: Layers, tint: 'from-blue-500 to-indigo-600' },
+  { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', xp: '+20 XP', icon: Link2, tint: 'from-amber-500 to-orange-600' },
+  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', xp: '+10–30 XP', icon: CheckCircle2, tint: 'from-emerald-500 to-teal-600' },
+  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with live letter-by-letter feedback.', xp: '+10–35 XP', icon: Keyboard, tint: 'from-sky-500 to-indigo-600' },
 ]
 
 export function ActivityPicker({ basePath, entriesCount }: { basePath: string; entriesCount: number }) {
@@ -206,9 +205,10 @@ export function ActivityPicker({ basePath, entriesCount }: { basePath: string; e
               </span>
               <h4 className="mt-3 text-lg font-black text-slate-900">{card.title}</h4>
               <p className="mt-1 text-sm leading-6 text-slate-600">{card.desc}</p>
-              <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-600 transition group-hover:gap-2">
-                Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" />
-              </p>
+              <div className="mt-3 flex items-center justify-between gap-2 text-xs font-bold">
+                <p className="inline-flex items-center gap-1 text-blue-600 transition group-hover:gap-2">Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" /></p>
+                <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">{card.xp}</span>
+              </div>
             </Link>
           </motion.div>
         )
@@ -218,7 +218,7 @@ export function ActivityPicker({ basePath, entriesCount }: { basePath: string; e
 }
 
 // ================================================================ Flashcards
-export function FlashcardsActivity({ entries, masteryKey }: { entries: VocabularyEntry[]; masteryKey: string }) {
+export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entries: VocabularyEntry[]; masteryKey: string; onComplete?: (accuracy: number) => void }) {
   const [deck, setDeck] = useState(entries)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -242,6 +242,7 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
     const next = { ...known, [current.id]: value }
     setKnown(next)
     setMastery(masteryKey, next)
+    if (value && deck.every((card) => next[card.id])) onComplete?.(100)
     window.setTimeout(() => go(1), 160)
   }
 
@@ -269,8 +270,9 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-4xl [perspective:2000px]">
+      <div className="relative mx-auto w-full max-w-4xl [perspective:2000px]">
         <motion.button
+          type="button"
           onClick={() => setFlipped((v) => !v)}
           whileTap={{ scale: 0.99 }}
           className={`relative block w-full text-left ${current.uzbek || current.exampleUzbek ? 'h-[500px] md:h-[520px]' : 'h-[360px] md:h-[400px]'}`}
@@ -279,22 +281,8 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
             {/* front */}
             <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(99,102,241,0.2)]">
               <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pr-24">
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Term</span>
-                {isSupported ? (
-                  <span
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (speakingCurrent) stop()
-                      else speak(current.term)
-                    }}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                  >
-                    {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                    {speakingCurrent ? 'Stop' : 'Listen'}
-                  </span>
-                ) : null}
               </div>
               <div className="flex flex-1 flex-col items-center justify-center text-center">
                 <p className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl">{current.term}</p>
@@ -324,6 +312,20 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
             </div>
           </motion.div>
         </motion.button>
+        {isSupported ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (speakingCurrent) stop()
+              else speak(current.term)
+            }}
+            className="absolute right-7 top-7 z-20 inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`}
+          >
+            {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            {speakingCurrent ? 'Stop' : 'Listen'}
+          </button>
+        ) : null}
       </div>
 
       {/* known / review */}
@@ -346,7 +348,7 @@ export function FlashcardsActivity({ entries, masteryKey }: { entries: Vocabular
 }
 
 // ================================================================ Matching
-export function MatchingActivity({ entries, rewardKey }: { entries: VocabularyEntry[]; rewardKey: string }) {
+export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: VocabularyEntry[]; rewardKey: string; onComplete?: (accuracy: number) => void }) {
   const groups = useMemo(() => chunkEntries(entries, 6), [entries])
   const definitionGroups = useMemo(() => groups.map((g) => shuffle(g)), [groups])
 
@@ -402,9 +404,10 @@ export function MatchingActivity({ entries, rewardKey }: { entries: VocabularyEn
     if (groups.every((_, i) => next.awardedGroups.includes(i)) && !next.bonusAwarded) {
       next = { ...next, bonusAwarded: true, completed: true, totalDiamonds: next.totalDiamonds + 5, completedAt: new Date().toISOString() }
       earned += 5; reason = 'All groups completed — bonus!'
+      onComplete?.(100)
     }
     if (next !== cur) commitReward(next, earned, reason)
-  }, [commitReward, groups])
+  }, [commitReward, groups, onComplete])
 
   const tryMatch = (groupIndex: number, wordId: string, defId: string) => {
     if (wordId === defId) {
@@ -553,7 +556,7 @@ function CelebrationOverlay({ celebration }: { celebration: MatchingCelebration 
 }
 
 // ================================================================ Quiz
-export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
+export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry[]; onComplete?: (accuracy: number) => void }) {
   const questions = useMemo(() => shuffle(entries).slice(0, Math.min(10, entries.length)), [entries])
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
@@ -580,7 +583,7 @@ export function QuizActivity({ entries }: { entries: VocabularyEntry[] }) {
     if (opt === current.definition) { setScore((s) => s + 1); setCombo((c) => c + 1); playCorrect() } else { setCombo(0); playWrong() }
   }
   const next = () => {
-    if (index === questions.length - 1) { setFinished(true); playWin(); return }
+    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.(Math.round((score / questions.length) * 100)); return }
     setIndex((i) => i + 1); setPicked(null); setLocked(false)
   }
   const restart = () => { setIndex(0); setPicked(null); setLocked(false); setScore(0); setFinished(false) }
@@ -673,7 +676,7 @@ function ScoreRing({ pct }: { pct: number }) {
 }
 
 // ================================================================ Typing
-export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
+export function TypingActivity({ entries, onComplete }: { entries: VocabularyEntry[]; onComplete?: (accuracy: number) => void }) {
   const questions = useMemo(() => shuffle(entries).slice(0, Math.min(10, entries.length)), [entries])
   const [index, setIndex] = useState(0)
   const [value, setValue] = useState('')
@@ -696,7 +699,7 @@ export function TypingActivity({ entries }: { entries: VocabularyEntry[] }) {
     if (correct) { setScore((s) => s + 1); playCorrect(); speak(current.term) } else playWrong()
   }
   const next = () => {
-    if (index === questions.length - 1) { setFinished(true); playWin(); return }
+    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.(Math.round((score / questions.length) * 100)); return }
     setIndex((i) => i + 1); setValue(''); setChecked(false); setReveal(false)
   }
   const restart = () => { setIndex(0); setValue(''); setChecked(false); setReveal(false); setScore(0); setFinished(false) }

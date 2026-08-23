@@ -50,13 +50,13 @@ const modeCards = [
       'Official module timing with a protected fullscreen environment and integrity monitoring.',
     icon: ShieldCheck,
     color: 'red',
-    points: ['Fullscreen required', 'Strict module timer', '10-second recovery window'],
+    points: ['Fullscreen required', 'Strict module timer', '30-second recovery window'],
   },
 ] as const
 
 export default function MockSAT() {
   const navigate = useNavigate()
-  const { mockId = '4' } = useParams<{ mockId: string }>()
+  const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
   const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
@@ -268,7 +268,7 @@ export default function MockSAT() {
                       {completedQuestions} of {test.questionCount} answered
                     </p>
                     <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                      {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · autosaved
+                      {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · timer paused · autosaved
                     </p>
                   </div>
                   <RotateCcw className="h-4 w-4 text-amber-600" />

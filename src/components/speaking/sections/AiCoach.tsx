@@ -21,6 +21,7 @@ const FREE_TALK_TOPICS = [
 // conversation (no isolated Part 1/2/3 drills here; those live in IELTS Speaking).
 export default function AiCoach() {
   const user = useAuthStore((state: AuthState) => state.user)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const addSession = useSpeakingStore((s) => s.addSession)
 
   const [config, setConfig] = useState<SessionConfig | null>(null)
@@ -36,7 +37,7 @@ export default function AiCoach() {
         modeLabel={labelFor(config)}
         onExit={() => setConfig(null)}
         onSaved={(evaluation) => {
-          addSession({
+          const localSession = addSession({
             userId: user?.id ?? null,
             modeLabel: labelFor(config),
             kind: 'examiner',
@@ -53,6 +54,7 @@ export default function AiCoach() {
           // Persist to the backend so it powers the real public profile + community.
           if (user) {
             void saveSpeakingSession({
+              eventKey: localSession.id,
               mode: config.mode,
               modeLabel: labelFor(config),
               overallBand: evaluation.overallBand,
@@ -62,6 +64,8 @@ export default function AiCoach() {
               pronunciationBand: evaluation.pronunciationBand,
               durationSec: evaluation.stats.durationSec,
               wordCount: evaluation.stats.wordCount,
+            }, user.id).then((reward) => {
+              if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level })
             })
           }
         }}

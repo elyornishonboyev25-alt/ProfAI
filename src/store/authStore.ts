@@ -1,7 +1,34 @@
 ﻿import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AuthUser } from '@/types/platform'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
+
+// Safari can expose localStorage while temporarily throwing on access (private
+// browsing, storage pressure, or a damaged value). Zustand otherwise skips its
+// hydration callback and the application waits on the loading screen forever.
+const resilientLocalStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      return typeof window === 'undefined' ? null : window.localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      window.localStorage.setItem(name, value)
+    } catch {
+      // Keep the in-memory session usable when browser storage is unavailable.
+    }
+  },
+  removeItem: (name) => {
+    try {
+      window.localStorage.removeItem(name)
+    } catch {
+      // There is nothing else to clear when browser storage is unavailable.
+    }
+  },
+}
 
 export type AuthState = {
   user: AuthUser | null
@@ -72,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
       // v2 intentionally invalidates old browser sessions once. This rolls every
       // existing learner through the new login + one-time onboarding contract.
       name: 'smart-test-pro-auth-v2',
+      storage: createJSONStorage(() => resilientLocalStorage),
       partialize: (state: AuthState) => ({
         user: state.user,
         accessToken: state.accessToken,

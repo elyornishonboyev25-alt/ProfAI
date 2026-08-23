@@ -16,6 +16,7 @@ import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
 import { sendHeartbeat } from '@/lib/speakingApi'
+import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
@@ -84,6 +85,15 @@ function toDateISO(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>): XpActivitySource | null {
+  if (activityKey === 'vocabulary') return 'STUDY_VOCABULARY'
+  if (activityKey === 'articles') return 'STUDY_ARTICLES'
+  if (activityKey === 'podcast') return 'STUDY_PODCAST'
+  if (activityKey === 'shadowing') return 'STUDY_SHADOWING'
+  if (activityKey === 'admission') return 'STUDY_ADMISSION'
+  return null
+}
+
 function RouteLoader() {
   return <BrandPageLoader />
 }
@@ -129,9 +139,16 @@ function DeferredAchievementCelebration() {
   )
 }
 
-function AnimatedRoute({ children }: { children: ReactNode }) {
+function AnimatedRoute({ children, staticEntrance = false }: { children: ReactNode; staticEntrance?: boolean }) {
   const location = useLocation()
-  return <div key={location.pathname} className="arena-route h-full">{children}</div>
+  return (
+    <div
+      key={location.pathname}
+      className={`arena-route h-full ${staticEntrance ? 'arena-route-static' : ''}`}
+    >
+      {children}
+    </div>
+  )
 }
 
 function LegacySpeakingRedirect() {
@@ -146,6 +163,7 @@ function App() {
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
+  const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
@@ -205,6 +223,7 @@ function App() {
     '/podcast',
     '/shadowing-lab',
     '/admission/universities',
+    '/admission/shortlist',
     '/vocabulary',
     '/community',
   ].includes(pathname)
@@ -235,15 +254,41 @@ function App() {
     }
   }, [pathname, user?.id])
 
+  useEffect(() => {
+    if (!user) return
+    const source = xpSourceForActivity(routeToActivityKey(pathname))
+    if (!source) return
+
+    const intervalId = window.setInterval(() => {
+      if (document.hidden) return
+      const bucket = Math.floor(Date.now() / 300_000)
+      void recordXpActivity({
+        source,
+        eventKey: `${pathname}:${bucket}`,
+        durationSec: 300,
+        metadata: { pathname, activeMinutes: 5 },
+      }).then((reward) => {
+        updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
+      }).catch(() => {})
+    }, 300_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [pathname, updateUserProgress, user?.id])
+
   // Presence heartbeat — keeps "online now" / "last seen" accurate for the community.
   useEffect(() => {
     if (!user) return
-    void sendHeartbeat()
+    const heartbeat = (recalculateStreak = false) => {
+      void sendHeartbeat(recalculateStreak).then((reward) => {
+        if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
+      })
+    }
+    heartbeat(true)
     const id = window.setInterval(() => {
-      if (!document.hidden) void sendHeartbeat()
+      if (!document.hidden) heartbeat()
     }, 60000)
     return () => window.clearInterval(id)
-  }, [user?.id])
+  }, [updateUserProgress, user?.id])
 
   // Persisted auth hydrates asynchronously. Rendering a route before that
   // completes briefly treats a signed-in learner as a guest, removes the
@@ -292,7 +337,7 @@ function App() {
 
           <main
             className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              sidebarVisible ? 'lg:ml-64' : 'ml-0'
+              sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
             }`}
           >
             <div
@@ -307,9 +352,9 @@ function App() {
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
-                      <Route path="/" element={<AnimatedRoute>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
-                      <Route path="/dashboard" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
-                      <Route path="/about" element={<AnimatedRoute><Dashboard /></AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute staticEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
+                      <Route path="/dashboard" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/about" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/tests" element={<Navigate to="/ielts" replace />} />
                       <Route
                         path="/tests/:id/attempt"
@@ -657,6 +702,7 @@ function App() {
                       <Route path="/admission/lessons" element={<AnimatedRoute><AdmissionLessons /></AnimatedRoute>} />
                       <Route path="/admission/lessons/:slug" element={<AnimatedRoute><AdmissionLesson /></AnimatedRoute>} />
                       <Route path="/admission/universities" element={<AnimatedRoute><AdmissionUniversities /></AnimatedRoute>} />
+                      <Route path="/admission/shortlist" element={<AnimatedRoute><AdmissionUniversities shortlistOnly /></AnimatedRoute>} />
                       <Route path="/admission/universities/:slug" element={<AnimatedRoute><AdmissionUniversity /></AnimatedRoute>} />
                       <Route
                         path="/ai-tutor"
@@ -702,4 +748,3 @@ function App() {
 }
 
 export default App
-

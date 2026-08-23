@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
+  AlertCircle,
   Award,
   BarChart3,
   BookOpen,
@@ -13,6 +14,7 @@ import {
   Medal,
   Mic2,
   Settings,
+  RefreshCw,
   Sparkles,
   Trophy,
 } from 'lucide-react'
@@ -24,10 +26,14 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
+import {
+  getDashboardExamScores,
+  getDashboardLearningMetrics,
+  getNextDashboardAchievement,
+  type DashboardLearningKey,
+} from '@/utils/dashboardMetrics'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
-import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 const emptyWeek = Array.from({ length: 7 }, (_, index) => {
   const date = new Date()
@@ -55,32 +61,57 @@ const EMPTY_OVERVIEW: DashboardOverview = {
 }
 
 const learningCards = [
-  { title: 'IELTS Reading', subtitle: 'Precision & timing', path: '/ielts/reading', icon: BookOpen, progress: 68 },
-  { title: 'Speaking Practice', subtitle: 'Fluency session', path: '/ielts/speaking', icon: Mic2, progress: 45 },
-  { title: 'SAT Full Mock', subtitle: 'Official simulation', path: '/sat', icon: CheckCircle2, progress: 20 },
-  { title: 'Advanced Vocabulary', subtitle: 'Daily word set', path: '/vocabulary/ielts', icon: Sparkles, progress: 80 },
-  { title: 'Study Abroad Academy', subtitle: 'Lessons & universities', path: '/admission', icon: GraduationCap, progress: 27 },
+  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
+  { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
+  { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap },
+  { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2 },
+  { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
 ] as const
+
+const dashboardEntrance = {
+  duration: 0.32,
+  ease: [0.22, 1, 0.36, 1],
+} as const
+
+function bestAvailableScore(...scores: Array<number | null | undefined>) {
+  const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
+  return available.length ? Math.max(...available) : 0
+}
+
+function achievementProgressLabel(current: number, target: number, unit: 'count' | 'days' | 'minutes' | 'percent') {
+  if (unit === 'minutes') return `${(current / 60).toFixed(1)} / ${(target / 60).toFixed(0)}h`
+  if (unit === 'percent') return `${current}% / ${target}%`
+  if (unit === 'days') return `${current} / ${target} days`
+  return `${current} / ${target} complete`
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+}
 
 function StatCard({
   label,
   value,
   note,
   icon: Icon,
-  tone = 'blue',
 }: {
   label: string
   value: string
   note: string
   icon: typeof Clock3
-  tone?: 'red' | 'blue' | 'indigo' | 'amber'
 }) {
   return (
-    <article className="apple-glass-card group rounded-[1.5rem] p-4 transition-shadow hover:border-blue-200 hover:shadow-[0_22px_48px_rgba(37,99,235,0.14)]">
-      <ArenaMetricMark icon={Icon} tone={tone} className="-ml-1 -mt-1" />
-      <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-      <p className="mt-1 text-[11px] font-semibold text-slate-500">{note}</p>
+    <article className="dashboard-stat-card group">
+      <span className="dashboard-stat-icon"><Icon className="h-[18px] w-[18px]" /></span>
+      <p className="dashboard-stat-label text-[13px] font-semibold leading-5 text-slate-600">{label}</p>
+      <p className={`dashboard-stat-value ${value === 'Unranked' ? 'dashboard-stat-value-long' : ''} font-black leading-none tracking-tight text-slate-950`}>{value}</p>
+      <p className="dashboard-stat-note text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{note}</p>
     </article>
   )
 }
@@ -92,14 +123,8 @@ export default function Dashboard() {
   const profile = loadOnboardingProfile(user?.id)
   const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
 
-  const { data, loading } = useAsyncData<DashboardOverview>(
-    async () => {
-      try {
-        return await apiClient.get('/dashboard/overview', { auth: Boolean(user) })
-      } catch {
-        return EMPTY_OVERVIEW
-      }
-    },
+  const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
+    () => apiClient.get('/dashboard/overview', { auth: Boolean(user) }),
     [user?.id],
   )
 
@@ -108,102 +133,120 @@ export default function Dashboard() {
     () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
     [baseOverview, user],
   )
-  const targetExam = profile?.targetExam ?? 'IELTS'
-  const ieltsCurrent = profile?.currentIeltsScore ?? (Math.max(4.5, Math.min(8.5, Number((overview.metrics.averageScore / 100 * 9).toFixed(1)))) || 6.5)
-  const satCurrent = profile?.currentSatScore ?? 1050
+  const localMetrics = useMemo(
+    () => user ? getDashboardLearningMetrics(user.id) : null,
+    [overview, user],
+  )
+  const measuredScores = useMemo(
+    () => user ? getDashboardExamScores(user.id) : { ielts: null, sat: null },
+    [overview, user],
+  )
+  const nextAchievement = useMemo(() => getNextDashboardAchievement(overview), [overview])
+  const targetExam = overview.targets?.targetExam ?? profile?.targetExam ?? 'IELTS'
+  const ieltsCurrent = bestAvailableScore(
+    measuredScores.ielts,
+    overview.targets?.currentIeltsScore,
+    profile?.currentIeltsScore,
+  )
+  const satCurrent = bestAvailableScore(
+    measuredScores.sat,
+    overview.targets?.currentSatScore,
+    profile?.currentSatScore,
+  )
   const examTargets = [
     ...(targetExam !== 'SAT'
-      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: profile?.targetIeltsScore ?? 7.5 }]
+      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: overview.targets?.targetIeltsScore ?? profile?.targetIeltsScore ?? 7.5 }]
       : []),
     ...(targetExam !== 'IELTS'
-      ? [{ label: 'SAT' as const, current: satCurrent, target: profile?.targetSatScore ?? 1450 }]
+      ? [{ label: 'SAT' as const, current: satCurrent, target: overview.targets?.targetSatScore ?? profile?.targetSatScore ?? 1450 }]
       : []),
   ]
-  const targetProgress = Math.max(
-    8,
-    Math.min(100, Math.round(examTargets.reduce((sum, exam) => sum + exam.current / exam.target, 0) / examTargets.length * 100)),
-  )
+  const targetProgress = Math.max(0, Math.min(100, Math.round(
+    examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
+  )))
 
   const chartData = useMemo(
-    () =>
-      overview.weeklyProgress.map((day) => ({
-        ...day,
-        activity: Number(((day.studyTimeSec ?? 0) / 3600).toFixed(2)),
-      })),
+    () => overview.weeklyProgress.map((day) => ({ ...day, activity: Number(((day.studyTimeSec ?? 0) / 3600).toFixed(2)) })),
     [overview.weeklyProgress],
   )
-
   const weeklyHours = overview.metrics.weeklyStudySeconds / 3600
   const weeklyHoursLabel = weeklyHours > 0 && weeklyHours < 0.1 ? '<0.1h' : `${weeklyHours.toFixed(1)}h`
-
-  const leaderboard = overview.miniLeaderboard.length
-    ? overview.miniLeaderboard.slice(0, 5)
-    : [
-        { rank: 1, fullName: firstName, totalXp: user?.xp ?? 0, accuracy: 0, rankTrend: 'same' as const, isCurrentUser: true },
-        { rank: 2, fullName: 'Amina', totalXp: 1280, accuracy: 91, rankTrend: 'up' as const, isCurrentUser: false },
-        { rank: 3, fullName: 'Daniel', totalXp: 1140, accuracy: 88, rankTrend: 'same' as const, isCurrentUser: false },
-      ]
+  const leaderboard = overview.miniLeaderboard.slice(0, 3)
+  const podium = [
+    { row: leaderboard[1], place: 2 },
+    { row: leaderboard[0], place: 1 },
+    { row: leaderboard[2], place: 3 },
+  ].filter((item): item is { row: NonNullable<typeof item.row>; place: number } => Boolean(item.row))
+  const currentRank = overview.metrics.currentRank
+    ?? overview.miniLeaderboard.find((row) => row.isCurrentUser)?.rank
+    ?? null
 
   return (
-    <div className="workspace-page premium-page-stage relative min-h-screen overflow-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-
-      <div className="relative mx-auto max-w-[94rem]">
+    <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
+      <div className="dashboard-main-shell mx-auto max-w-[98rem]">
+        {error ? (
+          <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> Dashboard data could not refresh. The values below may be out of date.</span>
+            <button type="button" onClick={() => void refetch()} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-black shadow-sm transition hover:bg-amber-100">
+              <RefreshCw className="h-3.5 w-3.5" /> Try again
+            </button>
+          </div>
+        ) : null}
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-[1.8rem] border border-white/80 bg-white/78 px-5 py-4 shadow-[0_18px_55px_rgba(51,65,85,0.09)] sm:px-6"
+          transition={dashboardEntrance}
+          className="flex flex-wrap items-center justify-between gap-4 px-1 pb-5"
         >
-          <div className="flex min-w-0 items-center gap-3.5">
-            <div className="relative h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-700 p-[4px] shadow-[0_10px_28px_rgba(37,99,235,0.3)]">
-              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-sm font-black text-blue-700">
-                <ProfileAvatar src={user?.avatarUrl} alt="" />
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="dashboard-avatar-ring">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-50 to-slate-100 text-sm font-black text-red-700">
+                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials(user?.fullName || 'ProfAI Learner')}
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-[3px] border-white bg-emerald-500" />
+              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-blue-500">Your learning cockpit</p>
-              <h1 className="truncate text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-500">Your learning dashboard</p>
+              <h1 className="truncate text-2xl font-black tracking-[-0.04em] text-[#101222] sm:text-4xl">
                 Welcome back, {firstName} <span aria-hidden>👋</span>
               </h1>
-              <p className="mt-0.5 text-xs font-medium text-slate-500">One focused session today keeps your momentum moving.</p>
+              <p className="mt-1 text-xs font-medium text-slate-500">Small steps today. Big results tomorrow.</p>
             </div>
+            <span className="dashboard-streak hidden sm:inline-flex" title="Current streak">
+              <Flame className="h-5 w-5 fill-current" />
+              <strong>{overview.metrics.currentStreak}</strong>
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-xl border border-blue-100 bg-white/75 px-3 py-2 text-xs font-black text-blue-700 sm:inline-flex">
-              <Flame className="mr-1.5 h-4 w-4" />
-              {overview.metrics.currentStreak || user?.currentStreak || 0} day streak
-            </span>
+          <div className="flex items-center gap-2.5">
             <NotificationsBell />
-            <button
-              type="button"
-              onClick={() => navigate('/account')}
-              aria-label="Profile settings"
-              className="rounded-xl border border-white bg-white/80 p-2 text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            >
-              <Settings className="h-4 w-4" />
+            <button type="button" onClick={() => navigate('/account')} aria-label="Profile settings" className="dashboard-icon-button">
+              <Settings className="h-5 w-5" />
             </button>
           </div>
         </motion.header>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)_20rem]">
+        <section className="grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
           <motion.article
             initial={minimalMotion ? false : { opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            className="target-glass-card relative overflow-hidden rounded-[1.8rem] p-5 text-white"
+            transition={minimalMotion ? { duration: 0.01 } : { ...dashboardEntrance, delay: 0.05 }}
+            className="dashboard-target-card"
           >
-            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/20 blur-2xl" />
-            <p className="relative text-[10px] font-black uppercase tracking-[0.17em] text-blue-100">Your target</p>
-            <div className="relative mt-2 flex flex-wrap gap-2">
-              {examTargets.map((exam) => (
-                <span key={exam.label} className="inline-flex items-center rounded-full border border-white/25 bg-white/14 px-3 py-1 text-sm font-black shadow-inner backdrop-blur-md">
-                  {exam.label} <span className="ml-1.5 text-blue-100">{exam.target}</span>
-                </span>
-              ))}
+            <div className="relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Your target</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {examTargets.map((exam) => (
+                  <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
+                    {exam.label} <span className="text-white/75">{exam.target}</span>
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="relative mx-auto mt-5 flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
-              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
-                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="8" />
+
+            <div className="dashboard-progress-orbit">
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
                 <motion.circle
                   cx="50"
                   cy="50"
@@ -215,42 +258,52 @@ export default function Dashboard() {
                   strokeDasharray={`${2 * Math.PI * 41}`}
                   initial={{ strokeDashoffset: 2 * Math.PI * 41 }}
                   animate={{ strokeDashoffset: 2 * Math.PI * 41 * (1 - targetProgress / 100) }}
-                  transition={{ duration: minimalMotion ? 0.1 : 1.1, ease: 'easeOut' }}
+                  transition={{ duration: minimalMotion ? 0.01 : 0.75, delay: minimalMotion ? 0 : 0.12, ease: 'easeOut' }}
                 />
               </svg>
               <div className="relative text-center">
-                <p className="text-4xl font-black">{targetProgress}%</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-100">on track</p>
+                <p className="text-4xl font-black tracking-[-0.05em]">{targetProgress}%</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/70">on track</p>
               </div>
             </div>
-            <div className={`relative mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+
+            <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {examTargets.map((exam) => (
-                <div key={`current-${exam.label}`} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs backdrop-blur-md">
-                  <span className="block text-[9px] font-black uppercase tracking-wider text-blue-100">{exam.label} current</span>
-                  <strong className="mt-0.5 block text-base">{exam.current}</strong>
+                <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
+                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
+                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
                 </div>
               ))}
             </div>
-            <button onClick={() => navigate(targetExam === 'SAT' ? '/sat' : targetExam === 'IELTS' ? '/ielts' : '/tests')} className="relative mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-blue-700 shadow-lg transition hover:-translate-y-0.5">
+            <button
+              type="button"
+              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
+              className="relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-700 shadow-lg transition hover:-translate-y-0.5"
+            >
               Continue preparing <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </motion.article>
 
-          <div className="min-w-0 space-y-5">
+          <div className="min-w-0 space-y-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} tone="amber" />
-              <StatCard label="Tests done" value={String(overview.metrics.totalTests)} note="All-time attempts" icon={CheckCircle2} tone="blue" />
-              <StatCard label="Average" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Across practice" icon={BarChart3} tone="indigo" />
-              <StatCard label="Current rank" value={overview.metrics.currentRank ? `#${overview.metrics.currentRank}` : '—'} note="Global board" icon={Trophy} tone="red" />
+              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} />
+              <StatCard
+                label="Practices completed"
+                value={String(overview.metrics.totalTests)}
+                note={`${localMetrics?.completedMocks ?? 0} full mocks`}
+                icon={CheckCircle2}
+              />
+              <StatCard label="Average score" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Scored practice" icon={BarChart3} />
+              <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
             </div>
 
-            <article className="apple-glass-card rounded-[1.8rem] p-5">
+            <article className="dashboard-glass-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-500">Weekly activity</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-500">Weekly activity</p>
                   <h2 className="mt-1 text-lg font-black text-slate-950">Your study rhythm</h2>
                 </div>
-                <button onClick={() => navigate('/profile')} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-700">
+                <button type="button" onClick={() => navigate('/profile')} className="inline-flex items-center gap-1 text-xs font-black text-red-600 hover:text-red-800">
                   Full performance <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -262,15 +315,26 @@ export default function Dashboard() {
                     <BarChart data={chartData} margin={{ top: 8, right: 2, left: -24, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" />
-                          <stop offset="100%" stopColor="#fda4af" />
+                          <stop offset="0%" stopColor="#8f303e" />
+                          <stop offset="52%" stopColor="#d94350" />
+                          <stop offset="100%" stopColor="#fb7185" />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="4 4" />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }} />
+                      <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                      <Tooltip contentStyle={{ border: '1px solid #bfdbfe', borderRadius: 14, fontSize: 12 }} cursor={{ fill: 'rgba(96,165,250,.08)' }} />
-                      <Bar dataKey="activity" fill="url(#dashboardBars)" radius={[9, 9, 3, 3]} maxBarSize={42} />
+                      <Tooltip
+                        formatter={(value) => [`${Number(value).toFixed(2)}h`, 'Study time']}
+                        contentStyle={{ border: '1px solid #fecdd3', borderRadius: 14, fontSize: 12 }}
+                        cursor={{ fill: 'rgba(244,63,94,.05)' }}
+                      />
+                      <Bar
+                        dataKey="activity"
+                        fill="url(#dashboardBars)"
+                        radius={[10, 10, 3, 3]}
+                        maxBarSize={42}
+                        isAnimationActive={false}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -278,87 +342,102 @@ export default function Dashboard() {
             </article>
           </div>
 
-          <div className="space-y-5">
-            <article className="apple-glass-card rounded-[1.8rem] p-5">
+          <div className="space-y-4">
+            <article className="dashboard-glass-card p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-500">Leaderboard</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-500">Leaderboard</p>
                   <h2 className="mt-1 text-lg font-black text-slate-950">Top learners</h2>
                 </div>
-                <Medal className="h-5 w-5 text-amber-500" />
+                <Medal className="h-6 w-6 text-amber-500" />
               </div>
-              <div className="mt-4 space-y-2">
-                {leaderboard.map((row) => (
-                  <button
-                    key={`${row.rank}-${row.fullName}`}
-                    onClick={() => navigate('/leaderboard')}
-                    className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition ${
-                      row.isCurrentUser ? 'border-blue-200 bg-blue-50/80' : 'border-slate-100 bg-white/65 hover:border-blue-100'
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-black ${row.rank === 1 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {row.rank}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-black text-slate-800">{row.fullName}</span>
-                      <span className="block text-[10px] font-semibold text-slate-400">{row.totalXp.toLocaleString('en-US')} XP</span>
-                    </span>
-                    {row.isCurrentUser ? <span className="text-[9px] font-black uppercase text-blue-600">You</span> : null}
-                  </button>
-                ))}
+
+              <div className="mt-5 flex items-end justify-center gap-2">
+                {podium.map(({ row, place }) => {
+                  return (
+                    <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
+                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}>{initials(row.fullName)}</div>
+                      <p className="mt-2 text-[11px] font-black text-slate-800">{place}{place === 1 ? 'st' : place === 2 ? 'nd' : 'rd'}</p>
+                    </div>
+                  )
+                })}
               </div>
-              <button onClick={() => navigate('/leaderboard')} className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-xl border border-slate-100 bg-white/75 py-2 text-[11px] font-black text-slate-600 hover:border-blue-200 hover:text-blue-700">
-                View leaderboard <ArrowRight className="h-3 w-3" />
-              </button>
+
+              {leaderboard.length ? (
+                <div className="mt-5 divide-y divide-slate-200/75">
+                  {leaderboard.map((row) => (
+                    <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
+                      <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-slate-200 text-[9px] font-black text-slate-700">{initials(row.fullName)}</span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
+                      <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-5 rounded-xl bg-slate-50 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+                  Complete a scored practice to join the board.
+                </p>
+              )}
             </article>
 
-            <article className="apple-glass-card rounded-[1.8rem] p-5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600"><Award className="h-4 w-4" /></span>
+            <article className="dashboard-glass-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="dashboard-medal-icon"><Award className="h-5 w-5" /></span>
                 <div>
                   <p className="text-sm font-black text-slate-900">Next achievement</p>
-                  <p className="text-[10px] font-semibold text-slate-500">Complete 3 practice sessions</p>
+                  <p className="text-[10px] font-semibold text-slate-500">{nextAchievement.description}</p>
                 </div>
               </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                <motion.div initial={{ width: 0 }} animate={{ width: '66%' }} className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500" />
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
+                <motion.div
+                  initial={minimalMotion ? false : { scaleX: 0 }}
+                  animate={{ scaleX: nextAchievement.progress / 100 }}
+                  transition={minimalMotion ? { duration: 0.01 } : { duration: 0.55, delay: 0.12, ease: 'easeOut' }}
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-300"
+                />
               </div>
-              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">2 / 3 complete</p>
+              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
+                {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
+              </p>
             </article>
           </div>
         </section>
 
         <motion.section
-          initial={minimalMotion ? false : { opacity: 0, y: 26, scale: 0.992 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          initial={minimalMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.12 }}
-          transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
-          className="apple-glass-card mt-5 rounded-[1.8rem] p-5"
+          transition={dashboardEntrance}
+          className="dashboard-glass-card mt-4 p-5"
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-500">Continue learning</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-500">Continue learning</p>
               <h2 className="mt-1 text-xl font-black text-slate-950">Pick up where you left off</h2>
             </div>
-            <button onClick={() => navigate('/tests')} className="inline-flex items-center gap-1 text-xs font-black text-blue-600">
-              Test Library <ArrowRight className="h-3.5 w-3.5" />
-            </button>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {learningCards.map((card) => {
               const Icon = card.icon
+              const metric = localMetrics?.learning[card.key as DashboardLearningKey] ?? {
+                progress: 0,
+                completed: 0,
+                total: 1,
+                detail: 'No activity yet',
+              }
               return (
-                <button key={card.title} onClick={() => navigate(card.path)} className="glass-tile group rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_18px_36px_rgba(37,99,235,0.13)]">
+                <button key={card.title} type="button" onClick={() => navigate(card.path)} className="dashboard-learning-card group">
                   <div className="flex items-start justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Icon className="h-4 w-4" /></span>
-                    <span className="text-[10px] font-black text-blue-600">{card.progress}%</span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600"><Icon className="h-4 w-4" /></span>
+                    <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
                   </div>
                   <h3 className="mt-3 text-sm font-black text-slate-900">{card.title}</h3>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{card.subtitle}</p>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full bg-gradient-to-r from-blue-700 via-blue-500 to-indigo-300" style={{ width: `${card.progress}%` }} />
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
+                    <div className="h-full rounded-full bg-gradient-to-r from-red-900 via-red-500 to-rose-300" style={{ width: `${metric.progress}%` }} />
                   </div>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-blue-700">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
                     Continue <ArrowRight className="h-3 w-3" />
                   </span>
                 </button>

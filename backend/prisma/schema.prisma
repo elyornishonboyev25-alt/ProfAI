@@ -119,9 +119,29 @@ model User {
   profile        UserProfile?
   skillBadges    SkillBadge[]
   sharedResults  SharedResult[]
+  xpEvents       XpEvent[]
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+// Immutable XP ledger for every non-test reward. Test XP remains attached to
+// TestAttempt; daily login, study time, vocabulary, writing and speaking use
+// this table so retries can never award the same activity twice.
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  source    String
+  eventKey  String
+  amount    Int
+  metadata  Json?
+  earnedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventKey])
+  @@index([userId, earnedAt])
+  @@index([source, earnedAt])
 }
 
 // Short-lived, single-use codes for password registration and recovery. Codes

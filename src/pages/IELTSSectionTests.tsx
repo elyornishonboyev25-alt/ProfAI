@@ -30,7 +30,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import CatalogHero from '@/components/catalog/CatalogHero'
 
-type CatalogFilter = 'all-tests' | 'passages' | 'full-tests'
+type CatalogFilter = 'day-tests' | 'full-tests'
 
 type CatalogRow = {
   id: string
@@ -44,6 +44,7 @@ type CatalogRow = {
   questionCount: number
   availableNow: boolean
   comingSoon: boolean
+  collection: 'day' | 'full'
 }
 
 type TrackEngagement = {
@@ -107,14 +108,14 @@ const TRACK_THEMES: Record<IeltsTrackType, TrackTheme> = {
       'border-indigo-200 bg-white/90 text-indigo-700 shadow-[0_8px_18px_rgba(79,70,229,0.14)] hover:border-indigo-300 hover:bg-indigo-50',
     metricCard: 'border-indigo-100/85 bg-white/90 shadow-[0_12px_28px_rgba(79,70,229,0.11)]',
     metricLabel: 'text-indigo-600',
-    sidebarPanel: 'border-indigo-100/85 bg-white/95 shadow-[0_18px_42px_rgba(79,70,229,0.1)]',
+    sidebarPanel: 'border-white/75 bg-white/62 shadow-[0_22px_54px_rgba(79,70,229,0.12)] backdrop-blur-2xl',
     sidebarSwitchWrap: 'border-indigo-100 bg-indigo-50/45',
     filterHeading: 'text-indigo-600',
     filterActive:
       'border-indigo-500 bg-gradient-to-r from-indigo-600 via-blue-500 to-orange-500 text-white shadow-[0_16px_30px_rgba(79,70,229,0.24)]',
     filterInactive: 'border-indigo-100 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/45',
     filterIconInactive: 'border-indigo-100 bg-indigo-50 text-indigo-700',
-    roadmapPanel: 'border-indigo-100/85 bg-white/95 shadow-[0_20px_46px_rgba(15,23,42,0.08)]',
+    roadmapPanel: 'border-white/75 bg-white/62 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl',
     continueCard: 'border-indigo-200/85 bg-gradient-to-r from-indigo-50/85 via-white to-orange-50/80',
     progressCard: 'border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/75',
     searchInput: 'border-indigo-100 focus:border-indigo-300 focus:ring-indigo-100',
@@ -144,14 +145,14 @@ const TRACK_THEMES: Record<IeltsTrackType, TrackTheme> = {
       'border-sky-200 bg-white/90 text-sky-700 shadow-[0_8px_18px_rgba(14,116,144,0.14)] hover:border-sky-300 hover:bg-sky-50',
     metricCard: 'border-sky-100/85 bg-white/90 shadow-[0_12px_28px_rgba(14,116,144,0.11)]',
     metricLabel: 'text-sky-600',
-    sidebarPanel: 'border-sky-100/85 bg-white/95 shadow-[0_18px_42px_rgba(14,116,144,0.1)]',
+    sidebarPanel: 'border-white/75 bg-white/62 shadow-[0_22px_54px_rgba(14,116,144,0.12)] backdrop-blur-2xl',
     sidebarSwitchWrap: 'border-sky-100 bg-sky-50/45',
     filterHeading: 'text-sky-600',
     filterActive:
       'border-sky-500 bg-gradient-to-r from-sky-600 via-blue-500 to-cyan-500 text-white shadow-[0_16px_30px_rgba(37,99,235,0.24)]',
     filterInactive: 'border-sky-100 text-slate-700 hover:border-sky-300 hover:bg-sky-50/45',
     filterIconInactive: 'border-sky-100 bg-sky-50 text-sky-700',
-    roadmapPanel: 'border-sky-100/85 bg-white/95 shadow-[0_20px_46px_rgba(15,23,42,0.08)]',
+    roadmapPanel: 'border-white/75 bg-white/62 shadow-[0_24px_64px_rgba(15,23,42,0.1)] backdrop-blur-2xl',
     continueCard: 'border-sky-200/85 bg-gradient-to-r from-sky-50/85 via-white to-cyan-50/80',
     progressCard: 'border-sky-200/80 bg-gradient-to-br from-white to-sky-50/75',
     searchInput: 'border-sky-100 focus:border-sky-300 focus:ring-sky-100',
@@ -310,7 +311,7 @@ export default function IELTSSectionTests() {
   const fromMock = navigationState?.entry === 'mock-ielts'
   const mockFrom = navigationState?.from ?? 'tests'
 
-  const [activeFilter, setActiveFilter] = useState<CatalogFilter>('all-tests')
+  const [activeFilter, setActiveFilter] = useState<CatalogFilter>('day-tests')
   const [searchTerm, setSearchTerm] = useState('')
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const [roadmapBooting, setRoadmapBooting] = useState(true)
@@ -360,6 +361,7 @@ export default function IELTSSectionTests() {
           questionCount,
           availableNow,
           comingSoon: !availableNow,
+          collection: 'day',
         }
       }),
     [passages, track, trackTitle],
@@ -384,6 +386,7 @@ export default function IELTSSectionTests() {
           questionCount: 40,
           availableNow,
           comingSoon: !availableNow,
+          collection: 'full',
         }
       }),
     [fullTests, track, trackTitle],
@@ -414,10 +417,8 @@ export default function IELTSSectionTests() {
   }, [scoredCompletedIds, trackEngagement.completedIds, trackEngagement.dismissedCompletedIds])
 
   const filteredRows = useMemo(() => {
-    if (activeFilter === 'passages') return passageRows
-    if (activeFilter === 'full-tests') return fullTestRows
-    return allRows
-  }, [activeFilter, allRows, fullTestRows, passageRows])
+    return activeFilter === 'full-tests' ? fullTestRows : passageRows
+  }, [activeFilter, fullTestRows, passageRows])
 
   const visibleRows = useMemo(() => {
     const normalizedQuery = deferredSearchTerm.trim().toLowerCase()
@@ -524,13 +525,8 @@ export default function IELTSSectionTests() {
     count: number
   }[] = [
     {
-      id: 'all-tests',
-      title: 'All tests',
-      count: counts.all,
-    },
-    {
-      id: 'passages',
-      title: 'Passages',
+      id: 'day-tests',
+      title: 'Day Tests',
       count: counts.passages,
     },
     {
@@ -865,11 +861,7 @@ export default function IELTSSectionTests() {
             <div>
               <h2 className="text-2xl font-black text-slate-900">Test Roadmap</h2>
               <p className="text-sm text-slate-500">
-                {activeFilter === 'passages'
-                  ? 'Single-passage lineup'
-                  : activeFilter === 'full-tests'
-                    ? 'Full simulation lineup'
-                    : 'Complete lineup'}
+                {activeFilter === 'day-tests' ? 'Focused day-by-day practice' : 'Complete exam simulations'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
@@ -931,6 +923,7 @@ export default function IELTSSectionTests() {
           <label className="relative mt-4 block">
             <Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${theme.searchIcon}`} />
             <input
+              type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search day or test number..."
@@ -950,7 +943,7 @@ export default function IELTSSectionTests() {
             </AnimatePresence>
           </label>
 
-          <div className="mt-3 max-h-[68vh] divide-y divide-slate-200/70 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white">
+          <div className="mt-3 max-h-[68vh] divide-y divide-white/70 overflow-y-auto rounded-2xl border border-white/80 bg-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
             {roadmapBooting ? (
               <RoadmapSkeleton theme={theme} />
             ) : visibleRows.length === 0 ? (
@@ -996,7 +989,11 @@ export default function IELTSSectionTests() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="truncate text-base font-bold text-slate-900">{row.title}</h3>
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${theme.neutralBadge}`}>
-                              {row.badge === 'passage' ? `Passage ${row.passageNumber}` : 'Full test'}
+                              {row.collection === 'full'
+                                ? 'Full test'
+                                : row.badge === 'passage'
+                                  ? `Day test · Passage ${row.passageNumber}`
+                                  : 'Day test · Mock'}
                             </span>
                             {row.availableNow ? (
                               <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">

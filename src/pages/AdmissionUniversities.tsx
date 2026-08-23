@@ -1,12 +1,15 @@
-import { memo, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
+  Bookmark,
+  BookmarkCheck,
   Check,
   ChevronDown,
   Compass,
   Globe2,
+  Heart,
   MapPin,
   RotateCcw,
   Search,
@@ -19,10 +22,14 @@ import { getUniversities, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
 import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
+import { prefetchUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
+import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
+import { useToastStore, type ToastState } from '@/store/toastStore'
 
 type BudgetFilter = 'all' | 'published' | 'under-20k-usd'
 type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
 type RankFilter = 'all' | 'top-10' | 'top-25' | 'top-50' | 'unranked'
+const UNIVERSITY_PAGE_SIZE = 12
 
 function yearlyCostLabel(university: University) {
   const cost = university.costOfLiving
@@ -50,29 +57,59 @@ function ieltsLabel(university: University) {
 const UniversityCard = memo(function UniversityCard({
   university,
   scores,
+  preferredCountry,
+  priority = false,
+  shortlisted,
+  onToggleShortlist,
+  returnTo,
 }: {
   university: University
   scores: AdmissionScores
+  preferredCountry?: string | null
+  priority?: boolean
+  shortlisted: boolean
+  onToggleShortlist: (university: University) => void
+  returnTo: '/admission/universities' | '/admission/shortlist'
 }) {
-  const fit = scoreUniversity(university, scores)
+  const fit = scoreUniversity(university, { ...scores, preferredCountry })
   const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
 
   return (
-    <Link
+    <article
       className="admission-university-card"
-      to={`/admission/universities/${university.slug}`}
+      onPointerEnter={() => prefetchUniversityCampusImage(university.name)}
+      onPointerDown={() => prefetchUniversityCampusImage(university.name)}
     >
+      <Link
+        className="admission-university-card-link"
+        to={`/admission/universities/${university.slug}`}
+        state={{ admissionReturnTo: returnTo }}
+        aria-label={`Explore ${university.name}`}
+        onFocus={() => prefetchUniversityCampusImage(university.name)}
+      />
       <div
         className="admission-card-glow"
         style={{ '--university-accent': university.brand.accent } as React.CSSProperties}
         aria-hidden="true"
       />
       <div className="admission-card-topline">
-        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" />
-        <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
-          <small>QS rank</small>
-          <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
-        </span>
+        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" priority={priority} />
+        <div className="admission-card-rank-actions">
+          <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
+            <small>QS rank</small>
+            <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
+          </span>
+          <button
+            type="button"
+            className={`admission-card-shortlist${shortlisted ? ' is-shortlisted' : ''}`}
+            aria-label={shortlisted ? `Remove ${university.name} from shortlist` : `Add ${university.name} to shortlist`}
+            aria-pressed={shortlisted}
+            title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+            onClick={() => onToggleShortlist(university)}
+          >
+            <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       </div>
 
       <div className="admission-card-copy">
@@ -103,7 +140,7 @@ const UniversityCard = memo(function UniversityCard({
       <span className="admission-card-open" aria-label={`Explore ${university.name}`}>
         Explore <ArrowRight className="h-3.5 w-3.5" />
       </span>
-    </Link>
+    </article>
   )
 })
 
@@ -157,14 +194,14 @@ function FilterSelect({
   }
 
   return (
-    <div ref={rootRef} className="admission-filter-control admission-listbox" onKeyDown={onKeyDown}>
+    <div ref={rootRef} className={`admission-filter-control admission-listbox${open ? ' is-open' : ''}`} onKeyDown={onKeyDown}>
       <span className="admission-filter-dot" aria-hidden="true" />
       <span className="sr-only">{label}</span>
       <button type="button" role="combobox" aria-label={label} aria-controls={listId} aria-expanded={open} onClick={() => { setOpen((current) => !current); setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value))) }}>
         <span>{selected?.label}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? <div className="admission-listbox-popover">
-        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
+        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
         <ul id={listId} role="listbox" aria-label={label}>
           {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{option.label}{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
           {!visible.length ? <li className="admission-listbox-empty">No options found</li> : null}
@@ -174,21 +211,29 @@ function FilterSelect({
   )
 }
 
-export default function AdmissionUniversities() {
+export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
   const navigate = useNavigate()
   const all = useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
-  const { scores } = useAdmissionScores()
+  const { scores, country: profileCountry, loading: profileLoading } = useAdmissionScores()
+  const { shortlistedSet, shortlistCount, toggleShortlist } = useUniversityShortlist()
+  const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [country, setCountry] = useState('all')
   const [budget, setBudget] = useState<BudgetFilter>('all')
   const [ielts, setIelts] = useState<IeltsFilter>('all')
   const [rank, setRank] = useState<RankFilter>('all')
+  const [visibleCount, setVisibleCount] = useState(UNIVERSITY_PAGE_SIZE)
+
+  const visibleCatalog = useMemo(
+    () => shortlistOnly ? all.filter((university) => shortlistedSet.has(university.slug)) : all,
+    [all, shortlistedSet, shortlistOnly],
+  )
 
   const filtered = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase()
-    return all.filter((university) => {
+    return visibleCatalog.filter((university) => {
       const matchesQuery = !normalizedQuery || [university.name, university.shortName, university.city, university.country]
         .some((value) => value.toLowerCase().includes(normalizedQuery))
       const matchesCountry = country === 'all' || university.country === country
@@ -213,7 +258,24 @@ export default function AdmissionUniversities() {
 
       return matchesQuery && matchesCountry && matchesBudget && matchesIelts && matchesRank
     })
-  }, [all, budget, country, deferredQuery, ielts, rank])
+  }, [budget, country, deferredQuery, ielts, rank, visibleCatalog])
+
+  useEffect(() => {
+    setVisibleCount(UNIVERSITY_PAGE_SIZE)
+  }, [budget, country, deferredQuery, ielts, rank, shortlistOnly])
+
+  const displayedUniversities = shortlistOnly ? filtered : filtered.slice(0, visibleCount)
+
+  const handleToggleShortlist = useCallback((university: University) => {
+    const added = toggleShortlist(university.slug)
+    pushToast({
+      type: added ? 'success' : 'info',
+      title: added ? 'Added to shortlist' : 'Removed from shortlist',
+      message: added
+        ? `${university.shortName} is saved in your Admission Hub shortlist.`
+        : `${university.shortName} was removed from your shortlist.`,
+    })
+  }, [pushToast, toggleShortlist])
 
   const hasFilters = Boolean(query || country !== 'all' || budget !== 'all' || ielts !== 'all' || rank !== 'all')
   const clearFilters = () => {
@@ -242,7 +304,11 @@ export default function AdmissionUniversities() {
           </button>
 
           <nav className="admission-journey" aria-label="Admission journey">
-            <button type="button" className="is-active" onClick={() => navigate('/admission/universities')}>Choose</button>
+            <button className={shortlistOnly ? '' : 'is-active'} onClick={() => navigate('/admission/universities')}>Choose</button>
+            <ArrowRight aria-hidden="true" />
+            <button className={shortlistOnly ? 'is-active' : ''} onClick={() => navigate('/admission/shortlist')}>
+              Shortlist <span className="admission-shortlist-count">{shortlistCount}</span>
+            </button>
             <ArrowRight aria-hidden="true" />
             <button type="button" onClick={() => navigate('/admission/lessons')}>Prepare</button>
             <ArrowRight aria-hidden="true" />
@@ -254,15 +320,29 @@ export default function AdmissionUniversities() {
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-globe-column">
-            <button type="button" onClick={() => navigate('/dashboard')} className="admission-dashboard-back">
+            <Link to="/dashboard" className="admission-dashboard-back">
               <ArrowLeft className="h-4 w-4" /> <span>Back to Dashboard</span>
-            </button>
+            </Link>
             <div className="admission-globe-sticky">
-              <UniversityGlobe />
-              <div className="admission-globe-caption">
-                <Globe2 className="h-4 w-4" />
-                <span>{UNIVERSITY_COUNT} verified university profiles</span>
-              </div>
+              {shortlistOnly ? (
+                <div className="admission-shortlist-summary">
+                  <span className="admission-shortlist-summary-icon"><BookmarkCheck /></span>
+                  <p className="admission-shortlist-summary-kicker">Your university plan</p>
+                  <h1>{shortlistCount} {shortlistCount === 1 ? 'university' : 'universities'} shortlisted</h1>
+                  <p>Keep your strongest options together, open their profiles and remove choices as your plan becomes clearer.</p>
+                  <button onClick={() => navigate('/admission/universities')}>
+                    <Compass className="h-4 w-4" /> Browse universities
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <UniversityGlobe country={profileCountry} profileLoading={profileLoading} />
+                  <div className="admission-globe-caption">
+                    <Globe2 className="h-4 w-4" />
+                    <span>{UNIVERSITY_COUNT} verified university profiles</span>
+                  </div>
+                </>
+              )}
             </div>
           </aside>
 
@@ -271,12 +351,12 @@ export default function AdmissionUniversities() {
               <div className="admission-search-box">
                 <Search aria-hidden="true" />
                 <input
+                  type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Find your university"
-                  aria-label="Search universities"
+                  placeholder={shortlistOnly ? 'Search your shortlist' : 'Find your university'}
+                  aria-label={shortlistOnly ? 'Search shortlisted universities' : 'Search universities'}
                 />
-                <span className="admission-search-action"><Search aria-hidden="true" /></span>
               </div>
 
               <div className="admission-filter-row">
@@ -287,8 +367,8 @@ export default function AdmissionUniversities() {
               </div>
 
               <div className="admission-results-meta">
-                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} universities found</span>
-                <span className="hidden sm:inline">Complete QS 2027 top {QS_TOP_50_COUNT}</span>
+                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} {shortlistOnly ? 'shortlisted' : 'universities found'}</span>
+                <span className="hidden sm:inline">{shortlistOnly ? 'Saved on this device' : `Complete QS 2027 top ${QS_TOP_50_COUNT}`}</span>
                 {hasFilters && (
                   <button type="button" onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
                 )}
@@ -301,7 +381,14 @@ export default function AdmissionUniversities() {
               aria-label="University results"
               tabIndex={0}
             >
-              {filtered.length === 0 ? (
+              {shortlistOnly && shortlistCount === 0 ? (
+                <div className="admission-empty-state admission-shortlist-empty">
+                  <Bookmark className="h-7 w-7" />
+                  <h2>Your shortlist is empty</h2>
+                  <p>Save universities you want to compare and revisit.</p>
+                  <button onClick={() => navigate('/admission/universities')}>Browse universities</button>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="admission-empty-state">
                   <Search className="h-7 w-7" />
                   <h2>No universities found</h2>
@@ -310,11 +397,33 @@ export default function AdmissionUniversities() {
                 </div>
               ) : (
                 <div className="admission-university-grid">
-                  {filtered.map((university) => (
-                    <UniversityCard key={university.id} university={university} scores={scores} />
+                  {displayedUniversities.map((university, index) => (
+                    <UniversityCard
+                      key={university.id}
+                      university={university}
+                      scores={scores}
+                      preferredCountry={profileCountry}
+                      priority={index < 4}
+                      shortlisted={shortlistedSet.has(university.slug)}
+                      onToggleShortlist={handleToggleShortlist}
+                      returnTo={shortlistOnly ? '/admission/shortlist' : '/admission/universities'}
+                    />
                   ))}
                 </div>
               )}
+
+              {!shortlistOnly && displayedUniversities.length < filtered.length ? (
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((count) => Math.min(filtered.length, count + UNIVERSITY_PAGE_SIZE))}
+                    className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-black text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50"
+                  >
+                    Show more universities
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs">{filtered.length - displayedUniversities.length}</span>
+                  </button>
+                </div>
+              ) : null}
 
               <p className="admission-catalog-note">
                 <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.

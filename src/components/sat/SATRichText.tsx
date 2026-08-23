@@ -5,7 +5,7 @@ type Props = {
   className?: string
 }
 
-function formatMath(value: string) {
+function normalizeMath(value: string) {
   let result = value
     .replace(/\\left|\\right/g, '')
     .replace(/\\times/g, '×')
@@ -37,11 +37,70 @@ function formatMath(value: string) {
       .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')
   }
 
-  return result
-    .replace(/\^\{([^{}]+)\}/g, '^$1')
-    .replace(/_\{([^{}]+)\}/g, '_$1')
-    .replace(/[{}]/g, '')
-    .trim()
+  return result.trim()
+}
+
+function closingBraceIndex(value: string, openingIndex: number) {
+  let depth = 0
+  for (let index = openingIndex; index < value.length; index += 1) {
+    if (value[index] === '{') depth += 1
+    if (value[index] === '}') depth -= 1
+    if (depth === 0) return index
+  }
+  return -1
+}
+
+function mathNodes(value: string, keyPrefix = 'math'): ReactNode[] {
+  const nodes: ReactNode[] = []
+  let plainText = ''
+  let nodeIndex = 0
+
+  const flushPlainText = () => {
+    if (!plainText) return
+    nodes.push(<Fragment key={`${keyPrefix}-text-${nodeIndex}`}>{plainText}</Fragment>)
+    plainText = ''
+    nodeIndex += 1
+  }
+
+  for (let index = 0; index < value.length; index += 1) {
+    const marker = value[index]
+    if (marker !== '^' && marker !== '_') {
+      // Unconsumed braces are LaTeX grouping characters, not visible math.
+      if (marker !== '{' && marker !== '}') plainText += marker
+      continue
+    }
+
+    let content = ''
+    let contentEnd = index + 1
+    if (value[index + 1] === '{') {
+      const closingIndex = closingBraceIndex(value, index + 1)
+      if (closingIndex !== -1) {
+        content = value.slice(index + 2, closingIndex)
+        contentEnd = closingIndex
+      }
+    } else if (value[index + 1]) {
+      content = value[index + 1]
+      contentEnd = index + 1
+    }
+
+    if (!content) {
+      plainText += marker
+      continue
+    }
+
+    flushPlainText()
+    const Tag = marker === '^' ? 'sup' : 'sub'
+    nodes.push(
+      <Tag key={`${keyPrefix}-${Tag}-${nodeIndex}`} className="not-italic">
+        {mathNodes(content, `${keyPrefix}-${Tag}-${nodeIndex}`)}
+      </Tag>,
+    )
+    nodeIndex += 1
+    index = contentEnd
+  }
+
+  flushPlainText()
+  return nodes
 }
 
 function inlineNodes(text: string): ReactNode[] {
@@ -57,7 +116,8 @@ function inlineNodes(text: string): ReactNode[] {
       return <em key={index}>{token.slice(1, -1)}</em>
     }
     if (token.startsWith('$') && token.endsWith('$')) {
-      return <span key={index} className="whitespace-nowrap font-serif font-semibold italic text-slate-950">{formatMath(token.slice(1, -1))}</span>
+      const math = normalizeMath(token.slice(1, -1))
+      return <span key={index} className="whitespace-nowrap font-serif font-semibold italic text-slate-950">{mathNodes(math, `inline-${index}`)}</span>
     }
     return <Fragment key={index}>{token}</Fragment>
   })

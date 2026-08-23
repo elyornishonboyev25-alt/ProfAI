@@ -13,6 +13,8 @@ import {
   usePronunciation,
   type ActivityMode,
 } from '@/components/vocab/activities'
+import { useAuthStore } from '@/store/authStore'
+import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 
 type Selection = {
   title: string
@@ -135,6 +137,8 @@ function TermPreview({ entries }: { entries: VocabularyEntry[] }) {
 
 export default function VocabularyActivity() {
   const params = useParams()
+  const user = useAuthStore((state) => state.user)
+  const updateUserProgress = useAuthStore((state) => state.updateUserProgress)
   const activity = resolveActivity(params.activity)
   const selection = useMemo(() => findSelection(params), [params])
 
@@ -145,6 +149,21 @@ export default function VocabularyActivity() {
   const isBlue = accent === 'blue'
   const backClass = isBlue ? 'premium-back-btn-sm-blue' : 'premium-back-btn-sm'
   const chipClass = isBlue ? 'premium-top-chip-blue' : 'premium-top-chip'
+  const awardVocabulary = (mode: ActivityMode, accuracy: number) => {
+    if (!user) return
+    const sources: Record<ActivityMode, XpActivitySource> = {
+      flashcards: 'VOCAB_FLASHCARDS',
+      matching: 'VOCAB_MATCHING',
+      quiz: 'VOCAB_QUIZ',
+      typing: 'VOCAB_TYPING',
+    }
+    void recordXpActivity({
+      source: sources[mode],
+      eventKey: `${rewardKey}:${mode}`,
+      accuracy,
+      metadata: { rewardKey, mode, terms: entries.length },
+    }).then((reward) => updateUserProgress({ xp: reward.totalXp, level: reward.level })).catch(() => {})
+  }
 
   // My Words sets can be empty — guide the learner instead of showing a broken activity.
   if (entries.length === 0) {
@@ -202,10 +221,10 @@ export default function VocabularyActivity() {
           </>
         ) : (
           <section className="rounded-[1.6rem] border border-blue-100 bg-white/70 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.08)] sm:p-5">
-            {activity === 'flashcards' ? <FlashcardsActivity entries={entries} masteryKey={masteryKey} /> : null}
-            {activity === 'matching' ? <MatchingActivity entries={entries} rewardKey={rewardKey} /> : null}
-            {activity === 'quiz' ? <QuizActivity entries={entries} /> : null}
-            {activity === 'typing' ? <TypingActivity entries={entries} /> : null}
+            {activity === 'flashcards' ? <FlashcardsActivity entries={entries} masteryKey={masteryKey} onComplete={(accuracy) => awardVocabulary('flashcards', accuracy)} /> : null}
+            {activity === 'matching' ? <MatchingActivity entries={entries} rewardKey={rewardKey} onComplete={(accuracy) => awardVocabulary('matching', accuracy)} /> : null}
+            {activity === 'quiz' ? <QuizActivity entries={entries} onComplete={(accuracy) => awardVocabulary('quiz', accuracy)} /> : null}
+            {activity === 'typing' ? <TypingActivity entries={entries} onComplete={(accuracy) => awardVocabulary('typing', accuracy)} /> : null}
           </section>
         )}
       </div>

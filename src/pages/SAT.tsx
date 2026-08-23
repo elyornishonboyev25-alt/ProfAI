@@ -297,7 +297,7 @@ export default function SAT() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate(`/mock/sat/${activeAttempt?.test.mockId ?? availableTests[0]?.mockId ?? 4}`)}
+                  onClick={() => navigate(`/mock/sat/${activeAttempt?.test.mockId ?? availableTests[0]?.mockId ?? 1}`)}
                   className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-red-700 hover:text-red-500"
                 >
                   {activeAttempt ? 'Continue test' : 'Start practice'} <ArrowRight className="h-3.5 w-3.5" />
@@ -381,7 +381,7 @@ export default function SAT() {
                       <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600">Practice library</p>
                       <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">30 full Digital SAT tests</h2>
                     </div>
-                    <p className="text-xs font-bold text-slate-500">2 available · 28 coming soon</p>
+                    <p className="text-xs font-bold text-slate-500">3 available · 27 coming soon</p>
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6">

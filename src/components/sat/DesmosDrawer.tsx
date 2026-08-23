@@ -89,7 +89,7 @@ export default function DesmosDrawer({ open, onClose }: Props) {
               />
             </div>
             <footer className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/80 px-4 py-2 text-[10px] font-semibold text-slate-500">
-              <span>Internet connection is required for the official embedded calculator.</span>
+              <span>Desmos is an allowed exam tool; the test timer continues while it is open.</span>
               <a
                 href={source.replace('?embed', '')}
                 target="_blank"

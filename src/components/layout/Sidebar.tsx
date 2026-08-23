@@ -79,7 +79,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
             ? 'min-h-[3.25rem] gap-3 rounded-[1rem] px-3 py-2.5 text-[13px] font-bold'
             : 'min-h-11 gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold',
           primary && active
-            ? 'sidebar-primary-active text-slate-950'
+            ? 'sidebar-primary-active text-white'
             : primary
               ? 'text-slate-800 hover:bg-white/80 hover:shadow-[0_10px_24px_rgba(107,35,45,0.08)]'
               : active
@@ -92,9 +92,9 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
             'flex shrink-0 items-center justify-center transition-colors',
             primary ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
             primary && active
-              ? 'bg-blue-600 text-white shadow-[0_6px_16px_rgba(37,99,235,0.22)]'
+              ? 'sidebar-primary-active-icon bg-white/12 text-white'
               : primary
-                ? 'border border-blue-100 bg-white/75 text-blue-600'
+                ? 'border border-slate-200/80 bg-white/85 text-slate-600 group-hover:border-blue-200 group-hover:text-blue-700'
                 : active
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-slate-400 group-hover:text-blue-500',
@@ -105,7 +105,7 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate">{item.label}</span>
           {item.description ? (
-            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-slate-500' : 'text-slate-400')}>
+            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-blue-100/80' : 'text-slate-400')}>
               {item.description}
             </span>
           ) : null}

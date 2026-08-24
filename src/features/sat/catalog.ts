@@ -50,7 +50,7 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     ...SAT_MAY_2026_INTL,
     modules: SAT_MAY_2026_INTL_MODULES,
     badge: 'May 2026 International · Version 1',
-    difficulty: 'Hard',
+    difficulty: 'Medium',
   },
 }
 

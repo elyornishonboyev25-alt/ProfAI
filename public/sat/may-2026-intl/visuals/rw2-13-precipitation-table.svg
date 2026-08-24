@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Simulated Change in Annual Aquifer Input and Irrigation Output</title>
+  <desc id="desc">Table comparing somewhat concentrated and evenly distributed baseline precipitation.</desc>
+  <rect width="1100" height="520" rx="24" fill="#fff"/>
+  <text x="550" y="45" text-anchor="middle" fill="#0f172a" font-family="Arial, sans-serif" font-size="24" font-weight="700">Simulated Change in Annual Aquifer Input and Irrigation Output</text>
+  <text x="550" y="76" text-anchor="middle" fill="#0f172a" font-family="Arial, sans-serif" font-size="24" font-weight="700">if Precipitation Concentration Increases as Climate Models Predict</text>
+  <rect x="35" y="105" width="1030" height="355" fill="#f8fafc" stroke="#334155" stroke-width="3"/>
+  <path d="M330 105V460M555 105V460M805 105V460M35 250H1065M35 355H1065" stroke="#64748b" stroke-width="2"/>
+  <g fill="#0f172a" font-family="Arial, sans-serif" font-size="19" text-anchor="middle">
+    <text x="182" y="150" font-weight="700"><tspan x="182" dy="0">Baseline concentration</tspan><tspan x="182" dy="27">of annual precipitation</tspan></text>
+    <text x="442" y="136" font-weight="700"><tspan x="442" dy="0">% change in water</tspan><tspan x="442" dy="27">entering aquifers</tspan></text>
+    <text x="680" y="136" font-weight="700"><tspan x="680" dy="0">% change in surface water</tspan><tspan x="680" dy="27">used for irrigation</tspan></text>
+    <text x="935" y="136" font-weight="700"><tspan x="935" dy="0">% change in groundwater</tspan><tspan x="935" dy="27">used for irrigation</tspan></text>
+    <text x="442" y="314" font-size="25">4.9</text><text x="680" y="314" font-size="25">0.4</text><text x="935" y="314" font-size="25">0.9</text>
+    <text x="442" y="420" font-size="25">11.0</text><text x="680" y="420" font-size="25">9.0</text><text x="935" y="420" font-size="25">7.9</text>
+  </g>
+  <g fill="#0f172a" font-family="Arial, sans-serif" font-size="18">
+    <text x="55" y="287"><tspan x="55" dy="0">Precipitation is currently</tspan><tspan x="55" dy="25">somewhat concentrated</tspan></text>
+    <text x="55" y="397"><tspan x="55" dy="0">Precipitation is currently</tspan><tspan x="55" dy="25">evenly distributed</tspan></text>
+  </g>
+</svg>

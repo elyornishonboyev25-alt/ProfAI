@@ -9,6 +9,7 @@ import {
   SAT_DECEMBER_2025_INTL,
   SAT_DECEMBER_2025_INTL_MODULES,
 } from './december2025Intl'
+import { SAT_MAY_2026_INTL, SAT_MAY_2026_INTL_MODULES } from './may2026Intl'
 
 export type SATTestDefinition = {
   mockId: number
@@ -43,6 +44,13 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     modules: SAT_DECEMBER_2025_INTL_MODULES,
     badge: 'December 2025 International · Version 1',
     difficulty: 'Easy',
+  },
+  4: {
+    mockId: 4,
+    ...SAT_MAY_2026_INTL,
+    modules: SAT_MAY_2026_INTL_MODULES,
+    badge: 'May 2026 International · Version 1',
+    difficulty: 'Hard',
   },
 }
 

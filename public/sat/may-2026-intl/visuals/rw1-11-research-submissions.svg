@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="title desc">
+  <title id="title">Total Science Research Submissions by Topic, 2016–2019</title>
+  <desc id="desc">Line graph comparing cellular and molecular biology, physics and space science, medicine and health, and animal science submissions.</desc>
+  <rect width="900" height="700" rx="24" fill="#fff"/>
+  <text x="450" y="48" text-anchor="middle" fill="#0f172a" font-family="Arial, sans-serif" font-size="28" font-weight="700">Total Science Research Submissions</text>
+  <text x="450" y="82" text-anchor="middle" fill="#0f172a" font-family="Arial, sans-serif" font-size="28" font-weight="700">by Topic, 2016–2019</text>
+  <g stroke="#cbd5e1" stroke-width="2">
+    <path d="M150 120H750M150 180H750M150 240H750M150 300H750M150 360H750M150 420H750M150 480H750M150 540H750"/>
+    <path d="M190 120V540M360 120V540M530 120V540M700 120V540"/>
+  </g>
+  <g stroke="#0f172a" stroke-width="3"><path d="M150 110V540H770"/></g>
+  <g fill="#334155" font-family="Arial, sans-serif" font-size="19" text-anchor="end">
+    <text x="138" y="546">0</text><text x="138" y="486">50</text><text x="138" y="426">100</text><text x="138" y="366">150</text><text x="138" y="306">200</text><text x="138" y="246">250</text><text x="138" y="186">300</text><text x="138" y="126">350</text>
+  </g>
+  <g fill="#334155" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">
+    <text x="190" y="570">2016</text><text x="360" y="570">2017</text><text x="530" y="570">2018</text><text x="700" y="570">2019</text>
+  </g>
+  <text x="450" y="605" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="22" font-weight="700">Year</text>
+  <text x="45" y="330" text-anchor="middle" transform="rotate(-90 45 330)" fill="#334155" font-family="Arial, sans-serif" font-size="22" font-weight="700">Number of submissions</text>
+  <path d="M190 300L360 180L530 204L700 216" fill="none" stroke="#111827" stroke-width="5"/><path d="M190 426L360 432L530 438L700 426" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="14 10"/><path d="M190 276L360 276L530 270L700 198" fill="none" stroke="#2563eb" stroke-width="5" stroke-dasharray="4 10"/><path d="M190 480L360 480L530 480L700 438" fill="none" stroke="#dc2626" stroke-width="5"/>
+  <g fill="#111827"><path d="m190 286-12 24h24zM360 166l-12 24h24zM530 190l-12 24h24zM700 202l-12 24h24z"/></g>
+  <g fill="#fff" stroke="#475569" stroke-width="4"><rect x="181" y="417" width="18" height="18"/><rect x="351" y="423" width="18" height="18"/><rect x="521" y="429" width="18" height="18"/><rect x="691" y="417" width="18" height="18"/></g>
+  <g fill="#fff" stroke="#2563eb" stroke-width="4"><circle cx="190" cy="276" r="10"/><circle cx="360" cy="276" r="10"/><circle cx="530" cy="270" r="10"/><circle cx="700" cy="198" r="10"/></g>
+  <g fill="#fff" stroke="#dc2626" stroke-width="4"><path d="m190 466 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/><path d="m360 466 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/><path d="m530 466 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/><path d="m700 424 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/></g>
+  <g fill="#334155" font-family="Arial, sans-serif" font-size="18">
+    <text x="115" y="640">▲ cellular &amp; molecular biology</text><text x="410" y="640">□ physics &amp; space science</text><text x="115" y="672" fill="#2563eb">○ medicine &amp; health</text><text x="410" y="672" fill="#dc2626">✧ animal science</text>
+  </g>
+</svg>

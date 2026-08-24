@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 360" role="img" aria-labelledby="title desc">
+  <title id="title">Orbital period dot plot</title>
+  <desc id="desc">Thirteen orbital periods between 720 and 732 days.</desc>
+  <rect width="860" height="360" rx="24" fill="#fff"/>
+  <path d="M90 210H790" stroke="#0f172a" stroke-width="4"/>
+  <g stroke="#334155" stroke-width="3">
+    <path d="M110 194V226M165 194V226M220 194V226M275 194V226M330 194V226M385 194V226M440 194V226M495 194V226M550 194V226M605 194V226M660 194V226M715 194V226M770 194V226"/>
+  </g>
+  <g fill="#111827">
+    <circle cx="110" cy="165" r="10"/><circle cx="110" cy="125" r="10"/>
+    <circle cx="275" cy="165" r="10"/><circle cx="275" cy="125" r="10"/><circle cx="275" cy="85" r="10"/>
+    <circle cx="330" cy="165" r="10"/><circle cx="330" cy="125" r="10"/>
+    <circle cx="440" cy="165" r="10"/><circle cx="495" cy="165" r="10"/><circle cx="550" cy="165" r="10"/>
+    <circle cx="660" cy="165" r="10"/><circle cx="660" cy="125" r="10"/><circle cx="770" cy="165" r="10"/>
+  </g>
+  <g fill="#334155" font-family="Arial, sans-serif" font-size="23" text-anchor="middle">
+    <text x="110" y="260">720</text><text x="220" y="260">722</text><text x="330" y="260">724</text><text x="440" y="260">726</text><text x="550" y="260">728</text><text x="660" y="260">730</text><text x="770" y="260">732</text>
+    <text x="440" y="315" font-size="26" font-weight="700">Orbital period (days)</text>
+  </g>
+</svg>

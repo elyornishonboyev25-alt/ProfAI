@@ -512,7 +512,12 @@ export default function IELTSWritingFullTestInterface({
           </div>
           {activeTask.imageUrl ? (
             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
-              <img src={activeTask.imageUrl} alt="The process of making smoked fish, from catching fish to sale in a fish shop" className="h-auto w-full object-contain" draggable={false} />
+              <img
+                src={activeTask.imageUrl}
+                alt={activeTask.imageAlt ?? `${activeTask.title} Task 1 visual`}
+                className="h-auto w-full object-contain"
+                draggable={false}
+              />
             </div>
           ) : null}
         </section>

@@ -33,6 +33,7 @@ export type WritingTask = {
   durationMinutes: number
   chart?: WritingChartData
   imageUrl?: string
+  imageAlt?: string
   promptLead?: string
   promptQuestion?: string
   instructions?: string
@@ -119,6 +120,7 @@ const FULL_TEST_1_TASKS: WritingTask[] = [
     maxWordCount: 500,
     durationMinutes: 20,
     imageUrl: '/images/ielts-writing/full-writing-test-1-smoked-fish-exact.png',
+    imageAlt: 'The process of making smoked fish, from catching fish to sale in a fish shop',
     available: true,
   },
   {
@@ -148,6 +150,57 @@ const FULL_TEST_1: WritingFullTest = {
   index: 1,
   title: 'Full Writing Test 1',
   tasks: FULL_TEST_1_TASKS,
+  available: true,
+}
+
+const FULL_TEST_2_TASKS: WritingTask[] = [
+  {
+    id: 'writing-full-2-task-1',
+    day: null,
+    fullTestIndex: 2,
+    taskType: 'task1',
+    title: 'Full Writing Test 2',
+    subtitle: 'Task 1 · Bar Chart · Renewable energy in transport',
+    prompt:
+      'The bar chart shows the percentage of fuel from renewable energy used in the transport sector, 2009 and 2010\n\nSummarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    promptLead:
+      'The bar chart shows the percentage of fuel from renewable energy used in the transport sector, 2009 and 2010',
+    instructions:
+      'Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    suggestedWordCount: { min: 150, max: 180 },
+    maxWordCount: 500,
+    durationMinutes: 20,
+    imageUrl: '/images/ielts-writing/full-writing-test-2-renewable-energy.png',
+    imageAlt:
+      'Bar chart comparing the percentage of fuel from renewable energy used in transport in 2009 and 2010 across six countries and the EU average',
+    available: true,
+  },
+  {
+    id: 'writing-full-2-task-2',
+    day: null,
+    fullTestIndex: 2,
+    taskType: 'task2',
+    title: 'Full Writing Test 2',
+    subtitle: 'Task 2 · Essay · Ambition and success',
+    prompt:
+      'Ambition is a positive quality for people to have in society today.\n\nHow important is it for people who want to succeed in life?\nIs it a positive or negative characteristic?\n\nGive reasons for your answer and include any relevant examples from your own knowledge and experience. Write at least 250 words.',
+    promptLead: 'Ambition is a positive quality for people to have in society today.',
+    promptQuestion:
+      'How important is it for people who want to succeed in life?\nIs it a positive or negative characteristic?',
+    instructions:
+      'Give reasons for your answer and include any relevant examples from your own knowledge and experience. Write at least 250 words.',
+    suggestedWordCount: { min: 250, max: 280 },
+    maxWordCount: 800,
+    durationMinutes: 40,
+    available: true,
+  },
+]
+
+const FULL_TEST_2: WritingFullTest = {
+  id: 'writing-full-2',
+  index: 2,
+  title: 'Full Writing Test 2',
+  tasks: FULL_TEST_2_TASKS,
   available: true,
 }
 
@@ -188,6 +241,11 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
       continue
     }
 
+    if (i === 2) {
+      tests.push(FULL_TEST_2)
+      continue
+    }
+
     tests.push({
       id: `writing-full-${i}`,
       index: i,
@@ -203,7 +261,9 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
 export function getWritingTaskById(id: string): WritingTask | null {
   if (id === 'writing-day-1') return DAY_1_TASK
 
-  const fullTestTask = FULL_TEST_1_TASKS.find((task) => task.id === id)
+  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS].find(
+    (task) => task.id === id,
+  )
   if (fullTestTask) return fullTestTask
 
   const dayCatalog = getWritingDayCatalog()

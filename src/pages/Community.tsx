@@ -230,15 +230,8 @@ export default function Community() {
               <nav className="community-side-list" aria-label="Learner filters">
                 <SideFilter active={exam === 'ALL' && smartFilters.length === 0} icon={SlidersHorizontal} label="All learners" onClick={clearFilters} />
                 <SideFilter active={sameBandActive} icon={Target} label={normalizeScore(account?.profile.targetScore) === null ? 'Add target band' : 'Same target band'} onClick={toggleBandFilter} />
-                <SideFilter
-                  active={sameCountryActive}
-                  icon={Globe2}
-                  label={account?.profile.country ? `Same country · ${account.profile.country}` : 'Add your country'}
-                  onClick={toggleCountryFilter}
-                />
                 <SideFilter active={exam === 'IELTS'} icon={MapPin} label="IELTS learners" onClick={() => setExam((value) => (value === 'IELTS' ? 'ALL' : 'IELTS'))} />
                 <SideFilter active={exam === 'SAT'} icon={GraduationCap} label="SAT learners" onClick={() => setExam((value) => (value === 'SAT' ? 'ALL' : 'SAT'))} />
-                <SideFilter active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
               </nav>
             </GlassPanel>
 

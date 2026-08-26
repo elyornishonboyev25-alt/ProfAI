@@ -11,7 +11,6 @@ import {
   Clock3,
   Flame,
   GraduationCap,
-  Medal,
   Mic2,
   Settings,
   RefreshCw,
@@ -187,7 +186,7 @@ export default function Dashboard() {
             </button>
           </div>
         ) : null}
-        <header className="flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
+        <header className="dashboard-entrance-header flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 text-sm font-black text-blue-700">
@@ -216,8 +215,10 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <section className="grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
+        <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
           <article className="dashboard-target-card dashboard-card-sheen">
+            <span className="dashboard-target-ribbon" aria-hidden="true" />
+            <span className="dashboard-target-orb" aria-hidden="true" />
             <div className="relative z-10">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Your target</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -328,13 +329,26 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-4">
-            <article className="dashboard-glass-card p-5">
+            <article
+              className="dashboard-glass-card dashboard-leaderboard-preview cursor-pointer p-5"
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate('/leaderboard')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate('/leaderboard')
+                }
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600">Leaderboard</p>
                   <h2 className="mt-1 text-lg font-black text-slate-950">Top learners</h2>
                 </div>
-                <Medal className="h-6 w-6 text-amber-500" />
+                <span className="flex items-center gap-1 text-[10px] font-black text-blue-700">
+                  View all <ArrowRight className="h-3.5 w-3.5" />
+                </span>
               </div>
 
               <div className="mt-5 flex items-end justify-center gap-2">
@@ -389,7 +403,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="dashboard-glass-card mt-4 p-5">
+        <section className="dashboard-entrance-learning dashboard-glass-card mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">Continue learning</p>

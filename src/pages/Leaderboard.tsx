@@ -11,6 +11,7 @@ import {
   Sparkles,
   Trophy,
   Users,
+  RefreshCw,
   Zap,
 } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
@@ -109,6 +110,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<LeaderboardResponse | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -143,7 +145,7 @@ export default function Leaderboard() {
     return () => {
       active = false
     }
-  }, [period, category, user])
+  }, [period, category, user, reloadKey])
 
   const rows = data?.rows ?? []
   const currentUserRow = useMemo(() => rows.find((row) => row.isCurrentUser) ?? null, [rows])
@@ -265,7 +267,26 @@ export default function Leaderboard() {
       </Reveal>
 
       {error ? (
-        <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">{error}</div>
+        <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-900 shadow-sm">
+          <span>{error}</span>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-amber-800 shadow-sm transition hover:bg-amber-100"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/login', { state: { from: { pathname: '/leaderboard' } } })}
+              className="rounded-full bg-slate-950 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800"
+            >
+              Sign in
+            </button>
+          )}
+        </div>
       ) : null}
 
       {/* ── Podium ────────────────────────────────────────────── */}

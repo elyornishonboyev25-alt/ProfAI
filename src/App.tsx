@@ -95,6 +95,34 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 }
 
 function RouteLoader() {
+  const { pathname } = useLocation()
+
+  if (pathname === '/dashboard' || pathname === '/') {
+    return (
+      <div className="dashboard-route-loader workspace-page min-h-screen px-3 pb-8 pt-3 sm:px-5 sm:pt-5" role="status" aria-label="Opening dashboard">
+        <div className="dashboard-loader-shell mx-auto max-w-[98rem]">
+          <div className="dashboard-loader-header">
+            <span className="dashboard-loader-avatar" />
+            <span className="dashboard-loader-copy">
+              <i />
+              <b />
+              <em />
+            </span>
+          </div>
+          <div className="dashboard-loader-grid">
+            <span className="dashboard-loader-target" />
+            <span className="dashboard-loader-center">
+              <i className="dashboard-loader-stats" />
+              <b className="dashboard-loader-chart" />
+            </span>
+            <span className="dashboard-loader-rail" />
+          </div>
+          <span className="dashboard-loader-learning" />
+        </div>
+      </div>
+    )
+  }
+
   return <BrandPageLoader compact label="Opening page" />
 }
 
@@ -156,12 +184,12 @@ function DeferredAchievementCelebration() {
   )
 }
 
-function AnimatedRoute({ children, staticEntrance = false }: { children: ReactNode; staticEntrance?: boolean }) {
+function AnimatedRoute({ children, dashboardEntrance = false }: { children: ReactNode; dashboardEntrance?: boolean }) {
   const location = useLocation()
   return (
     <div
       key={location.pathname}
-      className={`arena-route h-full ${staticEntrance ? 'arena-route-static' : ''}`}
+      className={`arena-route h-full ${dashboardEntrance ? 'arena-route-dashboard' : ''}`}
     >
       {children}
     </div>
@@ -188,11 +216,14 @@ function App() {
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
+  const isLeaderboardMode = pathname === '/leaderboard'
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'
   const isTrackMode =
     isStandaloneMode ||
     isVocabularyMode ||
+    pathname === '/dashboard' ||
+    (pathname === '/' && Boolean(user)) ||
     pathname.startsWith('/mock') ||
     pathname === '/speaking-community' ||
     pathname.startsWith('/speaker/') ||
@@ -206,7 +237,8 @@ function App() {
     pathname === '/podcast' ||
     pathname === '/onboarding' ||
     pathname.startsWith('/articles') ||
-    pathname.startsWith('/admission')
+    pathname.startsWith('/admission') ||
+    isLeaderboardMode
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
@@ -255,7 +287,8 @@ function App() {
     !isPublicStandalone &&
     !isTestMode &&
     !isFocusContentMode &&
-    !isVocabularyMode
+    !isVocabularyMode &&
+    !isLeaderboardMode
   const sidebarVisible = showSidebar && !isImmersiveHub
   const showMobileNav = Boolean(user) && sidebarVisible
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
@@ -372,9 +405,9 @@ function App() {
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
-                      <Route path="/" element={<AnimatedRoute staticEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
-                      <Route path="/dashboard" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
-                      <Route path="/about" element={<AnimatedRoute staticEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
+                      <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/tests" element={<Navigate to="/ielts" replace />} />
                       <Route
                         path="/tests/:id/attempt"

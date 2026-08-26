@@ -2131,7 +2131,7 @@
     "domain": "Math",
     "explanation": "**Step 1:** The line decreases, so its slope is negative.\n\n**Step 2:** It crosses the y-axis near 1.5, not 15.4.\n\n**Step 3:** Therefore $y=-x+1.5$, **D**, is correct.",
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/math2-02-scatterplot.png",
+      "asset": "/sat/practice-test-3/visuals/math2-02-scatterplot-clean.svg",
       "alt": "Scatterplot with a downward-sloping line of best fit"
     }
   },

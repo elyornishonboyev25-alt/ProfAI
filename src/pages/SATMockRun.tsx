@@ -732,7 +732,11 @@ export default function SATMockRun() {
         </div>
       </footer>
 
-      <DesmosDrawer open={calculatorOpen} onClose={closeCalculator} />
+      <DesmosDrawer
+        open={calculatorOpen}
+        preload={currentModule.section === 'math'}
+        onClose={closeCalculator}
+      />
 
       <AnimatePresence>
         {directionsOpen ? (

@@ -75,7 +75,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
           <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
 
           {question.kind === 'multiple-choice' ? (
-            <div className="mt-6 space-y-2.5">
+            <div className="mt-6 space-y-3.5">
               {question.choices.map((choice) => {
                 const isCorrectChoice = choice.key === question.correctAnswer
                 const isUserChoice = choice.key === response
@@ -86,7 +86,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
                       isCorrectChoice ? 'bg-emerald-600 text-white' : isUserChoice ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
                     }`}>{choice.key}</span>
-                    <span className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-7 text-slate-800">
+                    <span className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
                       <SATRichText text={choice.text} />
                     </span>

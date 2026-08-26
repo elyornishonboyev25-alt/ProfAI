@@ -5,165 +5,279 @@ type Props = {
   className?: string
 }
 
-const superscriptCharacters: Record<string, string> = {
-  '0': '⁰',
-  '1': '¹',
-  '2': '²',
-  '3': '³',
-  '4': '⁴',
-  '5': '⁵',
-  '6': '⁶',
-  '7': '⁷',
-  '8': '⁸',
-  '9': '⁹',
-  '-': '⁻',
+const MATH_FONT = '"STIX Two Math", "Cambria Math", "Times New Roman", serif'
+
+const mathSymbols: Record<string, string> = {
+  times: '×', cdot: '·', div: '÷', le: '≤', leq: '≤', ge: '≥', geq: '≥', neq: '≠',
+  pm: '±', approx: '≈', parallel: '∥', Rightarrow: '⇒', rightarrow: '→', implies: '⇒',
+  pi: 'π', circ: '°', triangle: '△', angle: '∠', infty: '∞', percent: '%', '%': '%',
 }
 
-function superscript(value: string) {
-  return [...value].map((character) => superscriptCharacters[character] ?? character).join('')
-}
+const mathFunctions = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln'])
 
-function normalizeMath(value: string) {
-  let result = value
-    .replace(/\\left|\\right/g, '')
-    .replace(/\\times/g, '×')
-    .replace(/\\cdot/g, '·')
-    .replace(/\\div/g, '÷')
-    .replace(/\\leq?/g, '≤')
-    .replace(/\\geq?/g, '≥')
-    .replace(/\\neq/g, '≠')
-    .replace(/\\pm/g, '±')
-    .replace(/\\approx/g, '≈')
-    .replace(/\\parallel/g, '∥')
-    .replace(/\\(?:Rightarrow|rightarrow|implies)/g, '→')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\circ/g, '°')
-    .replace(/\\sin/g, 'sin')
-    .replace(/\\cos/g, 'cos')
-    .replace(/\\tan/g, 'tan')
-    .replace(/\\cot/g, 'cot')
-    .replace(/\\%/g, '%')
-    .replace(/\\overline\{([^{}]+)\}/g, '$1')
-    .replace(/\\hat\{([^{}]+)\}/g, '$1̂')
-    .replace(/\\text\{([^{}]+)\}/g, '$1')
-    .replace(/\\triangle/g, '△')
-    .replace(/\\angle/g, '∠')
-    .replace(/\\sqrt\[([^\]]+)\]\{([^{}]+)\}/g, (_match, index: string, radicand: string) => `${superscript(index)}√(${radicand})`)
-
-  for (let index = 0; index < 4; index += 1) {
-    result = result
-      .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
-      .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')
-  }
-
-  return result.trim()
-}
-
-function closingBraceIndex(value: string, openingIndex: number) {
+function matchingClosingIndex(value: string, openingIndex: number, opening = '{', closing = '}') {
   let depth = 0
   for (let index = openingIndex; index < value.length; index += 1) {
-    if (value[index] === '{') depth += 1
-    if (value[index] === '}') depth -= 1
+    if (value[index] === opening) depth += 1
+    if (value[index] === closing) depth -= 1
     if (depth === 0) return index
   }
   return -1
 }
 
-function mathNodes(value: string, keyPrefix = 'math'): ReactNode[] {
-  const nodes: ReactNode[] = []
-  let plainText = ''
-  let nodeIndex = 0
+function isWrapped(value: string, opening: string, closing: string) {
+  return value.startsWith(opening) && matchingClosingIndex(value, 0, opening, closing) === value.length - 1
+}
 
-  const flushPlainText = () => {
-    if (!plainText) return
-    nodes.push(<Fragment key={`${keyPrefix}-text-${nodeIndex}`}>{plainText}</Fragment>)
-    plainText = ''
-    nodeIndex += 1
-  }
+function topLevelOperatorIndexes(value: string, operators: string[]) {
+  const matches: Array<{ index: number; operator: string }> = []
+  let braces = 0
+  let parentheses = 0
+  let brackets = 0
 
   for (let index = 0; index < value.length; index += 1) {
-    const marker = value[index]
-    if (marker !== '^' && marker !== '_') {
-      // Unconsumed braces are LaTeX grouping characters, not visible math.
-      if (marker !== '{' && marker !== '}') plainText += marker
-      continue
-    }
+    const character = value[index]
+    if (character === '{') braces += 1
+    else if (character === '}') braces -= 1
+    else if (character === '(') parentheses += 1
+    else if (character === ')') parentheses -= 1
+    else if (character === '[') brackets += 1
+    else if (character === ']') brackets -= 1
 
-    let content = ''
-    let contentEnd = index + 1
-    if (value[index + 1] === '{') {
-      const closingIndex = closingBraceIndex(value, index + 1)
-      if (closingIndex !== -1) {
-        content = value.slice(index + 2, closingIndex)
-        contentEnd = closingIndex
-      }
-    } else if (value[index + 1]) {
-      content = value[index + 1]
-      contentEnd = index + 1
-    }
+    if (braces || parentheses || brackets) continue
+    const operator = operators.find((candidate) => value.startsWith(candidate, index))
+    if (!operator) continue
+    matches.push({ index, operator })
+    index += operator.length - 1
+  }
+  return matches
+}
 
-    if (!content) {
-      plainText += marker
-      continue
-    }
+let mathKey = 0
+function nextMathKey() {
+  mathKey += 1
+  return `sat-math-${mathKey}`
+}
 
-    flushPlainText()
-    const Tag = marker === '^' ? 'sup' : 'sub'
-    nodes.push(
-      <Tag key={`${keyPrefix}-${Tag}-${nodeIndex}`} className="not-italic">
-        {mathNodes(content, `${keyPrefix}-${Tag}-${nodeIndex}`)}
-      </Tag>,
-    )
-    nodeIndex += 1
-    index = contentEnd
+function renderMathExpression(rawValue: string): ReactNode {
+  let value = rawValue.trim()
+  if (!value) return <mrow />
+  if (isWrapped(value, '{', '}')) value = value.slice(1, -1).trim()
+
+  const relations = topLevelOperatorIndexes(value, ['\\Rightarrow', '\\rightarrow', '\\implies', '\\leq', '\\geq', '\\neq', '\\approx', '<=', '>=', '≠', '≤', '≥', '=', '<', '>'])
+  if (relations.length) {
+    const children: ReactNode[] = []
+    let start = 0
+    relations.forEach(({ index, operator }) => {
+      children.push(<Fragment key={nextMathKey()}>{renderMathExpression(value.slice(start, index))}</Fragment>)
+      children.push(<Fragment key={nextMathKey()}><mo>{mathSymbols[operator.slice(1)] ?? ({ '<=': '≤', '>=': '≥' }[operator] ?? operator)}</mo></Fragment>)
+      start = index + operator.length
+    })
+    children.push(<Fragment key={nextMathKey()}>{renderMathExpression(value.slice(start))}</Fragment>)
+    return <mrow>{children}</mrow>
   }
 
-  flushPlainText()
-  return nodes
+  const additions = topLevelOperatorIndexes(value, ['+', '-'])
+    .filter(({ index }) => index > 0 && !/[=<>+\-×·*/^(,]\s*$/.test(value.slice(0, index)))
+  if (additions.length) {
+    const children: ReactNode[] = []
+    let start = 0
+    additions.forEach(({ index, operator }) => {
+      children.push(<Fragment key={nextMathKey()}>{renderMathExpression(value.slice(start, index))}</Fragment>)
+      children.push(<Fragment key={nextMathKey()}><mo>{operator}</mo></Fragment>)
+      start = index + operator.length
+    })
+    children.push(<Fragment key={nextMathKey()}>{renderMathExpression(value.slice(start))}</Fragment>)
+    return <mrow>{children}</mrow>
+  }
+
+  const divisions = topLevelOperatorIndexes(value, ['/'])
+  if (divisions.length) {
+    const division = divisions[divisions.length - 1]
+    return <mfrac>{renderMathExpression(value.slice(0, division.index))}{renderMathExpression(value.slice(division.index + 1))}</mfrac>
+  }
+
+  return renderMathSequence(value)
+}
+
+function renderMathSequence(value: string): ReactNode {
+  const nodes: ReactNode[] = []
+  let index = 0
+
+  const readGroup = (opening = '{', closing = '}') => {
+    if (value[index] !== opening) return ''
+    const end = matchingClosingIndex(value, index, opening, closing)
+    if (end === -1) return ''
+    const content = value.slice(index + 1, end)
+    index = end + 1
+    return content
+  }
+
+  const readAtom = (): ReactNode => {
+    while (/\s/.test(value[index] ?? '')) index += 1
+    if (index >= value.length) return <mrow />
+
+    const character = value[index]
+    if (character === '{') return <mrow>{renderMathExpression(readGroup())}</mrow>
+    if (character === '(' || character === '[') {
+      const closing = character === '(' ? ')' : ']'
+      const end = matchingClosingIndex(value, index, character, closing)
+      if (end !== -1) {
+        const content = value.slice(index + 1, end)
+        index = end + 1
+        return <mrow><mo>{character}</mo>{renderMathExpression(content)}<mo>{closing}</mo></mrow>
+      }
+    }
+    if (character === '\\') {
+      index += 1
+      const commandMatch = value.slice(index).match(/^[A-Za-z]+|^./)
+      const command = commandMatch?.[0] ?? ''
+      index += command.length
+
+      if (command === 'left' || command === 'right') return readAtom()
+      if (command === 'frac') {
+        while (/\s/.test(value[index] ?? '')) index += 1
+        const numerator = readGroup()
+        while (/\s/.test(value[index] ?? '')) index += 1
+        const denominator = readGroup()
+        return <mfrac>{renderMathExpression(numerator)}{renderMathExpression(denominator)}</mfrac>
+      }
+      if (command === 'sqrt') {
+        while (/\s/.test(value[index] ?? '')) index += 1
+        const rootIndex = value[index] === '[' ? readGroup('[', ']') : ''
+        while (/\s/.test(value[index] ?? '')) index += 1
+        const radicand = readGroup()
+        return rootIndex
+          ? <mroot>{renderMathExpression(radicand)}{renderMathExpression(rootIndex)}</mroot>
+          : <msqrt>{renderMathExpression(radicand)}</msqrt>
+      }
+      if (command === 'text') {
+        while (/\s/.test(value[index] ?? '')) index += 1
+        return <mtext>{readGroup()}</mtext>
+      }
+      if (command === 'overline' || command === 'hat') {
+        while (/\s/.test(value[index] ?? '')) index += 1
+        const content = readGroup()
+        return <mover accent="true">{renderMathExpression(content)}<mo>{command === 'hat' ? '^' : '¯'}</mo></mover>
+      }
+      if (mathFunctions.has(command)) return <mi mathvariant="normal">{command}</mi>
+      if (mathSymbols[command]) return <mo>{mathSymbols[command]}</mo>
+      return <mi>{command}</mi>
+    }
+    if (/\d/.test(character) || (character === '.' && /\d/.test(value[index + 1] ?? ''))) {
+      const number = value.slice(index).match(/^(?:\d[\d,]*(?:\.\d+)?|\.\d+)/)?.[0] ?? character
+      index += number.length
+      return <mn>{number}</mn>
+    }
+    if (/[A-Za-z]/.test(character)) {
+      index += 1
+      return <mi>{character}</mi>
+    }
+
+    index += 1
+    return <mo>{character}</mo>
+  }
+
+  while (index < value.length) {
+    let base = readAtom()
+    let subscript: ReactNode | undefined
+    let superscript: ReactNode | undefined
+    while (value[index] === '^' || value[index] === '_') {
+      const marker = value[index]
+      index += 1
+      while (/\s/.test(value[index] ?? '')) index += 1
+      let script: ReactNode
+      if (value[index] === '{') script = renderMathExpression(readGroup())
+      else script = readAtom()
+      if (marker === '^') superscript = script
+      else subscript = script
+    }
+
+    if (subscript && superscript) base = <msubsup>{base}{subscript}{superscript}</msubsup>
+    else if (subscript) base = <msub>{base}{subscript}</msub>
+    else if (superscript) base = <msup>{base}{superscript}</msup>
+    nodes.push(<Fragment key={nextMathKey()}>{base}</Fragment>)
+  }
+
+  return <mrow>{nodes}</mrow>
+}
+
+function MathFormula({ value, display = false }: { value: string; display?: boolean }) {
+  return (
+    <math
+      display={display ? 'block' : 'inline'}
+      className={display ? 'mx-auto min-w-max text-[1.12em]' : 'mx-[0.08em] inline-block text-[1.04em]'}
+      style={{ fontFamily: MATH_FONT }}
+    >
+      {renderMathExpression(value)}
+    </math>
+  )
+}
+
+function looksLikeMath(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.length > 180) return false
+  const proseWords = trimmed.match(/[A-Za-z]{2,}/g) ?? []
+  if (!trimmed.includes('\\') && proseWords.length >= 2) return false
+  if (/\\(?:frac|sqrt|angle|triangle|sin|cos|tan|text|overline|hat)|[=<>^_+*/]|\d/.test(trimmed)) return true
+  return /^[A-Za-z]$/.test(trimmed)
 }
 
 function inlineNodes(text: string): ReactNode[] {
-  const tokens = text.split(/(<u>.*?<\/u>|\*\*.*?\*\*|\*[^*]+\*|\$[^$]+\$)/g)
+  const tokens = text.split(/(<u>.*?<\/u>|\*\*.*?\*\*|\*[^*]+\*|\$[^$\n]+\$)/g)
   return tokens.filter(Boolean).map((token, index) => {
-    if (token.startsWith('<u>') && token.endsWith('</u>')) {
-      return <u key={index}>{token.slice(3, -4)}</u>
-    }
-    if (token.startsWith('**') && token.endsWith('**')) {
-      return <strong key={index}>{token.slice(2, -2)}</strong>
-    }
-    if (token.startsWith('*') && token.endsWith('*')) {
-      return <em key={index}>{token.slice(1, -1)}</em>
-    }
-    if (token.startsWith('$') && token.endsWith('$')) {
-      const math = normalizeMath(token.slice(1, -1))
-      return <span key={index} className="whitespace-nowrap font-serif font-semibold italic text-slate-950">{mathNodes(math, `inline-${index}`)}</span>
+    if (token.startsWith('<u>') && token.endsWith('</u>')) return <u key={index}>{token.slice(3, -4)}</u>
+    if (token.startsWith('**') && token.endsWith('**')) return <strong key={index}>{inlineNodes(token.slice(2, -2))}</strong>
+    if (token.startsWith('*') && token.endsWith('*')) return <em key={index}>{inlineNodes(token.slice(1, -1))}</em>
+    if (token.startsWith('$') && token.endsWith('$') && looksLikeMath(token.slice(1, -1))) {
+      return <MathFormula key={index} value={token.slice(1, -1)} />
     }
     return <Fragment key={index}>{token}</Fragment>
   })
 }
 
-export default function SATRichText({ text, className = '' }: Props) {
-  const normalized = text
-    .replace(/\r\n/g, '\n')
-    .replace(/\$\$([\s\S]*?)\$\$/g, (_match, value: string) => `\n$${value}$\n`)
+function normalizeRichText(text: string) {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .replace(/```/g, '')
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_match, value: string) => `\n\n$$${value}$$\n\n`)
+    .replace(/\$\$\s*\$\$/g, () => '$$\n\n$$')
+    .replace(/\$\$([^$]+)\$\$(?=\S)/g, (_match, value: string) => `$$${value}$$\n\n`)
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+}
 
-  const blocks = normalized.split(/\n\s*\n/).filter(Boolean)
+export default function SATRichText({ text, className = '' }: Props) {
+  const blocks = normalizeRichText(text).split(/\n\s*\n/).filter((block) => block.trim())
 
   return (
     <div className={className}>
-      {blocks.map((block, index) => {
-        const lines = block.split('\n').filter((line) => line.trim())
-        const isList = lines.every((line) => /^\s*[-*•]\s+/.test(line))
-        if (isList) {
-          return (
-            <ul key={index} className="my-3 list-disc space-y-2 pl-5">
-              {lines.map((line, lineIndex) => <li key={lineIndex}>{inlineNodes(line.replace(/^\s*[-*•]\s+/, ''))}</li>)}
-            </ul>
-          )
+      {blocks.map((rawBlock, index) => {
+        const block = rawBlock.trim()
+        const spacing = index ? 'mt-4' : ''
+        const displayMath = block.match(/^\$\$([\s\S]+)\$\$$/) ?? block.match(/^\$([^$\n]+)\$$/)
+        if (displayMath && looksLikeMath(displayMath[1])) {
+          return <div key={index} className={`${spacing} overflow-x-auto py-1.5 text-center`}><MathFormula value={displayMath[1]} display /></div>
         }
-        return <p key={index} className={index ? 'mt-3' : undefined}>{inlineNodes(lines.join(' '))}</p>
+
+        const heading = block.match(/^#{1,6}\s+(.+)$/s)
+        if (heading) return <p key={index} className={`${spacing} font-bold text-slate-950`}>{inlineNodes(heading[1])}</p>
+        if (/^(?:-{3,}|\*{3,})$/.test(block)) return <hr key={index} className={`${spacing} border-slate-200`} />
+
+        const lines = block.split('\n').map((line) => line.trim()).filter(Boolean)
+        const unordered = lines.every((line) => /^(?:[-*•])\s+/.test(line))
+        if (unordered) {
+          return <ul key={index} className={`${spacing} list-disc space-y-2.5 pl-6`}>{lines.map((line, lineIndex) => <li key={lineIndex}>{inlineNodes(line.replace(/^(?:[-*•])\s+/, ''))}</li>)}</ul>
+        }
+        const ordered = lines.every((line) => /^\d+[.)]\s+/.test(line))
+        if (ordered) {
+          return <ol key={index} className={`${spacing} list-decimal space-y-2.5 pl-7`}>{lines.map((line, lineIndex) => <li key={lineIndex}>{inlineNodes(line.replace(/^\d+[.)]\s+/, ''))}</li>)}</ol>
+        }
+        return (
+          <p key={index} className={`${spacing} whitespace-pre-line`}>
+            {lines.map((line, lineIndex) => <Fragment key={lineIndex}>{lineIndex > 0 && <br />}{inlineNodes(line)}</Fragment>)}
+          </p>
+        )
       })}
     </div>
   )

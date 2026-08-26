@@ -240,7 +240,7 @@ export default function SATQuestionCanvas({
           ) : null}
 
           {context ? (
-            <SATRichText text={context} className="break-words font-serif text-[18px] font-medium leading-[1.55] text-[#171717] sm:text-[19px] lg:text-[20px]" />
+            <SATRichText text={context} className="break-words font-serif text-[18px] font-medium leading-[1.65] text-[#171717] sm:text-[19px] lg:text-[20px]" />
           ) : (
             <div className="hidden min-h-24 items-center justify-center text-center font-serif text-sm font-semibold text-slate-400 md:flex">
               Use the question panel to the right.
@@ -278,10 +278,10 @@ export default function SATQuestionCanvas({
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
 
         <div className="mx-auto max-w-3xl px-5 py-5 sm:px-8 xl:px-12">
-          <SATRichText text={task} className="break-words font-serif text-[19px] font-bold leading-[1.45] text-[#151515] sm:text-[20px] lg:text-[21px]" />
+          <SATRichText text={task} className="break-words font-serif text-[19px] font-bold leading-[1.6] text-[#151515] sm:text-[20px] lg:text-[21px]" />
 
           {question.kind === 'multiple-choice' ? (
-            <div className="mt-5 space-y-2.5" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
+            <div className="mt-6 space-y-3.5" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
               {question.choices.map((choice) => {
                 const selected = answer === choice.key
                 return (
@@ -312,7 +312,7 @@ export default function SATQuestionCanvas({
                     }`}>
                       {choice.key}
                     </span>
-                    <span className="min-w-0 flex-1 pt-0.5 text-[17px] font-semibold leading-7 sm:text-[18px]">
+                    <span className="min-w-0 flex-1 pt-0.5 text-[17px] font-semibold leading-8 sm:text-[18px]">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
                       <SATRichText text={choice.text} />
                     </span>

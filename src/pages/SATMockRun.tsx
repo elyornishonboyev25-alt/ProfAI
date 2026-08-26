@@ -19,6 +19,7 @@ import {
   ListChecks,
   NotebookPen,
   ShieldAlert,
+  Sheet,
   Sparkles,
   Trash2,
   Undo2,
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
+import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
 import SATRichText from '@/components/sat/SATRichText'
@@ -83,6 +85,8 @@ export default function SATMockRun() {
   const [notesOpen, setNotesOpen] = useState(false)
   const [noteDraft, setNoteDraft] = useState('')
   const [calculatorOpen, setCalculatorOpen] = useState(false)
+  const [calculatorDocked, setCalculatorDocked] = useState(false)
+  const [formulaSheetOpen, setFormulaSheetOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
@@ -214,6 +218,7 @@ export default function SATMockRun() {
     setNavigatorOpen(false)
     setNotesOpen(false)
     setCalculatorOpen(false)
+    setFormulaSheetOpen(false)
     if (fullscreenElement()) void exit()
   }, [exit, persistUpdate])
 
@@ -383,6 +388,7 @@ export default function SATMockRun() {
         target?.tagName === 'TEXTAREA' ||
         target?.tagName === 'SELECT' ||
         calculatorOpen ||
+        formulaSheetOpen ||
         notesOpen ||
         navigatorOpen ||
         violationDeadline
@@ -423,6 +429,7 @@ export default function SATMockRun() {
   }, [
     attempt,
     calculatorOpen,
+    formulaSheetOpen,
     currentModule.questions.length,
     currentQuestion.id,
     currentQuestion.kind,
@@ -550,24 +557,39 @@ export default function SATMockRun() {
 
           <div className="col-span-2 flex items-center justify-end gap-1 sm:gap-3 md:col-span-1">
             {currentModule.section === 'math' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setCalculatorOpen((value) => !value)
-                  setToolsOpen(false)
-                  setMoreOpen(false)
-                }}
-                aria-expanded={calculatorOpen}
-                aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
-                title={calculatorOpen ? 'Close Desmos' : 'Open Desmos'}
-                className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${
-                  calculatorOpen
-                    ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.22)]'
-                    : 'bg-red-50 text-red-700 hover:bg-red-100'
-                }`}
-              >
-                <Calculator className="h-5 w-5" /> <span className="hidden lg:inline">Desmos</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormulaSheetOpen(true)
+                    setToolsOpen(false)
+                    setMoreOpen(false)
+                  }}
+                  aria-label="Open SAT formula sheet"
+                  title="Formula Sheet"
+                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-sky-50 px-3 font-serif text-sm font-bold text-sky-800 transition hover:bg-sky-100 sm:px-4"
+                >
+                  <Sheet className="h-5 w-5" /> <span className="hidden xl:inline">Formula Sheet</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCalculatorOpen((value) => !value)
+                    setToolsOpen(false)
+                    setMoreOpen(false)
+                  }}
+                  aria-expanded={calculatorOpen}
+                  aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
+                  title={calculatorOpen ? 'Close Desmos' : 'Open Desmos'}
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${
+                    calculatorOpen
+                      ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.22)]'
+                      : 'bg-red-50 text-red-700 hover:bg-red-100'
+                  }`}
+                >
+                  <Calculator className="h-5 w-5" /> <span className="hidden lg:inline">Desmos</span>
+                </button>
+              </>
             ) : null}
             <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Open question navigator">
               <FileText className="h-6 w-6" />
@@ -622,9 +644,6 @@ export default function SATMockRun() {
 
           {moreOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-56 rounded-2xl border border-slate-300 bg-white p-2 shadow-2xl">
-              {currentModule.section === 'math' ? (
-                <button type="button" onClick={() => { setCalculatorOpen(true); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Calculator className="h-4 w-4" /> Open Desmos</button>
-              ) : null}
               <div className="flex items-center gap-1 rounded-xl px-2 py-2">
                 <button type="button" aria-label="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
                 <span className="min-w-16 flex-1 text-center text-xs font-black tabular-nums">{Math.round(zoom * 100)}%</span>
@@ -658,7 +677,7 @@ export default function SATMockRun() {
         </div>
       ) : null}
 
-      <div className="overflow-auto pb-[5.4rem]">
+      <div className={`overflow-auto pb-[5.4rem] transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[calc(min(44vw,46rem)+0.75rem)]' : ''}`}>
         <div
           className="origin-top-left"
           style={{ zoom } as CSSProperties}
@@ -735,8 +754,12 @@ export default function SATMockRun() {
       <DesmosDrawer
         open={calculatorOpen}
         preload={currentModule.section === 'math'}
+        docked={calculatorDocked}
+        onDockedChange={setCalculatorDocked}
         onClose={closeCalculator}
       />
+
+      <SATFormulaSheet open={formulaSheetOpen} onClose={() => setFormulaSheetOpen(false)} />
 
       <AnimatePresence>
         {directionsOpen ? (

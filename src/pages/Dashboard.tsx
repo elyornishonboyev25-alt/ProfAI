@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -21,7 +20,6 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import NotificationsBell from '@/components/layout/NotificationsBell'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
@@ -115,7 +113,6 @@ function StatCard({
 export default function Dashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
-  const { minimalMotion } = useMotionPreferences()
   const profile = loadOnboardingProfile(user?.id)
   const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
 
@@ -242,7 +239,7 @@ export default function Dashboard() {
             <div className="dashboard-progress-orbit">
               <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
-                <motion.circle
+                <circle
                   cx="50"
                   cy="50"
                   r="41"
@@ -251,9 +248,7 @@ export default function Dashboard() {
                   strokeLinecap="round"
                   strokeWidth="8"
                   strokeDasharray={`${2 * Math.PI * 41}`}
-                  initial={{ strokeDashoffset: 2 * Math.PI * 41 }}
-                  animate={{ strokeDashoffset: 2 * Math.PI * 41 * (1 - targetProgress / 100) }}
-                  transition={{ duration: minimalMotion ? 0.01 : 0.75, delay: minimalMotion ? 0 : 0.12, ease: 'easeOut' }}
+                  strokeDashoffset={2 * Math.PI * 41 * (1 - targetProgress / 100)}
                 />
               </svg>
               <div className="relative text-center">
@@ -398,10 +393,8 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
-                <motion.div
-                  initial={minimalMotion ? false : { scaleX: 0 }}
-                  animate={{ scaleX: nextAchievement.progress / 100 }}
-                  transition={minimalMotion ? { duration: 0.01 } : { duration: 0.55, delay: 0.12, ease: 'easeOut' }}
+                <div
+                  style={{ transform: `scaleX(${nextAchievement.progress / 100})` }}
                   className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400"
                 />
               </div>

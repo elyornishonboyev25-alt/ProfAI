@@ -219,6 +219,7 @@ function App() {
   const isLeaderboardMode = pathname === '/leaderboard'
   const isProfileStandalone = pathname === '/profile'
   const isStandaloneMode = pathname === '/account'
+  const isIeltsMockMode = pathname === '/mock/ielts' || pathname.startsWith('/mock/ielts/')
   const isTrackMode =
     isStandaloneMode ||
     isVocabularyMode ||
@@ -313,6 +314,7 @@ function App() {
     !isFocusContentMode &&
     !isVocabularyMode &&
     !isLeaderboardMode &&
+    !isIeltsMockMode &&
     pathname !== '/ielts'
   const sidebarVisible = showSidebar && !isImmersiveHub
   const showMobileNav = Boolean(user) && sidebarVisible
@@ -414,7 +416,7 @@ function App() {
           {showSidebar ? <Sidebar concealed={isImmersiveHub} /> : null}
 
           <main
-            className={`min-w-0 w-full flex-1 overflow-x-clip transition-[margin] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`min-w-0 w-full flex-1 overflow-x-clip ${
               sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
             }`}
           >

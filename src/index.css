@@ -3280,7 +3280,7 @@ body {
 }
 
 .arena-route { animation: arenaRouteIn 230ms var(--app-ease-smooth) both; }
-.arena-route-dashboard { animation: dashboardRouteIn 260ms var(--app-ease-smooth) both; }
+.arena-route-dashboard { animation: dashboardRouteIn 180ms ease-out both; }
 
 @keyframes arenaRouteIn {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
@@ -3355,23 +3355,14 @@ body {
 }
 
 @keyframes dashboardRouteIn {
-  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.994); }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from { opacity: 0.35; }
+  to { opacity: 1; }
 }
 
 .arena-route-dashboard .dashboard-entrance-header,
 .arena-route-dashboard .dashboard-entrance-grid,
 .arena-route-dashboard .dashboard-entrance-learning {
-  animation: dashboardSectionIn 300ms var(--app-ease-smooth) both;
-}
-
-.arena-route-dashboard .dashboard-entrance-header { animation-delay: 20ms; }
-.arena-route-dashboard .dashboard-entrance-grid { animation-delay: 45ms; }
-.arena-route-dashboard .dashboard-entrance-learning { animation-delay: 70ms; }
-
-@keyframes dashboardSectionIn {
-  from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  animation: none;
 }
 
 .dashboard-leaderboard-preview {

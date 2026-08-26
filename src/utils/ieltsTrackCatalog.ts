@@ -20,6 +20,10 @@ export type IeltsFullTestEntry = {
   testId: string
 }
 
+export type IeltsReadingUnifiedEntry = IeltsFullTestEntry & {
+  source: 'roadmap' | 'library'
+}
+
 const READING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
   1: 'ielts-reading-full-vol1',
   2: 'ielts-reading-full-vol2',
@@ -46,8 +50,35 @@ const LISTENING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
 
 const MOCK_READING_DAYS = new Set([10, 20, 30])
 
+export const READING_ROADMAP_FULL_TEST_DAYS: readonly (readonly number[])[] = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10],
+  [11, 12, 13],
+  [14, 15, 16],
+  [17, 18, 19],
+  [20],
+  [21, 22, 23],
+  [24, 25, 26],
+  [27, 28, 29],
+  [30],
+] as const
+
 const CURRENTLY_AVAILABLE_TRACK_TESTS: Record<IeltsTrackType, Set<string>> = {
   reading: new Set([
+    'reading-roadmap-full-1',
+    'reading-roadmap-full-2',
+    'reading-roadmap-full-3',
+    'reading-roadmap-full-4',
+    'reading-roadmap-full-5',
+    'reading-roadmap-full-6',
+    'reading-roadmap-full-7',
+    'reading-roadmap-full-8',
+    'reading-roadmap-full-9',
+    'reading-roadmap-full-10',
+    'reading-roadmap-full-11',
+    'reading-roadmap-full-12',
     'reading-day-1',
     'reading-day-2',
     'reading-day-3',
@@ -115,8 +146,8 @@ function resolvePassageNumber(day: number): number | null {
 }
 
 function createPassageEntry(track: IeltsTrackType, day: number): IeltsPassageEntry {
-  const isMock = track === 'reading' && MOCK_READING_DAYS.has(day)
-  const title = isMock ? `Day ${day} (Mock)` : `Day ${day}`
+  const trackLabel = track === 'reading' ? 'Reading' : 'Listening'
+  const title = `${trackLabel} Full Test ${day}`
 
   return {
     id: `${track}-day-${day}`,
@@ -151,8 +182,38 @@ export function getIeltsFullTestCatalog(track: IeltsTrackType): IeltsFullTestEnt
   return Array.from({ length: 30 }, (_, index) => createFullTestEntry(track, index + 1))
 }
 
+/**
+ * Keeps every original roadmap passage while regrouping it into 12 complete
+ * tests, then appends the 10 independent Reading tests already in the library.
+ */
+export function getIeltsReadingUnifiedCatalog(): IeltsReadingUnifiedEntry[] {
+  const roadmapTests: IeltsReadingUnifiedEntry[] = READING_ROADMAP_FULL_TEST_DAYS.map((_, index) => ({
+    id: `reading-unified-${index + 1}`,
+    index: index + 1,
+    title: `Reading Full Test ${index + 1}`,
+    premiumOnly: false,
+    testId: `reading-roadmap-full-${index + 1}`,
+    source: 'roadmap',
+  }))
+
+  const libraryTests: IeltsReadingUnifiedEntry[] = Array.from({ length: 10 }, (_, index) => ({
+    id: `reading-unified-${index + 13}`,
+    index: index + 13,
+    title: `Reading Full Test ${index + 13}`,
+    premiumOnly: false,
+    testId: READING_FULL_TEST_SOURCE_IDS[index + 1],
+    source: 'library',
+  }))
+
+  return [...roadmapTests, ...libraryTests]
+}
+
 export function isIeltsTrackCatalogTest(track: IeltsTrackType, testId: string): boolean {
   if (!testId) return false
+
+  if (track === 'reading' && getIeltsReadingUnifiedCatalog().some((entry) => entry.testId === testId)) {
+    return true
+  }
 
   const inPassages = getIeltsPassageCatalog(track).some((entry) => entry.testId === testId)
   if (inPassages) return true

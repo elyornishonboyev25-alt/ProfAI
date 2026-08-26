@@ -1,10 +1,9 @@
-// Speaking Day catalog (Day 1–30) + Full Mock catalog (1–20). Days cycle through
-// Part 1 → Part 2 (cue card) → Part 3, then repeat from Part 1 — so Day 1 is Part
-// 1, Day 2 is Part 2, Day 3 is Part 3, Day 4 is Part 1 again, and so on.
+// Speaking practice catalog (1–30) + Full Mock catalog (1–20). Practice tests
+// cycle through Part 1 → Part 2 (cue card) → Part 3, then repeat from Part 1.
 //
 // The bank now holds 30 of each part. To guarantee NO question is ever reused, the
 // 10 Days of each part use indices 0–9, and the 20 mocks use indices 10–29 — so the
-// Day roadmap and every full mock have completely distinct questions.
+// The practice catalog and every full mock have completely distinct questions.
 
 import {
   CUE_CARDS,
@@ -99,7 +98,7 @@ function buildDayContent(day: number): SpeakingDayContent {
 }
 
 function dayTitle(day: number): string {
-  return `Day ${day}`
+  return `Speaking Full Test ${day}`
 }
 
 function daySubtitle(content: SpeakingDayContent): string {

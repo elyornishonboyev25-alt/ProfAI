@@ -12,6 +12,7 @@ import { readingDaySections } from '@/data/readingDaySections'
 import { readingMockDayTests } from '@/data/readingMockDayTests'
 import { mockListeningTests } from '@/data/listeningPassages'
 import type { IELTSTest, Section } from '@/types/ieltsTypes'
+import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
 
 export type GeneratedIeltsTrack = 'reading' | 'listening'
 const MOCK_READING_DAYS = new Set([10, 20, 30])
@@ -51,7 +52,7 @@ export function buildReadingDayTest(day: number): IELTSTest {
   return {
     ...fullReadingTest,
     id: `reading-day-${normalizedDay}`,
-    title: isMockDay ? `IELTS Reading Day ${normalizedDay} (Mock)` : `IELTS Reading Day ${normalizedDay}`,
+    title: isMockDay ? `IELTS Reading Full Test ${normalizedDay}` : `IELTS Reading Passage Set ${normalizedDay}`,
     duration: 20,
     sections: [section],
     totalQuestions,
@@ -80,6 +81,36 @@ export function buildReadingFullTest(index: number): IELTSTest {
   }
 }
 
+function cleanReadingSectionTitle(title: string, passageNumber: number): string {
+  const topic = title
+    .replace(/^IELTS\s+Reading\s+/i, '')
+    .replace(/^Day\s+\d+\s*/i, '')
+    .replace(/^Passage\s+\d+\s*:?\s*/i, '')
+    .trim()
+  return topic ? `Passage ${passageNumber}: ${topic}` : `Passage ${passageNumber}`
+}
+
+export function buildReadingRoadmapFullTest(index: number): IELTSTest | null {
+  const days = READING_ROADMAP_FULL_TEST_DAYS[index - 1]
+  if (!days) return null
+
+  const sections = days
+    .flatMap((day) => buildReadingDayTest(day).sections)
+    .map((section, sectionIndex) => ({
+      ...cloneSection(section),
+      title: cleanReadingSectionTitle(section.title, sectionIndex + 1),
+    }))
+
+  return {
+    ...fullReadingTest,
+    id: `reading-roadmap-full-${index}`,
+    title: `IELTS Reading Full Test ${index}`,
+    duration: 60,
+    sections,
+    totalQuestions: sections.reduce((total, section) => total + getQuestionSlotCount(section), 0),
+  }
+}
+
 export function buildListeningDayTest(day: number): IELTSTest {
   const seed = mockListeningTests[(Math.max(1, day) - 1) % mockListeningTests.length]
   const sectionIndex = (Math.max(1, day) - 1) % Math.min(3, seed.sections.length)
@@ -88,7 +119,7 @@ export function buildListeningDayTest(day: number): IELTSTest {
   return {
     ...seed,
     id: `listening-day-${day}`,
-    title: `IELTS Listening Day ${day}`,
+    title: `IELTS Listening Full Test ${day}`,
     duration: 20,
     sections: [section],
     totalQuestions: section.questions.length,
@@ -106,6 +137,11 @@ export function buildListeningFullTest(index: number): IELTSTest {
 }
 
 export function resolveGeneratedTrackTest(type: GeneratedIeltsTrack, id: string): IELTSTest | null {
+  const roadmapFullMatch = id.match(/^reading-roadmap-full-(\d{1,2})$/)
+  if (type === 'reading' && roadmapFullMatch) {
+    return buildReadingRoadmapFullTest(Number(roadmapFullMatch[1]))
+  }
+
   const dayMatch = id.match(/^(reading|listening)-day-(\d{1,2})$/)
   if (dayMatch) {
     const day = Number(dayMatch[2])

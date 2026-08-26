@@ -48,7 +48,7 @@ export default function IELTSWritingTest() {
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             {task || fullTest
-              ? 'This writing test is currently in preview mode. Day 1 and Full Writing Test 1 are fully live right now.'
+              ? 'This writing test is currently in preview mode. Writing Full Test 1 is live now.'
               : 'The requested writing test could not be found.'}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">

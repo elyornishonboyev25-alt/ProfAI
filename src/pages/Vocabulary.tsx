@@ -437,22 +437,22 @@ export default function Vocabulary() {
 
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <Reveal>
-          <section className="rounded-[2rem] border border-blue-100 bg-white/95 p-6 shadow-[0_30px_70px_rgba(30,64,175,0.13)] backdrop-blur-xl sm:p-8">
+          <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="premium-top-controls">
                   <button
                     onClick={() => navigate('/dashboard')}
-                    className="premium-back-btn-blue"
+                    className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
                     Back
                   </button>
-                  <span className="premium-top-chip-blue">SAT Vocabulary Track</span>
+                  <span className="premium-top-chip">SAT Vocabulary Track</span>
                 </div>
-                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary Collection</h1>
+                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary Studio</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Each pack opens independently. Choose a section to enter its activity page. The matching game uses group-level diamond rewards.
+                  Choose a pack, open a section and start practice.
                 </p>
               </div>
               <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
@@ -473,7 +473,7 @@ export default function Vocabulary() {
             return (
               <StaggerItem
                 key={pack.id}
-                className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/95 shadow-[0_12px_30px_rgba(30,64,175,0.09)]"
+                className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
               >
                 <button
                   onClick={() => toggleSatPack(pack.id)}

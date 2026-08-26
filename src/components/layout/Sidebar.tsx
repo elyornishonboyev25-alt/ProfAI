@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Headphones,
   Languages,
+  Trophy,
   Users,
 } from 'lucide-react'
 import { cn } from '../ui/utils'
@@ -42,6 +43,7 @@ const SECONDARY_ITEMS: NavItem[] = [
   { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
   { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
   { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
   { id: 'vocabulary', label: 'Vocabulary', icon: Languages, path: '/vocabulary' },
 ]
 

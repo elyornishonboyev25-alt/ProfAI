@@ -71,9 +71,9 @@ export default function IELTSSpeakingTests() {
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               className="relative w-full max-w-md rounded-[1.75rem] bg-white p-7 text-center shadow-2xl"
             >
-              <span className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg">
-                <Crown className="h-7 w-7" />
-              </span>
+              <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
+                <Crown className="h-3.5 w-3.5" /> Premium access
+              </p>
               <h2 className="mt-4 text-2xl font-black text-slate-950">Free sessions used</h2>
               <p className="mt-2 text-sm text-slate-600">Premium gives you unlimited AI speaking feedback.</p>
               <div className="mt-5 flex justify-center gap-2">
@@ -93,7 +93,7 @@ export default function IELTSSpeakingTests() {
         onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts')}
         onLaunch={handleLaunch}
         headerExtra={!speakingTrial.isPremium && Number.isFinite(speakingTrial.remaining) ? (
-          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 text-xs font-bold text-amber-200">
+          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-700">
             <Sparkles className="h-3.5 w-3.5" />
             {Math.max(0, speakingTrial.remaining)} free
           </span>

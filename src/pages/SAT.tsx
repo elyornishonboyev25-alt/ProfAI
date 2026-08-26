@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -28,7 +28,7 @@ type AttemptWithTest = {
   test: SATTestDefinition
 }
 
-const glassCard = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/50 shadow-[0_24px_70px_rgba(55,65,100,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-[28px]'
+const glassCard = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/88 shadow-[0_24px_70px_rgba(55,65,100,0.12),inset_0_1px_0_rgba(255,255,255,0.98)]'
 
 function ProgressRing({ value, size = 126 }: { value: number; size?: number }) {
   const radius = 45
@@ -189,6 +189,7 @@ export default function SAT() {
   const user = useAuthStore((state: AuthState) => state.user)
   const { minimalMotion } = useMotionPreferences()
   const [showMockCatalog, setShowMockCatalog] = useState(false)
+  const mockCatalogRef = useRef<HTMLElement>(null)
   const profile = loadOnboardingProfile(user?.id)
 
   const attempts = useMemo<AttemptWithTest[]>(() => (
@@ -245,13 +246,30 @@ export default function SAT() {
     ? Math.round((Object.keys(activeAttempt.attempt.answers).length / activeAttempt.test.questionCount) * 100)
     : completedAttempts.length ? 100 : 0
 
+  const toggleMockCatalog = () => {
+    if (showMockCatalog) {
+      setShowMockCatalog(false)
+      return
+    }
+
+    setShowMockCatalog(true)
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        mockCatalogRef.current?.scrollIntoView({
+          behavior: minimalMotion ? 'auto' : 'smooth',
+          block: 'start',
+        })
+      })
+    })
+  }
+
   return (
     <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
       <div className="relative mx-auto max-w-[112rem]">
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/55 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm backdrop-blur-xl hover:bg-white/80 hover:text-red-600"
+          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:bg-white hover:text-red-600"
         >
           <ArrowLeft className="h-4 w-4" /> Dashboard
         </button>
@@ -261,7 +279,7 @@ export default function SAT() {
           animate={{ opacity: 1, y: 0 }}
           className="pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/40 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-red-600 backdrop-blur-xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/82 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-red-600">
             <Sparkles className="h-3 w-3" /> Digital SAT command center
           </div>
           <h1 className="mt-3 text-5xl font-extrabold tracking-[-0.06em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">SAT Arena</h1>
@@ -344,7 +362,7 @@ export default function SAT() {
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_auto]">
           <article className={`${glassCard} p-6 sm:p-7`}>
-            <button type="button" onClick={() => setShowMockCatalog((current) => !current)} className="flex w-full flex-col gap-5 text-left sm:flex-row sm:items-center sm:justify-between" aria-expanded={showMockCatalog} aria-controls="sat-mock-catalog">
+            <button type="button" onClick={toggleMockCatalog} className="flex w-full flex-col gap-5 text-left sm:flex-row sm:items-center sm:justify-between" aria-expanded={showMockCatalog} aria-controls="sat-mock-catalog">
               <span className="block">
                 <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</span></span>
                 <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Full Digital SAT mocks</span>
@@ -371,11 +389,12 @@ export default function SAT() {
           <AnimatePresence initial={false}>
             {showMockCatalog ? (
               <motion.article
+                ref={mockCatalogRef}
                 id="sat-mock-catalog"
                 initial={minimalMotion ? false : { opacity: 0, height: 0, y: -8 }}
                 animate={{ opacity: 1, height: 'auto', y: 0 }}
                 exit={minimalMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
-                className={`${glassCard} lg:col-span-2`}
+                className={`${glassCard} scroll-mt-5 lg:col-span-2`}
               >
                 <div className="p-6 sm:p-7">
                   <div className="flex flex-wrap items-end justify-between gap-3">

@@ -40,7 +40,7 @@ const SKILLS: Array<{
   { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 8, illustration: 'speaking', icon: Mic2 },
 ]
 
-const GLASS = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/55 shadow-[0_24px_64px_rgba(30,41,59,.11),inset_0_1px_0_rgba(255,255,255,.96)] backdrop-blur-xl'
+const GLASS = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/88 shadow-[0_24px_64px_rgba(30,41,59,.1),inset_0_1px_0_rgba(255,255,255,.98)]'
 
 function localToday() {
   const now = new Date()

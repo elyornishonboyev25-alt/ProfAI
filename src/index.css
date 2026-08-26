@@ -264,6 +264,23 @@
   content: '';
 }
 
+.dashboard-card-sheen::after {
+  position: absolute;
+  inset: -30% auto -30% -45%;
+  z-index: 1;
+  width: 34%;
+  transform: translate3d(-170%, 0, 0) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+  content: '';
+  pointer-events: none;
+  animation: dashboardCardSheen 1050ms var(--app-ease-smooth) 420ms both;
+}
+
+@keyframes dashboardCardSheen {
+  from { transform: translate3d(-170%, 0, 0) skewX(-18deg); }
+  to { transform: translate3d(620%, 0, 0) skewX(-18deg); }
+}
+
 .dashboard-progress-orbit {
   position: relative;
   display: flex;
@@ -413,6 +430,12 @@ html[data-motion='minimal'] .dashboard-stat-card,
 html[data-motion='minimal'] .dashboard-learning-card {
   transform: none;
   transition: none;
+}
+
+html[data-motion='minimal'] .dashboard-card-sheen::after,
+html[data-motion-paused='true'] .dashboard-card-sheen::after {
+  animation: none;
+  display: none;
 }
 
 @media (max-width: 1279px) {
@@ -2343,6 +2366,11 @@ html[data-motion='minimal'] .dashboard-learning-card {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dashboard-card-sheen::after {
+    animation: none !important;
+    display: none;
+  }
+
   html {
     scroll-behavior: auto;
   }
@@ -2970,8 +2998,7 @@ body {
   opacity: 0.76;
   filter: saturate(1.08);
   isolation: isolate;
-  will-change: transform;
-  animation: ambientSphereDrift 22s ease-in-out infinite;
+  will-change: auto;
 }
 
 .ambient-sphere > i {
@@ -2998,8 +3025,6 @@ body {
   top: 16vh;
   width: 5.2rem;
   height: 5.2rem;
-  animation-delay: -3s;
-  animation-duration: 24s;
 }
 
 .ambient-sphere-b {
@@ -3008,8 +3033,6 @@ body {
   width: 8.7rem;
   height: 8.7rem;
   opacity: 0.64;
-  animation-delay: -11s;
-  animation-duration: 29s;
 }
 
 .ambient-sphere-c {
@@ -3017,13 +3040,6 @@ body {
   bottom: 12vh;
   width: 4rem;
   height: 4rem;
-  animation-delay: -17s;
-  animation-duration: 26s;
-}
-
-@keyframes ambientSphereDrift {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(10px, -14px, 0); }
 }
 
 .ui-page-shell,
@@ -3047,8 +3063,6 @@ body {
   width: 3.4rem;
   height: 3.4rem;
   opacity: .58;
-  animation-delay: -7s;
-  animation-duration: 21s;
 }
 
 .app-shell .backdrop-blur,
@@ -3058,15 +3072,15 @@ body {
 .app-shell .backdrop-blur-xl,
 .app-shell .backdrop-blur-2xl,
 .app-shell .backdrop-blur-3xl {
-  backdrop-filter: blur(14px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
+  backdrop-filter: blur(8px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(120%) !important;
 }
 
 .app-shell .backdrop-blur,
 .app-shell .backdrop-blur-sm,
 .app-shell .backdrop-blur-md {
-  backdrop-filter: blur(8px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(120%) !important;
+  backdrop-filter: blur(5px) saturate(116%) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(116%) !important;
 }
 
 .ui-focus-shell {
@@ -3183,6 +3197,14 @@ body {
 .arena-loading > span { height: .8rem; width: calc(100% - var(--row) * 14%); border-radius: 999px; background: linear-gradient(90deg, rgba(226,232,240,.82), rgba(241,245,249,.92)); }
 .arena-loader-progress { animation: arenaLoaderProgress 1.25s var(--app-ease-smooth) infinite; will-change: transform; }
 @keyframes arenaLoaderProgress { from { transform: translate3d(-110%,0,0); } to { transform: translate3d(245%,0,0); } }
+
+.route-loader-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 44px rgba(30, 41, 59, 0.09), inset 0 1px 0 white;
+}
 
 .ui-action {
   display: inline-flex;

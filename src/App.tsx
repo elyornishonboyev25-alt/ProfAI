@@ -11,7 +11,6 @@ import PremiumRoute from '@/components/auth/PremiumRoute'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import FloatingAIAssistant from '@/components/ai/FloatingAIAssistant'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import NicknameGate from '@/components/speaking/NicknameGate'
@@ -26,6 +25,7 @@ import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
+const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
@@ -95,7 +95,24 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 }
 
 function RouteLoader() {
-  return <BrandPageLoader />
+  return <BrandPageLoader compact label="Opening page" />
+}
+
+function DeferredFloatingAIAssistant() {
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setReady(true), 180)
+    return () => window.clearTimeout(timeoutId)
+  }, [])
+
+  if (!ready) return null
+
+  return (
+    <Suspense fallback={null}>
+      <FloatingAIAssistant />
+    </Suspense>
+  )
 }
 
 function DeferredTalkOverlay() {
@@ -175,6 +192,7 @@ function App() {
   const isStandaloneMode = pathname === '/account'
   const isTrackMode =
     isStandaloneMode ||
+    isVocabularyMode ||
     pathname.startsWith('/mock') ||
     pathname === '/speaking-community' ||
     pathname.startsWith('/speaker/') ||
@@ -236,7 +254,8 @@ function App() {
   const showSidebar =
     !isPublicStandalone &&
     !isTestMode &&
-    !isFocusContentMode
+    !isFocusContentMode &&
+    !isVocabularyMode
   const sidebarVisible = showSidebar && !isImmersiveHub
   const showMobileNav = Boolean(user) && sidebarVisible
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
@@ -325,7 +344,7 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          <FloatingAIAssistant />
+          <DeferredFloatingAIAssistant />
           {!isExamModeActive ? <DeferredTalkOverlay /> : null}
           {!isExamModeActive ? <FullscreenToggle /> : null}
           <WordLookupLayer />

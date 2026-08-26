@@ -68,11 +68,6 @@ const learningCards = [
   { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
 ] as const
 
-const dashboardEntrance = {
-  duration: 0.32,
-  ease: [0.22, 1, 0.36, 1],
-} as const
-
 function bestAvailableScore(...scores: Array<number | null | undefined>) {
   const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
   return available.length ? Math.max(...available) : 0
@@ -192,12 +187,7 @@ export default function Dashboard() {
             </button>
           </div>
         ) : null}
-        <motion.header
-          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={dashboardEntrance}
-          className="flex flex-wrap items-center justify-between gap-4 px-1 pb-5"
-        >
+        <header className="flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 text-sm font-black text-blue-700">
@@ -208,7 +198,7 @@ export default function Dashboard() {
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Your learning dashboard</p>
               <h1 className="truncate text-2xl font-black tracking-[-0.04em] text-[#101222] sm:text-4xl">
-                Welcome back, {firstName} <span aria-hidden>👋</span>
+                Welcome back, {firstName}
               </h1>
               <p className="mt-1 text-xs font-medium text-slate-500">Small steps today. Big results tomorrow.</p>
             </div>
@@ -224,15 +214,10 @@ export default function Dashboard() {
               <Settings className="h-5 w-5" />
             </button>
           </div>
-        </motion.header>
+        </header>
 
         <section className="grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
-          <motion.article
-            initial={minimalMotion ? false : { opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={minimalMotion ? { duration: 0.01 } : { ...dashboardEntrance, delay: 0.05 }}
-            className="dashboard-target-card"
-          >
+          <article className="dashboard-target-card dashboard-card-sheen">
             <div className="relative z-10">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">Your target</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -282,7 +267,7 @@ export default function Dashboard() {
             >
               Continue preparing <ArrowRight className="h-3.5 w-3.5" />
             </button>
-          </motion.article>
+          </article>
 
           <div className="min-w-0 space-y-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -404,13 +389,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <motion.section
-          initial={minimalMotion ? false : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.12 }}
-          transition={dashboardEntrance}
-          className="dashboard-glass-card mt-4 p-5"
-        >
+        <section className="dashboard-glass-card mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">Continue learning</p>
@@ -444,7 +423,7 @@ export default function Dashboard() {
               )
             })}
           </div>
-        </motion.section>
+        </section>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Crown, Lock, Sparkles } from 'lucide-react'
+import { CheckCircle2, Crown, Lock, Sparkles } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 
 type PremiumGateProps = {
@@ -61,12 +61,8 @@ export default function PremiumGate({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-blue-500 to-indigo-500" />
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-amber-200/40 blur-3xl" />
 
-          <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.4)]">
-            <Crown className="h-8 w-8" />
-          </div>
-
-          <span className="premium-top-chip mt-5 inline-flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
+          <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
+            <Crown className="h-3.5 w-3.5" />
             {eyebrow}
           </span>
 
@@ -77,9 +73,7 @@ export default function PremiumGate({
             <ul className="mx-auto mt-4 grid max-w-xs gap-1.5 text-left">
               {perks.map((perk) => (
                 <li key={perk} className="flex items-start gap-2 text-[13px] font-medium text-slate-600">
-                  <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                    <Sparkles className="h-2.5 w-2.5" />
-                  </span>
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
                   {perk}
                 </li>
               ))}

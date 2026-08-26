@@ -1,24 +1,22 @@
 import { BrandMark } from '@/components/brand/BrandLogo'
 
-export default function BrandPageLoader({ label = 'Preparing your workspace' }: { label?: string }) {
+export default function BrandPageLoader({
+  label = 'Preparing your workspace',
+  compact = false,
+}: {
+  label?: string
+  compact?: boolean
+}) {
   return (
-    <div className="relative flex min-h-[68vh] w-full min-w-0 items-center justify-center overflow-hidden px-5">
-      <div className="relative min-w-0 w-full max-w-md rounded-[2rem] border border-white/90 bg-white/78 p-6 text-center shadow-[0_28px_70px_rgba(30,41,59,0.13)] backdrop-blur-xl sm:p-8">
+    <div className={`relative flex w-full min-w-0 items-center justify-center px-5 ${compact ? 'min-h-[70vh]' : 'min-h-[56vh]'}`} role="status" aria-live="polite">
+      <div className={`route-loader-card relative min-w-0 w-full text-center ${compact ? 'max-w-xs p-5' : 'max-w-sm p-6 sm:p-7'}`}>
         <div className="relative mx-auto w-fit">
-          <BrandMark size={82} className="relative" />
+          <BrandMark size={compact ? 54 : 70} className="relative" />
         </div>
-        <p className="mt-5 text-sm font-black text-slate-950">{label}</p>
-        <p className="mt-1 text-xs font-semibold text-slate-500">ProfAI is syncing your plan and progress.</p>
-        <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-slate-200">
+        <p className={`${compact ? 'mt-3' : 'mt-4'} text-sm font-black text-slate-950`}>{label}</p>
+        {!compact ? <p className="mt-1 text-xs font-semibold text-slate-500">Syncing your plan and progress.</p> : null}
+        <div className={`${compact ? 'mt-4' : 'mt-5'} h-1 overflow-hidden rounded-full bg-slate-200/90`}>
           <div className="arena-loader-progress h-full w-[42%] rounded-full bg-gradient-to-r from-red-800 via-red-500 to-blue-500" />
-        </div>
-        <div className="mt-6 grid grid-cols-3 gap-2">
-          {[0, 1, 2].map((item) => (
-            <span
-              key={item}
-              className="h-14 rounded-xl border border-slate-100 bg-gradient-to-br from-white to-blue-50/60"
-            />
-          ))}
         </div>
       </div>
     </div>

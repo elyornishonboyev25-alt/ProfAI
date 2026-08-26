@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 705" role="img" aria-labelledby="title description">
+  <title id="title">Decreasing exponential graph below the x-axis</title>
+  <desc id="description">A decreasing exponential curve with a horizontal asymptote at y equals negative four. The curve remains below the x-axis.</desc>
+  <defs>
+    <marker id="axis-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 8 4 0 8Z" fill="#111827" />
+    </marker>
+    <clipPath id="plot-area">
+      <rect x="82" y="48" width="675" height="645" />
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="705" rx="10" fill="#ffffff" />
+
+  <g stroke="#64748b" stroke-width="2" opacity="0.58">
+    <path d="M108 78H721 M108 118H721 M108 158H721 M108 198H721 M108 238H721 M108 318H721 M108 358H721 M108 398H721 M108 438H721 M108 478H721 M108 518H721 M108 558H721 M108 598H721 M108 638H721 M108 678H721" />
+    <path d="M108 62V690 M139 62V690 M169 62V690 M200 62V690 M230 62V690 M261 62V690 M291 62V690 M322 62V690 M352 62V690 M383 62V690 M444 62V690 M475 62V690 M505 62V690 M536 62V690 M566 62V690 M597 62V690 M627 62V690 M658 62V690 M688 62V690 M721 62V690" />
+  </g>
+
+  <g fill="none" stroke="#111827" stroke-linecap="round">
+    <path d="M92 278H752" stroke-width="4" marker-end="url(#axis-arrow)" />
+    <path d="M413 692V43" stroke-width="4" marker-end="url(#axis-arrow)" />
+    <g stroke-width="3">
+      <path d="M108 268V288 M169 268V288 M230 268V288 M291 268V288 M352 268V288 M475 268V288 M536 268V288 M597 268V288 M658 268V288 M721 268V288" />
+      <path d="M403 118H423 M403 198H423 M403 358H423 M403 438H423 M403 518H423 M403 598H423 M403 678H423" />
+    </g>
+  </g>
+
+  <g fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="24" text-anchor="middle">
+    <text x="108" y="311">−10</text>
+    <text x="169" y="311">−8</text>
+    <text x="230" y="311">−6</text>
+    <text x="291" y="311">−4</text>
+    <text x="352" y="311">−2</text>
+    <text x="475" y="311">2</text>
+    <text x="536" y="311">4</text>
+    <text x="597" y="311">6</text>
+    <text x="658" y="311">8</text>
+    <text x="721" y="311">10</text>
+  </g>
+
+  <g fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="24" text-anchor="end" dominant-baseline="middle">
+    <text x="395" y="118">4</text>
+    <text x="395" y="198">2</text>
+    <text x="395" y="358">−2</text>
+    <text x="395" y="438">−4</text>
+    <text x="395" y="518">−6</text>
+    <text x="395" y="598">−8</text>
+    <text x="395" y="678">−10</text>
+  </g>
+
+  <g fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-style="italic">
+    <text x="760" y="292">x</text>
+    <text x="405" y="31">y</text>
+    <text x="384" y="306">O</text>
+  </g>
+
+  <g clip-path="url(#plot-area)">
+    <path
+      d="M108 438 C250 438 326 443 383 469 C425 494 459 552 475 601 C488 643 496 678 500 693"
+      fill="none"
+      stroke="#111827"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>

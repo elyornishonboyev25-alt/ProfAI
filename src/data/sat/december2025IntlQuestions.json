@@ -2303,7 +2303,7 @@
     "domain": "Math",
     "explanation": "**Step 1:** Solutions of $f(x)=0$ are x-intercepts.\n\n**Step 2:** The shown curve stays below the x-axis and never touches it.\n\n**Step 3:** There are **zero**, choice **A**.",
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/math2-08-graph.png",
+      "asset": "/sat/practice-test-3/visuals/math2-08-graph-clean.svg",
       "alt": "Coordinate graph of a decreasing exponential curve below the x-axis"
     }
   },
@@ -2563,7 +2563,7 @@
     "domain": "Math",
     "explanation": "**Step 1:** The displayed graph is $y=f(x)+2$ and has y-intercept 6.\n\n**Step 2:** So $f(0)=6-2=4$. For $f(x)=-4^x+c$, $f(0)=-1+c=4$, hence $c=5$.\n\n**Step 3:** Therefore **B** is correct.",
     "visual": {
-      "asset": "/sat/practice-test-3/visuals/math2-18-graph.png",
+      "asset": "/sat/practice-test-3/visuals/math2-18-graph-clean.svg",
       "alt": "Coordinate graph of y equals f of x plus 2, with y-intercept 6"
     }
   },

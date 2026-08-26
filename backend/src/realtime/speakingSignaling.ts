@@ -16,31 +16,91 @@ type Client = {
   peer: Client | null
   debateRoom: DebateRoom | null
   discussionRoom: string | null
+  subscribedToRoomStats: boolean
 }
 
-type DebateRoom = { id: string; topic: string; members: Client[] }
+type DebateTopic = {
+  motion: string
+  warmup: string
+  followUps: string[]
+  vocabulary: string[]
+}
+
+type DebateRoom = { id: string; number: number; topic: DebateTopic; members: Client[] }
 
 const waiting = new Map<string, Client[]>()
 const debateRooms = new Map<string, DebateRoom>()
 const discussionRooms = new Map<string, Client[]>()
-const discussionHistory = new Map<string, Array<{ id: string; name: string; text: string; createdAt: string }>>()
+const discussionHistory = new Map<string, Array<{ id: string; userId: string; name: string; text: string; createdAt: string }>>()
+const clients = new Set<Client>()
 
 const DEBATE_ROOM_SIZE = 5
-const DEBATE_MOTIONS = [
-  'Social media does more harm than good.',
-  'University education should be free for everyone.',
-  'Working from home is better than working in an office.',
-  'Technology is making people less social.',
-  'Exams are not a fair way to measure ability.',
-  'Tourism harms more than it helps local communities.',
-  'A four-day working week should be the standard.',
-  'Online learning is as effective as classroom learning.',
-  'Cities should ban private cars from their centres.',
-  'Celebrities have a responsibility to be good role models.',
+let nextDebateRoomNumber = 1
+const DEBATE_TOPICS: DebateTopic[] = [
+  {
+    motion: 'Social media does more harm than good.',
+    warmup: 'What is the strongest effect social media has on young people?',
+    followUps: ['Should governments regulate recommendation algorithms?', 'Can social media improve education and civic participation?'],
+    vocabulary: ['digital wellbeing', 'misinformation', 'social connection'],
+  },
+  {
+    motion: 'University education should be free for everyone.',
+    warmup: 'Who should pay for higher education, and why?',
+    followUps: ['Would free tuition reduce educational inequality?', 'Should every subject receive the same public funding?'],
+    vocabulary: ['equal access', 'taxpayer funding', 'social mobility'],
+  },
+  {
+    motion: 'Working from home is better than working in an office.',
+    warmup: 'Which environment helps people do their best work?',
+    followUps: ['How does remote work affect teamwork?', 'Should employees have the legal right to work remotely?'],
+    vocabulary: ['productivity', 'work-life balance', 'collaboration'],
+  },
+  {
+    motion: 'Technology is making people less social.',
+    warmup: 'Does online communication strengthen or weaken real relationships?',
+    followUps: ['Are virtual friendships as meaningful as face-to-face ones?', 'How should parents manage children’s screen time?'],
+    vocabulary: ['human interaction', 'social isolation', 'digital literacy'],
+  },
+  {
+    motion: 'Exams are not a fair way to measure ability.',
+    warmup: 'What should schools measure besides exam performance?',
+    followUps: ['Are projects more reliable than timed tests?', 'Can standardised exams ever be truly fair?'],
+    vocabulary: ['assessment', 'academic pressure', 'practical ability'],
+  },
+  {
+    motion: 'Tourism harms more than it helps local communities.',
+    warmup: 'What makes tourism sustainable for local residents?',
+    followUps: ['Should popular cities limit visitor numbers?', 'Who should receive the profits from tourism?'],
+    vocabulary: ['overtourism', 'local economy', 'cultural preservation'],
+  },
+  {
+    motion: 'A four-day working week should become the standard.',
+    warmup: 'Can people produce the same results in fewer working days?',
+    followUps: ['Which industries could not adopt this model?', 'Would a shorter week improve public health?'],
+    vocabulary: ['compressed schedule', 'employee wellbeing', 'output'],
+  },
+  {
+    motion: 'Online learning is as effective as classroom learning.',
+    warmup: 'Which parts of learning require face-to-face contact?',
+    followUps: ['Does online learning make education more accessible?', 'How can teachers keep remote learners engaged?'],
+    vocabulary: ['accessibility', 'learner engagement', 'self-discipline'],
+  },
+  {
+    motion: 'Cities should ban private cars from their centres.',
+    warmup: 'How would a car-free centre change daily life?',
+    followUps: ['Must public transport improve before a ban?', 'How should disabled residents be accommodated?'],
+    vocabulary: ['public transport', 'air quality', 'urban planning'],
+  },
+  {
+    motion: 'Celebrities have a responsibility to be good role models.',
+    warmup: 'Should public figures be judged differently from other people?',
+    followUps: ['Does fame create a duty to influence responsibly?', 'What responsibility belongs to fans and the media?'],
+    vocabulary: ['public influence', 'accountability', 'media scrutiny'],
+  },
 ]
 
-function pickMotion() {
-  return DEBATE_MOTIONS[Math.floor(Math.random() * DEBATE_MOTIONS.length)]
+function pickTopic() {
+  return DEBATE_TOPICS[Math.floor(Math.random() * DEBATE_TOPICS.length)]
 }
 
 function genId() {
@@ -50,6 +110,34 @@ function genId() {
 function send(client: Client, payload: unknown) {
   if (client.ws.readyState === WebSocket.OPEN) {
     client.ws.send(JSON.stringify(payload))
+  }
+}
+
+function roomStatsPayload() {
+  const liveDebateRooms = [...debateRooms.values()]
+    .map((room) => room.members.filter((member) => member.ws.readyState === WebSocket.OPEN).length)
+    .filter((online) => online > 0)
+
+  return {
+    type: 'roomStats',
+    rooms: {
+      debate: {
+        online: liveDebateRooms.reduce((total, online) => total + online, 0),
+        activeRooms: liveDebateRooms.length,
+        capacity: DEBATE_ROOM_SIZE,
+        openSeats: liveDebateRooms.reduce((total, online) => total + DEBATE_ROOM_SIZE - online, 0),
+      },
+      questions: { online: discussionRooms.get('hard-questions')?.length ?? 0 },
+      admissions: { online: discussionRooms.get('study-abroad')?.length ?? 0 },
+      partner: { online: [...clients].filter((client) => client.bucket !== null || client.peer !== null).length },
+    },
+  }
+}
+
+function broadcastRoomStats() {
+  const payload = roomStatsPayload()
+  for (const client of clients) {
+    if (client.subscribedToRoomStats) send(client, payload)
   }
 }
 
@@ -65,6 +153,8 @@ function removeFromQueue(client: Client) {
 function pair(a: Client, b: Client) {
   a.peer = b
   b.peer = a
+  a.bucket = null
+  b.bucket = null
   // `a` was already waiting → make it the caller (it initiates the WebRTC offer).
   send(a, { type: 'matched', isCaller: true, peerId: b.id, peerUserId: b.userId, peerName: b.name })
   send(b, { type: 'matched', isCaller: false, peerId: a.id, peerUserId: a.userId, peerName: a.name })
@@ -99,6 +189,7 @@ function enqueue(client: Client, part: number, level: string) {
     waiting.set(bucket, current)
     send(client, { type: 'queued' })
   }
+  broadcastRoomStats()
 }
 
 function unpair(client: Client, notify: boolean) {
@@ -119,14 +210,14 @@ function joinDebate(client: Client) {
 
   let room: DebateRoom | undefined
   for (const r of debateRooms.values()) {
-    const live = r.members.filter((m) => m.ws.readyState === WebSocket.OPEN).length
-    if (live < DEBATE_ROOM_SIZE) {
+    r.members = r.members.filter((member) => member.ws.readyState === WebSocket.OPEN)
+    if (r.members.length < DEBATE_ROOM_SIZE) {
       room = r
       break
     }
   }
   if (!room) {
-    room = { id: genId(), topic: pickMotion(), members: [] }
+    room = { id: genId(), number: nextDebateRoomNumber++, topic: pickTopic(), members: [] }
     debateRooms.set(room.id, room)
   }
 
@@ -135,6 +226,8 @@ function joinDebate(client: Client) {
   send(client, {
     type: 'debateRoom',
     roomId: room.id,
+    roomNumber: room.number,
+    capacity: DEBATE_ROOM_SIZE,
     topic: room.topic,
     members: room.members.map((m) => ({ id: m.id, userId: m.userId, name: m.name })),
   })
@@ -143,6 +236,7 @@ function joinDebate(client: Client) {
   }
   room.members.push(client)
   client.debateRoom = room
+  broadcastRoomStats()
 }
 
 function leaveDebate(client: Client, notify: boolean) {
@@ -154,6 +248,7 @@ function leaveDebate(client: Client, notify: boolean) {
     for (const m of room.members) send(m, { type: 'debatePeerLeft', peerId: client.id })
   }
   if (room.members.length === 0) debateRooms.delete(room.id)
+  broadcastRoomStats()
 }
 
 function relayDebateSignal(client: Client, to: string, data: unknown) {
@@ -171,6 +266,7 @@ function leaveDiscussion(client: Client) {
   else discussionRooms.delete(roomId)
   client.discussionRoom = null
   for (const member of remaining) send(member, { type: 'discussionPresence', roomId, online: remaining.length })
+  broadcastRoomStats()
 }
 
 function joinDiscussion(client: Client, roomId: string) {
@@ -182,12 +278,14 @@ function joinDiscussion(client: Client, roomId: string) {
   client.discussionRoom = safeRoomId
   send(client, { type: 'discussionSnapshot', roomId: safeRoomId, messages: discussionHistory.get(safeRoomId) ?? [] })
   for (const member of members) send(member, { type: 'discussionPresence', roomId: safeRoomId, online: members.length })
+  broadcastRoomStats()
 }
 
 function postDiscussion(client: Client, roomId: string, text: string) {
   if (client.discussionRoom !== roomId) return
   const message = {
     id: genId(),
+    userId: client.userId,
     name: client.name,
     text: text.trim().slice(0, 500),
     createdAt: new Date().toISOString(),
@@ -213,7 +311,9 @@ function attach(server: Server) {
       peer: null,
       debateRoom: null,
       discussionRoom: null,
+      subscribedToRoomStats: false,
     }
+    clients.add(client)
 
     ws.on('message', (raw) => {
       let msg: { type?: string; userId?: string; name?: string; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string }
@@ -228,6 +328,10 @@ function attach(server: Server) {
           client.userId = typeof msg.userId === 'string' ? msg.userId.slice(0, 120) : 'anon'
           client.name = typeof msg.name === 'string' ? msg.name.slice(0, 80) : 'Guest'
           break
+        case 'subscribeRoomStats':
+          client.subscribedToRoomStats = true
+          send(client, roomStatsPayload())
+          break
         case 'queue':
           if (typeof msg.part === 'number' && typeof msg.level === 'string') {
             enqueue(client, msg.part, msg.level.slice(0, 24))
@@ -240,6 +344,7 @@ function attach(server: Server) {
           removeFromQueue(client)
           unpair(client, true)
           client.bucket = null
+          broadcastRoomStats()
           break
         case 'joinDebate':
           joinDebate(client)
@@ -269,6 +374,8 @@ function attach(server: Server) {
       unpair(client, true)
       leaveDebate(client, true)
       leaveDiscussion(client)
+      clients.delete(client)
+      broadcastRoomStats()
     }
     ws.on('close', cleanup)
     ws.on('error', cleanup)

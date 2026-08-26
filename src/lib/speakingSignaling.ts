@@ -1,3 +1,5 @@
+import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
+
 // Signaling layer for live partner matchmaking. Two interchangeable transports
 // behind one interface:
 //   - BroadcastChannelTransport: peer-to-peer matchmaking across tabs of the SAME
@@ -251,18 +253,13 @@ export class WebSocketTransport implements SignalingTransport {
 
 // ── Factory ─────────────────────────────────────────────────────────────────
 /**
- * Pick a transport. In production we use the backend WebSocket (same origin, so it
- * works across devices). In dev we default to BroadcastChannel so the live flow is
- * testable across browser tabs with no server. Override with VITE_SPEAKING_WS_URL.
+ * Real rooms always use the backend so dev and production share the exact same
+ * matchmaking behaviour. BroadcastChannel remains available as an explicit
+ * offline fallback for UI demos.
  */
 export function createSignalingTransport(identity: SignalingIdentity): SignalingTransport {
-  const explicit = (import.meta.env as Record<string, string | undefined>).VITE_SPEAKING_WS_URL
-  if (explicit) return new WebSocketTransport(explicit, identity)
-
-  if (import.meta.env.PROD && typeof window !== 'undefined') {
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    return new WebSocketTransport(`${scheme}://${window.location.host}/ws/speaking`, identity)
-  }
-
-  return new BroadcastChannelTransport(identity)
+  const localFallback = (import.meta.env as Record<string, string | undefined>).VITE_SPEAKING_LOCAL_FALLBACK === 'true'
+  return localFallback
+    ? new BroadcastChannelTransport(identity)
+    : new WebSocketTransport(getSpeakingWebSocketUrl(), identity)
 }

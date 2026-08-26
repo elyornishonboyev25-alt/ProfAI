@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
+  ArrowRight,
   Award,
   BadgeCheck,
   ChevronDown,
@@ -36,6 +37,11 @@ import Debate from '@/components/speaking/sections/Debate'
 import Partner from '@/components/speaking/sections/Partner'
 import DiscussionRoom from '@/components/community/DiscussionRoom'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
+import {
+  EMPTY_COMMUNITY_ROOM_STATS,
+  subscribeToCommunityRoomStats,
+  type CommunityRoomStats,
+} from '@/lib/communityRoomStats'
 import '@/styles/community.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
@@ -45,10 +51,10 @@ export type CommunityMode = 'people' | 'debate' | 'partner' | 'questions' | 'adm
 const COMMUNITY_MODES: CommunityMode[] = ['people', 'debate', 'partner', 'questions', 'admissions']
 
 const STUDY_ROOMS = [
-  { name: 'IELTS Band 7+ room', detail: 'Live group debate', icon: Mic, section: 'debate' },
-  { name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp, section: 'questions' },
-  { name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap, section: 'admissions' },
-  { name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore, section: 'partner' },
+  { id: 'debate', name: 'IELTS Band 7+ room', detail: '5-person live debate', icon: Mic, section: 'debate' },
+  { id: 'questions', name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp, section: 'questions' },
+  { id: 'admissions', name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap, section: 'admissions' },
+  { id: 'partner', name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore, section: 'partner' },
 ] as const
 
 function normalizeScore(value: string | number | null | undefined) {
@@ -92,7 +98,14 @@ export default function Community() {
   const [account, setAccount] = useState<AccountResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [roomStats, setRoomStats] = useState<CommunityRoomStats>(EMPTY_COMMUNITY_ROOM_STATS)
+  const [roomStatsConnected, setRoomStatsConnected] = useState(false)
   const debounceRef = useRef<number | null>(null)
+
+  useEffect(
+    () => subscribeToCommunityRoomStats(setRoomStats, setRoomStatsConnected),
+    [],
+  )
 
   useEffect(() => {
     if (requestedMode === 'ai') navigate('/ielts/speaking/tests?coach=1', { replace: true })
@@ -178,8 +191,6 @@ export default function Community() {
     [account, visibleResults],
   )
   const suggested = ranked.slice(0, 3)
-  const onlineCount = visibleResults.filter((learner) => learner.online).length
-
   const clearFilters = () => {
     setExam('ALL')
     setSmartFilters([])
@@ -239,11 +250,16 @@ export default function Community() {
               <nav className="community-room-list" aria-label="Study rooms">
                 {STUDY_ROOMS.map((room) => {
                   const Icon = room.icon
+                  const stats = roomStats[room.id]
+                  const liveLabel = roomStatsConnected && stats.online > 0 ? `${stats.online} live` : 'Join'
+                  const detail = room.id === 'debate' && roomStats.debate.activeRooms > 0
+                    ? `${roomStats.debate.activeRooms} active · ${roomStats.debate.openSeats} open seats`
+                    : room.detail
                   return (
-                    <button type="button" key={room.name} onClick={() => selectMode(room.section)} className="community-room-link">
+                    <button type="button" key={room.name} onClick={() => selectMode(room.section)} className="community-room-link" aria-label={`Open ${room.name}`}>
                       <span className="community-room-icon"><Icon className="h-4 w-4" /></span>
-                      <span><b>{room.name}</b><small>{room.detail}</small></span>
-                      <i>{onlineCount || 'Open'}</i>
+                      <span><b>{room.name}</b><small>{detail}</small></span>
+                      <i className={stats.online > 0 ? 'is-live' : ''}>{liveLabel}<ArrowRight /></i>
                     </button>
                   )
                 })}
@@ -346,6 +362,13 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
         <p>{description}</p>
         <button type="button" onClick={() => onModeChange('people')} className="community-back-btn mt-4"><ArrowLeft className="h-4 w-4" /> Back to Community</button>
       </div>
+
+      <nav className="community-mode-nav" aria-label="Switch study room">
+        {STUDY_ROOMS.map((room) => {
+          const Icon = room.icon
+          return <button type="button" key={room.id} onClick={() => onModeChange(room.section)} aria-pressed={mode === room.section} className={cn('community-mode-btn', mode === room.section && 'is-active')}><Icon className="h-4 w-4" />{room.name}</button>
+        })}
+      </nav>
 
       {live && !trial.isPremium ? (
         <div className={cn('community-trial-banner', trial.locked && 'is-locked')}>

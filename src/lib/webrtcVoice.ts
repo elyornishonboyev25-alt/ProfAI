@@ -2,10 +2,22 @@
 // requested — this is a microphone-only experience by design. Signaling (SDP + ICE)
 // is delegated to whatever transport the caller passes in (BroadcastChannel or WS).
 
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-]
+function iceServers(): RTCIceServer[] {
+  const env = import.meta.env as Record<string, string | undefined>
+  const servers: RTCIceServer[] = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ]
+  const turnUrls = env.VITE_WEBRTC_TURN_URL?.split(',').map((value) => value.trim()).filter(Boolean)
+  if (turnUrls?.length) {
+    servers.push({
+      urls: turnUrls,
+      username: env.VITE_WEBRTC_TURN_USERNAME ?? '',
+      credential: env.VITE_WEBRTC_TURN_CREDENTIAL ?? '',
+    })
+  }
+  return servers
+}
 
 type SignalPayload = { sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }
 
@@ -21,7 +33,7 @@ export function createVoiceConnection(opts: {
   onRemoteStream: (stream: MediaStream) => void
   onStateChange?: (state: RTCPeerConnectionState) => void
 }): VoiceConnection {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
+  const pc = new RTCPeerConnection({ iceServers: iceServers() })
   let remoteDescriptionSet = false
   const pendingCandidates: RTCIceCandidateInit[] = []
 
@@ -89,7 +101,9 @@ export function createVoiceConnection(opts: {
 
   const close = () => {
     try {
-      pc.getSenders().forEach((sender) => sender.track?.stop())
+      // Media-stream ownership belongs to the session controller. A debate uses
+      // the same microphone track in several peer connections, so stopping it
+      // here would mute every remaining speaker when only one peer leaves.
       pc.onicecandidate = null
       pc.ontrack = null
       pc.onconnectionstatechange = null

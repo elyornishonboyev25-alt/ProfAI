@@ -1,12 +1,20 @@
+import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
+
 // Signaling for group debate rooms. Same two-transport idea as the 1-1 partner
 // layer: a BroadcastChannel transport for local cross-tab testing and a WebSocket
 // transport for real cross-device rooms. Mesh role is simple — the member who joins
 // LAST dials everyone already in the room, so no id comparison is needed.
 
 export type DebateMember = { id: string; userId: string; name: string }
+export type DebateTopic = {
+  motion: string
+  warmup: string
+  followUps: string[]
+  vocabulary: string[]
+}
 
 export type DebateEvent =
-  | { type: 'room'; roomId: string; topic: string; members: DebateMember[] }
+  | { type: 'room'; roomId: string; roomNumber: number; capacity: number; topic: DebateTopic; members: DebateMember[] }
   | { type: 'peer_joined'; peer: DebateMember }
   | { type: 'peer_left'; peerId: string }
   | { type: 'signal'; from: string; data: unknown }
@@ -20,19 +28,31 @@ export interface DebateTransport {
   close(): void
 }
 
-const DEBATE_MOTIONS = [
-  'Social media does more harm than good.',
-  'University education should be free for everyone.',
-  'Working from home is better than working in an office.',
-  'Technology is making people less social.',
-  'Online learning is as effective as classroom learning.',
-  'A four-day working week should be the standard.',
+const DEBATE_TOPICS: DebateTopic[] = [
+  {
+    motion: 'Social media does more harm than good.',
+    warmup: 'What is the strongest effect social media has on young people?',
+    followUps: ['Should governments regulate recommendation algorithms?', 'Can social media improve education?'],
+    vocabulary: ['digital wellbeing', 'misinformation', 'social connection'],
+  },
+  {
+    motion: 'University education should be free for everyone.',
+    warmup: 'Who should pay for higher education, and why?',
+    followUps: ['Would free tuition reduce inequality?', 'Should every subject receive the same funding?'],
+    vocabulary: ['equal access', 'taxpayer funding', 'social mobility'],
+  },
+  {
+    motion: 'Online learning is as effective as classroom learning.',
+    warmup: 'Which parts of learning require face-to-face contact?',
+    followUps: ['Does online learning improve access?', 'How can teachers keep remote learners engaged?'],
+    vocabulary: ['accessibility', 'learner engagement', 'self-discipline'],
+  },
 ]
 
 // ── BroadcastChannel (local, cross-tab) ─────────────────────────────────────
 type BCMsg =
   | { kind: 'hello'; from: string; userId: string; name: string }
-  | { kind: 'here'; from: string; userId: string; name: string; to: string; topic: string }
+  | { kind: 'here'; from: string; userId: string; name: string; to: string; topic: DebateTopic }
   | { kind: 'signal'; from: string; to: string; data: unknown }
   | { kind: 'bye'; from: string }
 
@@ -43,7 +63,7 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
   private listener: ((e: DebateEvent) => void) | null = null
   private phase: 'idle' | 'joining' | 'in' = 'idle'
   private members = new Map<string, DebateMember>()
-  private topic = ''
+  private topic: DebateTopic = DEBATE_TOPICS[0]
 
   constructor(identity: { userId: string; name: string }) {
     this.identity = identity
@@ -54,7 +74,7 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
   join() {
     this.phase = 'joining'
     this.members.clear()
-    this.topic = DEBATE_MOTIONS[Math.floor(Math.random() * DEBATE_MOTIONS.length)]
+    this.topic = DEBATE_TOPICS[Math.floor(Math.random() * DEBATE_TOPICS.length)]
     this.post({ kind: 'hello', from: this.selfId, userId: this.identity.userId, name: this.identity.name })
     // Collect "here" replies briefly, then finalise the room.
     window.setTimeout(() => {
@@ -63,6 +83,8 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
       this.listener?.({
         type: 'room',
         roomId: 'local-room',
+        roomNumber: 1,
+        capacity: 5,
         topic: this.topic,
         members: [...this.members.values()],
       })
@@ -137,7 +159,6 @@ export class WebSocketDebateTransport implements DebateTransport {
   private identity: { userId: string; name: string }
   private listener: ((e: DebateEvent) => void) | null = null
   private joined = false
-  private settled = false
 
   constructor(url: string, identity: { userId: string; name: string }) {
     this.url = url
@@ -164,8 +185,14 @@ export class WebSocketDebateTransport implements DebateTransport {
         const msg = JSON.parse(ev.data)
         switch (msg.type) {
           case 'debateRoom':
-            this.settled = true
-            this.listener?.({ type: 'room', roomId: msg.roomId, topic: msg.topic, members: msg.members ?? [] })
+            this.listener?.({
+              type: 'room',
+              roomId: msg.roomId,
+              roomNumber: Number(msg.roomNumber) || 1,
+              capacity: Number(msg.capacity) || 5,
+              topic: msg.topic,
+              members: msg.members ?? [],
+            })
             break
           case 'debatePeerJoined':
             this.listener?.({ type: 'peer_joined', peer: msg.peer })
@@ -185,10 +212,9 @@ export class WebSocketDebateTransport implements DebateTransport {
     }
     ws.onerror = () => {}
     ws.onclose = () => {
-      const wasSettled = this.settled
       this.ws = null
-      if (!wasSettled && this.joined) {
-        this.listener?.({ type: 'error', message: 'Couldn’t reach the debate server. Please try again shortly.' })
+      if (this.joined) {
+        this.listener?.({ type: 'error', message: 'The live debate connection was interrupted. Please rejoin the room.' })
       }
     }
   }
@@ -219,11 +245,8 @@ export class WebSocketDebateTransport implements DebateTransport {
 }
 
 export function createDebateTransport(identity: { userId: string; name: string }): DebateTransport {
-  const explicit = (import.meta.env as Record<string, string | undefined>).VITE_SPEAKING_WS_URL
-  if (explicit) return new WebSocketDebateTransport(explicit, identity)
-  if (import.meta.env.PROD && typeof window !== 'undefined') {
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    return new WebSocketDebateTransport(`${scheme}://${window.location.host}/ws/speaking`, identity)
-  }
-  return new BroadcastChannelDebateTransport(identity)
+  const localFallback = (import.meta.env as Record<string, string | undefined>).VITE_SPEAKING_LOCAL_FALLBACK === 'true'
+  return localFallback
+    ? new BroadcastChannelDebateTransport(identity)
+    : new WebSocketDebateTransport(getSpeakingWebSocketUrl(), identity)
 }

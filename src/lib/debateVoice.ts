@@ -1,5 +1,5 @@
 import { createVoiceConnection, type VoiceConnection } from '@/lib/webrtcVoice'
-import type { DebateMember, DebateTransport } from '@/lib/debateSignaling'
+import type { DebateMember, DebateTopic, DebateTransport } from '@/lib/debateSignaling'
 
 // WebRTC mesh for a debate room: one peer connection per other member. The newest
 // member dials everyone already present (isCaller=true via the 'room' event), while
@@ -14,7 +14,13 @@ export type DebatePeerState = {
   connected: boolean
 }
 
-export type DebateMeshState = { topic: string; peers: DebatePeerState[] }
+export type DebateMeshState = {
+  roomId: string
+  roomNumber: number
+  capacity: number
+  topic: DebateTopic | null
+  peers: DebatePeerState[]
+}
 
 type PeerEntry = {
   member: DebateMember
@@ -28,13 +34,20 @@ export function createDebateMesh(opts: {
   localStream: MediaStream
   onChange: (state: DebateMeshState) => void
   onError?: (message: string) => void
+  onFatal?: (message: string) => void
 }) {
   const peers = new Map<string, PeerEntry>()
   const pending = new Map<string, unknown[]>()
-  let topic = ''
+  let roomId = ''
+  let roomNumber = 0
+  let capacity = 5
+  let topic: DebateTopic | null = null
 
   const emit = () => {
     opts.onChange({
+      roomId,
+      roomNumber,
+      capacity,
       topic,
       peers: [...peers.values()].map((p) => ({
         id: p.member.id,
@@ -63,18 +76,23 @@ export function createDebateMesh(opts: {
     })
     entry.voice = voice
     peers.set(member.id, entry)
-    void voice.start(opts.localStream).then(() => {
-      const buffered = pending.get(member.id)
-      if (buffered) {
-        pending.delete(member.id)
-        buffered.forEach((data) => void voice.handleSignal(data))
-      }
-    })
+    void voice.start(opts.localStream)
+      .then(async () => {
+        const buffered = pending.get(member.id)
+        if (buffered) {
+          pending.delete(member.id)
+          for (const data of buffered) await voice.handleSignal(data)
+        }
+      })
+      .catch(() => opts.onError?.(`Could not connect to ${member.name}.`))
     emit()
   }
 
   opts.transport.on((event) => {
     if (event.type === 'room') {
+      roomId = event.roomId
+      roomNumber = event.roomNumber
+      capacity = event.capacity
       topic = event.topic
       event.members.forEach((m) => addPeer(m, true))
       emit()
@@ -83,7 +101,7 @@ export function createDebateMesh(opts: {
     } else if (event.type === 'signal') {
       const peer = peers.get(event.from)
       if (peer) {
-        void peer.voice.handleSignal(event.data)
+        void peer.voice.handleSignal(event.data).catch(() => opts.onError?.(`Voice connection to ${peer.member.name} failed.`))
       } else {
         const arr = pending.get(event.from) ?? []
         arr.push(event.data)
@@ -95,7 +113,7 @@ export function createDebateMesh(opts: {
       peers.delete(event.peerId)
       emit()
     } else if (event.type === 'error') {
-      opts.onError?.(event.message)
+      opts.onFatal?.(event.message)
     }
   })
 

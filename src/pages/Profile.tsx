@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
   Activity,
   ArrowDownRight,
@@ -36,7 +35,7 @@ import { useAsyncData } from '@/hooks/useAsyncData'
 import type { AuthUser, ProfileOverview } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, XPGem } from '@/components/fx'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 import { isPremiumUser } from '@/utils/premiumAccess'
@@ -210,6 +209,16 @@ const tooltipStyle = {
   fontWeight: 600,
 }
 
+function safePercent(value: number) {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(100, Math.max(0, value))
+}
+
+function safeCount(value: number) {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.round(value))
+}
+
 function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill in.' }: { label: string; hint?: string }) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
@@ -241,10 +250,24 @@ export default function Profile() {
   const hasXpHistory = data?.skillAnalytics.xpMomentum.some((item) => item.xp > 0) ?? false
   const hasWeeklyActivity = data?.weeklyActivity.some((item) => item.active || item.xpEarned > 0 || (item.studyMinutes ?? 0) > 0) ?? false
   const premiumLocked = Boolean(user) && !isPremiumUser(user)
+  const averageAccuracy = safePercent(data?.stats.averageAccuracy ?? 0)
+  const averageScore = safePercent(data?.stats.averageScore ?? 0)
+  const radarData = useMemo(
+    () => data?.skillAnalytics.radar.map((metric) => ({ ...metric, skillPower: safePercent(metric.skillPower) })) ?? [],
+    [data],
+  )
+  const weeklyActivity = useMemo(
+    () => data?.weeklyActivity.map((day) => ({
+      ...day,
+      xpEarned: safeCount(day.xpEarned),
+      studyMinutes: safeCount(day.studyMinutes ?? 0),
+    })) ?? [],
+    [data],
+  )
 
   const xpToNext = useMemo(() => {
     if (!data) return 0
-    return Math.max(0, data.levelProgress.nextLevelThreshold - data.profile.xp)
+    return safeCount(data.levelProgress.nextLevelThreshold - data.profile.xp)
   }, [data])
 
   const heroMetrics = useMemo(() => {
@@ -252,34 +275,34 @@ export default function Profile() {
     return [
       {
         label: 'Total XP',
-        value: data.profile.xp,
+        value: safeCount(data.profile.xp),
         format: (v: number) => v.toLocaleString('en-US'),
         icon: Zap,
         tone: 'amber' as const,
       },
       {
         label: 'Tests Completed',
-        value: data.stats.totalAttempts,
+        value: safeCount(data.stats.totalAttempts),
         format: (v: number) => v.toString(),
         icon: Activity,
         tone: 'blue' as const,
       },
       {
         label: 'Average Accuracy',
-        value: data.stats.averageAccuracy,
+        value: averageAccuracy,
         format: (v: number) => `${v.toFixed(1)}%`,
         icon: Target,
         tone: 'indigo' as const,
       },
       {
         label: 'Streak',
-        value: data.profile.currentStreak,
+        value: safeCount(data.profile.currentStreak),
         format: (v: number) => `${v} d`,
         icon: Flame,
         tone: 'red' as const,
       },
     ]
-  }, [data])
+  }, [averageAccuracy, data])
 
   const ieltsSkills = useMemo(
     () => data?.skillAnalytics.trackBreakdown.filter((item) => item.group === 'IELTS') ?? [],
@@ -291,7 +314,7 @@ export default function Profile() {
   )
 
   return (
-    <div className="workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div className="performance-studio workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative mx-auto w-full max-w-7xl">
       <Reveal>
         <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
@@ -352,7 +375,7 @@ export default function Profile() {
               </div>
 
               {/* XP gem progress card */}
-              <Tilt3D className="rounded-3xl" max={5}>
+              <div className="rounded-3xl">
                 <div className="relative overflow-hidden rounded-3xl border border-blue-100/80 bg-gradient-to-br from-white via-amber-50/30 to-indigo-50/50 p-5 shadow-[0_18px_44px_rgba(37,99,235,0.12)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
                   <div className="flex items-start justify-between gap-3">
@@ -374,7 +397,7 @@ export default function Profile() {
                     <AnimatedBar value={data.levelProgress.progressPercent} height={9} />
                   </div>
                 </div>
-              </Tilt3D>
+              </div>
             </div>
           ) : null}
         </section>
@@ -429,7 +452,7 @@ export default function Profile() {
                     title={`Unlock ${card.label}`}
                     compact
                   >
-                  <article className="group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/72 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] backdrop-blur-md transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
+                  <article className="performance-metric-card group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/80 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
@@ -482,16 +505,16 @@ export default function Profile() {
                 <div className="relative h-64">
                   {!hasSkillActivity ? <ChartEmpty label="No scored skill data yet" /> : null}
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={data.skillAnalytics.radar}>
+                    <RadarChart data={radarData}>
                       <PolarGrid stroke="#BFDBFE" />
                       <PolarAngleAxis dataKey="label" tick={{ fill: '#64748B', fontSize: 10 }} />
                       <Radar
                         name="Skill Power"
                         dataKey="skillPower"
-                        stroke="#2563EB"
-                        fill="#2563EB"
-                        fillOpacity={0.32}
-                        animationDuration={900}
+                        stroke="#DC2626"
+                        fill="#EF4444"
+                        fillOpacity={0.26}
+                        isAnimationActive={false}
                       />
                       <Tooltip contentStyle={tooltipStyle} />
                     </RadarChart>
@@ -503,9 +526,9 @@ export default function Profile() {
                     <div key={skill.key}>
                       <div className="mb-1 flex items-center justify-between">
                         <span className="text-[12px] font-semibold text-slate-700">{skill.label}</span>
-                        <span className="text-[11px] font-bold text-slate-900">{skill.skillPower.toFixed(1)}</span>
+                        <span className="text-[11px] font-bold text-slate-900">{safePercent(skill.skillPower).toFixed(1)}</span>
                       </div>
-                      <AnimatedBar value={skill.skillPower} height={6} />
+                      <AnimatedBar value={safePercent(skill.skillPower)} height={6} />
                     </div>
                   ))}
                   <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">SAT Tracks</p>
@@ -513,9 +536,9 @@ export default function Profile() {
                     <div key={skill.key}>
                       <div className="mb-1 flex items-center justify-between">
                         <span className="text-[12px] font-semibold text-slate-700">{skill.label}</span>
-                        <span className="text-[11px] font-bold text-slate-900">{skill.skillPower.toFixed(1)}</span>
+                        <span className="text-[11px] font-bold text-slate-900">{safePercent(skill.skillPower).toFixed(1)}</span>
                       </div>
-                      <AnimatedBar value={skill.skillPower} height={6} from="#2563EB" to="#1D4ED8" track="rgba(59,130,246,0.14)" />
+                      <AnimatedBar value={safePercent(skill.skillPower)} height={6} from="#334155" to="#0F172A" track="rgba(51,65,85,0.13)" />
                     </div>
                   ))}
                 </div>
@@ -542,10 +565,10 @@ export default function Profile() {
               <Skeleton className="mt-4 h-56 w-full rounded-2xl" />
             ) : data ? (
               <div className="mt-4 flex flex-col items-center">
-                <ProgressRing value={data.stats.averageAccuracy} size={170} stroke={14}>
+                <ProgressRing value={averageAccuracy} size={170} stroke={14}>
                   <div className="text-center">
                     <p className="text-3xl font-black tracking-tight text-slate-900">
-                      <CountUp value={data.stats.averageAccuracy} decimals={1} suffix="%" />
+                      <CountUp value={averageAccuracy} decimals={1} suffix="%" />
                     </p>
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Avg accuracy</p>
                   </div>
@@ -554,7 +577,7 @@ export default function Profile() {
                   <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Avg Score</p>
                     <p className="mt-1 text-lg font-black text-slate-900">
-                      <CountUp value={data.stats.averageScore} decimals={1} suffix="%" />
+                      <CountUp value={averageScore} decimals={1} suffix="%" />
                     </p>
                   </div>
                   <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-center">
@@ -600,8 +623,8 @@ export default function Profile() {
                 <AreaChart data={data.skillAnalytics.xpMomentum} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="xpGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="#EF4444" stopOpacity={0.36} />
+                      <stop offset="100%" stopColor="#EF4444" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -611,10 +634,10 @@ export default function Profile() {
                   <Area
                     type="monotone"
                     dataKey="xp"
-                    stroke="#2563EB"
+                    stroke="#DC2626"
                     strokeWidth={2.5}
                     fill="url(#xpGradient)"
-                    animationDuration={900}
+                    isAnimationActive={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -647,17 +670,17 @@ export default function Profile() {
               <div className="relative mt-4 h-64 w-full">
                 {!hasWeeklyActivity ? <ChartEmpty label="No activity this week" hint="Active learning minutes will appear here automatically." /> : null}
                 <ResponsiveContainer>
-                  <BarChart data={data.weeklyActivity}>
+                  <BarChart data={weeklyActivity}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis dataKey="label" axisLine={false} tickLine={false} tick={tickStyle} />
                     <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={tickStyle} />
-                    <Tooltip cursor={{ fill: 'rgba(37,99,235,0.06)' }} contentStyle={tooltipStyle} />
-                    <Bar dataKey="xpEarned" radius={[10, 10, 4, 4]} fill="url(#weeklyXpGradient)" animationDuration={700} />
-                    <Bar dataKey="studyMinutes" name="Study minutes" radius={[10, 10, 4, 4]} fill="#60A5FA" animationDuration={700} />
+                    <Tooltip cursor={{ fill: 'rgba(220,38,38,0.05)' }} contentStyle={tooltipStyle} />
+                    <Bar dataKey="xpEarned" radius={[10, 10, 4, 4]} fill="url(#weeklyXpGradient)" isAnimationActive={false} />
+                    <Bar dataKey="studyMinutes" name="Study minutes" radius={[10, 10, 4, 4]} fill="#334155" isAnimationActive={false} />
                     <defs>
                       <linearGradient id="weeklyXpGradient" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#F59E0B" />
-                        <stop offset="100%" stopColor="#2563EB" />
+                        <stop offset="0%" stopColor="#F87171" />
+                        <stop offset="100%" stopColor="#B91C1C" />
                       </linearGradient>
                     </defs>
                   </BarChart>
@@ -738,10 +761,7 @@ export default function Profile() {
             <Stagger className="mt-4 grid gap-3 md:grid-cols-2">
               {data.recentAttempts.slice(0, 6).map((attempt) => (
                 <StaggerItem key={attempt.id}>
-                  <motion.div
-                    whileHover={{ y: -2 }}
-                    className="group rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-[0_10px_22px_rgba(37,99,235,0.1)]"
-                  >
+                  <div className="group rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-red-200 hover:shadow-[0_10px_22px_rgba(220,38,38,0.09)]">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-bold text-slate-900">{attempt.test.title}</p>
                       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
@@ -753,13 +773,13 @@ export default function Profile() {
                         {attempt.test.category} · {attempt.test.difficulty}
                       </span>
                       <span className="text-[11px] font-bold text-slate-700">
-                        {attempt.percentage.toFixed(1)}% ({attempt.finalScore.toFixed(1)}%)
+                        {safePercent(attempt.percentage).toFixed(1)}% ({safePercent(attempt.finalScore).toFixed(1)}%)
                       </span>
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-blue-100/60">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                        style={{ width: `${Math.max(2, Math.min(100, attempt.percentage))}%` }}
+                        style={{ width: `${Math.max(2, safePercent(attempt.percentage))}%` }}
                       />
                     </div>
                     <p className="mt-2 text-[10px] font-medium text-slate-400">
@@ -770,7 +790,7 @@ export default function Profile() {
                         minute: '2-digit',
                       })}
                     </p>
-                  </motion.div>
+                  </div>
                 </StaggerItem>
               ))}
             </Stagger>

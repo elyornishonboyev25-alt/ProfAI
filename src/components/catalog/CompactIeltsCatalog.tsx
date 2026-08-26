@@ -33,10 +33,10 @@ type CompactIeltsCatalogProps = {
 }
 
 const SECTION_META = {
-  reading: { label: 'Reading', accent: 'from-blue-600 via-blue-500 to-indigo-600' },
-  listening: { label: 'Listening', accent: 'from-sky-500 via-blue-500 to-indigo-600' },
-  writing: { label: 'Writing', accent: 'from-blue-600 via-indigo-500 to-red-500' },
-  speaking: { label: 'Speaking', accent: 'from-indigo-600 via-violet-500 to-red-500' },
+  reading: { label: 'Reading', accent: 'from-red-700 via-red-600 to-rose-500' },
+  listening: { label: 'Listening', accent: 'from-red-700 via-red-600 to-rose-500' },
+  writing: { label: 'Writing', accent: 'from-red-700 via-red-600 to-rose-500' },
+  speaking: { label: 'Speaking', accent: 'from-red-700 via-red-600 to-rose-500' },
 } as const
 
 export default function CompactIeltsCatalog({
@@ -52,11 +52,11 @@ export default function CompactIeltsCatalog({
 
   return (
     <main className="mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-      <section className="relative isolate min-h-[11.5rem] overflow-hidden rounded-[2rem] border border-white/90 bg-white/62 px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.13),inset_0_1px_0_white] backdrop-blur-xl sm:min-h-[13rem] sm:px-8">
+      <section className="relative isolate min-h-[11.5rem] overflow-hidden rounded-[2rem] border border-white/90 bg-white/88 px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.11),inset_0_1px_0_white] sm:min-h-[13rem] sm:px-8">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(118deg,rgba(254,242,242,.72),rgba(255,255,255,.58)_45%,rgba(219,234,254,.72))]" />
-        <div className="pointer-events-none absolute -left-20 -top-32 -z-10 h-72 w-72 rounded-full bg-red-200/35 blur-3xl" />
-        <div className="pointer-events-none absolute -right-16 -top-36 -z-10 h-80 w-80 rounded-full bg-blue-300/38 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-28 w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/24 shadow-[0_18px_60px_rgba(37,99,235,.08)] backdrop-blur-sm" />
+        <div className="pointer-events-none absolute -left-20 -top-32 -z-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(254,202,202,.52),transparent_70%)]" />
+        <div className="pointer-events-none absolute -right-16 -top-36 -z-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(147,197,253,.42),transparent_70%)]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-28 w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/80 bg-white/38 shadow-[0_18px_60px_rgba(185,28,28,.07)]" />
         <div className="pointer-events-none absolute inset-x-[14%] bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-blue-300/75 to-transparent" />
         <div className="pointer-events-none absolute inset-x-[24%] top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
@@ -64,7 +64,7 @@ export default function CompactIeltsCatalog({
           type="button"
           onClick={onBack}
           aria-label="Back to IELTS"
-          className="absolute left-5 top-5 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/95 bg-white/76 text-slate-700 shadow-[0_12px_30px_rgba(30,64,175,.1),inset_0_1px_0_white] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:left-7 sm:top-7"
+          className="absolute left-5 top-5 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/95 bg-white/86 text-slate-700 shadow-[0_12px_30px_rgba(30,64,175,.08),inset_0_1px_0_white] transition hover:-translate-y-0.5 hover:bg-white hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 sm:left-7 sm:top-7"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -79,12 +79,12 @@ export default function CompactIeltsCatalog({
         </div>
       </section>
 
-      <section className="relative mt-5 overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/58 p-4 shadow-[0_24px_64px_rgba(30,64,175,.11),inset_0_1px_0_white] backdrop-blur-lg sm:p-5 lg:p-6">
+      <section className="relative mt-5 overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
 
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">IELTS Academic</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
             <h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{meta.label} tests</h2>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -96,7 +96,7 @@ export default function CompactIeltsCatalog({
                 value={searchTerm}
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="Search test..."
-                className="h-11 w-full rounded-full border border-white/90 bg-white/76 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,64,175,.07)] outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,64,175,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
               />
             </label>
           </div>
@@ -114,15 +114,15 @@ export default function CompactIeltsCatalog({
                 type="button"
                 disabled={!row.available}
                 onClick={() => onLaunch(row)}
-                className={`group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border p-6 text-left shadow-[0_18px_50px_rgba(30,64,175,.09),inset_0_1px_0_white] transition-[transform,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
+                className={`group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border p-6 text-left shadow-[0_18px_50px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-[transform,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${
                   row.available
-                    ? 'border-blue-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.86),rgba(239,246,255,.72))] hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_26px_62px_rgba(37,99,235,.15),inset_0_1px_0_white]'
+                    ? 'border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(239,246,255,.58))] hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_26px_62px_rgba(185,28,28,.13),inset_0_1px_0_white]'
                     : 'cursor-not-allowed border-slate-200/80 bg-white/48 opacity-75'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">
                       IELTS {meta.label} {String(row.number).padStart(2, '0')}
                     </p>
                     <h3 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{row.title}</h3>
@@ -140,7 +140,7 @@ export default function CompactIeltsCatalog({
                     <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes} min</span>
                     <span>{row.detail}</span>
                   </div>
-                  <span className={`inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-blue-700' : 'text-amber-600'}`}>
+                  <span className={`inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>
                     {row.available ? 'Open' : 'Coming soon'}
                     {row.available ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
                   </span>

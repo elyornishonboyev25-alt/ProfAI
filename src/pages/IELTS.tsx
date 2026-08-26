@@ -15,7 +15,6 @@ import {
   Target,
   X,
 } from 'lucide-react'
-import { FeatureIllustration, type FeatureIllustrationKind } from '@/components/ui/FeatureIllustration'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
@@ -31,16 +30,28 @@ const SKILLS: Array<{
   title: string
   topics: string[]
   tests: number
-  illustration: FeatureIllustrationKind
   icon: typeof Headphones
 }> = [
-  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 15, illustration: 'listening', icon: Headphones },
-  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 12, illustration: 'reading', icon: Target },
-  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 10, illustration: 'writing', icon: PenLine },
-  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 8, illustration: 'speaking', icon: Mic2 },
+  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 30, icon: Headphones },
+  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 30, icon: Target },
+  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 30, icon: PenLine },
+  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 30, icon: Mic2 },
 ]
 
-const GLASS = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/88 shadow-[0_24px_64px_rgba(30,41,59,.1),inset_0_1px_0_rgba(255,255,255,.98)]'
+const GLASS = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.94),rgba(248,250,252,.86)_54%,rgba(254,242,242,.64))] shadow-[0_24px_64px_rgba(30,41,59,.09),inset_0_1px_0_rgba(255,255,255,.98)]'
+
+let catalogPreloadPromise: Promise<unknown> | null = null
+
+function preloadIeltsCatalogs() {
+  if (!catalogPreloadPromise) {
+    catalogPreloadPromise = Promise.all([
+      import('@/pages/IELTSSectionTests'),
+      import('@/pages/IELTSWritingTests'),
+      import('@/pages/IELTSSpeakingTests'),
+    ])
+  }
+  return catalogPreloadPromise
+}
 
 function localToday() {
   const now = new Date()
@@ -96,28 +107,46 @@ function ProgressRing({ band, label = 'Band' }: { band: number; label?: string }
 }
 
 function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number; onOpen: () => void }) {
+  const Icon = skill.icon
+
   return (
-    <article className={`${GLASS} group min-h-[22rem] min-w-0 p-6 sm:p-7`}>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(116deg,rgba(255,255,255,.58),rgba(255,255,255,.05)_48%,rgba(219,234,254,.18)_49%,transparent)]" />
+    <button
+      type="button"
+      onClick={onOpen}
+      onPointerEnter={() => void preloadIeltsCatalogs()}
+      className={`${GLASS} group min-h-[18rem] min-w-0 p-6 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_30px_70px_rgba(185,28,28,.13),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-7`}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_94%_4%,rgba(239,68,68,.1),transparent_34%),linear-gradient(118deg,rgba(255,255,255,.5),transparent_42%,rgba(219,234,254,.14))]" />
       <div className="relative flex h-full flex-col">
-        <h2 className="text-[1.65rem] font-black tracking-[-.045em] text-[#12131f] sm:text-[1.9rem]">{skill.title}</h2>
-        <div className="mt-5 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900">Skills</h3>
-            <ul className="mt-1 space-y-1 text-base font-medium leading-6 text-slate-700">
-              {skill.topics.map((topic) => <li key={topic}>{topic}</li>)}
-            </ul>
-          </div>
-          <ProgressRing band={score} />
+        <div className="flex items-start justify-between gap-4">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl border border-red-100 bg-gradient-to-br from-red-50 to-white text-red-600 shadow-[0_12px_26px_rgba(220,38,38,.12),inset_0_1px_0_white]">
+            <Icon className="h-5 w-5" />
+          </span>
+          <span className="rounded-full border border-red-100 bg-red-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-red-700">
+            {skill.tests} tests
+          </span>
         </div>
-        <div className="mt-auto flex min-w-0 items-end justify-between gap-1 pt-4 sm:gap-3">
-          <FeatureIllustration kind={skill.illustration} />
-          <button type="button" onClick={onOpen} className="group/button mb-1 inline-flex min-w-[7rem] items-center justify-center gap-2 rounded-full border border-red-300/70 bg-gradient-to-b from-[#ee4248] to-[#d5222c] px-4 py-3 text-sm font-extrabold text-white shadow-[0_12px_24px_rgba(220,38,38,.28),inset_0_2px_3px_rgba(255,255,255,.5)] transition hover:-translate-y-0.5 sm:min-w-[8.5rem] sm:px-6 sm:text-base">
-            Practice <ArrowRight className="h-4 w-4 transition-transform group-hover/button:translate-x-1" />
-          </button>
+
+        <h2 className="mt-6 text-[1.7rem] font-black tracking-[-0.045em] text-[#12131f] sm:text-[2rem]">{skill.title}</h2>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {skill.topics.map((topic) => (
+            <li key={topic} className="rounded-full border border-slate-200/80 bg-white/75 px-3 py-1.5 text-xs font-bold text-slate-600">
+              {topic}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-auto flex items-end justify-between gap-4 pt-7">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.17em] text-slate-400">Current band</p>
+            <p className="mt-1 text-2xl font-black tracking-[-0.04em] text-slate-950">{formatBand(score)}</p>
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#d91f2b] to-[#ef353d] px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,.24),inset_0_1px_0_rgba(255,255,255,.35)]">
+            Open tests <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
         </div>
       </div>
-    </article>
+    </button>
   )
 }
 
@@ -165,27 +194,35 @@ export default function IELTS() {
     return () => window.clearInterval(id)
   }, [examDate])
 
+  useEffect(() => {
+    const preloadId = window.setTimeout(() => {
+      void preloadIeltsCatalogs()
+    }, 280)
+    return () => window.clearTimeout(preloadId)
+  }, [])
+
   const openSkill = (id: SkillId) => {
-    const path = id === 'writing' ? '/ielts/writing/tests' : id === 'speaking' ? '/ielts/speaking/tests' : `/ielts/${id}`
+    const path = `/ielts/${id}/tests`
     navigate(path, { state: fromMock ? { entry: 'mock-ielts', from: entry?.from ?? 'tests' } : { entry: 'ielts-hub' } })
   }
 
   return (
     <main className="workspace-page min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[112rem]">
-        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard')} className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/65 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm backdrop-blur-md hover:text-red-600">
+        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard')} className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/85 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:text-red-600">
           <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
         </button>
 
-        <header className="pb-8 pt-5 text-center sm:pb-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600 backdrop-blur-md">
+        <header className={`${GLASS} mt-5 px-5 py-10 text-center sm:px-8 sm:py-12`}>
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(239,68,68,.12),transparent_30%),radial-gradient(circle_at_92%_10%,rgba(59,130,246,.14),transparent_34%)]" />
+          <div className="relative inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600">
             <Sparkles className="h-3 w-3" /> IELTS command center
           </div>
-          <h1 className="mt-3 text-[2.55rem] font-extrabold tracking-[-.065em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">IELTS <span className="text-red-600">Arena</span></h1>
+          <h1 className="relative mt-3 text-[2.55rem] font-extrabold tracking-[-.065em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">IELTS <span className="text-red-600">Arena</span></h1>
           <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]">Listening + Reading + Writing + Speaking — your path to Band {target}+</p>
         </header>
 
-        <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
+        <section className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
           {SKILLS.slice(0, 2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}
           <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
             <article className={`${GLASS} p-6`}>

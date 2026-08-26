@@ -59,6 +59,8 @@ const EMPTY_OVERVIEW: DashboardOverview = {
   miniLeaderboard: [],
 }
 
+const dashboardOverviewCache = new Map<string, DashboardOverview>()
+
 const learningCards = [
   { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
   { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
@@ -117,12 +119,19 @@ export default function Dashboard() {
   const profile = loadOnboardingProfile(user?.id)
   const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
 
+  const dashboardCacheKey = user?.id ?? 'guest'
+  const cachedOverview = dashboardOverviewCache.get(dashboardCacheKey) ?? null
   const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
-    () => apiClient.get('/dashboard/overview', { auth: Boolean(user) }),
+    async () => {
+      const freshOverview = await apiClient.get<DashboardOverview>('/dashboard/overview', { auth: Boolean(user) })
+      dashboardOverviewCache.set(dashboardCacheKey, freshOverview)
+      return freshOverview
+    },
     [user?.id],
   )
 
-  const baseOverview = data ?? EMPTY_OVERVIEW
+  const baseOverview = data ?? cachedOverview ?? EMPTY_OVERVIEW
+  const isInitialLoading = loading && !cachedOverview
   const overview = useMemo(
     () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
     [baseOverview, user],
@@ -294,7 +303,7 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="mt-3 h-52">
-                {loading ? (
+                {isInitialLoading ? (
                   <Skeleton className="h-full w-full rounded-2xl" />
                 ) : (
                   <ResponsiveContainer>

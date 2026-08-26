@@ -41,7 +41,7 @@ export default function IELTSSectionTests() {
 
   const rows = useMemo<CompactIeltsTestRow[]>(() => {
     if (track === 'reading') {
-      return getIeltsReadingUnifiedCatalog().map((entry) => ({
+      const liveRows = getIeltsReadingUnifiedCatalog().map((entry) => ({
         id: entry.testId,
         number: entry.index,
         title: entry.title,
@@ -52,6 +52,22 @@ export default function IELTSSectionTests() {
         available: isAvailableIeltsTrackTest('reading', entry.testId),
         completed: completedTestIds.has(entry.testId),
       }))
+
+      const upcomingRows: CompactIeltsTestRow[] = Array.from({ length: 8 }, (_, index) => {
+        const number = index + 23
+        return {
+          id: `reading-upcoming-${number}`,
+          number,
+          title: `Reading Full Test ${number}`,
+          subtitle: 'New full test in preparation',
+          badge: 'Full test',
+          durationMinutes: 60,
+          detail: '3 passages · 40 questions',
+          available: false,
+        }
+      })
+
+      return [...liveRows, ...upcomingRows]
     }
 
     return getIeltsFullTestCatalog('listening').map((entry) => ({

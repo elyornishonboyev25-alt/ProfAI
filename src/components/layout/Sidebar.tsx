@@ -2,7 +2,9 @@ import { type ComponentType, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AudioLines,
+  BarChart3,
   BookOpenText,
+  BrainCircuit,
   Building2,
   FileText,
   Gauge,
@@ -39,6 +41,8 @@ const PRIMARY_ITEMS: NavItem[] = [
 ]
 
 const SECONDARY_ITEMS: NavItem[] = [
+  { id: 'performance', label: 'Performance', icon: BarChart3, path: '/profile' },
+  { id: 'ai-coach', label: 'AI Coach', icon: BrainCircuit, path: '/ai-tutor' },
   { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
   { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
   { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },

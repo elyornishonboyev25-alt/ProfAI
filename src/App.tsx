@@ -248,6 +248,30 @@ function App() {
   const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
   const isLiveCommunityMode = communityMode === 'debate' || communityMode === 'partner'
 
+  // Warm the next route while the learner is reading the current screen. This
+  // keeps Back from IELTS/SAT and sidebar navigation from waiting on a large
+  // dashboard/chart chunk after the click.
+  useEffect(() => {
+    const isReturningFromTrack = pathname.startsWith('/ielts') || pathname.startsWith('/sat') || pathname.startsWith('/mock')
+    const isDashboard = pathname === '/dashboard' || (pathname === '/' && Boolean(user))
+    if (!isReturningFromTrack && !isDashboard) return
+
+    const preloadTimer = window.setTimeout(() => {
+      if (isReturningFromTrack) {
+        void import('@/pages/Dashboard')
+      }
+
+      if (isDashboard) {
+        void Promise.all([
+          import('@/pages/Profile'),
+          import('@/pages/AITutor'),
+        ])
+      }
+    }, isReturningFromTrack ? 180 : 1400)
+
+    return () => window.clearTimeout(preloadTimer)
+  }, [pathname, user])
+
   const pathParts = pathname.split('/').filter(Boolean)
   const isFocusContentMode =
     pathname === '/onboarding' ||

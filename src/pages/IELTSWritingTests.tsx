@@ -2,7 +2,7 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
-import { getWritingDayCatalog } from '@/data/writingTestData'
+import { getWritingFullTestCatalog } from '@/data/writingTestData'
 
 export default function IELTSWritingTests() {
   const navigate = useNavigate()
@@ -14,15 +14,15 @@ export default function IELTSWritingTests() {
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () =>
-      getWritingDayCatalog().map((task, index) => ({
-        id: task.id,
-        number: index + 1,
-        title: `Writing Full Test ${index + 1}`,
-        subtitle: task.subtitle,
-        badge: task.taskType === 'task1' ? 'Task 1' : 'Task 2',
-        durationMinutes: task.durationMinutes,
-        detail: task.taskType === 'task1' ? '150+ words' : '250+ words',
-        available: task.available,
+      getWritingFullTestCatalog().map((test) => ({
+        id: test.id,
+        number: test.index,
+        title: `Writing Full Test ${test.index}`,
+        subtitle: test.available ? 'Complete academic writing simulation' : 'New full test in preparation',
+        badge: 'Full test',
+        durationMinutes: 60,
+        detail: '2 tasks · 400+ words',
+        available: test.available,
       })),
     [],
   )

@@ -3280,7 +3280,7 @@ body {
 }
 
 .arena-route { animation: arenaRouteIn 230ms var(--app-ease-smooth) both; }
-.arena-route-dashboard { animation: dashboardRouteIn 520ms var(--app-ease-smooth) both; }
+.arena-route-dashboard { animation: dashboardRouteIn 260ms var(--app-ease-smooth) both; }
 
 @keyframes arenaRouteIn {
   from { opacity: 0; transform: translate3d(0, 8px, 0); }
@@ -3362,12 +3362,12 @@ body {
 .arena-route-dashboard .dashboard-entrance-header,
 .arena-route-dashboard .dashboard-entrance-grid,
 .arena-route-dashboard .dashboard-entrance-learning {
-  animation: dashboardSectionIn 500ms var(--app-ease-smooth) both;
+  animation: dashboardSectionIn 300ms var(--app-ease-smooth) both;
 }
 
-.arena-route-dashboard .dashboard-entrance-header { animation-delay: 70ms; }
-.arena-route-dashboard .dashboard-entrance-grid { animation-delay: 130ms; }
-.arena-route-dashboard .dashboard-entrance-learning { animation-delay: 210ms; }
+.arena-route-dashboard .dashboard-entrance-header { animation-delay: 20ms; }
+.arena-route-dashboard .dashboard-entrance-grid { animation-delay: 45ms; }
+.arena-route-dashboard .dashboard-entrance-learning { animation-delay: 70ms; }
 
 @keyframes dashboardSectionIn {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
@@ -3680,6 +3680,38 @@ html[data-motion='minimal'] .arena-loader-progress { animation: none; transform:
 .ui-page-hero :where(.text-blue-600, .text-blue-700),
 .premium-hero :where(.text-blue-600, .text-blue-700) {
   color: #dc2626 !important;
+}
+
+/* Performance Studio: layered glass without full-page backdrop filters. The
+   gradients provide the visual depth while keeping route entry inexpensive. */
+.performance-studio {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(254, 202, 202, 0.42), transparent 25rem),
+    radial-gradient(circle at 92% 10%, rgba(191, 219, 254, 0.48), transparent 28rem),
+    linear-gradient(135deg, #fff8f8 0%, #f8fafc 48%, #eff6ff 100%);
+}
+
+.performance-studio .premium-hero,
+.performance-studio .surface-card,
+.performance-studio .performance-metric-card {
+  border-color: rgba(255, 255, 255, 0.94);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 250, 0.8) 48%, rgba(239, 246, 255, 0.78));
+  box-shadow:
+    0 22px 58px rgba(51, 65, 85, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.performance-studio .surface-card {
+  border-color: rgba(254, 226, 226, 0.82);
+}
+
+.performance-studio .performance-metric-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(254, 202, 202, 0.2), transparent 48%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.88));
 }
 
 @media (prefers-reduced-motion: reduce) {

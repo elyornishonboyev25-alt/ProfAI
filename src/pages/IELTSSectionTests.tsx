@@ -31,10 +31,13 @@ export default function IELTSSectionTests() {
   const fromMock = navigationState?.entry === 'mock-ielts'
 
   const completedTestIds = useMemo(() => {
-    if (track !== 'reading') return new Set<string>()
     return new Set(
       getReadingAnalysisHistory(user?.id)
         .filter((entry) => entry.correctAnswers > 0 && entry.totalQuestions > 0)
+        .filter((entry) => {
+          const isListeningAttempt = `${entry.testId} ${entry.testTitle}`.toLowerCase().includes('listening')
+          return track === 'listening' ? isListeningAttempt : !isListeningAttempt
+        })
         .map((entry) => entry.testId),
     )
   }, [track, user?.id])
@@ -79,6 +82,7 @@ export default function IELTSSectionTests() {
       durationMinutes: 30,
       detail: '4 parts · 40 questions',
       available: isAvailableIeltsTrackTest('listening', entry.testId),
+      completed: completedTestIds.has(entry.testId),
     }))
   }, [completedTestIds, track])
 

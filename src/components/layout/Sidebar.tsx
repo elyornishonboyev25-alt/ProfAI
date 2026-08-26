@@ -4,7 +4,6 @@ import {
   AudioLines,
   BarChart3,
   BookOpenText,
-  BrainCircuit,
   Building2,
   FileText,
   Gauge,
@@ -41,13 +40,12 @@ const PRIMARY_ITEMS: NavItem[] = [
 ]
 
 const SECONDARY_ITEMS: NavItem[] = [
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
   { id: 'performance', label: 'Performance', icon: BarChart3, path: '/profile' },
-  { id: 'ai-coach', label: 'AI Coach', icon: BrainCircuit, path: '/ai-tutor' },
   { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
   { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
   { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
   { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
   { id: 'vocabulary', label: 'Vocabulary', icon: Languages, path: '/vocabulary' },
 ]
 

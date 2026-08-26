@@ -162,3 +162,24 @@ export function findIeltsSpeakingDay(id: string): SpeakingDayEntry | null {
 export function findIeltsSpeakingFullMock(id: string): SpeakingFullMockEntry | null {
   return getIeltsSpeakingFullMockCatalog().find((m) => m.id === id) ?? null
 }
+
+function speakingCompletionKey(userId?: string) {
+  return `smarttest-speaking-completed-v1:${userId?.trim() || 'guest'}`
+}
+
+export function getCompletedSpeakingTestIds(userId?: string): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(speakingCompletionKey(userId)) ?? '[]')
+    return new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : [])
+  } catch {
+    return new Set()
+  }
+}
+
+export function markSpeakingTestCompleted(testId: string, userId?: string) {
+  if (typeof window === 'undefined' || !testId) return
+  const completed = getCompletedSpeakingTestIds(userId)
+  completed.add(testId)
+  window.localStorage.setItem(speakingCompletionKey(userId), JSON.stringify([...completed]))
+}

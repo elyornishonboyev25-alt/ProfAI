@@ -23,6 +23,7 @@ import {
 import {
   findIeltsSpeakingDay,
   findIeltsSpeakingFullMock,
+  markSpeakingTestCompleted,
   type SpeakingDayEntry,
   type SpeakingFullMockEntry,
 } from '@/utils/ieltsSpeakingCatalog'
@@ -185,7 +186,13 @@ export default function IELTSSpeakingTest() {
       />
     )
   } else {
-    content = <DayRunner day={mode.day} onExit={() => navigate('/ielts/speaking/tests')} />
+    content = (
+      <DayRunner
+        day={mode.day}
+        onExit={() => navigate('/ielts/speaking/tests')}
+        onComplete={() => markSpeakingTestCompleted(mode.day.id, user?.id)}
+      />
+    )
   }
 
   return (
@@ -201,7 +208,7 @@ export default function IELTSSpeakingTest() {
 }
 
 // ── Day runner (one Part with N questions; AI analysis per question) ────────
-function DayRunner({ day, onExit }: { day: SpeakingDayEntry; onExit: () => void }) {
+function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit: () => void; onComplete: () => void }) {
   const recognition = useSpeechRecognition('en-US')
 
   const items = useMemo(() => questionsForDay(day), [day])
@@ -329,6 +336,7 @@ function DayRunner({ day, onExit }: { day: SpeakingDayEntry; onExit: () => void 
 
   const goNext = useCallback(() => setIndex((i) => Math.min(items.length - 1, i + 1)), [items.length])
   const goPrev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [])
+  const canComplete = answers.every((item) => Boolean(item.analysis))
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -510,7 +518,12 @@ function DayRunner({ day, onExit }: { day: SpeakingDayEntry; onExit: () => void 
             Next question <ChevronRight className="ml-1 h-4 w-4" />
           </button>
         ) : (
-          <button onClick={onExit} className="arena-primary-btn">
+          <button
+            disabled={!canComplete}
+            onClick={() => { onComplete(); onExit() }}
+            className="arena-primary-btn disabled:cursor-not-allowed disabled:opacity-50"
+            title={canComplete ? 'Finish test' : 'Complete every question first'}
+          >
             Finish day <CheckCircle2 className="ml-1 h-4 w-4" />
           </button>
         )}

@@ -5,17 +5,20 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
-import { getIeltsSpeakingDayCatalog } from '@/utils/ieltsSpeakingCatalog'
+import { getCompletedSpeakingTestIds, getIeltsSpeakingDayCatalog } from '@/utils/ieltsSpeakingCatalog'
+import { useAuthStore, type AuthState } from '@/store/authStore'
 
 export default function IELTSSpeakingTests() {
   const navigate = useNavigate()
   const location = useLocation()
+  const user = useAuthStore((state: AuthState) => state.user)
   const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const speakingTrial = useFeatureTrial('speakingDaily')
   const [showTrialGate, setShowTrialGate] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const deferredSearchTerm = useDeferredValue(searchTerm)
+  const completedTestIds = useMemo(() => getCompletedSpeakingTestIds(user?.id), [user?.id])
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () =>
@@ -28,8 +31,9 @@ export default function IELTSSpeakingTests() {
         durationMinutes: test.durationMinutes,
         detail: 'AI feedback',
         available: test.available,
+        completed: completedTestIds.has(test.id),
       })),
-    [],
+    [completedTestIds],
   )
 
   const visibleRows = useMemo(() => {

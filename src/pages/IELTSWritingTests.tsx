@@ -3,14 +3,21 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 
 export default function IELTSWritingTests() {
   const navigate = useNavigate()
   const location = useLocation()
+  const user = useAuthStore((state: AuthState) => state.user)
   const navigationState = location.state as { entry?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const [searchTerm, setSearchTerm] = useState('')
   const deferredSearchTerm = useDeferredValue(searchTerm)
+  const completedTaskIds = useMemo(
+    () => new Set(getWritingAnalysisHistory(user?.id).map((entry) => entry.testId)),
+    [user?.id],
+  )
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () =>
@@ -23,8 +30,9 @@ export default function IELTSWritingTests() {
         durationMinutes: 60,
         detail: '2 tasks · 400+ words',
         available: test.available,
+        completed: test.available && test.tasks.length > 0 && test.tasks.every((task) => completedTaskIds.has(task.id)),
       })),
-    [],
+    [completedTaskIds],
   )
 
   const visibleRows = useMemo(() => {

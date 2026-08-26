@@ -3705,6 +3705,12 @@ html[data-motion='minimal'] .arena-loader-progress { animation: none; transform:
     linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.88));
 }
 
+.ielts-catalog-card {
+  content-visibility: auto;
+  contain: layout paint;
+  contain-intrinsic-size: 232px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .voice-orb-active-ring { animation: none; opacity: 0.7; }
 }

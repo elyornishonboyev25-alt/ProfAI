@@ -217,13 +217,9 @@ export default function SATMockRun() {
     if (fullscreenElement()) void exit()
   }, [exit, persistUpdate])
 
-  const closeCalculator = useCallback(async () => {
-    const current = attemptRef.current
-    if (current?.status === 'active' && current.mode === 'exam' && !fullscreenElement()) {
-      await enter()
-    }
+  const closeCalculator = useCallback(() => {
     setCalculatorOpen(false)
-  }, [enter])
+  }, [])
 
   const advanceModule = useCallback(() => {
     if (!attempt) return
@@ -307,27 +303,6 @@ export default function SATMockRun() {
   useEffect(() => {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
 
-    // The official Desmos calculator is an allowed exam tool. Browsers may leave
-    // fullscreen when its external view opens, so do not start an integrity
-    // countdown while the calculator session is active.
-    if (calculatorOpen) {
-      if (violationDeadline) {
-        const remaining = attempt.pausedModuleSeconds ?? currentModule.durationSeconds
-        setViolationDeadline(null)
-        violationFrozenRef.current = false
-        persistUpdate((current) => ({
-          ...current,
-          pausedModuleSeconds: undefined,
-          timerPausedAt: undefined,
-          moduleDeadlines: {
-            ...current.moduleDeadlines,
-            [currentModule.id]: Date.now() + remaining * 1000,
-          },
-        }))
-      }
-      return
-    }
-
     if (!isFullscreen && !violationDeadline) {
       const deadline = attempt.moduleDeadlines[currentModule.id]
       const remaining = attempt.pausedModuleSeconds ?? (deadline
@@ -359,7 +334,6 @@ export default function SATMockRun() {
     }
   }, [
     attempt,
-    calculatorOpen,
     currentModule.durationSeconds,
     currentModule.id,
     isFullscreen,
@@ -369,7 +343,6 @@ export default function SATMockRun() {
 
   useEffect(() => {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
-    if (calculatorOpen) return
     if (!violationDeadline || violationSeconds > 0) return
     setViolationDeadline(null)
     violationFrozenRef.current = false
@@ -380,7 +353,7 @@ export default function SATMockRun() {
       terminationReason: 'Fullscreen recovery window expired.',
     }))
     if (fullscreenElement()) void exit()
-  }, [attempt, calculatorOpen, exit, persistUpdate, violationDeadline, violationSeconds])
+  }, [attempt, exit, persistUpdate, violationDeadline, violationSeconds])
 
   useEffect(() => {
     if (
@@ -576,6 +549,26 @@ export default function SATMockRun() {
           </button>
 
           <div className="col-span-2 flex items-center justify-end gap-1 sm:gap-3 md:col-span-1">
+            {currentModule.section === 'math' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setCalculatorOpen((value) => !value)
+                  setToolsOpen(false)
+                  setMoreOpen(false)
+                }}
+                aria-expanded={calculatorOpen}
+                aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
+                title={calculatorOpen ? 'Close Desmos' : 'Open Desmos'}
+                className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${
+                  calculatorOpen
+                    ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.22)]'
+                    : 'bg-red-50 text-red-700 hover:bg-red-100'
+                }`}
+              >
+                <Calculator className="h-5 w-5" /> <span className="hidden lg:inline">Desmos</span>
+              </button>
+            ) : null}
             <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Open question navigator">
               <FileText className="h-6 w-6" />
             </button>
@@ -630,7 +623,7 @@ export default function SATMockRun() {
           {moreOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-56 rounded-2xl border border-slate-300 bg-white p-2 shadow-2xl">
               {currentModule.section === 'math' ? (
-                <button type="button" onClick={() => { setCalculatorOpen(true); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Calculator className="h-4 w-4" /> Calculator</button>
+                <button type="button" onClick={() => { setCalculatorOpen(true); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Calculator className="h-4 w-4" /> Open Desmos</button>
               ) : null}
               <div className="flex items-center gap-1 rounded-xl px-2 py-2">
                 <button type="button" aria-label="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
@@ -766,7 +759,7 @@ export default function SATMockRun() {
                 {currentModule.section === 'reading-writing' ? (
                   <p>Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review.</p>
                 ) : (
-                  <p>Solve each problem and select or enter the best answer. The calculator is available from the More menu. You may move between questions in this module and mark any question for review.</p>
+                  <p>Solve each problem and select or enter the best answer. Desmos is built into the Math toolbar and opens without leaving the test. You may move between questions in this module and mark any question for review.</p>
                 )}
                 <p className="mt-4">Your answers, notes, highlights, and current position are saved automatically on this device.</p>
               </div>

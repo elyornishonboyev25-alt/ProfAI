@@ -7,7 +7,7 @@ import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/cata
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import {
-  getIeltsPassageCatalog,
+  getIeltsFullTestCatalog,
   getIeltsReadingUnifiedCatalog,
   isAvailableIeltsTrackTest,
   type IeltsTrackType,
@@ -54,15 +54,15 @@ export default function IELTSSectionTests() {
       }))
     }
 
-    return getIeltsPassageCatalog('listening').map((entry) => ({
+    return getIeltsFullTestCatalog('listening').map((entry) => ({
       id: entry.testId,
-      number: entry.day,
-      title: `Listening Full Test ${entry.day}`,
-      subtitle: 'Focused listening practice',
-      badge: 'Listening',
-      durationMinutes: 20,
-      detail: 'Audio questions',
-      available: true,
+      number: entry.index,
+      title: `Listening Full Test ${entry.index}`,
+      subtitle: entry.index <= 9 ? 'Complete academic listening simulation' : 'New full test in preparation',
+      badge: 'Full test',
+      durationMinutes: 30,
+      detail: '4 parts · 40 questions',
+      available: isAvailableIeltsTrackTest('listening', entry.testId),
     }))
   }, [completedTestIds, track])
 

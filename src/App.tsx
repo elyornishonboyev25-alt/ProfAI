@@ -288,7 +288,8 @@ function App() {
     !isTestMode &&
     !isFocusContentMode &&
     !isVocabularyMode &&
-    !isLeaderboardMode
+    !isLeaderboardMode &&
+    pathname !== '/ielts'
   const sidebarVisible = showSidebar && !isImmersiveHub
   const showMobileNav = Boolean(user) && sidebarVisible
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode

@@ -52,25 +52,30 @@ export default function CompactIeltsCatalog({
 
   return (
     <main className="mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-      <section className="relative isolate min-h-[13rem] overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/58 px-5 py-5 shadow-[0_30px_80px_rgba(30,64,175,.15),inset_0_1px_0_white] backdrop-blur-xl sm:min-h-[15rem] sm:px-8">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(115deg,rgba(254,242,242,.78),rgba(255,255,255,.46)_42%,rgba(219,234,254,.76))]" />
-        <div className="pointer-events-none absolute -left-16 -top-24 -z-10 h-64 w-64 rounded-full bg-red-200/38 blur-3xl" />
-        <div className="pointer-events-none absolute -right-12 -top-28 -z-10 h-72 w-72 rounded-full bg-blue-300/42 blur-3xl" />
-        <div className="pointer-events-none absolute inset-x-[12%] bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent" />
+      <section className="relative isolate min-h-[11.5rem] overflow-hidden rounded-[2rem] border border-white/90 bg-white/62 px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.13),inset_0_1px_0_white] backdrop-blur-xl sm:min-h-[13rem] sm:px-8">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(118deg,rgba(254,242,242,.72),rgba(255,255,255,.58)_45%,rgba(219,234,254,.72))]" />
+        <div className="pointer-events-none absolute -left-20 -top-32 -z-10 h-72 w-72 rounded-full bg-red-200/35 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-36 -z-10 h-80 w-80 rounded-full bg-blue-300/38 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-28 w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/24 shadow-[0_18px_60px_rgba(37,99,235,.08)] backdrop-blur-sm" />
+        <div className="pointer-events-none absolute inset-x-[14%] bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-blue-300/75 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-[24%] top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
         <button
           type="button"
           onClick={onBack}
           aria-label="Back to IELTS"
-          className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/78 text-slate-700 shadow-[0_10px_28px_rgba(30,64,175,.1)] transition hover:-translate-y-0.5 hover:bg-white hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          className="absolute left-5 top-5 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/95 bg-white/76 text-slate-700 shadow-[0_12px_30px_rgba(30,64,175,.1),inset_0_1px_0_white] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:left-7 sm:top-7"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
 
-        <div className="relative flex min-h-[8.5rem] items-center justify-center px-2 pb-4 text-center sm:min-h-[10rem]">
-          <h1 className="text-[2.8rem] font-black leading-none tracking-[-0.065em] text-slate-950 sm:text-6xl lg:text-[5rem]">
-            IELTS <span className={`bg-gradient-to-r ${meta.accent} bg-clip-text text-transparent`}>{meta.label}</span>
-          </h1>
+        <div className="relative flex min-h-[9rem] items-center justify-center px-14 text-center sm:min-h-[11rem]">
+          <div className="relative">
+            <h1 className="text-[2.55rem] font-black leading-none tracking-[-0.065em] text-slate-950 sm:text-6xl lg:text-[4.6rem]">
+              IELTS <span className={`bg-gradient-to-r ${meta.accent} bg-clip-text text-transparent`}>{meta.label}</span>
+            </h1>
+            <span className={`mx-auto mt-5 block h-1 w-16 rounded-full bg-gradient-to-r ${meta.accent} shadow-[0_6px_18px_rgba(37,99,235,.24)] sm:w-20`} aria-hidden="true" />
+          </div>
         </div>
       </section>
 
@@ -78,7 +83,10 @@ export default function CompactIeltsCatalog({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
 
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-black tracking-tight text-slate-950">Tests</h2>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">IELTS Academic</p>
+            <h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{meta.label} tests</h2>
+          </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {headerExtra}
             <label className="relative block w-full sm:w-72">
@@ -106,7 +114,7 @@ export default function CompactIeltsCatalog({
                 type="button"
                 disabled={!row.available}
                 onClick={() => onLaunch(row)}
-                className={`group relative flex min-h-[15.5rem] w-full flex-col overflow-hidden rounded-[2rem] border p-6 text-left shadow-[0_18px_50px_rgba(30,64,175,.1),inset_0_1px_0_white] transition-[transform,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
+                className={`group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border p-6 text-left shadow-[0_18px_50px_rgba(30,64,175,.09),inset_0_1px_0_white] transition-[transform,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
                   row.available
                     ? 'border-blue-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.86),rgba(239,246,255,.72))] hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_26px_62px_rgba(37,99,235,.15),inset_0_1px_0_white]'
                     : 'cursor-not-allowed border-slate-200/80 bg-white/48 opacity-75'

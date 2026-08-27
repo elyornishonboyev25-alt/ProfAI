@@ -1,11 +1,11 @@
 import { z } from 'zod'
 import { TestCategory } from '@prisma/client'
-import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { generateSkillAnalytics } from './analytics.service.js'
+import { generateAiText } from './aiProvider.service.js'
 import { addUtcDays, startOfUtcDay } from '../utils/date.js'
 
-type AiReportSource = 'hf' | 'cache' | 'fallback'
+type AiReportSource = 'gemini' | 'openai' | 'hf' | 'cache' | 'fallback'
 
 export type AiReportResponse = {
   generatedAt: string
@@ -225,30 +225,6 @@ function buildUserPrompt(context: AiCoachContext) {
   )
 }
 
-function parseMessageContent(responsePayload: unknown): string | null {
-  const payload = responsePayload as {
-    choices?: Array<{
-      message?: {
-        content?: string | Array<{ type?: string; text?: string }>
-      }
-    }>
-  }
-
-  const content = payload.choices?.[0]?.message?.content
-  if (!content) return null
-
-  if (typeof content === 'string') {
-    return content
-  }
-
-  const textContent = content
-    .map((item) => (typeof item.text === 'string' ? item.text : ''))
-    .join('\n')
-    .trim()
-
-  return textContent || null
-}
-
 function extractJsonObject(input: string): unknown {
   const trimmed = input
     .trim()
@@ -269,10 +245,6 @@ function extractJsonObject(input: string): unknown {
   }
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 function buildFallbackReport(context: AiCoachContext): AiReportResponse {
   const topSkill = [...context.trackBreakdown].sort((left, right) => right.skillPower - left.skillPower)[0]
   const lowestAccuracy = [...context.trackBreakdown].sort((left, right) => left.accuracy - right.accuracy)[0]
@@ -281,7 +253,7 @@ function buildFallbackReport(context: AiCoachContext): AiReportResponse {
 
   return {
     generatedAt: new Date().toISOString(),
-    model: env.HF_MODEL,
+    model: 'deterministic-coach-v1',
     source: 'fallback',
     executiveSummary:
       `Your profile is stable with a current skill power of ${context.overall.skillPower.toFixed(1)} and recent average score around ${recentMean}. ` +
@@ -322,83 +294,6 @@ function buildFallbackReport(context: AiCoachContext): AiReportResponse {
   }
 }
 
-async function requestHfReport(systemPrompt: string, userPrompt: string): Promise<string> {
-  const endpoint = `${env.HF_API_BASE.replace(/\/$/, '')}/chat/completions`
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), env.HF_TIMEOUT_MS)
-
-    let response: Response
-    try {
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.HF_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          model: env.HF_MODEL,
-          temperature: 0.35,
-          max_tokens: 900,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-        }),
-        signal: controller.signal,
-      })
-    } catch (error) {
-      clearTimeout(timeoutId)
-      const errorName = error instanceof Error ? error.name : 'UnknownError'
-      if (errorName === 'AbortError') {
-        throw new AiCoachProviderError(504, 'AI provider timeout. Please try again.')
-      }
-      throw new AiCoachProviderError(504, 'AI provider network error. Please try again.')
-    }
-
-    clearTimeout(timeoutId)
-
-    if (response.status === 401 || response.status === 403) {
-      throw new AiCoachProviderError(502, 'AI provider rejected credentials. Please verify HF token.')
-    }
-
-    if (response.status === 429) {
-      if (attempt < 1) {
-        await sleep(450)
-        continue
-      }
-      throw new AiCoachProviderError(429, 'AI provider rate limit reached. Please retry in a moment.')
-    }
-
-    if (response.status >= 500) {
-      if (attempt < 1) {
-        await sleep(450)
-        continue
-      }
-      throw new AiCoachProviderError(502, 'AI provider is temporarily unavailable.')
-    }
-
-    if (!response.ok) {
-      throw new AiCoachProviderError(502, 'AI provider returned an unexpected response.')
-    }
-
-    const payload = await response.json().catch(() => null)
-    if (!payload) {
-      throw new AiCoachProviderError(502, 'AI provider returned invalid JSON.')
-    }
-
-    const content = parseMessageContent(payload)
-    if (!content) {
-      throw new AiCoachProviderError(502, 'AI provider returned an empty response.')
-    }
-
-    return content
-  }
-
-  throw new AiCoachProviderError(502, 'AI provider request failed.')
-}
-
 export async function generateAiCoachReport(input: {
   userId: string
   refresh?: boolean
@@ -418,28 +313,25 @@ export async function generateAiCoachReport(input: {
 
   const context = await buildContext(input.userId)
 
-  if (!env.HF_ACCESS_TOKEN.trim()) {
-    const fallback = buildFallbackReport(context)
-    aiReportCache.set(input.userId, {
-      expiresAt: now + AI_REPORT_CACHE_TTL_MS,
-      payload: fallback,
-    })
-    return fallback
-  }
-
   const systemPrompt = buildSystemPrompt()
   const userPrompt = buildUserPrompt(context)
 
   let normalizedPayload: AiReportResponse
   try {
-    const aiRawOutput = await requestHfReport(systemPrompt, userPrompt)
-    const parsed = extractJsonObject(aiRawOutput)
+    const generated = await generateAiText({
+      userId: input.userId,
+      purpose: 'coach_report',
+      systemPrompt,
+      userMessage: userPrompt,
+      maxOutputTokens: 900,
+    })
+    const parsed = extractJsonObject(generated.text)
     const validated = hfReportSchema.parse(parsed)
 
     normalizedPayload = {
       generatedAt: new Date().toISOString(),
-      model: env.HF_MODEL,
-      source: 'hf',
+      model: generated.model,
+      source: generated.provider,
       executiveSummary: validated.executiveSummary,
       strengths: validated.strengths,
       risks: validated.risks,

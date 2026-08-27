@@ -110,6 +110,7 @@ model User {
   aiPreference   UserAiPreference?
   aiMemories     AiMemory[]
   aiConversationThreads AiConversationThread[]
+  aiUsageEvents  AiUsageEvent[]
   vocabularyNotebooks VocabularyNotebook[]
   speakingEvaluations SpeakingEvaluation[]
   speakingSessions SpeakingSession[]
@@ -142,6 +143,30 @@ model XpEvent {
   @@unique([userId, eventKey])
   @@index([userId, earnedAt])
   @@index([source, earnedAt])
+}
+
+// Privacy-safe AI request ledger. Prompt text, student answers and image data
+// are deliberately never stored here.
+model AiUsageEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  purpose         String
+  provider        String
+  model           String
+  status          String
+  requestChars    Int
+  responseChars   Int      @default(0)
+  inputTokens     Int?
+  outputTokens    Int?
+  latencyMs       Int
+  fallbackUsed    Boolean  @default(false)
+  errorCode       String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([purpose, createdAt])
+  @@index([provider, status, createdAt])
 }
 
 // Short-lived, single-use codes for password registration and recovery. Codes

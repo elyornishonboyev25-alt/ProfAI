@@ -1,4 +1,5 @@
 import rateLimit from 'express-rate-limit'
+import { env } from '../config/env.js'
 
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -14,4 +15,13 @@ export const apiRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Rate limit exceeded. Please slow down your requests.' },
+})
+
+export const aiRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: env.AI_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user!.id,
+  message: { message: 'AI request limit reached. Please wait a moment and try again.' },
 })

@@ -1,42 +1,13 @@
-// API keys are read from environment variables so they are never committed to the repo.
-// You can supply MANY keys (from different Google accounts/projects) to multiply the free
-// quota — separate them with commas in VITE_GEMINI_API_KEY, e.g. "key1,key2,key3".
-// You may also use numbered vars VITE_GEMINI_API_KEY_2, _3, _4, _5 for clarity.
-// Each (key × model) pair has its OWN daily free quota, so the rotation below keeps the
-// app working even under heavy use — when one pair is exhausted/rate-limited it moves on.
-const GEMINI_API_KEYS: string[] = (() => {
-  const env = import.meta.env as Record<string, string | undefined>
-  const raw = [
-    env.VITE_GEMINI_API_KEY,
-    env.VITE_GEMINI_API_KEY_2,
-    env.VITE_GEMINI_API_KEY_3,
-    env.VITE_GEMINI_API_KEY_4,
-    env.VITE_GEMINI_API_KEY_5,
-  ]
-  return raw
-    .filter(Boolean)
-    .flatMap((value) => (value as string).split(','))
-    .map((key) => key.trim())
-    .filter((key) => key.length > 0)
-})()
+import { apiClient } from '@/lib/apiClient'
 
-// Models tried in priority order — first is highest quality, rest are high-quota fallbacks.
-const GEMINI_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
-  'gemini-3.1-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-]
-
-// Every (model, key) combination, ordered model-first so the best model is preferred
-// across all keys before dropping to a lighter model.
-const MODEL_KEY_COMBOS: Array<{ model: string; key: string }> = GEMINI_MODELS.flatMap((model) =>
-  GEMINI_API_KEYS.map((key) => ({ model, key })),
-)
-
-const buildModelUrl = (model: string, key: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+export type AiGenerationPurpose =
+  | 'assistant_chat'
+  | 'writing_evaluation'
+  | 'word_explanation'
+  | 'speaking_examiner'
+  | 'speaking_evaluation'
+  | 'speaking_response_analysis'
+  | 'weekly_plan'
 
 export interface WritingError {
   original: string
@@ -342,127 +313,21 @@ SAFETY:
 - Always be kind and encouraging about their progress, however small.`
 }
 
-// Turn a data URL ("data:image/png;base64,AAAA…") into a Gemini inlineData part.
-function dataUrlToInlinePart(dataUrl: string): { inlineData: { mimeType: string; data: string } } | null {
-  const match = /^data:([^;]+);base64,(.*)$/.exec(dataUrl)
-  if (!match) return null
-  return { inlineData: { mimeType: match[1], data: match[2] } }
-}
-
 export async function callGeminiAPI(
   systemPrompt: string,
   userMessage: string,
   maxOutputTokens = 2048,
   images: string[] = [],
+  purpose: AiGenerationPurpose = 'assistant_chat',
 ): Promise<string> {
-  if (MODEL_KEY_COMBOS.length === 0) {
-    throw new Error('AI is not configured yet. Add VITE_GEMINI_API_KEY to your environment and restart.')
-  }
-
-  const imageParts = images
-    .map(dataUrlToInlinePart)
-    .filter((part): part is { inlineData: { mimeType: string; data: string } } => part !== null)
-
-  const body = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: userMessage }, ...imageParts],
-      },
-    ],
-    systemInstruction: {
-      parts: [{ text: systemPrompt }],
-    },
-  }
-
-  let lastError = ''
-  let sawQuota = false
-  let sawOverload = false
-  let fatalError: string | null = null
-
-  // Rotate through every (model, key) pair. Each pair has its own free quota, so when one
-  // is exhausted/rate-limited (429) or its key is rejected (403) we simply move to the next
-  // pair. A transient overload (503) is retried in place first. This is why the daily-limit
-  // problem does not come back: add more keys and the combined capacity scales linearly.
-  for (const { model, key } of MODEL_KEY_COMBOS) {
-    const url = buildModelUrl(model, key)
-    const generationConfig = model.startsWith('gemini-3')
-      ? {
-          maxOutputTokens,
-          responseMimeType: 'application/json',
-          // Balanced reasoning materially improves SAT Math, planning and admissions
-          // while keeping an interactive-chat response time.
-          thinkingConfig: { thinkingLevel: 'medium' },
-        }
-      : {
-          temperature: 0.6,
-          maxOutputTokens,
-          responseMimeType: 'application/json',
-          thinkingConfig: { thinkingBudget: 0 },
-        }
-    let response: Response | null = null
-
-    const MAX_ATTEMPTS = 2
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...body, generationConfig }),
-      })
-      if (response.status !== 503 || attempt === MAX_ATTEMPTS - 1) break
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
-    }
-
-    if (!response) continue
-
-    if (response.ok) {
-      const data = await response.json()
-      const text = data?.candidates?.[0]?.content?.parts
-        ?.filter((part: { text?: string; thought?: boolean }) => part?.text && !part.thought)
-        .map((part: { text: string }) => part.text)
-        .join('')
-      if (text) return text
-      lastError = 'Empty response from the AI.'
-      continue
-    }
-
-    // Capture the error, then decide whether to fall through to the next pair.
-    try {
-      const errData = await response.json()
-      lastError = errData?.error?.message ?? ''
-    } catch {
-      lastError = await response.text().catch(() => '')
-    }
-
-    if (response.status === 429) {
-      sawQuota = true
-      continue // quota/rate limit for this pair — try the next key/model
-    }
-    if (response.status === 503) {
-      sawOverload = true
-      continue
-    }
-    if (response.status === 403 || response.status === 401) {
-      // This key is rejected (leaked/invalid/restricted). A different key may still work.
-      continue
-    }
-    if (response.status === 404) {
-      // A newly introduced model may not be enabled in every project/region yet.
-      continue
-    }
-    // A 400-style error is a request problem that no other key/model will fix.
-    fatalError = `Gemini API error (${response.status}): ${lastError}`
-    break
-  }
-
-  if (fatalError) throw new Error(fatalError)
-  if (sawQuota) {
-    throw new Error("All AI keys hit their free quota for now. It resets daily, or add another key to keep going.")
-  }
-  if (sawOverload) {
-    throw new Error('The AI is temporarily overloaded. Please try again in a few seconds.')
-  }
-  throw new Error(lastError || 'The AI did not return a response. Please try again.')
+  const response = await apiClient.post<{ text: string }>('/ai/generate', {
+    purpose,
+    systemPrompt,
+    userMessage,
+    maxOutputTokens,
+    images,
+  })
+  return response.text
 }
 
 export function extractJSON(raw: string): string {
@@ -492,7 +357,7 @@ ${studentResponse}
 
 Evaluate this response now. Return ONLY valid JSON.`
 
-  const raw = await callGeminiAPI(WRITING_EVALUATION_PROMPT, userMessage, 8192)
+  const raw = await callGeminiAPI(WRITING_EVALUATION_PROMPT, userMessage, 8192, [], 'writing_evaluation')
   const jsonStr = extractJSON(raw)
 
   try {
@@ -578,7 +443,7 @@ export async function chatWithAssistant(
     ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}${options.generateTitle ? ' Also generate the short chat title.' : ''}`
     : `User: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}${options.generateTitle ? ' Also generate the short chat title.' : ''}`
 
-  const raw = await callGeminiAPI(systemPrompt, fullMessage, 1800, options.images ?? [])
+  const raw = await callGeminiAPI(systemPrompt, fullMessage, 1800, options.images ?? [], 'assistant_chat')
   const jsonStr = extractJSON(raw)
 
   try {
@@ -657,7 +522,7 @@ EXPLANATION LANGUAGE: ${langLabel}
 
 Explain it now. Return ONLY valid JSON.`
 
-  const raw = await callGeminiAPI(WORD_EXPLANATION_PROMPT, userMessage, 1024)
+  const raw = await callGeminiAPI(WORD_EXPLANATION_PROMPT, userMessage, 1024, [], 'word_explanation')
   const jsonStr = extractJSON(raw)
 
   try {

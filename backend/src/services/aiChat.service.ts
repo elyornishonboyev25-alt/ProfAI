@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { generateSkillAnalytics } from './analytics.service.js'
+import { generateAiText } from './aiProvider.service.js'
 
 const routeTargetSchema = z.enum([
   'DASHBOARD',
@@ -50,7 +50,7 @@ export type AiChatResponse = {
   reply: string
   actions: AiChatAction[]
   meta: {
-    source: 'openai' | 'hf' | 'fallback'
+    source: 'gemini' | 'openai' | 'hf' | 'fallback'
     locale: ChatLocale
   }
 }
@@ -131,10 +131,6 @@ function clamp(value: number, min: number, max: number) {
 function normalizeLocale(input?: string | null): ChatLocale {
   if (!input) return 'en'
   return input.toLowerCase().startsWith('uz') ? 'uz' : 'en'
-}
-function parseMessageContent(responsePayload: unknown): string | null {
-  const payload = responsePayload as { choices?: Array<{ message?: { content?: string } }> }
-  return payload.choices?.[0]?.message?.content?.trim() ?? null
 }
 function extractJsonObject(input: string): unknown {
   const clean = input.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim()
@@ -335,54 +331,6 @@ async function buildChatContext(userId: string): Promise<AiChatContext> {
   }
 }
 
-async function requestOpenAiChat(systemPrompt: string, userPrompt: string) {
-  const response = await fetch(`${env.OPENAI_API_BASE.replace(/\/$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: env.OPENAI_MODEL,
-      temperature: 0.45,
-      max_tokens: 700,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
-  })
-  if (!response.ok) throw new Error('OpenAI provider failed')
-  const payload = await response.json()
-  const content = parseMessageContent(payload)
-  if (!content) throw new Error('OpenAI provider returned empty content')
-  return content
-}
-
-async function requestHfChat(systemPrompt: string, userPrompt: string) {
-  const response = await fetch(`${env.HF_API_BASE.replace(/\/$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.HF_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({
-      model: env.HF_MODEL,
-      temperature: 0.35,
-      max_tokens: 700,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
-  })
-  if (!response.ok) throw new Error('HF provider failed')
-  const payload = await response.json()
-  const content = parseMessageContent(payload)
-  if (!content) throw new Error('HF provider returned empty content')
-  return content
-}
-
 async function persistMemory(userId: string, locale: ChatLocale, detectedName: string | null) {
   if (typeof userAiPreferenceDelegate?.upsert === 'function') {
     await userAiPreferenceDelegate
@@ -529,19 +477,15 @@ export async function generateAiChatResponse(userId: string, input: AiChatReques
   })
 
   try {
-    const source: AiChatResponse['meta']['source'] = env.OPENAI_API_KEY.trim()
-      ? 'openai'
-      : env.HF_ACCESS_TOKEN.trim()
-        ? 'hf'
-        : 'fallback'
-    const raw =
-      source === 'openai'
-        ? await requestOpenAiChat(systemPrompt, userPrompt)
-        : source === 'hf'
-          ? await requestHfChat(systemPrompt, userPrompt)
-          : null
-
-    if (!raw) throw new Error('No provider configured')
+    const generated = await generateAiText({
+      userId,
+      purpose: 'legacy_ai_chat',
+      systemPrompt,
+      userMessage: userPrompt,
+      maxOutputTokens: 700,
+    })
+    const raw = generated.text
+    const source: AiChatResponse['meta']['source'] = generated.provider
 
     try {
       const parsed = extractJsonObject(raw)

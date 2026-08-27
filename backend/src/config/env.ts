@@ -29,6 +29,14 @@ const envSchema = z.object({
   APPLICATION_WORKSPACE_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   AUTOMATED_BILLING_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   GROWTH_RELEASE_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
+  GEMINI_API_KEY: z.string().default(''),
+  GEMINI_API_KEY_2: z.string().default(''),
+  GEMINI_API_KEY_3: z.string().default(''),
+  GEMINI_API_KEY_4: z.string().default(''),
+  GEMINI_API_KEY_5: z.string().default(''),
+  GEMINI_MODELS: z.string().default('gemini-2.5-flash,gemini-2.5-flash-lite'),
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).default(30_000),
+  AI_RATE_LIMIT_MAX: z.coerce.number().int().positive().max(300).default(30),
   HF_ACCESS_TOKEN: z.string().default(''),
   HF_API_BASE: z.string().url().default('https://router.huggingface.co/v1'),
   HF_MODEL: z.string().default('Qwen/Qwen2.5-7B-Instruct'),
@@ -43,8 +51,21 @@ const envSchema = z.object({
 
 export const env = envSchema.parse(process.env)
 
-if (env.NODE_ENV === 'production' && !env.HF_ACCESS_TOKEN.trim()) {
-  throw new Error('HF_ACCESS_TOKEN is required in production.')
+const hasGeminiKey = [
+  env.GEMINI_API_KEY,
+  env.GEMINI_API_KEY_2,
+  env.GEMINI_API_KEY_3,
+  env.GEMINI_API_KEY_4,
+  env.GEMINI_API_KEY_5,
+].some((value) => value.trim().length > 0)
+
+if (
+  env.NODE_ENV === 'production' &&
+  !hasGeminiKey &&
+  !env.OPENAI_API_KEY.trim() &&
+  !env.HF_ACCESS_TOKEN.trim()
+) {
+  throw new Error('At least one backend AI provider key is required in production.')
 }
 
 export const isProduction = env.NODE_ENV === 'production'

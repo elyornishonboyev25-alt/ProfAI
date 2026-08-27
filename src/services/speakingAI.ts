@@ -109,7 +109,7 @@ ${historyToText(params.history, params.candidateName) || '(the test is just star
 Respond with JSON only: { "reply": "<what you say next>" }`
 
   try {
-    const raw = await callGeminiAPI(system, userMessage, 256)
+    const raw = await callGeminiAPI(system, userMessage, 256, [], 'speaking_examiner')
     const parsed = JSON.parse(extractJSON(raw)) as { reply?: string }
     const reply = (parsed.reply ?? '').trim()
     if (reply && !wasAlreadyAsked(reply, params.history)) return reply
@@ -221,7 +221,7 @@ ${transcript}
 Grade the CANDIDATE's spoken English now. Return ONLY valid JSON.`
 
   try {
-    const raw = await callGeminiAPI(EVALUATION_PROMPT, userMessage, 2048)
+    const raw = await callGeminiAPI(EVALUATION_PROMPT, userMessage, 2048, [], 'speaking_evaluation')
     const parsed = JSON.parse(extractJSON(raw)) as Partial<SpeakingEvaluation>
     const fluencyBand = clampBand(parsed.fluencyBand)
     const lexicalBand = clampBand(parsed.lexicalBand)
@@ -344,7 +344,7 @@ ${text}
 Analyse and return ONLY valid JSON.`
 
   try {
-    const raw = await callGeminiAPI(RESPONSE_ANALYSIS_PROMPT, userMessage, 2048)
+    const raw = await callGeminiAPI(RESPONSE_ANALYSIS_PROMPT, userMessage, 2048, [], 'speaking_response_analysis')
     const parsed = JSON.parse(extractJSON(raw)) as Partial<SpeakingResponseAnalysis>
     const issues = Array.isArray(parsed.issues)
       ? parsed.issues

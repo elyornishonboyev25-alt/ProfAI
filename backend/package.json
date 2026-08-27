@@ -12,7 +12,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "test:realtime": "npm run build && node scripts/smoke-speaking-rooms.mjs"
+    "test:realtime": "npm run build && node scripts/smoke-speaking-rooms.mjs",
+    "test:ai-security": "node --test scripts/ai-provider.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",

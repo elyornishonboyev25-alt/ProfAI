@@ -191,7 +191,7 @@ export async function generateAdaptiveWeeklyPlan(
   })
 
   try {
-    const raw = await callGeminiAPI(systemPrompt, userMessage, 4096)
+    const raw = await callGeminiAPI(systemPrompt, userMessage, 4096, [], 'weekly_plan')
     return sanitizePlan(raw, profile, fallback) ?? fallback
   } catch {
     // Planning must never block onboarding or a Monday rollover. The deterministic

@@ -45,16 +45,16 @@ export default function Admission() {
                   </button>
                   <span className="premium-top-chip">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Admission · Study Abroad
+                    Applications · University Journey
                   </span>
                 </div>
                 <h1 className="premium-section-title mt-4">
-                  Your path to a <span className="arena-title-accent-red">world university</span>
+                  Plan your <span className="arena-title-accent-red">university application</span> journey
                 </h1>
                 <p className="premium-section-subtitle max-w-3xl">
-                  Everything you need to study abroad in one place — a step-by-step lesson track that takes you from
-                  “where do I start?” to landing on campus, plus live profiles of the planet’s best universities ranked
-                  by the {QS_EDITION}.
+                  Use guided lessons and ProfAI’s current university catalog to structure your research and next steps.
+                  University details can change, so consequential requirements should always be confirmed on the
+                  institution’s official website. Catalog ranking context: {QS_EDITION}.
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -93,7 +93,7 @@ export default function Admission() {
                 <div className="hero-metric-card interactive-lift">
                   <p className="hero-metric-label">Ranked by</p>
                   <p className="hero-metric-value-sm hero-metric-value-compact">QS 2026</p>
-                  <p className="hero-metric-note">Live, verified data</p>
+                  <p className="hero-metric-note">Current catalog edition</p>
                 </div>
               </div>
             </div>
@@ -110,9 +110,9 @@ export default function Admission() {
               <Target className="h-7 w-7" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-lg font-black text-white">Find my best-fit university</p>
+              <p className="text-lg font-black text-white">Explore university matches</p>
               <p className="mt-0.5 text-sm font-medium text-blue-50/90">
-                Answer a few questions about your SAT, IELTS, GPA and goals — we’ll rank the QS universities by how well they fit you.
+                Compare the current catalog using your SAT, IELTS, GPA and study preferences as planning signals.
               </p>
             </div>
             <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
@@ -148,8 +148,8 @@ export default function Admission() {
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Lessons</h2>
                 <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
-                  A complete study-abroad curriculum — choosing a country, conquering IELTS/TOEFL/SAT, writing essays
-                  that get you in, winning scholarships, and acing your visa. Follow it in order or jump to what you need.
+                  Guided study-abroad lessons covering country research, tests, application writing, scholarships and
+                  visa preparation. Follow the sequence or open the topic you need now.
                 </p>
 
                 <div className="relative mt-5 grid grid-cols-2 gap-2">
@@ -208,8 +208,8 @@ export default function Admission() {
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Universities</h2>
                 <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore the complete QS 2026 global top 50 with verified ranks, university facts and official source
-                  links. Published indicators, admissions and costs are shown only where they can be verified.
+                  Explore ProfAI’s current QS 2026 catalog with ranking context, university profiles and official links
+                  where available. Confirm current programme requirements directly with each institution.
                 </p>
 
                 <div className="relative mt-5 space-y-2">
@@ -231,7 +231,7 @@ export default function Admission() {
                 <div className="relative mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Globe2 className="h-4 w-4" />
-                    {UNIVERSITY_COUNT} live profiles
+                    {UNIVERSITY_COUNT} catalog profiles
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">
                     Open rankings

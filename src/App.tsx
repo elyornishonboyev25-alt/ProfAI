@@ -22,6 +22,9 @@ import { useCelebrationStore } from '@/store/celebrationStore'
 import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
+import { isPublicFeatureEnabled } from '@/config/featureFlags'
+
+const globalJourneyEnabled = isPublicFeatureEnabled('globalJourney')
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
@@ -29,6 +32,8 @@ const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssista
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
+const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
+const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
@@ -226,6 +231,8 @@ function App() {
     pathname === '/dashboard' ||
     (pathname === '/' && Boolean(user)) ||
     pathname.startsWith('/mock') ||
+    pathname === '/test-preparation' ||
+    pathname === '/academic-skills' ||
     pathname === '/speaking-community' ||
     pathname.startsWith('/speaker/') ||
     pathname === '/community' ||
@@ -239,6 +246,7 @@ function App() {
     pathname === '/onboarding' ||
     pathname.startsWith('/articles') ||
     pathname.startsWith('/admission') ||
+    pathname === '/ai-tutor' ||
     isLeaderboardMode
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
@@ -317,7 +325,14 @@ function App() {
     !isIeltsMockMode &&
     pathname !== '/ielts'
   const sidebarVisible = showSidebar && !isImmersiveHub
-  const showMobileNav = Boolean(user) && sidebarVisible
+  const showMobileNav =
+    Boolean(user) &&
+    !isPublicStandalone &&
+    !isTestMode &&
+    !isFocusContentMode &&
+    !isIeltsMockMode &&
+    pathname !== '/onboarding' &&
+    !isLiveCommunityMode
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
 
   useEffect(() => {
@@ -435,7 +450,15 @@ function App() {
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
-                      <Route path="/tests" element={<Navigate to="/ielts" replace />} />
+                      <Route
+                        path="/test-preparation"
+                        element={globalJourneyEnabled ? <AnimatedRoute><TestPreparation /></AnimatedRoute> : <Navigate to="/ielts" replace />}
+                      />
+                      <Route
+                        path="/academic-skills"
+                        element={globalJourneyEnabled ? <AnimatedRoute><AcademicSkills /></AnimatedRoute> : <Navigate to="/articles" replace />}
+                      />
+                      <Route path="/tests" element={<Navigate to={globalJourneyEnabled ? '/test-preparation' : '/ielts'} replace />} />
                       <Route
                         path="/tests/:id/attempt"
                         element={
@@ -447,7 +470,7 @@ function App() {
                         }
                       />
                       <Route path="/leaderboard" element={<AnimatedRoute><Leaderboard /></AnimatedRoute>} />
-                      <Route path="/mock" element={<Navigate to="/ielts" replace />} />
+                      <Route path="/mock" element={<Navigate to={globalJourneyEnabled ? '/test-preparation' : '/ielts'} replace />} />
                       <Route
                         path="/mock/ielts"
                         element={
@@ -770,8 +793,8 @@ function App() {
                         element={
                           <AnimatedRoute>
                             <PremiumOnly
-                              title="Admission Hub is Premium"
-                              description="Study-abroad lessons and the QS university explorer are part of ProfAI Premium."
+                              title="Application Planning is Premium"
+                              description="Guided application lessons and the university research workspace are part of ProfAI Premium."
                               perks={['30+ study-abroad lessons', 'QS university rankings explorer', 'Scholarship & application guidance']}
                             >
                               <Admission />
@@ -817,7 +840,7 @@ function App() {
                   <Footer />
                 </div>
               )}
-              {showMobileNav ? <div className="h-20 md:hidden" aria-hidden /> : null}
+              {showMobileNav ? <div className="h-20 lg:hidden" aria-hidden /> : null}
             </div>
           </main>
         </div>

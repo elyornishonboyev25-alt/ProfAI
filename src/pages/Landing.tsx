@@ -202,8 +202,8 @@ const FEATURES: Feature[] = [
     span: 'lg:col-span-1',
   },
   {
-    title: 'Admission Hub',
-    body: '30+ study-abroad lessons and a QS university explorer to plan your application end to end.',
+    title: 'University & Application Planning',
+    body: 'Use guided study-abroad lessons and the current university catalog to organize your next application steps.',
     icon: Globe2,
     route: '/admission',
     span: 'lg:col-span-2',
@@ -524,8 +524,8 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
               className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
             >
-              AI-powered SAT &amp; IELTS prep platform for studying abroad. Personalized learning, real-time
-              feedback, and guaranteed results.
+              One connected platform for test preparation, academic skills, university research and application
+              planning — organized around your next step.
             </motion.p>
 
             <motion.div

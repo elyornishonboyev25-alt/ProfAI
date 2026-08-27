@@ -1,9 +1,8 @@
 import { type ComponentType, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  AudioLines,
-  BarChart3,
   BookOpenText,
+  BarChart3,
   Building2,
   FileText,
   Gauge,
@@ -15,6 +14,8 @@ import {
 } from 'lucide-react'
 import { cn } from '../ui/utils'
 import { BrandMark } from '@/components/brand/BrandLogo'
+import { PRODUCT_NAVIGATION } from '@/config/productNavigation'
+import { isPublicFeatureEnabled } from '@/config/featureFlags'
 
 type NavItem = {
   id: string
@@ -23,9 +24,21 @@ type NavItem = {
   icon: ComponentType<{ className?: string }>
   path: string
   aliases?: string[]
+  matches?: (pathname: string) => boolean
 }
 
-const PRIMARY_ITEMS: NavItem[] = [
+const JOURNEY_PRIMARY_ITEMS: NavItem[] = [
+  { id: 'dashboard', label: 'Journey Home', description: "Today's priorities", icon: Gauge, path: '/dashboard' },
+  ...PRODUCT_NAVIGATION,
+]
+
+const JOURNEY_SECONDARY_ITEMS: NavItem[] = [
+  { id: 'performance', label: 'Progress', icon: BarChart3, path: '/profile' },
+  { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
+]
+
+const LEGACY_PRIMARY_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge, path: '/dashboard' },
   { id: 'ielts', label: 'IELTS Mock', icon: BookOpenText, path: '/ielts', aliases: ['/mock/ielts'] },
   { id: 'sat', label: 'SAT Mock', icon: GraduationCap, path: '/sat', aliases: ['/mock/sat'] },
@@ -39,12 +52,11 @@ const PRIMARY_ITEMS: NavItem[] = [
   },
 ]
 
-const SECONDARY_ITEMS: NavItem[] = [
+const LEGACY_SECONDARY_ITEMS: NavItem[] = [
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
   { id: 'performance', label: 'Performance', icon: BarChart3, path: '/profile' },
   { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
   { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
-  { id: 'shadowing', label: 'Shadowing', icon: AudioLines, path: '/shadowing-lab' },
   { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
   { id: 'vocabulary', label: 'Vocabulary', icon: Languages, path: '/vocabulary' },
 ]
@@ -53,6 +65,9 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
   const sidebarRef = useRef<HTMLElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
+  const journeyEnabled = isPublicFeatureEnabled('globalJourney')
+  const primaryItems = journeyEnabled ? JOURNEY_PRIMARY_ITEMS : LEGACY_PRIMARY_ITEMS
+  const secondaryItems = journeyEnabled ? JOURNEY_SECONDARY_ITEMS : LEGACY_SECONDARY_ITEMS
 
   useEffect(() => {
     const element = sidebarRef.current
@@ -61,14 +76,16 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
     else element.removeAttribute('inert')
   }, [concealed])
 
-  const isActive = (path: string, aliases: string[] = []) => {
+  const isActive = (item: NavItem) => {
+    if (item.matches) return item.matches(location.pathname)
+    const { path, aliases = [] } = item
     if (path === '/dashboard') return location.pathname === '/' || location.pathname === '/dashboard'
     if (location.pathname.startsWith(path)) return true
     return aliases.some((alias) => location.pathname.startsWith(alias))
   }
 
   const renderItem = (item: NavItem, primary: boolean) => {
-    const active = isActive(item.path, item.aliases)
+    const active = isActive(item)
     const Icon = item.icon
 
     return (
@@ -138,28 +155,38 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
             <p className="truncate text-[1.55rem] font-black leading-none tracking-[-0.06em] text-slate-900">
               Prof<span className="text-red-600">AI</span>
             </p>
-            <p className="mt-1 truncate text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">Learn. Practice. Achieve.</p>
+            <p className="mt-1 truncate text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">
+              {journeyEnabled ? 'Plan. Prepare. Apply.' : 'Learn. Practice. Achieve.'}
+            </p>
           </div>
         </button>
 
         <nav className="no-scrollbar mt-5 min-h-0 flex-1 overflow-y-auto" aria-label="Primary navigation">
           <div className="sidebar-primary-cluster rounded-[1.55rem] p-2">
-            <p className="sidebar-core-heading mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em]">Core learning</p>
-            <div className="space-y-1">{PRIMARY_ITEMS.map((item) => renderItem(item, true))}</div>
+            <p className="sidebar-core-heading mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em]">
+              {journeyEnabled ? 'Your university journey' : 'Core learning'}
+            </p>
+            <div className="space-y-1">{primaryItems.map((item) => renderItem(item, true))}</div>
           </div>
 
           <div className="mx-3 my-4 flex items-center gap-2" aria-hidden="true">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Explore</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+              {journeyEnabled ? 'Student tools' : 'Explore'}
+            </span>
             <span className="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-200 to-transparent" />
           </div>
 
-          <div className="space-y-0.5 px-1">{SECONDARY_ITEMS.map((item) => renderItem(item, false))}</div>
+          <div className="space-y-0.5 px-1">{secondaryItems.map((item) => renderItem(item, false))}</div>
         </nav>
 
         <div className="mt-4 rounded-2xl border border-white/80 bg-white/45 px-3 py-2.5 text-center shadow-inner">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Your path to</p>
-          <p className="mt-0.5 text-xs font-black text-slate-700">Top universities abroad</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
+            {journeyEnabled ? 'One connected journey' : 'Your path to'}
+          </p>
+          <p className="mt-0.5 text-xs font-black text-slate-700">
+            {journeyEnabled ? 'From preparation to application' : 'Top universities abroad'}
+          </p>
         </div>
       </div>
     </aside>

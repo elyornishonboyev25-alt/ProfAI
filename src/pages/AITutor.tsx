@@ -38,7 +38,7 @@ const WORKSPACE_ICONS: Record<AiWorkspaceId, typeof BrainCircuit> = {
 const CAPABILITIES = [
   { icon: ImagePlus, label: 'Understands screenshots' },
   { icon: AudioLines, label: 'Voice conversation' },
-  { icon: Languages, label: 'Uzbek, English and Russian' },
+  { icon: Languages, label: 'Goal-aware study guidance' },
 ] as const
 
 export default function AITutor() {
@@ -76,7 +76,7 @@ export default function AITutor() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-lg font-black text-slate-950">Prof · AI Tutor</h1>
+                <h1 className="truncate text-lg font-black text-slate-950">ProfAI Coach</h1>
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
               </div>
               <p className="truncate text-xs font-semibold text-slate-500">Grounded in your progress and ProfAI learning data</p>

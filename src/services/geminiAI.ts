@@ -1,4 +1,7 @@
 import { apiClient } from '@/lib/apiClient'
+import { isPublicFeatureEnabled } from '@/config/featureFlags'
+
+const GLOBAL_JOURNEY_ENABLED = isPublicFeatureEnabled('globalJourney')
 
 export type AiGenerationPurpose =
   | 'assistant_chat'
@@ -60,8 +63,9 @@ const ASSISTANT_ROUTES = new Set([
   '/dashboard', '/ielts', '/ielts/reading/tests', '/ielts/listening/tests',
   '/ielts/writing/tests', '/ielts/speaking/tests', '/sat', '/sat/calculator',
   '/vocabulary', '/articles', '/speaking-lab', '/shadowing-lab', '/writing-lab',
-  '/podcast', '/admission', '/mock', '/mock/ielts', '/mock/sat', '/leaderboard',
+  '/podcast', '/admission', '/mock/ielts', '/mock/sat', '/leaderboard',
   '/analyze-mistakes', '/premium', '/account',
+  ...(GLOBAL_JOURNEY_ENABLED ? ['/test-preparation', '/academic-skills', '/admission/universities', '/ai-tutor'] : []),
 ])
 
 function sanitizeChatActions(value: unknown): GeminiChatAction[] {
@@ -269,14 +273,15 @@ ${workspaceContext ? `\nACTIVE LEARNING MODE (adapt this conversation; selecting
 YOU CONTROL THE WHOLE WEBSITE via "actions". You can navigate anywhere AND open any test, with a timer, exactly as asked.
 
 ROUTE MAP (for the "navigate" action — use the exact path):
-- /dashboard — dashboard/home        - /ielts — IELTS hub
+- /dashboard — dashboard/home${GLOBAL_JOURNEY_ENABLED ? '\n- /test-preparation — IELTS and SAT preparation hub    - /academic-skills — academic English skills hub' : ''}
+- /ielts — IELTS hub
 - /ielts/reading/tests — Reading catalog    - /ielts/listening/tests — Listening catalog
 - /ielts/writing/tests — Writing catalog    - /ielts/speaking/tests — Speaking catalog
 - /sat — SAT hub        - /sat/calculator — SAT score calculator
 - /vocabulary — Vocabulary    - /articles — Reading library
 - /speaking-lab — Speaking lab    - /shadowing-lab — Shadowing    - /writing-lab — Writing lab
-- /podcast — English podcasts    - /admission — Study-abroad lessons + university explorer
-- /mock — Mock hub    - /mock/ielts — Full IELTS mocks    - /mock/sat — Full SAT mocks
+- /podcast — English podcasts    - /admission — application planning and study-abroad lessons${GLOBAL_JOURNEY_ENABLED ? '\n- /admission/universities — university research    - /ai-tutor — personal AI Coach' : ''}
+- /mock/ielts — Full IELTS mocks    - /mock/sat — Full SAT mocks
 - /leaderboard — Ranking    - /analyze-mistakes — Past mistakes & writing feedback
 - /premium — Upgrade    - /account — Account settings
 

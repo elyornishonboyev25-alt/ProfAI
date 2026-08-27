@@ -165,7 +165,9 @@ function renderMathSequence(value: string): ReactNode {
       return <mi>{command}</mi>
     }
     if (/\d/.test(character) || (character === '.' && /\d/.test(value[index + 1] ?? ''))) {
-      const number = value.slice(index).match(/^(?:\d[\d,]*(?:\.\d+)?|\.\d+)/)?.[0] ?? character
+      // A comma belongs to a number only when it is a thousands separator;
+      // coordinate commas such as (-7, 3) need their own operator spacing.
+      const number = value.slice(index).match(/^(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|\.\d+)/)?.[0] ?? character
       index += number.length
       return <mn>{number}</mn>
     }
@@ -217,23 +219,58 @@ function MathFormula({ value, display = false }: { value: string; display?: bool
 function looksLikeMath(value: string) {
   const trimmed = value.trim()
   if (!trimmed || trimmed.length > 180) return false
+  // Compact $...$ spans are always mathematical in SAT content. This covers
+  // variable pairs such as $xy$ and polynomials such as $x^2+ax+c=0$.
+  if (!/\s/.test(trimmed)) return true
   const proseWords = trimmed.match(/[A-Za-z]{2,}/g) ?? []
-  if (!trimmed.includes('\\') && proseWords.length >= 2) return false
-  if (/\\(?:frac|sqrt|angle|triangle|sin|cos|tan|text|overline|hat)|[=<>^_+*/]|\d/.test(trimmed)) return true
+  const hasMathSyntax = /\\|[=<>^_+*/]/.test(trimmed)
+  // Do not mistake paired currency amounts such as "$27 ... $3" for math.
+  if (!hasMathSyntax && proseWords.length) return false
+  if (hasMathSyntax) return true
+  if (!proseWords.length) return true
   return /^[A-Za-z]$/.test(trimmed)
 }
 
-function inlineNodes(text: string): ReactNode[] {
-  const tokens = text.split(/(<u>.*?<\/u>|\*\*.*?\*\*|\*[^*]+\*|\$[^$\n]+\$)/g)
+function markdownNodes(text: string, keyPrefix: string): ReactNode[] {
+  const tokens = text.split(/(<u>.*?<\/u>|\*\*.*?\*\*|\*[^*]+\*)/g)
   return tokens.filter(Boolean).map((token, index) => {
-    if (token.startsWith('<u>') && token.endsWith('</u>')) return <u key={index}>{token.slice(3, -4)}</u>
-    if (token.startsWith('**') && token.endsWith('**')) return <strong key={index}>{inlineNodes(token.slice(2, -2))}</strong>
-    if (token.startsWith('*') && token.endsWith('*')) return <em key={index}>{inlineNodes(token.slice(1, -1))}</em>
-    if (token.startsWith('$') && token.endsWith('$') && looksLikeMath(token.slice(1, -1))) {
-      return <MathFormula key={index} value={token.slice(1, -1)} />
-    }
-    return <Fragment key={index}>{token}</Fragment>
+    const key = `${keyPrefix}-${index}`
+    if (token.startsWith('<u>') && token.endsWith('</u>')) return <u key={key}>{token.slice(3, -4)}</u>
+    if (token.startsWith('**') && token.endsWith('**')) return <strong key={key}>{inlineNodes(token.slice(2, -2))}</strong>
+    if (token.startsWith('*') && token.endsWith('*')) return <em key={key}>{inlineNodes(token.slice(1, -1))}</em>
+    return <Fragment key={key}>{token}</Fragment>
   })
+}
+
+function inlineNodes(text: string): ReactNode[] {
+  // Find valid math pairs before parsing emphasis. Scanning instead of simply
+  // pairing every two dollar signs prevents a currency amount such as $900
+  // from swallowing the next real formula delimiter.
+  const nodes: ReactNode[] = []
+  let plainStart = 0
+  let cursor = 0
+  let segment = 0
+
+  while (cursor < text.length) {
+    const opening = text.indexOf('$', cursor)
+    if (opening === -1) break
+    const closing = text.indexOf('$', opening + 1)
+    if (closing === -1) break
+    const value = text.slice(opening + 1, closing)
+
+    if (looksLikeMath(value)) {
+      if (opening > plainStart) nodes.push(...markdownNodes(text.slice(plainStart, opening), `text-${segment}`))
+      nodes.push(<MathFormula key={`math-${segment}`} value={value} />)
+      segment += 1
+      plainStart = closing + 1
+      cursor = closing + 1
+    } else {
+      cursor = opening + 1
+    }
+  }
+
+  if (plainStart < text.length) nodes.push(...markdownNodes(text.slice(plainStart), `text-${segment}`))
+  return nodes
 }
 
 function normalizeRichText(text: string) {
@@ -242,7 +279,7 @@ function normalizeRichText(text: string) {
     .replace(/```/g, '')
     .replace(/\\\[([\s\S]*?)\\\]/g, (_match, value: string) => `\n\n$$${value}$$\n\n`)
     .replace(/\$\$\s*\$\$/g, () => '$$\n\n$$')
-    .replace(/\$\$([^$]+)\$\$(?=\S)/g, (_match, value: string) => `$$${value}$$\n\n`)
+    .replace(/(^|\n)\$\$([^$]+)\$\$(?=\S)/g, (_match, prefix: string, value: string) => `${prefix}$$${value}$$\n\n`)
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }

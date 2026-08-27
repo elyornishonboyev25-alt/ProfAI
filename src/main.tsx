@@ -5,12 +5,14 @@ import App from './App.tsx'
 import MotionRuntime from './components/MotionRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
+import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 
 if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', () => {
     void recoverFromStaleBuild(new Error('vite:preloadError'))
   })
+  startBuildFreshnessMonitor()
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

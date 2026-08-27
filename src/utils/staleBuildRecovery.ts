@@ -1,5 +1,6 @@
 const RECOVERY_KEY = 'profai:stale-build-recovery'
 const RECOVERY_COOLDOWN_MS = 30_000
+const BUILD_BYPASS_PARAM = '__profai_build'
 
 const STALE_BUILD_MESSAGES = [
   /failed to fetch dynamically imported module/i,
@@ -44,6 +45,20 @@ async function updateServiceWorker() {
   )
 }
 
+function reloadFromNetwork() {
+  const url = new URL(window.location.href)
+  url.searchParams.set(BUILD_BYPASS_PARAM, Date.now().toString(36))
+  window.location.replace(url.toString())
+}
+
+export function clearBuildBypassParam() {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  if (!url.searchParams.has(BUILD_BYPASS_PARAM)) return
+  url.searchParams.delete(BUILD_BYPASS_PARAM)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
 /**
  * Repairs a page that is still running an old deployment while requesting new
  * lazy chunks. The cooldown prevents a broken network from creating a reload loop.
@@ -64,6 +79,6 @@ export async function recoverFromStaleBuild(error?: unknown, force = false) {
     recovery,
     new Promise<void>((resolve) => window.setTimeout(resolve, 1_500)),
   ])
-  window.location.reload()
+  reloadFromNetwork()
   return true
 }

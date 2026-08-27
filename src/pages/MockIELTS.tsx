@@ -83,11 +83,11 @@ export default function MockIELTS() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/ielts')}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Dashboard
+                    Back to IELTS Arena
                   </button>
                   <span className="premium-top-chip">IELTS Mock Suite</span>
                   {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (

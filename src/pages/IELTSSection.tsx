@@ -31,9 +31,8 @@ export default function IELTSSection() {
     <IeltsSectionView
       section={section as IeltsSectionKey}
       backPath={fromMock ? '/mock/ielts' : '/ielts'}
-      backLabel={fromMock ? 'Back to Mock IELTS' : 'Back'}
+      backLabel={fromMock ? 'Back to Mock IELTS' : 'Back to IELTS Arena'}
       backState={fromMock ? { from: mockFrom } : null}
     />
   )
 }
-

@@ -186,7 +186,7 @@ export default function TestInterface() {
       })
       return
     }
-    navigate(-1)
+    navigate('/test-preparation')
   }
 
   if (loading) {

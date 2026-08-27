@@ -28,9 +28,9 @@ export default function AdmissionLessons() {
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
-                  <button type="button" onClick={() => navigate('/dashboard')} className="premium-back-btn">
+                  <button type="button" onClick={() => navigate('/admission')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Dashboard
+                    Back to Applications
                   </button>
                   <span className="premium-top-chip">
                     <GraduationCap className="h-3.5 w-3.5" />

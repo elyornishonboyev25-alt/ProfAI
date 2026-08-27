@@ -149,10 +149,10 @@ export default function ResultsReview() {
             This attempt is not available right now. Open it from Results or Analyze Mistakes.
           </p>
           <button type="button"
-            onClick={() => navigate('/ielts')}
+            onClick={() => navigate('/ielts/reading/tests')}
             className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
           >
-            Back to Reading
+            Back to Reading Tests
           </button>
         </div>
       </div>
@@ -342,5 +342,4 @@ export default function ResultsReview() {
     </div>
   )
 }
-
 

@@ -46,8 +46,8 @@ export default function Articles() {
       <div className="articles-arena-shell mx-auto max-w-[112rem]">
         <header className="articles-arena-hero">
           <div className="articles-arena-topline">
-            <button type="button" onClick={() => navigate('/dashboard')} className="articles-arena-back">
-              <ArrowLeft /> Dashboard
+            <button type="button" onClick={() => navigate('/academic-skills')} className="articles-arena-back">
+              <ArrowLeft /> Academic Skills
             </button>
             <div className="articles-arena-brand" aria-label="ProfAI Reading Library">
               <BrandMark size={48} />

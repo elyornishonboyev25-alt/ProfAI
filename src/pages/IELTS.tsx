@@ -204,8 +204,8 @@ export default function IELTS() {
   return (
     <main className="workspace-page min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[112rem]">
-        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard')} className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/85 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:text-red-600">
-          <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
+        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/test-preparation')} className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/85 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:text-red-600">
+          <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Test Preparation'}
         </button>
 
         <header className="relative mt-2 overflow-hidden px-5 py-10 text-center sm:px-8 sm:py-12">

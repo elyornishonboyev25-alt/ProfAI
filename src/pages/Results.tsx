@@ -305,8 +305,8 @@ export default function Results() {
         <div className="relative z-10 w-full max-w-lg rounded-3xl border border-red-200 bg-white/95 p-8 text-center shadow-[0_24px_52px_rgba(220,38,38,0.16)]">
           <h1 className="text-3xl font-black text-slate-900">No Results Found</h1>
           <p className="mt-2 text-sm text-slate-600">Open the reading test and submit at least one attempt.</p>
-          <Link to="/ielts" className="arena-primary-btn mt-6">
-            Return to IELTS
+          <Link to="/ielts/reading/tests" className="arena-primary-btn mt-6">
+            Return to Reading Tests
           </Link>
         </div>
       </div>
@@ -322,11 +322,11 @@ export default function Results() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => navigate('/ielts')}
+                onClick={() => navigate('/ielts/reading/tests')}
                 className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700">Back</span>
+                <span className="text-sm font-semibold text-slate-700">Reading Tests</span>
               </button>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600">Result Studio</p>
@@ -594,7 +594,7 @@ export default function Results() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/ielts')}
+              onClick={() => navigate('/ielts/reading/tests')}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               <BookOpen className="h-4 w-4" />
@@ -623,4 +623,3 @@ export default function Results() {
     </div>
   )
 }
-

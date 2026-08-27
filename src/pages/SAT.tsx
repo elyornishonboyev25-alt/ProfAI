@@ -268,10 +268,10 @@ export default function SAT() {
       <div className="relative mx-auto max-w-[112rem]">
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/test-preparation')}
           className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:bg-white hover:text-red-600"
         >
-          <ArrowLeft className="h-4 w-4" /> Dashboard
+          <ArrowLeft className="h-4 w-4" /> Test Preparation
         </button>
 
         <motion.header

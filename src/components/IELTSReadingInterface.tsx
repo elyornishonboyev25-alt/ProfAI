@@ -2896,7 +2896,7 @@ export default function IELTSReadingInterface({
 
         <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
           <button type="button" onClick={onExit} className="text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2 mx-auto px-6 py-2 rounded-full border border-white/5 hover:bg-white/5">
-            <ArrowLeftIcon className="w-4 h-4" /> Return to ProfAI Dashboard
+            <ArrowLeftIcon className="w-4 h-4" /> Return to Reading Tests
           </button>
         </motion.div>
       </div>

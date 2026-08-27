@@ -29,7 +29,7 @@ export default function SATCalculator() {
             <div className="premium-top-controls">
               <button onClick={() => navigate('/sat')} className="premium-back-btn-blue">
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                Back to SAT Arena
               </button>
               <span className="premium-top-chip-blue">SAT Score Tool</span>
             </div>

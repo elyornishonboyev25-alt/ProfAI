@@ -127,8 +127,8 @@ export default function Mock() {
       <div className="relative mx-auto w-full max-w-[92rem] space-y-5">
         <CatalogHero
           tone="rose"
-          backLabel="Dashboard"
-          onBack={() => navigate('/dashboard')}
+          backLabel="Test Preparation"
+          onBack={() => navigate('/test-preparation')}
           eyebrow="Mock Exam Center"
           title={<>Real exam pressure. <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent">Clear controlled practice.</span></>}
           subtitle="Choose IELTS or Digital SAT and enter a distraction-free simulation with official pacing, locked section flow and actionable review."

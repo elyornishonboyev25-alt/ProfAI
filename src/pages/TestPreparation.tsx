@@ -1,72 +1,46 @@
-import { BarChart3, BookOpenCheck, Calculator, Headphones, MessageSquareText, TimerReset } from 'lucide-react'
+import { Calculator, Headphones } from 'lucide-react'
 import PillarHub, { type PillarHubCard } from '@/components/journey/PillarHub'
 
-const CARDS: PillarHubCard[] = [
+const EXAM_ARENAS: PillarHubCard[] = [
   {
-    title: 'IELTS preparation',
-    description: 'Prepare for Academic or General Training across Reading, Listening, Writing and Speaking.',
+    title: 'IELTS Arena',
+    description:
+      'Build your English proficiency through one focused workspace for Academic and General Training preparation.',
     eyebrow: 'English proficiency',
-    action: 'Open IELTS',
+    action: 'Enter IELTS Arena',
     path: '/ielts',
     icon: Headphones,
-    tone: 'blue',
+    tone: 'red',
+    details: ['Listening & Reading', 'Writing & Speaking', 'Full mock exams', 'Band progress'],
   },
   {
-    title: 'Digital SAT preparation',
-    description: 'Build Math and Reading & Writing accuracy with section practice, timing and score review.',
+    title: 'Digital SAT Arena',
+    description:
+      'Strengthen the Math and Reading & Writing skills required for competitive undergraduate applications.',
     eyebrow: 'Undergraduate admissions',
-    action: 'Open SAT',
+    action: 'Enter SAT Arena',
     path: '/sat',
     icon: Calculator,
-    tone: 'indigo',
-  },
-  {
-    title: 'IELTS mock exams',
-    description: 'Run complete timed IELTS simulations when you are ready to measure your current baseline.',
-    eyebrow: 'Exam simulation',
-    action: 'View IELTS mocks',
-    path: '/mock/ielts',
-    icon: TimerReset,
-    tone: 'rose',
-  },
-  {
-    title: 'SAT mock exams',
-    description: 'Practice under test conditions and use the result to choose your next focused study block.',
-    eyebrow: 'Exam simulation',
-    action: 'View SAT mocks',
-    path: '/mock/sat',
-    icon: BookOpenCheck,
-    tone: 'amber',
-  },
-  {
-    title: 'Writing practice',
-    description: 'Work through IELTS writing tasks and receive structured feedback on your own response.',
-    eyebrow: 'Skill practice',
-    action: 'Open Writing',
-    path: '/ielts/writing/tests',
-    icon: MessageSquareText,
-    tone: 'emerald',
-  },
-  {
-    title: 'Mistake analysis',
-    description: 'Review completed work, identify recurring gaps and decide what deserves attention next.',
-    eyebrow: 'Progress review',
-    action: 'Review mistakes',
-    path: '/analyze-mistakes',
-    icon: BarChart3,
-    tone: 'slate',
+    tone: 'blue',
+    details: ['Math domains', 'Reading & Writing', 'Full practice tests', 'Score progress'],
   },
 ]
 
 export default function TestPreparation() {
   return (
     <PillarHub
-      eyebrow="Test Preparation"
-      title={<>Build the scores your <span className="text-blue-600">university plan</span> requires.</>}
-      description="Choose IELTS or SAT, establish a baseline and focus your practice on the skills that matter for your target applications."
-      highlights={['IELTS Academic & General Training', 'Digital SAT', 'Timed practice', 'Progress review']}
-      cards={CARDS}
-      note="Test results are preparation signals, not admission guarantees. Always confirm the required test type and score on each university’s official programme page."
+      eyebrow="Test preparation command center"
+      title={
+        <>
+          Choose your <span className="text-red-600">exam</span>{' '}
+          <span className="text-blue-600">arena.</span>
+        </>
+      }
+      description="Select the exam your university journey requires. Each arena already contains its own practice, full mocks, feedback and progress review."
+      highlights={['IELTS Academic & General Training', 'Digital SAT', 'Focused practice', 'Measured progress']}
+      cards={EXAM_ARENAS}
+      layout="tracks"
+      note="Test scores support your application strategy, but admission requirements vary. Always confirm the accepted exam and minimum score on the university's official programme page."
     />
   )
 }

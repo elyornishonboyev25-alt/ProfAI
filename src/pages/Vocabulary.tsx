@@ -140,7 +140,7 @@ export default function Vocabulary() {
   }
 
   const goBack = () => {
-    navigate('/dashboard')
+    navigate(routeTrack ? '/vocabulary' : '/academic-skills')
   }
 
   if (trackParam && !routeTrack) {
@@ -165,7 +165,7 @@ export default function Vocabulary() {
                       className="premium-back-btn group"
                     >
                       <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
-                      Back
+                      Back to Academic Skills
                     </motion.button>
                     <span className="premium-top-chip gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
@@ -308,11 +308,11 @@ export default function Vocabulary() {
                 <div>
                   <div className="premium-top-controls">
                     <button
-                      onClick={() => navigate('/dashboard')}
+                      onClick={() => navigate('/vocabulary')}
                       className="premium-back-btn"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
-                      Back
+                      Back to Vocabulary
                     </button>
                     <span className="premium-top-chip">IELTS Vocabulary Track</span>
                   </div>
@@ -442,11 +442,11 @@ export default function Vocabulary() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/vocabulary')}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back
+                    Back to Vocabulary
                   </button>
                   <span className="premium-top-chip">SAT Vocabulary Track</span>
                 </div>

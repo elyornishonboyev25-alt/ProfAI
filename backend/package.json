@@ -13,7 +13,8 @@
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "test:realtime": "npm run build && node scripts/smoke-speaking-rooms.mjs",
-    "test:ai-security": "node --test scripts/ai-provider.test.mjs"
+    "test:ai-security": "node --test scripts/ai-provider.test.mjs",
+    "test:legacy-removal": "node --test scripts/legacy-removal.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",

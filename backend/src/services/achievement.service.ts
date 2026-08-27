@@ -42,14 +42,6 @@ export function resolveUnlockedAchievements(params: {
       unlocked.push(achievement)
       continue
     }
-
-    if (
-      criteria.type === 'olympiad_score' &&
-      params.context.difficulty === 'OLYMPIAD' &&
-      params.context.finalScore >= min
-    ) {
-      unlocked.push(achievement)
-    }
   }
 
   return unlocked

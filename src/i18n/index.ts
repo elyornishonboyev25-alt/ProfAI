@@ -8,7 +8,6 @@ const translation = {
     tests: 'Tests',
     sat: 'SAT',
     ielts: 'IELTS',
-    olympiad: 'Olympiad',
     profile: 'Profile',
     login: 'Login',
     logout: 'Logout',
@@ -79,14 +78,6 @@ const translation = {
     general: 'General Training',
     fullTest: 'Full Practice Test',
   },
-  olympiad: {
-    title: 'Olympiad Preparation',
-    math: 'Math Olympiad',
-    english: 'English Olympiad',
-    problems: 'Problems',
-    solutions: 'Solutions',
-    rankings: 'Rankings',
-  },
   test: {
     title: 'Test',
     question: 'Question',
@@ -127,4 +118,3 @@ i18n
   })
 
 export default i18n
-

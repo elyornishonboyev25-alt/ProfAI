@@ -1,14 +1,15 @@
 # ProfAI
 
-Production-ready full-stack EdTech SaaS platform for AI-powered tutoring, testing, scoring, and gamified learning.
+Global university-preparation platform combining exam preparation, academic skills,
+university research and application planning.
 
 ## What This Platform Delivers
 
 ProfAI supports:
-- School student testing
 - SAT preparation
-- IELTS preparation
-- Olympiad-level academic competition training
+- IELTS Academic and General Training preparation
+- Academic English and application-readiness practice
+- University research and admissions planning
 
 Core capabilities implemented with real backend logic:
 - Real weighted scoring and percentage calculation

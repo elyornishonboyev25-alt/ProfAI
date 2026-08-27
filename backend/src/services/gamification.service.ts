@@ -32,14 +32,11 @@ type StreakOutput = {
  *    30% accuracy  ->   9 XP
  *     0% accuracy  ->   0 XP
  *
- * Olympiad caps at 150 so an absolute mastery run can yield 150 XP — your
- * "10/10 on SAT = +100" example sits at the Hard tier (Olympiad is rarer).
  */
 export const MAX_XP_BY_DIFFICULTY: Record<Difficulty, number> = {
   EASY: 40,
   MEDIUM: 70,
   HARD: 100,
-  OLYMPIAD: 150,
 }
 
 /** Small streak kicker capped at +20% — keeps daily players ahead, never dominates. */

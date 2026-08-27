@@ -38,7 +38,8 @@ reference point for the staged ProfAI Global University Journey rollout.
   deadlines.
 - User profiles already store useful journey inputs such as target exam,
   countries, degree level, field of study, budget and a target university slug.
-- The backend test schema still contains `SCHOOL` and `OLYMPIAD` categories.
+- At the Phase 0 baseline, the backend test schema still contained `SCHOOL`
+  and `OLYMPIAD` categories; Phase 2 removes them.
 
 ## Delivery baseline
 
@@ -77,8 +78,8 @@ explicit user checkpoint.
 - Browser-side Gemini credentials and calls are removed in Phase 1.
 - The tracked backend environment file and exposed historical credentials are
   remediated in Phase 1; account owners must rotate the actual secrets.
-- School/Olympiad data and behavior are removed through a backed-up migration in
-  Phase 2.
+- School/Olympiad data and behavior are removed through the backup-gated Phase 2
+  migration.
 - Funnel events, attribution and PostHog are introduced in Phase 4.
 - University and program data move to PostgreSQL in Phase 9.
 - Subscription entitlements and automated payment remain disabled until Phases

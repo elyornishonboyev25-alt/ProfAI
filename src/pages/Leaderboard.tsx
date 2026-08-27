@@ -557,7 +557,7 @@ export default function Leaderboard() {
               <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-900">
                 XP = max(difficulty) × score%²
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+              <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-3">
                 <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-2 py-1.5">
                   <p className="font-bold text-emerald-700">Easy</p>
                   <p className="text-emerald-900">up to 40 XP</p>
@@ -569,10 +569,6 @@ export default function Leaderboard() {
                 <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-2 py-1.5">
                   <p className="font-bold text-blue-700">Hard</p>
                   <p className="text-blue-900">up to 100 XP</p>
-                </div>
-                <div className="rounded-lg border border-violet-100 bg-violet-50/50 px-2 py-1.5">
-                  <p className="font-bold text-violet-700">Olympiad</p>
-                  <p className="text-violet-900">up to 150 XP</p>
                 </div>
               </div>
               <p className="mt-3 text-[11px] text-slate-500">

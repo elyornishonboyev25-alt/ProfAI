@@ -17,8 +17,8 @@ export type AuthUser = {
   onboardingCompleted: boolean
 }
 
-export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'OLYMPIAD'
-export type TestCategory = 'SCHOOL' | 'SAT' | 'IELTS' | 'OLYMPIAD'
+export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD'
+export type TestCategory = 'SAT' | 'IELTS'
 export type DivisionTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'ELITE'
 
 export type TestSummary = {

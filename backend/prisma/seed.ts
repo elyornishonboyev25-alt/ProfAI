@@ -61,14 +61,6 @@ const achievements = [
     xpReward: 250,
     criteria: { type: 'xp', min: 1000 },
   },
-  {
-    slug: 'olympiad_master',
-    title: 'Olympiad Master',
-    description: 'Score at least 85% on an Olympiad test.',
-    icon: 'Crown',
-    xpReward: 300,
-    criteria: { type: 'olympiad_score', min: 85 },
-  },
 ]
 
 const tests: SeedTest[] = [
@@ -204,131 +196,6 @@ const tests: SeedTest[] = [
           { text: 'long-term impact measurement', isCorrect: true },
           { text: 'marketing strategy redesign', isCorrect: false },
           { text: 'equipment procurement only', isCorrect: false },
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'olympiad-algebra-theory-01',
-    title: 'Olympiad Algebra and Number Theory Challenge 01',
-    description: 'Competition-level problem set focused on proof strategies and advanced transformations.',
-    category: TestCategory.OLYMPIAD,
-    difficulty: Difficulty.OLYMPIAD,
-    durationSec: 5400,
-    premium: true,
-    xpReward: 180,
-    subjects: ['Algebra', 'Number Theory', 'Proof'],
-    questions: [
-      {
-        text: 'If a, b, c are positive reals with abc = 1, which inequality is always true?',
-        explanation: 'Applying AM-GM directly yields the correct lower bound.',
-        weight: 1.4,
-        options: [
-          { text: 'a+b+c < 2', isCorrect: false },
-          { text: 'a+b+c >= 3', isCorrect: true },
-          { text: 'ab+bc+ca <= 1', isCorrect: false },
-          { text: 'a^2+b^2+c^2 <= 1', isCorrect: false },
-        ],
-      },
-      {
-        text: 'For integer n, n^2+n is always divisible by:',
-        explanation: 'n(n+1) is product of consecutive integers, one of which is even.',
-        weight: 1,
-        options: [
-          { text: '2', isCorrect: true },
-          { text: '3', isCorrect: false },
-          { text: '5', isCorrect: false },
-          { text: '7', isCorrect: false },
-        ],
-      },
-      {
-        text: 'The sequence a_n = 2a_{n-1}+1 with a_1=1 has closed form:',
-        explanation: 'Solve recurrence to get a_n = 2^n - 1.',
-        weight: 1.1,
-        options: [
-          { text: '2^n + 1', isCorrect: false },
-          { text: '2^n - 1', isCorrect: true },
-          { text: 'n^2 + 1', isCorrect: false },
-          { text: 'n(n+1)/2', isCorrect: false },
-        ],
-      },
-      {
-        text: 'Which method is most suitable to prove irrationality of sqrt(2)?',
-        explanation: 'Classical contradiction proof based on parity is standard.',
-        weight: 1,
-        options: [
-          { text: 'Proof by contradiction', isCorrect: true },
-          { text: 'Mathematical induction', isCorrect: false },
-          { text: 'Direct computation only', isCorrect: false },
-          { text: 'Exhaustive enumeration', isCorrect: false },
-        ],
-      },
-      {
-        text: 'In modular arithmetic, if a в‰Ў b (mod m), then:',
-        explanation: 'Congruence implies m divides a-b.',
-        weight: 1,
-        options: [
-          { text: 'm divides a+b', isCorrect: false },
-          { text: 'm divides a-b', isCorrect: true },
-          { text: 'a=b necessarily', isCorrect: false },
-          { text: 'a and b are prime', isCorrect: false },
-        ],
-      },
-    ],
-  },
-  {
-    slug: 'school-math-foundation-01',
-    title: 'School Mathematics Foundation 01',
-    description: 'Core arithmetic and algebra assessment for school students.',
-    category: TestCategory.SCHOOL,
-    difficulty: Difficulty.EASY,
-    durationSec: 1800,
-    premium: false,
-    xpReward: 60,
-    subjects: ['Mathematics', 'Reasoning'],
-    questions: [
-      {
-        text: 'Solve: 3x + 5 = 20',
-        explanation: 'Subtract 5 and divide by 3.',
-        weight: 1,
-        options: [
-          { text: 'x = 4', isCorrect: false },
-          { text: 'x = 5', isCorrect: true },
-          { text: 'x = 6', isCorrect: false },
-          { text: 'x = 7', isCorrect: false },
-        ],
-      },
-      {
-        text: 'What is 25% of 200?',
-        explanation: 'Quarter of 200 equals 50.',
-        weight: 1,
-        options: [
-          { text: '40', isCorrect: false },
-          { text: '45', isCorrect: false },
-          { text: '50', isCorrect: true },
-          { text: '60', isCorrect: false },
-        ],
-      },
-      {
-        text: 'Simplify: 2(3a - 4)',
-        explanation: 'Distribute 2 across both terms.',
-        weight: 0.9,
-        options: [
-          { text: '6a - 8', isCorrect: true },
-          { text: '6a - 4', isCorrect: false },
-          { text: '3a - 8', isCorrect: false },
-          { text: '5a - 4', isCorrect: false },
-        ],
-      },
-      {
-        text: 'If a triangle has angles 50В° and 60В°, the third angle is:',
-        explanation: 'Triangle angles sum to 180В°.',
-        weight: 1,
-        options: [
-          { text: '60В°', isCorrect: false },
-          { text: '65В°', isCorrect: false },
-          { text: '70В°', isCorrect: true },
-          { text: '80В°', isCorrect: false },
         ],
       },
     ],
@@ -473,4 +340,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect()
   })
-

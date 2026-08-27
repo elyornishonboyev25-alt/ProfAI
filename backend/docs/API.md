@@ -79,8 +79,8 @@ Query test library with filters.
 
 Query params:
 - `search`
-- `category` (`SCHOOL|SAT|IELTS|OLYMPIAD`)
-- `difficulty` (`EASY|MEDIUM|HARD|OLYMPIAD`)
+- `category` (`SAT|IELTS`)
+- `difficulty` (`EASY|MEDIUM|HARD`)
 - `premium` (`true|false`)
 - `page`
 - `limit`
@@ -149,7 +149,7 @@ Returns:
 ### `GET /leaderboard`
 Query params:
 - `period` (`today|week|month|all`)
-- `category` (`SCHOOL|SAT|IELTS|OLYMPIAD`) optional
+- `category` (`SAT|IELTS`) optional
 
 Response:
 - sorted rankings

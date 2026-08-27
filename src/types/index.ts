@@ -78,16 +78,10 @@ export interface TestResult {
   status: 'in-progress' | 'completed' | 'abandoned'
 }
 
-export type TestType = 'school' | 'sat' | 'ielts' | 'olympiad'
+export type TestType = 'sat' | 'ielts'
 export type TestCategory = 'mathematics' | 'english' | 'science' | 'history' | 'geography'
 export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard' | 'Mixed'
 export type QuestionType = 'multiple-choice' | 'true-false' | 'fill-blank' | 'essay'
-
-export interface SchoolTest extends Test {
-  grade: number
-  subject: TestCategory
-  chapter?: string
-}
 
 export interface SATTest extends Test {
   section: 'reading' | 'writing' | 'math' | 'full'
@@ -97,13 +91,6 @@ export interface SATTest extends Test {
 export interface IELTSTest extends Test {
   skill: 'listening' | 'reading' | 'writing' | 'speaking'
   bandScore?: number
-}
-
-export interface OlympiadTest extends Test {
-  source: string
-  year: string
-  problems: number
-  topics: string[]
 }
 
 export interface LeaderboardEntry {

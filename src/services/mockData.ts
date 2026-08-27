@@ -108,62 +108,6 @@ export const mockLeaderboard: LeaderboardEntry[] = [
   }
 ]
 
-export const mockSchoolTests: Test[] = [
-  {
-    id: 'math-grade10-1',
-    title: 'Grade 10 Mathematics - Algebra',
-    type: 'school',
-    category: 'mathematics',
-    difficulty: 'Medium',
-    duration: 60,
-    description: 'Test your knowledge of algebraic expressions and equations.',
-    questions: [
-      {
-        id: 1,
-        type: 'multiple-choice',
-        question: 'Solve for x: 2x + 5 = 15',
-        options: ['x = 5', 'x = 10', 'x = 7.5', 'x = 3'],
-        correctAnswer: 1,
-        explanation: '2x + 5 = 15, so 2x = 10, and x = 5.',
-        points: 1
-      },
-      {
-        id: 2,
-        type: 'multiple-choice',
-        question: 'What is the value of 3ВІ + 4ВІ?',
-        options: ['25', '49', '12', '7'],
-        correctAnswer: 0,
-        explanation: '3ВІ + 4ВІ = 9 + 16 = 25.',
-        points: 1
-      }
-    ],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: 'english-grade10-1',
-    title: 'Grade 10 English - Grammar',
-    type: 'school',
-    category: 'english',
-    difficulty: 'Easy',
-    duration: 45,
-    description: 'Test your understanding of English grammar rules.',
-    questions: [
-      {
-        id: 1,
-        type: 'multiple-choice',
-        question: 'Choose the correct form: "The cat ___ on the mat."',
-        options: ['is sitting', 'are sitting', 'sitting', 'sit'],
-        correctAnswer: 0,
-        explanation: 'The cat is singular, so we use "is sitting".',
-        points: 1
-      }
-    ],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
-]
-
 export const mockSATTests: Test[] = [
   {
     id: 'sat-math-1',
@@ -206,30 +150,6 @@ export const mockIELTSTests: Test[] = [
         options: ['Travel plans', 'University course', 'Job interview', 'Housing arrangement'],
         correctAnswer: 1,
         points: 1
-      }
-    ],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
-]
-
-export const mockOlympiadTests: Test[] = [
-  {
-    id: 'math-olympiad-1',
-    title: 'Math Olympiad - Number Theory',
-    type: 'olympiad',
-    category: 'mathematics',
-    difficulty: 'Hard',
-    duration: 120,
-    description: 'Challenging number theory problems from international competitions.',
-    questions: [
-      {
-        id: 1,
-        type: 'essay',
-        question: 'Prove that there are infinitely many prime numbers.',
-        correctAnswer: 'Euclid\'s proof by contradiction',
-        explanation: 'Assume finite primes, multiply all and add 1...',
-        points: 5
       }
     ],
     createdAt: '2024-01-01T00:00:00Z',

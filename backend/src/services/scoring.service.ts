@@ -39,7 +39,6 @@ const BASE_XP_BY_DIFFICULTY: Record<Difficulty, number> = {
   EASY: 45,
   MEDIUM: 75,
   HARD: 110,
-  OLYMPIAD: 150,
 }
 
 export function calculateAttemptScore(params: {

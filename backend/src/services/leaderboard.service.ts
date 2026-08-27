@@ -119,7 +119,6 @@ export const DIFFICULTY_MULTIPLIERS: Record<Difficulty, number> = {
   EASY: 1.0,
   MEDIUM: 1.2,
   HARD: 1.5,
-  OLYMPIAD: 2.0,
 }
 
 const DIVISION_THRESHOLDS: Array<{ tier: DivisionTier; min: number; maxExclusive: number }> = [
@@ -318,7 +317,7 @@ function resolveAntiCheatRules() {
     'Ranking is the sum of XP earned across all tests — higher scores on harder tests rank higher.',
     'Only one validated attempt per test counts in each leaderboard period — repeats are discarded.',
     'XP per attempt = max XP for the difficulty × (score%)² + small streak/perfect bonuses.',
-    'Difficulty caps: Easy 40 XP · Medium 70 XP · Hard 100 XP · Olympiad 150 XP.',
+    'Difficulty caps: Easy 40 XP · Medium 70 XP · Hard 100 XP.',
     'Ties are broken first by average accuracy, then by attempts completed.',
   ]
 }

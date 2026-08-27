@@ -63,12 +63,6 @@ export default function Home() {
       role: 'IELTS Candidate',
       content: 'The AI writing evaluation gave me detailed feedback that helped me achieve Band 8 in IELTS.',
       rating: 5
-    },
-    {
-      name: 'Maria Garcia',
-      role: 'Math Olympiad',
-      content: 'The challenging problems and clear explanations prepared me for the International Math Olympiad.',
-      rating: 5
     }
   ]
 

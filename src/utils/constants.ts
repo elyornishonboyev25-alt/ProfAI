@@ -5,10 +5,8 @@
 }
 
 export const TEST_CATEGORIES = {
-  SCHOOL: 'school',
   SAT: 'sat',
-  IELTS: 'ielts',
-  OLYMPIAD: 'olympiad'
+  IELTS: 'ielts'
 } as const
 
 export const DIFFICULTY_LEVELS = {
@@ -60,7 +58,6 @@ export const ROUTES = {
   SPEAKING_COMMUNITY: '/speaking-community',
   SAT: '/sat',
   IELTS: '/ielts',
-  OLYMPIAD: '/olympiad',
   PROFILE: '/profile',
   ACCOUNT: '/account',
   LOGIN: '/login',

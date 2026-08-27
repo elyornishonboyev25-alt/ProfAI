@@ -16,14 +16,11 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
-  OLYMPIAD
 }
 
 enum TestCategory {
-  SCHOOL
   SAT
   IELTS
-  OLYMPIAD
 }
 
 enum NotificationType {

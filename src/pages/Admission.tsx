@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
+import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
 import { AmbientBackdrop, CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityMatcher from '@/components/admission/UniversityMatcher'
@@ -39,10 +39,6 @@ export default function Admission() {
             <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
-                  <button type="button" onClick={() => navigate('/dashboard')} className="premium-back-btn">
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Dashboard
-                  </button>
                   <span className="premium-top-chip">
                     <Sparkles className="h-3.5 w-3.5" />
                     Applications · University Journey

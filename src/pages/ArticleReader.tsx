@@ -411,7 +411,7 @@ export default function ArticleReader() {
                   <span className="max-w-[28rem] truncate font-bold text-slate-950">{article.title}</span>
                 </nav>
 
-                <Link to="/articles" className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-700 md:hidden">
+                <Link to="/articles" className="route-back-button md:hidden">
                   <ArrowLeft className="h-4 w-4" /> Articles
                 </Link>
               </div>
@@ -441,7 +441,7 @@ export default function ArticleReader() {
                     to="/articles"
                     className={`mb-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] ${
                       prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-700'
-                    }`}
+                    } route-back-button`}
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> All articles
                   </Link>

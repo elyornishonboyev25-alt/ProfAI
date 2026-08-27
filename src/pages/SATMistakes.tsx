@@ -38,7 +38,7 @@ export default function SATMistakes() {
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
       <div className="relative mx-auto max-w-6xl space-y-5">
         <section className="rounded-[2rem] border border-white/90 bg-white/75 p-6 shadow-[0_24px_60px_rgba(37,99,235,0.12)] backdrop-blur-2xl sm:p-8">
-          <button onClick={() => navigate('/sat')} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-wider text-blue-700 hover:bg-blue-50">
+          <button onClick={() => navigate('/sat')} className="route-back-button">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to SAT Prep
           </button>
           <div className="mt-5 flex flex-wrap items-end justify-between gap-4">

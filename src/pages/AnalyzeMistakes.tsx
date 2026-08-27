@@ -406,7 +406,7 @@ export default function AnalyzeMistakes() {
               <button
                 type="button"
                 onClick={() => navigate('/ielts')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-red-700 hover:bg-red-50"
+                className="route-back-button"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back To IELTS Prep

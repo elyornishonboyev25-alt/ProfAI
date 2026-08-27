@@ -1,4 +1,3 @@
-import { Calculator, Headphones } from 'lucide-react'
 import PillarHub, { type PillarHubCard } from '@/components/journey/PillarHub'
 
 const EXAM_ARENAS: PillarHubCard[] = [
@@ -9,8 +8,8 @@ const EXAM_ARENAS: PillarHubCard[] = [
     eyebrow: 'English proficiency',
     action: 'Enter IELTS Arena',
     path: '/ielts',
-    icon: Headphones,
     tone: 'red',
+    visual: 'ielts-listening',
     details: ['Listening & Reading', 'Writing & Speaking', 'Full mock exams', 'Band progress'],
   },
   {
@@ -20,8 +19,8 @@ const EXAM_ARENAS: PillarHubCard[] = [
     eyebrow: 'Undergraduate admissions',
     action: 'Enter SAT Arena',
     path: '/sat',
-    icon: Calculator,
     tone: 'blue',
+    visual: 'sat-math',
     details: ['Math domains', 'Reading & Writing', 'Full practice tests', 'Score progress'],
   },
 ]
@@ -40,6 +39,7 @@ export default function TestPreparation() {
       highlights={['IELTS Academic & General Training', 'Digital SAT', 'Focused practice', 'Measured progress']}
       cards={EXAM_ARENAS}
       layout="tracks"
+      showBack={false}
       note="Test scores support your application strategy, but admission requirements vary. Always confirm the accepted exam and minimum score on the university's official programme page."
     />
   )

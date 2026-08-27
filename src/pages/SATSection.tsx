@@ -40,7 +40,7 @@ export default function SATSection() {
         <button
           type="button"
           onClick={() => navigate('/sat')}
-          className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm backdrop-blur-xl hover:text-red-600"
+          className="route-back-button"
         >
           <ArrowLeft className="h-4 w-4" /> SAT Prep
         </button>

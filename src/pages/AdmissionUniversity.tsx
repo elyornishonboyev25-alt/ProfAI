@@ -153,7 +153,7 @@ export default function AdmissionUniversity() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
                   onClick={() => navigate(admissionReturnTo)}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
+                  className="route-back-button"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   Back to Universities

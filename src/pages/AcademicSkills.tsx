@@ -1,4 +1,3 @@
-import { AudioLines, BookOpenText, Headphones, Languages, Mic2, PenLine } from 'lucide-react'
 import PillarHub, { type PillarHubCard } from '@/components/journey/PillarHub'
 
 const SKILL_STUDIOS: PillarHubCard[] = [
@@ -8,8 +7,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Language foundation',
     action: 'Build vocabulary',
     path: '/vocabulary',
-    icon: Languages,
     tone: 'blue',
+    visual: 'vocabulary',
     details: ['Personal word bank', 'Focused revision'],
   },
   {
@@ -18,8 +17,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Academic reading',
     action: 'Browse articles',
     path: '/articles',
-    icon: BookOpenText,
     tone: 'red',
+    visual: 'academic-reading',
     details: ['Curated reading', 'Context learning'],
   },
   {
@@ -28,8 +27,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Listening fluency',
     action: 'Open podcasts',
     path: '/podcast',
-    icon: Headphones,
     tone: 'blue',
+    visual: 'listening',
     details: ['Active listening', 'Flexible playback'],
   },
   {
@@ -38,8 +37,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Pronunciation',
     action: 'Start shadowing',
     path: '/shadowing-lab',
-    icon: AudioLines,
     tone: 'red',
+    visual: 'shadowing',
     details: ['Guided repetition', 'Speech rhythm'],
   },
   {
@@ -48,8 +47,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Academic writing',
     action: 'Open Writing Lab',
     path: '/writing-lab',
-    icon: PenLine,
     tone: 'blue',
+    visual: 'writing',
     details: ['Structured practice', 'Revision feedback'],
   },
   {
@@ -58,8 +57,8 @@ const SKILL_STUDIOS: PillarHubCard[] = [
     eyebrow: 'Academic speaking',
     action: 'Open Speaking Lab',
     path: '/speaking-lab',
-    icon: Mic2,
     tone: 'red',
+    visual: 'speaking',
     details: ['Guided prompts', 'Repeat attempts'],
   },
 ]
@@ -77,6 +76,7 @@ export default function AcademicSkills() {
       description="Develop the English skills behind strong exam performance, clear applications and confident university study."
       highlights={['Read with purpose', 'Listen actively', 'Write clearly', 'Speak confidently']}
       cards={SKILL_STUDIOS}
+      showBack={false}
       note="These studios support independent skill development. They complement exam preparation and do not replace a university's official language or academic requirements."
     />
   )

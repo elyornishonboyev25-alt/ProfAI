@@ -89,7 +89,7 @@ export default function CompactIeltsCatalog({
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex h-11 items-center gap-2 rounded-full border border-white/95 bg-white/82 px-4 text-xs font-black text-slate-700 shadow-[0_10px_28px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-colors hover:bg-white hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+              className="route-back-button"
             >
               <ArrowLeft className="h-4 w-4" /> Back
             </button>

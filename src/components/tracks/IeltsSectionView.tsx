@@ -19,6 +19,7 @@ type IeltsSectionViewProps = {
   backPath?: string
   backLabel?: string
   backState?: { from?: string } | null
+  showBack?: boolean
 }
 
 type ModuleCard = {
@@ -147,6 +148,7 @@ export function IeltsSectionView({
   backPath = '/ielts',
   backLabel = 'Back',
   backState = null,
+  showBack = true,
 }: IeltsSectionViewProps) {
   const navigate = useNavigate()
   const content = SECTION_CONFIG[section]
@@ -191,13 +193,15 @@ export function IeltsSectionView({
           <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <div className="premium-top-controls">
-                <button
-                  onClick={() => navigate(backPath, backState ? { state: backState } : undefined)}
-                  className="premium-back-btn"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  {backLabel}
-                </button>
+                {showBack ? (
+                  <button
+                    onClick={() => navigate(backPath, backState ? { state: backState } : undefined)}
+                    className="premium-back-btn"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    {backLabel}
+                  </button>
+                ) : null}
                 <span className="premium-top-chip">{content.chip}</span>
               </div>
               <h1 className="premium-section-title mt-4">

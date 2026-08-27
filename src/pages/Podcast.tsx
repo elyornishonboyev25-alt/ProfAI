@@ -1491,7 +1491,7 @@ export default function Podcast() {
           </AnimatePresence>
           <span className="podcast-header-vignette pointer-events-none absolute inset-0 rounded-[inherit]" />
           <div className="flex items-center justify-between gap-3">
-            <button type="button" onClick={() => navigate('/academic-skills')} className="podcast-soft-button group">
+            <button type="button" onClick={() => navigate('/academic-skills')} className="podcast-soft-button route-back-button group">
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               <span className="hidden sm:inline">Academic Skills</span>
             </button>

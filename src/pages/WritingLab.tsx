@@ -1,6 +1,6 @@
 ﻿import { IeltsSectionView } from '@/components/tracks/IeltsSectionView'
 
 export default function WritingLab() {
-  return <IeltsSectionView section="writing" backPath="/academic-skills" backLabel="Back to Academic Skills" />
+  return <IeltsSectionView section="writing" backPath="/academic-skills" backLabel="Back to Academic Skills" showBack={false} />
 }
 

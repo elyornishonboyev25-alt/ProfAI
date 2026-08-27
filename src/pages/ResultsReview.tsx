@@ -150,9 +150,9 @@ export default function ResultsReview() {
           </p>
           <button type="button"
             onClick={() => navigate('/ielts/reading/tests')}
-            className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+            className="route-back-button mt-5"
           >
-            Back to Reading Tests
+            <ArrowLeft className="h-4 w-4" /> Back to Reading Tests
           </button>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function ResultsReview() {
               Back to Results
             </button>
             <button type="button"
-              onClick={() => navigate('/ielts')}
+              onClick={() => navigate('/ielts/reading/tests')}
               className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
             >
               Reading Catalog
@@ -342,4 +342,3 @@ export default function ResultsReview() {
     </div>
   )
 }
-

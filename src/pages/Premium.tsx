@@ -158,7 +158,7 @@ export default function Premium() {
       <div className="relative mx-auto w-full max-w-6xl">
         <button
           onClick={() => navigate('/dashboard')}
-          className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-blue-100 bg-white/85 px-4 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-blue-700"
+          className="route-back-button mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard

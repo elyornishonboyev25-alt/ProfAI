@@ -1,7 +1,5 @@
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   AudioLines,
   BookOpen,
   BrainCircuit,
@@ -42,7 +40,6 @@ const CAPABILITIES = [
 ] as const
 
 export default function AITutor() {
-  const navigate = useNavigate()
   const openTalk = useAiAssistantStore((state) => state.openTalk)
   const voiceState = useAiAssistantStore((state) => state.voiceState)
   const voiceLevel = useAiAssistantStore((state) => state.voiceLevel)
@@ -62,13 +59,6 @@ export default function AITutor() {
         className="relative mx-auto w-full max-w-[1400px]"
       >
         <header className="mb-4 flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur-xl sm:flex-row sm:items-center">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
-          </button>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <span className="relative inline-flex">
               <span className="absolute inset-0 rounded-full bg-blue-500/40 blur-lg" />

@@ -115,7 +115,7 @@ export default function MockSAT() {
           <button
             type="button"
             onClick={() => navigate(backPath)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600 shadow-sm hover:border-blue-200 hover:text-blue-600"
+            className="route-back-button"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : 'SAT Prep'}
           </button>

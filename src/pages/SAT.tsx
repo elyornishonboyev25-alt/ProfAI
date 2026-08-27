@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenText,
-  Calculator,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -22,13 +21,14 @@ import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { getSATSectionTest, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
+import { ARENA_GLASS_SURFACE, ArenaBackdrop, StudyIllustration } from '@/components/visuals/ArenaVisuals'
 
 type AttemptWithTest = {
   attempt: SATAttempt
   test: SATTestDefinition
 }
 
-const glassCard = 'relative overflow-hidden rounded-[2rem] border border-white/90 bg-white/88 shadow-[0_24px_70px_rgba(55,65,100,0.12),inset_0_1px_0_rgba(255,255,255,0.98)]'
+const glassCard = ARENA_GLASS_SURFACE
 
 function ProgressRing({ value, size = 126 }: { value: number; size?: number }) {
   const radius = 45
@@ -64,32 +64,6 @@ function ProgressRing({ value, size = 126 }: { value: number; size?: number }) {
   )
 }
 
-function SubjectIllustration({ subject }: { subject: 'math' | 'reading' }) {
-  return (
-    <div className="relative flex h-[7.25rem] w-[9rem] items-end justify-start" aria-hidden="true">
-      <span className="absolute bottom-2 left-2 h-16 w-16 rounded-full bg-red-300/25 blur-2xl" />
-      {subject === 'math' ? (
-        <>
-          <Calculator className="relative z-10 h-[5.7rem] w-[5.7rem] -rotate-6 text-[#4d5363]" strokeWidth={1.35} />
-          <svg className="absolute bottom-2 right-0 h-20 w-[5.6rem]" viewBox="0 0 90 80">
-            <path d="M5 68V44h14v24M28 68V32h14v36M51 68V19h14v49M74 68V7" fill="rgba(239,53,61,.24)" stroke="#535866" strokeWidth="1.6" />
-            <path d="m2 28 18-20 15 14L59 0" fill="none" stroke="#535866" strokeWidth="1.6" />
-            <path d="m50 1 10-1-1 10" fill="none" stroke="#535866" strokeWidth="1.6" />
-          </svg>
-        </>
-      ) : (
-        <>
-          <BookOpenText className="relative z-10 h-[6.4rem] w-[6.4rem] -rotate-3 text-[#4d5363]" fill="rgba(239,53,61,.12)" strokeWidth={1.3} />
-          <svg className="absolute bottom-8 right-1 h-16 w-16 rotate-[-12deg]" viewBox="0 0 64 64">
-            <path d="m11 52 35-38 8 8-35 38-12 3z" fill="#f6a6a9" stroke="#535866" strokeWidth="1.6" />
-            <path d="m46 14 4-4c2-2 4-2 6 0l2 2c2 2 2 4 0 6l-4 4z" fill="#f4d9d7" stroke="#535866" strokeWidth="1.6" />
-          </svg>
-        </>
-      )}
-    </div>
-  )
-}
-
 function SubjectCard({
   title,
   topics,
@@ -118,7 +92,7 @@ function SubjectCard({
           <ProgressRing value={progress} />
         </div>
         <div className="mt-auto flex items-end justify-between gap-4 pt-3">
-          <SubjectIllustration subject={subject} />
+          <StudyIllustration variant={subject === 'math' ? 'sat-math' : 'sat-reading'} compact />
           <button
             type="button"
             onClick={onStart}
@@ -265,11 +239,12 @@ export default function SAT() {
 
   return (
     <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
-      <div className="relative mx-auto max-w-[112rem]">
+      <ArenaBackdrop />
+      <div className="relative z-10 mx-auto max-w-[112rem]">
         <button
           type="button"
           onClick={() => navigate('/test-preparation')}
-          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:bg-white hover:text-red-600"
+          className="route-back-button"
         >
           <ArrowLeft className="h-4 w-4" /> Test Preparation
         </button>

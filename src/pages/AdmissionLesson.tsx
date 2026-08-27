@@ -110,7 +110,7 @@ export default function AdmissionLesson() {
             <div className="relative">
               <button
                 onClick={() => navigate('/admission/lessons')}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur transition hover:bg-white/20"
+                className="route-back-button"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 All lessons

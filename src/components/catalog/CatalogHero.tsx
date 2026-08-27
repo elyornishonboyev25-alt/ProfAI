@@ -88,7 +88,7 @@ export default function CatalogHero({
         <button
           type="button"
           onClick={onBack}
-          className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/90 bg-white/78 px-4 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.08)] backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 ${theme.focus}`}
+          className={`route-back-button ${theme.focus}`}
         >
           <ArrowLeft className={`h-4 w-4 ${theme.accent}`} />
           {backLabel}

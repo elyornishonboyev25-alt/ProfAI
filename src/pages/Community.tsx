@@ -209,7 +209,7 @@ export default function Community() {
         <header className="community-header">
           <div className="community-brand-row">
             <BrandLockup className="community-brand" />
-            <button type="button" onClick={() => navigate('/dashboard')} className="community-back-btn">
+            <button type="button" onClick={() => navigate('/dashboard')} className="community-back-btn route-back-button">
               <ArrowLeft className="h-4 w-4" />
               <span>Dashboard</span>
             </button>
@@ -360,7 +360,7 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
         <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {eyebrow}</span>
         <h1>{heading}</h1>
         <p>{description}</p>
-        <button type="button" onClick={() => onModeChange('people')} className="community-back-btn mt-4"><ArrowLeft className="h-4 w-4" /> Back to Community</button>
+        <button type="button" onClick={() => onModeChange('people')} className="community-back-btn route-back-button mt-4"><ArrowLeft className="h-4 w-4" /> Back to Community</button>
       </div>
 
       <nav className="community-mode-nav" aria-label="Switch study room">

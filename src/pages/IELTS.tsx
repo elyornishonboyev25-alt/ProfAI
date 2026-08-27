@@ -8,18 +8,22 @@ import {
   Clock3,
   FileSearch,
   Flag,
-  Headphones,
-  Mic2,
-  PenLine,
   Sparkles,
-  Target,
   X,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
 import { loadActivityLog, loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import {
+  ARENA_GLASS_SURFACE,
+  ArenaBackdrop,
+  StudyIllustration,
+  type StudyIllustrationVariant,
+} from '@/components/visuals/ArenaVisuals'
 
 type SkillId = 'listening' | 'reading' | 'writing' | 'speaking'
 type SkillScore = Record<SkillId, number>
@@ -30,15 +34,15 @@ const SKILLS: Array<{
   title: string
   topics: string[]
   tests: number
-  icon: typeof Headphones
+  visual: StudyIllustrationVariant
 }> = [
-  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 30, icon: Headphones },
-  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 30, icon: Target },
-  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 30, icon: PenLine },
-  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 30, icon: Mic2 },
+  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 30, visual: 'ielts-listening' },
+  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 30, visual: 'ielts-reading' },
+  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 30, visual: 'ielts-writing' },
+  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 30, visual: 'ielts-speaking' },
 ]
 
-const GLASS = 'relative isolate overflow-hidden rounded-[2rem] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,255,255,.5)_54%,rgba(239,246,255,.38))] shadow-[0_24px_70px_rgba(55,65,100,.11),inset_0_1px_0_rgba(255,255,255,.96)]'
+const GLASS = ARENA_GLASS_SURFACE
 
 let catalogPreloadPromise: Promise<unknown> | null = null
 
@@ -107,8 +111,6 @@ function ProgressRing({ band, label = 'Band' }: { band: number; label?: string }
 }
 
 function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number; onOpen: () => void }) {
-  const Icon = skill.icon
-
   return (
     <button
       type="button"
@@ -132,9 +134,9 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-4">
-          <div className="flex items-end gap-3 text-slate-500" aria-hidden="true">
-            <Icon className="h-16 w-16 text-slate-600" strokeWidth={1.35} />
-            <span className="mb-1 text-[10px] font-black uppercase tracking-[0.15em] text-red-700">{skill.tests} full tests</span>
+          <div className="relative" aria-hidden="true">
+            <StudyIllustration variant={skill.visual} compact />
+            <span className="absolute bottom-1 right-0 rounded-full border border-red-100/80 bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-red-700 backdrop-blur-md">{skill.tests} full tests</span>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#d91f2b] to-[#ef353d] px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,.24),inset_0_1px_0_rgba(255,255,255,.35)]">
             Open tests <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -150,6 +152,7 @@ export default function IELTS() {
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
   const speakingSessions = useSpeakingStore((state) => state.sessions)
+  const { minimalMotion } = useMotionPreferences()
   const [examDate, setExamDate] = useState(() => loadExamDate(user?.id))
   const [examTime, setExamTime] = useState(() => loadExamTime(user?.id))
   const [editingDate, setEditingDate] = useState(false)
@@ -202,20 +205,24 @@ export default function IELTS() {
   }
 
   return (
-    <main className="workspace-page min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[112rem]">
-        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/test-preparation')} className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/85 px-4 py-2 text-xs font-extrabold text-slate-600 shadow-sm hover:text-red-600">
+    <main className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+      <ArenaBackdrop />
+      <div className="relative z-10 mx-auto max-w-[112rem]">
+        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/test-preparation')} className="route-back-button">
           <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Test Preparation'}
         </button>
 
-        <header className="relative mt-2 overflow-hidden px-5 py-10 text-center sm:px-8 sm:py-12">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(239,68,68,.08),transparent_28%),radial-gradient(circle_at_92%_10%,rgba(59,130,246,.1),transparent_32%)]" />
+        <motion.header
+          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+        >
           <div className="relative inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600">
             <Sparkles className="h-3 w-3" /> IELTS command center
           </div>
           <h1 className="relative mt-3 text-[2.55rem] font-extrabold tracking-[-.065em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">IELTS <span className="text-red-600">Arena</span></h1>
           <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]">Listening + Reading + Writing + Speaking — your path to Band {target}+</p>
-        </header>
+        </motion.header>
 
         <section className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
           {SKILLS.slice(0, 2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   Activity,
   ArrowDownRight,
-  ArrowLeft,
   ArrowUpRight,
   Award,
   BrainCircuit,
@@ -328,14 +327,6 @@ export default function Profile() {
             <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] xl:items-center">
               <div>
                 <div className="premium-top-controls">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/dashboard')}
-                    className="premium-back-btn"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Dashboard
-                  </button>
                   <span className="premium-top-chip">
                     <Trophy className="h-3.5 w-3.5" />
                     Performance Studio

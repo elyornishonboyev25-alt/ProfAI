@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
-  ArrowLeft,
   AtSign,
   BarChart3,
   Camera,
@@ -459,10 +458,6 @@ export default function AccountProfile() {
       <Reveal>
         <section className="premium-hero p-6 sm:p-9">
           <div className="premium-top-controls">
-            <button onClick={() => navigate('/dashboard')} className="premium-back-btn">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Dashboard
-            </button>
             <span className="premium-top-chip">
               <Sparkles className="h-3.5 w-3.5" />
               My Profile

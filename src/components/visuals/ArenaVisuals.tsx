@@ -28,6 +28,9 @@ export type StudyIllustrationVariant =
 export const ARENA_GLASS_SURFACE =
   'relative isolate overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.94),rgba(255,255,255,.82)_54%,rgba(239,246,255,.76))] shadow-[0_24px_70px_rgba(55,65,100,.11),inset_0_1px_0_rgba(255,255,255,.99)] backdrop-blur-2xl'
 
+export const PILLAR_GLASS_SURFACE =
+  'relative isolate overflow-hidden rounded-[2rem] border border-white/75 bg-[linear-gradient(145deg,rgba(255,255,255,.68),rgba(255,255,255,.43)_54%,rgba(241,245,249,.32))] shadow-[0_24px_70px_rgba(30,41,59,.1),inset_0_1px_0_rgba(255,255,255,.94)] backdrop-blur-2xl backdrop-saturate-150'
+
 const ICONS = {
   'sat-math': Calculator,
   'sat-reading': BookOpenText,
@@ -137,12 +140,12 @@ function BackdropOrb({ className, delay = 0 }: { className: string; delay?: numb
   )
 }
 
-export function ArenaBackdrop({ compact = false }: { compact?: boolean }) {
+export function ArenaBackdrop({ compact = false, fixed = false }: { compact?: boolean; fixed?: boolean }) {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-x-0 top-0 h-[48rem] bg-[radial-gradient(circle_at_9%_8%,rgba(254,202,202,.5),transparent_32%),radial-gradient(circle_at_88%_7%,rgba(191,219,254,.68),transparent_39%),linear-gradient(120deg,rgba(255,249,250,.94),rgba(248,250,255,.82)_48%,rgba(238,245,255,.92))]" />
-      <div className="absolute left-[34%] top-[24rem] h-60 w-60 rounded-full bg-red-100/35 blur-[80px]" />
-      <div className="absolute right-[12%] top-[38rem] h-72 w-72 rounded-full bg-blue-200/35 blur-[90px]" />
+    <div aria-hidden="true" className={cn('pointer-events-none inset-0 z-0 overflow-hidden', fixed ? 'fixed' : 'absolute')}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_9%_8%,rgba(254,202,202,.52),transparent_32%),radial-gradient(circle_at_88%_7%,rgba(191,219,254,.58),transparent_39%),linear-gradient(120deg,rgba(255,249,250,.96),rgba(248,250,255,.86)_48%,rgba(238,245,255,.94))]" />
+      <div className="absolute left-[34%] top-[38%] h-60 w-60 rounded-full bg-red-100/32 blur-[90px]" />
+      <div className="absolute bottom-[4%] right-[12%] h-72 w-72 rounded-full bg-blue-200/30 blur-[100px]" />
       <BackdropOrb className={compact ? '-left-8 top-28 h-24 w-24' : 'left-[3%] top-36 h-28 w-28'} />
       <BackdropOrb className={compact ? '-right-10 top-20 h-32 w-32' : 'right-[2%] top-20 h-36 w-36'} delay={1.2} />
     </div>

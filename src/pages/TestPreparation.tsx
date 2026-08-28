@@ -8,7 +8,6 @@ const EXAM_ARENAS: PillarHubCard[] = [
     eyebrow: 'English proficiency',
     action: 'Enter IELTS Arena',
     path: '/ielts',
-    tone: 'red',
     visual: 'ielts-listening',
     details: ['Listening & Reading', 'Writing & Speaking', 'Full mock exams', 'Band progress'],
   },
@@ -19,7 +18,6 @@ const EXAM_ARENAS: PillarHubCard[] = [
     eyebrow: 'Undergraduate admissions',
     action: 'Enter SAT Arena',
     path: '/sat',
-    tone: 'blue',
     visual: 'sat-math',
     details: ['Math domains', 'Reading & Writing', 'Full practice tests', 'Score progress'],
   },
@@ -31,12 +29,11 @@ export default function TestPreparation() {
       eyebrow="Test preparation command center"
       title={
         <>
-          Choose your <span className="text-red-600">exam</span>{' '}
-          <span className="text-blue-600">arena.</span>
+          Choose your exam <span className="text-red-600">arena.</span>
         </>
       }
-      description="Select the exam your university journey requires. Each arena already contains its own practice, full mocks, feedback and progress review."
-      highlights={['IELTS Academic & General Training', 'Digital SAT', 'Focused practice', 'Measured progress']}
+      description="Choose the exam your application requires. Practice, full mocks, feedback and progress live inside each arena."
+      highlights={['IELTS Academic & General Training', 'Digital SAT', 'Practice to progress']}
       cards={EXAM_ARENAS}
       layout="tracks"
       showBack={false}

@@ -420,9 +420,9 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {!isAiTutorMode ? <DeferredFloatingAIAssistant /> : null}
-          {!isExamModeActive ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive && !isAiTutorMode ? <FullscreenToggle /> : null}
+          {!isAiTutorMode && !isGuestLanding ? <DeferredFloatingAIAssistant /> : null}
+          {!isExamModeActive && !isGuestLanding ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive && !isAiTutorMode && !isGuestLanding ? <FullscreenToggle /> : null}
           <WordLookupLayer />
         </>
       ) : null}

@@ -1,1032 +1,380 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
-  ArrowUpRight,
-  BarChart3,
-  BookOpen,
+  BadgeCheck,
+  BookOpenCheck,
   Bot,
-  CheckCircle2,
-  ChevronRight,
+  CalendarCheck2,
+  Check,
+  ChevronDown,
+  ClipboardCheck,
   Globe2,
   GraduationCap,
-  Headphones,
   Languages,
-  Loader2,
+  Mail,
   Menu,
-  Mic2,
-  PenSquare,
-  Quote,
-  Radio,
+  Route,
+  Search,
+  ShieldCheck,
   Sparkles,
-  Star,
   Target,
-  Trophy,
-  Waves,
   X,
-  Zap,
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
-import { CountUp } from '@/components/fx'
-import LiquidGlassHero, { LiquidGlassHeroMobile } from '@/components/landing/LiquidGlassHero'
-import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
-
-/* ──────────────────────────────────────────────────────────────────────────
-   ProfAI — public marketing landing (guests only). An original, feature-rich
-   premium landing: a layered live-product hero, animated stat band, a bento
-   grid that shows off every study tool, an interactive track switcher, the
-   route, a community review wall anyone can post to, and a closing CTA.
-   Built with framer-motion; honours reduced-motion throughout.
-   ────────────────────────────────────────────────────────────────────────── */
 
 const EASE = [0.22, 1, 0.36, 1] as const
+const SUPPORT_EMAIL = 'elyornishonboyev000@gmail.com'
 
 const NAV_LINKS = [
-  { label: 'Features', target: 'features' },
-  { label: 'Pricing', target: 'tracks' },
-  { label: 'About', target: 'route' },
-  { label: 'Contact', target: 'reviews' },
+  { label: 'Platform', target: 'platform' },
+  { label: 'Journey', target: 'journey' },
+  { label: 'Pricing', target: 'pricing' },
+  { label: 'FAQ', target: 'faq' },
 ] as const
 
-const HERO_PILLS = [
-  { icon: 'file', label: '30 Full Mocks', target: 'features' },
-  { icon: 'pen', label: 'AI Writing Evaluation', target: 'features' },
-  { icon: 'globe', label: 'Live Speaking Partners', target: 'features' },
-] as const
+type IconType = ComponentType<{ className?: string }>
+type Tone = 'red' | 'blue' | 'ink'
 
-// Ambient floating red spheres scattered behind/in front of the glass at varied depth.
-const STATS = [
-  { value: 30, suffix: '+', label: 'Full timed mocks' },
-  { value: 10000, suffix: '+', label: 'Practice items' },
-  { value: 12, suffix: '', label: 'Study tools in one app' },
-  { value: 4, suffix: '', label: 'Skills, one roadmap' },
-] as const
-
-type ExamOption = ReviewExam
-const EXAM_OPTIONS: ExamOption[] = ['IELTS', 'SAT', 'General']
-
-const EXAM_OPTIONS_NAV = EXAM_OPTIONS
-
-/* ── helpers ───────────────────────────────────────────────────────────── */
-
-function scrollToId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? '')
-    .join('')
-}
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 26 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE, delay: i * 0.07 } }),
-}
-
-function SectionTag({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] font-black uppercase tracking-[0.28em] text-blue-600">{children}</span>
-}
-
-/* ── Bento feature data ────────────────────────────────────────────────── */
-
-type Feature = {
+type Pillar = {
+  eyebrow: string
   title: string
   body: string
-  icon: ComponentType<{ className?: string }>
+  icon: IconType
   route: string
-  span: string
-  visual?: ReactNode
-  tone?: 'red' | 'dark'
+  cta: string
+  tone: Tone
+  items: string[]
 }
 
-function RubricVisual() {
-  const rows = [
-    ['Task Response', 78],
-    ['Coherence', 64],
-    ['Lexical', 85],
-    ['Grammar', 70],
-  ] as const
-  return (
-    <div className="mt-4 space-y-2.5">
-      {rows.map(([label, w], i) => (
-        <div key={label}>
-          <div className="flex justify-between text-[11px] font-bold text-slate-500">
-            <span>{label}</span>
-            <span className="text-slate-400">{(w / 100 * 9).toFixed(1)}</span>
-          </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: `${w}%` }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: i * 0.1, ease: EASE }}
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-400"
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-const WAVE_BARS = [0.5, 0.8, 0.4, 1, 0.6, 0.9, 0.45, 0.75, 0.55, 1, 0.5, 0.85, 0.6, 0.95, 0.4, 0.7, 0.5, 0.9]
-
-function WaveVisual() {
-  return (
-    <div className="mt-5 flex h-12 items-center gap-1">
-      {WAVE_BARS.map((peak, i) => (
-        <span
-          key={i}
-          className="landing-wave-bar h-full w-1 flex-1 rounded-full bg-gradient-to-t from-blue-500/70 to-indigo-400/70"
-          style={{
-            transformOrigin: 'center',
-            animationDuration: `${1.2 + (i % 5) * 0.18}s`,
-            animationDelay: `${i * 0.05}s`,
-            '--landing-wave-peak': peak,
-          } as CSSProperties}
-        />
-      ))}
-    </div>
-  )
-}
-
-const FEATURES: Feature[] = [
+const PILLARS: Pillar[] = [
   {
-    title: 'AI Study Coach',
-    body: 'A personal roadmap that reads every mock, finds your weakest sub-skill and hands you the exact next task — never random practice.',
-    icon: Bot,
-    route: '/register',
-    span: 'lg:col-span-2 lg:row-span-2',
-    tone: 'dark',
+    eyebrow: 'Test preparation',
+    title: 'Build the scores your plan requires.',
+    body: 'Prepare for IELTS Academic or General Training and the Digital SAT through focused practice, full simulations and review.',
+    icon: Target,
+    route: '/test-preparation',
+    cta: 'Explore test preparation',
+    tone: 'red',
+    items: ['IELTS across all four skills', 'Digital SAT Math and Reading & Writing', 'Practice, mocks and progress review'],
   },
   {
-    title: 'Writing AI',
-    body: 'Task 1 & 2 scored on the real band rubric in minutes — with line-level fixes.',
-    icon: PenSquare,
-    route: '/ielts/writing',
-    span: 'lg:col-span-1',
-    visual: <RubricVisual />,
+    eyebrow: 'Academic skills',
+    title: 'Study in English with confidence.',
+    body: 'Strengthen the reading, listening, vocabulary, writing and speaking habits that support both exams and university study.',
+    icon: Languages,
+    route: '/academic-skills',
+    cta: 'Explore academic skills',
+    tone: 'blue',
+    items: ['Vocabulary and reading studios', 'Listening and shadowing practice', 'Writing and speaking labs'],
   },
   {
-    title: 'Speaking Community',
-    body: 'Voice-only partner practice over live WebRTC, plus an AI examiner that scores fluency.',
-    icon: Mic2,
-    route: '/community?mode=ai',
-    span: 'lg:col-span-1',
-  },
-  {
-    title: 'Shadowing Lab',
-    body: 'Paste any English YouTube link — we split it into lines you can loop, slow down and record.',
-    icon: Waves,
-    route: '/shadowing-lab',
-    span: 'lg:col-span-1',
-    visual: <WaveVisual />,
-  },
-  {
-    title: 'Vocabulary Arena',
-    body: 'Missed words return on a spaced schedule until they stop slowing your reading.',
-    icon: Sparkles,
-    route: '/vocabulary',
-    span: 'lg:col-span-1',
-  },
-  {
-    title: 'Reading Library & Podcasts',
-    body: 'A curated reader with Ask-AI vocab help and subtitled English podcasts with A-B loop.',
-    icon: Headphones,
-    route: '/articles',
-    span: 'lg:col-span-1',
-  },
-  {
-    title: 'University & Application Planning',
-    body: 'Use guided study-abroad lessons and the current university catalog to organize your next application steps.',
-    icon: Globe2,
+    eyebrow: 'University journey',
+    title: 'Turn preparation into an application plan.',
+    body: 'Research universities, organize next steps and keep preparation connected to the applications you want to build.',
+    icon: GraduationCap,
     route: '/admission',
-    span: 'lg:col-span-2',
+    cta: 'Explore university planning',
+    tone: 'ink',
+    items: ['University research', 'Application guidance', 'A roadmap centered on your goals'],
   },
 ]
 
-/* ── Tracks data (interactive switcher) ────────────────────────────────── */
+const JOURNEY_STEPS = [
+  { number: '01', title: 'Set your direction', body: 'Capture your target degree, destinations, timeline, budget and current academic profile.', icon: Route },
+  { number: '02', title: 'Build your readiness', body: 'Prepare for required exams while strengthening the English skills behind university study.', icon: BookOpenCheck },
+  { number: '03', title: 'Research your options', body: 'Compare universities and keep promising choices together as your plans become clearer.', icon: Search },
+  { number: '04', title: 'Plan every next step', body: 'Move from today’s study task toward future application work inside one journey view.', icon: CalendarCheck2 },
+] as const
 
-const TRACKS = [
+const PROOF_POINTS = [
   {
-    id: 'IELTS',
-    label: 'IELTS',
-    icon: GraduationCap,
-    blurb: 'Academic & General Training — every skill, full mocks and band-rubric feedback.',
-    route: '/ielts',
-    items: [
-      { icon: BookOpen, name: 'Reading', note: 'Passage strategy & inference control' },
-      { icon: Headphones, name: 'Listening', note: 'Audio flow & distractor filtering' },
-      { icon: PenSquare, name: 'Writing', note: 'Task 1 + 2 with AI rubric scoring' },
-      { icon: Mic2, name: 'Speaking', note: 'Part-by-part with fluency insights' },
-    ],
+    title: 'Complete learning workflows',
+    body: 'Practice, timed tests, results and review live in connected exam arenas instead of isolated question pages.',
+    icon: ClipboardCheck,
+    action: 'Open test preparation',
+    route: '/test-preparation',
   },
   {
-    id: 'SAT',
-    label: 'SAT',
-    icon: Target,
-    blurb: 'Digital-SAT style Math and Reading/Writing with timing blocks and a built-in calculator.',
-    route: '/sat',
-    items: [
-      { icon: BarChart3, name: 'Math', note: 'Algebra, problem solving & speed blocks' },
-      { icon: BookOpen, name: 'Reading/Writing', note: 'Evidence pairing & revision logic' },
-      { icon: Zap, name: 'Calculator', note: 'Built-in graphing tool' },
-      { icon: Trophy, name: 'Full mock', note: 'Adaptive, exam-mode simulation' },
-    ],
+    title: 'Guidance grounded in your account',
+    body: 'ProfAI Coach can use your learning context to explain priorities and turn a goal into clear study actions.',
+    icon: Bot,
+    action: 'Meet the AI Coach',
+    route: '/register',
   },
   {
-    id: 'English',
-    label: 'English Skills',
-    icon: Languages,
-    blurb: 'Build real fluency between mocks — shadowing, podcasts, reading and spaced vocab.',
-    route: '/articles',
-    items: [
-      { icon: Waves, name: 'Shadowing Lab', note: 'YouTube → line-by-line practice' },
-      { icon: Radio, name: 'Podcasts', note: 'Captions, speed control, A-B loop' },
-      { icon: BookOpen, name: 'Reading Library', note: 'Pro reader + Ask-AI vocab' },
-      { icon: Sparkles, name: 'Vocabulary', note: 'Spaced repetition that sticks' },
-    ],
-  },
-  {
-    id: 'Admission',
-    label: 'Study Abroad',
-    icon: Globe2,
-    blurb: 'Turn your scores into offers — lessons, university research and an application roadmap.',
-    route: '/admission',
-    items: [
-      { icon: GraduationCap, name: 'Lessons', note: '30+ study-abroad guides' },
-      { icon: Globe2, name: 'Universities', note: 'QS rankings explorer' },
-      { icon: Target, name: 'Roadmap', note: 'Step-by-step admission plan' },
-      { icon: Trophy, name: 'Scholarships', note: 'Funding & application tips' },
-    ],
+    title: 'Privacy choices built in',
+    body: 'Your AI conversation stays account-private, and optional analytics only starts after your permission.',
+    icon: ShieldCheck,
+    action: 'Start with a private account',
+    route: '/register',
   },
 ] as const
 
-const STEPS = [
-  { n: '01', title: 'Take a full mock', body: 'Set a clean baseline across all four skills under real exam timing.', icon: Target },
-  { n: '02', title: 'Open your skill map', body: 'See exactly which sub-skill is costing you the most band points.', icon: BarChart3 },
-  { n: '03', title: 'Train the gaps', body: 'The AI coach assigns the precise tasks and words you keep missing.', icon: Bot },
-  { n: '04', title: 'Watch the band move', body: 'Mocks, practice and rubric scores stay in one timeline you can trust.', icon: Trophy },
+const FREE_FEATURES = [
+  '4 full-test attempts each month',
+  '3 AI exam feedback requests each month',
+  '1 Essay or CV review each month',
+  'Basic roadmap and matching',
+  'Up to 10 universities in your shortlist',
 ] as const
 
-/* ── Star input ────────────────────────────────────────────────────────── */
+const PRO_FEATURES = [
+  'Unlimited non-AI practice',
+  'Up to 50 AI exam evaluations each month',
+  'Up to 10 Essay or CV analyses each month',
+  'Full matching and unlimited shortlist',
+  'Application tracking, reminders and version history',
+] as const
 
-function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
-  const [hover, setHover] = useState(0)
+const FAQS = [
+  {
+    question: 'Is ProfAI only for IELTS preparation?',
+    answer: 'No. IELTS and the Digital SAT are important parts of ProfAI, but the platform also connects academic English, university research and application planning in one student journey.',
+  },
+  {
+    question: 'Who is the first version designed for?',
+    answer: 'ProfAI v1 is designed for students aged 16 and above preparing for undergraduate study. The platform is English-only and built for applicants worldwide.',
+  },
+  {
+    question: 'Does ProfAI submit applications for students?',
+    answer: 'No. ProfAI helps you prepare, research and organize your work. You remain responsible for reviewing requirements and submitting every application through the university’s official process.',
+  },
+  {
+    question: 'Does IELTS General Training remain available?',
+    answer: 'Yes. ProfAI supports both IELTS Academic and IELTS General Training preparation alongside the Digital SAT.',
+  },
+  {
+    question: 'Can I rely on university requirements without checking?',
+    answer: 'No database should replace an official university page. Requirements and deadlines can change, so always confirm final details with the university.',
+  },
+  {
+    question: 'Is Pro checkout available now?',
+    answer: 'Not yet. Free access is available now. Pro checkout will open after private-beta and payment verification; the planned launch price is $9.99 monthly or $79.99 yearly.',
+  },
+] as const
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const reduceMotion = useReducedMotion()
   return (
-    <div className="flex items-center gap-1" onMouseLeave={() => setHover(0)}>
-      {[1, 2, 3, 4, 5].map((n) => {
-        const active = (hover || value) >= n
-        return (
-          <button
-            key={n}
-            type="button"
-            onClick={() => onChange(n)}
-            onMouseEnter={() => setHover(n)}
-            aria-label={`${n} star${n > 1 ? 's' : ''}`}
-            className="p-0.5 transition-transform hover:scale-110"
-          >
-            <Star className={`h-6 w-6 ${active ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-300'}`} />
-          </button>
-        )
-      })}
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-8% 0px' }}
+      transition={{ duration: reduceMotion ? 0 : 0.62, delay, ease: EASE }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="landing-kicker">{eyebrow}</span>
+      <h2 className="mt-5 text-3xl font-black leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[3.5rem]">{title}</h2>
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">{body}</p>
     </div>
   )
 }
 
-/* ── Review card ───────────────────────────────────────────────────────── */
-
-function ReviewCard({ review }: { review: LandingReview }) {
-  const hasBand = review.bandBefore && review.bandAfter
+function JourneyPreview() {
+  const reduceMotion = useReducedMotion()
   return (
-    <motion.article
-      variants={fadeUp}
-      className="flex h-full flex-col rounded-2xl border border-black/5 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.06)]"
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 24 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.78, delay: 0.16, ease: EASE }}
+      className="relative mx-auto w-full max-w-[620px]"
     >
-      <div className="flex items-center justify-between">
-        {hasBand ? (
-          <div className="flex items-center gap-1.5 text-sm font-black">
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-slate-500">{review.bandBefore}</span>
-            <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
-            <span className="rounded-md bg-blue-500 px-2 py-0.5 text-white">{review.bandAfter}</span>
+      <div className="landing-orbit landing-orbit-one" aria-hidden="true" />
+      <div className="landing-orbit landing-orbit-two" aria-hidden="true" />
+      <div className="landing-glass relative overflow-hidden rounded-[2rem] p-4 sm:p-6">
+        <div className="relative flex items-center justify-between gap-4 border-b border-white/70 pb-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Your university journey</p>
+            <p className="mt-1 text-lg font-black tracking-tight text-slate-950">One plan. Clear next steps.</p>
           </div>
-        ) : (
-          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-600">{review.exam}</span>
-        )}
-        <Quote className="h-5 w-5 text-blue-200" />
-      </div>
-
-      <div className="mt-3 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white">
-          {initials(review.name) || 'A'}
-        </span>
-        <div>
-          <p className="text-sm font-black text-slate-900">{review.name}</p>
-          <div className="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3 w-3 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-200'}`}
-              />
-            ))}
-            {review.source === 'local' && (
-              <span className="ml-1 text-[9px] font-bold uppercase tracking-wide text-slate-300">You</span>
-            )}
+          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700 sm:inline-flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Connected
+          </span>
+        </div>
+        <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
+          <PreviewCard icon={Target} label="Prepare" title="Test readiness" body="IELTS and Digital SAT live inside their own complete arenas." tone="red" />
+          <PreviewCard icon={Globe2} label="Research" title="University options" body="Keep destinations, university research and next questions in view." tone="blue" />
+        </div>
+        <div className="landing-glass-soft relative mt-3 flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white"><Sparkles className="h-5 w-5" /></span>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Today’s focus</p>
+              <p className="mt-1 text-sm font-black text-slate-950">Move one priority forward</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Preparation stays connected to your university journey.</p>
+            </div>
           </div>
+          <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black text-white">View next step <ArrowRight className="h-3.5 w-3.5" /></span>
         </div>
       </div>
-
-      <p className="mt-3 flex-1 text-[13px] leading-6 text-slate-600">"{review.text}"</p>
-    </motion.article>
+    </motion.div>
   )
 }
 
-/* ── Page ──────────────────────────────────────────────────────────────── */
+function PreviewCard({ icon: Icon, label, title, body, tone }: { icon: IconType; label: string; title: string; body: string; tone: 'red' | 'blue' }) {
+  return (
+    <div className="landing-glass-soft rounded-3xl p-4 sm:p-5">
+      <div className="flex items-center justify-between">
+        <span className={`flex h-10 w-10 items-center justify-center rounded-2xl text-white ${tone === 'red' ? 'bg-red-500 shadow-[0_12px_24px_rgba(239,68,68,0.28)]' : 'bg-blue-600 shadow-[0_12px_24px_rgba(37,99,235,0.25)]'}`}><Icon className="h-5 w-5" /></span>
+        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      </div>
+      <p className="mt-5 text-base font-black text-slate-950">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+    </div>
+  )
+}
+
+function PillarCard({ pillar, index, onOpen }: { pillar: Pillar; index: number; onOpen: () => void }) {
+  const Icon = pillar.icon
+  const tones = {
+    red: { icon: 'bg-red-500 shadow-red-200', eyebrow: 'text-red-600', button: 'bg-red-500 hover:bg-red-600', wash: 'from-red-100/70' },
+    blue: { icon: 'bg-blue-600 shadow-blue-200', eyebrow: 'text-blue-700', button: 'bg-blue-600 hover:bg-blue-700', wash: 'from-blue-100/75' },
+    ink: { icon: 'bg-slate-950 shadow-slate-200', eyebrow: 'text-slate-700', button: 'bg-slate-950 hover:bg-slate-800', wash: 'from-slate-200/75' },
+  }
+  const tone = tones[pillar.tone]
+  return (
+    <Reveal delay={index * 0.07} className="h-full">
+      <article className="landing-glass group relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-7">
+        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tone.wash} via-white/25 to-transparent`} />
+        <div className="relative flex items-center justify-between">
+          <span className={`flex h-13 w-13 items-center justify-center rounded-2xl p-3 text-white shadow-xl ${tone.icon}`}><Icon className="h-6 w-6" /></span>
+          <span className="rounded-full border border-white/80 bg-white/55 px-3 py-1.5 text-[10px] font-black tracking-[0.16em] text-slate-500">0{index + 1}</span>
+        </div>
+        <p className={`relative mt-7 text-[11px] font-black uppercase tracking-[0.22em] ${tone.eyebrow}`}>{pillar.eyebrow}</p>
+        <h3 className="relative mt-3 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-950">{pillar.title}</h3>
+        <p className="relative mt-3 text-sm leading-6 text-slate-600">{pillar.body}</p>
+        <ul className="relative mt-6 space-y-3">
+          {pillar.items.map((item) => <li key={item} className="flex items-start gap-2.5 text-sm font-semibold leading-5 text-slate-700"><CheckBadge />{item}</li>)}
+        </ul>
+        <button type="button" onClick={onOpen} className={`relative mt-7 inline-flex w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white transition-colors ${tone.button}`}>{pillar.cta} <ArrowRight className="h-4 w-4" /></button>
+      </article>
+    </Reveal>
+  )
+}
+
+function CheckBadge({ dark = false }: { dark?: boolean }) {
+  return <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${dark ? 'bg-blue-500 text-white' : 'border border-white bg-white/75 text-slate-900 shadow-sm'}`}><Check className="h-3 w-3" strokeWidth={3} /></span>
+}
+
+function PricingCard({ name, description, price, cadence, features, featured = false, action }: { name: string; description: string; price: string; cadence: string; features: readonly string[]; featured?: boolean; action: () => void }) {
+  return (
+    <article className={`relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-8 ${featured ? 'border border-slate-800 bg-slate-950 text-white shadow-[0_30px_80px_rgba(15,23,42,0.22)]' : 'landing-glass text-slate-950'}`}>
+      {featured ? <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(37,99,235,0.42),transparent_36%),radial-gradient(circle_at_10%_90%,rgba(239,68,68,0.2),transparent_38%)]" /> : null}
+      <div className="relative flex items-start justify-between gap-4">
+        <div><p className={`text-sm font-black uppercase tracking-[0.18em] ${featured ? 'text-blue-300' : 'text-red-600'}`}>{name}</p><p className={`mt-2 text-sm leading-6 ${featured ? 'text-slate-300' : 'text-slate-600'}`}>{description}</p></div>
+        {featured ? <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em]">After beta</span> : null}
+      </div>
+      <div className="relative mt-7 flex flex-wrap items-end gap-2"><span className="text-5xl font-black tracking-[-0.05em]">{price}</span><span className={`pb-1.5 text-sm font-semibold ${featured ? 'text-slate-400' : 'text-slate-500'}`}>{cadence}</span></div>
+      <ul className="relative mt-7 flex-1 space-y-3">
+        {features.map((feature) => <li key={feature} className={`flex items-start gap-3 text-sm leading-6 ${featured ? 'text-slate-200' : 'text-slate-700'}`}><CheckBadge dark={featured} />{feature}</li>)}
+      </ul>
+      <button type="button" onClick={action} className={`relative mt-8 inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-black transition-colors ${featured ? 'bg-white text-slate-950 hover:bg-blue-50' : 'bg-red-500 text-white hover:bg-red-600'}`}>Start with Free <ArrowRight className="h-4 w-4" /></button>
+    </article>
+  )
+}
+
+function FaqItem({ question, answer, open, onToggle }: { question: string; answer: string; open: boolean; onToggle: () => void }) {
+  return (
+    <div className="landing-glass overflow-hidden rounded-2xl">
+      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left sm:px-6"><span className="text-sm font-black text-slate-950 sm:text-base">{question}</span><ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} /></button>
+      <AnimatePresence initial={false}>{open ? <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} className="overflow-hidden"><p className="border-t border-white/70 px-5 py-5 text-sm leading-7 text-slate-600 sm:px-6">{answer}</p></motion.div> : null}</AnimatePresence>
+    </div>
+  )
+}
 
 export default function Landing() {
   const navigate = useNavigate()
-  const heroRef = useRef<HTMLDivElement>(null)
-
+  const reduceMotion = useReducedMotion()
   const [scrolled, setScrolled] = useState(false)
-  const [mobileNav, setMobileNav] = useState(false)
-  const [activeTrack, setActiveTrack] = useState<(typeof TRACKS)[number]['id']>('IELTS')
-
-  // Reviews
-  const [reviews, setReviews] = useState<LandingReview[]>([])
-  const [reviewsLoading, setReviewsLoading] = useState(true)
-  const [formOpen, setFormOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [justSubmitted, setJustSubmitted] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    exam: 'IELTS' as ExamOption,
-    rating: 5,
-    bandBefore: '',
-    bandAfter: '',
-    text: '',
-  })
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState(0)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
+    const onScroll = () => setScrolled(window.scrollY > 16)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
-    let alive = true
-    void loadReviews().then((data) => {
-      if (alive) {
-        setReviews(data)
-        setReviewsLoading(false)
-      }
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
-  const formValid = form.name.trim().length >= 2 && form.text.trim().length >= 8
-
-  const handleSubmit = async () => {
-    if (!formValid || submitting) return
-    setSubmitting(true)
-    try {
-      const created = await submitReview({
-        name: form.name,
-        exam: form.exam,
-        rating: form.rating,
-        bandBefore: form.bandBefore,
-        bandAfter: form.bandAfter,
-        text: form.text,
-      })
-      setReviews((prev) => [created, ...prev])
-      setJustSubmitted(true)
-      setForm({ name: '', exam: 'IELTS', rating: 5, bandBefore: '', bandAfter: '', text: '' })
-      window.setTimeout(() => {
-        setJustSubmitted(false)
-        setFormOpen(false)
-      }, 2200)
-    } finally {
-      setSubmitting(false)
-    }
+  const goTo = (target: string) => {
+    setMobileNavOpen(false)
+    scrollToSection(target)
   }
-
-  const ratingAvg = useMemo(() => {
-    if (!reviews.length) return 5
-    return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-  }, [reviews])
-
-  const go = (target: string) => {
-    setMobileNav(false)
-    scrollToId(target)
-  }
-
-  const track = TRACKS.find((t) => t.id === activeTrack)!
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-clip bg-transparent text-slate-900">
-      {/* frosted ambient wash — white base, pale red top-right, faint cool blue left */}
-      <div className="relative z-10">
-      {/* ── Nav (liquid glass pill) ─────────────────────────────────── */}
-      <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-4">
-        <div
-          className={`lg-glass lg-glass-sheen mx-auto flex max-w-6xl items-center justify-between overflow-hidden rounded-[28px] px-4 py-3 transition-all duration-300 sm:px-6 sm:py-3.5 ${
-            scrolled ? 'shadow-[0_16px_40px_rgba(15,23,42,0.14)]' : ''
-          }`}
-        >
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="relative flex items-center gap-2.5">
-            <BrandMark size={46} className="drop-shadow-[0_6px_12px_rgba(37,99,235,0.28)]" />
-            <span className="text-2xl font-black tracking-tight">
-              Prof<span className="text-blue-600">AI</span>
-            </span>
-          </button>
+    <div className="landing-page relative min-h-screen overflow-x-clip text-slate-950">
+      <div className="landing-backdrop" aria-hidden="true"><div className="landing-ambient landing-ambient-red" /><div className="landing-ambient landing-ambient-blue" /><div className="landing-ambient landing-ambient-center" /></div>
 
-          <nav className="relative hidden items-center gap-1 md:flex">
-            {NAV_LINKS.map((l, i) => (
-              <button
-                key={l.target}
-                onClick={() => go(l.target)}
-                className={`rounded-full px-4 py-2 text-[15px] font-semibold transition ${
-                  i === 0
-                    ? 'bg-white/70 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_rgba(15,23,42,0.06)]'
-                    : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-5">
+        <div className={`landing-nav mx-auto flex max-w-7xl items-center justify-between rounded-[1.6rem] px-3.5 py-3 transition-shadow sm:px-5 ${scrolled ? 'shadow-[0_18px_50px_rgba(15,23,42,0.13)]' : ''}`}>
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })} className="relative flex items-center gap-2.5 rounded-2xl px-1.5 py-1" aria-label="ProfAI home"><BrandMark size={42} /><span className="text-xl font-black tracking-[-0.04em] sm:text-2xl">Prof<span className="text-red-500">AI</span></span></button>
+          <nav className="relative hidden items-center gap-1 lg:flex" aria-label="Landing navigation">
+            {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-950">{item.label}</button>)}
+            <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-950">Support</a>
           </nav>
-
           <div className="relative flex items-center gap-2">
-            <button
-              onClick={() => navigate('/login')}
-              className="lg-glass lg-hover hidden rounded-full px-7 py-2.5 text-[15px] font-bold text-blue-600 sm:block"
-              style={{
-                border: '1.5px solid rgba(37,99,235,0.45)',
-                boxShadow: '0 0 0 4px rgba(37,99,235,0.06), 0 8px 22px rgba(37,99,235,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
-              }}
-            >
-              Login
-            </button>
-            <button onClick={() => setMobileNav((v) => !v)} className="ml-1 rounded-lg p-1.5 text-slate-700 md:hidden" aria-label="Menu">
-              {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            <button type="button" onClick={() => navigate('/login')} className="hidden rounded-full px-4 py-2.5 text-sm font-black text-slate-700 hover:bg-white/70 sm:inline-flex">Sign in</button>
+            <button type="button" onClick={() => navigate('/register')} className="hidden items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)] hover:bg-slate-800 sm:inline-flex">Start free <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setMobileNavOpen((value) => !value)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-800 lg:hidden" aria-label="Toggle navigation" aria-expanded={mobileNavOpen}>{mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
         </div>
-
-        <AnimatePresence>
-          {mobileNav && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mx-auto mt-2 max-w-6xl rounded-2xl border border-black/5 bg-white/95 p-3 shadow-xl backdrop-blur-xl md:hidden"
-            >
-              {NAV_LINKS.map((l) => (
-                <button
-                  key={l.target}
-                  onClick={() => go(l.target)}
-                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  {l.label}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <AnimatePresence initial={false}>{mobileNavOpen ? <motion.nav initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.2, ease: EASE }} className="landing-nav mx-auto mt-2 max-w-7xl rounded-3xl p-3 lg:hidden" aria-label="Mobile landing navigation">
+          {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="block w-full rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-white/70">{item.label}</button>)}
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-white/70">Support</a>
+          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/70 pt-3"><button type="button" onClick={() => navigate('/login')} className="rounded-2xl border border-white bg-white/65 px-4 py-3 text-sm font-black">Sign in</button><button type="button" onClick={() => navigate('/register')} className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">Start free</button></div>
+        </motion.nav> : null}</AnimatePresence>
       </header>
 
-      {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative px-4 pb-12 pt-32 sm:pt-40">
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.02fr_1.05fr]">
-          {/* copy */}
-          <div className="text-center lg:text-left">
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.06, ease: EASE }}
-              className="text-[3rem] font-black leading-[0.98] tracking-[-0.02em] text-slate-900 sm:text-[5rem]"
-            >
-              Your Path to Top
-              <br />
-              Universities
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.14, ease: EASE }}
-              className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-500 lg:mx-0 sm:text-lg"
-            >
-              One connected platform for test preparation, academic skills, university research and application
-              planning — organized around your next step.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.22, ease: EASE }}
-              className="mt-8 flex justify-center lg:justify-start"
-            >
-              <button
-                onClick={() => navigate('/register')}
-                className="lg-btn-red group inline-flex items-center gap-2 rounded-full px-11 py-5 text-lg font-bold text-white"
-              >
-                <span className="relative">Start Free</span>
-                <ArrowRight className="relative h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </motion.div>
-          </div>
-
-          {/* mobile: dashboard drops below the text */}
-          <div className="lg:hidden">
-            <LiquidGlassHeroMobile />
-          </div>
-
-          {/* live visual — liquid glass band dashboard (desktop) */}
-          <div className="hidden lg:block">
-            <LiquidGlassHero />
-          </div>
-        </div>
-
-        {/* feature pills (glass) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
-          className="relative mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-3"
-        >
-          {HERO_PILLS.map((pill) => {
-            const Icon = pill.icon === 'file' ? BookOpen : pill.icon === 'pen' ? PenSquare : Globe2
-            return (
-              <button
-                key={pill.label}
-                onClick={() => scrollToId(pill.target)}
-                className="lg-glass lg-glass-sheen lg-hover group flex items-center gap-3.5 overflow-hidden rounded-full px-6 py-4 text-left"
-              >
-                <span
-                  className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-blue-600"
-                  style={{
-                    background: 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(254,226,226,0.85))',
-                    boxShadow: '0 4px 12px rgba(37,99,235,0.16), inset 0 1px 0 rgba(255,255,255,0.95)',
-                    border: '1px solid rgba(191,219,254,0.9)',
-                  }}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={1.8} />
-                </span>
-                <span className="relative text-lg font-bold tracking-tight text-slate-800">{pill.label}</span>
-              </button>
-            )
-          })}
-        </motion.div>
-      </section>
-
-      {/* ── Stat band ───────────────────────────────────────────────── */}
-      <section className="landing-deferred-section px-4 py-10">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.05)] sm:grid-cols-4">
-          {STATS.map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }}
-              className="text-center"
-            >
-              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-                <CountUp value={s.value} suffix={s.suffix} />
-              </p>
-              <p className="mt-1 text-[12px] font-semibold text-slate-500">{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Bento features ──────────────────────────────────────────── */}
-      <section id="features" className="landing-deferred-section scroll-mt-24 px-4 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="mx-auto max-w-2xl text-center"
-          >
-            <SectionTag>Everything in one place</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              Not a question bank. A whole prep team.
-            </h2>
-            <p className="mt-4 text-base leading-7 text-slate-500">
-              Twelve study tools that talk to each other — so every mock, drill and word pushes the same band upward.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-8% 0px' }}
-            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-            className="mt-12 grid auto-rows-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {FEATURES.map((f) => {
-              const Icon = f.icon
-              const dark = f.tone === 'dark'
-              return (
-                <motion.button
-                  key={f.title}
-                  variants={fadeUp}
-                  onClick={() => navigate(f.route)}
-                  className={`group relative flex flex-col overflow-hidden rounded-3xl border p-6 text-left transition ${f.span} ${
-                    dark
-                      ? 'border-white/10 bg-slate-900 text-white shadow-[0_30px_70px_rgba(15,23,42,0.3)]'
-                      : 'border-black/5 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(37,99,235,0.12)]'
-                  }`}
-                >
-                  {dark && (
-                    <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/40 blur-3xl" />
-                  )}
-                  <div className="relative flex items-center justify-between">
-                    <span
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                        dark ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'
-                      } transition`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <ArrowUpRight
-                      className={`h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
-                        dark ? 'text-white/40' : 'text-slate-300'
-                      }`}
-                    />
-                  </div>
-                  <h3 className={`relative mt-4 text-lg font-black tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}>
-                    {f.title}
-                  </h3>
-                  <p className={`relative mt-1.5 text-sm leading-6 ${dark ? 'text-slate-300' : 'text-slate-500'}`}>{f.body}</p>
-                  {f.visual}
-                  {dark && (
-                    <div className="relative mt-auto flex items-center gap-2 pt-6 text-sm font-bold text-blue-300">
-                      Meet your coach <ChevronRight className="h-4 w-4" />
-                    </div>
-                  )}
-                </motion.button>
-              )
-            })}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Tracks (interactive) ────────────────────────────────────── */}
-      <section id="tracks" className="landing-deferred-section scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <SectionTag>Choose your goal</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Built for the test you're taking.</h2>
-          </div>
-
-          {/* tabs */}
-          <div className="mt-9 flex flex-wrap justify-center gap-2">
-            {TRACKS.map((t) => {
-              const Icon = t.icon
-              const active = t.id === activeTrack
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTrack(t.id)}
-                  className={`inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition ${
-                    active
-                      ? 'border-blue-300 bg-blue-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)]'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* panel — remounts on track change via React key to replay the entrance */}
-          <div className="mt-8">
-            <motion.div
-              key={track.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: EASE }}
-              className="grid gap-4 rounded-3xl border border-black/5 bg-white p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8 lg:grid-cols-[1fr_1.4fr] lg:items-center"
-            >
-              <div>
-                <p className="text-2xl font-black tracking-tight text-slate-900">{track.label}</p>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{track.blurb}</p>
-                <button
-                  onClick={() => navigate(track.route)}
-                  className="group mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
-                >
-                  Open {track.label}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {track.items.map((it) => {
-                  const Icon = it.icon
-                  return (
-                    <div
-                      key={it.name}
-                      className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-blue-100 hover:bg-white"
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-black text-slate-900">{it.name}</p>
-                        <p className="mt-0.5 text-[12px] leading-5 text-slate-500">{it.note}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ────────────────────────────────────────────── */}
-      <section id="route" className="landing-deferred-section scroll-mt-24 px-4 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <SectionTag>Your route</SectionTag>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-              From baseline to target — in four moves.
-            </h2>
-          </div>
-
-          <div className="relative mt-12 grid gap-4 lg:grid-cols-4">
-            <div className="pointer-events-none absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent lg:block" />
-            {STEPS.map((s, i) => {
-              const Icon = s.icon
-              return (
-                <motion.div
-                  key={s.n}
-                  initial={{ opacity: 0, y: 22 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.55, delay: i * 0.12, ease: EASE }}
-                  className="relative rounded-3xl border border-black/5 bg-white p-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.32)]">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="text-3xl font-black text-slate-100">{s.n}</span>
-                  </div>
-                  <h3 className="mt-4 text-lg font-black tracking-tight text-slate-900">{s.title}</h3>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-500">{s.body}</p>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Reviews wall ────────────────────────────────────────────── */}
-      <section id="reviews" className="landing-deferred-section scroll-mt-24 bg-white/60 px-4 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <SectionTag>Student proof</SectionTag>
-              <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-5xl">Bands moving up.</h2>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${i < Math.round(ratingAvg) ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-slate-200'}`}
-                    />
-                  ))}
-                </div>
-                <p className="text-sm font-bold text-slate-500">
-                  {ratingAvg.toFixed(1)} / 5.0 · {reviews.length}+ reviews
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setFormOpen((v) => !v)}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
-            >
-              {formOpen ? 'Close' : 'Leave a review'}
-              {!formOpen && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />}
-            </button>
-          </div>
-
-          {/* Submit form */}
-          <AnimatePresence initial={false}>
-            {formOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4, ease: EASE }}
-                className="overflow-hidden"
-              >
-                <div className="mt-6 rounded-3xl border border-black/5 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:p-8">
-                  {justSubmitted ? (
-                    <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                      <CheckCircle2 className="h-12 w-12 text-green-500" />
-                      <p className="text-lg font-black text-slate-900">Thank you! Your review is live.</p>
-                      <p className="text-sm text-slate-500">It now appears in the wall below.</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <div>
-                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Your name</label>
-                        <input
-                          value={form.name}
-                          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                          placeholder="e.g. Aziza K."
-                          maxLength={60}
-                          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Exam</label>
-                        <div className="mt-1.5 flex gap-2">
-                          {EXAM_OPTIONS_NAV.map((ex) => (
-                            <button
-                              key={ex}
-                              type="button"
-                              onClick={() => setForm((f) => ({ ...f, exam: ex }))}
-                              className={`flex-1 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
-                                form.exam === ex
-                                  ? 'border-blue-300 bg-blue-50 text-blue-600'
-                                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
-                              }`}
-                            >
-                              {ex}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Band before</label>
-                          <input
-                            value={form.bandBefore}
-                            onChange={(e) => setForm((f) => ({ ...f, bandBefore: e.target.value }))}
-                            placeholder="5.5"
-                            maxLength={12}
-                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                          />
-                        </div>
-                        <ArrowRight className="mb-3 h-4 w-4 shrink-0 text-slate-300" />
-                        <div className="flex-1">
-                          <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Band after</label>
-                          <input
-                            value={form.bandAfter}
-                            onChange={(e) => setForm((f) => ({ ...f, bandAfter: e.target.value }))}
-                            placeholder="7.5"
-                            maxLength={12}
-                            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Rating</label>
-                        <div className="mt-2">
-                          <StarInput value={form.rating} onChange={(n) => setForm((f) => ({ ...f, rating: n }))} />
-                        </div>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="text-[11px] font-black uppercase tracking-wide text-slate-500">Your story</label>
-                        <textarea
-                          value={form.text}
-                          onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
-                          placeholder="What changed for you? How did the mocks, AI coach and route help?"
-                          rows={4}
-                          maxLength={600}
-                          className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                        <p className="mt-1 text-right text-[11px] text-slate-400">{form.text.length}/600</p>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <button
-                          onClick={handleSubmit}
-                          disabled={!formValid || submitting}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.32)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {submitting ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" /> Posting…
-                            </>
-                          ) : (
-                            <>
-                              Publish review <ArrowRight className="h-4 w-4" />
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+      <main className="relative z-10">
+        <section className="px-4 pb-16 pt-32 sm:px-6 sm:pb-24 sm:pt-40 lg:pt-44">
+          <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
+            <div className="text-center lg:text-left">
+              <motion.div initial={reduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.58, ease: EASE }} className="inline-flex max-w-full items-center gap-2 overflow-hidden rounded-full border border-white/90 bg-white/55 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:text-[10px] sm:tracking-[0.2em]"><Globe2 className="h-3.5 w-3.5 shrink-0 text-blue-600" /><span className="sm:hidden">Global undergraduate journeys</span><span className="hidden sm:inline">Built for undergraduate applicants worldwide</span></motion.div>
+              <motion.h1 initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.7, delay: 0.06, ease: EASE }} className="mx-auto mt-7 max-w-3xl text-[2.75rem] font-black leading-[0.96] tracking-[-0.06em] sm:text-[4.6rem] lg:mx-0 lg:text-[5.25rem]">Your path to university, <span className="block text-red-500 sm:inline">connected.</span></motion.h1>
+              <motion.p initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.14, ease: EASE }} className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg lg:mx-0 lg:max-w-xl">ProfAI brings test preparation, academic English, university research and application planning into one personal journey—so you always know what to work on next.</motion.p>
+              <motion.div initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.22, ease: EASE }} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
+                <button type="button" onClick={() => navigate('/register')} className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(239,68,68,0.28)] transition-all hover:-translate-y-0.5 hover:bg-red-600">Build my journey <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+                <button type="button" onClick={() => goTo('journey')} className="inline-flex items-center justify-center rounded-2xl border border-white bg-white/60 px-6 py-4 text-sm font-black text-slate-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl hover:bg-white/85">See how it works</button>
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Wall */}
-          {reviewsLoading ? (
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-44 animate-pulse rounded-2xl bg-slate-200/60" />
-              ))}
+              <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : 0.6, delay: 0.34 }} className="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold text-slate-600 lg:justify-start">{['English-only v1', 'IELTS + Digital SAT', 'No card required'].map((item) => <span key={item} className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-blue-600" /> {item}</span>)}</motion.div>
             </div>
-          ) : (
-            <motion.div
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-8% 0px' }}
-              variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-              className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {reviews.slice(0, 9).map((r) => (
-                <ReviewCard key={r.id} review={r} />
-              ))}
-            </motion.div>
-          )}
-        </div>
-      </section>
+            <JourneyPreview />
+          </div>
+        </section>
 
-      {/* ── Final CTA ───────────────────────────────────────────────── */}
-      <section className="landing-deferred-section px-4 py-16 sm:py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-10% 0px' }}
-          transition={{ duration: 0.7, ease: EASE }}
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-slate-900 px-8 py-14 text-center sm:px-14 sm:py-20"
-        >
-          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-600/30 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-blue-300">
-              <Sparkles className="h-3.5 w-3.5" /> Start free — no card required
-            </span>
-            <h2 className="mt-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl">
-              Take one mock today.
-              <br />
-              See your band move by next week.
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-base leading-7 text-slate-300">
-              Set your baseline, let the AI coach map your route, and train only what costs you band points.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => navigate('/register')}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.4)] transition hover:-translate-y-0.5 hover:bg-blue-700"
-              >
-                Create free account
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/5"
-              >
-                I already have an account
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </section>
+        <section id="platform" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="One connected platform" title="Prepare for the whole journey—not one isolated score." body="Every part of ProfAI has a clear role: build readiness, strengthen academic skills and organize the path toward your applications." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PILLARS.map((pillar, index) => <PillarCard key={pillar.title} pillar={pillar} index={index} onOpen={() => navigate(pillar.route)} />)}</div></div></section>
 
-      {/* ── Footer ──────────────────────────────────────────────────── */}
-      <footer className="border-t border-black/5 px-4 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <BrandMark size={28} />
-            <span className="font-black tracking-tight">
-              Prof<span className="text-blue-600">AI</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            {NAV_LINKS.map((l) => (
-              <button key={l.target} onClick={() => go(l.target)} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] text-slate-400">Independent prep platform · {new Date().getFullYear()}</p>
-        </div>
-      </footer>
-      </div>
+        <section id="journey" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Your journey" title="From today’s priorities to tomorrow’s applications." body="ProfAI organizes preparation around a simple sequence, so progress in one area supports the decisions that follow." /></Reveal><div className="relative mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4"><div className="pointer-events-none absolute left-[12%] right-[12%] top-8 hidden h-px bg-gradient-to-r from-red-200 via-slate-300 to-blue-200 lg:block" />{JOURNEY_STEPS.map((step, index) => { const Icon = step.icon; return <Reveal key={step.number} delay={index * 0.08} className="relative h-full"><article className="landing-glass h-full rounded-[1.75rem] p-6"><div className="flex items-center justify-between"><span className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl text-white ${index % 2 === 0 ? 'bg-red-500' : 'bg-blue-600'}`}><Icon className="h-5 w-5" /></span><span className="text-2xl font-black text-slate-300">{step.number}</span></div><h3 className="mt-6 text-lg font-black tracking-tight">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.body}</p></article></Reveal>})}</div></div></section>
+
+        <section className="px-4 py-16 sm:px-6 sm:py-24"><Reveal className="mx-auto max-w-7xl"><div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 px-6 py-12 text-white shadow-[0_34px_90px_rgba(15,23,42,0.24)] sm:px-10 lg:px-14 lg:py-16"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_20%,rgba(37,99,235,0.45),transparent_34%),radial-gradient(circle_at_12%_90%,rgba(239,68,68,0.24),transparent_38%)]" /><div className="relative grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-200"><Sparkles className="h-3.5 w-3.5" /> ProfAI Coach</span><h2 className="mt-6 text-3xl font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl">Guidance that turns a big goal into the next clear action.</h2><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Choose a focused coaching mode, ask with text, voice or a screenshot, and receive structured guidance without leaving your journey workspace.</p><button type="button" onClick={() => navigate('/register')} className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950 hover:bg-blue-50">Start a private journey <ArrowRight className="h-4 w-4" /></button></div>
+          <div className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-2xl sm:p-5"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500"><Bot className="h-5 w-5" /></span><div><p className="text-sm font-black">ProfAI Coach</p><p className="text-[11px] text-emerald-300">Account-private guidance</p></div></div><span className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 sm:block">Journey context</span></div><div className="mt-4 space-y-3"><div className="ml-auto max-w-[84%] rounded-2xl rounded-tr-md bg-blue-500 px-4 py-3 text-sm leading-6">Help me decide what to focus on this week for my university plan.</div><div className="max-w-[92%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-4 text-sm leading-6 text-slate-200"><p className="font-black text-white">Your next three priorities</p><ol className="mt-3 space-y-2"><li><b className="mr-2 text-red-300">1.</b>Protect your closest deadline.</li><li><b className="mr-2 text-blue-300">2.</b>Complete one focused test-prep session.</li><li><b className="mr-2 text-emerald-300">3.</b>Record the university questions you still need to verify.</li></ol></div></div></div>
+        </div></div></Reveal></section>
+
+        <section className="px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Product proof" title="Useful evidence, without inflated promises." body="ProfAI does not guarantee admission or publish invented success stories. Inspect the workflows that are available and decide whether they help your journey." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PROOF_POINTS.map((point, index) => { const Icon = point.icon; return <Reveal key={point.title} delay={index * 0.07} className="h-full"><article className="landing-glass flex h-full flex-col rounded-[1.75rem] p-6"><span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-blue-600' : 'bg-slate-950'}`}><Icon className="h-5 w-5" /></span><h3 className="mt-6 text-xl font-black tracking-tight">{point.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{point.body}</p><button type="button" onClick={() => navigate(point.route)} className="mt-6 inline-flex items-center gap-2 text-sm font-black hover:text-blue-700">{point.action} <ArrowRight className="h-4 w-4" /></button></article></Reveal>})}</div></div></section>
+
+        <section id="pricing" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-5xl"><Reveal><SectionHeading eyebrow="Simple pricing" title="Start free. Upgrade when the journey needs more depth." body="Free access is available now. Pro billing remains closed until private-beta and payment verification are complete." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-2"><Reveal className="h-full"><PricingCard name="Free" description="A practical starting point for building readiness and exploring your university journey." price="$0" cadence="forever" features={FREE_FEATURES} action={() => navigate('/register')} /></Reveal><Reveal className="h-full" delay={0.08}><PricingCard name="Pro" description="Higher AI limits and the complete planning workspace for active applicants." price="$9.99" cadence="monthly · $79.99 yearly" features={PRO_FEATURES} featured action={() => navigate('/register')} /></Reveal></div><p className="mx-auto mt-5 max-w-3xl text-center text-xs leading-5 text-slate-500">Pro limits are fair-use defaults and may be adjusted before public billing opens. You will see final terms before any purchase.</p></div></section>
+
+        <section id="faq" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.75fr_1.25fr]"><Reveal><span className="landing-kicker">Clear answers</span><h2 className="mt-5 text-3xl font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl">Know what ProfAI does—and what it does not do.</h2><p className="mt-5 max-w-lg text-base leading-7 text-slate-600">Still unsure? Contact support and tell us where you are in your journey.</p><a href={`mailto:${SUPPORT_EMAIL}?subject=Question%20about%20ProfAI`} className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-black text-white hover:bg-slate-800"><Mail className="h-4 w-4" /> Email support</a></Reveal><Reveal className="space-y-3" delay={0.06}>{FAQS.map((item, index) => <FaqItem key={item.question} question={item.question} answer={item.answer} open={openFaq === index} onToggle={() => setOpenFaq((current) => current === index ? -1 : index)} />)}</Reveal></div></section>
+
+        <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20"><Reveal className="mx-auto max-w-7xl"><div className="landing-glass relative overflow-hidden rounded-[2.5rem] px-6 py-14 text-center sm:px-10 sm:py-20"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(248,113,113,0.2),transparent_32%),radial-gradient(circle_at_88%_74%,rgba(59,130,246,0.22),transparent_36%)]" /><div className="relative mx-auto max-w-3xl"><span className="landing-kicker"><Sparkles className="h-3.5 w-3.5" /> Your next step</span><h2 className="mt-6 text-3xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">Build a university journey you can actually follow.</h2><p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600">Create your free account, set your direction and let ProfAI organize the next useful action.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><button type="button" onClick={() => navigate('/register')} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(239,68,68,0.28)] hover:bg-red-600">Start free <ArrowRight className="h-4 w-4" /></button><button type="button" onClick={() => navigate('/login')} className="inline-flex items-center justify-center rounded-2xl border border-white bg-white/65 px-6 py-4 text-sm font-black text-slate-800 hover:bg-white/90">I already have an account</button></div></div></div></Reveal></section>
+      </main>
+
+      <footer className="relative z-10 border-t border-white/70 bg-white/35 px-4 py-10 backdrop-blur-xl sm:px-6"><div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr]"><div><div className="flex items-center gap-2.5"><BrandMark size={38} /><span className="text-xl font-black tracking-[-0.04em]">Prof<span className="text-red-500">AI</span></span></div><p className="mt-4 max-w-md text-sm leading-6 text-slate-600">A connected preparation and planning platform for undergraduate applicants worldwide.</p><p className="mt-4 text-xs font-semibold text-slate-500">Independent platform · Not affiliated with IELTS, College Board or any university.</p></div><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Explore</p><div className="mt-4 space-y-3">{NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="block text-sm font-bold text-slate-700 hover:text-blue-700">{item.label}</button>)}</div></div><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Account & support</p><div className="mt-4 space-y-3"><button type="button" onClick={() => navigate('/register')} className="block text-sm font-bold text-slate-700 hover:text-blue-700">Create account</button><button type="button" onClick={() => navigate('/login')} className="block text-sm font-bold text-slate-700 hover:text-blue-700">Sign in</button><a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="block break-all text-sm font-bold text-slate-700 hover:text-blue-700">{SUPPORT_EMAIL}</a></div></div></div><div className="mx-auto mt-9 flex max-w-7xl flex-col gap-2 border-t border-white/70 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} ProfAI. All rights reserved.</p><p>English-only undergraduate v1</p></div></footer>
     </div>
   )
 }

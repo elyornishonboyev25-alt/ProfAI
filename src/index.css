@@ -607,6 +607,151 @@ html[data-motion='minimal'] .dashboard-loader-learning {
   }
 }
 
+/* Phase 5: public university-journey landing surfaces. These classes stay
+   isolated from authenticated app panels so the marketing page can use real
+   translucency without changing exam or dashboard performance. */
+@layer components {
+  .landing-page {
+    background: linear-gradient(135deg, rgba(255,248,248,.98), rgba(250,252,255,.98) 46%, rgba(240,247,255,.98));
+    isolation: isolate;
+    width: 100%;
+    min-width: 0;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+
+  .landing-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .landing-backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: .2;
+    background-image:
+      linear-gradient(rgba(148,163,184,.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,.16) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom, #000, transparent 70%);
+  }
+
+  .landing-ambient {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(24px);
+    opacity: .72;
+  }
+
+  .landing-ambient-red {
+    left: -12rem;
+    top: -9rem;
+    width: 38rem;
+    height: 38rem;
+    background: radial-gradient(circle, rgba(248,113,113,.34), rgba(254,226,226,.08) 60%, transparent 72%);
+  }
+
+  .landing-ambient-blue {
+    right: -13rem;
+    top: -7rem;
+    width: 42rem;
+    height: 42rem;
+    background: radial-gradient(circle, rgba(96,165,250,.32), rgba(219,234,254,.08) 60%, transparent 72%);
+  }
+
+  .landing-ambient-center {
+    left: 35%;
+    top: 43rem;
+    width: 34rem;
+    height: 34rem;
+    background: radial-gradient(circle, rgba(199,210,254,.2), transparent 70%);
+  }
+
+  .landing-nav,
+  .landing-glass {
+    border: 1px solid rgba(255,255,255,.82);
+    background: linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.48));
+    box-shadow: 0 22px 60px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.94), inset 0 -1px 0 rgba(255,255,255,.34);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+    backdrop-filter: blur(24px) saturate(145%);
+  }
+
+  .landing-nav {
+    background: linear-gradient(135deg, rgba(255,255,255,.82), rgba(255,255,255,.62));
+  }
+
+  .landing-glass-soft {
+    border: 1px solid rgba(255,255,255,.82);
+    background: linear-gradient(135deg, rgba(255,255,255,.67), rgba(248,250,252,.42));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    backdrop-filter: blur(18px) saturate(135%);
+  }
+
+  .landing-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 9999px;
+    background: rgba(255,255,255,.6);
+    padding: .5rem .9rem;
+    color: rgb(30 64 175);
+    font-size: .65rem;
+    font-weight: 900;
+    letter-spacing: .2em;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow: 0 10px 28px rgba(15,23,42,.07);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+
+  .landing-orbit {
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 9999px;
+    box-shadow: inset 12px 12px 30px rgba(255,255,255,.72), inset -12px -12px 30px rgba(96,165,250,.12), 0 20px 50px rgba(15,23,42,.1);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .landing-orbit-one {
+    right: -2rem;
+    top: -2.5rem;
+    width: 8rem;
+    height: 8rem;
+    background: linear-gradient(145deg, rgba(255,255,255,.56), rgba(191,219,254,.32));
+  }
+
+  .landing-orbit-two {
+    bottom: -2.5rem;
+    left: -2rem;
+    width: 6rem;
+    height: 6rem;
+    background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(254,202,202,.34));
+  }
+}
+
+@media (max-width: 767px) {
+  .landing-backdrop::after { background-size: 48px 48px; opacity: .12; }
+  .landing-ambient { filter: blur(36px); opacity: .55; }
+  .landing-orbit-one { right: -1rem; top: -1.5rem; width: 5.5rem; height: 5.5rem; }
+  .landing-orbit-two { bottom: -1.5rem; left: -1rem; width: 4.5rem; height: 4.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after { scroll-behavior: auto !important; }
+}
+
 /* Article Reader — warm paper workspace inspired by a focused study desk. */
 .article-reader-glass {
   position: relative;

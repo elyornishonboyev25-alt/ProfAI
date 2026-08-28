@@ -1,6 +1,6 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useState, type ComponentType, type PointerEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
 import {
   ArrowRight,
   BadgeCheck,
@@ -184,30 +184,85 @@ function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: stri
   )
 }
 
+function AnimatedHeroTitle() {
+  const reduceMotion = useReducedMotion()
+  const lines = [
+    { text: 'Your path to', className: '' },
+    { text: 'university,', className: '' },
+    { text: 'connected.', className: 'landing-hero-accent text-red-500' },
+  ]
+
+  return (
+    <h1 className="mx-auto mt-7 max-w-3xl text-[2.75rem] font-black leading-[0.94] tracking-[-0.06em] sm:text-[4.6rem] lg:mx-0 lg:text-[5.25rem]">
+      {lines.map((line, index) => (
+        <span key={line.text} className="block overflow-hidden pb-[0.08em]">
+          <motion.span
+            className={`block w-fit mx-auto lg:mx-0 ${line.className}`}
+            initial={reduceMotion ? false : { y: '112%', rotate: 1.5 }}
+            animate={{ y: '0%', rotate: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.78, delay: 0.05 + index * 0.09, ease: EASE }}
+          >
+            {line.text}
+          </motion.span>
+        </span>
+      ))}
+    </h1>
+  )
+}
+
 function JourneyPreview() {
   const reduceMotion = useReducedMotion()
+  const pointerX = useMotionValue(0)
+  const pointerY = useMotionValue(0)
+  const springX = useSpring(pointerX, { stiffness: 130, damping: 22, mass: 0.65 })
+  const springY = useSpring(pointerY, { stiffness: 130, damping: 22, mass: 0.65 })
+  const rotateY = useTransform(springX, [-0.5, 0.5], [-3.5, 3.5])
+  const rotateX = useTransform(springY, [-0.5, 0.5], [3, -3])
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (reduceMotion || event.pointerType === 'touch') return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    pointerX.set((event.clientX - bounds.left) / bounds.width - 0.5)
+    pointerY.set((event.clientY - bounds.top) / bounds.height - 0.5)
+  }
+
+  const resetPointer = () => {
+    pointerX.set(0)
+    pointerY.set(0)
+  }
+
   return (
     <motion.div
       initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 24 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.78, delay: 0.16, ease: EASE }}
-      className="relative mx-auto w-full max-w-[620px]"
+      className="landing-preview-stage relative mx-auto w-full max-w-[620px]"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointer}
     >
-      <div className="landing-orbit landing-orbit-one" aria-hidden="true" />
-      <div className="landing-orbit landing-orbit-two" aria-hidden="true" />
-      <div className="landing-glass relative overflow-hidden rounded-[2rem] p-4 sm:p-6">
+      <motion.div className="landing-orbit landing-orbit-one" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, 9, -3, 0], y: [0, -12, 5, 0], rotate: [0, 5, -3, 0] }} transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }} />
+      <motion.div className="landing-orbit landing-orbit-two" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, -8, 5, 0], y: [0, 9, -6, 0], rotate: [0, -6, 4, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
+      <motion.div className="landing-float-badge landing-float-badge-one" aria-hidden="true" animate={reduceMotion ? undefined : { y: [0, -8, 0], rotate: [-2, 1, -2] }} transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}><Target className="h-3.5 w-3.5" /> IELTS + SAT</motion.div>
+      <motion.div className="landing-float-badge landing-float-badge-two" aria-hidden="true" animate={reduceMotion ? undefined : { y: [0, 7, 0], rotate: [2, -1, 2] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}><Sparkles className="h-3.5 w-3.5" /> AI next step</motion.div>
+      <motion.div className="landing-preview-tilt" style={{ rotateX, rotateY, transformPerspective: 1200 }}>
+      <div className="landing-glass landing-preview-glass relative overflow-hidden rounded-[2rem] p-4 sm:p-6">
+        <motion.div className="landing-preview-sheen" aria-hidden="true" animate={reduceMotion ? undefined : { x: ['-140%', '180%'] }} transition={{ duration: 6.5, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }} />
         <div className="relative flex items-center justify-between gap-4 border-b border-white/70 pb-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Your university journey</p>
             <p className="mt-1 text-lg font-black tracking-tight text-slate-950">One plan. Clear next steps.</p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700 sm:inline-flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Connected
+            <span className="landing-connected-dot h-2 w-2 rounded-full bg-emerald-500" /> Connected
           </span>
         </div>
+        <div className="relative my-4 grid grid-cols-4 gap-2" aria-label="University journey stages">
+          {['Profile', 'Prepare', 'Research', 'Apply'].map((stage, index) => <div key={stage} className="relative text-center"><span className={`relative z-10 mx-auto block h-2.5 w-2.5 rounded-full border-2 border-white ${index === 0 ? 'bg-red-500' : index === 3 ? 'bg-blue-600' : 'bg-slate-300'}`} /><span className="mt-1.5 block text-[8px] font-black uppercase tracking-[0.11em] text-slate-400 sm:text-[9px]">{stage}</span></div>)}
+          <motion.div className="absolute left-[12.5%] right-[12.5%] top-[4px] h-[2px] origin-left bg-gradient-to-r from-red-400 via-slate-300 to-blue-500" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reduceMotion ? 0 : 1.1, delay: 0.62, ease: EASE }} />
+        </div>
         <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
-          <PreviewCard icon={Target} label="Prepare" title="Test readiness" body="IELTS and Digital SAT live inside their own complete arenas." tone="red" />
-          <PreviewCard icon={Globe2} label="Research" title="University options" body="Keep destinations, university research and next questions in view." tone="blue" />
+          <PreviewCard icon={Target} label="Prepare" title="Test readiness" body="IELTS and Digital SAT live inside their own complete arenas." tone="red" delay={0.5} />
+          <PreviewCard icon={Globe2} label="Research" title="University options" body="Keep destinations, university research and next questions in view." tone="blue" delay={0.58} />
         </div>
         <div className="landing-glass-soft relative mt-3 flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex items-start gap-3">
@@ -221,20 +276,22 @@ function JourneyPreview() {
           <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black text-white">View next step <ArrowRight className="h-3.5 w-3.5" /></span>
         </div>
       </div>
+      </motion.div>
     </motion.div>
   )
 }
 
-function PreviewCard({ icon: Icon, label, title, body, tone }: { icon: IconType; label: string; title: string; body: string; tone: 'red' | 'blue' }) {
+function PreviewCard({ icon: Icon, label, title, body, tone, delay }: { icon: IconType; label: string; title: string; body: string; tone: 'red' | 'blue'; delay: number }) {
+  const reduceMotion = useReducedMotion()
   return (
-    <div className="landing-glass-soft rounded-3xl p-4 sm:p-5">
+    <motion.div initial={reduceMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.55, delay, ease: EASE }} whileHover={reduceMotion ? undefined : { y: -4, scale: 1.01 }} className="landing-glass-soft rounded-3xl p-4 sm:p-5">
       <div className="flex items-center justify-between">
         <span className={`flex h-10 w-10 items-center justify-center rounded-2xl text-white ${tone === 'red' ? 'bg-red-500 shadow-[0_12px_24px_rgba(239,68,68,0.28)]' : 'bg-blue-600 shadow-[0_12px_24px_rgba(37,99,235,0.25)]'}`}><Icon className="h-5 w-5" /></span>
         <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</span>
       </div>
       <p className="mt-5 text-base font-black text-slate-950">{title}</p>
       <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
-    </div>
+    </motion.div>
   )
 }
 
@@ -344,7 +401,7 @@ export default function Landing() {
           <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
             <div className="text-center lg:text-left">
               <motion.div initial={reduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.58, ease: EASE }} className="inline-flex max-w-full items-center gap-2 overflow-hidden rounded-full border border-white/90 bg-white/55 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:text-[10px] sm:tracking-[0.2em]"><Globe2 className="h-3.5 w-3.5 shrink-0 text-blue-600" /><span className="sm:hidden">Global undergraduate journeys</span><span className="hidden sm:inline">Built for undergraduate applicants worldwide</span></motion.div>
-              <motion.h1 initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.7, delay: 0.06, ease: EASE }} className="mx-auto mt-7 max-w-3xl text-[2.75rem] font-black leading-[0.96] tracking-[-0.06em] sm:text-[4.6rem] lg:mx-0 lg:text-[5.25rem]">Your path to university, <span className="block text-red-500 sm:inline">connected.</span></motion.h1>
+              <AnimatedHeroTitle />
               <motion.p initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.14, ease: EASE }} className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg lg:mx-0 lg:max-w-xl">ProfAI brings test preparation, academic English, university research and application planning into one personal journey—so you always know what to work on next.</motion.p>
               <motion.div initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.22, ease: EASE }} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
                 <button type="button" onClick={() => navigate('/register')} className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(239,68,68,0.28)] transition-all hover:-translate-y-0.5 hover:bg-red-600">Build my journey <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>

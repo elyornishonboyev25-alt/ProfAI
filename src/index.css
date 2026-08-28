@@ -646,6 +646,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     border-radius: 9999px;
     filter: blur(24px);
     opacity: .72;
+    will-change: transform;
   }
 
   .landing-ambient-red {
@@ -654,6 +655,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     width: 38rem;
     height: 38rem;
     background: radial-gradient(circle, rgba(248,113,113,.34), rgba(254,226,226,.08) 60%, transparent 72%);
+    animation: landingAmbientRed 22s ease-in-out infinite;
   }
 
   .landing-ambient-blue {
@@ -662,6 +664,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     width: 42rem;
     height: 42rem;
     background: radial-gradient(circle, rgba(96,165,250,.32), rgba(219,234,254,.08) 60%, transparent 72%);
+    animation: landingAmbientBlue 26s ease-in-out infinite;
   }
 
   .landing-ambient-center {
@@ -670,6 +673,24 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     width: 34rem;
     height: 34rem;
     background: radial-gradient(circle, rgba(199,210,254,.2), transparent 70%);
+    animation: landingAmbientCenter 30s ease-in-out infinite;
+  }
+
+  @keyframes landingAmbientRed {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    45% { transform: translate3d(4rem, 2rem, 0) scale(1.08); }
+    72% { transform: translate3d(1rem, 5rem, 0) scale(.96); }
+  }
+
+  @keyframes landingAmbientBlue {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    38% { transform: translate3d(-4rem, 3rem, 0) scale(1.06); }
+    70% { transform: translate3d(-1rem, 6rem, 0) scale(.98); }
+  }
+
+  @keyframes landingAmbientCenter {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(.94); }
+    50% { transform: translate3d(-3rem, -4rem, 0) scale(1.1); }
   }
 
   .landing-nav,
@@ -720,6 +741,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     box-shadow: inset 12px 12px 30px rgba(255,255,255,.72), inset -12px -12px 30px rgba(96,165,250,.12), 0 20px 50px rgba(15,23,42,.1);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
+    will-change: transform;
   }
 
   .landing-orbit-one {
@@ -737,6 +759,110 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     height: 6rem;
     background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(254,202,202,.34));
   }
+
+  .landing-preview-stage {
+    perspective: 1200px;
+  }
+
+  .landing-preview-tilt {
+    position: relative;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .landing-preview-glass {
+    transform: translateZ(0);
+  }
+
+  .landing-preview-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 14% 7%, rgba(248,113,113,.12), transparent 29%),
+      radial-gradient(circle at 91% 90%, rgba(59,130,246,.15), transparent 32%);
+  }
+
+  .landing-preview-sheen {
+    position: absolute;
+    z-index: 1;
+    top: -30%;
+    bottom: -30%;
+    left: -30%;
+    width: 28%;
+    pointer-events: none;
+    transform: skewX(-18deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+    filter: blur(7px);
+  }
+
+  .landing-float-badge {
+    position: absolute;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    border: 1px solid rgba(255,255,255,.92);
+    border-radius: 9999px;
+    background: rgba(255,255,255,.66);
+    padding: .55rem .8rem;
+    color: rgb(30 41 59);
+    font-size: .62rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+    box-shadow: 0 14px 36px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.96);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+    backdrop-filter: blur(18px) saturate(145%);
+    pointer-events: none;
+  }
+
+  .landing-float-badge-one {
+    left: -2.6rem;
+    top: 25%;
+    color: rgb(185 28 28);
+  }
+
+  .landing-float-badge-two {
+    right: -2.8rem;
+    bottom: 21%;
+    color: rgb(29 78 216);
+  }
+
+  .landing-connected-dot {
+    position: relative;
+    box-shadow: 0 0 0 0 rgba(16,185,129,.45);
+    animation: landingConnectedPulse 2.3s ease-out infinite;
+  }
+
+  @keyframes landingConnectedPulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129,.42); }
+    65%, 100% { box-shadow: 0 0 0 7px rgba(16,185,129,0); }
+  }
+
+  .landing-hero-accent {
+    position: relative;
+    padding-bottom: .06em;
+  }
+
+  .landing-hero-accent::after {
+    content: '';
+    position: absolute;
+    left: .02em;
+    right: .02em;
+    bottom: 0;
+    height: .06em;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, rgb(239 68 68), rgb(37 99 235));
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: landingAccentReveal .85s .52s cubic-bezier(.22,1,.36,1) forwards;
+  }
+
+  @keyframes landingAccentReveal {
+    to { transform: scaleX(1); }
+  }
 }
 
 @media (max-width: 767px) {
@@ -744,12 +870,18 @@ html[data-motion='minimal'] .dashboard-loader-learning {
   .landing-ambient { filter: blur(36px); opacity: .55; }
   .landing-orbit-one { right: -1rem; top: -1.5rem; width: 5.5rem; height: 5.5rem; }
   .landing-orbit-two { bottom: -1.5rem; left: -1rem; width: 4.5rem; height: 4.5rem; }
+  .landing-float-badge { display: none; }
+  .landing-preview-tilt { transform: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page *,
   .landing-page *::before,
   .landing-page *::after { scroll-behavior: auto !important; }
+  .landing-ambient,
+  .landing-connected-dot,
+  .landing-hero-accent::after { animation: none !important; }
+  .landing-hero-accent::after { transform: scaleX(1); }
 }
 
 /* Article Reader — warm paper workspace inspired by a focused study desk. */

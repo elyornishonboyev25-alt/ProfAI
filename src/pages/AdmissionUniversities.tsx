@@ -320,8 +320,8 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-globe-column">
-            <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
-              <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? 'Back to Universities' : 'Applications'}</span>
+            <Link to={shortlistOnly ? '/admission/universities' : '/dashboard'} className="admission-dashboard-back route-back-button">
+              <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? 'Back to Universities' : 'Dashboard'}</span>
             </Link>
             <div className="admission-globe-sticky">
               {shortlistOnly ? (

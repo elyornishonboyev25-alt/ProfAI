@@ -29,7 +29,7 @@ export const ARENA_GLASS_SURFACE =
   'relative isolate overflow-hidden rounded-[2rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.94),rgba(255,255,255,.82)_54%,rgba(239,246,255,.76))] shadow-[0_24px_70px_rgba(55,65,100,.11),inset_0_1px_0_rgba(255,255,255,.99)] backdrop-blur-2xl'
 
 export const PILLAR_GLASS_SURFACE =
-  'relative isolate overflow-hidden rounded-[2rem] border border-white/75 bg-[linear-gradient(145deg,rgba(255,255,255,.68),rgba(255,255,255,.43)_54%,rgba(241,245,249,.32))] shadow-[0_24px_70px_rgba(30,41,59,.1),inset_0_1px_0_rgba(255,255,255,.94)] backdrop-blur-2xl backdrop-saturate-150'
+  'relative isolate overflow-hidden rounded-[2rem] border border-white/65 bg-[linear-gradient(145deg,rgba(255,255,255,.54),rgba(255,255,255,.26)_52%,rgba(219,234,254,.22))] shadow-[0_24px_72px_rgba(30,41,59,.1),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-[26px] backdrop-saturate-150'
 
 const ICONS = {
   'sat-math': Calculator,

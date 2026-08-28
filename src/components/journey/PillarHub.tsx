@@ -114,8 +114,9 @@ export default function PillarHub({
                 )}
               >
                 <div className="pointer-events-none absolute inset-y-[-35%] left-[58%] w-24 rotate-[26deg] bg-white/55 blur-xl transition-transform duration-700 group-hover:translate-x-10" />
-                <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-red-100/28 blur-3xl" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white/32 to-transparent" />
+                <div className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-red-200/24 blur-[64px]" />
+                <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full bg-blue-300/28 blur-[72px] transition-opacity duration-500 group-hover:bg-blue-300/36" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white/18 to-transparent" />
 
                 <div className="relative flex h-full min-w-0 flex-col">
                   <div className="flex items-start justify-between gap-4">
@@ -125,7 +126,7 @@ export default function PillarHub({
                     </span>
                   </div>
 
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.22em] text-red-600 sm:text-xs">{card.eyebrow}</p>
+                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 sm:text-xs">{card.eyebrow}</p>
                   <h2 className={cn('mt-2 max-w-full break-words font-black leading-[1.02] tracking-[-.04em] text-[#080b18]', isTrackLayout ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-[1.7rem]')}>
                     {card.title}
                   </h2>
@@ -144,7 +145,7 @@ export default function PillarHub({
                     type="button"
                     onClick={() => navigate(card.path)}
                     className={cn(
-                      'mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#e52d35] to-[#f43f4a] px-5 text-sm font-black text-white shadow-[0_14px_30px_rgba(220,38,38,.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(220,38,38,.3)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200/70 sm:w-auto sm:self-start',
+                      'mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-blue-400/20 bg-gradient-to-r from-[#173b9d] via-[#2456d8] to-[#3676ef] px-5 text-sm font-black text-white shadow-[0_14px_30px_rgba(37,86,216,.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(37,86,216,.3)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200/70 sm:w-auto sm:self-start',
                     )}
                     aria-label={`${card.action}: ${card.title}`}
                   >

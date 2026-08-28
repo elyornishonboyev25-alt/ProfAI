@@ -12,6 +12,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import type { AuthUser } from '@/types/platform'
+import { captureAnalyticsEvent } from '@/lib/analytics'
 
 const registerSchema = z
   .object({
@@ -114,6 +115,7 @@ export default function Register() {
       )
 
       setSession(payload)
+      captureAnalyticsEvent('signup_completed', { method: 'password' })
       pushToast({
         type: 'success',
         title: 'Account created',
@@ -139,6 +141,7 @@ export default function Register() {
       )
 
       setSession(payload)
+      captureAnalyticsEvent('signup_completed', { method: 'google' })
       pushToast({
         type: 'success',
         title: 'Account ready',

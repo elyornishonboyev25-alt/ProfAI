@@ -22,6 +22,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { captureAnalyticsEvent } from '@/lib/analytics'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { setFlashToast } from '@/utils/authFlash'
@@ -338,6 +339,7 @@ export default function Onboarding() {
 
     const onboardingCompletedAt = new Date().toISOString()
     setOnboardingCompleted(true)
+    captureAnalyticsEvent('onboarding_completed', { completion_method: 'skip' })
     void updateAccount({ onboardingCompletedAt }).catch(() => {
       setFlashToast({
         type: 'info',
@@ -405,6 +407,10 @@ export default function Onboarding() {
           onboardingCompletedAt: new Date().toISOString(),
         })
         setOnboardingCompleted(true)
+        captureAnalyticsEvent('onboarding_completed', {
+          completion_method: 'generated_plan',
+          target_exam: targetExam,
+        })
       } catch (requestError) {
         setStage('idle')
         setSaveError(requestError instanceof Error ? requestError.message : 'Your profile could not be saved. Please try again.')

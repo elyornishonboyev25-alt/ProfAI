@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useToastStore, type ToastState } from '@/store/toastStore'
+import { captureAnalyticsEvent } from '@/lib/analytics'
 import { BrandMark } from '@/components/brand/BrandLogo'
 
 const TELEGRAM_USERNAME = 'nishonboyv7'
@@ -144,6 +145,7 @@ export default function Premium() {
   const handleCopyCard = async () => {
     try {
       await navigator.clipboard.writeText(CARD_NUMBER_RAW)
+      captureAnalyticsEvent('upgrade_started', { payment_method: 'manual_card' })
       setCopied(true)
       pushToast({ type: 'success', title: 'Card copied', message: 'Card number copied to clipboard.' })
       window.setTimeout(() => setCopied(false), 2200)
@@ -469,6 +471,7 @@ export default function Premium() {
 
               <a
                 href={TELEGRAM_URL}
+                onClick={() => captureAnalyticsEvent('upgrade_started', { payment_method: 'telegram_receipt' })}
                 target="_blank"
                 rel="noreferrer"
                 className="interactive-lift mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_14px_28px_rgba(37,99,235,0.32)] transition hover:shadow-[0_18px_36px_rgba(37,99,235,0.42)]"

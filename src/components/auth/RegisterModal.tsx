@@ -12,6 +12,7 @@ import { useRegisterModalStore, type RegisterModalState } from '@/store/register
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import type { AuthUser } from '@/types/platform'
+import { captureAnalyticsEvent } from '@/lib/analytics'
 
 const registerSchema = z
   .object({
@@ -114,6 +115,7 @@ export default function RegisterModal() {
       )
 
       setSession(payload)
+      captureAnalyticsEvent('signup_completed', { method: 'password_modal' })
       pushToast({
         type: 'success',
         title: 'Account created',

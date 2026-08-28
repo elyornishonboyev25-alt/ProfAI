@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import MotionRuntime from './components/MotionRuntime.tsx'
+import AnalyticsRuntime from './components/analytics/AnalyticsRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
@@ -18,6 +19,7 @@ if (typeof window !== 'undefined') {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <AnalyticsRuntime />
       <MotionRuntime>
         <App />
       </MotionRuntime>

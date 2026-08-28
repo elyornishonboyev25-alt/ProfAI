@@ -15,6 +15,7 @@ import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import { takeFlashToast } from '@/utils/authFlash'
 import type { AuthUser } from '@/types/platform'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
+import { captureAnalyticsEvent } from '@/lib/analytics'
 
 const loginSchema = z.object({
   email: z
@@ -90,6 +91,7 @@ export default function Login() {
 
       setNotFound(null)
       setSession(payload)
+      captureAnalyticsEvent('login_completed', { method: 'password' })
       pushToast({
         type: 'success',
         title: 'Signed in successfully',
@@ -121,6 +123,7 @@ export default function Login() {
 
       setNotFound(null)
       setSession(payload)
+      captureAnalyticsEvent('login_completed', { method: 'google' })
       pushToast({
         type: 'success',
         title: 'Signed in with Google',

@@ -34,6 +34,15 @@ const NAV_LINKS = [
   { label: 'FAQ', target: 'faq' },
 ] as const
 
+const UNIVERSITY_SIGNALS = [
+  { name: 'MIT', meta: 'Cambridge · US', className: 'landing-university-mit', delay: 0 },
+  { name: 'Oxford', meta: 'Oxford · UK', className: 'landing-university-oxford', delay: 0.18 },
+  { name: 'Harvard', meta: 'Cambridge · US', className: 'landing-university-harvard', delay: 0.34 },
+  { name: 'Stanford', meta: 'California · US', className: 'landing-university-stanford', delay: 0.12 },
+  { name: 'Columbia', meta: 'New York · US', className: 'landing-university-columbia', delay: 0.27 },
+  { name: 'Cambridge', meta: 'Cambridge · UK', className: 'landing-university-cambridge', delay: 0.42 },
+] as const
+
 type IconType = ComponentType<{ className?: string }>
 type Tone = 'red' | 'blue' | 'ink'
 
@@ -242,55 +251,50 @@ function JourneyPreview() {
     >
       <motion.div className="landing-orbit landing-orbit-one" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, 9, -3, 0], y: [0, -12, 5, 0], rotate: [0, 5, -3, 0] }} transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }} />
       <motion.div className="landing-orbit landing-orbit-two" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, -8, 5, 0], y: [0, 9, -6, 0], rotate: [0, -6, 4, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
-      <motion.div className="landing-float-badge landing-float-badge-one" aria-hidden="true" animate={reduceMotion ? undefined : { y: [0, -8, 0], rotate: [-2, 1, -2] }} transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}><Target className="h-3.5 w-3.5" /> IELTS + SAT</motion.div>
-      <motion.div className="landing-float-badge landing-float-badge-two" aria-hidden="true" animate={reduceMotion ? undefined : { y: [0, 7, 0], rotate: [2, -1, 2] }} transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}><Sparkles className="h-3.5 w-3.5" /> AI next step</motion.div>
       <motion.div className="landing-preview-tilt" style={{ rotateX, rotateY, transformPerspective: 1200 }}>
-      <div className="landing-glass landing-preview-glass relative overflow-hidden rounded-[2rem] p-4 sm:p-6">
-        <motion.div className="landing-preview-sheen" aria-hidden="true" animate={reduceMotion ? undefined : { x: ['-140%', '180%'] }} transition={{ duration: 6.5, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }} />
-        <div className="relative flex items-center justify-between gap-4 border-b border-white/70 pb-4">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Your university journey</p>
-            <p className="mt-1 text-lg font-black tracking-tight text-slate-950">One plan. Clear next steps.</p>
+        <div className="landing-glass landing-preview-glass landing-university-scene relative overflow-hidden rounded-[2.25rem]">
+          <motion.div className="landing-preview-sheen" aria-hidden="true" animate={reduceMotion ? undefined : { x: ['-140%', '180%'] }} transition={{ duration: 6.5, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }} />
+          <svg className="landing-university-routes" viewBox="0 0 620 520" aria-hidden="true">
+            <motion.path d="M 94 134 C 176 66, 230 106, 310 152 S 447 100, 530 142" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.5, delay: 0.35, ease: EASE }} />
+            <motion.path d="M 82 367 C 167 422, 236 376, 310 337 S 449 402, 548 348" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.5, delay: 0.52, ease: EASE }} />
+          </svg>
+          <div className="landing-scene-label"><span className="landing-connected-dot" /> Live journey signal</div>
+          {UNIVERSITY_SIGNALS.map((university, index) => (
+            <motion.div
+              key={university.name}
+              className={`landing-university-plaque ${university.className}`}
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.72, y: 18 }}
+              animate={reduceMotion ? { opacity: 1, scale: 1, y: 0 } : { opacity: 1, scale: 1, y: [0, index % 2 === 0 ? -8 : 7, 0], rotate: [0, index % 2 === 0 ? -1.2 : 1.2, 0] }}
+              transition={reduceMotion ? { duration: 0 } : { opacity: { duration: 0.45, delay: 0.28 + university.delay }, scale: { duration: 0.55, delay: 0.28 + university.delay, ease: EASE }, y: { duration: 6.4 + index * 0.35, repeat: Infinity, ease: 'easeInOut', delay: university.delay }, rotate: { duration: 7.2 + index * 0.3, repeat: Infinity, ease: 'easeInOut', delay: university.delay } }}
+            >
+              <span className="landing-university-monogram">{university.name.slice(0, 1)}</span>
+              <span><b>{university.name}</b><small>{university.meta}</small></span>
+            </motion.div>
+          ))}
+          <div className="landing-scene-core">
+            <motion.div className="landing-core-halo" aria-hidden="true" animate={reduceMotion ? undefined : { scale: [0.94, 1.05, 0.94], opacity: [0.48, 0.78, 0.48] }} transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }} />
+            <p>Your university journey</p>
+            <strong><span>TOP</span> 100</strong>
+            <em>one connected plan</em>
           </div>
-          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700 sm:inline-flex">
-            <span className="landing-connected-dot h-2 w-2 rounded-full bg-emerald-500" /> Connected
-          </span>
-        </div>
-        <div className="relative my-4 grid grid-cols-4 gap-2" aria-label="University journey stages">
-          {['Profile', 'Prepare', 'Research', 'Apply'].map((stage, index) => <div key={stage} className="relative text-center"><span className={`relative z-10 mx-auto block h-2.5 w-2.5 rounded-full border-2 border-white ${index === 0 ? 'bg-red-500' : index === 3 ? 'bg-blue-600' : 'bg-slate-300'}`} /><span className="mt-1.5 block text-[8px] font-black uppercase tracking-[0.11em] text-slate-400 sm:text-[9px]">{stage}</span></div>)}
-          <motion.div className="absolute left-[12.5%] right-[12.5%] top-[4px] h-[2px] origin-left bg-gradient-to-r from-red-400 via-slate-300 to-blue-500" initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reduceMotion ? 0 : 1.1, delay: 0.62, ease: EASE }} />
-        </div>
-        <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
-          <PreviewCard icon={Target} label="Prepare" title="Test readiness" body="IELTS and Digital SAT live inside their own complete arenas." tone="red" delay={0.5} />
-          <PreviewCard icon={Globe2} label="Research" title="University options" body="Keep destinations, university research and next questions in view." tone="blue" delay={0.58} />
-        </div>
-        <div className="landing-glass-soft relative mt-3 flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white"><Sparkles className="h-5 w-5" /></span>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Today’s focus</p>
-              <p className="mt-1 text-sm font-black text-slate-950">Move one priority forward</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Preparation stays connected to your university journey.</p>
-            </div>
+          <div className="landing-scene-progress" aria-label="Profile, preparation, research and application connected in one journey">
+            {['Profile', 'Prepare', 'Research', 'Apply'].map((stage, index) => <div key={stage}><span className={index === 0 ? 'is-active' : ''} />{stage}</div>)}
+            <motion.i initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reduceMotion ? 0 : 1.15, delay: 0.8, ease: EASE }} />
           </div>
-          <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black text-white">View next step <ArrowRight className="h-3.5 w-3.5" /></span>
         </div>
-      </div>
       </motion.div>
     </motion.div>
   )
 }
 
-function PreviewCard({ icon: Icon, label, title, body, tone, delay }: { icon: IconType; label: string; title: string; body: string; tone: 'red' | 'blue'; delay: number }) {
+function EditorialVisual({ icon: Icon, index, tone }: { icon: IconType; index: number; tone: Tone }) {
   const reduceMotion = useReducedMotion()
   return (
-    <motion.div initial={reduceMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.55, delay, ease: EASE }} whileHover={reduceMotion ? undefined : { y: -4, scale: 1.01 }} className="landing-glass-soft rounded-3xl p-4 sm:p-5">
-      <div className="flex items-center justify-between">
-        <span className={`flex h-10 w-10 items-center justify-center rounded-2xl text-white ${tone === 'red' ? 'bg-red-500 shadow-[0_12px_24px_rgba(239,68,68,0.28)]' : 'bg-blue-600 shadow-[0_12px_24px_rgba(37,99,235,0.25)]'}`}><Icon className="h-5 w-5" /></span>
-        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</span>
-      </div>
-      <p className="mt-5 text-base font-black text-slate-950">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+    <motion.div className={`landing-editorial-visual landing-editorial-${tone}`} initial={reduceMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: reduceMotion ? 0 : 0.55, delay: index * 0.07, ease: EASE }}>
+      <span className="landing-editorial-number">0{index + 1}</span>
+      <div className="landing-editorial-orbit"><Icon /></div>
+      <div className="landing-editorial-lines"><i /><i /><i /></div>
+      <motion.span className="landing-editorial-pulse" animate={reduceMotion ? undefined : { x: [0, 52, 0], opacity: [.35, 1, .35] }} transition={{ duration: 4.2 + index, repeat: Infinity, ease: 'easeInOut' }} />
     </motion.div>
   )
 }
@@ -298,20 +302,17 @@ function PreviewCard({ icon: Icon, label, title, body, tone, delay }: { icon: Ic
 function PillarCard({ pillar, index, onOpen }: { pillar: Pillar; index: number; onOpen: () => void }) {
   const Icon = pillar.icon
   const tones = {
-    red: { icon: 'bg-red-500 shadow-red-200', eyebrow: 'text-red-600', button: 'bg-red-500 hover:bg-red-600', wash: 'from-red-100/70' },
-    blue: { icon: 'bg-blue-600 shadow-blue-200', eyebrow: 'text-blue-700', button: 'bg-blue-600 hover:bg-blue-700', wash: 'from-blue-100/75' },
-    ink: { icon: 'bg-slate-950 shadow-slate-200', eyebrow: 'text-slate-700', button: 'bg-slate-950 hover:bg-slate-800', wash: 'from-slate-200/75' },
+    red: { eyebrow: 'text-red-600', button: 'bg-red-500 hover:bg-red-600', wash: 'from-red-100/70' },
+    blue: { eyebrow: 'text-blue-700', button: 'bg-blue-600 hover:bg-blue-700', wash: 'from-blue-100/75' },
+    ink: { eyebrow: 'text-slate-700', button: 'bg-slate-950 hover:bg-slate-800', wash: 'from-slate-200/75' },
   }
   const tone = tones[pillar.tone]
   return (
     <Reveal delay={index * 0.07} className="h-full">
-      <article className="landing-glass group relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-7">
+      <article className="landing-glass landing-premium-card group relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-7">
         <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tone.wash} via-white/25 to-transparent`} />
-        <div className="relative flex items-center justify-between">
-          <span className={`flex h-13 w-13 items-center justify-center rounded-2xl p-3 text-white shadow-xl ${tone.icon}`}><Icon className="h-6 w-6" /></span>
-          <span className="rounded-full border border-white/80 bg-white/55 px-3 py-1.5 text-[10px] font-black tracking-[0.16em] text-slate-500">0{index + 1}</span>
-        </div>
-        <p className={`relative mt-7 text-[11px] font-black uppercase tracking-[0.22em] ${tone.eyebrow}`}>{pillar.eyebrow}</p>
+        <EditorialVisual icon={Icon} index={index} tone={pillar.tone} />
+        <p className={`relative mt-6 text-[11px] font-black uppercase tracking-[0.22em] ${tone.eyebrow}`}>{pillar.eyebrow}</p>
         <h3 className="relative mt-3 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-950">{pillar.title}</h3>
         <p className="relative mt-3 text-sm leading-6 text-slate-600">{pillar.body}</p>
         <ul className="relative mt-6 space-y-3">
@@ -357,11 +358,19 @@ export default function Landing() {
   const navigate = useNavigate()
   const reduceMotion = useReducedMotion()
   const [scrolled, setScrolled] = useState(false)
+  const [activeSection, setActiveSection] = useState('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16)
+    const onScroll = () => {
+      setScrolled(window.scrollY > 16)
+      const visibleSection = [...NAV_LINKS].reverse().find(({ target }) => {
+        const section = document.getElementById(target)
+        return section ? section.getBoundingClientRect().top <= 190 : false
+      })
+      setActiveSection(visibleSection?.target ?? '')
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -369,6 +378,7 @@ export default function Landing() {
 
   const goTo = (target: string) => {
     setMobileNavOpen(false)
+    setActiveSection(target)
     scrollToSection(target)
   }
 
@@ -377,10 +387,10 @@ export default function Landing() {
       <div className="landing-backdrop" aria-hidden="true"><div className="landing-ambient landing-ambient-red" /><div className="landing-ambient landing-ambient-blue" /><div className="landing-ambient landing-ambient-center" /></div>
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-5">
-        <div className={`landing-nav mx-auto flex max-w-7xl items-center justify-between rounded-[1.6rem] px-3.5 py-3 transition-shadow sm:px-5 ${scrolled ? 'shadow-[0_18px_50px_rgba(15,23,42,0.13)]' : ''}`}>
+        <div className={`landing-nav landing-nav-fixed mx-auto flex max-w-7xl items-center justify-between rounded-[1.6rem] px-3.5 py-3 sm:px-5 ${scrolled ? 'is-scrolled' : ''}`}>
           <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })} className="relative flex items-center gap-2.5 rounded-2xl px-1.5 py-1" aria-label="ProfAI home"><BrandMark size={42} /><span className="text-xl font-black tracking-[-0.04em] sm:text-2xl">Prof<span className="text-red-500">AI</span></span></button>
           <nav className="relative hidden items-center gap-1 lg:flex" aria-label="Landing navigation">
-            {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-950">{item.label}</button>)}
+            {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} aria-current={activeSection === item.target ? 'page' : undefined} className={`landing-nav-link rounded-full px-4 py-2.5 text-sm font-bold ${activeSection === item.target ? 'is-active' : ''}`}>{item.label}</button>)}
             <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-950">Support</a>
           </nav>
           <div className="relative flex items-center gap-2">
@@ -415,14 +425,14 @@ export default function Landing() {
 
         <section id="platform" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="One connected platform" title="Prepare for the whole journey—not one isolated score." body="Every part of ProfAI has a clear role: build readiness, strengthen academic skills and organize the path toward your applications." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PILLARS.map((pillar, index) => <PillarCard key={pillar.title} pillar={pillar} index={index} onOpen={() => navigate(pillar.route)} />)}</div></div></section>
 
-        <section id="journey" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Your journey" title="From today’s priorities to tomorrow’s applications." body="ProfAI organizes preparation around a simple sequence, so progress in one area supports the decisions that follow." /></Reveal><div className="relative mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4"><div className="pointer-events-none absolute left-[12%] right-[12%] top-8 hidden h-px bg-gradient-to-r from-red-200 via-slate-300 to-blue-200 lg:block" />{JOURNEY_STEPS.map((step, index) => { const Icon = step.icon; return <Reveal key={step.number} delay={index * 0.08} className="relative h-full"><article className="landing-glass h-full rounded-[1.75rem] p-6"><div className="flex items-center justify-between"><span className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl text-white ${index % 2 === 0 ? 'bg-red-500' : 'bg-blue-600'}`}><Icon className="h-5 w-5" /></span><span className="text-2xl font-black text-slate-300">{step.number}</span></div><h3 className="mt-6 text-lg font-black tracking-tight">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.body}</p></article></Reveal>})}</div></div></section>
+        <section id="journey" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Your journey" title="From today’s priorities to tomorrow’s applications." body="ProfAI organizes preparation around a simple sequence, so progress in one area supports the decisions that follow." /></Reveal><div className="relative mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4"><div className="pointer-events-none absolute left-[12%] right-[12%] top-[3.2rem] hidden h-px bg-gradient-to-r from-red-200 via-slate-300 to-blue-200 lg:block" />{JOURNEY_STEPS.map((step, index) => { const Icon = step.icon; return <Reveal key={step.number} delay={index * 0.08} className="relative h-full"><article className="landing-glass landing-premium-card h-full rounded-[1.75rem] p-6"><div className="landing-step-heading"><div className="landing-step-symbol"><Icon /><motion.i animate={reduceMotion ? undefined : { rotate: 360 }} transition={{ duration: 18 + index * 2, repeat: Infinity, ease: 'linear' }} /></div><span>{step.number}</span></div><h3 className="mt-6 text-lg font-black tracking-tight">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.body}</p></article></Reveal>})}</div></div></section>
 
         <section className="px-4 py-16 sm:px-6 sm:py-24"><Reveal className="mx-auto max-w-7xl"><div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 px-6 py-12 text-white shadow-[0_34px_90px_rgba(15,23,42,0.24)] sm:px-10 lg:px-14 lg:py-16"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_20%,rgba(37,99,235,0.45),transparent_34%),radial-gradient(circle_at_12%_90%,rgba(239,68,68,0.24),transparent_38%)]" /><div className="relative grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-200"><Sparkles className="h-3.5 w-3.5" /> ProfAI Coach</span><h2 className="mt-6 text-3xl font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl">Guidance that turns a big goal into the next clear action.</h2><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Choose a focused coaching mode, ask with text, voice or a screenshot, and receive structured guidance without leaving your journey workspace.</p><button type="button" onClick={() => navigate('/register')} className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950 hover:bg-blue-50">Start a private journey <ArrowRight className="h-4 w-4" /></button></div>
-          <div className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-2xl sm:p-5"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500"><Bot className="h-5 w-5" /></span><div><p className="text-sm font-black">ProfAI Coach</p><p className="text-[11px] text-emerald-300">Account-private guidance</p></div></div><span className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 sm:block">Journey context</span></div><div className="mt-4 space-y-3"><div className="ml-auto max-w-[84%] rounded-2xl rounded-tr-md bg-blue-500 px-4 py-3 text-sm leading-6">Help me decide what to focus on this week for my university plan.</div><div className="max-w-[92%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-4 text-sm leading-6 text-slate-200"><p className="font-black text-white">Your next three priorities</p><ol className="mt-3 space-y-2"><li><b className="mr-2 text-red-300">1.</b>Protect your closest deadline.</li><li><b className="mr-2 text-blue-300">2.</b>Complete one focused test-prep session.</li><li><b className="mr-2 text-emerald-300">3.</b>Record the university questions you still need to verify.</li></ol></div></div></div>
+          <div className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-2xl sm:p-5"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-3"><span className="landing-coach-signal"><Bot /><i /><b /></span><div><p className="text-sm font-black">ProfAI Coach</p><p className="text-[11px] text-emerald-300">Account-private guidance</p></div></div><span className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 sm:block">Journey context</span></div><div className="mt-4 space-y-3"><div className="ml-auto max-w-[84%] rounded-2xl rounded-tr-md bg-blue-500 px-4 py-3 text-sm leading-6">Help me decide what to focus on this week for my university plan.</div><div className="max-w-[92%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-4 text-sm leading-6 text-slate-200"><p className="font-black text-white">Your next three priorities</p><ol className="mt-3 space-y-2"><li><b className="mr-2 text-red-300">1.</b>Protect your closest deadline.</li><li><b className="mr-2 text-blue-300">2.</b>Complete one focused test-prep session.</li><li><b className="mr-2 text-emerald-300">3.</b>Record the university questions you still need to verify.</li></ol></div></div></div>
         </div></div></Reveal></section>
 
-        <section className="px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Product proof" title="Useful evidence, without inflated promises." body="ProfAI does not guarantee admission or publish invented success stories. Inspect the workflows that are available and decide whether they help your journey." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PROOF_POINTS.map((point, index) => { const Icon = point.icon; return <Reveal key={point.title} delay={index * 0.07} className="h-full"><article className="landing-glass flex h-full flex-col rounded-[1.75rem] p-6"><span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-blue-600' : 'bg-slate-950'}`}><Icon className="h-5 w-5" /></span><h3 className="mt-6 text-xl font-black tracking-tight">{point.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{point.body}</p><button type="button" onClick={() => navigate(point.route)} className="mt-6 inline-flex items-center gap-2 text-sm font-black hover:text-blue-700">{point.action} <ArrowRight className="h-4 w-4" /></button></article></Reveal>})}</div></div></section>
+        <section className="px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Product proof" title="Useful evidence, without inflated promises." body="ProfAI does not guarantee admission or publish invented success stories. Inspect the workflows that are available and decide whether they help your journey." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PROOF_POINTS.map((point, index) => { const Icon = point.icon; return <Reveal key={point.title} delay={index * 0.07} className="h-full"><article className="landing-glass landing-premium-card flex h-full flex-col rounded-[1.75rem] p-6"><div className="landing-proof-symbol"><Icon /><span>0{index + 1}</span><i /></div><h3 className="mt-6 text-xl font-black tracking-tight">{point.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{point.body}</p><button type="button" onClick={() => navigate(point.route)} className="mt-6 inline-flex items-center gap-2 text-sm font-black hover:text-blue-700">{point.action} <ArrowRight className="h-4 w-4" /></button></article></Reveal>})}</div></div></section>
 
         <section id="pricing" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-5xl"><Reveal><SectionHeading eyebrow="Simple pricing" title="Start free. Upgrade when the journey needs more depth." body="Free access is available now. Pro billing remains closed until private-beta and payment verification are complete." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-2"><Reveal className="h-full"><PricingCard name="Free" description="A practical starting point for building readiness and exploring your university journey." price="$0" cadence="forever" features={FREE_FEATURES} action={() => navigate('/register')} /></Reveal><Reveal className="h-full" delay={0.08}><PricingCard name="Pro" description="Higher AI limits and the complete planning workspace for active applicants." price="$9.99" cadence="monthly · $79.99 yearly" features={PRO_FEATURES} featured action={() => navigate('/register')} /></Reveal></div><p className="mx-auto mt-5 max-w-3xl text-center text-xs leading-5 text-slate-500">Pro limits are fair-use defaults and may be adjusted before public billing opens. You will see final terms before any purchase.</p></div></section>
 

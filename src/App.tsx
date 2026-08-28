@@ -325,6 +325,7 @@ function App() {
     !isIeltsMockMode &&
     pathname !== '/ielts'
   const sidebarVisible = showSidebar && !isImmersiveHub
+  const isAiTutorMode = pathname === '/ai-tutor'
   const showMobileNav =
     Boolean(user) &&
     !isPublicStandalone &&
@@ -419,9 +420,9 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          <DeferredFloatingAIAssistant />
+          {!isAiTutorMode ? <DeferredFloatingAIAssistant /> : null}
           {!isExamModeActive ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive ? <FullscreenToggle /> : null}
+          {!isExamModeActive && !isAiTutorMode ? <FullscreenToggle /> : null}
           <WordLookupLayer />
         </>
       ) : null}
@@ -835,7 +836,7 @@ function App() {
                 </Suspense>
               </ErrorBoundary>
 
-              {!isAuthPage && !isGuestLanding && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && (
+              {!isAuthPage && !isGuestLanding && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && !isAiTutorMode && (
                 <div className="mt-14">
                   <Footer />
                 </div>

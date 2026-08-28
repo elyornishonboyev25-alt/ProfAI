@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
+import { normalizeAssistantReply, recoverAssistantResponse } from '@/services/ai/assistantResponse'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 
 const GLOBAL_JOURNEY_ENABLED = isPublicFeatureEnabled('globalJourney')
@@ -251,6 +252,8 @@ TONE & STYLE:
 - Warm, human, encouraging. Short, clear sentences. A well-placed emoji is fine (don't overdo it).
 - Your replies may be read aloud. Use the shortest answer that fully teaches the point: brief for a simple question, structured and thorough for a plan, solution, review, or comparison.
 - For math, show the reasoning, verify the result, and never invent a numerical step. For writing, quote the learner's actual wording before correcting it. For plans, give concrete tasks, minutes and a measurable outcome.
+- Format the reply for effortless reading. For substantial answers, use a short opening followed by concise Markdown headings and bullet or numbered lists. Keep paragraphs to 1-3 sentences, use bold only for key labels, and avoid walls of text.
+- A study plan must be practical and scannable: one clearly separated section per day, with duration, focus, tasks and a measurable outcome. Do not repeat the same explanation in multiple sections.
 
 TRUTH & GROUNDING — NON-NEGOTIABLE:
 - Never fabricate a university requirement, ranking, fee, deadline, scholarship, score, user progress, quotation or fact.
@@ -448,24 +451,19 @@ export async function chatWithAssistant(
     ? `Previous conversation:\n${historyContext}\n\nUser: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}${options.generateTitle ? ' Also generate the short chat title.' : ''}`
     : `User: ${messageBody}\n\nRespond with JSON only. ${replyLanguageInstruction}${options.generateTitle ? ' Also generate the short chat title.' : ''}`
 
-  const raw = await callGeminiAPI(systemPrompt, fullMessage, 1800, options.images ?? [], 'assistant_chat')
+  const raw = await callGeminiAPI(systemPrompt, fullMessage, 4096, options.images ?? [], 'assistant_chat')
   const jsonStr = extractJSON(raw)
 
   try {
     const parsed = JSON.parse(jsonStr) as GeminiChatResponse
     return {
-      reply: parsed.reply || "I'm here to help with your studies!",
+      reply: normalizeAssistantReply(parsed.reply),
       actions: sanitizeChatActions(parsed.actions),
       title: typeof parsed.title === 'string' ? parsed.title.replace(/\s+/g, ' ').trim().slice(0, 80) || null : null,
       memoryUpdates: sanitizeMemoryUpdates(parsed.memoryUpdates),
     }
   } catch {
-    return {
-      reply: raw.replace(/```json|```/g, '').trim() || "I'm here to help with your studies!",
-      actions: [],
-      title: null,
-      memoryUpdates: [],
-    }
+    return recoverAssistantResponse(raw)
   }
 }
 

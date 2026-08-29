@@ -25,3 +25,11 @@ export const aiRateLimit = rateLimit({
   keyGenerator: (req) => req.user!.id,
   message: { message: 'AI request limit reached. Please wait a moment and try again.' },
 })
+
+export const guestDiagnosticRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 45,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many diagnostic requests. Please wait a few minutes and try again.' },
+})

@@ -13,6 +13,11 @@ export type AnalyticsEventName =
   | 'login_completed'
   | 'onboarding_started'
   | 'onboarding_completed'
+  | 'diagnostic_started'
+  | 'diagnostic_step_completed'
+  | 'diagnostic_completed'
+  | 'diagnostic_signup_started'
+  | 'diagnostic_claimed'
   | 'study_session_started'
   | 'first_value_reached'
   | 'upgrade_viewed'
@@ -367,6 +372,7 @@ export function normalizeAnalyticsPath(pathname: string) {
 
 export function routeArea(pathname: string) {
   if (pathname === '/') return 'landing'
+  if (pathname === '/diagnostic') return 'diagnostic'
   if (pathname === '/dashboard') return 'journey_home'
   if (/^\/(test-preparation|ielts|sat|mock|tests|test|results)/.test(pathname)) return 'test_preparation'
   if (/^\/(academic-skills|vocabulary|articles|podcast|shadowing-lab|writing-lab|speaking-lab)/.test(pathname)) return 'academic_skills'
@@ -410,7 +416,7 @@ export function captureAppSession() {
 
 export function setSessionReplayForPath(pathname: string) {
   if (!posthogClient || getAnalyticsConsent() !== 'granted') return
-  const sensitive = /^\/(login|register|onboarding|account|profile|writing-lab|ai-tutor)(?:\/|$)/.test(pathname)
+  const sensitive = /^\/(login|register|onboarding|diagnostic|account|profile|writing-lab|ai-tutor)(?:\/|$)/.test(pathname)
   if (sensitive) posthogClient.stopSessionRecording()
   else posthogClient.startSessionRecording()
 }

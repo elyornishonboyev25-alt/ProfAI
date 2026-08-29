@@ -13,6 +13,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import type { AuthUser } from '@/types/platform'
 import { captureAnalyticsEvent } from '@/lib/analytics'
+import { claimStoredGuestDiagnostic } from '@/lib/guestDiagnostic'
 
 const registerSchema = z
   .object({
@@ -115,7 +116,9 @@ export default function Register() {
       )
 
       setSession(payload)
+      const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('signup_completed', { method: 'password' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'password' })
       pushToast({
         type: 'success',
         title: 'Account created',
@@ -141,7 +144,9 @@ export default function Register() {
       )
 
       setSession(payload)
+      const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('signup_completed', { method: 'google' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'google' })
       pushToast({
         type: 'success',
         title: 'Account ready',

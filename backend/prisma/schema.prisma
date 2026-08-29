@@ -117,6 +117,7 @@ model User {
   profile        UserProfile?
   skillBadges    SkillBadge[]
   sharedResults  SharedResult[]
+  claimedDiagnostics GuestDiagnostic[]
   xpEvents       XpEvent[]
 
   @@index([xp, level])
@@ -140,6 +141,28 @@ model XpEvent {
   @@unique([userId, eventKey])
   @@index([userId, earnedAt])
   @@index([source, earnedAt])
+}
+
+// A short-lived pre-account readiness assessment. The browser receives the
+// opaque token once; only its SHA-256 hash is persisted. Answers are bounded
+// structured data and are attached to a user only after an authenticated claim.
+model GuestDiagnostic {
+  id            String    @id @default(cuid())
+  tokenHash     String    @unique
+  schemaVersion Int       @default(1)
+  status        String    @default("IN_PROGRESS")
+  answers       Json
+  result        Json?
+  expiresAt     DateTime
+  completedAt   DateTime?
+  claimedAt     DateTime?
+  claimedById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  claimedBy     User?     @relation(fields: [claimedById], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+  @@index([claimedById, claimedAt])
 }
 
 // Privacy-safe AI request ledger. Prompt text, student answers and image data

@@ -25,6 +25,7 @@ import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 
 const globalJourneyEnabled = isPublicFeatureEnabled('globalJourney')
+const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
@@ -32,6 +33,7 @@ const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssista
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
+const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
@@ -220,6 +222,8 @@ function App() {
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
+  const isGuestDiagnostic = pathname === '/diagnostic' && !user
+  const isGuestExperience = isGuestLanding || isGuestDiagnostic
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isLeaderboardMode = pathname === '/leaderboard'
   const isProfileStandalone = pathname === '/profile'
@@ -244,6 +248,7 @@ function App() {
     pathname === '/shadowing-lab' ||
     pathname === '/podcast' ||
     pathname === '/onboarding' ||
+    pathname === '/diagnostic' ||
     pathname.startsWith('/articles') ||
     pathname.startsWith('/admission') ||
     pathname === '/ai-tutor' ||
@@ -295,7 +300,7 @@ function App() {
 
   const isPublicStandalone =
     isAuthPage ||
-    isGuestLanding ||
+    isGuestExperience ||
     pathname === '/premium' ||
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')
@@ -334,7 +339,7 @@ function App() {
     !isIeltsMockMode &&
     pathname !== '/onboarding' &&
     !isLiveCommunityMode
-  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode
+  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)
@@ -420,9 +425,9 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {!isAiTutorMode && !isGuestLanding ? <DeferredFloatingAIAssistant /> : null}
-          {!isExamModeActive && !isGuestLanding ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive && !isAiTutorMode && !isGuestLanding ? <FullscreenToggle /> : null}
+          {!isAiTutorMode && !isGuestExperience ? <DeferredFloatingAIAssistant /> : null}
+          {!isExamModeActive && !isGuestExperience ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive && !isAiTutorMode && !isGuestExperience ? <FullscreenToggle /> : null}
           <WordLookupLayer />
         </>
       ) : null}
@@ -449,6 +454,7 @@ function App() {
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
+                      <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route
@@ -836,7 +842,7 @@ function App() {
                 </Suspense>
               </ErrorBoundary>
 
-              {!isAuthPage && !isGuestLanding && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && !isAiTutorMode && (
+              {!isAuthPage && !isGuestExperience && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && !isAiTutorMode && (
                 <div className="mt-14">
                   <Footer />
                 </div>

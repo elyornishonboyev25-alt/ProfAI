@@ -38,6 +38,7 @@ import {
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
 import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
+import { clearGuestDiagnosticHandoff, loadGuestDiagnosticHandoff } from '@/lib/guestDiagnostic'
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -249,6 +250,20 @@ export default function Onboarding() {
     const parts = (user?.fullName ?? '').trim().split(/\s+/)
     if (parts[0]) setFirstName(parts[0])
     if (parts.length > 1) setLastName(parts.slice(1).join(' '))
+    const diagnostic = loadGuestDiagnosticHandoff()
+    if (diagnostic) {
+      setCountry(diagnostic.applicantCountry || 'Uzbekistan')
+      setTargetCountries(diagnostic.destinations.length ? diagnostic.destinations : ['United States'])
+      setFieldOfStudy(diagnostic.intendedMajor)
+      if (diagnostic.testPlan === 'IELTS' || diagnostic.testPlan === 'SAT' || diagnostic.testPlan === 'BOTH') {
+        setTargetExam(diagnostic.testPlan)
+      }
+      setCurrentIeltsScore(diagnostic.currentIeltsScore)
+      setTargetIeltsScore(diagnostic.targetIeltsScore ?? 7.5)
+      setCurrentSatScore(diagnostic.currentSatScore)
+      setTargetSatScore(diagnostic.targetSatScore ?? 1450)
+      setDailyHours(Math.max(3, Math.min(6, Math.round(diagnostic.weeklyHours / 5))))
+    }
   }, [user?.id, user?.fullName])
 
   useEffect(() => {
@@ -339,6 +354,7 @@ export default function Onboarding() {
 
     const onboardingCompletedAt = new Date().toISOString()
     setOnboardingCompleted(true)
+    clearGuestDiagnosticHandoff()
     captureAnalyticsEvent('onboarding_completed', { completion_method: 'skip' })
     void updateAccount({ onboardingCompletedAt }).catch(() => {
       setFlashToast({
@@ -407,6 +423,7 @@ export default function Onboarding() {
           onboardingCompletedAt: new Date().toISOString(),
         })
         setOnboardingCompleted(true)
+        clearGuestDiagnosticHandoff()
         captureAnalyticsEvent('onboarding_completed', {
           completion_method: 'generated_plan',
           target_exam: targetExam,

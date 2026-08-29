@@ -13,6 +13,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import type { AuthUser } from '@/types/platform'
 import { captureAnalyticsEvent } from '@/lib/analytics'
+import { claimStoredGuestDiagnostic } from '@/lib/guestDiagnostic'
 
 const registerSchema = z
   .object({
@@ -115,7 +116,9 @@ export default function RegisterModal() {
       )
 
       setSession(payload)
+      const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('signup_completed', { method: 'password_modal' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'password', surface: 'modal' })
       pushToast({
         type: 'success',
         title: 'Account created',

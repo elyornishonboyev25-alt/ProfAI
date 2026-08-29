@@ -16,6 +16,7 @@ import { takeFlashToast } from '@/utils/authFlash'
 import type { AuthUser } from '@/types/platform'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 import { captureAnalyticsEvent } from '@/lib/analytics'
+import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 
 const loginSchema = z.object({
   email: z
@@ -91,13 +92,16 @@ export default function Login() {
 
       setNotFound(null)
       setSession(payload)
+      const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('login_completed', { method: 'password' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'password_login' })
       pushToast({
         type: 'success',
         title: 'Signed in successfully',
         message: 'Welcome back to ProfAI.',
       })
-      navigate(payload.user.onboardingCompleted ? redirectPath : '/onboarding', { replace: true })
+      const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
+      navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
     } catch (error) {
       // Unregistered email → show an explicit "create account" call-to-action
       // instead of a generic error toast.
@@ -123,7 +127,9 @@ export default function Login() {
 
       setNotFound(null)
       setSession(payload)
+      const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('login_completed', { method: 'google' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'google_login' })
       pushToast({
         type: 'success',
         title: 'Signed in with Google',
@@ -132,7 +138,8 @@ export default function Login() {
       // Full reload guarantees the persisted session is hydrated and the
       // destination route renders immediately (fixes the blank-until-refresh
       // behaviour after the Google popup closes).
-      window.location.assign(payload.user.onboardingCompleted ? redirectPath : '/onboarding')
+      const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
+      window.location.assign(payload.user.onboardingCompleted ? destination : '/onboarding')
     } catch (error) {
       // No account yet for this Google email — guide them to register instead
       // of silently creating one from the sign-in screen.

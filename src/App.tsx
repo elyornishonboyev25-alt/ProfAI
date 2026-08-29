@@ -34,6 +34,7 @@ const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
+const JourneyPlan = lazy(() => import('@/pages/JourneyPlan'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
@@ -222,7 +223,7 @@ function App() {
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
-  const isGuestDiagnostic = pathname === '/diagnostic' && !user
+  const isGuestDiagnostic = pathname === '/diagnostic'
   const isGuestExperience = isGuestLanding || isGuestDiagnostic
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isLeaderboardMode = pathname === '/leaderboard'
@@ -233,6 +234,7 @@ function App() {
     isStandaloneMode ||
     isVocabularyMode ||
     pathname === '/dashboard' ||
+    pathname === '/journey-plan' ||
     (pathname === '/' && Boolean(user)) ||
     pathname.startsWith('/mock') ||
     pathname === '/test-preparation' ||
@@ -456,6 +458,7 @@ function App() {
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/journey-plan" element={<ProtectedRoute><AnimatedRoute><JourneyPlan /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route
                         path="/test-preparation"

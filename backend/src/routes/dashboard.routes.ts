@@ -27,7 +27,7 @@ router.get(
     const userId = req.user!.id
     const now = new Date()
 
-    const [user, attemptAggregate, attemptsCount, recentAttempts, notifications] = await Promise.all([
+    const [user, attemptAggregate, attemptsCount, recentAttempts, notifications, latestJourneyPlan] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -80,6 +80,21 @@ router.get(
           title: true,
           message: true,
           createdAt: true,
+        },
+      }),
+      prisma.guestDiagnostic.findFirst({
+        where: {
+          claimedById: userId,
+          status: 'CLAIMED',
+        },
+        orderBy: [{ claimedAt: 'desc' }, { completedAt: 'desc' }],
+        select: {
+          id: true,
+          answers: true,
+          result: true,
+          completedAt: true,
+          claimedAt: true,
+          updatedAt: true,
         },
       }),
     ])
@@ -245,6 +260,16 @@ router.get(
         currentSatScore: user.profile?.currentSatScore ?? null,
         targetSatScore: user.profile?.targetSatScore ?? null,
       },
+      journeyPlan: latestJourneyPlan
+        ? {
+            id: latestJourneyPlan.id,
+            answers: latestJourneyPlan.answers,
+            result: latestJourneyPlan.result,
+            completedAt: latestJourneyPlan.completedAt,
+            claimedAt: latestJourneyPlan.claimedAt,
+            updatedAt: latestJourneyPlan.updatedAt,
+          }
+        : null,
     })
   }),
 )

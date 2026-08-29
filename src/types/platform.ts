@@ -74,6 +74,14 @@ export type DashboardOverview = {
     currentSatScore: number | null
     targetSatScore: number | null
   }
+  journeyPlan?: {
+    id: string
+    answers: import('@/lib/guestDiagnostic').GuestDiagnosticAnswers
+    result: import('@/lib/guestDiagnostic').GuestDiagnosticResult
+    completedAt: string | null
+    claimedAt: string | null
+    updatedAt: string
+  } | null
 }
 
 export type ProfileOverview = {

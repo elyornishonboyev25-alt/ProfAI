@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Headphones,
   Languages,
+  Route,
   Trophy,
   Users,
 } from 'lucide-react'
@@ -66,8 +67,14 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
   const navigate = useNavigate()
   const location = useLocation()
   const journeyEnabled = isPublicFeatureEnabled('globalJourney')
+  const diagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
   const primaryItems = journeyEnabled ? JOURNEY_PRIMARY_ITEMS : LEGACY_PRIMARY_ITEMS
-  const secondaryItems = journeyEnabled ? JOURNEY_SECONDARY_ITEMS : LEGACY_SECONDARY_ITEMS
+  const secondaryItems = journeyEnabled
+    ? [
+        ...(diagnosticEnabled ? [{ id: 'journey-plan', label: 'My Journey Plan', icon: Route, path: '/journey-plan' }] : []),
+        ...JOURNEY_SECONDARY_ITEMS,
+      ]
+    : LEGACY_SECONDARY_ITEMS
 
   useEffect(() => {
     const element = sidebarRef.current

@@ -24,13 +24,16 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import { WORLD_COUNTRIES } from '@/data/countries'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import {
+  claimGuestDiagnostic,
   completeGuestDiagnostic,
   openGuestDiagnosticSession,
+  rememberGuestDiagnosticDestination,
   saveGuestDiagnosticDraft,
   saveGuestDiagnosticHandoff,
   type GuestDiagnosticAnswers,
   type GuestDiagnosticResult,
 } from '@/lib/guestDiagnostic'
+import { useAuthStore, type AuthState } from '@/store/authStore'
 
 type StepId = 1 | 2 | 3 | 4 | 5
 type Answers = GuestDiagnosticAnswers
@@ -142,6 +145,7 @@ function JourneySignal({ step, reduceMotion }: { step: StepId; reduceMotion: boo
 
 export default function GuestDiagnostic() {
   const navigate = useNavigate()
+  const user = useAuthStore((state: AuthState) => state.user)
   const reduceMotion = Boolean(useReducedMotion())
   const [step, setStep] = useState<StepId>(1)
   const [direction, setDirection] = useState(1)
@@ -150,6 +154,7 @@ export default function GuestDiagnostic() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'error'>('loading')
   const [result, setResult] = useState<GuestDiagnosticResult | null>(null)
   const [error, setError] = useState('')
+  const [openingPlan, setOpeningPlan] = useState(false)
   const started = useRef(false)
 
   const initialize = async () => {
@@ -173,7 +178,10 @@ export default function GuestDiagnostic() {
 
   useEffect(() => { void initialize() }, [])
 
-  const set = <K extends keyof Answers>(key: K, value: Answers[K]) => setAnswers((current) => ({ ...current, [key]: value }))
+  const set = <K extends keyof Answers>(key: K, value: Answers[K]) => {
+    setError('')
+    setAnswers((current) => ({ ...current, [key]: value }))
+  }
   const meta = STEP_META[step - 1]
   const progress = result ? 100 : step * 20
 
@@ -182,13 +190,19 @@ export default function GuestDiagnostic() {
       if (answers.applicantCountry.length < 2) return 'Select the country where you are applying from.'
       if (answers.intendedMajor.trim().length < 2) return 'Add the field you currently want to study.'
       if (answers.destinations.length === 0) return 'Add at least one destination country.'
+      if (answers.intakeYear < currentYear || answers.intakeYear > currentYear + 7) return 'Choose a valid target intake year.'
     }
     if (step === 3) {
       if (['IELTS', 'BOTH'].includes(answers.testPlan) && answers.targetIeltsScore === null) return 'Add your IELTS target score.'
       if (['SAT', 'BOTH'].includes(answers.testPlan) && answers.targetSatScore === null) return 'Add your SAT target score.'
+      if (answers.currentIeltsScore !== null && (answers.currentIeltsScore < 0 || answers.currentIeltsScore > 9 || answers.currentIeltsScore * 2 % 1 !== 0)) return 'Current IELTS band must be between 0 and 9 in 0.5 steps.'
+      if (answers.targetIeltsScore !== null && (answers.targetIeltsScore < 4 || answers.targetIeltsScore > 9 || answers.targetIeltsScore * 2 % 1 !== 0)) return 'Target IELTS band must be between 4 and 9 in 0.5 steps.'
+      if (answers.currentSatScore !== null && (answers.currentSatScore < 400 || answers.currentSatScore > 1600)) return 'Current SAT score must be between 400 and 1600.'
+      if (answers.targetSatScore !== null && (answers.targetSatScore < 400 || answers.targetSatScore > 1600)) return 'Target SAT score must be between 400 and 1600.'
       if (answers.currentIeltsScore !== null && answers.targetIeltsScore !== null && answers.currentIeltsScore > answers.targetIeltsScore) return 'IELTS target should be at least your current score.'
       if (answers.currentSatScore !== null && answers.targetSatScore !== null && answers.currentSatScore > answers.targetSatScore) return 'SAT target should be at least your current score.'
     }
+    if (step === 5 && (answers.weeklyHours < 1 || answers.weeklyHours > 30)) return 'Choose between 1 and 30 focused hours per week.'
     return ''
   }, [answers, step])
 
@@ -229,6 +243,28 @@ export default function GuestDiagnostic() {
     set('destinations', [...answers.destinations, country])
   }
 
+  const openSavedPlan = async () => {
+    if (!token || !result || openingPlan) return
+    setError('')
+    saveGuestDiagnosticHandoff(answers)
+    rememberGuestDiagnosticDestination()
+    captureAnalyticsEvent('diagnostic_signup_started', { source: user ? 'authenticated_result' : 'result' })
+
+    if (!user) {
+      navigate('/register', { state: { from: { pathname: '/journey-plan' } } })
+      return
+    }
+
+    setOpeningPlan(true)
+    try {
+      await claimGuestDiagnostic(token)
+      navigate('/journey-plan', { replace: true })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Your plan could not be linked to this account. Please retry.')
+      setOpeningPlan(false)
+    }
+  }
+
   if (status === 'loading') {
     return <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_10%_15%,#fee2e2,transparent_35%),radial-gradient(circle_at_90%_20%,#dbeafe,transparent_38%),#f8fafc]"><div className="text-center"><BrandMark size={64} /><Loader2 className="mx-auto mt-5 h-6 w-6 animate-spin text-blue-600" /><p className="mt-3 text-sm font-bold text-slate-600">Opening your private diagnostic…</p></div></main>
   }
@@ -257,8 +293,31 @@ export default function GuestDiagnostic() {
           <div className="rounded-2xl border border-white bg-white/55 px-4 py-3 shadow-sm backdrop-blur-xl"><div className="flex items-center justify-between gap-12 text-xs font-black"><span>{result ? 'Assessment complete' : `Step ${step} of 5`}</span><span className="text-blue-700">{progress}%</span></div><div className="mt-2 h-1.5 w-56 overflow-hidden rounded-full bg-slate-200/70"><motion.div className="h-full rounded-full bg-gradient-to-r from-red-500 via-blue-600 to-blue-500" animate={{ width: `${progress}%` }} transition={{ duration: reduceMotion ? 0 : .45, ease: EASE }} /></div></div>
         </div>
 
+        {!result ? (
+          <nav aria-label="Diagnostic progress" className="mb-5 grid grid-cols-5 gap-1.5 rounded-[1.5rem] border border-white/90 bg-white/50 p-2 shadow-[0_16px_50px_rgba(15,23,42,.07)] backdrop-blur-2xl sm:gap-2 sm:p-2.5">
+            {STEP_META.map((item) => {
+              const Icon = item.icon
+              const active = item.id === step
+              const complete = item.id < step
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={!complete}
+                  onClick={() => { setDirection(-1); setStep(item.id); setError('') }}
+                  aria-current={active ? 'step' : undefined}
+                  className={`relative flex min-h-14 items-center justify-center gap-2 overflow-hidden rounded-[1rem] px-2 text-left transition sm:justify-start sm:px-3 ${active ? 'bg-slate-950 text-white shadow-[0_12px_28px_rgba(15,23,42,.2)]' : complete ? 'bg-white/75 text-slate-700 hover:bg-white' : 'text-slate-400'}`}
+                >
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${active ? 'bg-blue-600 text-white' : complete ? 'bg-emerald-50 text-emerald-700' : 'bg-white/70 text-slate-400'}`}>{complete ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}</span>
+                  <span className="hidden min-w-0 sm:block"><b className="block truncate text-[10px] font-black">{item.short}</b><small className={`mt-0.5 block text-[8px] font-bold uppercase tracking-[.11em] ${active ? 'text-blue-200' : 'text-slate-400'}`}>Step 0{item.id}</small></span>
+                </button>
+              )
+            })}
+          </nav>
+        ) : null}
+
         {result ? (
-          <ResultView result={result} onEdit={goBack} onSave={() => { saveGuestDiagnosticHandoff(answers); captureAnalyticsEvent('diagnostic_signup_started', { source: 'result' }); navigate('/register') }} />
+          <ResultView result={result} onEdit={goBack} onSave={() => void openSavedPlan()} saving={openingPlan} error={error} />
         ) : (
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.22fr)_minmax(300px,.78fr)]">
             <section className="overflow-hidden rounded-[2.2rem] border border-white/90 bg-white/55 shadow-[0_30px_90px_rgba(30,64,175,0.14)] backdrop-blur-2xl">
@@ -302,6 +361,56 @@ function TimelineStep({ answers, set }: { answers: Answers; set: <K extends keyo
   return <><ChoiceGrid items={STAGES} value={answers.applicationStage} onChange={(value) => set('applicationStage', value)} legend="Current application stage" /><div className="mt-7 rounded-[1.5rem] border border-white bg-white/50 p-5"><div className="flex items-center justify-between gap-4"><div><FieldLabel>Weekly time available</FieldLabel><p className="text-sm text-slate-500">A realistic commitment is more useful than an ambitious guess.</p></div><span className="rounded-xl bg-slate-950 px-3 py-2 text-sm font-black text-white">{answers.weeklyHours}h</span></div><input aria-label="Weekly study hours" type="range" min={1} max={30} value={answers.weeklyHours} onChange={(event) => set('weeklyHours', Number(event.target.value))} className="mt-6 w-full accent-blue-600" /><div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>1 hour</span><span>30 hours</span></div></div></>
 }
 
-function ResultView({ result, onEdit, onSave }: { result: GuestDiagnosticResult; onEdit: () => void; onSave: () => void }) {
-  return <section className="overflow-hidden rounded-[2.3rem] border border-white/90 bg-white/56 shadow-[0_34px_100px_rgba(30,64,175,.16)] backdrop-blur-2xl"><div className="grid gap-8 border-b border-white/80 p-6 sm:p-9 lg:grid-cols-[auto_1fr_auto] lg:items-center"><div className="relative grid h-40 w-40 place-items-center rounded-full" style={{ background: `conic-gradient(#2563eb ${result.overallScore}%, rgba(226,232,240,.75) 0)` }}><div className="grid h-[128px] w-[128px] place-items-center rounded-full border border-white bg-white/85 text-center shadow-inner backdrop-blur-xl"><div><b className="block text-4xl font-black tracking-tight">{result.overallScore}</b><span className="text-[9px] font-black uppercase tracking-[.15em] text-slate-500">Readiness</span></div></div></div><div><span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase tracking-[.16em] text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> Preview ready</span><h2 className="mt-4 text-3xl font-black tracking-[-.04em] sm:text-4xl">{result.readinessLabel}</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">{result.summary}</p></div><div className="flex flex-col gap-2"><button type="button" onClick={onSave} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 text-sm font-black text-white shadow-[0_16px_38px_rgba(239,68,68,.25)] hover:bg-red-600">Save my journey <ArrowRight className="h-4 w-4" /></button><button type="button" onClick={onEdit} className="min-h-11 rounded-2xl px-4 text-xs font-black text-slate-600 hover:bg-white/70">Edit answers</button></div></div><div className="grid gap-4 p-6 sm:grid-cols-2 sm:p-9 lg:grid-cols-4">{result.categories.map((category) => <article key={category.key} className="rounded-[1.5rem] border border-white bg-white/58 p-5 shadow-[0_14px_40px_rgba(15,23,42,.07)]"><div className="flex items-start justify-between gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700"><BookOpenCheck className="h-5 w-5" /></div><b className="text-2xl font-black">{category.score}</b></div><h3 className="mt-5 text-sm font-black">{category.label}</h3><p className="mt-1 text-[10px] font-black uppercase tracking-[.13em] text-blue-700">{category.status}</p><p className="mt-3 text-xs leading-5 text-slate-500">{category.summary}</p></article>)}</div><div className="border-t border-white/80 bg-white/25 p-6 sm:p-9"><div className="flex items-center gap-3"><Target className="h-5 w-5 text-red-500" /><h3 className="text-xl font-black">Your next three priorities</h3></div><div className="mt-5 grid gap-4 lg:grid-cols-3">{result.priorities.map((priority, index) => <article key={priority.key} className="rounded-[1.5rem] border border-white bg-white/60 p-5"><span className="text-[10px] font-black uppercase tracking-[.18em] text-red-500">Priority 0{index + 1}</span><h4 className="mt-3 text-base font-black">{priority.title}</h4><p className="mt-2 text-xs leading-5 text-slate-600">{priority.body}</p></article>)}</div><div className="mt-6 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs leading-5 text-blue-950"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" /><p>This preview is deterministic planning guidance—not an admission probability. University requirements, tuition and deadlines must be verified against official sources.</p></div></div></section>
+function ResultView({ result, onEdit, onSave, saving, error }: { result: GuestDiagnosticResult; onEdit: () => void; onSave: () => void; saving: boolean; error: string }) {
+  const scoreStyle = { background: `conic-gradient(#2563eb ${result.overallScore}%, rgba(226,232,240,.75) 0)` }
+  return (
+    <section className="overflow-hidden rounded-[2.3rem] border border-white/90 bg-white/60 shadow-[0_34px_100px_rgba(30,64,175,.16)] backdrop-blur-2xl">
+      <div className="grid gap-8 border-b border-white/80 p-6 sm:p-9 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+        <div className="relative grid h-40 w-40 place-items-center rounded-full shadow-[0_18px_55px_rgba(37,99,235,.2)]" style={scoreStyle}>
+          <div className="grid h-[128px] w-[128px] place-items-center rounded-full border border-white bg-white/90 text-center shadow-inner backdrop-blur-xl">
+            <div><b className="block text-4xl font-black tracking-tight">{result.overallScore}</b><span className="text-[9px] font-black uppercase tracking-[.15em] text-slate-500">Readiness</span></div>
+          </div>
+        </div>
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[10px] font-black uppercase tracking-[.16em] text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> Your preview is ready</span>
+          <h2 className="mt-4 text-3xl font-black tracking-[-.04em] sm:text-4xl">{result.readinessLabel}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">{result.summary}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button type="button" disabled={saving} onClick={onSave} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 text-sm font-black text-white shadow-[0_16px_38px_rgba(239,68,68,.25)] transition hover:-translate-y-0.5 hover:bg-red-600 disabled:cursor-wait disabled:opacity-70">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {saving ? 'Saving your plan…' : 'Save & see my plan'}
+            {!saving ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
+          </button>
+          <button type="button" disabled={saving} onClick={onEdit} className="min-h-11 rounded-2xl px-4 text-xs font-black text-slate-600 hover:bg-white/70 disabled:opacity-50">Edit answers</button>
+          {error ? <p role="alert" className="max-w-xs text-xs font-bold leading-5 text-red-600">{error}</p> : null}
+        </div>
+      </div>
+
+      <div className="grid gap-4 p-6 sm:grid-cols-2 sm:p-9 lg:grid-cols-4">
+        {result.categories.map((category) => (
+          <article key={category.key} className="rounded-[1.5rem] border border-white bg-white/65 p-5 shadow-[0_14px_40px_rgba(15,23,42,.07)]">
+            <div className="flex items-start justify-between gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700"><BookOpenCheck className="h-5 w-5" /></div><b className="text-2xl font-black">{category.score}</b></div>
+            <h3 className="mt-5 text-sm font-black">{category.label}</h3>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[.13em] text-blue-700">{category.status}</p>
+            <p className="mt-3 text-xs leading-5 text-slate-500">{category.summary}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="border-t border-white/80 bg-white/30 p-6 sm:p-9">
+        <div className="flex items-center gap-3"><Target className="h-5 w-5 text-red-500" /><h3 className="text-xl font-black">Your next three priorities</h3></div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {result.priorities.map((priority, index) => (
+            <article key={priority.key} className="rounded-[1.5rem] border border-white bg-white/65 p-5 shadow-[0_12px_35px_rgba(15,23,42,.05)]">
+              <span className="text-[10px] font-black uppercase tracking-[.18em] text-red-500">Priority 0{index + 1}</span>
+              <h4 className="mt-3 text-base font-black">{priority.title}</h4>
+              <p className="mt-2 text-xs leading-5 text-slate-600">{priority.body}</p>
+            </article>
+          ))}
+        </div>
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/65 p-4 text-xs leading-5 text-blue-950"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" /><p>This is transparent planning guidance—not an admission probability. Always verify university requirements, tuition and deadlines on official sources.</p></div>
+      </div>
+    </section>
+  )
 }

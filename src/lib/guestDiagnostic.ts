@@ -47,7 +47,7 @@ export type GuestDiagnosticResult = {
   }>
 }
 
-type DiagnosticRecord = {
+export type DiagnosticRecord = {
   id: string
   status: 'IN_PROGRESS' | 'COMPLETED' | 'CLAIMED'
   answers: Partial<GuestDiagnosticAnswers>
@@ -59,6 +59,9 @@ type DiagnosticRecord = {
 
 const TOKEN_KEY = 'profai-guest-diagnostic-token-v1'
 const HANDOFF_KEY = 'profai-guest-diagnostic-handoff-v1'
+const DESTINATION_KEY = 'profai-guest-diagnostic-destination-v1'
+const INVITATION_DISMISSED_KEY = 'profai-guest-diagnostic-invitation-v1'
+const INVITATION_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000
 
 function tokenHeaders(token: string) {
   return { 'x-guest-diagnostic-token': token }
@@ -66,6 +69,41 @@ function tokenHeaders(token: string) {
 
 function readToken() {
   try { return window.localStorage.getItem(TOKEN_KEY) } catch { return null }
+}
+
+export function hasGuestDiagnosticSession() {
+  return Boolean(readToken())
+}
+
+export function shouldShowGuestDiagnosticInvitation() {
+  try {
+    const dismissedAt = Number(window.localStorage.getItem(INVITATION_DISMISSED_KEY) ?? 0)
+    return !dismissedAt || Date.now() - dismissedAt >= INVITATION_COOLDOWN_MS
+  } catch {
+    return true
+  }
+}
+
+export function dismissGuestDiagnosticInvitation() {
+  try { window.localStorage.setItem(INVITATION_DISMISSED_KEY, String(Date.now())) } catch { /* no-op */ }
+}
+
+export function rememberGuestDiagnosticDestination() {
+  try { window.sessionStorage.setItem(DESTINATION_KEY, '/journey-plan') } catch { /* no-op */ }
+}
+
+export function takeGuestDiagnosticDestination(fallback = '/dashboard') {
+  try {
+    const destination = window.sessionStorage.getItem(DESTINATION_KEY)
+    window.sessionStorage.removeItem(DESTINATION_KEY)
+    return destination === '/journey-plan' ? destination : fallback
+  } catch {
+    return fallback
+  }
+}
+
+export function peekGuestDiagnosticDestination() {
+  try { return window.sessionStorage.getItem(DESTINATION_KEY) === '/journey-plan' ? '/journey-plan' : null } catch { return null }
 }
 
 function saveToken(token: string) {
@@ -115,14 +153,24 @@ export async function completeGuestDiagnostic(token: string, answers: GuestDiagn
   return apiClient.post<{ diagnostic: DiagnosticRecord }>('/guest-diagnostic/complete', { answers }, { auth: false, headers: tokenHeaders(token) })
 }
 
+export async function claimGuestDiagnostic(token: string) {
+  const response = await apiClient.post<{ diagnostic: DiagnosticRecord }>('/guest-diagnostic/claim', undefined, { headers: tokenHeaders(token) })
+  clearGuestDiagnosticToken()
+  return response.diagnostic
+}
+
 export async function claimStoredGuestDiagnostic() {
   const token = readToken()
   if (!token) return false
   try {
-    await apiClient.post('/guest-diagnostic/claim', undefined, { headers: tokenHeaders(token) })
-    clearGuestDiagnosticToken()
+    await claimGuestDiagnostic(token)
     return true
   } catch {
     return false
   }
+}
+
+export async function getMyJourneyPlan() {
+  const response = await apiClient.get<{ diagnostic: DiagnosticRecord | null }>('/guest-diagnostic/mine')
+  return response.diagnostic
 }

@@ -10,7 +10,9 @@ import {
   Clock3,
   Flame,
   GraduationCap,
+  MapPin,
   Mic2,
+  Route,
   Settings,
   RefreshCw,
   Sparkles,
@@ -107,6 +109,34 @@ function StatCard({
       <p className={`dashboard-stat-value ${value === 'Unranked' ? 'dashboard-stat-value-long' : ''} font-black leading-none tracking-tight text-slate-950`}>{value}</p>
       <p className="dashboard-stat-note text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{note}</p>
     </article>
+  )
+}
+
+function JourneyPlanPreview({ plan, onOpen }: { plan: NonNullable<DashboardOverview['journeyPlan']>; onOpen: () => void }) {
+  const destinations = plan.answers.destinations?.slice(0, 2).join(' · ') || 'Destination not set'
+  const priorities = plan.result.priorities.slice(0, 3)
+  const scoreStyle = { background: `conic-gradient(#60a5fa ${plan.result.overallScore}%, rgba(255,255,255,.14) 0)` }
+
+  return (
+    <section className="relative mt-4 overflow-hidden rounded-[2rem] bg-slate-950 p-5 text-white shadow-[0_26px_72px_rgba(15,23,42,.22)] sm:p-7">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_16%,rgba(37,99,235,.55),transparent_30%),radial-gradient(circle_at_8%_100%,rgba(239,68,68,.25),transparent_34%)]" />
+      <div className="pointer-events-none absolute -right-14 -top-20 h-64 w-64 rounded-full border border-white/10" />
+      <div className="relative grid gap-6 xl:grid-cols-[1fr_minmax(28rem,.95fr)_auto] xl:items-center">
+        <div className="flex items-center gap-4">
+          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-[0_14px_42px_rgba(37,99,235,.28)]" style={scoreStyle}>
+            <div className="grid h-[76px] w-[76px] place-items-center rounded-full bg-slate-950 text-center"><div><b className="block text-2xl font-black leading-none">{plan.result.overallScore}</b><span className="mt-1 block text-[7px] font-black uppercase tracking-[.13em] text-blue-200">Readiness</span></div></div>
+          </div>
+          <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.18em] text-blue-200">Your university journey</p><h2 className="mt-1 text-xl font-black tracking-[-.035em] sm:text-2xl">{plan.result.readinessLabel}</h2><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-slate-300"><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><GraduationCap className="h-3.5 w-3.5 text-red-300" /> {plan.answers.intendedMajor || 'Major not set'}</span><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><MapPin className="h-3.5 w-3.5 text-blue-300" /> {destinations}</span></div></div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-3">
+          {priorities.map((priority, index) => <div key={priority.key} className="rounded-2xl border border-white/10 bg-white/[.07] p-3 backdrop-blur-xl"><span className="text-[8px] font-black uppercase tracking-[.15em] text-red-300">Next 0{index + 1}</span><p className="mt-1.5 text-[11px] font-black leading-4 text-white">{priority.title}</p></div>)}
+        </div>
+
+        <button type="button" onClick={onOpen} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-slate-950 shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50">Open my plan <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+      </div>
+      <div className="relative mt-5 flex items-start gap-2 border-t border-white/10 pt-4 text-[10px] font-semibold leading-5 text-slate-400"><Route className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-300" /><span>Your saved readiness priorities now stay with your ProfAI account and can be opened from any device.</span></div>
+    </section>
   )
 }
 
@@ -404,6 +434,8 @@ export default function Dashboard() {
             </article>
           </div>
         </section>
+
+        {overview.journeyPlan?.result ? <JourneyPlanPreview plan={overview.journeyPlan} onOpen={() => navigate('/journey-plan')} /> : null}
 
         <section className="dashboard-entrance-learning dashboard-glass-card mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">

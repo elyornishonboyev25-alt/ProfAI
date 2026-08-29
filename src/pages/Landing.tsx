@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
+import GuestDiagnosticInvitation from '@/components/diagnostic/GuestDiagnosticInvitation'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -388,6 +389,7 @@ export default function Landing() {
   return (
     <div className="landing-page relative min-h-screen overflow-x-clip text-slate-950">
       <div className="landing-backdrop" aria-hidden="true"><div className="landing-ambient landing-ambient-red" /><div className="landing-ambient landing-ambient-blue" /><div className="landing-ambient landing-ambient-center" /></div>
+      {guestDiagnosticEnabled ? <GuestDiagnosticInvitation onStart={startJourney} /> : null}
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-5">
         <div className={`landing-nav landing-nav-fixed mx-auto flex max-w-7xl items-center justify-between rounded-[1.6rem] px-3.5 py-3 sm:px-5 ${scrolled ? 'is-scrolled' : ''}`}>
@@ -398,14 +400,14 @@ export default function Landing() {
           </nav>
           <div className="relative flex items-center gap-2">
             <button type="button" onClick={() => navigate('/login')} className="hidden rounded-full px-4 py-2.5 text-sm font-black text-slate-700 hover:bg-white/70 sm:inline-flex">Sign in</button>
-            <button type="button" onClick={() => navigate('/register')} className="hidden items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)] hover:bg-slate-800 sm:inline-flex">Start free <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={startJourney} className="hidden items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)] hover:bg-slate-800 sm:inline-flex">Start free <ArrowRight className="h-4 w-4" /></button>
             <button type="button" onClick={() => setMobileNavOpen((value) => !value)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-800 lg:hidden" aria-label="Toggle navigation" aria-expanded={mobileNavOpen}>{mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
         </div>
         <AnimatePresence initial={false}>{mobileNavOpen ? <motion.nav initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.2, ease: EASE }} className="landing-nav mx-auto mt-2 max-w-7xl rounded-3xl p-3 lg:hidden" aria-label="Mobile landing navigation">
           {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="block w-full rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-white/70">{item.label}</button>)}
           <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-white/70">Support</a>
-          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/70 pt-3"><button type="button" onClick={() => navigate('/login')} className="rounded-2xl border border-white bg-white/65 px-4 py-3 text-sm font-black">Sign in</button><button type="button" onClick={() => navigate('/register')} className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">Start free</button></div>
+          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/70 pt-3"><button type="button" onClick={() => navigate('/login')} className="rounded-2xl border border-white bg-white/65 px-4 py-3 text-sm font-black">Sign in</button><button type="button" onClick={startJourney} className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">Start free</button></div>
         </motion.nav> : null}</AnimatePresence>
       </header>
 

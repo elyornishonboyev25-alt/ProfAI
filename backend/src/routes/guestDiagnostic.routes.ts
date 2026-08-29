@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { Router, type Request } from 'express'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/requireFeature.js'
@@ -90,6 +90,21 @@ router.post('/complete', asyncHandler(async (req, res) => {
     data: { answers: answers as Prisma.InputJsonValue, result: result as unknown as Prisma.InputJsonValue, status: 'COMPLETED', completedAt },
   })
   return res.json({ diagnostic: serializeDiagnostic(updated) })
+}))
+
+router.get('/mine', requireAuth, asyncHandler(async (req, res) => {
+  const diagnostic = await prisma.guestDiagnostic.findFirst({
+    where: {
+      claimedById: req.user!.id,
+      status: 'CLAIMED',
+      result: { not: Prisma.DbNull },
+    },
+    orderBy: [{ claimedAt: 'desc' }, { completedAt: 'desc' }],
+  })
+
+  return res.json({
+    diagnostic: diagnostic ? serializeDiagnostic(diagnostic) : null,
+  })
 }))
 
 router.post('/claim', requireAuth, asyncHandler(async (req, res) => {

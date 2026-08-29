@@ -38,7 +38,7 @@ import {
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
 import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
-import { clearGuestDiagnosticHandoff, loadGuestDiagnosticHandoff } from '@/lib/guestDiagnostic'
+import { clearGuestDiagnosticHandoff, loadGuestDiagnosticHandoff, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -363,7 +363,7 @@ export default function Onboarding() {
         message: 'Your profile is editable from Account settings at any time.',
       })
     })
-    navigate('/dashboard', { replace: true })
+    navigate(takeGuestDiagnosticDestination('/dashboard'), { replace: true })
   }
 
   const generatePlan = () => {
@@ -441,7 +441,7 @@ export default function Onboarding() {
           title: 'Your study plan is ready',
           message: 'Your personalized 7-day rolling plan is live on your dashboard.',
         })
-        navigate('/dashboard')
+        navigate(takeGuestDiagnosticDestination('/dashboard'))
       }, 1100)
     }, 2200)
   }

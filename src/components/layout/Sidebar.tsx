@@ -35,6 +35,7 @@ const JOURNEY_PRIMARY_ITEMS: NavItem[] = [
 
 const JOURNEY_SECONDARY_ITEMS: NavItem[] = [
   { id: 'performance', label: 'Progress', icon: BarChart3, path: '/profile' },
+  { id: 'learning-center', label: 'Learning Center', icon: Building2, path: '/learning-center' },
   { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
 ]
@@ -54,6 +55,7 @@ const LEGACY_PRIMARY_ITEMS: NavItem[] = [
 ]
 
 const LEGACY_SECONDARY_ITEMS: NavItem[] = [
+  { id: 'learning-center', label: 'Learning Center', icon: Building2, path: '/learning-center' },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
   { id: 'performance', label: 'Performance', icon: BarChart3, path: '/profile' },
   { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },

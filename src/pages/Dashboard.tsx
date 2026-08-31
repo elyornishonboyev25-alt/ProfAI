@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Award,
   BarChart3,
+  Building2,
   BookOpen,
   CheckCircle2,
   Clock3,
@@ -244,6 +245,9 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => navigate('/learning-center')} aria-label="Open Learning Center" title="Learning Center" className="dashboard-icon-button">
+              <Building2 className="h-5 w-5" />
+            </button>
             <NotificationsBell />
             <button type="button" onClick={() => navigate('/account')} aria-label="Profile settings" className="dashboard-icon-button">
               <Settings className="h-5 w-5" />

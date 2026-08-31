@@ -85,6 +85,9 @@ const AdmissionUniversities = lazy(() => import('@/pages/AdmissionUniversities')
 const AdmissionUniversity = lazy(() => import('@/pages/AdmissionUniversity'))
 const AITutor = lazy(() => import('@/pages/AITutor'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
+const LearningCenterPortal = lazy(() => import('@/pages/LearningCenterPortal'))
+const LearningCenterWorkspace = lazy(() => import('@/pages/LearningCenterWorkspace'))
+const LearningCenterJoin = lazy(() => import('@/pages/LearningCenterJoin'))
 
 function toDateISO(date: Date) {
   const year = date.getFullYear()
@@ -220,6 +223,7 @@ function App() {
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
   const isAuthPage = pathname === '/login' || pathname === '/register'
+  const isLearningCenterMode = pathname === '/learning-center' || pathname.startsWith('/learning-center/')
   // Guests at the root get the full-bleed marketing landing (its own nav + footer),
   // so the global top-nav and footer chrome are suppressed there.
   const isGuestLanding = pathname === '/' && hydrated && !user
@@ -303,6 +307,7 @@ function App() {
   const isPublicStandalone =
     isAuthPage ||
     isGuestExperience ||
+    isLearningCenterMode ||
     pathname === '/premium' ||
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')
@@ -341,7 +346,7 @@ function App() {
     !isIeltsMockMode &&
     pathname !== '/onboarding' &&
     !isLiveCommunityMode
-  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic
+  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic && !isLearningCenterMode
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)
@@ -427,10 +432,10 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {!isAiTutorMode && !isGuestExperience ? <DeferredFloatingAIAssistant /> : null}
-          {!isExamModeActive && !isGuestExperience ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive && !isAiTutorMode && !isGuestExperience ? <FullscreenToggle /> : null}
-          <WordLookupLayer />
+          {!isAiTutorMode && !isGuestExperience && !isLearningCenterMode ? <DeferredFloatingAIAssistant /> : null}
+          {!isExamModeActive && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive && !isAiTutorMode && !isGuestExperience && !isLearningCenterMode ? <FullscreenToggle /> : null}
+          {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
       ) : null}
 
@@ -830,6 +835,9 @@ function App() {
                       <Route path="/premium" element={<AnimatedRoute><Premium /></AnimatedRoute>} />
                       <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
                       <Route path="/register" element={<AnimatedRoute><Register /></AnimatedRoute>} />
+                      <Route path="/learning-center" element={<AnimatedRoute><LearningCenterPortal /></AnimatedRoute>} />
+                      <Route path="/learning-center/join/:code" element={<ProtectedRoute><AnimatedRoute><LearningCenterJoin /></AnimatedRoute></ProtectedRoute>} />
+                      <Route path="/learning-center/:workspaceSlug/*" element={<ProtectedRoute><AnimatedRoute><LearningCenterWorkspace /></AnimatedRoute></ProtectedRoute>} />
                       <Route
                         path="/onboarding"
                         element={
@@ -845,7 +853,7 @@ function App() {
                 </Suspense>
               </ErrorBoundary>
 
-              {!isAuthPage && !isGuestExperience && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && !isAiTutorMode && (
+              {!isAuthPage && !isGuestExperience && !isLearningCenterMode && !isTestMode && !isVocabularyMode && !isTrackMode && !isProfileStandalone && !isAiTutorMode && (
                 <div className="mt-14">
                   <Footer />
                 </div>

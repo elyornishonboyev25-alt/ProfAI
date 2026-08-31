@@ -31,6 +31,8 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { saveWritingAnalysis } from '@/utils/writingAnalysisStorage'
+import { useSearchParams } from 'react-router-dom'
+import { learningCenterApi } from '@/features/learningCenter/api'
 
 type Props = {
   fullTest: WritingFullTest
@@ -67,6 +69,7 @@ export default function IELTSWritingFullTestInterface({
   autoTimerEnabled,
   autoDurationMinutes,
 }: Props) {
+  const [searchParams] = useSearchParams()
   const tasks = fullTest.tasks
   const defaultDuration = tasks.reduce((total, task) => total + task.durationMinutes, 0)
   const effectiveDuration =
@@ -217,6 +220,29 @@ export default function IELTSWritingFullTestInterface({
       )
 
       if (user && savedEntries[0]) {
+        void learningCenterApi.syncResult({
+          sourceKey: `writing-full-${fullTest.id}-${savedEntries[0].attemptKey}`,
+          sourceType: 'IELTS_WRITING_FULL_TEST',
+          examType: 'IELTS',
+          skill: 'IELTS_WRITING',
+          title: fullTest.title,
+          score: overallBand,
+          maxScore: 9,
+          durationSec: timeSpent,
+          completedAt: savedEntries[0].savedAt,
+          assignmentId: searchParams.get('assignmentId') ?? undefined,
+          breakdown: {
+            wordCount: totalWordCount,
+            tasks: tasks.map((task, index) => ({
+              taskType: task.taskType,
+              score: results[index].overallBand,
+              taskAchievement: results[index].taskAchievement,
+              coherenceCohesion: results[index].coherenceCohesion,
+              lexicalResource: results[index].lexicalResource,
+              grammaticalRange: results[index].grammaticalRange,
+            })),
+          },
+        }).catch(() => {})
         void recordXpActivity({
           source: 'WRITING',
           eventKey: savedEntries[0].attemptKey,
@@ -246,6 +272,7 @@ export default function IELTSWritingFullTestInterface({
     effectiveDuration,
     fullTest.id,
     fullTest.title,
+    searchParams,
     tasks,
     timeRemaining,
     timerEnabled,

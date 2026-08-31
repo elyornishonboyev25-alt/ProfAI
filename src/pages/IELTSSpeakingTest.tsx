@@ -36,6 +36,7 @@ import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import { markFullMockSectionComplete } from '@/utils/ieltsMockCatalog'
 import { saveSpeakingSession } from '@/lib/speakingApi'
+import { learningCenterApi } from '@/features/learningCenter/api'
 
 // Single test runner. There are 3 launch modes (Part 1, Part 2 cue card, Part 3)
 // for the daily roadmap, and a 4th "full mock" that delegates to the live
@@ -153,6 +154,25 @@ export default function IELTSSpeakingTest() {
             summary: analysis.summary,
           })
           if (user) {
+            void learningCenterApi.syncResult({
+              sourceKey: `speaking-${localSession.id}`,
+              sourceType: 'IELTS_SPEAKING_MOCK',
+              examType: 'IELTS',
+              skill: 'IELTS_SPEAKING',
+              title: mode.mock.title,
+              score: analysis.overallBand,
+              maxScore: 9,
+              durationSec: analysis.stats.durationSec,
+              completedAt: new Date().toISOString(),
+              assignmentId: new URLSearchParams(location.search).get('assignmentId') ?? undefined,
+              breakdown: {
+                fluency: analysis.fluencyBand,
+                lexical: analysis.lexicalBand,
+                grammar: analysis.grammarBand,
+                pronunciation: analysis.pronunciationBand,
+                wordCount: analysis.stats.wordCount,
+              },
+            }).catch(() => {})
             void saveSpeakingSession({
               eventKey: localSession.id,
               mode: 'full_mock',

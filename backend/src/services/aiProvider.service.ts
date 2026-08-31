@@ -12,6 +12,7 @@ export type AiGenerationPurpose =
   | 'speaking_response_analysis'
   | 'weekly_plan'
   | 'coach_report'
+  | 'center_performance_analysis'
   | 'legacy_ai_chat'
 
 export type AiGenerationResult = {

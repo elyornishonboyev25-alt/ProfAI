@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Clock3, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
@@ -45,6 +45,7 @@ function LevelUpConfetti() {
 
 export default function TestRunner() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const authUser = useAuthStore((state: AuthState) => state.user)
@@ -134,6 +135,7 @@ export default function TestRunner() {
       const timeSpentSec = Math.max(1, test.durationSec - remainingSec)
       const payload = await apiClient.post<SubmitAttemptResponse>(`/tests/${id}/submit`, {
         timeSpentSec,
+        assignmentId: searchParams.get('assignmentId') ?? undefined,
         answers: Object.entries(answers).map(([questionId, optionId]) => ({
           questionId,
           optionId,

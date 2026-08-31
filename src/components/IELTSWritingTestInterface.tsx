@@ -36,6 +36,8 @@ import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import type { WritingTask, LineChartData, ChartSeries } from '@/data/writingTestData'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
+import { useSearchParams } from 'react-router-dom'
+import { learningCenterApi } from '@/features/learningCenter/api'
 
 type Props = {
   task: WritingTask
@@ -291,6 +293,7 @@ export default function IELTSWritingTestInterface({
   autoTimerEnabled,
   autoDurationMinutes,
 }: Props) {
+  const [searchParams] = useSearchParams()
   const [phase, setPhase] = useState<'landing' | 'writing' | 'submitted'>('landing')
   const [timerEnabled, setTimerEnabled] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState(task.durationMinutes * 60)
@@ -413,6 +416,26 @@ export default function IELTSWritingTestInterface({
         result,
       )
       if (user) {
+        void learningCenterApi.syncResult({
+          sourceKey: savedEntry.attemptKey,
+          sourceType: 'IELTS_WRITING_AI_EVALUATION',
+          examType: 'IELTS',
+          skill: 'IELTS_WRITING',
+          title: task.title,
+          score: result.overallBand,
+          maxScore: 9,
+          durationSec: timeSpent,
+          completedAt: savedEntry.savedAt,
+          assignmentId: searchParams.get('assignmentId') ?? undefined,
+          breakdown: {
+            taskType: task.taskType,
+            taskAchievement: result.taskAchievement,
+            coherenceCohesion: result.coherenceCohesion,
+            lexicalResource: result.lexicalResource,
+            grammaticalRange: result.grammaticalRange,
+            wordCount,
+          },
+        }).catch(() => {})
         void recordXpActivity({
           source: 'WRITING',
           eventKey: savedEntry.attemptKey,
@@ -434,7 +457,7 @@ export default function IELTSWritingTestInterface({
     } finally {
       setEvaluating(false)
     }
-  }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, writingTrial.locked, writingTrial.consume])
+  }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, searchParams, writingTrial.locked, writingTrial.consume])
 
   const handleExitConfirm = useCallback(() => {
     setShowExitConfirm(false)

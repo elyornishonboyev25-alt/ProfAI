@@ -1,4 +1,4 @@
-import { Difficulty, Prisma, TestCategory } from '@prisma/client'
+import { Difficulty, LearningSubmissionStatus, Prisma, TestCategory } from '@prisma/client'
 import { type Response, Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
@@ -27,6 +27,7 @@ const testListQuerySchema = z.object({
 
 const submitAttemptSchema = z.object({
   timeSpentSec: z.coerce.number().int().min(1),
+  assignmentId: z.string().min(1).max(191).optional(),
   answers: z
     .array(
       z.object({
@@ -860,7 +861,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const testId = req.params.id
-    const { answers, timeSpentSec } = req.body
+    const { answers, timeSpentSec, assignmentId } = req.body
 
     const test = await prisma.test.findUnique({
       where: { id: testId },
@@ -1006,6 +1007,17 @@ router.post(
           },
         },
       })
+
+      if (assignmentId) {
+        await tx.learningCenterAssignmentSubmission.updateMany({
+          where: { assignmentId, studentId: userId },
+          data: {
+            status: LearningSubmissionStatus.COMPLETED,
+            progress: 100,
+            submittedAt: now,
+          },
+        })
+      }
 
       await tx.user.update({
         where: { id: userId },

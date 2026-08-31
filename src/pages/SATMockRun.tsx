@@ -49,6 +49,7 @@ import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
+import { learningCenterApi } from '@/features/learningCenter/api'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
 const FULLSCREEN_RECOVERY_SECONDS = 30
@@ -148,6 +149,44 @@ export default function SATMockRun() {
     if (!user || !attempt || attempt.status !== 'submitted' || !attempt.submittedAt) return
     const sourceKey = `${test.id}-${attempt.submittedAt}`
     const report = scoreSATModules(test.modules, attempt.answers)
+    const topicStats = new Map<string, { correct: number; total: number }>()
+    test.modules.flatMap((module) => module.questions).forEach((question) => {
+      const current = topicStats.get(question.domain) ?? { correct: 0, total: 0 }
+      current.total += 1
+      if (isSATAnswerCorrect(question, attempt.answers[question.id])) current.correct += 1
+      topicStats.set(question.domain, current)
+    })
+    const assignmentId = searchParams.get('assignmentId') ?? undefined
+    void learningCenterApi.syncResult({
+      sourceKey: `sat-${sourceKey}`,
+      sourceType: 'SAT_BLUEBOOK_MOCK',
+      examType: 'SAT',
+      skill: section === 'math' ? 'SAT_MATH' : section === 'reading-writing' ? 'SAT_READING_WRITING' : 'SAT_OVERALL',
+      title: test.title,
+      score: section === 'math'
+        ? Math.round((report.mathRange[0] + report.mathRange[1]) / 20) * 10
+        : section === 'reading-writing'
+          ? Math.round((report.readingWritingRange[0] + report.readingWritingRange[1]) / 20) * 10
+          : report.midpoint,
+      maxScore: section ? 800 : 1600,
+      accuracy: report.percent,
+      durationSec: Math.max(0, Math.round((attempt.submittedAt - attempt.startedAt) / 1000)),
+      completedAt: new Date(attempt.submittedAt).toISOString(),
+      assignmentId,
+      breakdown: {
+        readingWritingRange: report.readingWritingRange,
+        mathRange: report.mathRange,
+        correct: report.correct,
+        incorrect: report.incorrect,
+        unanswered: report.unanswered,
+        topics: [...topicStats].map(([topic, value]) => ({
+          topic,
+          correct: value.correct,
+          total: value.total,
+          accuracy: Math.round((value.correct / Math.max(1, value.total)) * 100),
+        })),
+      },
+    }).catch(() => {})
     void recordXpActivity({
       source: 'SAT_PRACTICE',
       eventKey: sourceKey,
@@ -158,7 +197,7 @@ export default function SATMockRun() {
       markXpActivitySynced(user.id, sourceKey)
       updateUserProgress({ xp: reward.totalXp, level: reward.level })
     }).catch(() => {})
-  }, [attempt, test, updateUserProgress, user?.id])
+  }, [attempt, searchParams, section, test, updateUserProgress, user?.id])
 
   const pauseAndSaveAttempt = useCallback(() => {
     const current = attemptRef.current

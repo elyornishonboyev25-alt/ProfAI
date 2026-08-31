@@ -24,6 +24,7 @@ import sharedResultsRoutes from './routes/sharedResults.routes.js'
 import aiWorkspaceRoutes from './routes/aiWorkspace.routes.js'
 import aiGenerationRoutes from './routes/aiGeneration.routes.js'
 import guestDiagnosticRoutes from './routes/guestDiagnostic.routes.js'
+import learningCentersRoutes from './routes/learningCenters.routes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -79,6 +80,7 @@ app.use('/api/v1/reviews', reviewsRoutes)
 app.use('/api/v1/shared-results', sharedResultsRoutes)
 app.use('/api/v1/ai-workspace', aiWorkspaceRoutes)
 app.use('/api/v1/guest-diagnostic', guestDiagnosticRoutes)
+app.use('/api/v1/learning-centers', learningCentersRoutes)
 
 app.get('/googleea0efe504503609e.html', (_req, res) => {
   res.type('html').send('google-site-verification: googleea0efe504503609e.html')

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 440" role="img" aria-labelledby="title desc">
+  <title id="title">Semicircle above a rectangle</title>
+  <desc id="desc">A semicircle with diameter JM sits above rectangle KMNO. Point L is the center, and K is the midpoint of JL.</desc>
+  <rect width="760" height="440" rx="18" fill="#fff"/>
+  <g fill="none" stroke="#0f172a" stroke-width="5" stroke-linejoin="round">
+    <path d="M120 245 A250 190 0 0 1 620 245"/>
+    <line x1="120" y1="245" x2="620" y2="245"/>
+    <path d="M280 245 V360 H620 V245"/>
+  </g>
+  <g fill="none" stroke="#334155" stroke-width="3">
+    <path d="M280 270 H305 V245"/><path d="M595 245 V270 H620"/>
+    <path d="M280 335 H305 V360"/><path d="M595 360 V335 H620"/>
+  </g>
+  <circle cx="370" cy="245" r="7" fill="#0f172a"/>
+  <g fill="#0f172a" font-family="Georgia, serif" font-size="28" font-style="italic">
+    <text x="91" y="257">J</text><text x="264" y="231">K</text><text x="380" y="231">L</text><text x="632" y="257">M</text>
+    <text x="257" y="395">O</text><text x="632" y="395">N</text>
+  </g>
+  <text x="370" y="418" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="18">Note: Figure not drawn to scale.</text>
+</svg>

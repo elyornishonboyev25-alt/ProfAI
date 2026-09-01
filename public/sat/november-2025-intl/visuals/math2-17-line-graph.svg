@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" role="img" aria-labelledby="title desc">
+  <title id="title">Graph of a decreasing linear function</title>
+  <desc id="desc">A coordinate plane showing a line with y-intercept 3 and x-intercept 3.</desc>
+  <defs>
+    <pattern id="minorGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+      <path d="M 15 0 L 0 0 0 15" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+    </pattern>
+    <pattern id="majorGrid" width="75" height="75" patternUnits="userSpaceOnUse">
+      <rect width="75" height="75" fill="url(#minorGrid)"/>
+      <path d="M 75 0 L 0 0 0 75" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    </pattern>
+    <clipPath id="plotClip"><rect x="55" y="30" width="660" height="390" rx="8"/></clipPath>
+  </defs>
+  <rect width="760" height="470" rx="18" fill="#fff"/>
+  <rect x="55" y="30" width="660" height="390" rx="8" fill="url(#majorGrid)" stroke="#cbd5e1"/>
+  <g stroke="#334155" stroke-width="2">
+    <line x1="55" y1="390" x2="715" y2="390"/>
+    <line x1="330" y1="30" x2="330" y2="420"/>
+  </g>
+  <g fill="#475569" font-family="Arial, sans-serif" font-size="15" text-anchor="middle">
+    <text x="110" y="413">−2</text><text x="165" y="413">−1.5</text><text x="220" y="413">−1</text>
+    <text x="275" y="413">−0.5</text><text x="330" y="413">0</text><text x="385" y="413">0.5</text>
+    <text x="440" y="413">1</text><text x="495" y="413">1.5</text><text x="550" y="413">2</text>
+    <text x="605" y="413">2.5</text><text x="660" y="413">3</text><text x="710" y="413">3.5</text>
+  </g>
+  <g fill="#475569" font-family="Arial, sans-serif" font-size="15" text-anchor="end">
+    <text x="320" y="395">0</text><text x="320" y="335">0.5</text><text x="320" y="275">1</text>
+    <text x="320" y="215">1.5</text><text x="320" y="155">2</text><text x="320" y="95">2.5</text><text x="320" y="35">3</text>
+  </g>
+  <g clip-path="url(#plotClip)">
+    <line x1="297" y1="-6" x2="693" y2="426" stroke="#60a5fa" stroke-width="4"/>
+  </g>
+  <text x="724" y="383" fill="#0f172a" font-family="Georgia, serif" font-size="22" font-style="italic">x</text>
+  <text x="340" y="24" fill="#0f172a" font-family="Georgia, serif" font-size="22" font-style="italic">y</text>
+</svg>

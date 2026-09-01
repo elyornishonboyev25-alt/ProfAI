@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" role="img" aria-labelledby="title desc">
+  <title id="title">Orientation of leaf pairs in grapevines</title>
+  <desc id="desc">For Amur, July, and graybark grapes, opposite-side leaf-pair orientations are more numerous than same-side orientations.</desc>
+  <rect width="820" height="600" rx="18" fill="#fff"/>
+  <text x="390" y="48" text-anchor="middle" fill="#0f172a" font-family="Georgia, serif" font-size="28" font-weight="700">Orientation of Leaf Pairs in Grapevines</text>
+  <g stroke="#94a3b8" stroke-width="1.5">
+    <line x1="110" y1="470" x2="610" y2="470"/><line x1="110" y1="403" x2="610" y2="403"/>
+    <line x1="110" y1="336" x2="610" y2="336"/><line x1="110" y1="269" x2="610" y2="269"/>
+    <line x1="110" y1="202" x2="610" y2="202"/><line x1="110" y1="135" x2="610" y2="135"/>
+    <line x1="110" y1="68" x2="610" y2="68"/>
+  </g>
+  <g fill="#334155" font-family="Arial, sans-serif" font-size="17" text-anchor="end">
+    <text x="98" y="476">0</text><text x="98" y="409">50</text><text x="98" y="342">100</text>
+    <text x="98" y="275">150</text><text x="98" y="208">200</text><text x="98" y="141">250</text><text x="98" y="74">300</text>
+  </g>
+  <line x1="110" y1="68" x2="110" y2="470" stroke="#0f172a" stroke-width="3"/>
+  <line x1="110" y1="470" x2="610" y2="470" stroke="#0f172a" stroke-width="3"/>
+  <g>
+    <rect x="190" y="276" width="58" height="194" fill="#64748b"/>
+    <rect x="248" y="202" width="58" height="268" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+    <rect x="306" y="108" width="58" height="362" fill="#111827"/>
+    <rect x="430" y="390" width="58" height="80" fill="#64748b"/>
+    <rect x="488" y="336" width="58" height="134" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+    <rect x="546" y="350" width="58" height="120" fill="#111827"/>
+  </g>
+  <g fill="#0f172a" font-family="Georgia, serif" font-size="20" text-anchor="middle">
+    <text x="277" y="505">opposite side</text><text x="517" y="505">same side</text>
+  </g>
+  <text x="360" y="548" text-anchor="middle" fill="#0f172a" font-family="Georgia, serif" font-size="21" font-weight="700">Orientation of leaves in pair</text>
+  <text transform="translate(38 270) rotate(-90)" text-anchor="middle" fill="#0f172a" font-family="Georgia, serif" font-size="21" font-weight="700">Number of pairs</text>
+  <g font-family="Arial, sans-serif" font-size="18" fill="#0f172a">
+    <rect x="642" y="185" width="22" height="22" fill="#64748b"/><text x="675" y="202">Amur grape</text>
+    <rect x="642" y="230" width="22" height="22" fill="#f8fafc" stroke="#64748b" stroke-width="2"/><text x="675" y="247">July grape</text>
+    <rect x="642" y="275" width="22" height="22" fill="#111827"/><text x="675" y="292">graybark grape</text>
+  </g>
+</svg>

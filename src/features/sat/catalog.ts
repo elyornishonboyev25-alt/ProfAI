@@ -65,14 +65,14 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     ...SAT_NOVEMBER_2025_INTL,
     modules: SAT_NOVEMBER_2025_INTL_MODULES,
     badge: 'November 2025 International · Version 1',
-    difficulty: 'Hard',
+    difficulty: 'Medium',
   },
   6: {
     mockId: 6,
     ...SAT_OCTOBER_2025_INTL,
     modules: SAT_OCTOBER_2025_INTL_MODULES,
     badge: 'October 2025 International · Version 1',
-    difficulty: 'Hard',
+    difficulty: 'Medium',
   },
 }
 

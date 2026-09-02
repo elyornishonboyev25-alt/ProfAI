@@ -10,13 +10,25 @@ const QS_RANKING_URL = 'https://www.topuniversities.com/world-university-ranking
 const COUNTRY_ALIASES: Record<string, string> = {
   'Brunei Darussalam': 'Brunei',
   'Hong Kong SAR, China': 'Hong Kong SAR',
+  'Iran (Islamic Republic of)': 'Iran',
   'Macao SAR, China': 'Macau SAR',
   Palestine: 'Palestinian Territories',
   'Republic of Korea': 'South Korea',
   'Russian Federation': 'Russia',
   'Syrian Arab Republic': 'Syria',
   'United States of America': 'United States',
+  'Venezuela (Bolivarian Republic of)': 'Venezuela',
   'Viet Nam': 'Vietnam',
+}
+
+// These profiles were first published with shorter names. Preserve their URLs
+// while showing QS's final official display names.
+const LEGACY_SLUGS: Record<string, string> = {
+  'University of Canterbury | Te Whare Wānanga o Waitaha': 'university-of-canterbury',
+  'IPB University (aka Bogor Agricultural University)': 'ipb-university-bogor-agricultural-university',
+  'Toronto Metropolitan University (formerly Ryerson University)': 'toronto-metropolitan-university',
+  'Saveetha Institute of Medical And Technical Sciences (SIMATS) , Tamil Nadu,India': 'saveetha-institute-of-medical-and-technical-sciences-simats',
+  'University of Colorado Denver | Anschutz Medical Campus': 'university-of-colorado-denver',
 }
 
 const COUNTRY_CODES: Record<string, string> = {
@@ -137,10 +149,11 @@ function universityFromRow(row: Qs2027CatalogRow): University {
   const country = COUNTRY_ALIASES[sourceCountry] ?? sourceCountry
   const type = institutionType(status)
   const location = city ? `${city}, ${country}` : country
+  const slug = LEGACY_SLUGS[name] ?? slugify(name)
 
   return {
-    id: slugify(name),
-    slug: slugify(name),
+    id: slug,
+    slug,
     rank,
     rankLabel: rankLabel ?? undefined,
     rankTied: rankLabel === null && (exactRankCounts.get(rank) ?? 0) > 1,

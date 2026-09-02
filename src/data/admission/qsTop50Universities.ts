@@ -23,7 +23,7 @@ type CoreUniversity = Pick<
   qsProfileUrl: string
 }
 
-const verifiedAt = '2026-08-12'
+const verifiedAt = '2026-09-02'
 
 function top50University({ admissionsUrl, qsProfileUrl, ...university }: CoreUniversity): University {
   const admission = QS_TOP_50_ADMISSIONS[university.id]
@@ -73,7 +73,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/nanyang-technological-university-ntu',
   }),
   top50University({
-    id: 'university-of-chicago', slug: 'university-of-chicago', rank: 13,
+    id: 'university-of-chicago', slug: 'university-of-chicago', rank: 24,
     name: 'University of Chicago', shortName: 'UChicago', city: 'Chicago', country: 'United States', countryEmoji: '🇺🇸',
     type: 'Private research university', founded: 1890, website: 'https://www.uchicago.edu',
     tagline: 'A private research university known for rigorous inquiry across the sciences, humanities and professional fields.',
@@ -83,7 +83,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-chicago',
   }),
   top50University({
-    id: 'peking-university', slug: 'peking-university', rank: 14,
+    id: 'peking-university', slug: 'peking-university', rank: 13,
     name: 'Peking University', shortName: 'PKU', city: 'Beijing', country: 'China (Mainland)', countryEmoji: '🇨🇳',
     type: 'Public research university', founded: 1898, website: 'https://english.pku.edu.cn',
     tagline: 'A comprehensive national university based at the Yan Yuan campus in Beijing.',
@@ -93,7 +93,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/peking-university',
   }),
   top50University({
-    id: 'tsinghua-university', slug: 'tsinghua-university', rank: 17, rankTied: true,
+    id: 'tsinghua-university', slug: 'tsinghua-university', rank: 14,
     name: 'Tsinghua University', shortName: 'Tsinghua', city: 'Beijing', country: 'China (Mainland)', countryEmoji: '🇨🇳',
     type: 'Public research university', founded: 1911, website: 'https://www.tsinghua.edu.cn/en/',
     tagline: 'A comprehensive research university in Beijing with deep strengths in science, engineering and public leadership.',
@@ -103,7 +103,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/tsinghua-university',
   }),
   top50University({
-    id: 'uc-berkeley', slug: 'university-of-california-berkeley', rank: 17, rankTied: true,
+    id: 'uc-berkeley', slug: 'university-of-california-berkeley', rank: 20, rankTied: true,
     name: 'University of California, Berkeley (UCB)', shortName: 'UC Berkeley', city: 'Berkeley', country: 'United States', countryEmoji: '🇺🇸',
     type: 'Public research university', founded: 1868, website: 'https://www.berkeley.edu',
     tagline: 'The original University of California campus and a leading public research university.',
@@ -113,7 +113,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-california-berkeley-ucb',
   }),
   top50University({
-    id: 'university-of-melbourne', slug: 'university-of-melbourne', rank: 19,
+    id: 'university-of-melbourne', slug: 'university-of-melbourne', rank: 22, rankTied: true,
     name: 'The University of Melbourne', shortName: 'Melbourne', city: 'Melbourne', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1853, website: 'https://www.unimelb.edu.au',
     tagline: 'Australia’s second-oldest university, based at Parkville in central Melbourne.',
@@ -123,7 +123,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-melbourne',
   }),
   top50University({
-    id: 'unsw-sydney', slug: 'unsw-sydney', rank: 20,
+    id: 'unsw-sydney', slug: 'unsw-sydney', rank: 19,
     name: 'The University of New South Wales (UNSW Sydney)', shortName: 'UNSW Sydney', city: 'Sydney', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1949, website: 'https://www.unsw.edu.au',
     tagline: 'A Sydney-based public research university with strong engineering, science, business and professional programmes.',
@@ -143,7 +143,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/epfl',
   }),
   top50University({
-    id: 'technical-university-of-munich', slug: 'technical-university-of-munich', rank: 22, rankTied: true,
+    id: 'technical-university-of-munich', slug: 'technical-university-of-munich', rank: 25,
     name: 'Technical University of Munich', shortName: 'TUM', city: 'Munich', country: 'Germany', countryEmoji: '🇩🇪',
     type: 'Public research university', founded: 1868, website: 'https://www.tum.de/en/',
     tagline: 'A public technical university with campuses across the Munich region and beyond.',
@@ -153,7 +153,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/technical-university-munich',
   }),
   top50University({
-    id: 'johns-hopkins-university', slug: 'johns-hopkins-university', rank: 24,
+    id: 'johns-hopkins-university', slug: 'johns-hopkins-university', rank: 20, rankTied: true,
     name: 'Johns Hopkins University', shortName: 'Johns Hopkins', city: 'Baltimore', country: 'United States', countryEmoji: '🇺🇸',
     type: 'Private research university', founded: 1876, website: 'https://www.jhu.edu',
     tagline: 'A private research university founded in Baltimore with a strong tradition of discovery and professional education.',
@@ -163,7 +163,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/johns-hopkins-university',
   }),
   top50University({
-    id: 'university-of-sydney', slug: 'university-of-sydney', rank: 25, rankTied: true,
+    id: 'university-of-sydney', slug: 'university-of-sydney', rank: 28,
     name: 'The University of Sydney', shortName: 'Sydney', city: 'Sydney', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1850, website: 'https://www.sydney.edu.au',
     tagline: 'Australia’s oldest university, with its main campus at Camperdown and Darlington.',
@@ -173,7 +173,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-sydney',
   }),
   top50University({
-    id: 'mcgill-university', slug: 'mcgill-university', rank: 27,
+    id: 'mcgill-university', slug: 'mcgill-university', rank: 30,
     name: 'McGill University', shortName: 'McGill', city: 'Montreal', country: 'Canada', countryEmoji: '🇨🇦',
     type: 'Public research university', founded: 1821, website: 'https://www.mcgill.ca',
     tagline: 'A Montreal research university offering programmes across eleven faculties and schools.',
@@ -183,7 +183,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/mcgill-university',
   }),
   top50University({
-    id: 'universite-psl', slug: 'universite-psl', rank: 28,
+    id: 'universite-psl', slug: 'universite-psl', rank: 34,
     name: 'Université PSL', shortName: 'PSL', city: 'Paris', country: 'France', countryEmoji: '🇫🇷',
     type: 'Public collegiate research university', founded: 2010, website: 'https://psl.eu/en',
     tagline: 'A collegiate university bringing together leading Paris institutions across science, engineering, arts and the humanities.',
@@ -193,7 +193,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/universite-psl',
   }),
   top50University({
-    id: 'university-of-toronto', slug: 'university-of-toronto', rank: 29,
+    id: 'university-of-toronto', slug: 'university-of-toronto', rank: 32,
     name: 'University of Toronto', shortName: 'Toronto', city: 'Toronto', country: 'Canada', countryEmoji: '🇨🇦',
     type: 'Public research university', founded: 1827, website: 'https://www.utoronto.ca',
     tagline: 'A three-campus public research university centred in Toronto.',
@@ -203,7 +203,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-toronto',
   }),
   top50University({
-    id: 'fudan-university', slug: 'fudan-university', rank: 30,
+    id: 'fudan-university', slug: 'fudan-university', rank: 26,
     name: 'Fudan University', shortName: 'Fudan', city: 'Shanghai', country: 'China (Mainland)', countryEmoji: '🇨🇳',
     type: 'Public research university', founded: 1905, website: 'https://www.fudan.edu.cn/en/',
     tagline: 'A comprehensive public research university with multiple campuses in Shanghai.',
@@ -213,7 +213,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/fudan-university',
   }),
   top50University({
-    id: 'kings-college-london', slug: 'kings-college-london', rank: 31,
+    id: 'kings-college-london', slug: 'kings-college-london', rank: 37,
     name: "King's College London", shortName: "King's", city: 'London', country: 'United Kingdom', countryEmoji: '🇬🇧',
     type: 'Public research university', founded: 1829, website: 'https://www.kcl.ac.uk',
     tagline: 'A multi-faculty research university with campuses in central London.',
@@ -223,7 +223,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/kings-college-london',
   }),
   top50University({
-    id: 'australian-national-university', slug: 'australian-national-university', rank: 32, rankTied: true,
+    id: 'australian-national-university', slug: 'australian-national-university', rank: 29,
     name: 'Australian National University (ANU)', shortName: 'ANU', city: 'Canberra', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1946, website: 'https://www.anu.edu.au',
     tagline: 'Australia’s national university, based in the capital city of Canberra.',
@@ -233,7 +233,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/australian-national-university-anu',
   }),
   top50University({
-    id: 'chinese-university-of-hong-kong', slug: 'chinese-university-of-hong-kong', rank: 32, rankTied: true,
+    id: 'chinese-university-of-hong-kong', slug: 'chinese-university-of-hong-kong', rank: 18,
     name: 'The Chinese University of Hong Kong (CUHK)', shortName: 'CUHK', city: 'Hong Kong', country: 'Hong Kong SAR', countryEmoji: '🇭🇰',
     type: 'Public research university', founded: 1963, website: 'https://www.cuhk.edu.hk/english/',
     tagline: 'A bilingual collegiate research university overlooking Tolo Harbour in Hong Kong.',
@@ -243,7 +243,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/chinese-university-hong-kong-cuhk',
   }),
   top50University({
-    id: 'university-of-edinburgh', slug: 'university-of-edinburgh', rank: 34,
+    id: 'university-of-edinburgh', slug: 'university-of-edinburgh', rank: 35,
     name: 'The University of Edinburgh', shortName: 'Edinburgh', city: 'Edinburgh', country: 'United Kingdom', countryEmoji: '🇬🇧',
     type: 'Public research university', founded: 1583, website: 'https://www.ed.ac.uk',
     tagline: 'A historic Scottish research university founded in the sixteenth century.',
@@ -253,7 +253,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-edinburgh',
   }),
   top50University({
-    id: 'university-of-manchester', slug: 'university-of-manchester', rank: 35,
+    id: 'university-of-manchester', slug: 'university-of-manchester', rank: 40, rankTied: true,
     name: 'The University of Manchester', shortName: 'Manchester', city: 'Manchester', country: 'United Kingdom', countryEmoji: '🇬🇧',
     type: 'Public research university', founded: 1824, website: 'https://www.manchester.ac.uk',
     tagline: 'A large research university with roots in Manchester’s nineteenth-century civic and scientific institutions.',
@@ -263,7 +263,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-manchester',
   }),
   top50University({
-    id: 'monash-university', slug: 'monash-university', rank: 36, rankTied: true,
+    id: 'monash-university', slug: 'monash-university', rank: 31,
     name: 'Monash University', shortName: 'Monash', city: 'Melbourne', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1958, website: 'https://www.monash.edu',
     tagline: 'A large Australian research university with campuses and partnerships across several countries.',
@@ -273,7 +273,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/monash-university',
   }),
   top50University({
-    id: 'university-of-tokyo', slug: 'university-of-tokyo', rank: 36, rankTied: true,
+    id: 'university-of-tokyo', slug: 'university-of-tokyo', rank: 39,
     name: 'The University of Tokyo', shortName: 'UTokyo', city: 'Tokyo', country: 'Japan', countryEmoji: '🇯🇵',
     type: 'Public research university', founded: 1877, website: 'https://www.u-tokyo.ac.jp/en/',
     tagline: 'Japan’s first national university, with major campuses at Hongo, Komaba and Kashiwa.',
@@ -283,7 +283,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-tokyo',
   }),
   top50University({
-    id: 'seoul-national-university', slug: 'seoul-national-university', rank: 38, rankTied: true,
+    id: 'seoul-national-university', slug: 'seoul-national-university', rank: 38,
     name: 'Seoul National University', shortName: 'SNU', city: 'Seoul', country: 'South Korea', countryEmoji: '🇰🇷',
     type: 'Public national university', founded: 1946, website: 'https://en.snu.ac.kr',
     tagline: 'South Korea’s leading national university, with its principal campus at Gwanak.',
@@ -293,7 +293,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/seoul-national-university',
   }),
   top50University({
-    id: 'university-of-british-columbia', slug: 'university-of-british-columbia', rank: 40,
+    id: 'university-of-british-columbia', slug: 'university-of-british-columbia', rank: 45, rankTied: true,
     name: 'University of British Columbia', shortName: 'UBC', city: 'Vancouver', country: 'Canada', countryEmoji: '🇨🇦',
     type: 'Public research university', founded: 1908, website: 'https://www.ubc.ca',
     tagline: 'A public research university with major campuses in Vancouver and the Okanagan.',
@@ -303,7 +303,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-british-columbia',
   }),
   top50University({
-    id: 'institut-polytechnique-de-paris', slug: 'institut-polytechnique-de-paris', rank: 41,
+    id: 'institut-polytechnique-de-paris', slug: 'institut-polytechnique-de-paris', rank: 43, rankTied: true,
     name: 'Institut Polytechnique de Paris', shortName: 'IP Paris', city: 'Palaiseau', country: 'France', countryEmoji: '🇫🇷',
     type: 'Public research and higher education institute', founded: 2019, website: 'https://www.ip-paris.fr/en',
     tagline: 'A federation of leading French engineering schools based on the Paris-Saclay plateau.',
@@ -313,7 +313,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/institut-polytechnique-de-paris',
   }),
   top50University({
-    id: 'northwestern-university', slug: 'northwestern-university', rank: 42, rankTied: true,
+    id: 'northwestern-university', slug: 'northwestern-university', rank: 45, rankTied: true,
     name: 'Northwestern University', shortName: 'Northwestern', city: 'Evanston', country: 'United States', countryEmoji: '🇺🇸',
     type: 'Private research university', founded: 1851, website: 'https://www.northwestern.edu',
     tagline: 'A private research university with its principal undergraduate campus in Evanston, Illinois.',
@@ -323,7 +323,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/northwestern-university',
   }),
   top50University({
-    id: 'university-of-queensland', slug: 'university-of-queensland', rank: 42, rankTied: true,
+    id: 'university-of-queensland', slug: 'university-of-queensland', rank: 40, rankTied: true,
     name: 'The University of Queensland', shortName: 'UQ', city: 'Brisbane', country: 'Australia', countryEmoji: '🇦🇺',
     type: 'Public research university', founded: 1909, website: 'https://www.uq.edu.au',
     tagline: 'A Queensland public research university centred at the St Lucia campus in Brisbane.',
@@ -333,7 +333,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-queensland-1',
   }),
   top50University({
-    id: 'hkust', slug: 'hong-kong-university-of-science-and-technology', rank: 44,
+    id: 'hkust', slug: 'hong-kong-university-of-science-and-technology', rank: 33,
     name: 'The Hong Kong University of Science and Technology', shortName: 'HKUST', city: 'Hong Kong', country: 'Hong Kong SAR', countryEmoji: '🇭🇰',
     type: 'Public research university', founded: 1991, website: 'https://hkust.edu.hk',
     tagline: 'A research university focused on science, engineering, business and interdisciplinary innovation.',
@@ -349,11 +349,11 @@ export const qsTop50Additions: University[] = [
     tagline: 'A public research university in Hong Kong with an applied education and innovation focus.',
     about: 'The Hong Kong Polytechnic University traces its history to 1937 and became a university in 1994. Its Hung Hom campus supports education and research across business, construction and environment, engineering, health and social sciences, humanities, design, fashion and hospitality.',
     brand: { monogram: 'PolyU', gradient: 'linear-gradient(150deg,#39050d,#a6192e 60%,#dc5666)', accent: '#A6192E', ink: '#ffffff' },
-    admissionsUrl: 'https://www.polyu.edu.hk/study/ug/admissions/international-qualifications/',
+    admissionsUrl: 'https://www.polyu.edu.hk/study/ug/admissions/international-other-qualifications/international-other-qualifications-general',
     qsProfileUrl: 'https://www.topuniversities.com/universities/hong-kong-polytechnic-university',
   }),
   top50University({
-    id: 'ucla', slug: 'university-of-california-los-angeles', rank: 46,
+    id: 'ucla', slug: 'university-of-california-los-angeles', rank: 49,
     name: 'University of California, Los Angeles (UCLA)', shortName: 'UCLA', city: 'Los Angeles', country: 'United States', countryEmoji: '🇺🇸',
     type: 'Public research university', founded: 1919, website: 'https://www.ucla.edu',
     tagline: 'A public research university in Westwood and a member of the University of California system.',
@@ -363,7 +363,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/university-california-los-angeles-ucla',
   }),
   top50University({
-    id: 'delft-university-of-technology', slug: 'delft-university-of-technology', rank: 47, rankTied: true,
+    id: 'delft-university-of-technology', slug: 'delft-university-of-technology', rank: 48,
     name: 'Delft University of Technology', shortName: 'TU Delft', city: 'Delft', country: 'Netherlands', countryEmoji: '🇳🇱',
     type: 'Public technical university', founded: 1842, website: 'https://www.tudelft.nl/en/',
     tagline: 'The Netherlands’ oldest and largest public technical university.',
@@ -373,7 +373,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/delft-university-technology',
   }),
   top50University({
-    id: 'shanghai-jiao-tong-university', slug: 'shanghai-jiao-tong-university', rank: 47, rankTied: true,
+    id: 'shanghai-jiao-tong-university', slug: 'shanghai-jiao-tong-university', rank: 36,
     name: 'Shanghai Jiao Tong University', shortName: 'SJTU', city: 'Shanghai', country: 'China (Mainland)', countryEmoji: '🇨🇳',
     type: 'Public research university', founded: 1896, website: 'https://en.sjtu.edu.cn',
     tagline: 'A comprehensive research university in Shanghai with a long engineering tradition.',
@@ -383,7 +383,7 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/shanghai-jiao-tong-university',
   }),
   top50University({
-    id: 'zhejiang-university', slug: 'zhejiang-university', rank: 49,
+    id: 'zhejiang-university', slug: 'zhejiang-university', rank: 47,
     name: 'Zhejiang University', shortName: 'ZJU', city: 'Hangzhou', country: 'China (Mainland)', countryEmoji: '🇨🇳',
     type: 'Public research university', founded: 1897, website: 'https://www.zju.edu.cn/english/',
     tagline: 'A comprehensive public research university based in Hangzhou.',
@@ -393,9 +393,9 @@ export const qsTop50Additions: University[] = [
     qsProfileUrl: 'https://www.topuniversities.com/universities/zhejiang-university',
   }),
   top50University({
-    id: 'yonsei-university', slug: 'yonsei-university', rank: 50,
+    id: 'yonsei-university', slug: 'yonsei-university', rank: 42,
     name: 'Yonsei University', shortName: 'Yonsei', city: 'Seoul', country: 'South Korea', countryEmoji: '🇰🇷',
-    type: 'Private research university', founded: 1885, website: 'https://www.yonsei.ac.kr/en_sc/',
+    type: 'Private research university', founded: 1885, website: 'https://www.yonsei.ac.kr/en_sc/index.do',
     tagline: 'A private research university in Seoul whose institutional roots date to 1885.',
     about: 'Yonsei University traces its origins to Korea’s first modern hospital, founded in 1885, and to Chosun Christian College. Its main Sinchon campus in Seoul supports undergraduate, graduate and professional education across a broad range of fields.',
     brand: { monogram: 'YU', gradient: 'linear-gradient(150deg,#001c3d,#003876 60%,#5f91bf)', accent: '#003876', ink: '#ffffff' },

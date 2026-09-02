@@ -47,14 +47,14 @@ export const QS_TOP_50_ADMISSIONS: Record<string, AdmissionProfile> = {
   'tsinghua-university': {
     note: 'Tsinghua reviews international academic tests and language ability by application route and programme; it does not publish one SAT or IELTS minimum for all bachelor applicants.',
     bachelor: [
-      test('SAT', 'Accepted · route-specific', { policy: 'conditional', sourceUrl: 'https://international.join-tsinghua.edu.cn/Admission1/Undergraduate_Programs.htm' }),
-      test('IELTS', 'Programme-specific · no universal minimum', { policy: 'conditional', sourceUrl: 'https://international.join-tsinghua.edu.cn/Admission1/Undergraduate_Programs.htm' }),
+      test('SAT', 'Accepted · route-specific', { policy: 'conditional', sourceUrl: 'https://international.join-tsinghua.edu.cn/Admission1/FAQ.htm' }),
+      test('IELTS', 'Programme-specific · no universal minimum', { policy: 'conditional', sourceUrl: 'https://international.join-tsinghua.edu.cn/Admission1/FAQ.htm' }),
     ],
   },
   'uc-berkeley': {
     note: 'UC Berkeley is test-free and does not use SAT or ACT scores in admission. Applicants educated in a non-English-language setting can satisfy English proficiency with IELTS.',
     bachelor: [
-      test('SAT', 'Not considered for admission', { policy: 'not-accepted', sourceUrl: 'https://admissions.berkeley.edu/apply-to-berkeley/freshmen/requirements/' }),
+      test('SAT', 'Not considered for admission', { policy: 'not-accepted', sourceUrl: 'https://www.admissions.berkeley.edu/apply-to-berkeley/first-year-applicants-uc-berkeley/first-year-policy-changes/' }),
       test('IELTS', '6.5 overall', { minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', sourceUrl: 'https://admissions.berkeley.edu/apply-to-berkeley/international-students/' }),
     ],
   },
@@ -97,7 +97,7 @@ export const QS_TOP_50_ADMISSIONS: Record<string, AdmissionProfile> = {
     note: 'Sydney accepts SAT as one recognised secondary qualification; the required score changes by course. The standard IELTS level applies to many bachelor degrees.',
     bachelor: [
       test('SAT', 'Accepted · course-specific score', { policy: 'conditional', sourceUrl: 'https://www.sydney.edu.au/study/applying/how-to-apply/international-students.html' }),
-      test('IELTS', '6.5 overall · 6.0 each', { minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Some courses have higher English requirements.', sourceUrl: 'https://www.sydney.edu.au/study/applying/how-to-apply/english-language-requirements.html' }),
+      test('IELTS', '6.5 overall · 6.0 each', { minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Some courses have higher English requirements.', sourceUrl: 'https://www.sydney.edu.au/study/applying/how-to-apply/international-students/english-language-requirements.html' }),
     ],
   },
   'mcgill-university': {
@@ -110,7 +110,7 @@ export const QS_TOP_50_ADMISSIONS: Record<string, AdmissionProfile> = {
   'universite-psl': {
     note: 'PSL bachelor admission is handled by individual member schools and programmes, so there is no institution-wide SAT or IELTS cutoff.',
     bachelor: [
-      test('SAT', 'Optional or programme-specific', { policy: 'conditional', detail: 'For example, the English-taught I-BE3 bachelor accepts optional SAT evidence.', sourceUrl: 'https://psl.eu/en/education/bachelors-degrees' }),
+      test('SAT', 'Optional or programme-specific', { policy: 'conditional', detail: 'For example, the English-taught I-BE3 bachelor accepts optional SAT evidence.', sourceUrl: 'https://psl.eu/en/education/applying-bachelors-degree' }),
       test('IELTS', 'Programme-specific · no universal minimum', { policy: 'conditional', detail: 'The I-BE3 bachelor asks for English B2 but does not mandate an IELTS score.', sourceUrl: 'https://www.minesparis.psl.eu/en/education/i-be3/' }),
     ],
   },
@@ -194,21 +194,21 @@ export const QS_TOP_50_ADMISSIONS: Record<string, AdmissionProfile> = {
   'institut-polytechnique-de-paris': {
     note: 'IP Paris bachelor admission is programme-specific. The Bachelor of Science uses its own academic and English criteria rather than a university-wide SAT or IELTS cutoff.',
     bachelor: [
-      test('SAT', 'Not a university-wide requirement', { policy: 'not-required', sourceUrl: 'https://www.ip-paris.fr/en/education/bachelors' }),
-      test('IELTS', 'English B2 · no IELTS cutoff', { policy: 'conditional', detail: 'Accepted proof depends on the selected bachelor programme.', sourceUrl: 'https://www.ip-paris.fr/en/education/bachelors' }),
+      test('SAT', 'Not a university-wide requirement', { policy: 'not-required', sourceUrl: 'https://www.ip-paris.fr/en/education/undergraduate-programs' }),
+      test('IELTS', 'English B2 · no IELTS cutoff', { policy: 'conditional', detail: 'Accepted proof depends on the selected bachelor programme.', sourceUrl: 'https://www.ip-paris.fr/en/education/undergraduate-programs' }),
     ],
   },
   'northwestern-university': {
     note: 'Northwestern is test-optional for first-year applicants. English-proficiency testing is required for specified international applicants, with no published IELTS cutoff.',
     bachelor: [
       test('SAT', 'Optional · no minimum', { policy: 'optional', sourceUrl: 'https://admissions.northwestern.edu/faqs/standardized-testing-policy/' }),
-      test('IELTS', 'Required in specified cases · no minimum', { policy: 'conditional', detail: 'Applies when English is not the first language and high-school courses were not taught in English.', sourceUrl: 'https://admissions.northwestern.edu/apply/international-students/' }),
+      test('IELTS', 'Required in specified cases · no minimum', { policy: 'conditional', detail: 'Applies when English is not the first language and high-school courses were not taught in English.', sourceUrl: 'https://admissions.northwestern.edu/apply/identities/international.html' }),
     ],
   },
   'university-of-queensland': {
     note: 'UQ accepts recognised international qualifications, including SAT where applicable, using programme-specific entry scores. Most degrees use the standard English minimum.',
     bachelor: [
-      test('SAT', 'Accepted · programme-specific score', { policy: 'conditional', sourceUrl: 'https://study.uq.edu.au/admissions/undergraduate/consider-your-entry-score' }),
+      test('SAT', 'Accepted · programme-specific score', { policy: 'conditional', sourceUrl: 'https://study.uq.edu.au/sites/default/files/2024-07/md-provisional-minimum-entry-scores.pdf' }),
       test('IELTS', '6.5 overall · 6.0 each', { minimum: 6.5, comparison: 'ieltsOverall', policy: 'conditional', detail: 'Some programmes require higher scores.', sourceUrl: 'https://study.uq.edu.au/admissions/english-language-requirements' }),
     ],
   },

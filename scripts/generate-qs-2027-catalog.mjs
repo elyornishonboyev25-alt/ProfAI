@@ -36,6 +36,28 @@ function numeric(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+// The normalized CSV predates a handful of display-name and country-label
+// corrections in QS's final workbook. Keep these aliases here so regenerating
+// the catalog stays semantically aligned with the official release while
+// removing accidental leading, trailing and repeated whitespace.
+const OFFICIAL_NAME_OVERRIDES = new Map([
+  ['University of Canterbury', 'University of Canterbury | Te Whare Wānanga o Waitaha'],
+  ['IPB University (Bogor Agricultural University)', 'IPB University (aka Bogor Agricultural University)'],
+  ['Toronto Metropolitan University', 'Toronto Metropolitan University (formerly Ryerson University)'],
+  ['Saveetha Institute of Medical And Technical Sciences (SIMATS)', 'Saveetha Institute of Medical And Technical Sciences (SIMATS) , Tamil Nadu,India'],
+  ['University of Colorado Denver', 'University of Colorado Denver | Anschutz Medical Campus'],
+])
+
+const OFFICIAL_COUNTRY_OVERRIDES = new Map([
+  ['Iran', 'Iran (Islamic Republic of)'],
+  ['Venezuela', 'Venezuela (Bolivarian Republic of)'],
+])
+
+function officialName(value) {
+  const normalized = value.trim().replace(/\s{2,}/g, ' ')
+  return OFFICIAL_NAME_OVERRIDES.get(normalized) ?? normalized
+}
+
 const rows = readFileSync(inputPath, 'utf8')
   .replace(/^\uFEFF/, '')
   .trim()
@@ -56,9 +78,9 @@ const records = rows.map((row) => {
   return [
     rank,
     exactRank ? null : rankLabel,
-    row[3],
+    officialName(row[3]),
     row[29],
-    row[4],
+    OFFICIAL_COUNTRY_OVERRIDES.get(row[4]) ?? row[4],
     row[9] || null,
     numeric(row[28]),
     numeric(row[10]),
@@ -73,7 +95,7 @@ const records = rows.map((row) => {
   ]
 })
 
-const header = `// Generated from the QS World University Rankings 2027 spreadsheet published 18 June 2026.\n// Regenerate with: node scripts/generate-qs-2027-catalog.mjs <input.csv>\n// Source: https://www.qs.com/insights/qs-world-university-rankings-2027-results-table-excel\n\nexport type Qs2027CatalogRow = readonly [\n  rank: number,\n  rankLabel: string | null,\n  name: string,\n  city: string,\n  country: string,\n  institutionType: string | null,\n  overallScore: number | null,\n  academicReputation: number | null,\n  employerReputation: number | null,\n  facultyStudentRatio: number | null,\n  citationsPerFaculty: number | null,\n  internationalFacultyRatio: number | null,\n  internationalStudentRatio: number | null,\n  internationalResearchNetwork: number | null,\n  employmentOutcomes: number | null,\n  sustainability: number | null,\n]\n\nexport const QS_2027_RANKED_UNIVERSITY_COUNT = 1504\n\nexport const QS_2027_UNIVERSITY_CATALOG: readonly Qs2027CatalogRow[] = [\n`
+const header = `// Ranking data matches the official QS World University Rankings 2027 workbook published 18 June 2026.\n// City labels are display metadata and are not fields in the official QS workbook.\n// Regenerate with: node scripts/generate-qs-2027-catalog.mjs <input.csv>\n// Source: https://www.qs.com/insights/qs-world-university-rankings-2027-results-table-excel\n\nexport type Qs2027CatalogRow = readonly [\n  rank: number,\n  rankLabel: string | null,\n  name: string,\n  city: string,\n  country: string,\n  institutionType: string | null,\n  overallScore: number | null,\n  academicReputation: number | null,\n  employerReputation: number | null,\n  facultyStudentRatio: number | null,\n  citationsPerFaculty: number | null,\n  internationalFacultyRatio: number | null,\n  internationalStudentRatio: number | null,\n  internationalResearchNetwork: number | null,\n  employmentOutcomes: number | null,\n  sustainability: number | null,\n]\n\nexport const QS_2027_RANKED_UNIVERSITY_COUNT = 1504\n\nexport const QS_2027_UNIVERSITY_CATALOG: readonly Qs2027CatalogRow[] = [\n`
 
 const body = records.map((record) => `  ${JSON.stringify(record)},`).join('\n')
 writeFileSync(outputPath, `${header}${body}\n]\n`)

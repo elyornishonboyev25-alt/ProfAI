@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" role="img" aria-labelledby="title desc">
+  <title id="title">Complete graph of y equals f of x</title><desc id="desc">An increasing S-shaped curve flattens around y equals negative four and crosses the x-axis once between x equals nine and ten.</desc>
+  <rect width="760" height="460" rx="20" fill="#fff"/><g fill="none" stroke="#d7dee8"><path d="M70 80H700M70 120H700M70 160H700M70 200H700M70 240H700M70 280H700M70 320H700M70 360H700M130 50V400M190 50V400M250 50V400M310 50V400M370 50V400M430 50V400M490 50V400M550 50V400M610 50V400M670 50V400"/></g>
+  <g fill="none" stroke="#111827" stroke-width="3"><path d="M60 200H745"/><path d="M130 410V40"/></g><path d="M210 420C255 402 282 362 310 330C350 283 382 280 440 280C530 280 620 280 680 235C700 205 715 140 730 80" fill="none" stroke="#2563eb" stroke-width="6"/>
+  <g fill="#334155" font-family="Arial,sans-serif" font-size="16" text-anchor="middle"><text x="250" y="222">2</text><text x="370" y="222">4</text><text x="490" y="222">6</text><text x="610" y="222">8</text><text x="730" y="222">10</text></g><g fill="#334155" font-family="Arial,sans-serif" font-size="18"><text x="738" y="192">x</text><text x="143" y="50">y</text></g>
+</svg>

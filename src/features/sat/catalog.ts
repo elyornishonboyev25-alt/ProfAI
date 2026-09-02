@@ -14,6 +14,10 @@ import {
   SAT_NOVEMBER_2025_INTL,
   SAT_NOVEMBER_2025_INTL_MODULES,
 } from './november2025Intl'
+import {
+  SAT_OCTOBER_2025_INTL,
+  SAT_OCTOBER_2025_INTL_MODULES,
+} from './october2025Intl'
 
 export type SATTestDefinition = {
   mockId: number
@@ -61,6 +65,13 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     ...SAT_NOVEMBER_2025_INTL,
     modules: SAT_NOVEMBER_2025_INTL_MODULES,
     badge: 'November 2025 International · Version 1',
+    difficulty: 'Hard',
+  },
+  6: {
+    mockId: 6,
+    ...SAT_OCTOBER_2025_INTL,
+    modules: SAT_OCTOBER_2025_INTL_MODULES,
+    badge: 'October 2025 International · Version 1',
     difficulty: 'Hard',
   },
 }

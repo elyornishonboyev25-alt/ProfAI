@@ -182,7 +182,7 @@ const part3: Section = {
     q(21, 'multiple-choice', 'Why Andrew and Sarah decide to mention the Mountain Code', 'A', part3Mcq[21]),
     q(22, 'multiple-choice', 'Why some field trip participants harm the environment', 'C', part3Mcq[22]),
     q(23, 'multiple-choice', 'The most important rule about taking samples', 'C', part3Mcq[23]),
-    q(24, 'multiple-choice', 'The aspect of taking samples they still need to investigate', 'C', part3Mcq[24]),
+    q(24, 'multiple-choice', 'The aspect of taking samples they still need to investigate', 'A', part3Mcq[24]),
     q(25, 'multiple-choice', 'The coastal danger they decide to emphasise', 'B', part3Mcq[25]),
     q(26, 'matching-information', 'Topic of the Geothermal Fields reading pack', 'D', readingPackTopics),
     q(27, 'matching-information', 'Topic of The Hot Spot reading pack', 'A', readingPackTopics),

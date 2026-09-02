@@ -24,7 +24,7 @@ import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityRadar from '@/components/admission/UniversityRadar'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
-import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
+import { formatUniversityRank, getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
@@ -121,7 +121,7 @@ export default function AdmissionUniversity() {
   }
 
   const keyFacts: { icon: typeof Landmark; label: string; value: string }[] = [
-    { icon: CalendarDays, label: 'Founded', value: String(u.founded) },
+    ...(typeof u.founded === 'number' ? [{ icon: CalendarDays, label: 'Founded', value: String(u.founded) }] : []),
     { icon: Landmark, label: 'Institution', value: u.type },
     ...(students ? [{ icon: Users, label: 'Students', value: `${hasDetailedStudents ? '' : '≈ '}${students.total.toLocaleString()}` }] : []),
     ...(students && typeof students.international === 'number'
@@ -174,7 +174,7 @@ export default function AdmissionUniversity() {
                 <div className="min-w-0">
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
                     <Trophy className="h-3.5 w-3.5" />
-                    {typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank} · ${QS_EDITION}` : 'Official university profile'}
+                    {typeof u.rank === 'number' ? `${formatUniversityRank(u, '#')} · ${QS_EDITION}` : 'Official university profile'}
                   </div>
                   <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-4xl">{u.name}</h1>
                   <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/80">
@@ -183,19 +183,23 @@ export default function AdmissionUniversity() {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">{u.type}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Founded {u.founded}
-                    </span>
-                    <a
-                      href={u.website}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-[12px] font-bold text-slate-900 transition hover:bg-white/90"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Visit website
-                    </a>
+                    {typeof u.founded === 'number' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Founded {u.founded}
+                      </span>
+                    ) : null}
+                    {u.website ? (
+                      <a
+                        href={u.website}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-[12px] font-bold text-slate-900 transition hover:bg-white/90"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Visit website
+                      </a>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -204,7 +208,7 @@ export default function AdmissionUniversity() {
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">QS World Ranking</p>
-                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank}` : 'Not ranked'}</p>
+                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? formatUniversityRank(u, '#') : 'Not ranked'}</p>
                   <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS rank listed'}</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
@@ -304,7 +308,7 @@ export default function AdmissionUniversity() {
             </h2>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <RankCard icon={Trophy} label="QS World University Rankings" value={typeof u.rank === 'number' ? `#${u.rankTied ? '=' : ''}${u.rank}` : 'Not listed'} accent={accent} />
+              <RankCard icon={Trophy} label="QS World University Rankings" value={typeof u.rank === 'number' ? formatUniversityRank(u, '#') : 'Not listed'} accent={accent} />
               {typeof u.subjectRank === 'number' ? (
                 <RankCard icon={Star} label="QS WUR Ranking by Subject" value={`#${u.subjectRank}`} accent={accent} />
               ) : (

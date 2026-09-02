@@ -1,6 +1,7 @@
 import type { University, QSIndicators, AdmissionLesson, LessonPhase } from './types'
 import { universities } from './universities'
 import { QS_2027_TOP_50_IDS } from './qs2027Rankings'
+import { QS_2027_RANKED_UNIVERSITY_COUNT } from './qs2027Universities'
 import { lessons, lessonPhases } from './lessons'
 
 export type {
@@ -24,6 +25,7 @@ export { lessons, lessonPhases } from './lessons'
 export const LESSON_COUNT = lessons.length
 export const UNIVERSITY_COUNT = universities.length
 export const QS_TOP_50_COUNT = universities.filter((university) => university.groups?.includes('qs-top-50')).length
+export { QS_2027_RANKED_UNIVERSITY_COUNT }
 
 function validateUniversityCatalog() {
   const ids = new Set<string>()
@@ -59,6 +61,11 @@ function validateUniversityCatalog() {
     throw new Error('QS 2027 tied-rank markers do not match the catalog positions')
   }
 
+  const ranked = universities.filter((university) => typeof university.rank === 'number')
+  if (ranked.length !== QS_2027_RANKED_UNIVERSITY_COUNT) {
+    throw new Error(`QS 2027 catalog must contain exactly ${QS_2027_RANKED_UNIVERSITY_COUNT} ranked universities`)
+  }
+
   if (
     top50.some((university) => {
       const requirements = university.admission?.bachelor ?? []
@@ -80,6 +87,12 @@ validateUniversityCatalog()
 
 export function getUniversities(): University[] {
   return [...universities].sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name))
+}
+
+export function formatUniversityRank(university: Pick<University, 'rank' | 'rankLabel' | 'rankTied'>, prefix = '') {
+  if (university.rankLabel) return `${prefix}${university.rankLabel}`
+  if (typeof university.rank !== 'number') return '—'
+  return `${prefix}${university.rankTied ? '=' : ''}${university.rank}`
 }
 
 export function getUniversityBySlug(slug: string): University | undefined {

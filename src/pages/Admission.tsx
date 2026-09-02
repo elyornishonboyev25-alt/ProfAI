@@ -9,6 +9,7 @@ import {
   getUniversities,
   lessonPhases,
   LESSON_COUNT,
+  QS_2027_RANKED_UNIVERSITY_COUNT,
   UNIVERSITY_COUNT,
   totalLessonMinutes,
   QS_EDITION,
@@ -88,7 +89,7 @@ export default function Admission() {
                 </div>
                 <div className="hero-metric-card interactive-lift">
                   <p className="hero-metric-label">Ranked by</p>
-                  <p className="hero-metric-value-sm hero-metric-value-compact">QS 2026</p>
+                  <p className="hero-metric-value-sm hero-metric-value-compact">QS 2027</p>
                   <p className="hero-metric-note">Current catalog edition</p>
                 </div>
               </div>
@@ -199,12 +200,12 @@ export default function Admission() {
                     <Trophy className="h-8 w-8" />
                   </span>
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
-                    Top {UNIVERSITY_COUNT} · QS 2026
+                    {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ranked · QS 2027
                   </span>
                 </div>
                 <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900">Universities</h2>
                 <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore ProfAI’s current QS 2026 catalog with ranking context, university profiles and official links
+                  Explore ProfAI’s complete QS 2027 catalog with ranking context, university profiles and official links
                   where available. Confirm current programme requirements directly with each institution.
                 </p>
 

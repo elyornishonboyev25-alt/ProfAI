@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, GraduationCap, Loader2, Sparkles, Target, X } from 'lucide-react'
 import UniversityLogo from '@/components/admission/UniversityLogo'
+import { formatUniversityRank } from '@/data/admission'
 import { universities } from '@/data/admission/universities'
 import { matchUniversities, type DegreeLevel, type MatchInput, type UniversityMatch } from '@/data/admission/match'
 import { fetchAccount, updateAccount } from '@/lib/profileApi'
@@ -187,7 +188,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                         <UniversityLogo id={m.university.id} name={m.university.name} brand={m.university.brand} website={m.university.website} size={40} rounded="0.6rem" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-black text-slate-900">{m.university.name}</p>
-                          <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS #${m.university.rank}` : ''}</p>
+                          <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS ${formatUniversityRank(m.university, '#')}` : ''}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-black text-slate-900">{m.fitPercent}%</p>

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { ApiError } from '@/lib/apiClient'
 import { fetchPublicProfile, type PublicProfilePayload } from '@/lib/profileApi'
-import { getUniversityBySlug } from '@/data/admission'
+import { formatUniversityRank, getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 import SkillBadge from '@/components/achievements/SkillBadge'
 import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
@@ -298,7 +298,7 @@ export default function PublicProfile() {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-slate-900">{targetUniversity.name}</p>
-                    <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS #${targetUniversity.rank}` : ''}</p>
+                    <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS ${formatUniversityRank(targetUniversity, '#')}` : ''}</p>
                   </div>
                   <span className="text-xs font-bold text-blue-600">View</span>
                 </button>

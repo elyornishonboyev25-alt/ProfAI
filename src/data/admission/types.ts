@@ -88,6 +88,7 @@ export type University = {
   id: string
   slug: string
   rank?: number // QS World University Rankings 2027 position, when ranked
+  rankLabel?: string // QS rank band, e.g. "801-850" or "1401+"
   rankTied?: boolean
   name: string
   shortName: string
@@ -96,8 +97,8 @@ export type University = {
   countryEmoji: string // flag emoji for the location chip
   overallScore?: number // QS overall score, 0–100, when published in our verified dataset
   type: string // e.g. "Private, not-for-profit"
-  founded: number
-  website: string
+  founded?: number
+  website?: string
   // 1–2 sentence hook for the ranking row, plus a fuller "about" for the detail page.
   tagline: string
   about: string

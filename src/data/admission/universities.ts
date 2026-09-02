@@ -1,6 +1,7 @@
 import type { AdmissionRequirement, CostOfLiving, University } from './types'
 import { qsTop50Additions } from './qsTop50Universities'
 import { QS_2027_RANKINGS, QS_2027_TOP_50_IDS } from './qs2027Rankings'
+import { buildMissingQs2027Universities } from './qs2027Universities'
 
 // Rankings are QS World University Rankings 2027. Detailed admissions policies
 // were rechecked against university sources on 5 August 2026; the top-50 additions
@@ -320,7 +321,7 @@ const universityProfiles: University[] = [
   },
 ]
 
-export const universities: University[] = universityProfiles.map((university) => {
+const existingUniversityProfiles = universityProfiles.map((university) => {
   const ranking = QS_2027_RANKINGS[university.id]
   const groups: NonNullable<University['groups']> = (university.groups ?? []).filter(
     (group) => group !== 'qs-top-50',
@@ -342,3 +343,11 @@ export const universities: University[] = universityProfiles.map((university) =>
     groups,
   }
 })
+
+// Keep every hand-verified profile intact and append only institutions that are
+// absent from the existing catalog. The helper matches official names and common
+// abbreviations so entries such as UCL are not duplicated.
+export const universities: University[] = [
+  ...existingUniversityProfiles,
+  ...buildMissingQs2027Universities(existingUniversityProfiles),
+]

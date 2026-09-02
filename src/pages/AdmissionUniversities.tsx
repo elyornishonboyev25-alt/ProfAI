@@ -18,7 +18,7 @@ import {
 import { BrandMark } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityGlobe from '@/components/admission/UniversityGlobe'
-import { getUniversities, QS_EDITION, QS_TOP_50_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
+import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
 import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
@@ -97,7 +97,7 @@ const UniversityCard = memo(function UniversityCard({
         <div className="admission-card-rank-actions">
           <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
             <small>QS rank</small>
-            <strong>{typeof university.rank === 'number' ? `${university.rankTied ? '=' : ''}${university.rank}` : '—'}</strong>
+            <strong>{formatUniversityRank(university)}</strong>
           </span>
           <button
             type="button"
@@ -339,7 +339,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   <UniversityGlobe country={profileCountry} profileLoading={profileLoading} />
                   <div className="admission-globe-caption">
                     <Globe2 className="h-4 w-4" />
-                    <span>{UNIVERSITY_COUNT} verified university profiles</span>
+                    <span>{UNIVERSITY_COUNT} universities in the catalog</span>
                   </div>
                 </>
               )}
@@ -368,7 +368,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
               <div className="admission-results-meta">
                 <span><Compass className="h-3.5 w-3.5" /> {filtered.length} {shortlistOnly ? 'shortlisted' : 'universities found'}</span>
-                <span className="hidden sm:inline">{shortlistOnly ? 'Saved on this device' : `Complete QS 2027 top ${QS_TOP_50_COUNT}`}</span>
+                <span className="hidden sm:inline">{shortlistOnly ? 'Saved on this device' : `Complete QS 2027 ranking · ${QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}`}</span>
                 {hasFilters && (
                   <button type="button" onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" /> Reset filters</button>
                 )}
@@ -426,7 +426,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               ) : null}
 
               <p className="admission-catalog-note">
-                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}. Catalog refreshed 12 August 2026; official admission and cost sources open from each profile.
+                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}, published 18 June 2026. Admission and cost details appear only where they have been independently verified.
               </p>
             </div>
           </section>

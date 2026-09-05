@@ -12,7 +12,7 @@ const EXAM_ARENAS: PillarHubCard[] = [
     details: ['Listening & Reading', 'Writing & Speaking', 'Full mock exams', 'Band progress'],
   },
   {
-    title: 'Digital SAT Arena',
+    title: 'SAT Arena',
     description:
       'Strengthen the Math and Reading & Writing skills required for competitive undergraduate applications.',
     eyebrow: 'Undergraduate admissions',

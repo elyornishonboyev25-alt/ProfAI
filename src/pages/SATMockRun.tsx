@@ -46,6 +46,7 @@ import {
   clearSATAttempt,
   loadSATAttempt,
   saveSATAttempt,
+  saveSATAttemptToHistory,
 } from '@/features/sat/attemptStorage'
 import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -234,6 +235,7 @@ export default function SATMockRun() {
     }
     attemptRef.current = paused
     saveSATAttempt(paused)
+    saveSATAttemptToHistory(paused, 'exit')
   }, [modules])
 
   const exitTest = useCallback(() => {

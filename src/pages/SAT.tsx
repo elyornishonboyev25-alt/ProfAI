@@ -19,7 +19,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { getSATSectionTest, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
-import { loadSATAttempt } from '@/features/sat/attemptStorage'
+import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 import { ARENA_GLASS_SURFACE, ArenaBackdrop, StudyIllustration } from '@/components/visuals/ArenaVisuals'
 
@@ -180,12 +180,29 @@ export default function SAT() {
   ), [])
 
   const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
-  const completedAttempts = attempts.filter(({ attempt }) => attempt.status === 'submitted')
-  const completedTestIds = new Set(completedAttempts.map(({ test }) => test.id))
-  const scoreHistory = completedAttempts
-    .slice()
-    .sort((a, b) => a.attempt.updatedAt - b.attempt.updatedAt)
-    .map(({ attempt, test }) => scoreSATModules(test.modules, attempt.answers).midpoint)
+  const firstCompletedFullAttempts = useMemo(() => {
+    const fullTestsById = new Map(Object.values(SAT_TEST_CATALOG).map((test) => [test.id, test]))
+    const firstCompletedAttemptByTest = new Map<string, AttemptWithTest>()
+
+    loadSATAttemptHistory()
+      .filter(({ attempt }) => attempt.status === 'submitted' && fullTestsById.has(attempt.testId))
+      .sort((a, b) => a.savedAt - b.savedAt)
+      .forEach(({ attempt }) => {
+        if (!firstCompletedAttemptByTest.has(attempt.testId)) {
+          firstCompletedAttemptByTest.set(attempt.testId, {
+            attempt,
+            test: fullTestsById.get(attempt.testId)!,
+          })
+        }
+      })
+
+    return [...firstCompletedAttemptByTest.values()]
+      .sort((a, b) => (a.attempt.submittedAt ?? a.attempt.updatedAt) - (b.attempt.submittedAt ?? b.attempt.updatedAt))
+  }, [])
+  const completedTestIds = new Set(firstCompletedFullAttempts.map(({ test }) => test.id))
+  const scoreHistory = firstCompletedFullAttempts.map(({ attempt, test }) => (
+    scoreSATModules(test.modules, attempt.answers).midpoint
+  ))
   const bestScore = scoreHistory.length ? Math.max(...scoreHistory) : (profile?.currentSatScore ?? 1050)
   const targetScore = profile?.targetSatScore ?? 1400
   const targetProgress = Math.min(100, Math.max(1, Math.round((bestScore / targetScore) * 100)))
@@ -218,7 +235,7 @@ export default function SAT() {
   const studyHours = studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`
   const recentProgress = activeAttempt
     ? Math.round((Object.keys(activeAttempt.attempt.answers).length / activeAttempt.test.questionCount) * 100)
-    : completedAttempts.length ? 100 : 0
+    : completedTestIds.size ? 100 : 0
 
   const toggleMockCatalog = () => {
     if (showMockCatalog) {
@@ -322,7 +339,7 @@ export default function SAT() {
 
           <div className="grid min-h-[15rem] grid-cols-3 gap-4">
             {[
-              { label: 'Practice tests', value: `${completedAttempts.length}/${30}`, icon: Check },
+              { label: 'Practice tests', value: `${completedTestIds.size}/${30}`, icon: Check },
               { label: 'Best score', value: bestScore, icon: Flag },
               { label: 'Study hours', value: studyHours, icon: Clock3 },
             ].map(({ label, value, icon: Icon }) => (

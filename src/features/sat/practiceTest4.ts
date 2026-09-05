@@ -52,6 +52,7 @@ export type HighlightStroke = {
 
 export type SATAttempt = {
   version: 1
+  attemptId: string
   testId: string
   mode: SATMode
   status: SATAttemptStatus
@@ -360,6 +361,7 @@ export function createSATAttempt(testId: string, modules: SATModule[], mode: SAT
   const totalDurationSeconds = modules.reduce((total, module) => total + module.durationSeconds, 0)
   return {
     version: 1,
+    attemptId: `${testId}-${now}-${Math.random().toString(36).slice(2, 10)}`,
     testId,
     mode,
     status: 'active',

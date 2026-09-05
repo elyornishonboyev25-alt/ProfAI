@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Maximize2, X } from 'lucide-react'
+import { ImageOff, Maximize2, RefreshCw, X } from 'lucide-react'
 
 type Props = {
   asset: string
@@ -12,6 +12,25 @@ type Props = {
 
 export default function SATVisual({ asset, alt, className = '', imageClassName = '', onError }: Props) {
   const [open, setOpen] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [automaticRetries, setAutomaticRetries] = useState(0)
+  const [failed, setFailed] = useState(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const displayedAsset = loadAttempt === 0
+    ? asset
+    : `${asset}${asset.includes('?') ? '&' : '?'}sat-retry=${loadAttempt}`
+
+  useEffect(() => {
+    setOpen(false)
+    setLoadAttempt(0)
+    setAutomaticRetries(0)
+    setFailed(false)
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+  }, [asset])
+
+  useEffect(() => () => {
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+  }, [])
 
   useEffect(() => {
     if (!open) return undefined
@@ -27,21 +46,56 @@ export default function SATVisual({ asset, alt, className = '', imageClassName =
     }
   }, [open])
 
+  const handleLoadError = () => {
+    if (automaticRetries < 2) {
+      retryTimer.current = setTimeout(() => {
+        setAutomaticRetries((count) => count + 1)
+        setLoadAttempt((attempt) => attempt + 1)
+      }, automaticRetries === 0 ? 250 : 750)
+      return
+    }
+
+    setFailed(true)
+    setOpen(false)
+    onError?.()
+  }
+
+  const retry = () => {
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+    setAutomaticRetries(0)
+    setFailed(false)
+    setLoadAttempt((attempt) => attempt + 1)
+  }
+
   return (
     <>
-      <button
-        type="button"
-        aria-label={`Enlarge ${alt}`}
-        onClick={() => setOpen(true)}
-        className={`group relative block max-w-full cursor-zoom-in overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${className}`}
-      >
-        <img src={asset} alt={alt} onError={onError} className={imageClassName} />
-        <span className="pointer-events-none absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950/75 text-white opacity-0 shadow-lg backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
-          <Maximize2 className="h-4 w-4" />
-        </span>
-      </button>
+      {failed ? (
+        <div className={`flex min-h-36 max-w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-amber-400 bg-amber-50 px-5 py-6 text-center text-amber-950 ${className}`}>
+          <ImageOff className="h-6 w-6" />
+          <p className="text-xs font-bold">The reference visual could not be loaded.</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-900 shadow-sm transition hover:bg-amber-100"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Retry image
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-label={`Enlarge ${alt}`}
+          onClick={() => setOpen(true)}
+          className={`group relative block max-w-full cursor-zoom-in overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${className}`}
+        >
+          <img src={displayedAsset} alt={alt} onError={handleLoadError} className={imageClassName} />
+          <span className="pointer-events-none absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950/75 text-white opacity-0 shadow-lg backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Maximize2 className="h-4 w-4" />
+          </span>
+        </button>
+      )}
 
-      {open
+      {open && !failed
         ? createPortal(
             <div
               role="dialog"
@@ -61,8 +115,9 @@ export default function SATVisual({ asset, alt, className = '', imageClassName =
                 <X className="h-5 w-5" />
               </button>
               <img
-                src={asset}
+                src={displayedAsset}
                 alt={alt}
+                onError={handleLoadError}
                 className="max-h-[90vh] max-w-[96vw] rounded-xl bg-white object-contain shadow-2xl"
               />
             </div>,

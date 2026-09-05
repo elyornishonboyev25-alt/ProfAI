@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
-import { Bookmark, FileImage, ImageOff, ScanText, SpellCheck2 } from 'lucide-react'
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { Bookmark, FileImage, ScanText, SpellCheck2 } from 'lucide-react'
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
@@ -129,17 +129,12 @@ export default function SATQuestionCanvas({
   const draftRef = useRef<HighlightStroke | null>(null)
   const [draft, setDraft] = useState<HighlightStroke | null>(null)
   const [sourceOpen, setSourceOpen] = useState(false)
-  const [visualFailed, setVisualFailed] = useState(false)
   const sourceStrokes = useMemo(
     () => strokes.filter((stroke) => (stroke.surface ?? 'source') === 'source'),
     [strokes],
   )
   const displayedStrokes = useMemo(() => (draft ? [...sourceStrokes, draft] : sourceStrokes), [draft, sourceStrokes])
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
-
-  useEffect(() => {
-    setVisualFailed(false)
-  }, [question.id])
 
   const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (!highlightEnabled) return
@@ -218,12 +213,11 @@ export default function SATQuestionCanvas({
           onChange={onChange}
         />
         <div className="mx-auto max-w-3xl">
-          {question.visual && !visualFailed ? (
+          {question.visual ? (
             <figure className="mb-7 overflow-hidden rounded-xl border border-slate-300 bg-white p-4">
               <SATVisual
                 asset={question.visual.asset}
                 alt={question.visual.alt}
-                onError={() => setVisualFailed(true)}
                 className="mx-auto"
                 imageClassName="mx-auto max-h-[28rem] w-auto max-w-full object-contain"
               />
@@ -231,12 +225,6 @@ export default function SATQuestionCanvas({
                 <FileImage className="h-4 w-4" /> Reference visual · not drawn to scale unless stated
               </figcaption>
             </figure>
-          ) : null}
-
-          {visualFailed ? (
-            <div className="mb-6 flex items-center justify-center gap-2 rounded-xl border border-dashed border-amber-400 bg-amber-50 px-4 py-5 text-xs font-bold text-amber-900">
-              <ImageOff className="h-4 w-4" /> The reference visual could not be loaded.
-            </div>
           ) : null}
 
           {context ? (

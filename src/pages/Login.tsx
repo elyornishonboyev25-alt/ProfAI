@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { ArrowRight, Eye, EyeOff, Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Flame, Loader2, Lock, Mail, Sparkles, Star, UserPlus } from 'lucide-react'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
@@ -166,7 +166,7 @@ export default function Login() {
         className="relative grid w-full max-w-[430px] items-stretch lg:max-w-6xl lg:grid-cols-[1.08fr_.92fr] lg:gap-5"
       >
         {/* Aspirational showcase (desktop only) — concept 11-Login-Desktop */}
-        <AuthShowcasePanel quote="Your university journey remembers where you stopped." />
+        <AuthShowcasePanel />
 
         <div className="relative flex">
         {/* Soft glow halo behind the card */}
@@ -203,17 +203,9 @@ export default function Login() {
               </span>
             </div>
 
-            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
-              <Sparkles className="h-3 w-3" />
-              Your progress is ready
-            </span>
-
             <h1 className="mt-3 text-[1.9rem] font-black leading-[1.08] tracking-[-0.035em] text-slate-950">
-              Pick up exactly where you left off.
+              Welcome back.
             </h1>
-            <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-slate-500">
-              Your plan, XP, streak and university roadmap are waiting inside.
-            </p>
           </div>
 
           {/* Account-not-found call-to-action */}
@@ -325,7 +317,7 @@ export default function Login() {
                 </>
               ) : (
                 <span className="inline-flex items-center gap-2">
-                  Enter my learning cockpit
+                  Sign in
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
               )}
@@ -336,18 +328,13 @@ export default function Login() {
           <div className="my-4 flex items-center gap-3">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-100 to-blue-200/70" />
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-              or continue with
+              or
             </span>
             <span className="h-px flex-1 bg-gradient-to-l from-transparent via-blue-100 to-blue-200/70" />
           </div>
 
           {/* Google */}
           <GoogleAuthButton mode="signin" onCredential={handleGoogleCredential} />
-
-          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-            Use your existing Google account — no password needed.
-          </p>
 
           {/* Gamified trust chips */}
           <div className="mt-5 grid grid-cols-3 gap-2 border-t border-blue-50 pt-4">
@@ -363,9 +350,8 @@ export default function Login() {
           </div>
 
           <p className="mt-4 text-center text-[13px] text-[#6B7280]">
-            New account?{' '}
             <Link to="/register" className="font-bold text-blue-600 transition-colors hover:text-blue-700">
-              Create one now
+              Create an account
             </Link>
           </p>
         </div>

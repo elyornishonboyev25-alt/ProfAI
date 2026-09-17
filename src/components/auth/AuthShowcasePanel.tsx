@@ -15,7 +15,7 @@ const stats = [
   { value: '1', label: 'Clear path' },
 ] as const
 
-export default function AuthShowcasePanel({ quote = 'Your university journey continues here.' }: { quote?: string }) {
+export default function AuthShowcasePanel({ quote = 'Your path to university.' }: { quote?: string }) {
   const { minimalMotion } = useMotionPreferences()
 
   return (
@@ -36,7 +36,7 @@ export default function AuthShowcasePanel({ quote = 'Your university journey con
           </span>
           <div>
             <p className="text-sm font-black tracking-tight">Prof<span className="text-blue-400">AI</span></p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Learning cockpit</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Learning platform</p>
           </div>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200 backdrop-blur-xl">
@@ -51,7 +51,7 @@ export default function AuthShowcasePanel({ quote = 'Your university journey con
           animate={{ opacity: 1, y: 0 }}
           className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-blue-200 backdrop-blur-xl"
         >
-          <Sparkles className="h-3.5 w-3.5" /> One account. Your entire journey.
+          <Sparkles className="h-3.5 w-3.5" /> IELTS · SAT · UNIVERSITY
         </motion.span>
         <motion.h2
           initial={minimalMotion ? false : { opacity: 0, y: 16 }}
@@ -62,15 +62,14 @@ export default function AuthShowcasePanel({ quote = 'Your university journey con
           {quote}
         </motion.h2>
         <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">
-          Return to the exact plan, practice history and university targets you left behind.
+          Prepare for IELTS and SAT with ProfAI.
         </p>
 
         <div className="relative mt-8 overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/[.08] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,.12),0_24px_48px_rgba(0,0,0,.24)] backdrop-blur-2xl">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">Your live route</p>
-              <p className="mt-1 text-sm font-bold text-white">From today’s score to your dream campus</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">Your study plan</p>
             </div>
             <MapPin className="h-5 w-5 text-blue-300" />
           </div>
@@ -108,8 +107,7 @@ export default function AuthShowcasePanel({ quote = 'Your university journey con
             <CheckCircle2 className="h-4 w-4" />
           </span>
           <div>
-            <p className="text-xs font-black text-white">Everything is exactly where you left it</p>
-            <p className="mt-0.5 text-[10px] text-white/45">Study history syncs securely across every device.</p>
+            <p className="text-xs font-black text-white">Your progress is saved.</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2.5">

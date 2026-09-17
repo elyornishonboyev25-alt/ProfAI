@@ -312,7 +312,15 @@ function resolveWeeklyPerformanceBoard(period: PeriodInput, rows: LeaderboardRow
     .slice(0, 5)
 }
 
-function resolveAntiCheatRules() {
+function resolveAntiCheatRules(useCanonicalXp = false) {
+  if (useCanonicalXp) {
+    return [
+      'Rankings use the total XP shown on each learner’s profile, highest first.',
+      'All awarded XP counts, including tests, vocabulary, speaking, writing and daily learning.',
+      'You can join the ranking without completing a test.',
+      'Ties are broken by test accuracy, then completed tests. Otherwise, tied learners keep a consistent order.',
+    ]
+  }
   return [
     'Ranking is the sum of XP earned across all tests — higher scores on harder tests rank higher.',
     'Only one validated attempt per test counts in each leaderboard period — repeats are discarded.',
@@ -367,9 +375,9 @@ function buildUserAggregates(params: {
 
   const rows: UserAggregateRow[] = []
 
-  for (const [userId, userAttempts] of attemptsByUser.entries()) {
-    const user = params.usersById.get(userId)
-    if (!user || userAttempts.length === 0) continue
+  for (const [userId, user] of params.usersById.entries()) {
+    const userAttempts = attemptsByUser.get(userId) ?? []
+    if (!params.useCanonicalXp && userAttempts.length === 0) continue
 
     userAttempts.sort((left, right) => left.completedAt.getTime() - right.completedAt.getTime())
     const seenTests = new Set<string>()
@@ -386,11 +394,11 @@ function buildUserAggregates(params: {
       validatedAttempts.push(attempt)
     }
 
-    if (validatedAttempts.length === 0) continue
+    if (!params.useCanonicalXp && validatedAttempts.length === 0) continue
 
     const lastAttemptAt =
-      validatedAttempts[validatedAttempts.length - 1]?.completedAt ?? validatedAttempts[0].completedAt
-    const inactivityDays = fullDaysBetween(new Date(), lastAttemptAt)
+      validatedAttempts[validatedAttempts.length - 1]?.completedAt
+    const inactivityDays = lastAttemptAt ? fullDaysBetween(new Date(), lastAttemptAt) : 0
     const inactivityPenalty = calculateInactivityPenalty(inactivityDays)
     const activityDecay = calculateActivityDecay(inactivityDays)
     const focusStats = params.focusStatsByUser.get(userId) ?? {
@@ -443,11 +451,12 @@ function buildUserAggregates(params: {
     // the breakdown drawer so reviewers can audit a row, but it no longer
     // multiplies the visible ranking number.
     const rankingScore = xpTotal
-    const avgAccuracy = accuracyTotal / testsCompleted
-    const avgSpeed = speedTotal / testsCompleted
-    const avgConsistency = consistencyTotal / testsCompleted
-    const avgImprovement = improvementTotal / testsCompleted
-    const avgDifficulty = difficultyTotal / testsCompleted
+    const sampleCount = Math.max(1, testsCompleted)
+    const avgAccuracy = accuracyTotal / sampleCount
+    const avgSpeed = speedTotal / sampleCount
+    const avgConsistency = consistencyTotal / sampleCount
+    const avgImprovement = improvementTotal / sampleCount
+    const avgDifficulty = difficultyTotal / sampleCount
     const avgEngagement = engagementScore
     const division = resolveDivision(avgAccuracy)
 
@@ -496,7 +505,7 @@ function buildUserAggregates(params: {
   rows.sort((left, right) => {
     if (right.totalXp !== left.totalXp) return right.totalXp - left.totalXp
     if (right.accuracy !== left.accuracy) return right.accuracy - left.accuracy
-    return right.testsCompleted - left.testsCompleted
+    return right.testsCompleted - left.testsCompleted || left.userId.localeCompare(right.userId)
   })
 
   return rows
@@ -527,6 +536,7 @@ export async function generateLeaderboard(params: {
     }
   }
 
+  const useCanonicalXp = params.period === 'all' && !params.category
   const startDate = getPeriodStart(params.period)
   const categoryFilter = params.category
 
@@ -557,7 +567,7 @@ export async function generateLeaderboard(params: {
     },
   })
 
-  if (attempts.length === 0) {
+  if (!useCanonicalXp && attempts.length === 0) {
     return {
       period: params.period,
       category: params.category ?? null,
@@ -569,10 +579,10 @@ export async function generateLeaderboard(params: {
     }
   }
 
-  const userIds = [...new Set(attempts.map((attempt) => attempt.userId))]
+  const attemptUserIds = [...new Set(attempts.map((attempt) => attempt.userId))]
 
   const users = await prisma.user.findMany({
-    where: { id: { in: userIds } },
+    where: useCanonicalXp ? {} : { id: { in: attemptUserIds } },
     select: {
       id: true,
       fullName: true,
@@ -583,6 +593,7 @@ export async function generateLeaderboard(params: {
     },
   })
 
+  const userIds = users.map((user) => user.id)
   const userMap = new Map(users.map((user) => [user.id, user]))
   const focusWindowStart = addUtcDays(startOfUtcDay(new Date()), -13)
   const focusRows = await prisma.focusDailyAnalytics.findMany({
@@ -619,7 +630,7 @@ export async function generateLeaderboard(params: {
   const aggregatedRows = buildUserAggregates({
     attempts: attempts as UserAttemptSnapshot[],
     period: params.period,
-    useCanonicalXp: params.period === 'all' && !params.category,
+    useCanonicalXp,
     usersById: userMap,
     focusStatsByUser,
   })
@@ -710,7 +721,7 @@ export async function generateLeaderboard(params: {
     category: params.category ?? null,
     weeklyPremiumWinner: resolveWeeklyPremiumWinner(params.period, stableRows),
     weeklyPerformanceBoard: resolveWeeklyPerformanceBoard(params.period, stableRows),
-    antiCheatRules: resolveAntiCheatRules(),
+    antiCheatRules: resolveAntiCheatRules(useCanonicalXp),
     rows: stableRows,
   }
 

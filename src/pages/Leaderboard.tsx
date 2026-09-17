@@ -15,7 +15,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
-import type { LeaderboardResponse, LeaderboardRow, TestCategory } from '@/types/platform'
+import type { LeaderboardResponse, LeaderboardRow } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { isPremiumUser } from '@/utils/premiumAccess'
@@ -26,20 +26,6 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
-
-type PeriodValue = 'today' | 'week' | 'month'
-
-const periods: Array<{ label: string; value: PeriodValue }> = [
-  { label: 'Daily', value: 'today' },
-  { label: 'Weekly', value: 'week' },
-  { label: 'Monthly', value: 'month' },
-]
-
-const categories: Array<{ label: string; value: TestCategory | 'ALL' }> = [
-  { label: 'Combined', value: 'ALL' },
-  { label: 'IELTS', value: 'IELTS' },
-  { label: 'SAT', value: 'SAT' },
-]
 
 function getMovement(row: LeaderboardRow) {
   if (row.rankTrend === 'same') {
@@ -105,8 +91,6 @@ export default function Leaderboard() {
   const user = useAuthStore((state: AuthState) => state.user)
   const { minimalMotion } = useMotionPreferences()
 
-  const [period, setPeriod] = useState<PeriodValue>('week')
-  const [category, setCategory] = useState<TestCategory | 'ALL'>('ALL')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<LeaderboardResponse | null>(null)
@@ -127,10 +111,7 @@ export default function Leaderboard() {
       setError(null)
 
       try {
-        const params = new URLSearchParams({ period })
-        if (category !== 'ALL') params.set('category', category)
-
-        const payload = await apiClient.get<LeaderboardResponse>(`/leaderboard?${params.toString()}`, { auth: true })
+        const payload = await apiClient.get<LeaderboardResponse>('/leaderboard?period=all', { auth: true })
         if (!active) return
         setData(payload)
       } catch (fetchError) {
@@ -145,9 +126,9 @@ export default function Leaderboard() {
     return () => {
       active = false
     }
-  }, [period, category, user, reloadKey])
+  }, [user, reloadKey])
 
-  const rows = data?.rows ?? []
+  const rows = useMemo(() => data?.rows ?? [], [data])
   const currentUserRow = useMemo(() => rows.find((row) => row.isCurrentUser) ?? null, [rows])
   const podiumRows = useMemo(() => {
     if (data?.podium?.length) return data.podium.slice(0, 3)
@@ -162,6 +143,11 @@ export default function Leaderboard() {
   }, [rows])
 
   const topTen = rows.slice(0, 10)
+  const leader = rows[0] ?? null
+  const currentXp = currentUserRow?.totalXp ?? user?.xp ?? 0
+  const nextRank = currentUserRow ? rows.find((row) => row.rank === currentUserRow.rank - 1) : null
+  const xpToNextRank = nextRank ? Math.max(0, nextRank.totalXp - currentXp + 1) : 0
+  const leaderProgress = leader && leader.totalXp > 0 ? Math.min(100, currentXp / leader.totalXp * 100) : 0
   // Competition and progress visibility are core learning features. Keep the
   // complete board free for every signed-in learner.
   const premiumLocked = false
@@ -195,7 +181,7 @@ export default function Leaderboard() {
                 Global <span className="arena-title-accent-red">Leaderboard</span>
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Pure XP ranking — earn more XP on harder tests to climb. Ties broken by accuracy then attempts.
+                Ranked by total profile XP, highest first. Every awarded XP counts across all activities.
               </p>
             </div>
 
@@ -207,7 +193,7 @@ export default function Leaderboard() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700">Your XP</p>
                     <p className="text-3xl font-black tracking-tight text-slate-900">
-                      <CountUp value={currentUserRow ? currentUserRow.totalXp : user?.xp ?? 0} />
+                      <CountUp value={currentXp} />
                     </p>
                     <p className="mt-0.5 text-[11px] font-semibold text-slate-600">
                       Rank{' '}
@@ -221,48 +207,9 @@ export default function Leaderboard() {
             </Tilt3D>
           </div>
 
-          {/* Filters */}
-          <div className="relative z-10 mt-6 grid gap-3 lg:grid-cols-2">
-            <div className="rounded-2xl border border-blue-100 bg-white p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600">Period</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {periods.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setPeriod(item.value)}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                      period === item.value
-                        ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
-                        : 'border border-blue-100 bg-white text-slate-600 hover:text-blue-700'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-blue-100 bg-white p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-600">Track</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {categories.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setCategory(item.value)}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                      category === item.value
-                        ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
-                        : 'border border-blue-100 bg-white text-slate-600 hover:text-blue-700'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <p className="relative z-10 mt-6 text-xs font-semibold text-blue-700">
+            All time · All activities · Same XP as your profile
+          </p>
         </section>
       </Reveal>
 
@@ -308,7 +255,7 @@ export default function Leaderboard() {
           </div>
         ) : visualPodium.length === 0 ? (
           <div className="rounded-2xl border border-blue-100 bg-white p-6 text-sm text-slate-600">
-            Be the first to complete a test and claim the top spot.
+            Earn XP from learning activities to claim the top spot.
           </div>
         ) : (
           <div className="grid items-end gap-4 lg:grid-cols-3">
@@ -508,7 +455,7 @@ export default function Leaderboard() {
               </Stagger>
             ) : (
               <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-5 text-sm text-slate-600">
-                No verified rankings yet for this filter. Be the first to climb!
+                No rankings yet. Earn XP to start climbing!
               </div>
             )}
           </article>
@@ -517,27 +464,33 @@ export default function Leaderboard() {
 
         <div className="space-y-4">
           <Reveal>
-            <PremiumFeatureLock locked={premiumLocked} title="Unlock League Promotion" compact>
+            <PremiumFeatureLock locked={premiumLocked} title="Unlock Your XP Progress" compact>
             <article className="surface-card relative overflow-hidden border-amber-200 p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
               <div className="flex items-center gap-3">
                 <ArenaMetricMark icon={Crown} tone="amber" />
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">Gold League</p>
-                  <h3 className="text-lg font-black text-slate-900">League Promotion</h3>
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">Total profile XP</p>
+                  <h3 className="text-lg font-black text-slate-900">Your XP Progress</h3>
                 </div>
               </div>
               <div className="mt-5 overflow-hidden rounded-full bg-amber-100">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, Math.max(16, ((11 - Math.min(10, data?.currentUserRank ?? 10)) / 10) * 100))}%` }}
+                  animate={{ width: `${leaderProgress}%` }}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                   className="h-3 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-blue-500 shadow-[0_0_18px_rgba(245,158,11,.48)]"
                 />
               </div>
-              <p className="mt-4 text-center text-sm font-black text-slate-800">Top 10 advance to Platinum</p>
+              <p className="mt-4 text-center text-sm font-black text-slate-800">
+                {currentUserRow?.rank === 1
+                  ? 'You lead the leaderboard!'
+                  : nextRank
+                    ? `${xpToNextRank.toLocaleString('en-US')} XP to pass #${nextRank.rank}`
+                    : 'Earn XP to climb the leaderboard'}
+              </p>
               <p className="mt-1 text-center text-xs font-semibold text-slate-500">
-                2 days left · Your rank #{data?.currentUserRank ?? '—'}
+                Your rank #{data?.currentUserRank ?? '—'} · {currentXp.toLocaleString('en-US')} XP
               </p>
             </article>
             </PremiumFeatureLock>
@@ -552,49 +505,37 @@ export default function Leaderboard() {
                 <h3 className="text-base font-black tracking-tight text-slate-900">How XP Works</h3>
               </div>
               <p className="mt-3 text-xs leading-5 text-slate-600">
-                Each attempt awards XP based on how much you scored. The formula is fully transparent:
+                Your leaderboard XP is the same total shown on your profile. Tests, vocabulary,
+                speaking, writing and other rewarded learning activities all contribute.
               </p>
               <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-900">
-                XP = max(difficulty) × score%²
-              </div>
-              <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-3">
-                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-2 py-1.5">
-                  <p className="font-bold text-emerald-700">Easy</p>
-                  <p className="text-emerald-900">up to 40 XP</p>
-                </div>
-                <div className="rounded-lg border border-amber-100 bg-amber-50/50 px-2 py-1.5">
-                  <p className="font-bold text-amber-700">Medium</p>
-                  <p className="text-amber-900">up to 70 XP</p>
-                </div>
-                <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-2 py-1.5">
-                  <p className="font-bold text-blue-700">Hard</p>
-                  <p className="text-blue-900">up to 100 XP</p>
-                </div>
+                More total XP = a higher rank
               </div>
               <p className="mt-3 text-[11px] text-slate-500">
-                100% score = full XP. 70% score = 49% XP. Daily streak adds up to +20% bonus.
+                Equal XP is ranked by test accuracy, then completed tests. Learning activities
+                count even if you have not completed a test.
               </p>
             </article>
           </Reveal>
 
-          {/* Weekly winner */}
+          {/* Overall XP leader */}
           <Reveal delay={0.06}>
-            <PremiumFeatureLock locked={premiumLocked} title="Unlock Weekly Champion" compact>
+            <PremiumFeatureLock locked={premiumLocked} title="Unlock XP Leader" compact>
             <article className="surface-card relative overflow-hidden p-5">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
               <div className="flex items-center gap-2">
                 <ArenaMetricMark icon={Trophy} tone="red" size="sm" />
-                <h3 className="text-base font-black tracking-tight text-slate-900">Weekly Champion</h3>
+                <h3 className="text-base font-black tracking-tight text-slate-900">XP Leader</h3>
               </div>
-              {data?.weeklyPremiumWinner ? (
+              {leader ? (
                 <div className="mt-3">
-                  <p className="text-lg font-black text-slate-900">{data.weeklyPremiumWinner.fullName}</p>
+                  <p className="text-lg font-black text-slate-900">{leader.fullName}</p>
                   <p className="mt-1 text-xs font-medium text-slate-600">
-                    {data.weeklyPremiumWinner.testsCompleted} tests · Score {data.weeklyPremiumWinner.rankingScore.toFixed(0)} XP
+                    {leader.totalXp.toLocaleString('en-US')} total XP · Rank #1
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">No champion yet this week.</p>
+                <p className="mt-3 text-sm text-slate-500">No XP leader yet.</p>
               )}
             </article>
             </PremiumFeatureLock>
@@ -635,7 +576,7 @@ export default function Leaderboard() {
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/55 to-transparent" />
               <div className="flex items-center gap-2">
                 <ArenaMetricMark icon={Shield} tone="emerald" size="sm" />
-                <h3 className="text-base font-black tracking-tight text-slate-900">Integrity Rules</h3>
+                <h3 className="text-base font-black tracking-tight text-slate-900">Ranking Rules</h3>
               </div>
               <div className="mt-3 space-y-2">
                 {(data?.antiCheatRules ?? []).slice(0, 5).map((rule) => (

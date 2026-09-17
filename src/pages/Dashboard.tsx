@@ -407,7 +407,7 @@ export default function Dashboard() {
                       <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-slate-200 text-[9px] font-black text-slate-700">{initials(row.fullName)}</span>
                       <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
-                      <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')}</span>
+                      <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')} XP</span>
                     </button>
                   ))}
                 </div>

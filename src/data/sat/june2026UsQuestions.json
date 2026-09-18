@@ -1,0 +1,3412 @@
+[
+  {
+    "id": "rw1-1",
+    "moduleId": "rw1",
+    "number": 1,
+    "prompt": "Traditionally, certain features of mosque architecture are nearly _______, such as the mihrab (or niche), which almost all mosques include. But mosques can also be built to reflect a multitude of different architectural styles, as in the case of the Great Mosque of Central Java, which includes elements from the Javanese and Greek revival styles.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "universal"
+      },
+      {
+        "key": "B",
+        "text": "elaborate"
+      },
+      {
+        "key": "C",
+        "text": "illusory"
+      },
+      {
+        "key": "D",
+        "text": "idealized"
+      }
+    ],
+    "rationale": "Almost all mosques share these features, so they are nearly universal. The contrast concerns variation in architectural styles.",
+    "difficulty": "Foundation",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw1-01.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      3
+    ]
+  },
+  {
+    "id": "rw1-2",
+    "moduleId": "rw1",
+    "number": 2,
+    "prompt": "The dates that archaeologists assign to most of the colossal sculptures of human heads produced by the Olmec civilization of Mesoamerica are necessarily _______. The majority of the sculptures have been moved from their original context, making precise dating impossible.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "uncontroversial"
+      },
+      {
+        "key": "B",
+        "text": "irrelevant"
+      },
+      {
+        "key": "C",
+        "text": "applicable"
+      },
+      {
+        "key": "D",
+        "text": "approximate"
+      }
+    ],
+    "rationale": "Moving the sculptures from their original context prevents precise dating, so the dates must be approximate.",
+    "difficulty": "Foundation",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw1-02.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      4
+    ]
+  },
+  {
+    "id": "rw1-3",
+    "moduleId": "rw1",
+    "number": 3,
+    "prompt": "_______ traditional descriptions of pollination syndromes (suites of floral traits, such as nectar composition and symmetry, hypothesized to have independently evolved as a result of selection pressure exerted by pollinators) and recent empirical observations of floral-trait combinations have led some ecologists to express reservations about the utility of those descriptions.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Discrepancies between"
+      },
+      {
+        "key": "B",
+        "text": "Proclamations of"
+      },
+      {
+        "key": "C",
+        "text": "Recurrences of"
+      },
+      {
+        "key": "D",
+        "text": "Affinities between"
+      }
+    ],
+    "rationale": "Reservations about the descriptions arise from discrepancies, or mismatches, between the traditional descriptions and actual observations.",
+    "difficulty": "Advanced",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw1-03.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      5
+    ]
+  },
+  {
+    "id": "rw1-4",
+    "moduleId": "rw1",
+    "number": 4,
+    "prompt": "Scientists discovered a 390-million-year-old fossilized forest of Calamophyton trees in modern-day England. The scientists believe the emergence of these Calamophyton forests changed the land significantly. <u>For example, the tree roots would have greatly reduced soil erosion, and the accumulated twigs the trees shed likely created new habitats for animal life.</u>\n\nWhich choice best describes the function of the underlined sentence in the text as a whole?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It suggests that there are likely fossilized Calamophyton forests from before 390 million years ago."
+      },
+      {
+        "key": "B",
+        "text": "It provides two competing views of when the Calamophyton forest likely emerged."
+      },
+      {
+        "key": "C",
+        "text": "It illustrates how Calamophyton forests likely changed conditions on the land."
+      },
+      {
+        "key": "D",
+        "text": "It indicates how fast the Calamophyton forest spread."
+      }
+    ],
+    "rationale": "Reduced erosion and new animal habitats are concrete examples of how the forests changed the land.",
+    "difficulty": "Foundation",
+    "domain": "Craft and Structure",
+    "skill": "Text Structure & Purpose",
+    "asset": "/sat/june-2026-us/questions/rw1-04.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      6
+    ]
+  },
+  {
+    "id": "rw1-5",
+    "moduleId": "rw1",
+    "number": 5,
+    "prompt": "The following text is from Louise Erdrich's 1986 novel The Beet Queen. The narrator discusses her relationship with her young niece, Dot. Celestine, the narrator's sister-in-law, is Dot's mother.\n\nDot and I had a mental connection, I was sure of it. I understood things about the baby that her mother could not accept.\n\nFor instance, she was never meant to be a baby.\n\nDot was as impatient with babyhood as I. She tried at once to grow out of it. Celestine never saw that, because she, and only she, took pleasure in Dot's helpless softness. Only Celestine was saddened by her daughter's fierce progress. Day by day, Dot grew stronger. In her shopping-cart stroller she exercised to exhaustion, bouncing for hours to develop her leg muscles.\n\nWhich choice best describes the main purpose of the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To present the narrator’s belief that she understands Dot better than Celestine does"
+      },
+      {
+        "key": "B",
+        "text": "To speculate that when Dot is older, her personality will be like Celestine’s"
+      },
+      {
+        "key": "C",
+        "text": "To discuss what the narrator and Celestine do to amuse Dot"
+      },
+      {
+        "key": "D",
+        "text": "To compare the narrator’s physical appearance to the physical appearance of Celestine"
+      }
+    ],
+    "rationale": "The narrator claims a special mental connection with Dot and contrasts her own understanding of Dot’s impatience with Celestine’s enjoyment of babyhood.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Text Structure & Purpose",
+    "asset": "/sat/june-2026-us/questions/rw1-05.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      7
+    ]
+  },
+  {
+    "id": "rw1-6",
+    "moduleId": "rw1",
+    "number": 6,
+    "prompt": "Adelaide is one of many cities that have installed pontoons or other hardening structures to protect their shorelines against coastal hazards. To assess how birds respond to shoreline hardening and other landscape alterations, Diann Prosser et al. used a tool known as the Index of Waterbird Community Integrity to survey bird communities consisting of sixty-four species, including the tundra swan and the great blue heron, in the Chesapeake Bay on the US East Coast. The researchers concluded that shoreline hardening more negatively affects birds than does land development for uses such as housing.\n\nWhich choice best describes the overall structure of the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It introduces a certain technique, mentions the hypothesis of a study into an ecological consequence of that technique, and presents evidence in support of that study’s hypothesis."
+      },
+      {
+        "key": "B",
+        "text": "It provides an example of a location that has adopted a particular approach, explains the methodology of a study into an ecological effect of that approach, and describes a finding of that study."
+      },
+      {
+        "key": "C",
+        "text": "It makes a claim about the use of a specific strategy, describes field observations of a consequence of that strategy in a particular ecosystem, and makes a supposition based on those observations."
+      },
+      {
+        "key": "D",
+        "text": "It presents a solution to a commonly occurring problem, summarizes the procedures used by a group of researchers studying the environmental impact of that solution, and notes the significance of the researchers’ findings."
+      }
+    ],
+    "rationale": "The sequence is Adelaide’s use of shoreline hardening, the waterbird survey method, and the finding comparing hardening with land development. The passage does not state an initial hypothesis or discuss the broader significance of the findings.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Text Structure & Purpose",
+    "asset": "/sat/june-2026-us/questions/rw1-06.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      8
+    ]
+  },
+  {
+    "id": "rw1-7",
+    "moduleId": "rw1",
+    "number": 7,
+    "prompt": "Women like Dorothy T. Blum made important early contributions to the history of US cryptology, a field concerned with secure data communication and storage. Blum provided cryptological services for the US Army in the 1940s and then joined the National Security Agency (NSA). She was a pioneer in transitioning the NSA to using computers for cryptanalysis. In this way, Blum and others like her helped make it possible for more women—such as Maureen Baginski, who later worked in intelligence and supported the FBI— to enter the field of cryptology.\n\nWhich choice best states the main idea of the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Cryptology is a field that focuses primarily on securely managing data."
+      },
+      {
+        "key": "B",
+        "text": "Women such as Dorothy T. Blum and Maureen Baginski have contributed to the field of cryptology."
+      },
+      {
+        "key": "C",
+        "text": "Dorothy T. Blum and Maureen Baginski worked together on an important project in the field of cryptology."
+      },
+      {
+        "key": "D",
+        "text": "Cryptology should be taught more often in schools to encourage more women to enter the field."
+      }
+    ],
+    "rationale": "The passage focuses on women’s contributions, using Blum’s pioneering work and Baginski’s later career as examples.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Central Ideas & Details",
+    "asset": "/sat/june-2026-us/questions/rw1-07.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      9
+    ]
+  },
+  {
+    "id": "rw1-8",
+    "moduleId": "rw1",
+    "number": 8,
+    "prompt": "Researchers who examined data from radio-tagged southern sea otters (Enhydra lutris nereis) identified fitness benefits gained by otters that used tools. By using fixed stones as anvils, tool-using otters gained access to high-quality, hard-shelled prey (e.g., mussels and clams) that they could usually not access through biting alone. Non-tool-using otters foraged abundant, energy-poor, easily extractable prey instead (e.g., snails). Even when easily processed prey were depleted, tool-using otters that processed mussels and clams were thus able to obtain their needed energy resources and to do so without incurring tooth damage.\n\nWhat does the text most strongly suggest about southern sea otters in environments where snails, mussels, and clams are present?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Those otters whose diet consists mainly of snails will likely exhibit less tooth damage than will those otters that use tools to consume mussels and clams."
+      },
+      {
+        "key": "B",
+        "text": "Those otters that do not use tools will likely have more robust health than those otters that do use tools."
+      },
+      {
+        "key": "C",
+        "text": "Those otters that do not use tools will likely need to process larger amounts of prey to meet their energy requirements than will those otters that use tools."
+      },
+      {
+        "key": "D",
+        "text": "Those otters that consume mussels and clams without the use of tools will likely spend less time foraging than will those otters that use tools to access the same prey resources."
+      }
+    ],
+    "rationale": "Non-tool-using otters eat energy-poor prey. To obtain comparable energy, they would need larger amounts than tool users consuming higher-quality prey.",
+    "difficulty": "Medium",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw1-08.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      10
+    ]
+  },
+  {
+    "id": "rw1-9",
+    "moduleId": "rw1",
+    "number": 9,
+    "prompt": "Over the course of the 1900s, more and more Native Hawaiians spoke English instead of the Hawaiian language. To preserve their language, Native Hawaiian teachers founded the ‘Aha Pūnana Leo preschool in 1984. They spoke Hawaiian while teaching, and their Native Hawaiian students were soon able to understand and speak it themselves. The school was a huge success. Eventually it opened locations around Hawaiʻi and started teaching Hawaiian to elementary and high school students too. <u>Thanks to ‘Aha Pūnana Leo, the number of young people who speak the language has increased.</u>\n\nWhich statement, if true, would most directly support the underlined claim?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Besides Native Hawaiians, tens of thousands of people from other Pacific Islander communities live in Hawaiʻi today, including over 37,000 Samoans."
+      },
+      {
+        "key": "B",
+        "text": "Fewer than fifty children could speak Hawaiian when ‘Aha Pūnana Leo was founded, but now more than 2,000 students at ‘Aha Pūnana Leo speak it."
+      },
+      {
+        "key": "C",
+        "text": "Hawaiian is very similar to other languages that are spoken on the Polynesian Islands of the Pacific Ocean, including Tahitian, Samoan, and Māori."
+      },
+      {
+        "key": "D",
+        "text": "Roughly 680,000 Native Hawaiian people lived in the United States in 2020, and a little less than half of them lived in Hawaiʻi."
+      }
+    ],
+    "rationale": "An increase from fewer than 50 children to more than 2,000 students speaking Hawaiian directly supports the claim that the school increased the number of young speakers.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Command of Evidence",
+    "asset": "/sat/june-2026-us/questions/rw1-09.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      11
+    ]
+  },
+  {
+    "id": "rw1-10",
+    "moduleId": "rw1",
+    "number": 10,
+    "prompt": "Lin-Tai Ho and colleagues tracked fish populations in three tide pool-monitoring stations. Although a total of only 31 blackspotted rockskippers were observed at station 3, that was not the lowest count at any station:_______.\n\nWhich choice most effectively uses data from the table to complete the assertion?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "there were 16 streaky rockskippers observed at station 1."
+      },
+      {
+        "key": "B",
+        "text": "there were 610 streaky rockskippers observed at station 3."
+      },
+      {
+        "key": "C",
+        "text": "there were 16 barred flagtails observed at station 3."
+      },
+      {
+        "key": "D",
+        "text": "there were 50 Cocos frillgobies observed at station 1."
+      }
+    ],
+    "rationale": "To show that 31 was not the lowest count, identify a count below 31. Station 3 had 16 barred flagtails.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Quantitative Evidence",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/rw1-10.webp",
+      "alt": "Cumulative counts of four fish species at three Taiwanese tide-pool stations, 1999–2018."
+    },
+    "asset": "/sat/june-2026-us/questions/rw1-10.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      12
+    ]
+  },
+  {
+    "id": "rw1-11",
+    "moduleId": "rw1",
+    "number": 11,
+    "prompt": "Elisabeth Pötzelsberger and colleagues gathered data on 23 non-native tree species. They analyzed reports from Austria, Bulgaria, and Belgium. The researchers concluded that Austria had a greater number of damaging fungus species than either of the other countries did.\n\nWhich choice best describes data from the table that support Pötzelsberger and colleagues’ conclusion?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Belgium reported 13 damaging fungus species but only 11 damaging insect species."
+      },
+      {
+        "key": "B",
+        "text": "Austria reported 51 damaging fungus species, whereas Bulgaria reported 16 damaging insect species."
+      },
+      {
+        "key": "C",
+        "text": "Bulgaria and Belgium reported 9 and 4 damaging fungus species, respectively, which is far fewer than Austria reported."
+      },
+      {
+        "key": "D",
+        "text": "Austria reported 51 damaging fungus species, which is more than either Bulgaria or Belgium reported."
+      }
+    ],
+    "rationale": "Compare the fungi column across countries: Austria has 51, Bulgaria 14, and Belgium 13. The other choices either compare different columns or misread tree counts as fungi counts.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Quantitative Evidence",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/rw1-11.webp",
+      "alt": "Table of non-native tree species and damaging fungus and insect species reported by Austria, Belgium, and Bulgaria."
+    },
+    "asset": "/sat/june-2026-us/questions/rw1-11.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      13
+    ]
+  },
+  {
+    "id": "rw1-12",
+    "moduleId": "rw1",
+    "number": 12,
+    "prompt": "The Wonderful Wizard of Oz is a 1900 novel by L. Frank Baum. In the novel, Dorothy lives in Kansas with her aunt and uncle, but she later finds herself in a land called Oz. The narrator indicates that her aunt and uncle's house in Kansas is remote and solitary, writing that _______.\n\nWhich quotation from The Wonderful Wizard of Oz most effectively illustrates the claim?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "in Oz, “[Dorothy and her companions] passed through the rest of the forest in safety, and when they came out from its gloom saw before them a steep hill, covered from top to bottom with great pieces of rock.”"
+      },
+      {
+        "key": "B",
+        "text": "in Oz, “Dorothy fell asleep only once, and then she dreamed she was in Kansas, where Aunt Em was telling her how glad she was to have her little girl at home again.”"
+      },
+      {
+        "key": "C",
+        "text": "in Kansas, “Dorothy lived in the midst of the great Kansas prairies, with Uncle Henry, who was a farmer, and Aunt Em, who was the farmer’s wife.”"
+      },
+      {
+        "key": "D",
+        "text": "in Kansas, “When Dorothy stood in the doorway and looked around, she could see nothing but the great gray prairie on every side. Not a tree nor a house broke the broad sweep of flat country.”"
+      }
+    ],
+    "rationale": "The absence of any other house or even a tree directly illustrates how isolated the Kansas house is.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Command of Evidence",
+    "asset": "/sat/june-2026-us/questions/rw1-12.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      14
+    ]
+  },
+  {
+    "id": "rw1-13",
+    "moduleId": "rw1",
+    "number": 13,
+    "prompt": "Carcinization, or the evolution of a crablike body form, has taken place in crustaceans many times over the last 250 million years. Decarcinization has occurred several times as well, even though it involves the loss of traits such as sideways walking that seem to have helped carcinized groups persist in a variety of ecosystems. In a 2021 paper, Joanna Wolfe and team note that many decarcinized groups are extinct and have very few living relatives— signs that decarcinization might be an “evolutionary dead-end.” But the team also discusses frog crabs, a living decarcinized group with traits suited to dwelling in sediment; fossils show that the group had decarcinized members as far back as the Early Cretaceous. This example suggests that _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "the evolutionary benefits of a crablike body form are less certain than many studies of carcinization had previously implied."
+      },
+      {
+        "key": "B",
+        "text": "despite having many living relatives, some decarcinized groups did not benefit from decarcinization."
+      },
+      {
+        "key": "C",
+        "text": "sideways walking may have been less important to the survival of frog crabs than a protected abdomen and other traits associated with carcinization."
+      },
+      {
+        "key": "D",
+        "text": "a crablike body form may not be optimal in all cases, with ecological conditions sometimes favoring the persistence of decarcinization."
+      }
+    ],
+    "rationale": "Frog crabs have persisted for a long time with non-crablike features suited to sediment habitats. They show that decarcinization can remain advantageous in particular environments.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw1-13.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      15
+    ]
+  },
+  {
+    "id": "rw1-14",
+    "moduleId": "rw1",
+    "number": 14,
+    "prompt": "A group of primate conservationists recently began a long-term study of the effects of different conservation strategies on the northern muriqui (Brachyteles hypoxanthus). The species’ population is currently estimated to be around 1,000. It is challenging to accurately count these primates, however, which makes it difficult to tell whether the population is increasing, decreasing, or staying stable. The study may thus _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "cause other conservationists to adopt a new methodology for counting populations."
+      },
+      {
+        "key": "B",
+        "text": "risk making inaccurate conclusions about the effectiveness of different conservation strategies."
+      },
+      {
+        "key": "C",
+        "text": "benefit from including species beyond the northern muriqui."
+      },
+      {
+        "key": "D",
+        "text": "fail to consider less-well-known conservation approaches for the northern muriqui."
+      }
+    ],
+    "rationale": "If population changes cannot be measured accurately, the study may incorrectly judge whether a conservation strategy works.",
+    "difficulty": "Medium",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw1-14.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      16
+    ]
+  },
+  {
+    "id": "rw1-15",
+    "moduleId": "rw1",
+    "number": 15,
+    "prompt": "Mountain goats were made to climb. In addition to having hard hooves that can dig into nearly any groove or _______ mountain goats have slender bodies ideal for scaling nearly ninety-degree cliffs.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "crack, or"
+      },
+      {
+        "key": "B",
+        "text": "crack or"
+      },
+      {
+        "key": "C",
+        "text": "crack"
+      },
+      {
+        "key": "D",
+        "text": "crack,"
+      }
+    ],
+    "rationale": "The opening “In addition to having…” phrase must be separated from the main clause by a comma. “Groove or crack” already contains its conjunction.",
+    "difficulty": "Foundation",
+    "domain": "Standard English Conventions",
+    "skill": "Boundaries",
+    "asset": "/sat/june-2026-us/questions/rw1-15.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      17
+    ]
+  },
+  {
+    "id": "rw1-16",
+    "moduleId": "rw1",
+    "number": 16,
+    "prompt": "As an object-oriented computer programming language, Perl is used by coders like Black Girls Code founder Kimberly Bryant to create computer programs by manipulating ‘objects’ (that is, specifically defined variables or combinations of variables) into interacting with each other. Conversely, languages like Scheme, used in software development, _______ object oriented.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "is not"
+      },
+      {
+        "key": "B",
+        "text": "are not"
+      },
+      {
+        "key": "C",
+        "text": "was not"
+      },
+      {
+        "key": "D",
+        "text": "has not been"
+      }
+    ],
+    "rationale": "The subject “languages” is plural, so it takes “are not.” The intervening phrases do not change the subject.",
+    "difficulty": "Foundation",
+    "domain": "Standard English Conventions",
+    "skill": "Subject–Verb Agreement",
+    "asset": "/sat/june-2026-us/questions/rw1-16.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      18
+    ]
+  },
+  {
+    "id": "rw1-17",
+    "moduleId": "rw1",
+    "number": 17,
+    "prompt": "In premodern Europe, one could sail from the east coast of England to the Netherlands or France faster than one could travel by land to England's capital, London. In that era, historian Michael Pye argues in his 2015 book The Edge of the World: A Cultural History of the North Sea and the Transformation of Europe, the North Sea did more to link the various peoples, cultures, and economies on _______ shores than to divide them.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "it's"
+      },
+      {
+        "key": "B",
+        "text": "its"
+      },
+      {
+        "key": "C",
+        "text": "their"
+      },
+      {
+        "key": "D",
+        "text": "they're"
+      }
+    ],
+    "rationale": "The shores belong to the singular North Sea, so the possessive pronoun is “its,” without an apostrophe.",
+    "difficulty": "Foundation",
+    "domain": "Standard English Conventions",
+    "skill": "Pronouns & Possessives",
+    "asset": "/sat/june-2026-us/questions/rw1-17.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      19
+    ]
+  },
+  {
+    "id": "rw1-18",
+    "moduleId": "rw1",
+    "number": 18,
+    "prompt": "Creating personas—brief profiles of imaginary characters that represent key segments of a customer base—can help user experience (UX) designers think like and empathize with those using their products. Fictional yet realistic, _______\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "these personas include specific details (demographics, browsing habits, etc.) that UX designers draw from actual users."
+      },
+      {
+        "key": "B",
+        "text": "specific details that UX designers draw from actual users (demographics, browsing habits, etc.) are included in these personas."
+      },
+      {
+        "key": "C",
+        "text": "UX designers include specific details (demographics, browsing habits, etc.) drawn from actual users in these personas."
+      },
+      {
+        "key": "D",
+        "text": "actual users are the source of the specific details (demographics, browsing habits, etc.) that UX designers include in these personas."
+      }
+    ],
+    "rationale": "The opening modifier “Fictional yet realistic” describes the personas, so “these personas” must immediately follow it.",
+    "difficulty": "Medium",
+    "domain": "Standard English Conventions",
+    "skill": "Modifiers",
+    "asset": "/sat/june-2026-us/questions/rw1-18.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      20
+    ]
+  },
+  {
+    "id": "rw1-19",
+    "moduleId": "rw1",
+    "number": 19,
+    "prompt": "As the exoplanet 17 Scorpii b orbits a star 408 light-years from Earth, the gas giant's gravity causes the star to wobble. In 2020, astronomers observing the wobble—indicated by redshifts and blueshifts in the star's spectral wavelengths— eventually attributed _______ to the gravitational influence of the previously undetected exoplanet.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "each"
+      },
+      {
+        "key": "B",
+        "text": "these"
+      },
+      {
+        "key": "C",
+        "text": "it"
+      },
+      {
+        "key": "D",
+        "text": "them"
+      }
+    ],
+    "rationale": "The astronomers attributed the singular “wobble” to the exoplanet’s gravity, so “it” is the appropriate pronoun.",
+    "difficulty": "Medium",
+    "domain": "Standard English Conventions",
+    "skill": "Pronoun Agreement",
+    "asset": "/sat/june-2026-us/questions/rw1-19.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      21
+    ]
+  },
+  {
+    "id": "rw1-20",
+    "moduleId": "rw1",
+    "number": 20,
+    "prompt": "Although the term ‘balloonomania'—referring to the hot-air balloon fad in England and France in the late 1700s—might suggest that the public as a whole was captivated by the technology, it was not universally _______ whereas many flocked to balloon launches and purchased balloon-themed items ranging from dinnerware to accessories, others dismissed the hot-air balloon as an impractical and dangerous extravagance.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "embraced:"
+      },
+      {
+        "key": "B",
+        "text": "embraced"
+      },
+      {
+        "key": "C",
+        "text": "embraced,"
+      },
+      {
+        "key": "D",
+        "text": "embraced and"
+      }
+    ],
+    "rationale": "A colon follows the complete claim that the technology was not universally embraced and introduces an explanation contrasting supporters with critics.",
+    "difficulty": "Medium",
+    "domain": "Standard English Conventions",
+    "skill": "Boundaries",
+    "asset": "/sat/june-2026-us/questions/rw1-20.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      22
+    ]
+  },
+  {
+    "id": "rw1-21",
+    "moduleId": "rw1",
+    "number": 21,
+    "prompt": "In February 1864, James Johnson joined the US Army. He went on to serve in the 18th New York Cavalry during the US Civil War and, _______ earned a place in US history as one of the war's few Chinese-born American soldiers.\n\nWhich choice completes the text with the most logical transition?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "usually,"
+      },
+      {
+        "key": "B",
+        "text": "for instance,"
+      },
+      {
+        "key": "C",
+        "text": "in any case,"
+      },
+      {
+        "key": "D",
+        "text": "in doing so,"
+      }
+    ],
+    "rationale": "Johnson earned his historical place by serving in the cavalry, so “in doing so” expresses that connection.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "asset": "/sat/june-2026-us/questions/rw1-21.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      23
+    ]
+  },
+  {
+    "id": "rw1-22",
+    "moduleId": "rw1",
+    "number": 22,
+    "prompt": "The lack of accessible written sources is a common challenge faced by biographers of pre-nineteenth-century subjects. _______ when writing his biography of Alexander Hamilton (1755-1804), historian Ron Chernow had at his disposal Harold Syrett's 26-volume, 19,000-document Papers of Alexander Hamilton.\n\nWhich choice completes the text with the most logical transition?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To take one well-known example,"
+      },
+      {
+        "key": "B",
+        "text": "In accordance with this premise,"
+      },
+      {
+        "key": "C",
+        "text": "It thus came as no surprise that,"
+      },
+      {
+        "key": "D",
+        "text": "On the other end of the spectrum,"
+      }
+    ],
+    "rationale": "Chernow’s access to 19,000 documents contrasts with the usual lack of sources. “On the other end of the spectrum” marks that contrast.",
+    "difficulty": "Medium",
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "asset": "/sat/june-2026-us/questions/rw1-22.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      24
+    ]
+  },
+  {
+    "id": "rw1-23",
+    "moduleId": "rw1",
+    "number": 23,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- India Arie is an African American singer and songwriter.\n- The media outlet BBC Music has described her music as a “blend of hip hop, soul and folk…”\n- Her acclaimed albums feature many talented musicians.\n- Judeth Insel played viola on her first studio album, *Acoustic Soul* (2001).\n- Ricky Quiñones played guitar on her second studio album, *Voyage to India* (2002).\n\nThe student wants to emphasize a difference between Judeth Insel and Ricky Quiñones. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Judeth Insel played on India Arie’s first studio album, *Acoustic Soul*, which was released one year before her album *Voyage to India*."
+      },
+      {
+        "key": "B",
+        "text": "Both musicians have played on India Arie albums, but Judeth Insel played viola, whereas Ricky Quiñones played guitar."
+      },
+      {
+        "key": "C",
+        "text": "*Acoustic Soul* and *Voyage to India*, released in 2001 and 2002, respectively, are albums by singer and songwriter India Arie."
+      },
+      {
+        "key": "D",
+        "text": "Judeth Insel and Ricky Quiñones have both lent their musical talents to albums by India Arie."
+      }
+    ],
+    "rationale": "Only B directly compares the two musicians and identifies their different instruments.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw1-23.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      25
+    ]
+  },
+  {
+    "id": "rw1-24",
+    "moduleId": "rw1",
+    "number": 24,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- A supercontinent is a single landmass made up of most or all of Earth’s continents.\n- Continents merge to form supercontinents, then break apart.\n- This process is the supercontinent cycle.\n- Vaalbara was a supercontinent that formed about 3.6 billion years ago.\n- Euramerica was a supercontinent that formed about 300 million years ago.\n\nThe student wants to emphasize the order in which the supercontinents were formed. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Vaalbara and Euramerica were both supercontinents, single landmasses made up of most or all of Earth’s continents."
+      },
+      {
+        "key": "B",
+        "text": "The supercontinent Euramerica formed long after the supercontinent Vaalbara."
+      },
+      {
+        "key": "C",
+        "text": "Forming and breaking apart over hundreds of millions of years, supercontinents are made up of most or all of Earth’s continents."
+      },
+      {
+        "key": "D",
+        "text": "Vaalbara formed about 3.6 billion years ago but eventually broke apart."
+      }
+    ],
+    "rationale": "Vaalbara formed billions of years before Euramerica. B explicitly states their chronological order.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw1-24.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      26
+    ]
+  },
+  {
+    "id": "rw1-25",
+    "moduleId": "rw1",
+    "number": 25,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- Grimanesa Amoros is a Peruvian American artist known for her LED light sculptures.\n- *Uros Island* (2011) is from her Uros series of works.\n- It is made of smooth multicolored LED domes.\n- *Golden Connection* (2013) is from her Huanchaco series of works.\n- It is made of entangled blue and white LED tubes.\n\nThe student wants to emphasize a difference between Uros Island and Golden Connection. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Grimanesa Amoros often employs LED lights in her work, but the smooth LED domes of *Uros Island* stand in contrast to the tangled LED tubes of *Golden Connection*."
+      },
+      {
+        "key": "B",
+        "text": "*Uros Island* and *Golden Connection* are two LED light sculptures by well-known artist Grimanesa Amoros."
+      },
+      {
+        "key": "C",
+        "text": "In 2011, Grimanesa Amoros debuted *Uros Island*, a part of her Uros series."
+      },
+      {
+        "key": "D",
+        "text": "Many of Grimanesa Amoros’s sculptures, like *Uros Island* and *Golden Connection*, incorporate LED lights in the form of domes or tubes."
+      }
+    ],
+    "rationale": "A explicitly contrasts the smooth domes of one sculpture with the tangled tubes of the other.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw1-25.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      27
+    ]
+  },
+  {
+    "id": "rw1-26",
+    "moduleId": "rw1",
+    "number": 26,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- Refrigerants are chemical compounds used in cooling technologies.\n- Air conditioners use refrigerants to absorb heat and release cold air.\n- Dichloromethane is a hydrochlorocarbon (HCC).\n- HCCs are composed of hydrogen, chlorine, and carbon.\n- Tetradecafluorohexane is a perfluorocarbon (PFC).\n- PFCs are composed of fluorine and carbon.\n\nThe student wants to contrast dichloromethane and tetradecafluorohexane. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Dichloromethane, a hydrochlorocarbon, is composed of hydrogen, chlorine, and carbon; tetradecafluorohexane, a perfluorocarbon, is composed of fluorine and carbon."
+      },
+      {
+        "key": "B",
+        "text": "Dichloromethane and tetradecafluorohexane are chemical compounds used in cooling technologies; the compounds are known as refrigerants."
+      },
+      {
+        "key": "C",
+        "text": "The hydrochlorocarbon dichloromethane and the perfluorocarbon tetradecafluorohexane are both refrigerants that can be used in cooling technologies like air conditioners."
+      },
+      {
+        "key": "D",
+        "text": "Tetradecafluorohexane, a refrigerant, can be used in cooling technologies to absorb heat and release cold air."
+      }
+    ],
+    "rationale": "A contrasts the compounds by identifying the different elements in each. The other choices emphasize similarities or discuss only one compound.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw1-26.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      29
+    ]
+  },
+  {
+    "id": "rw1-27",
+    "moduleId": "rw1",
+    "number": 27,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- The A. M. Turing Award is a prestigious award given by the Association for Computing Machinery (ACM).\n- The ACM gives the award for “major contributions of lasting importance to computing.”\n- It is named after groundbreaking British mathematician Alan Turing.\n- Raj Reddy won the award in 1994 for pioneering the development of large-scale artificial intelligence systems.\n\nThe student wants to explain whom the award is named for. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "In 1994, Raj Reddy won the A. M. Turing Award for pioneering the development of large-scale artificial intelligence systems."
+      },
+      {
+        "key": "B",
+        "text": "The A. M. Turing Award is given for “major contributions of lasting importance to computing.”"
+      },
+      {
+        "key": "C",
+        "text": "The A. M. Turing Award is named for groundbreaking British mathematician Alan Turing."
+      },
+      {
+        "key": "D",
+        "text": "It was in 1994 that Raj Reddy won the A. M. Turing Award."
+      }
+    ],
+    "rationale": "The goal is to identify the award’s namesake. C explicitly names Alan Turing; the other options describe a recipient or the award criteria.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw1-27.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      28
+    ]
+  },
+  {
+    "id": "rw2-1",
+    "moduleId": "rw2",
+    "number": 1,
+    "prompt": "Studying menus from nineteenth-century restaurants, old coupons clipped out of newspapers, and posters promoting concerts by long-forgotten musicians may seem like a frivolous pursuit, but ephemeral objects like these are useful as evidence of cultural change: they can _______ shifts in norms, values, and concerns that traditional objects of historical inquiry may not.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "dissociate from"
+      },
+      {
+        "key": "B",
+        "text": "collude with"
+      },
+      {
+        "key": "C",
+        "text": "compensate for"
+      },
+      {
+        "key": "D",
+        "text": "attest to"
+      }
+    ],
+    "rationale": "The objects provide evidence of cultural change, so they can “attest to,” or demonstrate, shifts in norms and values.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw2-01.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      31
+    ]
+  },
+  {
+    "id": "rw2-2",
+    "moduleId": "rw2",
+    "number": 2,
+    "prompt": "In the architectural process called modular construction, a building is manufactured in modules under controlled conditions and then assembled at its intended location. _______ of this approach cite the production of less material waste and a faster return on investment.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Components"
+      },
+      {
+        "key": "B",
+        "text": "Safeguards"
+      },
+      {
+        "key": "C",
+        "text": "Proponents"
+      },
+      {
+        "key": "D",
+        "text": "Epitomes"
+      }
+    ],
+    "rationale": "People citing advantages to support an approach are its proponents.",
+    "difficulty": "Foundation",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw2-02.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      32
+    ]
+  },
+  {
+    "id": "rw2-3",
+    "moduleId": "rw2",
+    "number": 3,
+    "prompt": "Run by researchers in Europe, the Survey of Health, Ageing, and Retirement in Europe (SHARE) is an examination of aging that has attempted to track approximately 120,000 people for several years. Long-running studies like this need a lot of participants not merely for statistical robustness but also because of _______: over such a length of time, a substantial number of participants will withdraw or fall out of contact with the researchers.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "attrition"
+      },
+      {
+        "key": "B",
+        "text": "circumspection"
+      },
+      {
+        "key": "C",
+        "text": "impartiality"
+      },
+      {
+        "key": "D",
+        "text": "replicability"
+      }
+    ],
+    "rationale": "The explanation describes the gradual loss of study participants, which is attrition.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw2-03.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      33
+    ]
+  },
+  {
+    "id": "rw2-4",
+    "moduleId": "rw2",
+    "number": 4,
+    "prompt": "Some ethicists challenge the concept of personal character, claiming that if it were meaningful, situational factors could not, as they clearly can, induce behavior contrary to that character. As Rachana Kamtekar observes, this argument is difficult to reconcile with our lay conception of character: we expect a person of helpful character to be frequently helpful, not _______ helpful.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "self-servingly"
+      },
+      {
+        "key": "B",
+        "text": "sporadically"
+      },
+      {
+        "key": "C",
+        "text": "grudgingly"
+      },
+      {
+        "key": "D",
+        "text": "unfailingly"
+      }
+    ],
+    "rationale": "The text contrasts being helpful frequently with being helpful without exception. “Unfailingly” means always, without fail.",
+    "difficulty": "Advanced",
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "asset": "/sat/june-2026-us/questions/rw2-04.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      34
+    ]
+  },
+  {
+    "id": "rw2-5",
+    "moduleId": "rw2",
+    "number": 5,
+    "prompt": "The Reckoning and Resilience (2022) exhibition at Duke University's Nasher Museum of Art in Durham, North Carolina, was curated to feature the work of thirty North Carolina artists. The included artists represent a wide variety of artistic disciplines, from painters such as Juan Logan to the sculptor Stephen Hayes. In its inclusion of many borrowed works, the exhibition is atypical for the Nasher Museum, which tends to curate its exhibitions around the permanent collection of contemporary art that it owns.\n\nWhich choice best describes the overall structure of the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It explains how an art exhibition differs from many other exhibitions, then analyzes the significance of that difference."
+      },
+      {
+        "key": "B",
+        "text": "It presents the unusual goals curators had for an art exhibition, then evaluates whether the curators achieved those goals."
+      },
+      {
+        "key": "C",
+        "text": "It provides an overview of an art exhibition, then explains what makes the exhibition unusual for the institution that organized it."
+      },
+      {
+        "key": "D",
+        "text": "It discusses the wide range of disciplines represented in an art exhibition, then explains why curators included works in those disciplines."
+      }
+    ],
+    "rationale": "The text first introduces the exhibition and artists, then explains that borrowing many works differs from the museum’s usual reliance on its own collection.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Text Structure & Purpose",
+    "asset": "/sat/june-2026-us/questions/rw2-05.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      35
+    ]
+  },
+  {
+    "id": "rw2-6",
+    "moduleId": "rw2",
+    "number": 6,
+    "prompt": "The Heege Manuscript (HM) is a collection of booklets of once-unbound paper sheets on which Richard Heege copied various texts at his fifteenth-century home between Derbyshire and Nottinghamshire in England. <u>Most other contemporaneous personal manuscripts like the Findern Anthology (FA) consist primarily of pieces by celebrated medieval authors like Hoccleve and other readings favored by elites</u>, whereas the HM has a distinctive emphasis on the popular, including entertainments like crude comedies, and the practical, with advice about manners.\n\nWhich choice best describes the function of the underlined portion in the text as a whole?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To suggest that the FA is a poor point of comparison for a collection like the HM"
+      },
+      {
+        "key": "B",
+        "text": "To emphasize the ubiquity of hand-copied collections like the FA and the HM in medieval England"
+      },
+      {
+        "key": "C",
+        "text": "To provide context for the text’s suggestion that the HM is an outlier among collections of its time"
+      },
+      {
+        "key": "D",
+        "text": "To illustrate how the discussion of the HM earlier in the text can improve historians’ understanding of the FA"
+      }
+    ],
+    "rationale": "The underlined portion describes what comparable collections usually contain, establishing the baseline against which the Heege Manuscript’s popular and practical content is unusual.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Text Structure & Purpose",
+    "asset": "/sat/june-2026-us/questions/rw2-06.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      36
+    ]
+  },
+  {
+    "id": "rw2-7",
+    "moduleId": "rw2",
+    "number": 7,
+    "prompt": "Text 1 is T. E. Hulme’s 1912 poem “Above the Dock.” Text 2 is from Amy Lowell’s 1912 poem “The Crescent Moon.”\n\n**Text 1**\n\nAbove the quiet dock in midnight,\nTangled in the tall mast’s corded height,\nHangs the moon. What seemed so far away\nIs but a child’s balloon, forgotten after play.\n\n**Text 2**\n\nSlipping softly through the sky\nLittle horned, happy moon,\nCan you hear me up so high?\nWill you come down soon?\n\nWhich choice best describes a notable difference in how the speaker of Text 1 and the speaker of Text 2 portray the moon?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "While both speakers characterize the moon as an entrapped figure, only the speaker of Text 2 describes the moon as being content with this fate."
+      },
+      {
+        "key": "B",
+        "text": "While both speakers present the moon as a tangible object, only the speaker of Text 1 addresses the moon’s beauty."
+      },
+      {
+        "key": "C",
+        "text": "While the speaker of Text 1 presents the moon as an object of play, the speaker of Text 2 presents the moon as an object of serious study."
+      },
+      {
+        "key": "D",
+        "text": "While the speaker of Text 1 presents the moon as seeming to be very close, the speaker of Text 2 emphasizes the moon’s distance from the speaker."
+      }
+    ],
+    "rationale": "Text 1 imagines the moon caught in a ship’s mast like a nearby balloon. Text 2 asks whether the moon can hear from “so high” and whether it will come down, emphasizing its distance.",
+    "difficulty": "Medium",
+    "domain": "Craft and Structure",
+    "skill": "Cross-Text Connections",
+    "asset": "/sat/june-2026-us/questions/rw2-07.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      37
+    ]
+  },
+  {
+    "id": "rw2-8",
+    "moduleId": "rw2",
+    "number": 8,
+    "prompt": "Mauricio Drelichman and Hans-Joachim Voth's research into the debt defaults of Philip II (who ruled an empire including Spain and much of Belgium from 1556 to 1598) relates to other work on European early modern state finance, including Hoffman and Norberg's research on the relationship between state finance and political development. But Drelichman and Voth's unique contribution to the field is their reconstruction of the earliest extant set of annual fiscal records for any sovereign state, demonstrating in turn that Philip's defaults were caused by short-term cash shortages, not long-term unsustainable debts.\n\nWhich choice best states the main idea of the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Analysis of the earliest available records of a sovereign state’s finances can be found not in the work of Hoffman and Norberg but in that of Drelichman and Voth."
+      },
+      {
+        "key": "B",
+        "text": "Drelichman and Voth advanced the field of research on European early modern state finance by assembling a novel collection of evidence that gave them insight into Philip II’s debt defaults."
+      },
+      {
+        "key": "C",
+        "text": "The research by Drelichman and Voth suggests that the logistics of ruling both Spain and much of Belgium led to short-term problems with cash that forced Philip II to default on his debts."
+      },
+      {
+        "key": "D",
+        "text": "Drelichman and Voth’s research on Philip II’s debt defaults builds on earlier work by Hoffman and Norberg, adding nuance to the earlier work’s findings."
+      }
+    ],
+    "rationale": "B captures both the distinctive contribution—reconstructing early fiscal records—and the insight those records yielded about short-term shortages causing the defaults.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Central Ideas & Details",
+    "asset": "/sat/june-2026-us/questions/rw2-08.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      38
+    ]
+  },
+  {
+    "id": "rw2-9",
+    "moduleId": "rw2",
+    "number": 9,
+    "prompt": "The following text is adapted from William Shakespeare's 1597 play\nThe Tragedy of King Richard III. Richard is reflecting on the recent\narrest of his brother, the Duke of Clarence, on suspicion of treason\nagainst King Edward IV. Derby, Hastings, Buckingham, Rivers, Dorset,\nand Grey are also members of the English nobility.\n\nRICHARD: I do the wrong, and first begin to brawl.\nThe secret mischiefs that I set [flowing]\nI lay unto the grievous charge of others.\nClarence, whom I indeed have cast in darkness,\nI do beweep to many simple [gullible people],\nNamely, to Derby, Hastings, Buckingham;\nAnd tell them 'tis the Queen and her allies\nThat stir the King against the Duke my brother.\nNow they believe it, and withal whet me\nTo be revenged on Rivers, Dorset, Grey.\n\nWhich choice best describes what happens in the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Richard attributes Clarence’s troubles to both his own secret plotting and the distrust of Clarence that the queen and her allies Derby, Hastings, and Buckingham have planted in the king’s mind."
+      },
+      {
+        "key": "B",
+        "text": "Richard describes having wept as he informed Derby, Hastings, and Buckingham that the queen and her allies convinced the king to act against Clarence, and says that the earnestness of his grief caused them to accept his version of events."
+      },
+      {
+        "key": "C",
+        "text": "Richard acknowledges that his mischievous nature has spurred him to commit misdeeds in the past, including instigating enmity between the king and Clarence, but he reports that he has hitherto not lost the trust of the queen and her allies."
+      },
+      {
+        "key": "D",
+        "text": "Richard indicates that he has pretended to be aggrieved about Clarence’s situation and has proclaimed it to be the fault of the queen and her allies, but in reality, he has caused the hostility the king feels toward Clarence."
+      }
+    ],
+    "rationale": "Richard admits causing Clarence’s trouble, then pretending to grieve and blaming the queen and her allies. D captures both his responsibility and his deception.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Central Ideas & Details",
+    "asset": "/sat/june-2026-us/questions/rw2-09.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      39
+    ]
+  },
+  {
+    "id": "rw2-10",
+    "moduleId": "rw2",
+    "number": 10,
+    "prompt": "A student is writing a research paper on the global rise of the home video game industry during the 1970s and 1980s. The student is surprised by differences in the number of units sold by some systems compared to those sold by others. Most remarkably, the _______.\n\nWhich choice most effectively uses data from the table to complete the statement?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "MSX sold approximately 4,000,000 units, whereas the Intellivision sold only approximately 3,000,000 units."
+      },
+      {
+        "key": "B",
+        "text": "MSX sold approximately 18,600,000 units, whereas the Intellivision sold only approximately 2,000,000 units."
+      },
+      {
+        "key": "C",
+        "text": "Game & Watch sold approximately 4,000,000 units, whereas the ColecoVision sold only approximately 3,000,000 units."
+      },
+      {
+        "key": "D",
+        "text": "Game & Watch sold approximately 18,600,000 units, whereas the ColecoVision sold only approximately 2,000,000 units."
+      }
+    ],
+    "rationale": "The largest contrast in the table is between Game & Watch’s 18.6 million units and ColecoVision’s 2 million. A reports a smaller difference, while B and C misread the table.",
+    "difficulty": "Foundation",
+    "domain": "Information and Ideas",
+    "skill": "Quantitative Evidence",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/rw2-10.webp",
+      "alt": "Table of four home video game systems, their manufacturers, types, and approximate worldwide sales."
+    },
+    "asset": "/sat/june-2026-us/questions/rw2-10.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      40
+    ]
+  },
+  {
+    "id": "rw2-11",
+    "moduleId": "rw2",
+    "number": 11,
+    "prompt": "In what is now southern Florida, the Calusa people (circa 1000-1600 CE) supported their relatively large population's dietary needs with hydrological engineering rather than terrestrial farming methods. They constructed watercourts (gated coastal enclosures) out of shells and sediments to trap a variety of fish as waters rose and fell with tides and seasonal sea-level shifts; watercourt pools then held the fish for later consumption. Archaeologist Theresa Schober has posited an additional purpose of these enclosures, suggesting that they were intended to foster conch. She ties this hypothesis to the high value the sea snails would have had for the Calusa, both nutritionally and as a building material (conch shells are highly durable).\n\nWhich finding, if true, would most directly weaken Schober’s hypothesis?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Samples of animal remains collected at Calusa sites reflect a greater diversity of marine species, particularly among sea snails, within the perimeter of watercourts than in locations known to have been devoted to the preparation and consumption of food."
+      },
+      {
+        "key": "B",
+        "text": "Historical population-size estimates suggest that the sea snails and fish most common in the Calusa diet were plentiful in open coastal waters when the watercourts were constructed but decreased in abundance in the years immediately after construction."
+      },
+      {
+        "key": "C",
+        "text": "Radar surveys of Calusa sites reveal watercourt dimensions suitable for sustaining fish of many local species but not conducive for maintaining the shallow environments with ample seagrasses that allow sea snails to thrive."
+      },
+      {
+        "key": "D",
+        "text": "Sediment layers excavated from Calusa watercourt sites contain heterogeneous mixtures of scales from multiple species of fish and fragments of shells from various types of sea snails, but conch shells do not constitute the majority of the mixture in most of those layers."
+      }
+    ],
+    "rationale": "If watercourts cannot sustain the habitat that sea snails require, it is unlikely that their intended additional purpose was to foster conch. Merely finding few conch remains is weaker evidence than finding the habitat unsuitable.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Command of Evidence",
+    "asset": "/sat/june-2026-us/questions/rw2-11.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      41
+    ]
+  },
+  {
+    "id": "rw2-12",
+    "moduleId": "rw2",
+    "number": 12,
+    "prompt": "The mating environment hypothesis predicts that populations of flowering plants compensate for reduced mating opportunities due to dichogamy by adjusting the bias of floral sex allocation during the flowering period. Researchers tested the hypothesis by examining a population of broadleaf arrowhead. They concluded that the mating environment hypothesis is not well supported by their observational data.\n\nWhich choice best describes data from the table that support the researchers’ conclusion?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Whereas the total number of open flowers per growth unit peaked on day 15, the proportion of male flowers experienced a peak earlier in the flowering season, on day 10."
+      },
+      {
+        "key": "B",
+        "text": "Despite the sharp reduction in the total number of open flowers per growth unit from day 15 to 20, there was no decline in the estimated reproductive success rate of male flowers in that interval."
+      },
+      {
+        "key": "C",
+        "text": "Sex allocations were largely evenly distributed on days 10 and 15 but were female biased on days 5 and 20."
+      },
+      {
+        "key": "D",
+        "text": "Although sex allocations became overwhelmingly female biased by day 20, male flowers’ estimated reproductive success rate did not vary from day 5 to 20."
+      }
+    ],
+    "rationale": "D links the two variables relevant to the hypothesis: sex allocation changed strongly toward female flowers while estimated male reproductive success stayed at 0.29. This does not support a compensatory response to changing mating opportunity.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Quantitative Evidence",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/rw2-12.webp",
+      "alt": "Broadleaf arrowhead traits by flowering day: open flower counts, male reproductive success, and male flower proportions."
+    },
+    "asset": "/sat/june-2026-us/questions/rw2-12.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      42
+    ]
+  },
+  {
+    "id": "rw2-13",
+    "moduleId": "rw2",
+    "number": 13,
+    "prompt": "Although Grant Tavinor concludes that computer games are art by virtue of their forming a subcategory of fiction, and Berys Gaut similarly places them within the realm of cinema, neither approach adequately captures a central aspect of playing these games: when the player no longer attends to the narrative and is instead simply absorbed in the instrumentalities of gameplay. This is among the reasons philosopher C. Thi Nguyen contends that the work of computer-game designers is in what he calls the medium of player agency, which the designer prescribes through rules and goals, and which elicits positive aesthetic experiences in the player who agrees to adopt it. Therefore, Nguyen's position is that Tavinor's and Gaut's frameworks _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "are helpful starting points for studying computer games as art, even though these frameworks are overly simplistic."
+      },
+      {
+        "key": "B",
+        "text": "are useful for analyzing the narrative aspects of computer games, even if neither attempts to address player agency."
+      },
+      {
+        "key": "C",
+        "text": "overstate the influence of fiction and cinema on the narrative elements of computer games."
+      },
+      {
+        "key": "D",
+        "text": "subsume computer games under other categories of media that do not address a feature of games that is integral to player enjoyment."
+      }
+    ],
+    "rationale": "Nguyen emphasizes the aesthetic experience of player agency, which frameworks based on fiction or cinema fail to capture. D directly states that limitation.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw2-13.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      43
+    ]
+  },
+  {
+    "id": "rw2-14",
+    "moduleId": "rw2",
+    "number": 14,
+    "prompt": "As observed in a 2011 study by Emilio García-Robledo and Alfonso Corzo, macroalgal proliferation may have a suppressive effect on the abundance of cyanobacteria and other microphytobenthos (MPB)— chlorophyll-producing microbes inhabiting marine sediment—in part by reducing the amount of sunlight available to MPB. Examining benthic chlorophyll concentrations (a widely used proxy for MPB biomass) in mudflats in Curlew Bay and other coastal sites in Virginia, Alice F. Besterman and Michael L. Pace found that those concentrations did not negatively correlate with macroalgal proliferation. However, they noted that MPB may respond to low-light conditions by producing higher-than-normal concentrations of chlorophyll, and they thus concluded that _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "researchers ought to account for the possibility that because MPB have the capacity to compensate for reduced sunlight availability, benthic chlorophyll concentrations may not always be a reliable indicator of MPB biomass."
+      },
+      {
+        "key": "B",
+        "text": "although their finding was inconsistent with that of García-Robledo and Corzo, this discrepancy was not attributable to the ability of MPB to accelerate chlorophyll production to mitigate the negative impact of macroalgal accumulations."
+      },
+      {
+        "key": "C",
+        "text": "although elevated levels of macroalgae do not always correspond to increased levels of benthic chlorophyll, there is likely a larger trend in MPB biomass that is related to macroalgal presence but unrelated to light conditions."
+      },
+      {
+        "key": "D",
+        "text": "the effect of macroalgal concentrations on MPB abundance that García-Robledo and Corzo reported was not observed in Curlew Bay and other Virginia sites because low-light conditions likely are not generalizable across the sites in the studies."
+      }
+    ],
+    "rationale": "If each microbe can produce more chlorophyll in low light, chlorophyll concentrations can remain high even when biomass falls. Therefore the proxy may fail to track biomass reliably.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw2-14.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      44
+    ]
+  },
+  {
+    "id": "rw2-15",
+    "moduleId": "rw2",
+    "number": 15,
+    "prompt": "Neuroscientist Artin Arshamian and his team sought to determine what affects a person's perception of an odor as pleasant: is it culture, personal taste, or aspects of human anatomy? The team assessed odor preferences in ten groups of people with different modes of living (urban, agricultural, and hunter-gatherer) including the Maniq people from a small community in Thailand and the Seri people from a small community in Mexico. The team observed that across cultures, people generally rated odors about the same: ethyl butyrate, which smells like peaches, was typically rated more pleasant than diethyl disulfide, which smells like garlic. The team's study thus undermined the idea that _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "a person who perceives certain odors as pleasant will likely perceive the odors as roughly equal in pleasantness."
+      },
+      {
+        "key": "B",
+        "text": "culture significantly influences whether a person perceives an odor as pleasant or unpleasant."
+      },
+      {
+        "key": "C",
+        "text": "personal taste has little influence on whether odors are perceived as pleasant or unpleasant."
+      },
+      {
+        "key": "D",
+        "text": "people agree in their perception of odors as pleasant or unpleasant regardless of where they live."
+      }
+    ],
+    "rationale": "Similar odor ratings across cultures undermine the claim that culture has a strong effect on pleasantness judgments. The question asks for the idea undermined, not the study’s conclusion.",
+    "difficulty": "Medium",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw2-15.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      45
+    ]
+  },
+  {
+    "id": "rw2-16",
+    "moduleId": "rw2",
+    "number": 16,
+    "prompt": "Many studies have found a positive association between levels of dissolved organic carbon and mercury in bodies of fresh water undisturbed by human activity. But Stéphane Guédron, Delphine Tisserand, and colleagues did not find this correlation in an examination of freshwater bodies impacted by wastewater, leading some scientists to hypothesize that the association could be particular to undisturbed waters. However, Ida Tjerngren and colleagues carried out a study on freshwater bodies disturbed by urban development that showed similar results to the studies on undisturbed waters, suggesting that _______.\n\nWhich choice most logically completes the text?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "levels of dissolved organic carbon and mercury are both much higher in bodies of fresh water impacted by wastewater than they are in bodies of fresh water disturbed by urban development."
+      },
+      {
+        "key": "B",
+        "text": "Guédron, Tisserand, and colleagues’ study used different methods to measure the concentration of mercury in fresh water than Tjerngren and colleagues’ study did."
+      },
+      {
+        "key": "C",
+        "text": "the effects of wastewater on the association between levels of dissolved organic carbon and mercury should not be taken as indicative of the effects of every type of human disturbance."
+      },
+      {
+        "key": "D",
+        "text": "disturbances linked to wastewater affect significantly more bodies of fresh water than disturbances linked to urban development do."
+      }
+    ],
+    "rationale": "Urban development did not eliminate the association, although wastewater did. Therefore findings about one type of disturbance cannot be generalized to all human disturbances.",
+    "difficulty": "Advanced",
+    "domain": "Information and Ideas",
+    "skill": "Inferences",
+    "asset": "/sat/june-2026-us/questions/rw2-16.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      46
+    ]
+  },
+  {
+    "id": "rw2-17",
+    "moduleId": "rw2",
+    "number": 17,
+    "prompt": "Branching in Jurisprudential Schools is one of the hundreds of thousands of manuscripts that have survived from roughly the sixteenth century to the present _______ being passed down through private libraries in the city of Timbuktu, Mali. Many of these manuscripts can be found at the Al-Wangari Manuscript Library.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "day by"
+      },
+      {
+        "key": "B",
+        "text": "day; by"
+      },
+      {
+        "key": "C",
+        "text": "day. By"
+      },
+      {
+        "key": "D",
+        "text": "day by,"
+      }
+    ],
+    "rationale": "“By being passed down…” explains how the manuscripts survived to the present day. It remains connected to the clause without a semicolon, period, or misplaced comma.",
+    "difficulty": "Foundation",
+    "domain": "Standard English Conventions",
+    "skill": "Boundaries",
+    "asset": "/sat/june-2026-us/questions/rw2-17.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      47
+    ]
+  },
+  {
+    "id": "rw2-18",
+    "moduleId": "rw2",
+    "number": 18,
+    "prompt": "The terms included in Barry Lopez and Debra Gwartney's Home Ground: A Guide to the American _______ such as ‘karst,' which refers to limestone terrain riddled with caves or sinkholes—illustrate the rich vocabulary used to describe the landforms of North America.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Landscape,"
+      },
+      {
+        "key": "B",
+        "text": "Landscape:"
+      },
+      {
+        "key": "C",
+        "text": "Landscape—"
+      },
+      {
+        "key": "D",
+        "text": "Landscape"
+      }
+    ],
+    "rationale": "The example beginning “such as” is an interrupting phrase closed by a dash. A matching opening dash after the book title is required.",
+    "difficulty": "Medium",
+    "domain": "Standard English Conventions",
+    "skill": "Boundaries",
+    "asset": "/sat/june-2026-us/questions/rw2-18.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      48
+    ]
+  },
+  {
+    "id": "rw2-19",
+    "moduleId": "rw2",
+    "number": 19,
+    "prompt": "Following the signing of the Maastricht Treaty in 1992, the organizers of that year’s Tour de France wanted the bike race to reflect the cross-national flow of people and trade associated with European integration. The resulting course was 2,500 miles long _______ seven separate borders of neighboring countries, modeled a vision of the proposed European Union’s unifying aims.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "and, crossed"
+      },
+      {
+        "key": "B",
+        "text": "and had crossed"
+      },
+      {
+        "key": "C",
+        "text": "and crossed"
+      },
+      {
+        "key": "D",
+        "text": "and, crossing"
+      }
+    ],
+    "rationale": "The clause has two main verbs: the course “was” 2,500 miles long and “modeled” a vision. “Crossing seven separate borders…” is an interrupting participial phrase, set off with commas.",
+    "difficulty": "Advanced",
+    "domain": "Standard English Conventions",
+    "skill": "Sentence Structure",
+    "asset": "/sat/june-2026-us/questions/rw2-19.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      49
+    ]
+  },
+  {
+    "id": "rw2-20",
+    "moduleId": "rw2",
+    "number": 20,
+    "prompt": "As part of his I GOT UP series, Japanese conceptual artist On Kawara spent over a decade—with near daily consistency—mailing postcards to friends declaring what time he got up each day, resulting in pieces such as I Got Up at 7.19 A.M, Jun 6 1977. Such meticulous documentation of mundane _______ artworks that “resonate with existential, psychological and scientific implications about the time-space continuum,” according to the New York Times, became Kawara’s life’s work.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "information, has generated"
+      },
+      {
+        "key": "B",
+        "text": "information generates"
+      },
+      {
+        "key": "C",
+        "text": "information, generating"
+      },
+      {
+        "key": "D",
+        "text": "information generated"
+      }
+    ],
+    "rationale": "The subject is “Such meticulous documentation” and the main verb is “became.” “Generating artworks…” must be a supplementary participial phrase, not another finite verb.",
+    "difficulty": "Advanced",
+    "domain": "Standard English Conventions",
+    "skill": "Sentence Structure",
+    "asset": "/sat/june-2026-us/questions/rw2-20.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      50
+    ]
+  },
+  {
+    "id": "rw2-21",
+    "moduleId": "rw2",
+    "number": 21,
+    "prompt": "For her film I Am Somebody (1970), a documentary about a successful months-long strike held by Black female hospital workers in Charleston, South Carolina, director Madeline Anderson chose a narrator who had participated in the _______ by allowing the narrative to be shaped by one of their own, amplified the agency and power the workers possessed.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "protest a decision that"
+      },
+      {
+        "key": "B",
+        "text": "protest. A decision that"
+      },
+      {
+        "key": "C",
+        "text": "protest; a decision that,"
+      },
+      {
+        "key": "D",
+        "text": "protest, a decision that,"
+      }
+    ],
+    "rationale": "“A decision that … amplified…” is an appositive explaining the narrator choice. A comma introduces it, and a second comma opens the interrupting “by allowing…” phrase, which already has a closing comma after “own.”",
+    "difficulty": "Advanced",
+    "domain": "Standard English Conventions",
+    "skill": "Boundaries",
+    "asset": "/sat/june-2026-us/questions/rw2-21.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      51
+    ]
+  },
+  {
+    "id": "rw2-22",
+    "moduleId": "rw2",
+    "number": 22,
+    "prompt": "At a time when many women writers used male pseudonyms to gain greater freedom of self-expression by evading gender conventions, Katherine Bradley and Edith Cooper adapted the practice by publishing poetry, prose, and drama for four decades under the shared name Michael Field. _______ the duo was able to express the joint creative vision that sustained their long personal and professional partnership.\n\nWhich choice completes the text with the most logical transition?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "In this way,"
+      },
+      {
+        "key": "B",
+        "text": "For instance,"
+      },
+      {
+        "key": "C",
+        "text": "Later,"
+      },
+      {
+        "key": "D",
+        "text": "On the other hand,"
+      }
+    ],
+    "rationale": "The shared pen name was the means by which the writers expressed their joint vision. “In this way” links the practice to its result.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "asset": "/sat/june-2026-us/questions/rw2-22.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      52
+    ]
+  },
+  {
+    "id": "rw2-23",
+    "moduleId": "rw2",
+    "number": 23,
+    "prompt": "In a 2005 study by Mellado et al., the researchers’ aim was to analyze the diet composition of cattle in Coahuila, Mexico. _______ they aimed to analyze the ratio of three different plant subtypes within these animals’ diet: graminoids, forbs, and browse.\n\nWhich choice completes the text with the most logical transition?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Instead,"
+      },
+      {
+        "key": "B",
+        "text": "All the same,"
+      },
+      {
+        "key": "C",
+        "text": "Therefore,"
+      },
+      {
+        "key": "D",
+        "text": "Specifically,"
+      }
+    ],
+    "rationale": "The second sentence gives a more precise account of the broad aim stated in the first: measuring the proportions of three plant subtypes.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "asset": "/sat/june-2026-us/questions/rw2-23.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      53
+    ]
+  },
+  {
+    "id": "rw2-24",
+    "moduleId": "rw2",
+    "number": 24,
+    "prompt": "John Quincy Adams employed the pseudonym “Marcellus”—a reference to a leader of an ancient Roman army—in political essays he wrote in 1793, a choice that accomplished far more than simply concealing his authorship. _______ it wasn't an arbitrary pen name but rather a complex rhetorical strategy through which Adams aligned his political views with the venerated republican ideals of the ancient world, thereby bolstering the authority of his writing.\n\nWhich choice completes the text with the most logical transition?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Conversely,"
+      },
+      {
+        "key": "B",
+        "text": "In addition,"
+      },
+      {
+        "key": "C",
+        "text": "However,"
+      },
+      {
+        "key": "D",
+        "text": "Indeed,"
+      }
+    ],
+    "rationale": "The second sentence reinforces and explains the claim that the pseudonym did more than hide authorship. “Indeed” introduces that elaboration.",
+    "difficulty": "Medium",
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "asset": "/sat/june-2026-us/questions/rw2-24.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      54
+    ]
+  },
+  {
+    "id": "rw2-25",
+    "moduleId": "rw2",
+    "number": 25,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- Kale is a vegetable that contains ascorbic acid, an essential nutrient for humans.\n- Apricots are fruits that contain ascorbic acid.\n- There are 120 milligrams (mg) of ascorbic acid per every 100 grams (g) of kale.\n- There are 10 mg of ascorbic acid per every 100 g of apricot.\n- Humans cannot make ascorbic acid in their bodies, so they must get it from foods.\n- Ascorbic acid is also known as vitamin C.\n\nThe student wants to refute a claim that apricots are a better source of vitamin C than kale is. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Kale contains vitamin C (also known as ascorbic acid); in fact, there is 120 mg of vitamin C in every 100 g of kale."
+      },
+      {
+        "key": "B",
+        "text": "Kale contains ascorbic acid (also known as vitamin C), and apricots do too."
+      },
+      {
+        "key": "C",
+        "text": "Humans cannot make ascorbic acid in their bodies, but they can get it from kale and apricots."
+      },
+      {
+        "key": "D",
+        "text": "With 120 mg of vitamin C per every 100 g, kale is actually a better source of vitamin C than apricots, which contain only 10 mg per every 100 g."
+      }
+    ],
+    "rationale": "D directly refutes the claim by comparing vitamin C amounts for equal masses: 120 mg in kale versus 10 mg in apricots.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw2-25.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      55
+    ]
+  },
+  {
+    "id": "rw2-26",
+    "moduleId": "rw2",
+    "number": 26,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- Snow hydrologist Julie Koeberle helps maintain automated snow measurement stations.\n- They are called SNOTEL sites.\n- There are around 90 stations throughout Wyoming.\n- One is at Bear Trap Meadow.\n- The data collected can help researchers make downstream water supply predictions.\n\nWhich choice most effectively uses information from the given sentences to provide an example of a SNOTEL site?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The data collected by SNOTEL sites can help researchers predict downstream water supplies."
+      },
+      {
+        "key": "B",
+        "text": "The SNOTEL site at Bear Trap Meadow is one of around 90 automated snow measurement stations in Wyoming."
+      },
+      {
+        "key": "C",
+        "text": "Snow hydrologist Julie Koeberle helps maintain automated snow monitoring stations known as SNOTEL sites."
+      },
+      {
+        "key": "D",
+        "text": "Located throughout Wyoming, SNOTEL sites monitor snow conditions."
+      }
+    ],
+    "rationale": "B gives a particular example, the station at Bear Trap Meadow. The other options give general information about SNOTEL sites.",
+    "difficulty": "Foundation",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw2-26.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      56
+    ]
+  },
+  {
+    "id": "rw2-27",
+    "moduleId": "rw2",
+    "number": 27,
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n- The nautical mile (approximately 6,076 feet) is the measure of distance used in seafaring navigation.\n- A nautical mile corresponds approximately to one minute (1/60th of a degree) of latitude.\n- The curvature of Earth affects the accurate measurement of long distances when using flat maps.\n- Measuring distances with latitude and longitude coordinates takes into account Earth’s curvature.\n- Mariners use nautical charts marked with latitude and longitude to quickly calculate distances and positions.\n\nThe student wants to explain why nautical miles are used to measure distances in seafaring navigation. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Nautical miles are a measure of distance equal to one minute of latitude, which is a feature nautical charts use to calculate distances and positions."
+      },
+      {
+        "key": "B",
+        "text": "Nautical charts use latitude and longitude to measure long distances; these charts are more accurate than flat maps for measuring distances in seafaring navigation because they account for Earth’s curvature."
+      },
+      {
+        "key": "C",
+        "text": "Since they directly correlate to the coordinates on nautical charts, which take into account Earth’s curvature, nautical miles are an efficient way to calculate distances at sea."
+      },
+      {
+        "key": "D",
+        "text": "Mariners use nautical charts marked with latitude and longitude, and a nautical mile is approximately 6,076 feet long."
+      }
+    ],
+    "rationale": "C explains the practical advantage of nautical miles by connecting them to chart coordinates and Earth’s curvature. A gives a definition, B discusses charts without explaining the unit choice, and D lists facts without explaining the advantage.",
+    "difficulty": "Medium",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "asset": "/sat/june-2026-us/questions/rw2-27.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      57
+    ]
+  },
+  {
+    "id": "math1-1",
+    "moduleId": "math1",
+    "number": 1,
+    "prompt": "The length of each side of triangle A is 270 millimeters. The length of each side of triangle B is double the length of each side of triangle A. What is the length, in millimeters, of each side of triangle B?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "270"
+      },
+      {
+        "key": "B",
+        "text": "272"
+      },
+      {
+        "key": "C",
+        "text": "540"
+      },
+      {
+        "key": "D",
+        "text": "1,080"
+      }
+    ],
+    "rationale": "Double 270 to obtain $2(270)=540$ millimeters.",
+    "difficulty": "Foundation",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Scale Factors",
+    "asset": "/sat/june-2026-us/questions/math1-01.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      4
+    ]
+  },
+  {
+    "id": "math1-2",
+    "moduleId": "math1",
+    "number": 2,
+    "prompt": "Carrie has $c$ dollars and Marjani has $m$ dollars. Carrie has 4 times as many dollars as Marjani, and together they have a total of 40 dollars. Which system of equations represents this situation?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$c=4m$\n$c+m=40$"
+      },
+      {
+        "key": "B",
+        "text": "$m=4c$\n$c+m=40$"
+      },
+      {
+        "key": "C",
+        "text": "$c=40m$\n$c+m=4$"
+      },
+      {
+        "key": "D",
+        "text": "$m=40c$\n$c+m=4$"
+      }
+    ],
+    "rationale": "Four times as many means $c=4m$. The combined amount gives $c+m=40$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Systems of Linear Equations",
+    "asset": "/sat/june-2026-us/questions/math1-02.webp",
+    "assetWidth": 1440,
+    "assetHeight": 1620,
+    "sourcePages": [
+      5,
+      6
+    ]
+  },
+  {
+    "id": "math1-3",
+    "moduleId": "math1",
+    "number": 3,
+    "prompt": "Anton is selling toys from his toy collection. When he started selling the toys, there were 2,800 toys in the collection. At the end of each week for 3 weeks after Anton started selling the toys, the number of toys in the collection had decreased by $1/2$ of the toys in the collection at the end of the previous week. Which equation gives the number of toys, $c$, in the collection $w$ weeks after Anton started selling the toys, where $0 \\leq w \\leq 3$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$c=w^2$"
+      },
+      {
+        "key": "B",
+        "text": "$c=2,800w$"
+      },
+      {
+        "key": "C",
+        "text": "$c=1,400(1/2)^w$"
+      },
+      {
+        "key": "D",
+        "text": "$c=2,800(1/2)^w$"
+      }
+    ],
+    "rationale": "The initial amount is 2,800 and half remains each week, so $c=2,800(1/2)^w$.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Exponential Functions",
+    "asset": "/sat/june-2026-us/questions/math1-03.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      7
+    ]
+  },
+  {
+    "id": "math1-4",
+    "moduleId": "math1",
+    "number": 4,
+    "prompt": "$$\\sqrt{w}+22=28$$\n\nWhat is the solution to the given equation?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "2"
+      },
+      {
+        "key": "B",
+        "text": "3"
+      },
+      {
+        "key": "C",
+        "text": "12"
+      },
+      {
+        "key": "D",
+        "text": "36"
+      }
+    ],
+    "rationale": "Subtract 22 to get $\\sqrt{w}=6$, then square both sides: $w=36$.",
+    "difficulty": "Foundation",
+    "domain": "Advanced Math",
+    "skill": "Radical Equations",
+    "asset": "/sat/june-2026-us/questions/math1-04.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      8
+    ]
+  },
+  {
+    "id": "math1-5",
+    "moduleId": "math1",
+    "number": 5,
+    "prompt": "The function $f$ is defined by $f(x)=7x^3+6$. What is the value of $f(2)$?",
+    "kind": "student-response",
+    "correctAnswer": "62",
+    "choices": [],
+    "rationale": "Substitute 2: $f(2)=7(2^3)+6=56+6=62$.",
+    "difficulty": "Foundation",
+    "domain": "Advanced Math",
+    "skill": "Function Evaluation",
+    "acceptedAnswers": [
+      "62"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-05.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      9
+    ]
+  },
+  {
+    "id": "math1-6",
+    "moduleId": "math1",
+    "number": 6,
+    "prompt": "The function $f(x)=-30x+310$ gives the predicted height above the ground $f(x)$, in feet, of a model airplane $x$ minutes after it begins to descend. What is the predicted height above the ground, in feet, of the model airplane 2 minutes after it begins to descend?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "60"
+      },
+      {
+        "key": "B",
+        "text": "250"
+      },
+      {
+        "key": "C",
+        "text": "280"
+      },
+      {
+        "key": "D",
+        "text": "370"
+      }
+    ],
+    "rationale": "Substitute $x=2$: $f(2)=-30(2)+310=250$ feet.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Linear Functions",
+    "asset": "/sat/june-2026-us/questions/math1-06.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      10
+    ]
+  },
+  {
+    "id": "math1-7",
+    "moduleId": "math1",
+    "number": 7,
+    "prompt": "$$2x=9+7y$$\n\n$$-2x=3+7y$$\n\nThe solution to the given system of equations is $(x,y)$. What is the value of $4x$?",
+    "kind": "student-response",
+    "correctAnswer": "6",
+    "choices": [],
+    "rationale": "Subtract the second equation from the first: $2x-(-2x)=(9+7y)-(3+7y)$, so $4x=6$.",
+    "difficulty": "Medium",
+    "domain": "Algebra",
+    "skill": "Systems of Linear Equations",
+    "acceptedAnswers": [
+      "6"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-07.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      11
+    ]
+  },
+  {
+    "id": "math1-8",
+    "moduleId": "math1",
+    "number": 8,
+    "prompt": "A bank account was opened with an initial deposit. Over the next several months, regular deposits were made into this account, and there were no withdrawals made during this time. The graph of the function $f$ shown, where $y=f(x)$, estimates the account balance, in dollars, in this bank account $x$ months since the initial deposit. To the nearest whole dollar, what is the amount of the initial deposit estimated by the graph?",
+    "kind": "student-response",
+    "correctAnswer": "35",
+    "choices": [],
+    "rationale": "The initial deposit occurs at $x=0$. The graph crosses the vertical axis at about 35 dollars.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Interpreting Linear Graphs",
+    "acceptedAnswers": [
+      "35"
+    ],
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math1-08.webp",
+      "alt": "Graph of bank account balance in dollars versus months since the initial deposit."
+    },
+    "asset": "/sat/june-2026-us/questions/math1-08.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      12
+    ]
+  },
+  {
+    "id": "math1-9",
+    "moduleId": "math1",
+    "number": 9,
+    "prompt": "$$y=-12x+16$$\n\n$$y=-20x+24$$\n\nWhat is the solution $(x,y)$ to the given system of equations?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$(1,4)$"
+      },
+      {
+        "key": "B",
+        "text": "$(16,24)$"
+      },
+      {
+        "key": "C",
+        "text": "$(24,16)$"
+      },
+      {
+        "key": "D",
+        "text": "$(4,1)$"
+      }
+    ],
+    "rationale": "Equating the expressions gives $-12x+16=-20x+24$, hence $8x=8$ and $x=1$. Then $y=4$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Systems of Linear Equations",
+    "asset": "/sat/june-2026-us/questions/math1-09.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      13
+    ]
+  },
+  {
+    "id": "math1-10",
+    "moduleId": "math1",
+    "number": 10,
+    "prompt": "A rectangle has a length that is 73 times its width. The function $y=(73w)(w)$ represents this situation, where $y$ is the area, in square feet, of the rectangle and $w>0$. Which of the following is the best interpretation of $73w$ in this context?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The length of the rectangle, in feet"
+      },
+      {
+        "key": "B",
+        "text": "The area of the rectangle, in square feet"
+      },
+      {
+        "key": "C",
+        "text": "The difference between the length and the width of the rectangle, in feet"
+      },
+      {
+        "key": "D",
+        "text": "The width of the rectangle, in feet"
+      }
+    ],
+    "rationale": "Area equals length times width. The width is $w$, so the other factor, $73w$, is the length.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Interpreting Expressions",
+    "asset": "/sat/june-2026-us/questions/math1-10.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      14
+    ]
+  },
+  {
+    "id": "math1-11",
+    "moduleId": "math1",
+    "number": 11,
+    "prompt": "An entomologist placed an initial population of 40 Tenebrio molitor, a type of beetle, into a habitat and monitored the population over time. When the number of Tenebrio molitor in the habitat reached 170% of the initial population, the entomologist moved 75% of the Tenebrio molitor to a second habitat. How many Tenebrio molitor did the entomologist move to the second habitat at this time?",
+    "kind": "student-response",
+    "correctAnswer": "51",
+    "choices": [],
+    "rationale": "The population reached $1.70(40)=68$. Moving 75% gives $0.75(68)=51$ beetles.",
+    "difficulty": "Medium",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Percentages",
+    "acceptedAnswers": [
+      "51"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-11.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      15
+    ]
+  },
+  {
+    "id": "math1-12",
+    "moduleId": "math1",
+    "number": 12,
+    "prompt": "For the polynomial function $f$, the graph of $y=f(x)$ in the $xy$-plane passes through the points $(-3,0)$, $(1,0)$, and $(4,0)$. Which of the following must be a factor of $f(x)$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$x+1$"
+      },
+      {
+        "key": "B",
+        "text": "$x+4$"
+      },
+      {
+        "key": "C",
+        "text": "$x-1$"
+      },
+      {
+        "key": "D",
+        "text": "$x-3$"
+      }
+    ],
+    "rationale": "By the factor theorem, the zero $x=1$ gives the factor $x-1$. The other given zeros correspond to $x+3$ and $x-4$.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Polynomial Factors",
+    "asset": "/sat/june-2026-us/questions/math1-12.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      16
+    ]
+  },
+  {
+    "id": "math1-13",
+    "moduleId": "math1",
+    "number": 13,
+    "prompt": "A circle has a circumference of $89\\pi$ centimeters. What is the diameter, in centimeters, of the circle?",
+    "kind": "student-response",
+    "correctAnswer": "89",
+    "choices": [],
+    "rationale": "Since $C=\\pi d$, the diameter is $d=89\\pi/\\pi=89$ centimeters.",
+    "difficulty": "Foundation",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Circles",
+    "acceptedAnswers": [
+      "89"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-13.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      17
+    ]
+  },
+  {
+    "id": "math1-14",
+    "moduleId": "math1",
+    "number": 14,
+    "prompt": "If $\\frac{x-17}{18}=\\frac{x-17}{6}$, what is the value of $x+17$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0"
+      },
+      {
+        "key": "B",
+        "text": "3"
+      },
+      {
+        "key": "C",
+        "text": "17"
+      },
+      {
+        "key": "D",
+        "text": "34"
+      }
+    ],
+    "rationale": "Multiply by 18: $x-17=3(x-17)$. Thus $x=17$ and $x+17=34$.",
+    "difficulty": "Medium",
+    "domain": "Algebra",
+    "skill": "Linear Equations",
+    "asset": "/sat/june-2026-us/questions/math1-14.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      18
+    ]
+  },
+  {
+    "id": "math1-15",
+    "moduleId": "math1",
+    "number": 15,
+    "prompt": "For what value of $a$ is $\\sqrt[a]{r^{42}}$ equivalent to $r^{6/7}$, where $r>1$?",
+    "kind": "student-response",
+    "correctAnswer": "49",
+    "choices": [],
+    "rationale": "The radical equals $r^{42/a}$. Since $r>1$, equate exponents: $42/a=6/7$. Therefore $a=49$.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Rational Exponents",
+    "acceptedAnswers": [
+      "49"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-15.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      19
+    ]
+  },
+  {
+    "id": "math1-16",
+    "moduleId": "math1",
+    "number": 16,
+    "prompt": "In the $xy$-plane, line $s$ passes through the point $(0,0)$ and is parallel to the line represented by the equation $y=36x+6$. If line $s$ also passes through the point $(9,d)$, what is the value of $d$?",
+    "kind": "student-response",
+    "correctAnswer": "324",
+    "choices": [],
+    "rationale": "Parallel lines have the same slope, 36. Through the origin, line $s$ is $y=36x$, so $d=36(9)=324$.",
+    "difficulty": "Medium",
+    "domain": "Algebra",
+    "skill": "Linear Equations & Slopes",
+    "acceptedAnswers": [
+      "324"
+    ],
+    "asset": "/sat/june-2026-us/questions/math1-16.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      20
+    ]
+  },
+  {
+    "id": "math1-17",
+    "moduleId": "math1",
+    "number": 17,
+    "prompt": "Circles A and B are graphed in the $xy$-plane. Circle A is represented by the equation $(x+8)^2+(y-8)^2=64$ and intersects the $x$-axis at the point $(r,s)$. Circle B has its center at $(r,s)$ and has a radius of the same length as circle A. Which equation represents circle B?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$x^2+(y+8)^2=64$"
+      },
+      {
+        "key": "B",
+        "text": "$x^2+(y-8)^2=64$"
+      },
+      {
+        "key": "C",
+        "text": "$(x+8)^2+y^2=64$"
+      },
+      {
+        "key": "D",
+        "text": "$(x-8)^2+y^2=64$"
+      }
+    ],
+    "rationale": "On the $x$-axis, $y=0$, so $(x+8)^2+64=64$ and $x=-8$. Circle B therefore has center $(-8,0)$ and radius 8.",
+    "difficulty": "Medium",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Circle Equations",
+    "asset": "/sat/june-2026-us/questions/math1-17.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      21
+    ]
+  },
+  {
+    "id": "math1-18",
+    "moduleId": "math1",
+    "number": 18,
+    "prompt": "The dot plots represent the distributions of values in data sets A and B. Which of the following statements must be true?\n\nI. The median of data set A is equal to the median of data set B.\nII. The standard deviation of data set A is equal to the standard deviation of data set B.",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "I and II"
+      },
+      {
+        "key": "B",
+        "text": "I only"
+      },
+      {
+        "key": "C",
+        "text": "II only"
+      },
+      {
+        "key": "D",
+        "text": "Neither I nor II"
+      }
+    ],
+    "rationale": "Both distributions are symmetric about 7 and have median 7. Data set B places more observations farther from 7, so it has a larger standard deviation. Only statement I is true.",
+    "difficulty": "Medium",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Median & Standard Deviation",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math1-18.webp",
+      "alt": "Dot plots of data sets A and B, with values from 4 to 10."
+    },
+    "asset": "/sat/june-2026-us/questions/math1-18.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      22
+    ]
+  },
+  {
+    "id": "math1-19",
+    "moduleId": "math1",
+    "number": 19,
+    "prompt": "The scatterplot shows the relationship between two variables, $x$ and $y$. A line of best fit for the data is also shown. For how many of the 9 data points is the actual $y$-value greater than the $y$-value predicted by the line of best fit?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "8"
+      },
+      {
+        "key": "B",
+        "text": "7"
+      },
+      {
+        "key": "C",
+        "text": "5"
+      },
+      {
+        "key": "D",
+        "text": "2"
+      }
+    ],
+    "rationale": "A point has a greater actual than predicted value when it lies above the line of best fit. There are five such points.",
+    "difficulty": "Foundation",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Scatterplots & Residuals",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math1-19.webp",
+      "alt": "Scatterplot containing nine data points and a line of best fit."
+    },
+    "asset": "/sat/june-2026-us/questions/math1-19.webp",
+    "assetWidth": 1440,
+    "assetHeight": 1620,
+    "sourcePages": [
+      23,
+      24
+    ]
+  },
+  {
+    "id": "math1-20",
+    "moduleId": "math1",
+    "number": 20,
+    "prompt": "$$RS=504$$\n\n$$ST=128$$\n\n$$TR=520$$\n\nThe side lengths of right triangle $RST$ are given. Triangle $RST$ is similar to triangle $UVW$, where $S$ corresponds to $V$ and $T$ corresponds to $W$. What is the value of $\\tan(W)$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$16/65$"
+      },
+      {
+        "key": "B",
+        "text": "$16/63$"
+      },
+      {
+        "key": "C",
+        "text": "$63/65$"
+      },
+      {
+        "key": "D",
+        "text": "$63/16$"
+      }
+    ],
+    "rationale": "The hypotenuse is $TR=520$, so $S$ is the right angle. For angle $T$, opposite is $RS=504$ and adjacent is $ST=128$. Thus $\\tan(W)=\\tan(T)=504/128=63/16$.",
+    "difficulty": "Medium",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Right Triangle Trigonometry",
+    "asset": "/sat/june-2026-us/questions/math1-20.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      25
+    ]
+  },
+  {
+    "id": "math1-21",
+    "moduleId": "math1",
+    "number": 21,
+    "prompt": "$$f(x)=20(2)^x+6(2)^x$$\n\nThe function $f$ is defined by the given equation. Which of the following equivalent forms of $f$ displays, as a coefficient or a base, the $y$-coordinate of the $y$-intercept of the graph of $y=f(x)$ in the $xy$-plane?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$f(x)=80(2)^{x-2}+24(2)^{x-2}$"
+      },
+      {
+        "key": "B",
+        "text": "$f(x)=2(10(2)^x+3(2)^x)$"
+      },
+      {
+        "key": "C",
+        "text": "$f(x)=20(4)^{x/2}+6(4)^{x/2}$"
+      },
+      {
+        "key": "D",
+        "text": "$f(x)=26(2)^x$"
+      }
+    ],
+    "rationale": "Combine the common factors to get $f(x)=(20+6)2^x=26(2)^x$. At $x=0$, $f(0)=26$, explicitly shown as the coefficient.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Equivalent Exponential Expressions",
+    "asset": "/sat/june-2026-us/questions/math1-21.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      26
+    ]
+  },
+  {
+    "id": "math1-22",
+    "moduleId": "math1",
+    "number": 22,
+    "prompt": "In a set of three consecutive integers, where the integers are ordered from least to greatest, the first integer is represented by $x$. The sum of 4 and the second integer is less than the product of 17 and the third integer. Which inequality represents this situation?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$4+(x+1)>17(x+2)$"
+      },
+      {
+        "key": "B",
+        "text": "$4+(x+1)<17(x+2)$"
+      },
+      {
+        "key": "C",
+        "text": "$4+(x+2)>17(x+3)$"
+      },
+      {
+        "key": "D",
+        "text": "$4+(x+2)<17(x+3)$"
+      }
+    ],
+    "rationale": "The integers are $x$, $x+1$, and $x+2$. The stated comparison is $4+(x+1)<17(x+2)$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Linear Inequalities",
+    "asset": "/sat/june-2026-us/questions/math1-22.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      27
+    ]
+  },
+  {
+    "id": "math2-1",
+    "moduleId": "math2",
+    "number": 1,
+    "prompt": "The function $g$ is defined by $g(x)=19-x$. What is the value of $g(4)$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "4"
+      },
+      {
+        "key": "B",
+        "text": "15"
+      },
+      {
+        "key": "C",
+        "text": "19"
+      },
+      {
+        "key": "D",
+        "text": "23"
+      }
+    ],
+    "rationale": "Substitute 4: $g(4)=19-4=15$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Function Evaluation",
+    "asset": "/sat/june-2026-us/questions/math2-01.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      30
+    ]
+  },
+  {
+    "id": "math2-2",
+    "moduleId": "math2",
+    "number": 2,
+    "prompt": "Micah deposited a total of 6,600 dollars into two retirement accounts last year by depositing $x$ dollars once each month into one account and $y$ dollars twice each month into the other account. Which equation represents this situation?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$6,600=12x+12y$"
+      },
+      {
+        "key": "B",
+        "text": "$6,600=12x+24y$"
+      },
+      {
+        "key": "C",
+        "text": "$6,600=24x+12y$"
+      },
+      {
+        "key": "D",
+        "text": "$6,600=24x+24y$"
+      }
+    ],
+    "rationale": "There are 12 deposits of $x$ and 24 deposits of $y$ in a year, giving $6,600=12x+24y$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Linear Equations in Two Variables",
+    "asset": "/sat/june-2026-us/questions/math2-02.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      31
+    ]
+  },
+  {
+    "id": "math2-3",
+    "moduleId": "math2",
+    "number": 3,
+    "prompt": "The measure of angle $G$ is $\\pi/10$ radians. If the measure of angle $G$ is $9n$ degrees, where $n$ is a constant, what is the value of $n$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "2"
+      },
+      {
+        "key": "B",
+        "text": "9"
+      },
+      {
+        "key": "C",
+        "text": "10"
+      },
+      {
+        "key": "D",
+        "text": "18"
+      }
+    ],
+    "rationale": "Convert radians to degrees: $(\\pi/10)(180/\\pi)=18$. Thus $9n=18$ and $n=2$.",
+    "difficulty": "Foundation",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Radians & Degrees",
+    "asset": "/sat/june-2026-us/questions/math2-03.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      32
+    ]
+  },
+  {
+    "id": "math2-4",
+    "moduleId": "math2",
+    "number": 4,
+    "prompt": "The ratio 6 to 3 is equivalent to the ratio 24 to $3k$, where $k$ is a constant. What is the value of $k$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0.75"
+      },
+      {
+        "key": "B",
+        "text": "4"
+      },
+      {
+        "key": "C",
+        "text": "12"
+      },
+      {
+        "key": "D",
+        "text": "72"
+      }
+    ],
+    "rationale": "Set $6/3=24/(3k)$. Then $6k=24$, so $k=4$.",
+    "difficulty": "Foundation",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Ratios & Proportions",
+    "asset": "/sat/june-2026-us/questions/math2-04.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      33
+    ]
+  },
+  {
+    "id": "math2-5",
+    "moduleId": "math2",
+    "number": 5,
+    "prompt": "Which expression is equivalent to $(8nr^2+2nr)+(4n^2r+3nr)$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$12n^2r^2+5nr$"
+      },
+      {
+        "key": "B",
+        "text": "$12n^3r^3+5n^2r^2$"
+      },
+      {
+        "key": "C",
+        "text": "$32n^3r^3+6n^2r^2$"
+      },
+      {
+        "key": "D",
+        "text": "$8nr^2+4n^2r+5nr$"
+      }
+    ],
+    "rationale": "Only $2nr$ and $3nr$ are like terms; they sum to $5nr$. The terms $8nr^2$ and $4n^2r$ remain separate.",
+    "difficulty": "Foundation",
+    "domain": "Advanced Math",
+    "skill": "Equivalent Polynomial Expressions",
+    "asset": "/sat/june-2026-us/questions/math2-05.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      34
+    ]
+  },
+  {
+    "id": "math2-6",
+    "moduleId": "math2",
+    "number": 6,
+    "prompt": "$$R=\\frac{0.43l}{A}$$\n\nThe given equation relates the resistance $R$, in ohms, of a wire to its length $l$, in meters, and its cross-sectional area $A$, in square meters. Which equation correctly expresses the length, in meters, of the wire in terms of its resistance, in ohms, and its cross-sectional area, in square meters?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$l=\\frac{R-A}{0.43}$"
+      },
+      {
+        "key": "B",
+        "text": "$l=\\frac{R+A}{0.43}$"
+      },
+      {
+        "key": "C",
+        "text": "$l=\\frac{0.43R}{A}$"
+      },
+      {
+        "key": "D",
+        "text": "$l=\\frac{AR}{0.43}$"
+      }
+    ],
+    "rationale": "Multiply by $A$ to get $AR=0.43l$, then divide by 0.43.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Rearranging Formulas",
+    "asset": "/sat/june-2026-us/questions/math2-06.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      35
+    ]
+  },
+  {
+    "id": "math2-7",
+    "moduleId": "math2",
+    "number": 7,
+    "prompt": "The graphs of $y=-3x+7$ and $y=x-5$ are shown. Point $P$ (not shown) has coordinates $(3,-5)$ and lies in the shaded region. The coordinates of $P$ satisfy which of the following inequalities?\n\nI. $y<-3x+7$\nII. $y>x-5$",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "I only"
+      },
+      {
+        "key": "B",
+        "text": "II only"
+      },
+      {
+        "key": "C",
+        "text": "I and II"
+      },
+      {
+        "key": "D",
+        "text": "Neither I nor II"
+      }
+    ],
+    "rationale": "At $(3,-5)$, statement I is $-5<-2$, which is true. Statement II is $-5>-2$, which is false.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Linear Inequalities",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math2-07.webp",
+      "alt": "Graphs of two intersecting lines with the region below both lines shaded."
+    },
+    "asset": "/sat/june-2026-us/questions/math2-07.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      36
+    ]
+  },
+  {
+    "id": "math2-8",
+    "moduleId": "math2",
+    "number": 8,
+    "prompt": "There is a linear relationship between $x$ and $y$. The table shows three values of $x$ and their corresponding values of $y$ in terms of a constant $n$. What is the slope of the line that represents this relationship in the $xy$-plane?",
+    "kind": "student-response",
+    "correctAnswer": "4.8",
+    "choices": [],
+    "rationale": "The slope is the change in $y$ divided by the change in $x$: $((n+24)-n)/(5-0)=24/5=4.8$.",
+    "difficulty": "Medium",
+    "domain": "Algebra",
+    "skill": "Slope from a Table",
+    "acceptedAnswers": [
+      "4.8"
+    ],
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math2-08.webp",
+      "alt": "Table: x = 0, 5, 10; corresponding y = n, n + 24, n + 48."
+    },
+    "asset": "/sat/june-2026-us/questions/math2-08.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      37
+    ]
+  },
+  {
+    "id": "math2-9",
+    "moduleId": "math2",
+    "number": 9,
+    "prompt": "If $(\\frac{1}{2}x-\\frac{21}{2})^2-81=0$, what is the value of $(x-21)^2$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "324"
+      },
+      {
+        "key": "B",
+        "text": "162"
+      },
+      {
+        "key": "C",
+        "text": "21"
+      },
+      {
+        "key": "D",
+        "text": "9"
+      }
+    ],
+    "rationale": "Rewrite the squared term as $(x-21)^2/4$. Hence $(x-21)^2/4=81$, so $(x-21)^2=324$.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Quadratic Expressions",
+    "asset": "/sat/june-2026-us/questions/math2-09.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      38
+    ]
+  },
+  {
+    "id": "math2-10",
+    "moduleId": "math2",
+    "number": 10,
+    "prompt": "Rectangles $ABCD$ and $EFGH$ are similar. The length of each side of $EFGH$ is 6 times the length of the corresponding side of $ABCD$. The area of $ABCD$ is 90 square units. What is the area, in square units, of $EFGH$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "15"
+      },
+      {
+        "key": "B",
+        "text": "36"
+      },
+      {
+        "key": "C",
+        "text": "540"
+      },
+      {
+        "key": "D",
+        "text": "3,240"
+      }
+    ],
+    "rationale": "Area scales with the square of the length scale factor: $90(6^2)=3,240$ square units.",
+    "difficulty": "Medium",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Similar Figures & Area",
+    "asset": "/sat/june-2026-us/questions/math2-10.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      39
+    ]
+  },
+  {
+    "id": "math2-11",
+    "moduleId": "math2",
+    "number": 11,
+    "prompt": "On a plot of land, 48.0% of the square footage is farmland and the remaining square footage is pasture. There are buildings on exactly 23.5% of the square footage of the farmland, and there are buildings on exactly 16.0% of the square footage of the pasture. If there are buildings on exactly $p$% of the square footage of the plot of land, what is the value of $p$?",
+    "kind": "student-response",
+    "correctAnswer": "19.6",
+    "choices": [],
+    "rationale": "The weighted percentage is $p=0.48(23.5)+0.52(16.0)=11.28+8.32=19.6$.",
+    "difficulty": "Medium",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Weighted Percentages",
+    "acceptedAnswers": [
+      "19.6"
+    ],
+    "asset": "/sat/june-2026-us/questions/math2-11.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      40
+    ]
+  },
+  {
+    "id": "math2-12",
+    "moduleId": "math2",
+    "number": 12,
+    "prompt": "The scatterplot shows data set A, relating a puppy’s age $x$, in months, to its weight $y$, in pounds. The puppy was weighed again at 9 months old and weighed 52 pounds. Data set B consists of all the data points in data set A as well as the data point $(9,52)$. The equation of a line of best fit for data set B can be written as $y=r+sx$, where $r$ and $s$ are constants and $2 \\leq x \\leq 9$. Assuming the equations of the lines of best fit are calculated in the same way, which of the following is the best estimate for the value of $s$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "5.9"
+      },
+      {
+        "key": "B",
+        "text": "8.7"
+      },
+      {
+        "key": "C",
+        "text": "13.8"
+      },
+      {
+        "key": "D",
+        "text": "17.7"
+      }
+    ],
+    "rationale": "The added point $(9,52)$ lies below the extension of the original upward trend, reducing its slope. The combined data rise about 40 pounds over 7 months, and a fitted slope is about 6 pounds per month. Of the choices, 5.9 is closest.",
+    "difficulty": "Medium",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Lines of Best Fit",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math2-12.webp",
+      "alt": "Data set A: a puppy’s weight in pounds plotted against age in months."
+    },
+    "asset": "/sat/june-2026-us/questions/math2-12.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      41
+    ]
+  },
+  {
+    "id": "math2-13",
+    "moduleId": "math2",
+    "number": 13,
+    "prompt": "If $|16-2x|=58$, which of the following is a value of $8-x$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "0"
+      },
+      {
+        "key": "B",
+        "text": "8"
+      },
+      {
+        "key": "C",
+        "text": "29"
+      },
+      {
+        "key": "D",
+        "text": "42"
+      }
+    ],
+    "rationale": "Since $|16-2x|=2|8-x|$, divide by 2 to obtain $|8-x|=29$. Thus $8-x$ can be 29 or -29; 29 is listed.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Absolute Value Equations",
+    "asset": "/sat/june-2026-us/questions/math2-13.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      42
+    ]
+  },
+  {
+    "id": "math2-14",
+    "moduleId": "math2",
+    "number": 14,
+    "prompt": "A book-of-the-month club charges 16 dollars for the first book purchased during the month and an additional 11 dollars for each book after the first. Which equation describes this situation, where $y$ is the total cost, in dollars, for books purchased during a month, $x$ is the number of books purchased during the month, and $x>0$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$y=x+16$"
+      },
+      {
+        "key": "B",
+        "text": "$y=11x+16$"
+      },
+      {
+        "key": "C",
+        "text": "$y=11(x-1)+16$"
+      },
+      {
+        "key": "D",
+        "text": "$y=(x-1)+16$"
+      }
+    ],
+    "rationale": "After paying 16 dollars for the first book, the remaining $x-1$ books cost 11 dollars each: $y=16+11(x-1)$.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Linear Models",
+    "asset": "/sat/june-2026-us/questions/math2-14.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      43
+    ]
+  },
+  {
+    "id": "math2-15",
+    "moduleId": "math2",
+    "number": 15,
+    "prompt": "A company developed a plan to set the selling price of a product. The company determined that for a selling price of 120.00 dollars, zero products would be sold. For each 2.50 dollar decrease in the selling price, the number of products sold would increase by one. For a revenue of exactly 1,437.50 dollars, which of the following could be the number of products sold? (revenue = price × number of products sold)",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "23"
+      },
+      {
+        "key": "B",
+        "text": "24"
+      },
+      {
+        "key": "C",
+        "text": "527"
+      },
+      {
+        "key": "D",
+        "text": "1,440"
+      }
+    ],
+    "rationale": "With $n$ products, the price is $120-2.5n$. Solve $n(120-2.5n)=1,437.5$, or $n^2-48n+575=0$. Factoring gives $(n-23)(n-25)=0$. Only 23 is an answer choice.",
+    "difficulty": "Advanced",
+    "domain": "Advanced Math",
+    "skill": "Quadratic Models",
+    "asset": "/sat/june-2026-us/questions/math2-15.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      44
+    ]
+  },
+  {
+    "id": "math2-16",
+    "moduleId": "math2",
+    "number": 16,
+    "prompt": "The equation of the graph shown is $y=a^x+b$, where $a$ and $b$ are constants. What is the value of $a-b$?",
+    "kind": "student-response",
+    "correctAnswer": "11",
+    "choices": [],
+    "rationale": "The vertical intercept is $(0,-1)$, so $1+b=-1$ and $b=-2$. The marked point $(1,7)$ gives $a-2=7$, so $a=9$. Therefore $a-b=9-(-2)=11$.",
+    "difficulty": "Medium",
+    "domain": "Advanced Math",
+    "skill": "Exponential Graphs",
+    "acceptedAnswers": [
+      "11"
+    ],
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math2-16.webp",
+      "alt": "Exponential graph with vertical intercept (0, -1) and marked point (1, 7)."
+    },
+    "asset": "/sat/june-2026-us/questions/math2-16.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      45
+    ]
+  },
+  {
+    "id": "math2-17",
+    "moduleId": "math2",
+    "number": 17,
+    "prompt": "$$y=7x^2-bx-6$$\n\nWhich of the following equations is equivalent to the given equation, where $b$ is a positive constant?",
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$y=7(x-\\frac{b}{14})^2-6-\\frac{b^2}{28}$"
+      },
+      {
+        "key": "B",
+        "text": "$y=7(x-\\frac{b}{14})^2-6$"
+      },
+      {
+        "key": "C",
+        "text": "$y=7(x+\\frac{b}{14})^2-6-\\frac{b^2}{28}$"
+      },
+      {
+        "key": "D",
+        "text": "$y=7(x+\\frac{b}{14})^2-6$"
+      }
+    ],
+    "rationale": "Complete the square: $7(x-b/14)^2=7x^2-bx+b^2/28$. Subtract $b^2/28$ and 6 to recover the original expression.",
+    "difficulty": "Advanced",
+    "domain": "Advanced Math",
+    "skill": "Completing the Square",
+    "asset": "/sat/june-2026-us/questions/math2-17.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      46
+    ]
+  },
+  {
+    "id": "math2-18",
+    "moduleId": "math2",
+    "number": 18,
+    "prompt": "The equation $d=6t+210$ gives the distance $d$, in feet, from a reference point on the surface of Mars to a Mars rover, where $t$ is the number of minutes after the start of a period of observation. By how many feet does the Mars rover’s distance from the reference point increase over a period of 20 minutes?",
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "choices": [
+      {
+        "key": "A",
+        "text": "330"
+      },
+      {
+        "key": "B",
+        "text": "230"
+      },
+      {
+        "key": "C",
+        "text": "120"
+      },
+      {
+        "key": "D",
+        "text": "6"
+      }
+    ],
+    "rationale": "The rate is 6 feet per minute. Over 20 minutes, the increase is $6(20)=120$ feet; the initial 210 feet does not affect the change.",
+    "difficulty": "Foundation",
+    "domain": "Algebra",
+    "skill": "Rates of Change",
+    "asset": "/sat/june-2026-us/questions/math2-18.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      47
+    ]
+  },
+  {
+    "id": "math2-19",
+    "moduleId": "math2",
+    "number": 19,
+    "prompt": "A line intersects two parallel lines, forming four acute angles and four obtuse angles. The measure of one of the acute angles is $(7x-410)^\\circ$. The sum of the measures of one of the acute angles and three of the obtuse angles is $(-14x+w)^\\circ$. What is the value of $w$?",
+    "kind": "student-response",
+    "correctAnswer": "1360",
+    "choices": [],
+    "rationale": "Each obtuse angle measures $180-(7x-410)=590-7x$. The stated sum is $(7x-410)+3(590-7x)=-14x+1,360$, so $w=1,360$.",
+    "difficulty": "Advanced",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Parallel Lines & Angles",
+    "acceptedAnswers": [
+      "1360"
+    ],
+    "asset": "/sat/june-2026-us/questions/math2-19.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      48
+    ]
+  },
+  {
+    "id": "math2-20",
+    "moduleId": "math2",
+    "number": 20,
+    "prompt": "The table gives the numbers of participants in three groups by age. One of these participants will be selected at random. What is the probability of selecting a participant from group A, given that the participant is at least 10 years of age?",
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$1/6$"
+      },
+      {
+        "key": "B",
+        "text": "$1/4$"
+      },
+      {
+        "key": "C",
+        "text": "$11/30$"
+      },
+      {
+        "key": "D",
+        "text": "$1/2$"
+      }
+    ],
+    "rationale": "Restrict the sample to ages 10 and older: $30+30=60$ participants. In group A, $11+4=15$ qualify. The conditional probability is $15/60=1/4$.",
+    "difficulty": "Medium",
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Conditional Probability",
+    "visual": {
+      "asset": "/sat/june-2026-us/visuals/math2-20.webp",
+      "alt": "Participant counts by group and age, with row and column totals."
+    },
+    "asset": "/sat/june-2026-us/questions/math2-20.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      49
+    ]
+  },
+  {
+    "id": "math2-21",
+    "moduleId": "math2",
+    "number": 21,
+    "prompt": "A circle in the $xy$-plane has its center at $(2,9)$. Line $t$ is tangent to this circle at the point $(a,-4)$, where $a$ is a constant. The slope of line $t$ is $6/5$. What is the value of $a$?",
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$-68/5$"
+      },
+      {
+        "key": "B",
+        "text": "$-53/6$"
+      },
+      {
+        "key": "C",
+        "text": "$77/6$"
+      },
+      {
+        "key": "D",
+        "text": "$88/5$"
+      }
+    ],
+    "rationale": "The radius to the point of tangency is perpendicular to the tangent, so its slope is $-5/6$. Thus $(-4-9)/(a-2)=-5/6$, giving $a-2=78/5$ and $a=88/5$.",
+    "difficulty": "Advanced",
+    "domain": "Geometry and Trigonometry",
+    "skill": "Circle Tangents & Slopes",
+    "asset": "/sat/june-2026-us/questions/math2-21.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      50
+    ]
+  },
+  {
+    "id": "math2-22",
+    "moduleId": "math2",
+    "number": 22,
+    "prompt": "$$-x^2+bx-49=0$$\n\nIn the given equation, $b$ is an integer. The equation has no real solutions. What is the least possible value of $b$?",
+    "kind": "student-response",
+    "correctAnswer": "-13",
+    "choices": [],
+    "rationale": "No real solutions requires a negative discriminant: $b^2-4(-1)(-49)=b^2-196<0$. Therefore $-14<b<14$, and the least integer is -13.",
+    "difficulty": "Advanced",
+    "domain": "Advanced Math",
+    "skill": "Quadratic Discriminants",
+    "acceptedAnswers": [
+      "-13"
+    ],
+    "asset": "/sat/june-2026-us/questions/math2-22.webp",
+    "assetWidth": 1440,
+    "assetHeight": 810,
+    "sourcePages": [
+      51
+    ]
+  }
+]

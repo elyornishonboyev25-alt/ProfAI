@@ -11,6 +11,7 @@ import {
 } from './december2025Intl'
 import { SAT_MAY_2026_INTL, SAT_MAY_2026_INTL_MODULES } from './may2026Intl'
 import { SAT_JUNE_2026_INTL, SAT_JUNE_2026_INTL_MODULES } from './june2026Intl'
+import { SAT_JUNE_2026_US } from './june2026Us'
 import {
   SAT_NOVEMBER_2025_INTL,
   SAT_NOVEMBER_2025_INTL_MODULES,
@@ -81,6 +82,12 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     modules: SAT_JUNE_2026_INTL_MODULES,
     badge: 'June 2026 International · Version 1',
     difficulty: 'Hard',
+  },
+  8: {
+    mockId: 8,
+    ...SAT_JUNE_2026_US,
+    badge: 'June 2026 US · Version 1',
+    difficulty: 'Medium',
   },
 }
 

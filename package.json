@@ -11,12 +11,14 @@
     "validate:speaking": "node scripts/validate-speaking-bank.mjs",
     "validate:sat-assets": "node scripts/validate-sat-assets.mjs",
     "validate:sat-test8": "node scripts/validate-sat-test8.mjs",
-    "build": "npm run validate:speaking && npm run validate:sat-assets && npm run validate:sat-test8 && tsc && vite build",
+    "build": "npm run validate:speaking && npm run validate:sat-assets && npm run validate:sat-test8 && npm run validate:vocabulary && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "dev:all": "concurrently \"npm run dev:web\" \"npm run api:dev\"",
     "build:all": "npm run build && npm --prefix backend run build",
-    "start": "npm --prefix backend run start"
+    "start": "npm --prefix backend run start",
+    "validate:vocabulary": "node scripts/validate-vocabulary.mjs",
+    "test:vocabulary-ui": "node scripts/test-vocabulary-ui.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

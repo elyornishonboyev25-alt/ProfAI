@@ -1,3 +1,4 @@
+import { SaveWordButton } from './SaveWordButton'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -220,6 +221,7 @@ export function ActivityPicker({ basePath, entriesCount }: { basePath: string; e
 // ================================================================ Flashcards
 export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entries: VocabularyEntry[]; masteryKey: string; onComplete?: (accuracy: number) => void }) {
   const [deck, setDeck] = useState(entries)
+  const completionReported = useRef(false)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [known, setKnown] = useState<Record<string, boolean>>(() => getMastery(masteryKey))
@@ -242,12 +244,16 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
     const next = { ...known, [current.id]: value }
     setKnown(next)
     setMastery(masteryKey, next)
-    if (value && deck.every((card) => next[card.id])) onComplete?.(100)
+    if (value && !completionReported.current && deck.every((card) => next[card.id])) {
+      completionReported.current = true
+      onComplete?.(100)
+    }
     window.setTimeout(() => go(1), 160)
   }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest('button, input, textarea, select, a')) return
       if (e.key === 'ArrowRight') go(1)
       else if (e.key === 'ArrowLeft') go(-1)
       else if (e.key === ' ') { e.preventDefault(); setFlipped((v) => !v) }
@@ -270,6 +276,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
         </div>
       </section>
 
+      <div className="mx-auto w-full max-w-4xl"><SaveWordButton entry={current} /></div>
       <div className="relative mx-auto w-full max-w-4xl [perspective:2000px]">
         <motion.button
           type="button"
@@ -363,6 +370,7 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
   const [celebration, setCelebration] = useState<MatchingCelebration | null>(null)
 
   const completedGroupsRef = useRef<Record<number, boolean>>({})
+  const matchedByGroupRef = useRef<Record<number, Record<string, boolean>>>({})
   const sectionRewardRef = useRef(sectionReward)
 
   useEffect(() => {
@@ -370,7 +378,7 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
     setSectionReward(next); sectionRewardRef.current = next
     setDiamondBank(getDiamondBank())
     setActiveGroupIndex(0); setSelectedWord(null); setSelectedDef(null)
-    setMatchedByGroup({}); setCompletedGroups({}); completedGroupsRef.current = {}
+    setMatchedByGroup({}); matchedByGroupRef.current = {}; setCompletedGroups({}); completedGroupsRef.current = {}
     setWrongPair(null); setCelebration(null)
   }, [rewardKey, groups.length])
 
@@ -404,21 +412,20 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
     if (groups.every((_, i) => next.awardedGroups.includes(i)) && !next.bonusAwarded) {
       next = { ...next, bonusAwarded: true, completed: true, totalDiamonds: next.totalDiamonds + 5, completedAt: new Date().toISOString() }
       earned += 5; reason = 'All groups completed — bonus!'
-      onComplete?.(100)
     }
     if (next !== cur) commitReward(next, earned, reason)
-  }, [commitReward, groups, onComplete])
+  }, [commitReward, groups])
 
   const tryMatch = (groupIndex: number, wordId: string, defId: string) => {
     if (wordId === defId) {
-      let solved = false
-      setMatchedByGroup((prev) => {
-        const g = prev[groupIndex] ?? {}
-        if (g[wordId]) return prev
-        const ng = { ...g, [wordId]: true }
-        solved = groups[groupIndex].every((it) => ng[it.id])
-        return { ...prev, [groupIndex]: ng }
-      })
+      const previous = matchedByGroupRef.current
+      const group = previous[groupIndex] ?? {}
+      if (group[wordId]) return
+      const nextGroup = { ...group, [wordId]: true }
+      const nextMatches = { ...previous, [groupIndex]: nextGroup }
+      matchedByGroupRef.current = nextMatches
+      setMatchedByGroup(nextMatches)
+      const solved = groups[groupIndex].every((entry) => nextGroup[entry.id])
       setWrongPair(null)
       playCorrect()
       if (solved && !completedGroupsRef.current[groupIndex]) {
@@ -426,6 +433,9 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
         completedGroupsRef.current = nc
         setCompletedGroups(nc)
         onGroupCompleted(groupIndex)
+        // XP is independent of locally collected diamonds; retries and other devices
+        // are deduplicated by the server using the stable activity event key.
+        if (groups.every((_, index) => nc[index])) onComplete?.(100)
         const nextOpen = groups.findIndex((_, i) => !nc[i])
         if (nextOpen !== -1) window.setTimeout(() => setActiveGroupIndex(nextOpen), 600)
       }
@@ -502,10 +512,13 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
           <div className="space-y-2">
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Terms</p>
             {activeGroup.map((it) => (
-              <button key={it.id} onClick={() => pickWord(activeGroupIndex, it.id)} className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-left text-sm font-semibold transition ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
-                {activeMatches[it.id] ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : null}
-                {it.term}
-              </button>
+              <div key={it.id}>
+                <SaveWordButton entry={it} />
+                <button onClick={() => pickWord(activeGroupIndex, it.id)} className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-left text-sm font-semibold transition ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
+                  {activeMatches[it.id] ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : null}
+                  {it.term}
+                </button>
+              </div>
             ))}
           </div>
           <div className="space-y-2">
@@ -586,7 +599,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
     if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.(Math.round((score / questions.length) * 100)); return }
     setIndex((i) => i + 1); setPicked(null); setLocked(false)
   }
-  const restart = () => { setIndex(0); setPicked(null); setLocked(false); setScore(0); setFinished(false) }
+  const restart = () => { setIndex(0); setPicked(null); setLocked(false); setScore(0); setCombo(0); setFinished(false) }
 
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
@@ -606,6 +619,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
         <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
       </div>
+      <SaveWordButton entry={current} />
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-xl font-bold text-slate-900">What does <span className="text-blue-600">“{current.term}”</span> mean?</h3>
         <AnimatePresence>
@@ -721,6 +735,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
         <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600" />
       </div>
+      {checked ? <SaveWordButton entry={current} /> : null}
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Type the term that matches this meaning</p>
       <div className="mt-2 flex items-start gap-2 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3">
         <BrainCircuit className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />

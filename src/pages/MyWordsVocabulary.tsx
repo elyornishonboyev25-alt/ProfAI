@@ -5,6 +5,7 @@ import {
   BookOpen,
   BookOpenCheck,
   Bot,
+  Bookmark,
   FileText,
   Headphones,
   Plus,
@@ -27,12 +28,13 @@ import {
 } from '@/utils/myVocabularyStore'
 
 const CONTEXTS: Array<{ key: VocabContext; label: string; icon: typeof BookOpen; desc: string; siteLink?: { to: string; label: string } }> = [
+  { key: 'sat', label: 'SAT', icon: Bookmark, desc: 'Words saved from SAT Full Mock English modules.', siteLink: { to: '/vocabulary/sat', label: 'SAT Full Mock sets' } },
   { key: 'reading', label: 'Reading', icon: BookOpen, desc: 'Words you met in reading passages.', siteLink: { to: '/vocabulary/ielts', label: 'IELTS reading sets' } },
   { key: 'listening', label: 'Listening', icon: Headphones, desc: 'Words you met while listening.' },
   { key: 'article', label: 'Article', icon: FileText, desc: 'Words you met inside articles.', siteLink: { to: '/vocabulary/articles', label: 'Article sets' } },
 ]
 
-type Filter = 'all' | 'ai' | 'manual'
+type Filter = 'all' | 'ai' | 'manual' | 'studio'
 
 // ----------------------------------------------------------------- overview
 function Overview() {
@@ -57,7 +59,7 @@ function Overview() {
                 </div>
                 <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">My Vocabulary</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Every word you ask the AI about — while reading, listening, or reading an article — is collected here, plus
+                  Words you save from Vocabulary Studio or ask the AI about are collected here, along with
                   any words you add yourself. Study them just like the arena sets.
                 </p>
               </div>
@@ -70,11 +72,12 @@ function Overview() {
           </section>
         </Reveal>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {CONTEXTS.map((c) => {
             const Icon = c.icon
             const ai = countSavedWords(c.key, 'ai')
             const manual = countSavedWords(c.key, 'manual')
+            const studio = countSavedWords(c.key, 'studio')
             return (
               <button
                 key={c.key}
@@ -86,9 +89,10 @@ function Overview() {
                 </span>
                 <h2 className="mt-3 text-xl font-black text-slate-900">{c.label}</h2>
                 <p className="mt-1 text-sm text-slate-600">{c.desc}</p>
-                <div className="mt-4 flex gap-2 text-xs font-semibold">
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700"><Bot className="h-3 w-3" /> {ai} AI</span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-600"><Plus className="h-3 w-3" /> {manual} added</span>
+                  <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">{studio} Studio</span>
                 </div>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">Open <ArrowLeft className="h-3.5 w-3.5 rotate-180" /></span>
               </button>
@@ -168,6 +172,7 @@ function Collection({ context }: { context: VocabContext }) {
   const filtered = words.filter((w) => (filter === 'all' ? true : w.source === filter))
   const aiCount = words.filter((w) => w.source === 'ai').length
   const manualCount = words.filter((w) => w.source === 'manual').length
+  const studioCount = words.filter((w) => w.source === 'studio').length
 
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
@@ -181,7 +186,7 @@ function Collection({ context }: { context: VocabContext }) {
             <span className="premium-top-chip gap-1"><Icon className="h-3.5 w-3.5" /> {meta.label}</span>
           </div>
           <h1 className="mt-4 text-2xl font-black text-slate-900 sm:text-3xl">My {meta.label} Words</h1>
-          <p className="mt-1 text-sm text-slate-500">{words.length} saved · {aiCount} from AI · {manualCount} added by you</p>
+          <p className="mt-1 text-sm text-slate-500">{words.length} saved · {aiCount} from AI · {manualCount} added by you · {studioCount} from Studio</p>
 
           {/* the 3 parts: site vocab link + study + add */}
           <div className="mt-4 flex flex-wrap gap-2">
@@ -212,7 +217,7 @@ function Collection({ context }: { context: VocabContext }) {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-black text-slate-900">Saved words</h2>
             <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 text-xs font-bold">
-              {(['all', 'ai', 'manual'] as Filter[]).map((f) => (
+              {(['all', 'ai', 'manual', 'studio'] as Filter[]).map((f) => (
                 <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 capitalize transition ${filter === f ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}>
                   {f === 'ai' ? 'AI' : f}
                 </button>
@@ -245,10 +250,17 @@ function WordCard({ word, onSpeak, onRemove }: { word: SavedWord; onSpeak: () =>
           <div className="flex items-center gap-2">
             <p className="truncate text-sm font-black text-slate-900">{word.term}</p>
             <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${word.source === 'ai' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-              {word.source === 'ai' ? 'AI' : 'You'}
+              {word.source === 'ai' ? 'AI' : word.source === 'studio' ? 'Studio' : 'You'}
             </span>
           </div>
+          {word.uzbek ? <p className="mt-1 text-xs font-semibold text-emerald-700">{word.uzbek}</p> : null}
           <p className="mt-1 text-xs leading-5 text-slate-600">{word.definition}</p>
+          {word.origin ? <p className="mt-2 text-xs text-slate-500">From: {word.origin}</p> : null}
+          {word.origins?.map((origin) => (
+            <Link key={`${origin.path}:${origin.questionId ?? ''}`} to={origin.path} className="mt-2 block text-xs font-semibold text-blue-700 hover:underline">
+              From: {origin.label}
+            </Link>
+          ))}
           {word.example ? <p className="mt-1 text-xs italic leading-5 text-slate-400">“{word.example}”</p> : null}
           {word.synonym ? <p className="mt-1 text-[11px] font-semibold text-blue-600">≈ {word.synonym}</p> : null}
         </div>
@@ -264,7 +276,7 @@ function WordCard({ word, onSpeak, onRemove }: { word: SavedWord; onSpeak: () =>
 export default function MyWordsVocabulary() {
   const { wordsContext } = useParams<{ wordsContext?: string }>()
   if (!wordsContext) return <Overview />
-  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'article') {
+  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'article' || wordsContext === 'sat') {
     return <Collection context={wordsContext} />
   }
   return <Navigate to="/vocabulary/my-words" replace />

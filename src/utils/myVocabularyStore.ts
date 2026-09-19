@@ -1,23 +1,15 @@
-// Personal vocabulary store (localStorage) for words the learner captures while studying.
-//
-// Two ways a word lands here:
-//   • source 'ai'     — the learner selected a word in a Reading / Listening / Article view and
-//                        asked the AI to explain it. The AI's structured explanation is saved.
-//   • source 'manual' — the learner typed a word in themselves to memorise.
-//
-// Words are grouped by `context` so the Vocabulary Arena can show a section per study area:
-//   reading · listening · article
-// Each context exposes its AI words and manual words, alongside the site's built-in sets.
-
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 
-export type VocabContext = 'reading' | 'listening' | 'article'
-export type VocabSource = 'ai' | 'manual'
+export type VocabContext = 'reading' | 'listening' | 'article' | 'sat'
+export type VocabSource = 'ai' | 'manual' | 'studio'
+
+export type WordOrigin = { label: string; path: string; questionId?: string }
 
 export type SavedWord = VocabularyEntry & {
   source: VocabSource
   context: VocabContext
   origin?: string // where it was captured (article slug, test id, …) for a friendly label
+  origins?: WordOrigin[]
   createdAt: string
 }
 
@@ -73,6 +65,10 @@ type AddInput = {
   source: VocabSource
   context: VocabContext
   origin?: string
+  origins?: WordOrigin[]
+  uzbek?: string
+  exampleUzbek?: string
+  sourceQuestionId?: string
 }
 
 // Adds a word, de-duplicating by (context, term). If the same term already exists in that
@@ -84,6 +80,11 @@ export function addSavedWord(input: AddInput): SavedWord {
     (word) => word.context === input.context && normalizeTerm(word.term) === key,
   )
 
+  const existing = words[existingIndex]
+  const origins = [...(existing?.origins ?? [])]
+  for (const origin of input.origins ?? []) {
+    if (!origins.some((item) => item.path === origin.path && item.questionId === origin.questionId)) origins.push(origin)
+  }
   const saved: SavedWord = {
     id: existingIndex >= 0 ? words[existingIndex].id : makeId(),
     term: input.term.trim(),
@@ -92,7 +93,11 @@ export function addSavedWord(input: AddInput): SavedWord {
     synonym: input.synonym.trim(),
     source: input.source,
     context: input.context,
-    origin: input.origin,
+    origin: input.origin ?? existing?.origin,
+    origins,
+    uzbek: input.uzbek?.trim() ?? existing?.uzbek,
+    exampleUzbek: input.exampleUzbek?.trim() ?? existing?.exampleUzbek,
+    sourceQuestionId: input.sourceQuestionId ?? existing?.sourceQuestionId,
     createdAt: existingIndex >= 0 ? words[existingIndex].createdAt : new Date().toISOString(),
   }
 

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
 import { articles } from '@/data/articles'
-import { countSavedWords } from '@/utils/myVocabularyStore'
+import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 
@@ -82,6 +82,8 @@ function resolveTrack(trackParam?: string): VocabularyTrack | null {
 
 export default function Vocabulary() {
   const navigate = useNavigate()
+  const [, refreshSavedCount] = useState(0)
+  useEffect(() => subscribeSavedWords(() => refreshSavedCount((n) => n + 1)), [])
   const { track: trackParam } = useParams<{ track?: string }>()
   const routeTrack = resolveTrack(trackParam)
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
@@ -232,11 +234,11 @@ export default function Vocabulary() {
                   </div>
                   <h2 className="mt-4 text-3xl font-black text-slate-900">SAT Vocabulary</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    10 packs, each with 4 sections. Each section opens on its own activity page with group-based matching rewards.
+                    {satStats.packs} full mocks, each with 2 English modules and 20 challenging words per module.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.packs} packs</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.sections} sections</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.packs} mocks</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.sections} modules</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.words} words</span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open SAT page -&gt;</p>
@@ -279,12 +281,12 @@ export default function Vocabulary() {
                   </div>
                   <h2 className="mt-4 text-3xl font-black text-slate-900">My Words</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Words you asked the AI about while reading, listening, or reading articles — plus any you add yourself. Grouped and ready to study.
+                    Words saved from Vocabulary Studio, AI explanations, and your own additions — with links back to their sources.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">Reading · Listening · Article</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">SAT · Reading · Listening · Article</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">
-                      {countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')} saved
+                      {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')} saved
                     </span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open My Words -&gt;</p>
@@ -452,12 +454,12 @@ export default function Vocabulary() {
                 </div>
                 <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary Studio</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Choose a pack, open a section and start practice.
+                  Choose a SAT Full Mock and study 20 challenging words from each English module.
                 </p>
               </div>
               <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">SAT Stats</p>
-                <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} packs / {satStats.sections} sections</p>
+                <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} mocks / {satStats.sections} modules</p>
                 <p className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
                   <Gem className="h-4 w-4" />
                   <CountUp value={satStats.words} /> terms
@@ -481,7 +483,7 @@ export default function Vocabulary() {
                 >
                   <div>
                     <p className="text-xl font-bold text-slate-900">{pack.title}</p>
-                    <p className="text-xs font-semibold text-slate-500">{pack.sections.length} sections</p>
+                    <p className="text-xs font-semibold text-slate-500">{pack.sections.length} modules · 20 words each</p>
                   </div>
                   <ChevronDown
                     className={`h-5 w-5 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? 'rotate-180' : ''}`}
@@ -495,7 +497,7 @@ export default function Vocabulary() {
                   className="bg-gradient-to-b from-white to-blue-50/45"
                 >
                   {() => (
-                    <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-2">
                       {pack.sections.map((section, sectionIndex) => (
                         <div
                           key={section.id}
@@ -507,7 +509,7 @@ export default function Vocabulary() {
                             onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`)}
                             className="mt-3 inline-flex items-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.35)]"
                           >
-                            Start Section {sectionIndex + 1}
+                            Start Module {sectionIndex + 1}
                           </button>
                         </div>
                       ))}

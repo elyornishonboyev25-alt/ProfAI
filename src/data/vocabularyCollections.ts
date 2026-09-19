@@ -1,3 +1,4 @@
+import { satVocabularyPacks } from './satVocabulary'
 import {
   readingVocabularyByTest,
   type ReadingVocabularySeed,
@@ -23,6 +24,7 @@ export type VocabularyEntry = {
   example: string
   exampleUzbek?: string
   synonym: string
+  sourceQuestionId?: string
 }
 
 export type VocabularySection = {
@@ -228,91 +230,6 @@ function buildFullTrackTests(): IeltsTest[] {
   })
 }
 
-const satLeft = [
-  'abstruse', 'adamant', 'adept', 'austere', 'benevolent', 'candid', 'coherent', 'concise', 'deft', 'diligent',
-  'eloquent', 'emphatic', 'fervent', 'frugal', 'gregarious', 'impartial', 'lucid', 'meticulous', 'nuanced',
-  'obscure', 'pragmatic', 'resolute', 'rigorous', 'sagacious', 'skeptical', 'subtle', 'tenacious', 'vigilant',
-  'wary', 'zealous',
-]
-
-const satRight = [
-  'advocacy', 'allusion', 'ambiguity', 'analogy', 'assertion', 'candor', 'cohesion', 'concession', 'connotation',
-  'contention', 'credibility', 'deduction', 'dissonance', 'eloquence', 'fallacy', 'foresight', 'gratitude',
-  'hypocrisy', 'impulse', 'inference', 'integrity', 'judgment', 'paradox', 'precision', 'premise', 'proposal',
-  'rationale', 'scrutiny', 'substance', 'validity',
-]
-
-const satSynonyms = [
-  'clarity', 'logic', 'insight', 'reasoning', 'judicious', 'assertive', 'balanced', 'accurate', 'objective',
-  'careful', 'exact', 'factual', 'persuasive', 'credible', 'sound', 'reliable', 'refined', 'thorough',
-]
-
-function makeSatBank() {
-  const terms: string[] = []
-  for (const left of satLeft) {
-    for (const right of satRight) {
-      terms.push(`SAT ${left} ${right}`)
-    }
-  }
-  return terms
-}
-
-const satBank = makeSatBank()
-
-function makeSatEntry(index: number): VocabularyEntry {
-  const term = satBank[index % satBank.length]
-  return {
-    id: `sat_${index + 1}`,
-    term,
-    definition: 'High-frequency SAT expression used in reading, writing, and logic tasks.',
-    example: `The author used "${term}" to make the claim precise and persuasive.`,
-    synonym: satSynonyms[index % satSynonyms.length],
-  }
-}
-
-function buildSatPacks(): SatPack[] {
-  const satPackNames = [
-    'Rhetoric Foundations',
-    'Precision in Context',
-    'Evidence and Reasoning',
-    'Advanced Inference Set',
-    'Critical Reading Core',
-    'Argumentation Mastery',
-    'Lexical Logic Studio',
-    'Analytical Language Pack',
-    'High-Score Verbal Set',
-    'Elite SAT Vocabulary',
-  ]
-
-  const packs: SatPack[] = []
-  let cursor = 0
-
-  satPackNames.forEach((packName, packIndex) => {
-    const sections: VocabularySection[] = []
-
-    for (let section = 1; section <= 4; section += 1) {
-      const entries: VocabularyEntry[] = []
-      for (let i = 0; i < 15; i += 1) {
-        entries.push(makeSatEntry(cursor))
-        cursor += 1
-      }
-      sections.push({
-        id: `sat_pack_${packIndex + 1}_section_${section}`,
-        title: `Section ${section}`,
-        entries,
-      })
-    }
-
-    packs.push({
-      id: `sat_pack_${packIndex + 1}`,
-      title: packName,
-      sections,
-    })
-  })
-
-  return packs
-}
-
 export const vocabularyCollections: VocabularyCollections = {
   ielts: [
     {
@@ -326,5 +243,5 @@ export const vocabularyCollections: VocabularyCollections = {
       tests: buildFullTrackTests(),
     },
   ],
-  sat: buildSatPacks(),
+  sat: satVocabularyPacks,
 }

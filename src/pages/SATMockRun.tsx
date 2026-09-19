@@ -48,7 +48,7 @@ import {
   saveSATAttempt,
   saveSATAttemptToHistory,
 } from '@/features/sat/attemptStorage'
-import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATSection, isSATTestComplete } from '@/features/sat/catalog'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
@@ -173,7 +173,7 @@ export default function SATMockRun() {
       topicStats.set(question.domain, current)
     })
     const assignmentId = searchParams.get('assignmentId') ?? undefined
-    void learningCenterApi.syncResult({
+    if (isSATTestComplete(test)) void learningCenterApi.syncResult({
       sourceKey: `sat-${sourceKey}`,
       sourceType: 'SAT_BLUEBOOK_MOCK',
       examType: 'SAT',
@@ -208,7 +208,7 @@ export default function SATMockRun() {
       eventKey: sourceKey,
       accuracy: report.percent,
       durationSec: test.totalDurationSeconds,
-      metadata: { testId: test.id, title: test.title, score: report.midpoint, accuracy: report.percent },
+      metadata: { testId: test.id, title: test.title, ...(isSATTestComplete(test) ? { score: report.midpoint } : {}), accuracy: report.percent },
     }).then((reward) => {
       markXpActivitySynced(user.id, sourceKey)
       updateUserProgress({ xp: reward.totalXp, level: reward.level })

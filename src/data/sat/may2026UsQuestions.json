@@ -1,0 +1,2735 @@
+[
+  {
+    "id": "rw1-1",
+    "moduleId": "rw1",
+    "number": 1,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "The following text is from Lilliam Rivera's 2020 novel Never Look Back. The text describes the narrator's friend Pheus, a young musician, after finishing a performance during a church service.\n\nPheus pulls a handkerchief from his back pocket and wipes his forehead. I mime a quiet clap for him. He does a slight bow and flashes his dimples. This is where Pheus <u>truly</u> shines. When Pheus is in front of an audience, it's as if he becomes another person, a more heightened version of himself.\n\nAs used in the text, what does the word \"truly\" most nearly mean?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Mildly"
+      },
+      {
+        "key": "B",
+        "text": "Scarcely"
+      },
+      {
+        "key": "C",
+        "text": "Really"
+      },
+      {
+        "key": "D",
+        "text": "Impolitely"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "“Truly” emphasizes that Pheus really shines when performing; it does not describe mildness, rarity, or rudeness.",
+    "sourcePages": [
+      3
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-01.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-2",
+    "moduleId": "rw1",
+    "number": 2,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Native Hawaiian fiber artist Marques Hanalei Marzan creates art using the techniques of lauhala weaving. Lauhala weaving is a traditional Hawaiian art form that uses leaves of the hala tree. Often, Marzan doesn't have a specific _____ what the final product will look like when he starts a new piece. Instead, he makes up his designs as he weaves, allowing inspiration to take him in unexpected directions.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Intention for"
+      },
+      {
+        "key": "B",
+        "text": "Admiration for"
+      },
+      {
+        "key": "C",
+        "text": "Imitation of"
+      },
+      {
+        "key": "D",
+        "text": "Acceptance of"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "Marzan improvises rather than planning the final appearance, so he lacks a specific intention for that appearance.",
+    "sourcePages": [
+      4
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-02.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-3",
+    "moduleId": "rw1",
+    "number": 3,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "In a study at the Massachusetts Institute of Technology, participants with clinically typical eyesight were shown a drawing of a broken line, with the break in the line situated in a blocked part of their field of vision. The participants still perceived the line as continuous, suggesting that when visual information is incomplete, the brain can _____, filling in what is missing.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "captivate"
+      },
+      {
+        "key": "B",
+        "text": "revert"
+      },
+      {
+        "key": "C",
+        "text": "barricade"
+      },
+      {
+        "key": "D",
+        "text": "compensate"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "Filling in missing visual information makes up for an incomplete input. “Compensate” expresses this function.",
+    "sourcePages": [
+      5
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-03.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-4",
+    "moduleId": "rw1",
+    "number": 4,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "The following text is from Shirley Jackson's 1951 novel Hangsaman.\n\nNatalie was leaving for her first year in college a week after her brother went back to high school; sometimes twenty-one days resolved itself into three weeks, and seemed endless; sometimes it seemed a matter of minutes slipping by so swiftly that there would never be time to approach college with appropriate <u>consideration</u>, to form a workable personality to take along.\n\nAs used in the text, what does the word \"consideration\" most nearly mean?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Admiration"
+      },
+      {
+        "key": "B",
+        "text": "Indecision"
+      },
+      {
+        "key": "C",
+        "text": "Reflection"
+      },
+      {
+        "key": "D",
+        "text": "Kindness"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "Natalie wants time to think carefully about college and her personality. “Reflection” means that careful thought.",
+    "sourcePages": [
+      6
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-04.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-5",
+    "moduleId": "rw1",
+    "number": 5,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "The Marsalis family is often referred to as \"the first family of jazz.\" Four of the children of celebrated pianist Ellis Marsalis Jr. went on to become performers who are also critically acclaimed: drummer Jason, trombonist Delfeayo, saxophonist Branford, and trumpeter Wynton. Wynton notably went on to become the first jazz composer to win the Pulitzer Prize for Music (for his oratorio Blood on the Fields).\n\nWhich choice best describes the main purpose of the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "To explain why a family of musicians received a nickname"
+      },
+      {
+        "key": "B",
+        "text": "To compare the artistic achievements of several musicians"
+      },
+      {
+        "key": "C",
+        "text": "To show why a particular musician won a major award"
+      },
+      {
+        "key": "D",
+        "text": "To emphasize why musicians should work together"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Text Structure and Purpose",
+    "difficulty": "Foundation",
+    "rationale": "The account of a celebrated father and four acclaimed sons explains why the Marsalises are called the first family of jazz.",
+    "sourcePages": [
+      7
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-05.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-6",
+    "moduleId": "rw1",
+    "number": 6,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Community science, which involves professional scientists collaborating with members of the public to study a topic, is often an effective and engaging way to conduct research. <u>It can increase the amount of data researchers can collect, offer insight into the daily life of a scientist, and spark youth interest in science.</u> This approach was essential to the success of biologist Abbigail Merrill and colleagues' study of how weather relates to a butterfly's flower choice, which included findings from hundreds of students and community members in northwestern Arkansas.\n\nWhich choice best states the function of the underlined sentence in the text as a whole?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It offers details to clarify the claim made in the previous sentence."
+      },
+      {
+        "key": "B",
+        "text": "It establishes the limits of the conclusion presented in the sentence that follows."
+      },
+      {
+        "key": "C",
+        "text": "It provides a contrast with an idea presented in the previous sentence."
+      },
+      {
+        "key": "D",
+        "text": "It identifies the purpose of the study described in the sentence that follows."
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Text Structure and Purpose",
+    "difficulty": "Foundation",
+    "rationale": "The underlined sentence lists the benefits of community science, developing the preceding claim that it is effective and engaging.",
+    "sourcePages": [
+      8
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-06.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-7",
+    "moduleId": "rw1",
+    "number": 7,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Text 1\nScientists can learn a lot about the Hispaniolan ground sloth and other prehistoric sloths from their fossils. But it can be hard to study sloths alive today. In the wild, the Linnaeus's two-toed sloth and other sloths spend most of their time in trees. They're difficult to observe because of their excellent camouflage and slow movements. \n\nText 2\nRebecca Cliffe and other scientists can now record the previously hidden activities of tree-dwelling sloths by using a backpack monitor. Such monitors can provide information to correct misconceptions. It was long believed that sloths are slow because of laziness. But, in fact, sloths' slow movements are useful. Being slow protects them from predators with keen eyesight.\n\nThe author of Text 1 and the author of Text 2 both discuss which topic?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The scientific study of sloths"
+      },
+      {
+        "key": "B",
+        "text": "How climate change affects sloths"
+      },
+      {
+        "key": "C",
+        "text": "The techniques scientists use to care for sloths"
+      },
+      {
+        "key": "D",
+        "text": "The differences between prehistoric and living sloths"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "Text 1 describes the difficulty of studying living sloths, while Text 2 describes a monitoring technique. Both concern their scientific study.",
+    "sourcePages": [
+      9
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-07.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-8",
+    "moduleId": "rw1",
+    "number": 8,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "Humans aren't the only ones who use tools. Other animals also find tools helpful. Octopuses use two halves of a seashell to provide protection or a place to hide. And despite sometimes being thought of as simple, many birds make clever use of tools as well. New Caledonian crows are well known for creating hooks and spears from twigs. Furthermore, palm cockatoos have been observed using leaves to pad their beaks when opening nuts.\n\nAccording to the text, what are New Caledonian crows known for?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "They have larger brains than palm cockatoos have."
+      },
+      {
+        "key": "B",
+        "text": "They live longer than octopuses do."
+      },
+      {
+        "key": "C",
+        "text": "They create tools out of twigs."
+      },
+      {
+        "key": "D",
+        "text": "They use leaves as tools."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "The passage explicitly states that New Caledonian crows create hooks and spears from twigs.",
+    "sourcePages": [
+      10
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-08.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-9",
+    "moduleId": "rw1",
+    "number": 9,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "Women like Minnie McNeal Kenny made important early contributions to the history of US cryptology, a field concerned with secure data communication and storage. Kenny worked for the National Security Agency (NSA) and received the NSA's two highest awards. She also held administrative positions at the National Cryptologic School. In this way, Kenny and others like her helped make it possible for more women-such as Anna Lysyansakaya, who currently works in and teaches digital cryptography-to enter the field of cryptology.\n\nAccording to the text, what is the relationship between Kenny and Lysyansakaya?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Minnie McNeal Kenny taught Anna Lysyansakaya how to securely manage important data."
+      },
+      {
+        "key": "B",
+        "text": "Minnie McNeal Kenny and Anna Lysyansakaya worked together early in their careers."
+      },
+      {
+        "key": "C",
+        "text": "Minnie McNeal Kenny founded an organization that Anna Lysyansakaya currently works for."
+      },
+      {
+        "key": "D",
+        "text": "Minnie McNeal Kenny made earlier contributions to a field that Anna Lysyansakaya currently works within."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "Kenny’s earlier work helped open cryptology to later women such as Lysyansakaya; the passage does not establish teaching or collaboration between them.",
+    "sourcePages": [
+      11
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-09.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-10",
+    "moduleId": "rw1",
+    "number": 10,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Optimal foraging theory (OFT) holds that animals' foraging behaviors reflect cost-benefit trade-offs that vary by species and with dynamic ecological circumstances. One such circumstance is lunar intensity, which Mahmoud-Reza Hemami and colleagues found to be negatively associated with foraging by Iranian jerboas but Deborah J. Curtis and colleagues found to be positively associated with foraging by mongoose lemurs. This discrepancy is explicable in terms of OFT: the lemurs' greater reliance on vision means that higher lunar intensity benefits them more than it benefits the jerboas.\n\nInformation in the text best supports which statement about OFT?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It can account for observations of different species responding differently to similar ecological circumstances."
+      },
+      {
+        "key": "B",
+        "text": "It tends to allow for a better understanding of the benefits of ecological circumstances than the costs of those circumstances."
+      },
+      {
+        "key": "C",
+        "text": "It may be weakened by the finding that the costs and benefits associated with a particular ecological circumstance vary by species."
+      },
+      {
+        "key": "D",
+        "text": "It can explain why some species act in accordance with cost-benefit trade-offs and others do not."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "OFT explains the opposite lunar-intensity associations by the species’ different reliance on vision. Thus the same circumstance can produce different behavior.",
+    "sourcePages": [
+      12
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-10.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-11",
+    "moduleId": "rw1",
+    "number": 11,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "Most bird species that are capable of flight weigh less than a kilogram (kg), which is not surprising considering the burden that extra body weight puts on a flying animal. But not all flying birds are so light, as we can see most clearly in the example of the _____.\n\nWhich choice most effectively uses data from the table to complete the example?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "northern cassowary, which has an average mass of 44.0 kg."
+      },
+      {
+        "key": "B",
+        "text": "Andean condor, which has an average mass below 10 kg."
+      },
+      {
+        "key": "C",
+        "text": "northern cassowary, which has a higher average mass than the lesser rhea."
+      },
+      {
+        "key": "D",
+        "text": "Dalmatian pelican, which has an average mass of 11.5 kg."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "The Dalmatian pelican can fly and weighs 11.5 kg, clearly exceeding one kilogram. The cassowary cannot fly, and the condor’s mass is not below ten kilograms.",
+    "sourcePages": [
+      13
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-11.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw1-11.webp",
+      "alt": "Bird masses and whether each species can fly."
+    }
+  },
+  {
+    "id": "rw1-12",
+    "moduleId": "rw1",
+    "number": 12,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "A student is writing a research paper on the history of irrigation in the United States, situating the development of Lake Yosemite (created in Merced County, California, in 1888) in a larger historical context. The student claims that California's climate renders irrigation an essential component of agriculture in some parts of the state but not in others.\n\nWhich quotation from a study of California agriculture best supports the student's claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "“While the low humidity of Southern California’s desert areas makes irrigation a requirement if agriculture is to be a success there, the relatively high humidity in the northern parts of the state makes such practices less necessary.”"
+      },
+      {
+        "key": "B",
+        "text": "“The irrigation system developed by the Hohokam people in the 7th century CE in what is now Arizona was simple but applied hydraulic engineering design features that are in use today throughout California.”"
+      },
+      {
+        "key": "C",
+        "text": "“Sprinkler irrigation systems are a method of irrigating that requires machinery to spray water in all directions. These systems can presently be found in use throughout California.”"
+      },
+      {
+        "key": "D",
+        "text": "“The usefulness of irrigation infrastructure in California today cannot be overstated, since it is the most common means of conveying water for agricultural purposes.”"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "Only A connects regional humidity differences to the differing need for irrigation, directly supporting both parts of the claim.",
+    "sourcePages": [
+      14
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-12.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-13",
+    "moduleId": "rw1",
+    "number": 13,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "Terrestrial plants typically carry a negative electrical charge, while bees and other pollinators tend to accumulate a positive charge. A team of researchers therefore hypothesized that electrostatic attraction (mutual attraction between objects with opposite charges) might enhance pollen transmission between plants and their pollinator species. The team's experiments showed that the maximum positive charge of wintering honeybees is sufficiently high to facilitate electrostatic pollen transfer, a finding that suggests that _____\n\nWhich choice most effectively uses data from the graph to complete the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Red mason bees and houseflies, having greater maximum charges than wintering honeybees have, should not demonstrate this capacity."
+      },
+      {
+        "key": "B",
+        "text": "Houseflies should demonstrate the opposite tendency."
+      },
+      {
+        "key": "C",
+        "text": "The minimum positive charge necessary for a pollinator to induce electrostatic attraction must be greater than 300 pC."
+      },
+      {
+        "key": "D",
+        "text": "Red mason bees should also demonstrate this capacity."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "Red mason bees have a higher maximum positive charge than wintering honeybees. Since the latter can transfer pollen electrostatically, the former should also have that capacity.",
+    "sourcePages": [
+      15
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-13.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw1-13.webp",
+      "alt": "Maximum positive charge for houseflies, red mason bees, and wintering honeybees."
+    }
+  },
+  {
+    "id": "rw1-14",
+    "moduleId": "rw1",
+    "number": 14,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "Namibia has classified the house sparrow as an invasive species that could harm some of the country's native species. But researchers Alejandro Camacho and Jason McLachlan have pointed out that \"invasive\" and \"native\" are labels that describe temporary circumstances. Changes in Earth's climate may force animals from their current ranges. Climate changes may also create good habitats in areas where a species couldn't live previously. These observations suggest that _____\n\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Changes in Earth’s climate are likely to result in the house sparrow establishing itself as a native species in locations other than Namibia."
+      },
+      {
+        "key": "B",
+        "text": "Namibia was previously home to some house sparrows but they were outcompeted by invading species."
+      },
+      {
+        "key": "C",
+        "text": "It’s appropriate for Namibia to designate certain species as invasive but the country should designate the house sparrow as native."
+      },
+      {
+        "key": "D",
+        "text": "Namibia may eventually need to reexamine its designation of the house sparrow as invasive."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "Climate change may alter habitats and ranges, so a designation based on current circumstances may need to be reconsidered.",
+    "sourcePages": [
+      16
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-14.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-15",
+    "moduleId": "rw1",
+    "number": 15,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "Password strength meters (PSMs) provide real-time feedback to users during the password-creation process about how secure a potential password is. PSMs often include \"nudges\"-design elements meant to encourage the creation of robust passwords. Other PSMs provide direct guidance on how to create strong passwords. A research team found that the strongest passwords resulted from a combination of these approaches. The team also found that the specific type of nudge (reciprocity, compensation, etc.) did not significantly affect user behavior. It therefore follows that when creating passwords, users receiving _____\n\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Both compensation and reciprocity nudges would not be expected to create stronger passwords than users receiving reciprocity nudges only, although users receiving direct guidance would be expected to create stronger passwords than users receiving either type of nudge."
+      },
+      {
+        "key": "B",
+        "text": "Direct guidance would not be expected to create stronger passwords than users receiving compensation nudges, although users receiving compensation nudges would be expected to create stronger passwords than users receiving reciprocity nudges."
+      },
+      {
+        "key": "C",
+        "text": "Reciprocity nudges would not be expected to create stronger passwords than users receiving compensation nudges, although users receiving both direct guidance and reciprocity nudges would be expected to create stronger passwords than users receiving only reciprocity nudges."
+      },
+      {
+        "key": "D",
+        "text": "Both direct guidance and reciprocity nudges would not be expected to create stronger passwords than users receiving reciprocity nudges only, although users receiving this combination would be expected to create stronger passwords than users receiving both direct guidance and compensation nudges."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "The type of nudge did not matter, but combining a nudge with direct guidance produced the strongest passwords. C states both results without inventing a ranking of nudge types.",
+    "sourcePages": [
+      17
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-15.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-16",
+    "moduleId": "rw1",
+    "number": 16,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "The Okavango Delta is a vital water source and hub for biodiversity in southern Africa. Koketso Mookodi, a director of the National Geographic Okavango Wilderness Project (NGOWP) in Botswana, helps educate the public about _____ important place.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "this"
+      },
+      {
+        "key": "B",
+        "text": "both"
+      },
+      {
+        "key": "C",
+        "text": "those"
+      },
+      {
+        "key": "D",
+        "text": "these"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Foundation",
+    "rationale": "The singular demonstrative “this” agrees with the singular noun “place,” referring to the Okavango Delta.",
+    "sourcePages": [
+      18
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-16.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-17",
+    "moduleId": "rw1",
+    "number": 17,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "After screening Stellar by Anishinaabe filmmaker Darlene Naponse, the members of the selection committee for the Native Women in Film Festival were so impressed by the feature-length romance that they chose _____ as one of the films to be shown at the festival.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "it"
+      },
+      {
+        "key": "B",
+        "text": "those"
+      },
+      {
+        "key": "C",
+        "text": "these"
+      },
+      {
+        "key": "D",
+        "text": "them"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Foundation",
+    "rationale": "The singular pronoun “it” refers to the single film Stellar. The other choices are plural.",
+    "sourcePages": [
+      19
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-17.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-18",
+    "moduleId": "rw1",
+    "number": 18,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Robert B. Elliott was one of the nearly two thousand African Americans who won a public office during the Reconstruction era, the twelve-year period that followed the Civil War. A politician from South Carolina, _____\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Elliott was elected to the US House of Representatives in 1870 by his constituents."
+      },
+      {
+        "key": "B",
+        "text": "1870 was the year that Elliott was elected to the US House of Representatives by his constituents."
+      },
+      {
+        "key": "C",
+        "text": "Constituents of Elliott elected him to the US House of Representatives in 1870."
+      },
+      {
+        "key": "D",
+        "text": "In 1870, his constituents elected Elliott to the US House of Representatives."
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The introductory modifier “A politician from South Carolina” must describe the subject immediately following it: Elliott.",
+    "sourcePages": [
+      20
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-18.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-19",
+    "moduleId": "rw1",
+    "number": 19,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "The relationship between grassland arthropod populations and agricultural fertilizers containing macronutrients-such as nitrogen, phosphorus, and potassium—was the focus of a 1992 study in the _____ by the researcher Walther van Wingerden, the study examined a variety of arthropod specimens, which had been collected by hand.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Netherlands and led"
+      },
+      {
+        "key": "B",
+        "text": "Netherlands, led"
+      },
+      {
+        "key": "C",
+        "text": "Netherlands. Led"
+      },
+      {
+        "key": "D",
+        "text": "Netherlands led"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The first independent clause ends after “Netherlands.” “Led by…” then modifies “the study” in a new complete sentence.",
+    "sourcePages": [
+      21
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-19.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-20",
+    "moduleId": "rw1",
+    "number": 20,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "Known in Taiwan for hosting its first televised cooking show, renowned _____ Fu Pei-mei taught viewers how to cook Chinese cuisine for almost 40 years. Fu gained acclaim outside of Taiwan as well, particularly from the success of her first bilingual Mandarin-English cookbook, published in 1969.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "chef and culinary instructor,"
+      },
+      {
+        "key": "B",
+        "text": "chef and culinary instructor"
+      },
+      {
+        "key": "C",
+        "text": "chef, and culinary instructor"
+      },
+      {
+        "key": "D",
+        "text": "chef and culinary instructor—"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The identifying title “chef and culinary instructor” belongs directly with Fu Pei-mei’s name; no comma or dash should separate them.",
+    "sourcePages": [
+      22
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-20.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-21",
+    "moduleId": "rw1",
+    "number": 21,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Anthropologist, activist, and musician Lila Downs draws on a variety of Mexican musical genres in her 2023 album La Sánchez. _____ she draws on corridos, rancheras, and other genres of northern Mexico, even though she is from the southern Mexican city of Oaxaca. \"La Sánchez is my contribution,\" Downs says in an interview, \"as a southern woman, that also considers this music as hers.\"\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Specifically,"
+      },
+      {
+        "key": "B",
+        "text": "Therefore,"
+      },
+      {
+        "key": "C",
+        "text": "In conclusion,"
+      },
+      {
+        "key": "D",
+        "text": "Rather,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Medium",
+    "rationale": "The second sentence names specific genres included in the broader category introduced in the first sentence.",
+    "sourcePages": [
+      23
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-21.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-22",
+    "moduleId": "rw1",
+    "number": 22,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "The World Cup of men's soccer, one of the biggest sporting events on the planet, brought 32 national teams from six continents to the host country, Germany, in 2006. _____ only 16 teams, all from Europe and the Americas, competed in the 1958 World Cup in Sweden.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Therefore,"
+      },
+      {
+        "key": "B",
+        "text": "For instance,"
+      },
+      {
+        "key": "C",
+        "text": "In contrast,"
+      },
+      {
+        "key": "D",
+        "text": "In other words,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "The smaller and less geographically diverse 1958 competition contrasts with the 2006 competition.",
+    "sourcePages": [
+      24
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-22.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-23",
+    "moduleId": "rw1",
+    "number": 23,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "Broadcasting from the Yankton Sioux Tribe's lands in southern South Dakota, the Native-run radio station KDKO 89.5 FM does much to serve the local Dakota-speaking community. _____ it broadcasts local news and music as well as programming in the Dakota language.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Instead,"
+      },
+      {
+        "key": "B",
+        "text": "Specifically,"
+      },
+      {
+        "key": "C",
+        "text": "As a result,"
+      },
+      {
+        "key": "D",
+        "text": "Nevertheless,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "The broadcasts provide concrete examples of how the station serves its community, so “Specifically” introduces them.",
+    "sourcePages": [
+      25
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-23.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-24",
+    "moduleId": "rw1",
+    "number": 24,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "In the West African country of Sierra Leone, the percentage of the population living in cities rose from 40.8% to 42.9% between 2015 and 2020. _____ urbanization rates climbed across West Africa as a whole, rising 3.2 percentage points in that five-year period.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "In other words,"
+      },
+      {
+        "key": "B",
+        "text": "Eventually,"
+      },
+      {
+        "key": "C",
+        "text": "Concurrently,"
+      },
+      {
+        "key": "D",
+        "text": "For example,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "The two increases occurred during the same five-year period. “Concurrently” expresses that simultaneity.",
+    "sourcePages": [
+      26
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-24.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-25",
+    "moduleId": "rw1",
+    "number": 25,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Al-Andalus, the historical region of the Iberian Peninsula that includes most of modern-day Spain, was ruled by various Arabic-speaking Muslim states between the eighth and fifteenth centuries. _____ many Arabic words, such as \"alacrán\"-meaning \"scorpion\"-made their way into the Spanish language.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Consequently,"
+      },
+      {
+        "key": "B",
+        "text": "Specifically,"
+      },
+      {
+        "key": "C",
+        "text": "For example,"
+      },
+      {
+        "key": "D",
+        "text": "Instead,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "The borrowing of Arabic words is presented as a consequence of centuries of Arabic-speaking rule.",
+    "sourcePages": [
+      27
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-25.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-26",
+    "moduleId": "rw1",
+    "number": 26,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• The Dnieper River is in Europe.\n• It ranks No. 48 among the longest rivers in the world.\n• It is 2,287 kilometers long.\n• The Indus River is in Asia.\n• It ranks No. 19 among the longest rivers in the world.\n• It is 3,610 kilometers long.\n\nThe student wants to compare the lengths of the two rivers. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The Indus River is in Asia, whereas the Dnieper River is located in Europe."
+      },
+      {
+        "key": "B",
+        "text": "The Dnieper River is shorter than the Indus River."
+      },
+      {
+        "key": "C",
+        "text": "The Dnieper River in Europe is 2,287 kilometers long."
+      },
+      {
+        "key": "D",
+        "text": "Among the longest rivers in the world, the Indus River is ranked No. 19."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Foundation",
+    "rationale": "At 2,287 km, the Dnieper is shorter than the 3,610 km Indus. B directly compares the two lengths.",
+    "sourcePages": [
+      28
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-26.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw1-27",
+    "moduleId": "rw1",
+    "number": 27,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• 2024: Spain and Portugal sponsored a workshop to address recent encounters between Iberian orcas and marine vessels off the Iberian Peninsula.\n• Many of the 637 documented incidents involved pods of orcas damaging vessels by ramming, nudging, or biting the rudders.\n• Studies of Iberian orcas suggest recent increases in tuna populations have reduced the time the orcas spend hunting by 99%.\n• Researchers believe this shift has increased the number of interactions between marine vessels and understimulated orcas.\n• The workshop advised mariners to avoid orcas pending further testing of the efficacy of TAST, a harmless acoustic deterrent.\n\nThe student wants to make and support a claim about Iberian orca behavior. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "The recent destructive behavior of Iberian orcas may be the result of understimulation, given that orcas’ interactions with marine vessels have increased as the orcas have spent less time hunting."
+      },
+      {
+        "key": "B",
+        "text": "Tuna populations have increased by approximately 99% off the Iberian Peninsula due to changes in the hunting behavior of Iberian orcas."
+      },
+      {
+        "key": "C",
+        "text": "As supported by the workshop’s analysis of 637 encounters between vessels and Iberian orcas, TAST is a harmless and effective acoustic deterrent."
+      },
+      {
+        "key": "D",
+        "text": "In 2024, Spain and Portugal sponsored a workshop that addressed incidents where pods of Iberian orcas were ramming, nudging, or biting the rudders of vessels."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "rationale": "A makes a behavioral claim and supports it with the reduced hunting time and increased vessel interactions. The notes do not establish TAST’s effectiveness or a 99% increase in tuna.",
+    "sourcePages": [
+      29
+    ],
+    "asset": "/sat/may-2026-us/questions/rw1-27.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-1",
+    "moduleId": "rw2",
+    "number": 1,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The following text is from Agatha Christie's 1924 novel The Man in the Brown Suit.\n\nMy <u>object</u> in life is to be thoroughly comfortable. I have devoted a certain amount of thought, and a considerable amount of money, to further that end. But I cannot say that I always succeed.\n\nAs used in the text, what does the word \"object\" most nearly mean?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Piece"
+      },
+      {
+        "key": "B",
+        "text": "Astonishment"
+      },
+      {
+        "key": "C",
+        "text": "Regret"
+      },
+      {
+        "key": "D",
+        "text": "Goal"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "The narrator’s “object in life” is the goal of being comfortable, which money and thought are directed toward achieving.",
+    "sourcePages": [
+      3
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-01.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-2",
+    "moduleId": "rw2",
+    "number": 2,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "Brazilian artist Camila Rosa started her career with a female street art collective called Colectivo Chá. Rosa says that her artistic style has been _____ by her time in the group and her interest in things like punk rock and political movements. Those inspirations can be seen in her artworks' references to identity and social justice.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "copied"
+      },
+      {
+        "key": "B",
+        "text": "believed"
+      },
+      {
+        "key": "C",
+        "text": "influenced"
+      },
+      {
+        "key": "D",
+        "text": "debated"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "Rosa’s experiences and interests shaped her style, as the resulting artworks show. “Influenced” captures that relationship.",
+    "sourcePages": [
+      4
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-02.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-3",
+    "moduleId": "rw2",
+    "number": 3,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The reception of Misa Sugiura's book It's Not Like It's a Secret has been very good. Many reviewers have _____ the book, and it won the Asian/Pacific American Award for Literature.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "blamed"
+      },
+      {
+        "key": "B",
+        "text": "misunderstood"
+      },
+      {
+        "key": "C",
+        "text": "overlooked"
+      },
+      {
+        "key": "D",
+        "text": "applauded"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "The positive reception and literary award support “applauded,” meaning praised.",
+    "sourcePages": [
+      5
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-03.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-4",
+    "moduleId": "rw2",
+    "number": 4,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "It would not be productive for supporters of a proposal to increase the toll that drivers must pay to use the Veterans Bridge, which spans the Southern Branch of the Elizabeth River in Virginia, to direct their arguments at those drivers who strongly believe that the current toll is too high. There's little point in trying to _____ someone whose mind is already made up.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "identify"
+      },
+      {
+        "key": "B",
+        "text": "support"
+      },
+      {
+        "key": "C",
+        "text": "sway"
+      },
+      {
+        "key": "D",
+        "text": "ignore"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Words in Context",
+    "difficulty": "Foundation",
+    "rationale": "To “sway” someone is to persuade them to change their view. The passage argues this is unlikely for firmly opposed drivers.",
+    "sourcePages": [
+      6
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-04.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-5",
+    "moduleId": "rw2",
+    "number": 5,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The first souvenir postcards in the United States were sold at the 1893 World's Fair in Chicago. People bought them to mail to family and friends or to keep as collectibles. Extremely popular, these postcards sparked a craze for souvenir postcards that lasted into the early 1900s: <u>tourists bought postcards showing pictures of scenery and attractions from across the US, and billions of souvenir postcards were sent through the mail.</u>\n\nWhich choice best describes the function of the underlined portion in the text as a whole?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It explains why tourism became more widespread in the late 1800s and early 1900s."
+      },
+      {
+        "key": "B",
+        "text": "It describes the various kinds of souvenirs that were available at the Chicago World’s Fair."
+      },
+      {
+        "key": "C",
+        "text": "It compares what early souvenir postcards in the US looked like with what postcards from other countries looked like."
+      },
+      {
+        "key": "D",
+        "text": "It illustrates the popularity of souvenir postcards during a particular historical period."
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Text Structure and Purpose",
+    "difficulty": "Foundation",
+    "rationale": "Tourists buying postcards and billions being mailed demonstrate how popular souvenir postcards became during that period.",
+    "sourcePages": [
+      7
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-05.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-6",
+    "moduleId": "rw2",
+    "number": 6,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Can marsh thistle plants grow on Mars? Can pea plants? <u>You might think the answer to these questions is obviously no</u>, but researchers in the Netherlands recently showed that many common plant species can thrive in soil designed to simulate Martian conditions, as long as water is supplied. In fact, some species actually did better in Martian soil than in Earth soil: 54 percent of marsh thistle plants grown in simulated Martian soil were alive after 50 days, compared with 46 percent that were when planted in soil from their home planet.\n\nWhich choice best describes the function of the underlined portion in the text as a whole?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "It signals the surprising nature of the findings discussed in the text."
+      },
+      {
+        "key": "B",
+        "text": "It clarifies a potential point of confusion about the hypothesis tested in the study discussed in the text."
+      },
+      {
+        "key": "C",
+        "text": "It acknowledges that readers may object to the method used in the experiment discussed in the text."
+      },
+      {
+        "key": "D",
+        "text": "It draws a distinction between the two species discussed in the text."
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Text Structure and Purpose",
+    "difficulty": "Foundation",
+    "rationale": "The expectation that plants cannot grow under Martian conditions contrasts with the successful experiment, emphasizing the surprising result.",
+    "sourcePages": [
+      8
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-06.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-7",
+    "moduleId": "rw2",
+    "number": 7,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "The following text is adapted from Matthew Arnold's 1869 nonfiction book Culture and Anarchy.\n\nThe Times [a British newspaper], replying to some foreign strictures on the dress, looks, and behaviour of the English abroad, urges that the English ideal is that every one should be free to do and to look just as he likes. But culture indefatigably tries, not to make what each raw person may like, the rule by which he fashions himself; but to draw ever nearer to a sense of what is indeed beautiful, graceful, and becoming, and to get the raw person to like that.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Culture’s duty is to use scientific methods to determine what is beautiful."
+      },
+      {
+        "key": "B",
+        "text": "One of the functions of culture is to create a consensus about matters of good taste."
+      },
+      {
+        "key": "C",
+        "text": "The English are unjustly derided for their sense of taste."
+      },
+      {
+        "key": "D",
+        "text": "The process of determining what should be considered beautiful is likely to lead to disagreement."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "Arnold describes culture as guiding individual preferences toward shared standards of beauty and grace, supporting the idea of consensus about taste.",
+    "sourcePages": [
+      9
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-07.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-8",
+    "moduleId": "rw2",
+    "number": 8,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "The orbital period of a moon is the time it takes the moon to go around the planet it orbits one time. The table shows the orbital period of three of Jupiter's moons, measured in Earth days.\n\nAccording to the table, what is the orbital period of Europa?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "155.3 days"
+      },
+      {
+        "key": "B",
+        "text": "3.6 days"
+      },
+      {
+        "key": "C",
+        "text": "723.9 days"
+      },
+      {
+        "key": "D",
+        "text": "817.7 days"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "The Europa row lists an orbital period of 3.6 Earth days.",
+    "sourcePages": [
+      10
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-08.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw2-08.webp",
+      "alt": "Orbital periods: Europa 3.6 days, Leda 240.9 days, Arche 723.9 days."
+    }
+  },
+  {
+    "id": "rw2-9",
+    "moduleId": "rw2",
+    "number": 9,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Regulations called RSRs prevent insurance companies from raising prices by large amounts. Researchers Naoki Aizawa and Ami Ko collected data about the years in which various US states implemented RSRs.\n\nWhich state shown in the table implemented RSRs most recently?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Washington"
+      },
+      {
+        "key": "B",
+        "text": "New Jersey"
+      },
+      {
+        "key": "C",
+        "text": "Wisconsin"
+      },
+      {
+        "key": "D",
+        "text": "Virginia"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "Washington implemented RSRs in 2009, the latest of the four listed years.",
+    "sourcePages": [
+      11
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-09.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw2-09.webp",
+      "alt": "RSR implementation: Wisconsin 2002, Virginia 2003, New Jersey 2006, Washington 2009."
+    }
+  },
+  {
+    "id": "rw2-10",
+    "moduleId": "rw2",
+    "number": 10,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "Some studies of migrating animals measure how far the animals travel in a year by fitting individuals with GPS tracking collars. Other studies track annual round-trip distance (RTD), which is equal to double the distance separating the two habitats a population migrates between each year. A researcher argues that since GPS records all of an animal's movements, using the GPS method to track a population would result in significantly higher recorded travel distances than using the RTD method would. For example, it's very likely that the distance reported for the _____\n\nWhich choice most effectively uses data from the table to complete the example?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "caribou would be greater than 2,155 kilometers if the RTD method had been used."
+      },
+      {
+        "key": "B",
+        "text": "caribou would be less than 3,807 kilometers if the RTD method had been used."
+      },
+      {
+        "key": "C",
+        "text": "white-eared kob would be less than 400 kilometers if the GPS method had been used."
+      },
+      {
+        "key": "D",
+        "text": "white-eared kob would be greater than 3,807 kilometers if the GPS method had been used."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "The GPS distance for caribou is 3,807 km. If RTD records less movement, its distance for the same population would be lower than 3,807 km.",
+    "sourcePages": [
+      12
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-10.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw2-10.webp",
+      "alt": "Migratory travel distances and measurement methods for four species."
+    }
+  },
+  {
+    "id": "rw2-11",
+    "moduleId": "rw2",
+    "number": 11,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "A student is researching copper mining in several countries in 1995 and 2020. Consulting the table, the student finds that the country that mined the smallest amount of copper in 1995 was _____\n\nWhich choice most effectively uses data from the table to complete the statement?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "the United States"
+      },
+      {
+        "key": "B",
+        "text": "Poland"
+      },
+      {
+        "key": "C",
+        "text": "Kazakhstan"
+      },
+      {
+        "key": "D",
+        "text": "Chile"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Foundation",
+    "rationale": "Kazakhstan’s 1995 production was 0.26 million metric tons, less than Poland’s 0.38, the United States’ 1.85, and Chile’s 2.49.",
+    "sourcePages": [
+      13
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-11.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/rw2-11.webp",
+      "alt": "Copper production in millions of metric tons in 1995 and 2020."
+    }
+  },
+  {
+    "id": "rw2-12",
+    "moduleId": "rw2",
+    "number": 12,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "High-speed rail (HSR) systems have trains that move at much higher speeds than traditional trains. HSR is expanding in Greece, Sweden, and many other countries around the world. The United States, however, has been slow to build HSR systems. Researchers surveyed United States residents about their attitudes toward HSR. The researchers claim that <u>this survey reveals that there is strong support for building more HSR lines in the United States.</u>\n\nWhich quotation from a survey respondent would best illustrate the underlined claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "“I prefer riding buses instead of taking trains because buses travel to more locations.”"
+      },
+      {
+        "key": "B",
+        "text": "“I have traveled on high-speed rail lines in Greece but not in Sweden.”"
+      },
+      {
+        "key": "C",
+        "text": "“I think high-speed rail is wonderful. The United States needs to build more high-speed rail lines.”"
+      },
+      {
+        "key": "D",
+        "text": "“I believe that the United States has enough high-speed rail lines. It should invest in airports instead.”"
+      }
+    ],
+    "domain": "Craft and Structure",
+    "skill": "Text Structure and Purpose",
+    "difficulty": "Medium",
+    "rationale": "C explicitly praises high-speed rail and calls for more lines in the United States, directly illustrating support for expansion.",
+    "sourcePages": [
+      14
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-12.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-13",
+    "moduleId": "rw2",
+    "number": 13,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "Uncle Vanya: Scenes from Country Life in Four Acts is an 1898 play by Anton Chekhov, originally written in Russian. In the play, Professor Serebrakoff and his wife Helena have come to stay at their country estate, which Vanya manages with the help of Sonia, the professor's daughter from a previous marriage. Chekhov portrays Vanya as feeling underappreciated by the professor, as is evident when _____\n\nWhich quotation from a translation of Uncle Vanya most effectively illustrates the claim?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Vanya says of Professor Serebrakoff, “For twenty-five years he has been masquerading in false clothes and has now retired absolutely unknown to any living soul.”"
+      },
+      {
+        "key": "B",
+        "text": "Vanya says to Professor Serebrakoff, “We used to think of you as almost superhuman, but now the scales have fallen from my eyes and I see you as you are! You write on art without knowing anything about it. Those books of yours which I used to admire are not worth one copper kopeck. You are a hoax!”"
+      },
+      {
+        "key": "C",
+        "text": "Vanya says to Professor Serebrakoff, “For twenty-five years I have managed this place [the estate], and have sent you the returns from it like the most honest of servants, and you have never given me one single word of thanks for my work, not one—neither in my youth nor now.”"
+      },
+      {
+        "key": "D",
+        "text": "Professor Serebrakoff says to Helena, “Of course I see that it is foolish for me to live so long, but wait! I shall soon set you all free. My life cannot drag on much longer.”"
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "Vanya’s statement that twenty-five years of work have received no word of thanks directly shows that he feels underappreciated.",
+    "sourcePages": [
+      15
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-13.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-14",
+    "moduleId": "rw2",
+    "number": 14,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "Over 600 languages are spoken in New York City in addition to English—one can find Amharic spoken in the neighborhood of Norwood, or Ghale in Jackson Heights. Most speakers of Chinese languages reside in the neighborhood of Flushing (part of New York City's borough of Queens), where the dominant Chinese language is Mandarin, and in Chinatown, in the borough of Manhattan, where the dominant Chinese languages are Cantonese and Fuzhounese. Mandarin is widely spoken in north China, while Cantonese and Fuzhounese are widely spoken in south China. It can therefore be inferred that _____\n\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "chinese immigrants who emigrated to New York City many years ago are more likely to speak several Chinese languages than are more recent Chinese immigrants."
+      },
+      {
+        "key": "B",
+        "text": "taken together, there are more Cantonese and Fuzhounese speakers among Chinese immigrants in New York City than there are Mandarin speakers."
+      },
+      {
+        "key": "C",
+        "text": "people who emigrate from north China tend to settle in Queens, while people who emigrate from south China tend to settle in Manhattan."
+      },
+      {
+        "key": "D",
+        "text": "chinese immigrants regularly change their residences between Queens and Manhattan after they emigrate, rather than staying in one borough."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "The dominant languages of the two neighborhoods match those of different Chinese regions, supporting the inference about settlement patterns.",
+    "sourcePages": [
+      16
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-14.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-15",
+    "moduleId": "rw2",
+    "number": 15,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Many studies have found a positive association between levels of dissolved organic carbon and mercury in bodies of fresh water undisturbed by human activity. Stéphane Guédron, Delphine Tisserand, and colleagues did not find this correlation in an examination of freshwater bodies impacted by wastewater, but Michael E. Berndt and Travis K. Bavin, who studied freshwater bodies disturbed by mining, did find it, leading some scientists to hypothesize that wastewater affects water chemistry differently than mining does. Guédron, Tisserand, and colleagues' study, however, was conducted in Laos, whereas Berndt and Bavin's study was conducted in the United States, suggesting that _____\n\nWhich choice most logically completes the text?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "the discrepancy in the two studies’ results may be attributable to underlying environmental differences rather than the effects of wastewater and mining."
+      },
+      {
+        "key": "B",
+        "text": "levels of dissolved organic carbon and mercury are both much higher in bodies of fresh water impacted by wastewater than they are in bodies of fresh water disturbed by mining."
+      },
+      {
+        "key": "C",
+        "text": "disturbances related to wastewater likely affect significantly more bodies of fresh water than disturbances related to mining do."
+      },
+      {
+        "key": "D",
+        "text": "bodies of fresh water impacted by wastewater are more common in Laos than in the United States."
+      }
+    ],
+    "domain": "Information and Ideas",
+    "skill": "Evidence and Inference",
+    "difficulty": "Medium",
+    "rationale": "The studies differ in location as well as disturbance type. Underlying environmental differences are therefore a plausible alternative explanation.",
+    "sourcePages": [
+      17
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-15.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-16",
+    "moduleId": "rw2",
+    "number": 16,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "Many folktales that originate in the Lithuanian language begin with the same phrase. In English, this phrase _____ roughly to \"beyond nine seas, beyond nine lagoons.\"\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "translates"
+      },
+      {
+        "key": "B",
+        "text": "to translate"
+      },
+      {
+        "key": "C",
+        "text": "having translated"
+      },
+      {
+        "key": "D",
+        "text": "translating"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Foundation",
+    "rationale": "The singular subject “this phrase” needs the finite singular verb “translates.” The other forms do not complete the sentence’s predicate.",
+    "sourcePages": [
+      18
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-16.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-17",
+    "moduleId": "rw2",
+    "number": 17,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "You can see Brazilian artist Tarsila do Amaral's bold use of color in her painting Sol Poente (Setting Sun). Created in 1929, the painting _____ bright green cacti towering in front of a candy-orange sky.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "to feature"
+      },
+      {
+        "key": "B",
+        "text": "featuring"
+      },
+      {
+        "key": "C",
+        "text": "feature"
+      },
+      {
+        "key": "D",
+        "text": "features"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Foundation",
+    "rationale": "The singular subject “the painting” takes the finite singular verb “features.” The participle and infinitive do not supply a predicate.",
+    "sourcePages": [
+      19
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-17.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-18",
+    "moduleId": "rw2",
+    "number": 18,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "Leptoptilos dubius, also known as the greater _____ can be found in places like the Central Tanintharyi Coast in Myanmar and Chitwan National Park in Nepal, but more than 80 percent of this endangered stork species is found in Assam, India. There, wildlife biologist Dr. Purnima Devi Barman is on the front lines of a conservation effort that aims to bring adjutants back from near extinction.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "adjutant"
+      },
+      {
+        "key": "B",
+        "text": "adjutant—"
+      },
+      {
+        "key": "C",
+        "text": "adjutant;"
+      },
+      {
+        "key": "D",
+        "text": "adjutant,"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The nonessential phrase “also known as the greater adjutant” begins with a comma and must end with a matching comma before “can be found.”",
+    "sourcePages": [
+      20
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-18.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-19",
+    "moduleId": "rw2",
+    "number": 19,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "In 2010, anthropologist Lívia Barbosa published a study wherein she documented survey respondents' perceptions of popular Brazilian foods, such as coxinha and broa. While the data may now be somewhat outdated, scholars in the future interested in tracking changes in food and sociability in Brazilian society _____ Barbosa's study useful.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "find"
+      },
+      {
+        "key": "B",
+        "text": "will find"
+      },
+      {
+        "key": "C",
+        "text": "had found"
+      },
+      {
+        "key": "D",
+        "text": "found"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The explicit reference to scholars “in the future” calls for the future tense “will find.”",
+    "sourcePages": [
+      21
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-19.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-20",
+    "moduleId": "rw2",
+    "number": 20,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "In Puerto Rico, it's not unusual for a city or town to be known by a nickname that corresponds to one of its notable features, like landscape, climate, famous residents, or chief export. For example, the Puerto Rican municipality of Arecibo is well known for Antonio de los Reyes Correa, the 17th-century army captain who once defended the _____ this distinction has earned it a fitting nickname: \"the Villa of Captain Correa.\"\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "town"
+      },
+      {
+        "key": "B",
+        "text": "town,"
+      },
+      {
+        "key": "C",
+        "text": "town, and"
+      },
+      {
+        "key": "D",
+        "text": "town and"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "Two independent clauses are joined by a comma and the coordinating conjunction “and.” A comma alone creates a comma splice.",
+    "sourcePages": [
+      22
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-20.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-21",
+    "moduleId": "rw2",
+    "number": 21,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The Eiger, the Mönch, the Jungfrau-Alpine summits like these were little more than wastelands to many Europeans until the eighteenth century, when attitudes toward such intimidating landscapes shifted as part of a broader aesthetic _____ by Irish philosopher Edmund Burke, this shift framed mountains as sublime objects capable of producing delightful terror.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "revolution, initiated"
+      },
+      {
+        "key": "B",
+        "text": "revolution that, initiated"
+      },
+      {
+        "key": "C",
+        "text": "revolution initiated"
+      },
+      {
+        "key": "D",
+        "text": "revolution. Initiated"
+      }
+    ],
+    "domain": "Standard English Conventions",
+    "skill": "Form, Structure, and Sense",
+    "difficulty": "Medium",
+    "rationale": "The first independent clause ends at “revolution.” The following sentence begins with “Initiated by…” modifying “this shift.”",
+    "sourcePages": [
+      23
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-21.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-22",
+    "moduleId": "rw2",
+    "number": 22,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "While some researchers have identified the planet Teegarden's Star c as potentially habitable, it's unlikely that humanity will be able to take advantage of its favorable conditions anytime soon-it's 12.58 light years away. _____ at 1,196 light years away, the planet Kepler-1410b is also inaccessible.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "For example,"
+      },
+      {
+        "key": "B",
+        "text": "Likewise,"
+      },
+      {
+        "key": "C",
+        "text": "Instead,"
+      },
+      {
+        "key": "D",
+        "text": "As a result,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "Both planets are inaccessible because they are far away, so “Likewise” introduces the parallel example.",
+    "sourcePages": [
+      24
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-22.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-23",
+    "moduleId": "rw2",
+    "number": 23,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "John Rankin was an outspoken abolitionist whose Ohio home was a stop on the Underground Railroad (the network of people and places that some enslaved people used to escape to freedom). _____ supporters of the railroad were secretive about their antislavery views. Usually, they were vocal abolitionists like Rankin.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Accordingly,"
+      },
+      {
+        "key": "B",
+        "text": "In some cases,"
+      },
+      {
+        "key": "C",
+        "text": "For example,"
+      },
+      {
+        "key": "D",
+        "text": "However,"
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Transitions",
+    "difficulty": "Foundation",
+    "rationale": "“In some cases” marks secretiveness as an exception to the usual pattern of vocal abolitionism described in the next sentence.",
+    "sourcePages": [
+      25
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-23.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-24",
+    "moduleId": "rw2",
+    "number": 24,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• Angelina Weld Grimke was an African American poet, playwright, and journalist.\n• Grimke lived and worked in Washington, DC, for many years.\n• \"To Miss Harriet E. Riggs\" is a poem by Grimke.\n• It was published in 1923.\n\nThe student wants to indicate the year \"To Miss Harriet E. Riggs\" was published. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "“To Miss Harriet E. Riggs” was published in 1923."
+      },
+      {
+        "key": "B",
+        "text": "Washington, DC, is where Angelina Weld Grimke lived and worked."
+      },
+      {
+        "key": "C",
+        "text": "Angelina Weld Grimke wrote the poem “To Miss Harriet E. Riggs.”"
+      },
+      {
+        "key": "D",
+        "text": "Angelina Weld Grimke was a poet as well as a playwright and journalist."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Foundation",
+    "rationale": "A directly supplies the requested publication year, 1923.",
+    "sourcePages": [
+      26
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-24.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-25",
+    "moduleId": "rw2",
+    "number": 25,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• Snow hydrologist Julie Koeberle helps maintain automated snow measurement stations throughout the western United States.\n• They are called SNOTEL sites.\n• There are around 90 sites throughout Wyoming.\n• There is one at Bear Trap Meadow.\n\nThe student wants to emphasize the number of SNOTEL sites in Wyoming. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "In Wyoming alone, there are around 90 SNOTEL sites located throughout the state."
+      },
+      {
+        "key": "B",
+        "text": "SNOTEL sites collect snow measurement data throughout the state of Wyoming."
+      },
+      {
+        "key": "C",
+        "text": "One particular SNOTEL site is located at Bear Trap Meadow in Wyoming."
+      },
+      {
+        "key": "D",
+        "text": "Snow hydrologist Julie Koeberle helps maintain SNOTEL sites, such as the one at Bear Trap Meadow, Wyoming."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Foundation",
+    "rationale": "A emphasizes the approximate total of 90 sites in Wyoming. The other options describe function, location, or maintenance.",
+    "sourcePages": [
+      27
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-25.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-26",
+    "moduleId": "rw2",
+    "number": 26,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• One and All is the name of a sailboat.\n• Uku Randmaa is an Estonian sailor.\n• He sailed One and All on a nonstop, 254-day journey around the world.\n• He set sail from Les Sables d'Olonne, France, in July 2018.\n• He returned to Les Sables d'Olonne in March 2019.\n\nThe student wants to indicate the name of the sailboat Randmaa sailed. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "One and All is the name of the sailboat Randmaa sailed on his journey around the world."
+      },
+      {
+        "key": "B",
+        "text": "After 254 days at sea, Randmaa returned to Les Sables d’Olonne in March 2019."
+      },
+      {
+        "key": "C",
+        "text": "Estonian sailor Uku Randmaa set sail in July 2018 and returned in March 2019."
+      },
+      {
+        "key": "D",
+        "text": "Randmaa set sail from Les Sables d’Olonne, France, in 2018."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Foundation",
+    "rationale": "A directly identifies the boat as One and All. The other choices give dates or locations instead.",
+    "sourcePages": [
+      28
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-26.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "rw2-27",
+    "moduleId": "rw2",
+    "number": 27,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "While researching a topic, a student has taken the following notes:\n\n• Body positions are a fundamental aspect of dance.\n• In Cecchetti method ballet, there is a position for the dancer's arms called fourth position en avant.\n• In the position, one arm is out to the side, and the other is rounded to roughly align the fingers with the navel.\n• In Vaganova method ballet, there is a position for the dancer's arms called big pose.\n• In this position, one arm is out to the side, and the other is rounded and raised above the head.\n\nThe student wants to emphasize a similarity between the two positions. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "Fourth position en avant in Cecchetti method ballet and big pose in Vaganova method ballet are both positions for the dancer’s arms."
+      },
+      {
+        "key": "B",
+        "text": "Both fourth position en avant and big pose are positions in Vaganova method ballet."
+      },
+      {
+        "key": "C",
+        "text": "In fourth position en avant, one arm is out to the side, and the other is rounded to roughly align the fingers with the navel, in contrast to big pose, where one arm is out to the side, and the other is rounded and raised above the head."
+      },
+      {
+        "key": "D",
+        "text": "In Cecchetti method ballet, there are a number of positions, including fourth position en avant."
+      }
+    ],
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "rationale": "A states a shared feature: both are arm positions in ballet. B misattributes the methods, while C emphasizes differences and D discusses only one method.",
+    "sourcePages": [
+      29
+    ],
+    "asset": "/sat/may-2026-us/questions/rw2-27.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-1",
+    "moduleId": "math1",
+    "number": 1,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "$\\frac{j}{5}=k+9m$\n\nThe given equation relates the distinct positive numbers $j$, $k$, and $m$. Which equation correctly expresses $j$ in terms of $k$ and $m$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$j=k+5(9m)$"
+      },
+      {
+        "key": "B",
+        "text": "$j=5(k+9m)$"
+      },
+      {
+        "key": "C",
+        "text": "$j=5k+9m$"
+      },
+      {
+        "key": "D",
+        "text": "$j=\\frac{k+9m}{5}$"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Equivalent Expressions",
+    "difficulty": "Foundation",
+    "rationale": "Multiply both sides by 5 to obtain $j=5(k+9m)$.",
+    "sourcePages": [
+      4
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-01.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-2",
+    "moduleId": "math1",
+    "number": 2,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The function $h$ is defined by $h(x)=5|x|$. What is the value of $h(-4)$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−20"
+      },
+      {
+        "key": "B",
+        "text": "1"
+      },
+      {
+        "key": "C",
+        "text": "9"
+      },
+      {
+        "key": "D",
+        "text": "20"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Absolute Value",
+    "difficulty": "Foundation",
+    "rationale": "The absolute value of −4 is 4, so $h(-4)=5(4)=20$.",
+    "sourcePages": [
+      5
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-02.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-3",
+    "moduleId": "math1",
+    "number": 3,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "A student council group is selling car stickers for a fundraiser. They use the function $p(x)=5x-210$ to determine their profit $p(x)$, in dollars, for selling $x$ car stickers. In order to earn a profit of 800, how many car stickers must they sell?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−20"
+      },
+      {
+        "key": "B",
+        "text": "1"
+      },
+      {
+        "key": "C",
+        "text": "9"
+      },
+      {
+        "key": "D",
+        "text": "202"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Linear Equations",
+    "difficulty": "Foundation",
+    "rationale": "Set $5x-210=800$. Adding 210 and dividing by 5 gives $x=1010/5=202$.",
+    "sourcePages": [
+      6
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-03.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-4",
+    "moduleId": "math1",
+    "number": 4,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "For two acute angles $X$ and $Y$, the measure of angle $Y$ is $32°$ and $\\frac{\\sin X}{\\cos Y}=1$. What is the measure, in degrees, of angle $X$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "77"
+      },
+      {
+        "key": "B",
+        "text": "58"
+      },
+      {
+        "key": "C",
+        "text": "45"
+      },
+      {
+        "key": "D",
+        "text": "32"
+      }
+    ],
+    "domain": "Geometry and Trigonometry",
+    "skill": "Complementary Angles",
+    "difficulty": "Medium",
+    "rationale": "The equation gives $\\sin X=\\cos Y$. For acute angles, $X=90°-Y=58°$.",
+    "sourcePages": [
+      7
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-04.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-5",
+    "moduleId": "math1",
+    "number": 5,
+    "kind": "student-response",
+    "correctAnswer": "174",
+    "prompt": "Charles saves $\\frac{2}{5}$ of the 145 dollars he earns each week from his summer job. If Charles continues to save at this rate, how much money, in dollars, will Charles save in 3 weeks?",
+    "choices": [],
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Ratios and Rates",
+    "difficulty": "Foundation",
+    "rationale": "Weekly savings are $(2/5)(145)=58$ dollars. Over three weeks, Charles saves $3(58)=174$ dollars.",
+    "sourcePages": [
+      8
+    ],
+    "acceptedAnswers": [
+      "174"
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-05.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-6",
+    "moduleId": "math1",
+    "number": 6,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "If $\\frac{x}{y}=64$ and $\\frac{cx}{4y}=64$, what is the value of $c$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "4"
+      },
+      {
+        "key": "B",
+        "text": "16"
+      },
+      {
+        "key": "C",
+        "text": "64"
+      },
+      {
+        "key": "D",
+        "text": "256"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Equivalent Expressions",
+    "difficulty": "Foundation",
+    "rationale": "Substitute $x/y=64$ into the second equation: $(c/4)(64)=64$, so $c=4$.",
+    "sourcePages": [
+      9
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-06.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-7",
+    "moduleId": "math1",
+    "number": 7,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "Line $k$ is shown in the $xy$-plane. Line $n$ (not shown) is perpendicular to line $k$ and passes through the point $(4,7)$. Which equation defines line $n$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$y=-\\frac{6}{5}x+2$"
+      },
+      {
+        "key": "B",
+        "text": "$y=-\\frac{6}{5}x+\\frac{59}{5}$"
+      },
+      {
+        "key": "C",
+        "text": "$y=\\frac{6}{5}x+2$"
+      },
+      {
+        "key": "D",
+        "text": "$y=\\frac{6}{5}x+12$"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Perpendicular Lines",
+    "difficulty": "Medium",
+    "rationale": "Line $k$ has slope $5/6$, so a perpendicular line has slope $-6/5$. Substitute $(4,7)$: $7=(-6/5)(4)+b$, giving $b=59/5=11.8$. Source correction: the supplied PDF prints +12 in B, which does not pass through (4,7). B is corrected here to retain the supplied answer key and the stated point.",
+    "sourcePages": [
+      10
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-07.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/math1-07.webp",
+      "alt": "Line k in the coordinate plane with slope 5/6."
+    }
+  },
+  {
+    "id": "math1-8",
+    "moduleId": "math1",
+    "number": 8,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "If $7(6-9x)+4=6(6-9x)+19$, what is the value of $6-9x$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−15"
+      },
+      {
+        "key": "B",
+        "text": "−1"
+      },
+      {
+        "key": "C",
+        "text": "1"
+      },
+      {
+        "key": "D",
+        "text": "15"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Linear Equations",
+    "difficulty": "Foundation",
+    "rationale": "Subtract $6(6-9x)$ and then 4 from both sides. The result is $6-9x=15$.",
+    "sourcePages": [
+      11
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-08.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-9",
+    "moduleId": "math1",
+    "number": 9,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "Trapezoid $CDEF$ is similar to trapezoid $JKLM$, such that $C$, $D$, $E$, and $F$ correspond to $J$, $K$, $L$, and $M$, respectively. The length of each side of trapezoid $JKLM$ is 4 times the length of its corresponding side in trapezoid $CDEF$. The measure of angle $C$ is $42°$. What is the measure of angle $J$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$38°$"
+      },
+      {
+        "key": "B",
+        "text": "$42°$"
+      },
+      {
+        "key": "C",
+        "text": "$46°$"
+      },
+      {
+        "key": "D",
+        "text": "$168°$"
+      }
+    ],
+    "domain": "Geometry and Trigonometry",
+    "skill": "Similarity",
+    "difficulty": "Foundation",
+    "rationale": "Similar figures preserve corresponding angles, regardless of the side-length scale factor. Therefore angle J is 42°.",
+    "sourcePages": [
+      12
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-09.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-10",
+    "moduleId": "math1",
+    "number": 10,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "The table gives the average time $t$, in minutes, it takes Adriana to travel a certain distance $d$, in miles. Which equation could represent this linear relationship?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$t=50d$"
+      },
+      {
+        "key": "B",
+        "text": "$t=\\frac{1}{2}d$"
+      },
+      {
+        "key": "C",
+        "text": "$t=2d$"
+      },
+      {
+        "key": "D",
+        "text": "$t=\\frac{1}{50}d$"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Linear Relationships",
+    "difficulty": "Foundation",
+    "rationale": "Each time-to-distance ratio equals 50: $9/0.18=12/0.24=18/0.36=50$. Therefore $t=50d$.",
+    "sourcePages": [],
+    "sourceImage": "Screenshot 2026-09-19 at 21.01.47.png",
+    "asset": "/sat/may-2026-us/questions/math1-10.webp",
+    "assetWidth": 2060,
+    "assetHeight": 1060,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/math1-10.webp",
+      "alt": "Distance in miles and time in minutes: 0.18 and 9, 0.24 and 12, 0.36 and 18."
+    }
+  },
+  {
+    "id": "math1-11",
+    "moduleId": "math1",
+    "number": 11,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "In right triangle $ABC$, the tangent of $\\angle C$ is $\\frac{3}{4}$. What is the length of $AB$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$\\frac{35}{16}$"
+      },
+      {
+        "key": "B",
+        "text": "$\\frac{15}{4}$"
+      },
+      {
+        "key": "C",
+        "text": "54"
+      },
+      {
+        "key": "D",
+        "text": "72"
+      }
+    ],
+    "domain": "Geometry and Trigonometry",
+    "skill": "Right Triangle Trigonometry",
+    "difficulty": "Medium",
+    "rationale": "Relative to angle C, the opposite and adjacent legs have ratio 3:4, giving a 3:4:5 triangle. The hypotenuse AC is 90, so the scale factor is 18 and AB is $3(18)=54$.",
+    "sourcePages": [
+      14
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-11.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/math1-11.webp",
+      "alt": "Right triangle ABC, right angle at B and hypotenuse AC of length 90."
+    }
+  },
+  {
+    "id": "math1-12",
+    "moduleId": "math1",
+    "number": 12,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "$f(x)=x^2-12x+30$\n\nWhat is the minimum value of the given function?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−12"
+      },
+      {
+        "key": "B",
+        "text": "−6"
+      },
+      {
+        "key": "C",
+        "text": "6"
+      },
+      {
+        "key": "D",
+        "text": "30"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Quadratic Functions",
+    "difficulty": "Medium",
+    "rationale": "Complete the square: $f(x)=(x-6)^2-6$. Since the square is nonnegative, the minimum value is −6.",
+    "sourcePages": [
+      15
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-12.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-13",
+    "moduleId": "math1",
+    "number": 13,
+    "kind": "student-response",
+    "correctAnswer": "28500",
+    "prompt": "In the ancient Roman measurement system, a leuga was a unit of length that was equal to 7,500 pedes. In this measurement system, how many pedes were equivalent to 3.8 leugas?",
+    "choices": [],
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Unit Conversion",
+    "difficulty": "Foundation",
+    "rationale": "Multiply the number of leugas by the conversion factor: $3.8(7500)=28500$ pedes.",
+    "sourcePages": [
+      16
+    ],
+    "acceptedAnswers": [
+      "28500"
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-13.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-14",
+    "moduleId": "math1",
+    "number": 14,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "For the linear function $f$, the table shows three values of $x$ and their corresponding values of $f(x)$. Function $f$ is defined by $f(x)=rx+s$, where $r$ and $s$ are constants. What is the value of $rs$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "144"
+      },
+      {
+        "key": "B",
+        "text": "192"
+      },
+      {
+        "key": "C",
+        "text": "216"
+      },
+      {
+        "key": "D",
+        "text": "240"
+      }
+    ],
+    "domain": "Algebra",
+    "skill": "Linear Functions",
+    "difficulty": "Medium",
+    "rationale": "The slope is $r=(-96-48)/(8-(-8))=-9$. Using $48=-9(-8)+s$ gives $s=-24$. Thus $rs=(-9)(-24)=216$.",
+    "sourcePages": [
+      17
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-14.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608,
+    "visual": {
+      "asset": "/sat/may-2026-us/visuals/math1-14.webp",
+      "alt": "Function table: f(−8)=48, f(8)=−96, f(24)=−240."
+    }
+  },
+  {
+    "id": "math1-15",
+    "moduleId": "math1",
+    "number": 15,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "$2|5x-5|=11$\n\nWhat is the sum of the solutions to the given equation?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "−2"
+      },
+      {
+        "key": "B",
+        "text": "0"
+      },
+      {
+        "key": "C",
+        "text": "2"
+      },
+      {
+        "key": "D",
+        "text": "4"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Absolute Value Equations",
+    "difficulty": "Medium",
+    "rationale": "Divide by 2, then solve $5x-5=11/2$ and $5x-5=-11/2$. The roots are $21/10$ and $-1/10$, whose sum is 2.",
+    "sourcePages": [
+      18
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-15.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-16",
+    "moduleId": "math1",
+    "number": 16,
+    "kind": "multiple-choice",
+    "correctAnswer": "D",
+    "prompt": "The positive number $a$ is 290% of the number $b$, and $a$ is 90% of the number $c$. If $c$ is $p$% of $b$, which of the following is closest to the value of $p$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "211"
+      },
+      {
+        "key": "B",
+        "text": "222"
+      },
+      {
+        "key": "C",
+        "text": "261"
+      },
+      {
+        "key": "D",
+        "text": "322"
+      }
+    ],
+    "domain": "Problem-Solving and Data Analysis",
+    "skill": "Percentages",
+    "difficulty": "Medium",
+    "rationale": "Since $a=2.9b=0.9c$, we have $c=(2.9/0.9)b$. Thus $p=100(2.9/0.9)$, approximately 322.22.",
+    "sourcePages": [
+      19
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-16.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-17",
+    "moduleId": "math1",
+    "number": 17,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "A computer program models the total mass of the population of a certain type of algae after the algae was placed in an environment where it has no natural predators. According to the model, the estimated total mass of this population of algae at the end of every 6-hour period is 129% greater than the estimated total mass of this population of algae at the end of the previous 6-hour period, and the estimated total mass of this population of algae is 613.90 grams after 18 hours. Which equation best represents this model, where $A$ is the estimated total mass, in grams, of the population of algae after $x$ hours, and $x<50$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$A=34.11(1.29)^{x/6}$"
+      },
+      {
+        "key": "B",
+        "text": "$A=34.11(2.29)^{x/6}$"
+      },
+      {
+        "key": "C",
+        "text": "$A=51.12(2.29)^{x/6}$"
+      },
+      {
+        "key": "D",
+        "text": "$A=285.98(1.29)^{x/6}$"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Exponential Models",
+    "difficulty": "Medium",
+    "rationale": "A 129% increase gives a growth factor of 2.29 each six hours. Eighteen hours is three periods, so the initial mass is $613.90/(2.29)^3$, approximately 51.12 grams.",
+    "sourcePages": [
+      20
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-17.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-18",
+    "moduleId": "math1",
+    "number": 18,
+    "kind": "multiple-choice",
+    "correctAnswer": "A",
+    "prompt": "The area of a rectangle is 105 square inches. The length of the longest side of the rectangle is 15 inches. What is the length, in inches, of the shortest side of this rectangle?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "7"
+      },
+      {
+        "key": "B",
+        "text": "15"
+      },
+      {
+        "key": "C",
+        "text": "30"
+      },
+      {
+        "key": "D",
+        "text": "90"
+      }
+    ],
+    "domain": "Geometry and Trigonometry",
+    "skill": "Area",
+    "difficulty": "Foundation",
+    "rationale": "Area equals length times width. The shorter side is $105/15=7$ inches.",
+    "sourcePages": [
+      21
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-18.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-19",
+    "moduleId": "math1",
+    "number": 19,
+    "kind": "multiple-choice",
+    "correctAnswer": "C",
+    "prompt": "A computer program models the total mass of a population of a certain type of algae after the algae was placed in an environment with no natural predators. The estimated total mass at the end of every 6-hour period is 128% greater than the estimated total mass at the end of the previous 6-hour period. The estimated total mass after 18 hours is 629.60 grams. Which equation best represents this model, where $A$ is the estimated total mass (in grams) after $x$ hours, with $x<50$?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$A=34.98(1.28)^{x/6}$"
+      },
+      {
+        "key": "B",
+        "text": "$A=34.98(2.28)^{x/6}$"
+      },
+      {
+        "key": "C",
+        "text": "$A=53.12(2.28)^{x/6}$"
+      },
+      {
+        "key": "D",
+        "text": "$A=300.22(1.28)^{x/6}$"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Exponential Models",
+    "difficulty": "Medium",
+    "rationale": "A 128% increase multiplies mass by 2.28 every six hours. The initial mass is $629.60/(2.28)^3$, approximately 53.12 grams, giving C.",
+    "sourcePages": [
+      22
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-19.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-20",
+    "moduleId": "math1",
+    "number": 20,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "$y=7x+3$\n$y=7x^2+3$\n\nWhich ordered pair $(x,y)$ is a solution to the given system of equations?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$(0,0)$"
+      },
+      {
+        "key": "B",
+        "text": "$(0,3)$"
+      },
+      {
+        "key": "C",
+        "text": "$(6,45)$"
+      },
+      {
+        "key": "D",
+        "text": "$(6,87)$"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Nonlinear Systems",
+    "difficulty": "Foundation",
+    "rationale": "When $x=0$, both equations give $y=3$, so (0,3) satisfies the system. At $x=6$, the equations give different y-values.",
+    "sourcePages": [
+      23
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-20.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-21",
+    "moduleId": "math1",
+    "number": 21,
+    "kind": "multiple-choice",
+    "correctAnswer": "B",
+    "prompt": "What is an $x$-intercept of the graph of $y=x^2-169$ in the $xy$-plane?",
+    "choices": [
+      {
+        "key": "A",
+        "text": "$(1,0)$"
+      },
+      {
+        "key": "B",
+        "text": "$(13,0)$"
+      },
+      {
+        "key": "C",
+        "text": "$(26,0)$"
+      },
+      {
+        "key": "D",
+        "text": "$(169,0)$"
+      }
+    ],
+    "domain": "Advanced Math",
+    "skill": "Quadratic Equations",
+    "difficulty": "Foundation",
+    "rationale": "At an x-intercept, $y=0$. Thus $x^2=169$ and $x=13$ or $x=-13$. The listed solution is (13,0).",
+    "sourcePages": [
+      24
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-21.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  },
+  {
+    "id": "math1-22",
+    "moduleId": "math1",
+    "number": 22,
+    "kind": "student-response",
+    "correctAnswer": "20",
+    "prompt": "A right square pyramid has a height of 15 inches and a volume of 125 cubic inches. What is the perimeter, in inches, of the base of this pyramid?",
+    "choices": [],
+    "domain": "Geometry and Trigonometry",
+    "skill": "Volume",
+    "difficulty": "Medium",
+    "rationale": "Using $V=(1/3)Bh$, the base area is $B=3(125)/15=25$. The square base has side length 5, so its perimeter is $4(5)=20$ inches.",
+    "sourcePages": [
+      25
+    ],
+    "acceptedAnswers": [
+      "20"
+    ],
+    "asset": "/sat/may-2026-us/questions/math1-22.webp",
+    "assetWidth": 1080,
+    "assetHeight": 608
+  }
+]

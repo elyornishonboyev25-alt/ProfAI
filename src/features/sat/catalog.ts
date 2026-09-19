@@ -2,6 +2,7 @@ import {
   SAT_PRACTICE_TEST_4,
   SAT_PRACTICE_TEST_4_MODULES,
   type SATModule,
+  type SATModuleId,
   type SATSection,
 } from './practiceTest4'
 import { SAT_PAPER_17, SAT_PAPER_17_MODULES } from './paper17'
@@ -12,6 +13,7 @@ import {
 import { SAT_MAY_2026_INTL, SAT_MAY_2026_INTL_MODULES } from './may2026Intl'
 import { SAT_JUNE_2026_INTL, SAT_JUNE_2026_INTL_MODULES } from './june2026Intl'
 import { SAT_JUNE_2026_US } from './june2026Us'
+import { SAT_MAY_2026_US } from './may2026Us'
 import {
   SAT_NOVEMBER_2025_INTL,
   SAT_NOVEMBER_2025_INTL_MODULES,
@@ -31,6 +33,7 @@ export type SATTestDefinition = {
   modules: SATModule[]
   badge: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
+  missingModuleIds?: readonly SATModuleId[]
 }
 
 export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
@@ -89,6 +92,20 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     badge: 'June 2026 US · Version 1',
     difficulty: 'Medium',
   },
+  9: {
+    mockId: 9,
+    ...SAT_MAY_2026_US,
+    badge: 'May 2026 US · Version 1',
+    difficulty: 'Medium',
+  },
+}
+
+export function isSATTestComplete(test: SATTestDefinition): boolean {
+  return !test.missingModuleIds?.length
+}
+
+export function satAvailabilityNote(test: SATTestDefinition): string | null {
+  return isSATTestComplete(test) ? null : 'Math Module 2 is unavailable. Practice the available modules; a full SAT or Math score is not provided.'
 }
 
 export function getSATTest(mockId?: string | number): SATTestDefinition {
@@ -122,6 +139,7 @@ export function getSATSectionTest(
     questionCount: modules.reduce((total, module) => total + module.questions.length, 0),
     totalDurationSeconds: modules.reduce((total, module) => total + module.durationSeconds, 0),
     modules,
+    missingModuleIds: test.missingModuleIds?.filter((id) => section === 'math' ? id.startsWith('math') : id.startsWith('rw')),
     badge: `${test.badge} · ${sectionTitle}`,
   }
 }

@@ -18,7 +18,7 @@ import {
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { getSATSectionTest, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 import { ARENA_GLASS_SURFACE, ArenaBackdrop, StudyIllustration } from '@/components/visuals/ArenaVisuals'
@@ -200,7 +200,7 @@ export default function SAT() {
       .sort((a, b) => (a.attempt.submittedAt ?? a.attempt.updatedAt) - (b.attempt.submittedAt ?? b.attempt.updatedAt))
   }, [])
   const completedTestIds = new Set(firstCompletedFullAttempts.map(({ test }) => test.id))
-  const scoreHistory = firstCompletedFullAttempts.map(({ attempt, test }) => (
+  const scoreHistory = firstCompletedFullAttempts.filter(({ test }) => isSATTestComplete(test)).map(({ attempt, test }) => (
     scoreSATModules(test.modules, attempt.answers).midpoint
   ))
   const bestScore = scoreHistory.length ? Math.max(...scoreHistory) : (profile?.currentSatScore ?? 1050)
@@ -357,7 +357,7 @@ export default function SAT() {
             <button type="button" onClick={toggleMockCatalog} className="flex w-full flex-col gap-5 text-left sm:flex-row sm:items-center sm:justify-between" aria-expanded={showMockCatalog} aria-controls="sat-mock-catalog">
               <span className="block">
                 <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</span></span>
-                <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Full Digital SAT mocks</span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Digital SAT mocks</span>
                 <span className="mt-1 block text-xs font-medium text-slate-500">Click to browse all 30 Reading &amp; Writing + Math simulations.</span>
               </span>
               <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg sm:self-auto">
@@ -392,7 +392,7 @@ export default function SAT() {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600">Practice library</p>
-                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">30 full Digital SAT tests</h2>
+                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">30 Digital SAT practice tests</h2>
                     </div>
                     <p className="text-xs font-bold text-slate-500">
                       {availableTests.length} available · {30 - availableTests.length} coming soon
@@ -431,6 +431,7 @@ export default function SAT() {
                             ) : null}
                           </span>
                           <span className="mt-4 block text-sm font-extrabold text-[#171823]">Test {displayNumber}</span>
+                          {test && !isSATTestComplete(test) ? <span className="mt-1 block text-[10px] font-bold text-amber-700">3 modules · Math 2 unavailable</span> : null}
                           <span className={`mt-1 inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider ${completed ? 'text-emerald-700' : test ? 'text-blue-700' : 'text-slate-500'}`}>
                             {completed
                               ? <><CheckCircle2 className="h-3 w-3" /> Completed</>

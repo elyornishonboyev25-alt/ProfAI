@@ -13,6 +13,7 @@ import {
   getSATSectionTest,
   isSATSection,
   SAT_TEST_CATALOG,
+  satAvailabilityNote,
 } from '@/features/sat/catalog'
 
 function formatMinutes(seconds: number) {
@@ -82,6 +83,7 @@ export default function SATSection() {
                       </span>
                       <h3 className="mt-3 text-xl font-black tracking-[-0.03em] text-slate-950">Practice Test {test.mockId}</h3>
                       <p className="mt-1 text-xs font-semibold text-slate-500">{test.badge}</p>
+                      {satAvailabilityNote(test) ? <p className="mt-2 text-xs font-semibold text-amber-700">{satAvailabilityNote(test)}</p> : null}
                     </div>
                     {attempt?.status === 'submitted' ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> : <FileQuestion className="h-6 w-6 text-slate-400" />}
                   </div>

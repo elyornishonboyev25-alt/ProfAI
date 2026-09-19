@@ -3027,5 +3027,383 @@ export const satVocabularyPacks: SatPack[] = [
         ]
       }
     ]
+  },
+  {
+    "id": "sat_full_mock_9",
+    "title": "SAT Full Mock 9",
+    "sections": [
+      {
+        "id": "sat_full_mock_9_rw1",
+        "title": "English Module 1",
+        "entries": [
+          {
+            "term": "intention",
+            "uzbek": "niyat",
+            "definition": "A plan or aim that guides an action.",
+            "synonym": "purpose",
+            "example": "She began the project with the intention of reducing waste.",
+            "id": "sat_full_mock_9_rw1_intention",
+            "sourceQuestionId": "rw1-2"
+          },
+          {
+            "term": "inspiration",
+            "uzbek": "ilhom",
+            "definition": "A stimulus that encourages creative thought.",
+            "synonym": "motivation",
+            "example": "The coastline provided inspiration for the painting.",
+            "id": "sat_full_mock_9_rw1_inspiration",
+            "sourceQuestionId": "rw1-2"
+          },
+          {
+            "term": "captivate",
+            "uzbek": "maftun qilmoq",
+            "definition": "To attract and hold someone’s attention strongly.",
+            "synonym": "enthrall",
+            "example": "A compelling opening can captivate an audience.",
+            "id": "sat_full_mock_9_rw1_captivate",
+            "sourceQuestionId": "rw1-3"
+          },
+          {
+            "term": "revert",
+            "uzbek": "avvalgi holatga qaytmoq",
+            "definition": "To return to an earlier state or practice.",
+            "synonym": "return",
+            "example": "Without maintenance, the field may revert to grassland.",
+            "id": "sat_full_mock_9_rw1_revert",
+            "sourceQuestionId": "rw1-3"
+          },
+          {
+            "term": "barricade",
+            "uzbek": "to‘sib qo‘ymoq",
+            "definition": "To block an entrance or route with an obstruction.",
+            "synonym": "block",
+            "example": "Workers had to barricade the unsafe doorway.",
+            "id": "sat_full_mock_9_rw1_barricade",
+            "sourceQuestionId": "rw1-3"
+          },
+          {
+            "term": "compensate",
+            "uzbek": "o‘rnini qoplamoq",
+            "definition": "To make up for a loss or deficiency.",
+            "synonym": "offset",
+            "example": "Better lighting can compensate for the room’s small windows.",
+            "id": "sat_full_mock_9_rw1_compensate",
+            "sourceQuestionId": "rw1-3"
+          },
+          {
+            "term": "reflection",
+            "uzbek": "mulohaza",
+            "definition": "Careful thought about an idea or situation.",
+            "synonym": "contemplation",
+            "example": "The decision required a period of reflection.",
+            "id": "sat_full_mock_9_rw1_reflection",
+            "sourceQuestionId": "rw1-4"
+          },
+          {
+            "term": "acclaimed",
+            "uzbek": "e’tirof etilgan",
+            "definition": "Publicly praised for excellence.",
+            "synonym": "celebrated",
+            "example": "The acclaimed novelist spoke at the festival.",
+            "id": "sat_full_mock_9_rw1_acclaimed",
+            "sourceQuestionId": "rw1-5"
+          },
+          {
+            "term": "collaborating",
+            "uzbek": "hamkorlik qilayotgan",
+            "definition": "Working jointly toward a shared goal.",
+            "synonym": "cooperating",
+            "example": "The two laboratories are collaborating on a new experiment.",
+            "id": "sat_full_mock_9_rw1_collaborating",
+            "sourceQuestionId": "rw1-6"
+          },
+          {
+            "term": "camouflage",
+            "uzbek": "niqoblanish",
+            "definition": "Coloring or disguise that makes something hard to notice.",
+            "synonym": "concealment",
+            "example": "The insect’s camouflage hides it among dry leaves.",
+            "id": "sat_full_mock_9_rw1_camouflage",
+            "sourceQuestionId": "rw1-7"
+          },
+          {
+            "term": "misconceptions",
+            "uzbek": "noto‘g‘ri tushunchalar",
+            "definition": "Ideas that are based on mistaken understanding.",
+            "synonym": "misunderstandings",
+            "example": "The lesson challenged common misconceptions about evolution.",
+            "id": "sat_full_mock_9_rw1_misconceptions",
+            "sourceQuestionId": "rw1-7"
+          },
+          {
+            "term": "keen",
+            "uzbek": "o‘tkir",
+            "definition": "Highly sensitive or perceptive.",
+            "synonym": "acute",
+            "example": "The owl’s keen hearing helps it locate prey.",
+            "id": "sat_full_mock_9_rw1_keen",
+            "sourceQuestionId": "rw1-7"
+          },
+          {
+            "term": "discrepancy",
+            "uzbek": "tafovut",
+            "definition": "A difference between things expected to agree.",
+            "synonym": "inconsistency",
+            "example": "The accountant investigated a discrepancy in the totals.",
+            "id": "sat_full_mock_9_rw1_discrepancy",
+            "sourceQuestionId": "rw1-10"
+          },
+          {
+            "term": "explicable",
+            "uzbek": "izohlash mumkin bo‘lgan",
+            "definition": "Capable of being explained or understood.",
+            "synonym": "explainable",
+            "example": "The unusual pattern was explicable once the missing data arrived.",
+            "id": "sat_full_mock_9_rw1_explicable",
+            "sourceQuestionId": "rw1-10"
+          },
+          {
+            "term": "reliance",
+            "uzbek": "tayanish",
+            "definition": "Dependence on someone or something for support.",
+            "synonym": "dependence",
+            "example": "The town reduced its reliance on imported fuel.",
+            "id": "sat_full_mock_9_rw1_reliance",
+            "sourceQuestionId": "rw1-10"
+          },
+          {
+            "term": "essential",
+            "uzbek": "zarur",
+            "definition": "Necessary for something to function or succeed.",
+            "synonym": "indispensable",
+            "example": "Accurate measurements are essential to the experiment.",
+            "id": "sat_full_mock_9_rw1_essential",
+            "sourceQuestionId": "rw1-12"
+          },
+          {
+            "term": "facilitate",
+            "uzbek": "osonlashtirmoq",
+            "definition": "To make a process easier to carry out.",
+            "synonym": "assist",
+            "example": "Clear instructions facilitate independent study.",
+            "id": "sat_full_mock_9_rw1_facilitate",
+            "sourceQuestionId": "rw1-13"
+          },
+          {
+            "term": "invasive",
+            "uzbek": "bosib kirib zarar yetkazuvchi",
+            "definition": "Spreading into an area in a way that can harm existing life.",
+            "synonym": "encroaching",
+            "example": "The invasive plant displaced several native species.",
+            "id": "sat_full_mock_9_rw1_invasive",
+            "sourceQuestionId": "rw1-14"
+          },
+          {
+            "term": "robust",
+            "uzbek": "mustahkam",
+            "definition": "Strong enough to withstand difficulties or pressure.",
+            "synonym": "resilient",
+            "example": "The team developed a robust system for storing data.",
+            "id": "sat_full_mock_9_rw1_robust",
+            "sourceQuestionId": "rw1-15"
+          },
+          {
+            "term": "efficacy",
+            "uzbek": "samaradorlik",
+            "definition": "The ability to produce an intended result.",
+            "synonym": "effectiveness",
+            "example": "The trial measured the efficacy of the new treatment.",
+            "id": "sat_full_mock_9_rw1_efficacy",
+            "sourceQuestionId": "rw1-27"
+          }
+        ]
+      },
+      {
+        "id": "sat_full_mock_9_rw2",
+        "title": "English Module 2",
+        "entries": [
+          {
+            "term": "considerable",
+            "uzbek": "salmoqli",
+            "definition": "Large enough in amount or extent to matter.",
+            "synonym": "substantial",
+            "example": "The repair required considerable effort.",
+            "id": "sat_full_mock_9_rw2_considerable",
+            "sourceQuestionId": "rw2-1"
+          },
+          {
+            "term": "influenced",
+            "uzbek": "ta’sir ko‘rsatgan",
+            "definition": "Affected the development or direction of something.",
+            "synonym": "shaped",
+            "example": "Her early travels influenced her choice of career.",
+            "id": "sat_full_mock_9_rw2_influenced",
+            "sourceQuestionId": "rw2-2"
+          },
+          {
+            "term": "applauded",
+            "uzbek": "olqishlagan",
+            "definition": "Expressed strong approval or praise.",
+            "synonym": "praised",
+            "example": "Critics applauded the film’s careful attention to detail.",
+            "id": "sat_full_mock_9_rw2_applauded",
+            "sourceQuestionId": "rw2-3"
+          },
+          {
+            "term": "sway",
+            "uzbek": "fikrini o‘zgartirishga undamoq",
+            "definition": "To persuade someone to change a judgment.",
+            "synonym": "persuade",
+            "example": "New evidence may sway the committee’s opinion.",
+            "id": "sat_full_mock_9_rw2_sway",
+            "sourceQuestionId": "rw2-4"
+          },
+          {
+            "term": "widespread",
+            "uzbek": "keng tarqalgan",
+            "definition": "Present or occurring across a large area or group.",
+            "synonym": "prevalent",
+            "example": "The proposal received widespread support.",
+            "id": "sat_full_mock_9_rw2_widespread",
+            "sourceQuestionId": "rw2-5"
+          },
+          {
+            "term": "thrive",
+            "uzbek": "yaxshi rivojlanmoq",
+            "definition": "To grow or develop successfully.",
+            "synonym": "flourish",
+            "example": "These plants thrive in moist soil.",
+            "id": "sat_full_mock_9_rw2_thrive",
+            "sourceQuestionId": "rw2-6"
+          },
+          {
+            "term": "simulate",
+            "uzbek": "taqlid qilmoq",
+            "definition": "To reproduce conditions for study or practice.",
+            "synonym": "imitate",
+            "example": "The chamber can simulate extreme temperatures.",
+            "id": "sat_full_mock_9_rw2_simulate",
+            "sourceQuestionId": "rw2-6"
+          },
+          {
+            "term": "strictures",
+            "uzbek": "keskin tanqidlar",
+            "definition": "Strong critical comments or objections.",
+            "synonym": "criticisms",
+            "example": "The essay answered the reviewer’s strictures on its method.",
+            "id": "sat_full_mock_9_rw2_strictures",
+            "sourceQuestionId": "rw2-7"
+          },
+          {
+            "term": "indefatigably",
+            "uzbek": "tinimsiz",
+            "definition": "With persistent effort and little sign of fatigue.",
+            "synonym": "tirelessly",
+            "example": "She worked indefatigably to preserve the archive.",
+            "id": "sat_full_mock_9_rw2_indefatigably",
+            "sourceQuestionId": "rw2-7"
+          },
+          {
+            "term": "consensus",
+            "uzbek": "umumiy kelishuv",
+            "definition": "Broad agreement among members of a group.",
+            "synonym": "accord",
+            "example": "The panel reached a consensus after discussing the evidence.",
+            "id": "sat_full_mock_9_rw2_consensus",
+            "sourceQuestionId": "rw2-7"
+          },
+          {
+            "term": "derided",
+            "uzbek": "masxara qilingan",
+            "definition": "Treated with scorn or mocking criticism.",
+            "synonym": "ridiculed",
+            "example": "The early design was derided before its advantages became clear.",
+            "id": "sat_full_mock_9_rw2_derided",
+            "sourceQuestionId": "rw2-7"
+          },
+          {
+            "term": "implemented",
+            "uzbek": "amalga joriy etilgan",
+            "definition": "Put a plan or rule into practical use.",
+            "synonym": "enacted",
+            "example": "The school implemented a new attendance policy.",
+            "id": "sat_full_mock_9_rw2_implemented",
+            "sourceQuestionId": "rw2-9"
+          },
+          {
+            "term": "significantly",
+            "uzbek": "sezilarli darajada",
+            "definition": "To a degree large enough to be meaningful.",
+            "synonym": "substantially",
+            "example": "The new route significantly reduced travel time.",
+            "id": "sat_full_mock_9_rw2_significantly",
+            "sourceQuestionId": "rw2-10"
+          },
+          {
+            "term": "underappreciated",
+            "uzbek": "yetarlicha qadrlanmagan",
+            "definition": "Not recognized or valued as much as deserved.",
+            "synonym": "undervalued",
+            "example": "The underappreciated assistant had organized the entire project.",
+            "id": "sat_full_mock_9_rw2_underappreciated",
+            "sourceQuestionId": "rw2-13"
+          },
+          {
+            "term": "dominant",
+            "uzbek": "ustun",
+            "definition": "Having the greatest influence or presence.",
+            "synonym": "prevailing",
+            "example": "One species became dominant in the restored habitat.",
+            "id": "sat_full_mock_9_rw2_dominant",
+            "sourceQuestionId": "rw2-14"
+          },
+          {
+            "term": "attributable",
+            "uzbek": "bilan izohlanadigan",
+            "definition": "Capable of being assigned to a particular cause.",
+            "synonym": "ascribable",
+            "example": "The delay was attributable to damaged equipment.",
+            "id": "sat_full_mock_9_rw2_attributable",
+            "sourceQuestionId": "rw2-15"
+          },
+          {
+            "term": "underlying",
+            "uzbek": "asosida yotgan",
+            "definition": "Existing beneath the surface as a basic cause or condition.",
+            "synonym": "fundamental",
+            "example": "The report examined the underlying causes of the shortage.",
+            "id": "sat_full_mock_9_rw2_underlying",
+            "sourceQuestionId": "rw2-15"
+          },
+          {
+            "term": "conservation",
+            "uzbek": "muhofaza qilish",
+            "definition": "Protection of natural resources or living species.",
+            "synonym": "preservation",
+            "example": "The conservation project restored the wetland.",
+            "id": "sat_full_mock_9_rw2_conservation",
+            "sourceQuestionId": "rw2-18"
+          },
+          {
+            "term": "sublime",
+            "uzbek": "ulug‘vor",
+            "definition": "Inspiring awe through grandeur or impressive beauty.",
+            "synonym": "majestic",
+            "example": "The painter captured the sublime landscape at dawn.",
+            "id": "sat_full_mock_9_rw2_sublime",
+            "sourceQuestionId": "rw2-21"
+          },
+          {
+            "term": "inaccessible",
+            "uzbek": "yetib bo‘lmaydigan",
+            "definition": "Unable to be reached or entered.",
+            "synonym": "unreachable",
+            "example": "The mountain village was inaccessible after the storm.",
+            "id": "sat_full_mock_9_rw2_inaccessible",
+            "sourceQuestionId": "rw2-22"
+          }
+        ]
+      }
+    ]
   }
 ]

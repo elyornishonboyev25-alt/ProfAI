@@ -18,6 +18,7 @@ import {
 } from '@/features/sat/attemptStorage'
 import {
   getSATSectionTest,
+  isSATTestComplete,
   SAT_TEST_CATALOG,
   type SATTestDefinition,
 } from '@/features/sat/catalog'
@@ -152,7 +153,7 @@ export default function SATMistakes() {
                     </div>
                     <div className="rounded-xl bg-blue-50 px-3 py-2 text-center">
                       <p className="text-[9px] font-black uppercase text-blue-500">Score</p>
-                      <p className="text-sm font-black text-blue-800">{completed ? `${result.score}/${result.maxScore}` : '—'}</p>
+                      <p className="text-sm font-black text-blue-800">{completed ? (isSATTestComplete(test) ? `${result.score}/${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</p>
                     </div>
                     <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
                       <p className="text-[9px] font-black uppercase text-slate-400">Progress</p>

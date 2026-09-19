@@ -24,7 +24,7 @@ import {
   createSATAttempt,
   type SATMode,
 } from '@/features/sat/practiceTest4'
-import { getSATSectionTest, isSATSection } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATSection, isSATTestComplete, satAvailabilityNote } from '@/features/sat/catalog'
 import {
   clearSATAttempt,
   loadSATAttempt,
@@ -129,7 +129,7 @@ export default function MockSAT() {
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">
-                <Sparkles className="h-3.5 w-3.5" /> New official mock
+                <Sparkles className="h-3.5 w-3.5" /> {isSATTestComplete(test) ? 'New official mock' : 'Partial practice test'}
               </span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
                 {test.badge}
@@ -143,15 +143,17 @@ export default function MockSAT() {
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
               All {test.questionCount} questions from {test.subtitle}, with original graphs,
-              autosave, review tools, explanations, and SAT range scoring.
+              autosave, review tools, explanations, and {isSATTestComplete(test) ? 'SAT range scoring' : 'accuracy feedback'}.
             </p>
+
+            {satAvailabilityNote(test) ? <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-800">{satAvailabilityNote(test)}</p> : null}
 
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 [String(test.questionCount), 'Questions'],
                 [String(test.modules.length), 'Modules'],
                 [`${Math.round(test.totalDurationSeconds / 60)}m`, 'Exam time'],
-                [isSectionPractice ? '200–800' : '400–1600', 'Score range'],
+                [isSATTestComplete(test) ? (isSectionPractice ? '200–800' : '400–1600') : 'Accuracy', 'Result'],
               ].map(([value, label]) => (
                 <div key={label} className="rounded-2xl border border-white bg-white/85 p-3 shadow-sm">
                   <p className="text-xl font-black tracking-tight text-slate-950">{value}</p>
@@ -164,7 +166,7 @@ export default function MockSAT() {
               {[
                 { icon: Highlighter, title: 'Highlight & notes', copy: 'Draw directly over any passage, graph, or formula.' },
                 { icon: Focus, title: 'Focused runner', copy: 'Question-by-question flow with flags and keyboard controls.' },
-                { icon: Target, title: 'Range scoring', copy: 'R&W and Math performance converted into a clear SAT estimate.' },
+                { icon: Target, title: isSATTestComplete(test) ? 'Range scoring' : 'Accuracy feedback', copy: isSATTestComplete(test) ? 'R&W and Math performance converted into a clear SAT estimate.' : 'Review your accuracy across the available modules.' },
                 { icon: GraduationCap, title: 'Deep review', copy: 'Correct answers, explanations, filters, and section insight.' },
               ].map((feature) => {
                 const Icon = feature.icon

@@ -24,7 +24,7 @@ import {
   type SATQuestion,
 } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
-import type { SATTestDefinition } from '@/features/sat/catalog'
+import { isSATTestComplete, satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
 import SATVisual from './SATVisual'
 import { useAuthStore } from '@/store/authStore'
@@ -116,7 +116,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
       <section className="rounded-[1.6rem] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><BookOpenCheck className="h-5 w-5" /></span>
-          <div><p className="text-[9px] font-black uppercase tracking-[0.13em] text-blue-700">Official reasoning</p><h3 className="mt-0.5 text-lg font-black text-slate-950">Why this answer works</h3></div>
+          <div><p className="text-[9px] font-black uppercase tracking-[0.13em] text-blue-700">Answer explanation</p><h3 className="mt-0.5 text-lg font-black text-slate-950">Why this answer works</h3></div>
         </div>
         <SATRichText text={question.explanation || 'Explanation unavailable.'} className="mt-4 text-sm font-medium leading-7 text-slate-700" />
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-100 bg-white/80 px-3 py-3 text-[11px] font-bold leading-5 text-slate-600">
@@ -180,12 +180,14 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
     : onlySection === 'reading-writing'
       ? report.readingWritingRange
       : report.totalRange
+  const completeTest = isSATTestComplete(test)
+  const completeMath = !test.missingModuleIds?.some((id) => id.startsWith('math'))
   const displayedMidpoint = Math.round((displayedRange[0] + displayedRange[1]) / 2)
   const weakest = domainStats[0]
   const elapsed = formatDuration(Math.max(0, ((attempt.submittedAt ?? attempt.updatedAt) - attempt.startedAt) / 1000))
 
   useEffect(() => {
-    if (onlySection || displayedMidpoint < 1400) return
+    if (!completeTest || onlySection || displayedMidpoint < 1400) return
     awardBadge({
       userId,
       track: 'SAT_OVERALL',
@@ -193,8 +195,8 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
       mode: attempt.mode,
       source: 'mock',
     })
-  }, [attempt.mode, awardBadge, displayedMidpoint, onlySection, userId])
-  const headline = displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
+  }, [attempt.mode, awardBadge, completeTest, displayedMidpoint, onlySection, userId])
+  const headline = !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (
     <main className="min-h-screen bg-[linear-gradient(145deg,#eef6ff_0%,#f8fafc_46%,#fff5f4_100%)] px-3 py-4 sm:px-5 lg:px-7">
@@ -217,10 +219,11 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
             </div>
             <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-950 p-6 text-white sm:p-8">
               <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl" />
-              <div className="relative flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/60">{onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-2 text-5xl font-black tracking-tight">{displayedRange[0]}–{displayedRange[1]}</p></div><Award className="h-8 w-8 text-cyan-300" /></div>
+              <div className="relative flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/60">{!completeTest ? 'Available-module accuracy' : onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-2 text-5xl font-black tracking-tight">{completeTest ? `${displayedRange[0]}–${displayedRange[1]}` : `${report.percent}%`}</p></div><Award className="h-8 w-8 text-cyan-300" /></div>
+              {satAvailabilityNote(test) ? <p className="relative mt-4 text-xs leading-5 text-white/80">{satAvailabilityNote(test)}</p> : null}
               <div className="relative mt-8 space-y-3">
                 {readingWritingTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Reading & Writing</span><span>{report.readingWritingRange[0]}–{report.readingWritingRange[1]}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-cyan-300" style={{ width: `${(report.readingWritingRaw / readingWritingTotal) * 100}%` }} /></div></div> : null}
-                {mathTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Math</span><span>{report.mathRange[0]}–{report.mathRange[1]}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-rose-300" style={{ width: `${(report.mathRaw / mathTotal) * 100}%` }} /></div></div> : null}
+                {mathTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Math</span><span>{completeMath ? `${report.mathRange[0]}–${report.mathRange[1]}` : `${report.mathRaw}/${mathTotal} correct`}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-rose-300" style={{ width: `${(report.mathRaw / mathTotal) * 100}%` }} /></div></div> : null}
               </div>
             </div>
           </div>

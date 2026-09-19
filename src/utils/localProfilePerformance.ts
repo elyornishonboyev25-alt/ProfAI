@@ -1,4 +1,4 @@
-import { getSATSectionTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
 import { useSpeakingStore } from '@/store/speakingStore'
@@ -276,7 +276,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
       tracks,
       synced: false,
       xpSynced: isXpActivitySynced(userId, `${test.id}-${endedAt}`),
-      examScore: report.midpoint,
+      ...(isSATTestComplete(test) ? { examScore: report.midpoint } : {}),
     }]
   })
 

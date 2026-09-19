@@ -1,4 +1,4 @@
-import { satVocabularyPacks } from './satVocabulary'
+import satVocabularyPacks from './satVocabulary.generated.json'
 import {
   readingVocabularyByTest,
   type ReadingVocabularySeed,

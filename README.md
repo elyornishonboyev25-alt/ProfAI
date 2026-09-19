@@ -233,3 +233,39 @@ After running `npm run db:seed` in backend:
 
 - This codebase now includes both legacy modules and the new production stack.
 - The new backend API and new dashboard/test flow are in active use through the updated routes/pages.
+
+
+### Automatic SAT vocabulary
+
+Register a new full mock in `src/features/sat/catalog.ts` with its Reading & Writing
+modules (`rw1` and `rw2`). Vocabulary Studio automatically gets a matching
+`SAT Full Mock N` pack with 20 challenging words per English module. No separate
+vocabulary catalog edit is needed. Existing reviewed packs in
+`src/data/satVocabulary.ts` retain their content, IDs, and learning progress.
+
+`npm run build` prepares and validates the vocabulary before TypeScript/Vite run.
+The Vite plugin also prepares it on startup and watches SAT source edits during
+`npm run dev:web`. Run `npm run sync:sat-vocabulary` to prepare it explicitly
+(for example, before invoking `tsc` directly).
+
+Only new or changed, uncurated modules need AI. Set `GEMINI_API_KEY` or
+`OPENAI_API_KEY` in the **frontend build environment**; local development also
+reads the existing `backend/.env` configuration. Optional model settings follow
+the backend's `GEMINI_MODELS`, `OPENAI_MODEL`, and `OPENAI_API_BASE` settings.
+CI and hosting services must expose these keys as frontend build-time
+environment variables; backend-only deployment variables are not automatically
+available to the frontend builder. Keys are
+never emitted into the browser bundle. Current reviewed packs and cached
+modules build without AI credentials.
+
+Validated modules are cached by source-content hash in `.cache/sat-vocabulary/`.
+Configure the builder to persist the same directory to avoid repeat generation. `src/data/satVocabulary.generated.json` is the assembled
+build input. Both are ignored artifacts and must not be committed. The generator
+rejects missing translations, duplicate words/meanings, wrong counts, and words
+absent from their cited module. Generation or validation failures stop the build
+rather than publishing a partial pack. Edited curated source references must be
+reviewed explicitly if they no longer match the test.
+
+Run `npm run test:sat-vocabulary-sync` for synthetic new-mock, cache, failure, and
+provider tests; it makes no external AI requests. `npm run validate:vocabulary`
+checks the complete live catalog, saved-word compatibility, and XP rules.

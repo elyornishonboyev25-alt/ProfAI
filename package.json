@@ -17,8 +17,10 @@
     "dev:all": "concurrently \"npm run dev:web\" \"npm run api:dev\"",
     "build:all": "npm run build && npm --prefix backend run build",
     "start": "npm --prefix backend run start",
-    "validate:vocabulary": "node scripts/validate-vocabulary.mjs",
-    "test:vocabulary-ui": "node scripts/test-vocabulary-ui.mjs"
+    "validate:vocabulary": "npm run sync:sat-vocabulary && node scripts/validate-vocabulary.mjs",
+    "test:vocabulary-ui": "npm run sync:sat-vocabulary && node scripts/test-vocabulary-ui.mjs",
+    "sync:sat-vocabulary": "node scripts/sync-sat-vocabulary.mjs",
+    "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

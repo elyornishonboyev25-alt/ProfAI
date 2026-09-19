@@ -2,7 +2,7 @@ import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import assert from 'node:assert/strict'
-import { satVocabularyPacks } from '../../src/data/satVocabulary'
+import { vocabularyCollections } from '../../src/data/vocabularyCollections'
 import { FlashcardsActivity, MatchingActivity, QuizActivity, TypingActivity } from '../../src/components/vocab/activities'
 import { SaveWordButton, WordSaveProvider } from '../../src/components/vocab/SaveWordButton'
 import { getSavedWords } from '../../src/utils/myVocabularyStore'
@@ -12,6 +12,7 @@ import Vocabulary from '../../src/pages/Vocabulary'
 import { apiClient } from '../../src/lib/apiClient'
 import { useAuthStore } from '../../src/store/authStore'
 
+const satVocabularyPacks = vocabularyCollections.sat
 const entries = satVocabularyPacks[0].sections[0].entries
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
@@ -54,7 +55,7 @@ export async function run() {
     path: '/vocabulary/sat/sat_full_mock_1/sat_full_mock_1_rw1',
   }
   await render(<Routes><Route path="/vocabulary/:track" element={<Vocabulary />} /></Routes>, '/vocabulary/sat')
-  for (let mock = 1; mock <= 8; mock++) assert.match(container.textContent!, new RegExp(`SAT Full Mock ${mock}`))
+  for (const pack of satVocabularyPacks) assert.ok(container.textContent!.includes(pack.title))
   assert.doesNotMatch(container.textContent!, /Rhetoric Foundations|Section 3/)
   assert.ok(button('Start Module 1'))
   assert.ok(button('Start Module 2'))

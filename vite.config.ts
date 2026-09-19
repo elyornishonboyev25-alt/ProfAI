@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
+import { satVocabularyPlugin } from './scripts/lib/sat-vocabulary-plugin.mjs'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
+    satVocabularyPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

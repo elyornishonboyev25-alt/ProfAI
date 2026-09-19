@@ -75,6 +75,12 @@ function bestAvailableScore(...scores: Array<number | null | undefined>) {
   return available.length ? Math.max(...available) : 0
 }
 
+function formatStudyTime(seconds: number) {
+  if (seconds > 3600) return `${Number((seconds / 3600).toFixed(2))}h`
+  if (seconds > 0 && seconds < 60) return '<1 min'
+  return `${Math.round(seconds / 60)} min`
+}
+
 function achievementProgressLabel(current: number, target: number, unit: 'count' | 'days' | 'minutes' | 'percent') {
   if (unit === 'minutes') return `${(current / 60).toFixed(1)} / ${(target / 60).toFixed(0)}h`
   if (unit === 'percent') return `${current}% / ${target}%`
@@ -197,11 +203,11 @@ export default function Dashboard() {
   )))
 
   const chartData = useMemo(
-    () => overview.weeklyProgress.map((day) => ({ ...day, activity: Number(((day.studyTimeSec ?? 0) / 3600).toFixed(2)) })),
+    () => overview.weeklyProgress.map((day) => ({ ...day, activity: day.studyTimeSec ?? 0 })),
     [overview.weeklyProgress],
   )
-  const weeklyHours = overview.metrics.weeklyStudySeconds / 3600
-  const weeklyHoursLabel = weeklyHours > 0 && weeklyHours < 0.1 ? '<0.1h' : `${weeklyHours.toFixed(1)}h`
+  const chartUsesHours = chartData.some((day) => day.activity > 3600)
+  const weeklyStudyTimeLabel = formatStudyTime(overview.metrics.weeklyStudySeconds)
   const leaderboard = overview.miniLeaderboard.slice(0, 3)
   const podium = [
     { row: leaderboard[1], place: 2 },
@@ -310,7 +316,7 @@ export default function Dashboard() {
 
           <div className="min-w-0 space-y-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Study hours" value={weeklyHoursLabel} note="This week" icon={Clock3} />
+              <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard
                 label="Practices completed"
                 value={String(overview.metrics.totalTests)}
@@ -346,9 +352,14 @@ export default function Dashboard() {
                       </defs>
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 10 }}
+                        tickFormatter={(value: number) => `${Number((value / (chartUsesHours ? 3600 : 60)).toFixed(2))}${chartUsesHours ? 'h' : 'm'}`}
+                      />
                       <Tooltip
-                        formatter={(value) => [`${Number(value).toFixed(2)}h`, 'Study time']}
+                        formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}
                         contentStyle={{ border: '1px solid #bfdbfe', borderRadius: 14, fontSize: 12 }}
                         cursor={{ fill: 'rgba(59,130,246,.06)' }}
                       />

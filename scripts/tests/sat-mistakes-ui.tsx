@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import SATMistakes from '../../src/pages/SATMistakes'
 import SATReview from '../../src/components/sat/SATReview'
 import { SAT_TEST_CATALOG, getSATSectionTest } from '../../src/features/sat/catalog'
-import { createSATAttempt } from '../../src/features/sat/practiceTest4'
+import { createSATAttempt, scoreSATModules } from '../../src/features/sat/practiceTest4'
 import { loadSATAttemptHistory, saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useBadgeStore } from '../../src/store/badgeStore'
 
@@ -34,6 +34,16 @@ const rows = () => [...container.querySelectorAll<HTMLButtonElement>('button[ari
 
 export async function run() {
   localStorage.clear()
+  // Full mocks retain the 400 floor even with every answer wrong or missing.
+  for (const test of Object.values(SAT_TEST_CATALOG)) {
+    const wrongAnswers = Object.fromEntries(test.modules.flatMap((module) => module.questions).map((q) => [q.id, 'wrong']))
+    for (const answers of [{}, wrongAnswers]) {
+      const report = scoreSATModules(test.modules, answers)
+      assert.deepEqual(report.readingWritingRange, [200, 200], test.id)
+      assert.deepEqual(report.mathRange, [200, 200], test.id)
+      assert.deepEqual(report.totalRange, [400, 400], test.id)
+    }
+  }
   let badgeCalls = 0
   useBadgeStore.setState({ awardIfEligible: () => { badgeCalls++; return { celebrated: false, tier: null } } })
   const test = SAT_TEST_CATALOG[8]
@@ -51,6 +61,7 @@ export async function run() {
   await render()
   assert.equal(rows().length, 2)
   assert.match(rows()[1].textContent!, /Correct answers1\/98/)
+  assert.match(rows()[1].textContent!, /Estimated SAT total400–400 \/ 1600/)
   assert.match(rows()[1].textContent!, /1 incorrect · 96 unanswered/)
   assert.match(text(), /Mistakes to review97/)
   await click(rows()[1])
@@ -101,10 +112,24 @@ export async function run() {
   saveSATAttemptToHistory(sectionAttempt, 'submitted')
   await render()
   const sectionRow = rows().find((row) => row.textContent!.includes('· Math'))!
-  const range = sectionRow.textContent!.match(/Estimated score(\d+–\d+)/)![1]
+  const range = sectionRow.textContent!.match(/Estimated Math(\d+–\d+) \/ 800/)![1]
   await click(sectionRow)
   assert.match(text(), /Correct20\/44/)
   assert.ok(text().includes(`Estimated Math range${range}`))
+
+  const oldMath = getSATSectionTest(1, 'math')
+  const lowMathAttempt = {
+    ...old,
+    attemptId: 'old-math-low-score',
+    testId: oldMath.id,
+    answers: Object.fromEntries(oldMath.modules.flatMap((module) => module.questions).slice(0, 18).map((q) => [q.id, q.correctAnswer])),
+  }
+  saveSATAttemptToHistory(lowMathAttempt, 'submitted')
+  const readingWriting = getSATSectionTest(1, 'reading-writing')
+  saveSATAttemptToHistory({ ...old, attemptId: 'rw-minimum', testId: readingWriting.id, answers: {} }, 'submitted')
+  await render()
+  assert.match(rows().find((row) => row.textContent!.includes(oldMath.title))!.textContent!, /Estimated Math340–370 \/ 800/)
+  assert.match(rows().find((row) => row.textContent!.includes(readingWriting.title))!.textContent!, /Estimated R&W200–200 \/ 800/)
 
   await render('/sat/mistakes?attempt=deleted')
   assert.match(container.querySelector('[role="status"]')!.textContent!, /no longer available/)

@@ -53,6 +53,10 @@ function scoreFor(test: SATTestDefinition, entry: SATAttemptHistoryEntry) {
     unanswered: report.unanswered,
     total: report.correct + report.incorrect + report.unanswered,
     scoreRange: `${range[0]}–${range[1]}`,
+    scoreLabel: onlySection
+      ? test.modules[0]?.section === 'math' ? 'Estimated Math' : 'Estimated R&W'
+      : 'Estimated SAT total',
+    maxScore: onlySection ? 800 : 1600,
   }
 }
 
@@ -153,6 +157,7 @@ export default function SATMistakes() {
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.15em] text-blue-600">Attempt history</p>
               <h2 className="mt-1 text-xl font-black text-slate-950">Your SAT review queue</h2>
+              <p className="mt-2 text-xs text-slate-500">Full mock: 400–1600 total. Individual sections: 200–800 each.</p>
             </div>
             <Clock3 className="h-5 w-5 text-blue-500" />
           </div>
@@ -192,8 +197,8 @@ export default function SATMistakes() {
                         <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-blue-600">Review answers <ChevronRight className="h-3.5 w-3.5" /></span>
                       </div>
                       <div className="rounded-xl bg-blue-50 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase text-blue-500">{isSATTestComplete(test) ? 'Estimated score' : 'Accuracy'}</p>
-                        <p className="text-sm font-black text-blue-800">{completed ? (isSATTestComplete(test) ? result.scoreRange : `${result.accuracy}% accuracy`) : '—'}</p>
+                        <p className="text-[9px] font-black uppercase text-blue-500">{isSATTestComplete(test) ? result.scoreLabel : 'Accuracy'}</p>
+                        <p className="text-sm font-black text-blue-800">{completed ? (isSATTestComplete(test) ? `${result.scoreRange} / ${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</p>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
                         <p className="text-[9px] font-black uppercase text-slate-400">Correct answers</p>

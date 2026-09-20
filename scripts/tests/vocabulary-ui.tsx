@@ -17,7 +17,7 @@ const entries = satVocabularyPacks[0].sections[0].entries
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
 
-async function render(node: React.ReactNode, path = '/') {
+async function render(node: React.ReactNode, path: string | { pathname: string; state: { from: string } } = '/') {
   if (root) await act(async () => root.unmount())
   root = createRoot(container)
   await act(async () => root.render(
@@ -59,6 +59,44 @@ export async function run() {
   assert.doesNotMatch(container.textContent!, /Rhetoric Foundations|Section 3/)
   assert.ok(button('Start Module 1'))
   assert.ok(button('Start Module 2'))
+
+  const navigationRoutes = (
+    <Routes>
+      <Route path="/sat" element={<div>SAT Arena destination</div>} />
+      <Route path="/vocabulary" element={<Vocabulary />} />
+      <Route path="/vocabulary/:track" element={<Vocabulary />} />
+      <Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} />
+      <Route path="/vocabulary/sat/:packId/:sectionId/:activity" element={<VocabularyActivity />} />
+    </Routes>
+  )
+  for (const fromArena of [true, false]) {
+    const entry = fromArena ? { pathname: '/vocabulary/sat', state: { from: '/sat' } } : '/vocabulary'
+    const backLabel = fromArena ? 'Back to SAT Arena' : 'Back to Vocabulary'
+    await render(navigationRoutes, entry)
+    if (!fromArena) {
+      await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent === 'SAT Vocabulary'))
+    }
+    assert.ok(button(backLabel))
+    await click(button(backLabel))
+    assert.match(container.textContent!, fromArena ? /SAT Arena destination/ : /Vocabulary Arena/)
+
+    for (const mode of ['flashcards', 'matching', 'quiz', 'typing']) {
+      await render(navigationRoutes, entry)
+      if (!fromArena) {
+        await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent === 'SAT Vocabulary'))
+      }
+      await click(button('Start Module 1'))
+      await click(container.querySelector(`a[href='${origin.path}/${mode}']`))
+      if (mode === 'typing') {
+        await click(container.querySelector("a[href='/vocabulary/sat']"))
+      } else {
+        await click(container.querySelector(`a[href='${origin.path}']`))
+        await click(container.querySelector("a[href='/vocabulary/sat']"))
+      }
+      await click(button(backLabel))
+      assert.match(container.textContent!, fromArena ? /SAT Arena destination/ : /Vocabulary Arena/)
+    }
+  }
 
   await render(
     <Routes><Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} /></Routes>,

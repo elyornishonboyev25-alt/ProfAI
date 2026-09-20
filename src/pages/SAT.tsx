@@ -371,7 +371,7 @@ export default function SAT() {
               <span className="mt-4 block text-sm font-extrabold text-[#171823]">Mistake lab</span>
               <span className="mt-1 block text-[11px] font-medium text-slate-500">Review weak domains</span>
             </button>
-            <button type="button" onClick={() => navigate('/vocabulary/sat')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+            <button type="button" onClick={() => navigate('/vocabulary/sat', { state: { from: '/sat' } })} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
               <BookOpenText className="h-6 w-6 text-red-500" />
               <span className="mt-4 block text-sm font-extrabold text-[#171823]">Vocabulary</span>
               <span className="mt-1 block text-[11px] font-medium text-slate-500">600 SAT words</span>

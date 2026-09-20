@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Volume2 } from 'lucide-react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCollections'
 import { getArticleBySlug } from '@/data/articles'
 import { getSavedWords, type VocabContext } from '@/utils/myVocabularyStore'
@@ -140,6 +140,10 @@ function TermPreview({ entries }: { entries: VocabularyEntry[] }) {
 
 export default function VocabularyActivity() {
   const params = useParams()
+  const location = useLocation()
+  const navigationState = params.packId && (location.state as { from?: string } | null)?.from === '/sat'
+    ? { from: '/sat' }
+    : undefined
   const user = useAuthStore((state) => state.user)
   const updateUserProgress = useAuthStore((state) => state.updateUserProgress)
   const activity = resolveActivity(params.activity)
@@ -148,7 +152,7 @@ export default function VocabularyActivity() {
   const selection = useMemo(() => findSelection(params), [params])
 
   if (!selection) return <Navigate to="/vocabulary" replace />
-  if (params.activity && !activity) return <Navigate to={selection.basePath} replace />
+  if (params.activity && !activity) return <Navigate to={selection.basePath} state={navigationState} replace />
 
   const { title, subtitle, entries, basePath, trackPath, trackLabel, rewardKey, masteryKey, accent } = selection
   const isBlue = accent === 'blue'
@@ -194,7 +198,7 @@ export default function VocabularyActivity() {
           <BookOpenCheck className="mx-auto h-10 w-10 text-blue-500" />
           <h3 className="mt-3 text-2xl font-black text-slate-900">{title}</h3>
           <p className="mt-2 text-sm text-slate-600">No words here yet. Select a word while studying and tap “Ask AI”, or add one manually.</p>
-          <Link to={trackPath} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+          <Link to={trackPath} state={navigationState} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white">
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
         </div>
@@ -215,7 +219,7 @@ export default function VocabularyActivity() {
           {/* hero */}
           <section className={`relative overflow-hidden rounded-[1.8rem] border bg-white/90 p-5 shadow-[0_24px_54px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-7 ${isBlue ? 'border-blue-100' : 'border-blue-100'}`}>
             <div className="premium-top-controls">
-              <Link to={activity ? basePath : trackPath} className={`${backClass} group`}>
+              <Link to={activity ? basePath : trackPath} state={navigationState} className={`${backClass} group`}>
                 <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 {activity ? 'Activities' : 'Back'}
               </Link>
@@ -224,7 +228,7 @@ export default function VocabularyActivity() {
                 {trackLabel}
               </span>
               {activity ? (
-                <Link to={trackPath} className={backClass}>
+                <Link to={trackPath} state={navigationState} className={backClass}>
                   <RotateCcw className="mr-1 h-4 w-4" />
                   Track
                 </Link>
@@ -247,7 +251,7 @@ export default function VocabularyActivity() {
                 <p className="mt-1 text-sm text-slate-600">Four focused drills — flip, match, quiz, and type — with audio, instant feedback, and diamond rewards.</p>
                 <p className="mt-2 text-xs text-slate-500">XP is awarded once per activity in each set, up to 120 vocabulary XP per day.</p>
               </section>
-              <ActivityPicker basePath={basePath} entriesCount={entries.length} />
+              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} />
               <section className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Vocabulary</p>
                 <TermPreview entries={entries} />

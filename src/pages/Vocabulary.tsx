@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Gem, Sparkles, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
 import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
@@ -82,10 +82,13 @@ function resolveTrack(trackParam?: string): VocabularyTrack | null {
 
 export default function Vocabulary() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [, refreshSavedCount] = useState(0)
   useEffect(() => subscribeSavedWords(() => refreshSavedCount((n) => n + 1)), [])
   const { track: trackParam } = useParams<{ track?: string }>()
   const routeTrack = resolveTrack(trackParam)
+  const fromSatArena = routeTrack === 'SAT' && (location.state as { from?: string } | null)?.from === '/sat'
+  const satNavigationState = fromSatArena ? { from: '/sat' } : undefined
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const minimalMotion = reducedMotion
 
@@ -444,11 +447,11 @@ export default function Vocabulary() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/vocabulary')}
+                    onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Vocabulary
+                    {fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'}
                   </button>
                   <span className="premium-top-chip">SAT Vocabulary Track</span>
                 </div>
@@ -506,7 +509,7 @@ export default function Vocabulary() {
                           <p className="text-sm font-bold text-slate-900">{section.title}</p>
                           <p className="mt-1 text-xs text-slate-500">{section.entries.length} terms</p>
                           <button
-                            onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`)}
+                            onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`, { state: satNavigationState })}
                             className="mt-3 inline-flex items-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.35)]"
                           >
                             Start Module {sectionIndex + 1}

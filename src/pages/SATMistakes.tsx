@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   BrainCircuit,
   CheckCircle2,
+  ChevronRight,
   Clock3,
   Target,
   Trash2,
   TrendingUp,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import SATReview from '@/components/sat/SATReview'
 import {
   clearSATAttempt,
   deleteSATAttemptHistoryEntry,
@@ -40,20 +42,23 @@ function loadHistoryWithLegacyResults() {
 function scoreFor(test: SATTestDefinition, entry: SATAttemptHistoryEntry) {
   const report = scoreSATModules(test.modules, entry.attempt.answers)
   const onlySection = test.modules.every((module) => module.section === test.modules[0]?.section)
-  const range = test.modules[0]?.section === 'math' ? report.mathRange : report.readingWritingRange
-  const sectionScore = Math.round((range[0] + range[1]) / 20) * 10
+  const range = onlySection
+    ? test.modules[0]?.section === 'math' ? report.mathRange : report.readingWritingRange
+    : report.totalRange
 
   return {
     accuracy: report.percent,
-    answered: report.correct + report.incorrect,
+    correct: report.correct,
     incorrect: report.incorrect,
-    score: onlySection ? sectionScore : report.midpoint,
-    maxScore: onlySection ? 800 : 1600,
+    unanswered: report.unanswered,
+    total: report.correct + report.incorrect + report.unanswered,
+    scoreRange: `${range[0]}–${range[1]}`,
   }
 }
 
 export default function SATMistakes() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [history, setHistory] = useState(loadHistoryWithLegacyResults)
 
   const attempts = useMemo(() => history.flatMap((entry) => {
@@ -65,7 +70,7 @@ export default function SATMistakes() {
   const averageAccuracy = completedAttempts.length
     ? completedAttempts.reduce((sum, attempt) => sum + attempt.result.accuracy, 0) / completedAttempts.length
     : 0
-  const recoveryQueue = completedAttempts.reduce((sum, attempt) => sum + attempt.result.incorrect, 0)
+  const recoveryQueue = completedAttempts.reduce((sum, attempt) => sum + attempt.result.incorrect + attempt.result.unanswered, 0)
 
   const deleteAttempt = (entry: SATAttemptHistoryEntry, title: string) => {
     const timestamp = new Date(entry.savedAt).toLocaleString('en-GB', {
@@ -80,6 +85,31 @@ export default function SATMistakes() {
     if (currentAttempt?.attemptId === entry.id) clearSATAttempt(entry.attempt.testId)
     deleteSATAttemptHistoryEntry(entry.id)
     setHistory(loadSATAttemptHistory())
+  }
+
+  const selectedAttemptId = searchParams.get('attempt')
+  const selectedAttempt = attempts.find(({ entry }) => entry.id === selectedAttemptId)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [selectedAttemptId])
+  const closeReview = () => {
+    setSearchParams((params) => {
+      params.delete('attempt')
+      return params
+    })
+  }
+
+  if (selectedAttempt) {
+    return (
+      <SATReview
+        key={selectedAttempt.entry.id}
+        attempt={selectedAttempt.entry.attempt}
+        test={selectedAttempt.test}
+        onBack={closeReview}
+        backLabel="SAT Mistake Lab"
+        historyReview
+      />
+    )
   }
 
   return (
@@ -127,44 +157,56 @@ export default function SATMistakes() {
             <Clock3 className="h-5 w-5 text-blue-500" />
           </div>
 
+          {selectedAttemptId ? (
+            <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">This saved attempt is no longer available. Choose another result below.</p>
+          ) : null}
           <div className="mt-4 space-y-2.5">
             {attempts.length ? (
               attempts.map(({ entry, test, result }) => {
                 const completed = entry.attempt.status === 'submitted'
                 return (
-                  <article key={entry.id} className="grid gap-3 rounded-2xl border border-slate-100 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-black text-slate-900">{test.title}</p>
-                        <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${completed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                          {completed ? 'Completed' : 'Saved incomplete'}
-                        </span>
+                  <article key={entry.id} className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white p-2">
+                    <button
+                      type="button"
+                      onClick={() => setSearchParams({ attempt: entry.id })}
+                      aria-label={`Review ${test.title} attempt saved ${new Date(entry.savedAt).toLocaleString('en-GB')}`}
+                      className="grid min-w-0 flex-1 gap-3 rounded-xl p-2 text-left transition hover:bg-blue-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-black text-slate-900">{test.title}</p>
+                          <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${completed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {completed ? 'Completed' : 'Saved incomplete'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                          {new Date(entry.savedAt).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {' · '}{entry.attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}
+                        </p>
+                        <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-blue-600">Review answers <ChevronRight className="h-3.5 w-3.5" /></span>
                       </div>
-                      <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                        {new Date(entry.savedAt).toLocaleString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                        {' · '}{entry.attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-blue-50 px-3 py-2 text-center">
-                      <p className="text-[9px] font-black uppercase text-blue-500">Score</p>
-                      <p className="text-sm font-black text-blue-800">{completed ? (isSATTestComplete(test) ? `${result.score}/${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</p>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
-                      <p className="text-[9px] font-black uppercase text-slate-400">Progress</p>
-                      <p className="text-sm font-black text-slate-800">{result.answered}/{test.questionCount}</p>
-                    </div>
+                      <div className="rounded-xl bg-blue-50 px-3 py-2 text-center">
+                        <p className="text-[9px] font-black uppercase text-blue-500">{isSATTestComplete(test) ? 'Estimated score' : 'Accuracy'}</p>
+                        <p className="text-sm font-black text-blue-800">{completed ? (isSATTestComplete(test) ? result.scoreRange : `${result.accuracy}% accuracy`) : '—'}</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
+                        <p className="text-[9px] font-black uppercase text-slate-400">Correct answers</p>
+                        <p className="text-sm font-black text-slate-800">{result.correct}/{result.total}</p>
+                        <p className="mt-1 text-[10px] font-semibold text-slate-500">{result.incorrect} incorrect · {result.unanswered} unanswered</p>
+                      </div>
+                    </button>
                     <button
                       type="button"
                       onClick={() => deleteAttempt(entry, test.title)}
                       aria-label={`Delete ${test.title} attempt`}
                       title="Delete result"
-                      className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-xl border border-red-100 bg-red-50 text-red-600 transition hover:border-red-200 hover:bg-red-100"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-xl border border-red-100 bg-red-50 text-red-600 transition hover:border-red-200 hover:bg-red-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

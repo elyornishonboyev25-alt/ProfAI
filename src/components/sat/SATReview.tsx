@@ -35,7 +35,10 @@ type ReviewFilter = 'all' | 'correct' | 'incorrect' | 'unanswered' | 'flagged'
 type Props = {
   attempt: SATAttempt
   test: SATTestDefinition
-  onStartAgain: () => void
+  onStartAgain?: () => void
+  onBack?: () => void
+  backLabel?: string
+  historyReview?: boolean
 }
 
 function formatDuration(seconds: number) {
@@ -129,7 +132,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
   )
 }
 
-export default function SATReview({ attempt, test, onStartAgain }: Props) {
+export default function SATReview({ attempt, test, onStartAgain, onBack, backLabel, historyReview = false }: Props) {
   const navigate = useNavigate()
   const userId = useAuthStore((state) => state.user?.id ?? null)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
@@ -174,6 +177,8 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
     : modules.every((module) => module.section === 'reading-writing')
       ? 'reading-writing'
       : null
+  const submitted = attempt.status === 'submitted'
+  const returnLabel = backLabel ?? (onlySection ? 'section tests' : 'SAT Prep')
   const backPath = onlySection ? `/sat/${onlySection}` : '/sat'
   const displayedRange = onlySection === 'math'
     ? report.mathRange
@@ -187,7 +192,7 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
   const elapsed = formatDuration(Math.max(0, ((attempt.submittedAt ?? attempt.updatedAt) - attempt.startedAt) / 1000))
 
   useEffect(() => {
-    if (!completeTest || onlySection || displayedMidpoint < 1400) return
+    if (historyReview || !submitted || !completeTest || onlySection || displayedMidpoint < 1400) return
     awardBadge({
       userId,
       track: 'SAT_OVERALL',
@@ -195,8 +200,8 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
       mode: attempt.mode,
       source: 'mock',
     })
-  }, [attempt.mode, awardBadge, completeTest, displayedMidpoint, onlySection, userId])
-  const headline = !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
+  }, [attempt.mode, awardBadge, completeTest, displayedMidpoint, historyReview, onlySection, submitted, userId])
+  const headline = !submitted ? 'Your saved answers are ready to review.' : !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (
     <main className="min-h-screen bg-[linear-gradient(145deg,#eef6ff_0%,#f8fafc_46%,#fff5f4_100%)] px-3 py-4 sm:px-5 lg:px-7">
@@ -205,25 +210,25 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
           <div className="grid lg:grid-cols-[1fr_23rem]">
             <div className="p-5 sm:p-8">
               <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => navigate(backPath)} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600"><ArrowLeft className="h-3.5 w-3.5" /> {onlySection ? 'Section tests' : 'SAT Prep'}</button>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> {test.title} complete</span>
+                <button type="button" onClick={onBack ?? (() => navigate(backPath))} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600"><ArrowLeft className="h-3.5 w-3.5" /> {returnLabel}</button>
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> {test.title} · {submitted ? 'Completed' : 'Saved incomplete'}</span>
               </div>
               <p className="mt-6 text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Personal score report</p>
               <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">{headline}</h1>
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500">You completed all {modules.length} modules. Use the review lab below to turn every missed pattern into a repeatable strength.</p>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500">{submitted ? `Your submitted answers across ${modules.length} modules are shown below.` : 'This attempt was saved before submission. Review your answers and unanswered questions below.'}</p>
               <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
-                  ['Correct', `${report.correct}/${test.questionCount}`], ['Accuracy', `${report.percent}%`], ['Time used', elapsed], ['Flagged', String(attempt.flagged.length)],
+                  ['Correct', `${report.correct}/${allQuestions.length}`], ['Accuracy', `${report.percent}%`], ['Time used', elapsed], ['Flagged', String(attempt.flagged.length)],
                 ].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3"><p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">{label}</p><p className="mt-1 text-lg font-black text-slate-950">{value}</p></div>)}
               </div>
             </div>
             <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-950 p-6 text-white sm:p-8">
               <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl" />
-              <div className="relative flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/60">{!completeTest ? 'Available-module accuracy' : onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-2 text-5xl font-black tracking-tight">{completeTest ? `${displayedRange[0]}–${displayedRange[1]}` : `${report.percent}%`}</p></div><Award className="h-8 w-8 text-cyan-300" /></div>
+              <div className="relative flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/60">{!submitted ? 'Saved incomplete' : !completeTest ? 'Available-module accuracy' : onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-2 text-5xl font-black tracking-tight">{!submitted ? '—' : completeTest ? `${displayedRange[0]}–${displayedRange[1]}` : `${report.percent}%`}</p></div><Award className="h-8 w-8 text-cyan-300" /></div>
               {satAvailabilityNote(test) ? <p className="relative mt-4 text-xs leading-5 text-white/80">{satAvailabilityNote(test)}</p> : null}
               <div className="relative mt-8 space-y-3">
-                {readingWritingTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Reading & Writing</span><span>{report.readingWritingRange[0]}–{report.readingWritingRange[1]}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-cyan-300" style={{ width: `${(report.readingWritingRaw / readingWritingTotal) * 100}%` }} /></div></div> : null}
-                {mathTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Math</span><span>{completeMath ? `${report.mathRange[0]}–${report.mathRange[1]}` : `${report.mathRaw}/${mathTotal} correct`}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-rose-300" style={{ width: `${(report.mathRaw / mathTotal) * 100}%` }} /></div></div> : null}
+                {readingWritingTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Reading & Writing</span><span>{submitted ? `${report.readingWritingRange[0]}–${report.readingWritingRange[1]}` : `${report.readingWritingRaw}/${readingWritingTotal} correct`}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-cyan-300" style={{ width: `${(report.readingWritingRaw / readingWritingTotal) * 100}%` }} /></div></div> : null}
+                {mathTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Math</span><span>{submitted && completeMath ? `${report.mathRange[0]}–${report.mathRange[1]}` : `${report.mathRaw}/${mathTotal} correct`}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-rose-300" style={{ width: `${(report.mathRaw / mathTotal) * 100}%` }} /></div></div> : null}
               </div>
             </div>
           </div>
@@ -267,7 +272,7 @@ export default function SATReview({ attempt, test, onStartAgain }: Props) {
           </article>
         </section>
 
-        <div className="mt-4 flex flex-wrap justify-end gap-2"><button type="button" onClick={() => navigate(backPath)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-black text-slate-600">Back to {onlySection ? 'section tests' : 'SAT Prep'}</button><button type="button" onClick={onStartAgain} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-[11px] font-black text-white"><RotateCcw className="h-3.5 w-3.5" /> Start fresh</button></div>
+        <div className="mt-4 flex flex-wrap justify-end gap-2"><button type="button" onClick={onBack ?? (() => navigate(backPath))} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-black text-slate-600">Back to {returnLabel}</button>{onStartAgain ? <button type="button" onClick={onStartAgain} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-[11px] font-black text-white"><RotateCcw className="h-3.5 w-3.5" /> Start fresh</button> : null}</div>
       </div>
     </main>
   )

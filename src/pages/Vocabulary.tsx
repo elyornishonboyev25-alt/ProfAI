@@ -452,7 +452,7 @@ export default function Vocabulary() {
                   </button>
                   <span className="premium-top-chip">SAT Vocabulary Track</span>
                 </div>
-                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary Studio</h1>
+                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                   Choose a SAT Full Mock and study 20 challenging words from each English module.
                 </p>

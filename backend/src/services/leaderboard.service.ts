@@ -318,6 +318,7 @@ function resolveAntiCheatRules(useCanonicalXp = false) {
       'Rankings use the total XP shown on each learner’s profile, highest first.',
       'All awarded XP counts, including tests, vocabulary, speaking, writing and daily learning.',
       'You can join the ranking without completing a test.',
+      'Test statistics include submitted SAT and IELTS results; each saved attempt counts once.',
       'Ties are broken by test accuracy, then completed tests. Otherwise, tied learners keep a consistent order.',
     ]
   }
@@ -385,7 +386,7 @@ function buildUserAggregates(params: {
     let discardedAttempts = 0
 
     for (const attempt of userAttempts) {
-      if (seenTests.has(attempt.testId)) {
+      if (!params.useCanonicalXp && seenTests.has(attempt.testId)) {
         discardedAttempts += 1
         continue
       }
@@ -566,6 +567,35 @@ export async function generateLeaderboard(params: {
       },
     },
   })
+
+  // SAT mocks and IELTS writing/speaking use the assessment ledger rather
+  // than TestAttempt. Include their statistics without adding their XP again.
+  // Scoped competition boards keep their existing validated-test rules.
+  if (useCanonicalXp) {
+    const assessments = await prisma.assessmentResult.findMany({
+      where: { sourceType: { in: ['SAT_BLUEBOOK_MOCK', 'IELTS_WRITING_AI_EVALUATION', 'IELTS_WRITING_FULL_TEST', 'IELTS_SPEAKING_MOCK'] } },
+      select: { id: true, userId: true, examType: true, accuracy: true, score: true, maxScore: true, durationSec: true, completedAt: true },
+    })
+    for (const result of assessments) {
+      // A scaled SAT score is not question accuracy. IELTS band-based
+      // assessments use the same percentage normalization as the profile.
+      const percentage = result.accuracy ?? (result.examType === 'IELTS' && result.maxScore > 0
+        ? result.score / result.maxScore * 100 : null)
+      if (percentage === null || !Number.isFinite(percentage)) continue
+      attempts.push({
+        userId: result.userId,
+        testId: `assessment:${result.id}`,
+        percentage,
+        finalScore: percentage,
+        totalQuestions: 0,
+        correctAnswers: 0,
+        timeSpentSec: result.durationSec,
+        xpEarned: 0,
+        completedAt: result.completedAt,
+        test: { difficulty: Difficulty.HARD, durationSec: Math.max(1, result.durationSec) },
+      })
+    }
+  }
 
   if (!useCanonicalXp && attempts.length === 0) {
     return {

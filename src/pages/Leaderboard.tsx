@@ -26,6 +26,7 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
+import { syncSavedSATAttemptResults } from '@/features/sat/resultSync'
 
 function getMovement(row: LeaderboardRow) {
   if (row.rankTrend === 'same') {
@@ -111,6 +112,9 @@ export default function Leaderboard() {
       setError(null)
 
       try {
+        const sync = await syncSavedSATAttemptResults(user.id)
+        if (!active || useAuthStore.getState().user?.id !== user.id) return
+        if (sync.failed) setError('Some saved SAT results could not sync. Retry to update your test statistics.')
         const payload = await apiClient.get<LeaderboardResponse>('/leaderboard?period=all', { auth: true })
         if (!active) return
         setData(payload)

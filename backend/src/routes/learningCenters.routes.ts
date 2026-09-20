@@ -15,6 +15,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { generateAiText } from '../services/aiProvider.service.js'
+import { invalidateLeaderboardCache } from '../services/leaderboard.service.js'
 import {
   average,
   buildDataDrivenInsight,
@@ -363,6 +364,7 @@ router.post(
         data: { resultId: result.id, status: LearningSubmissionStatus.COMPLETED, progress: 100, submittedAt: completedAt },
       })
     }
+    invalidateLeaderboardCache()
     return res.status(201).json({ result: { ...result, completedAt: result.completedAt.toISOString() } })
   }),
 )

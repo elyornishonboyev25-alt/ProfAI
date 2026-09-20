@@ -5,6 +5,7 @@ import { afterEach, mock, test } from 'node:test'
 const unexpectedQuery = () => { throw new Error('Unexpected database query') }
 const prisma = {
   testAttempt: { findMany: unexpectedQuery },
+  assessmentResult: { findMany: unexpectedQuery },
   user: { findMany: unexpectedQuery },
   focusDailyAnalytics: { findMany: unexpectedQuery },
   leaderboardState: { findMany: unexpectedQuery, upsert: unexpectedQuery },
@@ -20,8 +21,9 @@ const attempt = (userId, testId, xpEarned, percentage = 80) => ({
   completedAt: new Date(), test: { difficulty: 'MEDIUM', durationSec: 600 },
 })
 
-function mockDatabase(users, attempts = []) {
+function mockDatabase(users, attempts = [], assessments = []) {
   mock.method(prisma.testAttempt, 'findMany', async () => attempts)
+  const assessmentQuery = mock.method(prisma.assessmentResult, 'findMany', async () => assessments)
   const userQuery = mock.method(prisma.user, 'findMany', async ({ where }) => (
     where.id ? users.filter((user) => where.id.in.includes(user.id)) : users
   ))
@@ -29,7 +31,7 @@ function mockDatabase(users, attempts = []) {
   mock.method(prisma.leaderboardState, 'findMany', async () => [])
   mock.method(prisma.leaderboardState, 'upsert', async (query) => query.create)
   mock.method(prisma, '$transaction', async (writes) => Promise.all(writes))
-  return { userQuery }
+  return { userQuery, assessmentQuery }
 }
 
 afterEach(() => {
@@ -61,6 +63,40 @@ test('all-time ranking uses profile totals including activity and repeat-test re
     ['activities', 261], ['tests', 150],
   ])
   assert.equal(board.currentUserRank, 2)
+  assert.equal(board.rows[1].testsCompleted, 2)
+})
+
+test('SAT and IELTS assessments contribute test statistics without changing profile XP', async () => {
+  const assessment = (id, userId, examType, accuracy, score = 0, maxScore = 1600) => ({
+    id, userId, examType, accuracy, score, maxScore, durationSec: 1200, completedAt: new Date(),
+  })
+  mockDatabase([learner('sat', 324), learner('ielts', 398)], [attempt('sat', 'native', 20, 50)], [
+    assessment('old-sat', 'sat', 'SAT', 80),
+    assessment('repeat-sat', 'sat', 'SAT', 20),
+    assessment('zero-sat', 'sat', 'SAT', 0),
+    assessment('unknown-accuracy', 'sat', 'SAT', null, 1200),
+    assessment('writing', 'ielts', 'IELTS', null, 6, 9),
+  ])
+  const board = await generateLeaderboard({ period: 'all', currentUserId: 'sat' })
+  const sat = board.rows.find((row) => row.userId === 'sat')
+  assert.equal(sat.totalXp, 324)
+  assert.equal(sat.testsCompleted, 4)
+  assert.equal(sat.accuracy, 37.5)
+  assert.equal(sat.breakdown.accuracy, 37.5)
+  assert.equal(board.rows[0].testsCompleted, 1)
+  assert.equal(board.rows[0].accuracy, 66.67)
+})
+
+test('assessment sync cache invalidation refreshes statistics even when XP is unchanged', async () => {
+  const assessments = []
+  mockDatabase([learner('sat', 324)], [], assessments)
+  assert.equal((await generateLeaderboard({ period: 'all' })).rows[0].testsCompleted, 0)
+  assessments.push({ id: 'saved', userId: 'sat', examType: 'SAT', accuracy: 45, score: 900, maxScore: 1600, durationSec: 100, completedAt: new Date() })
+  invalidateLeaderboardCache()
+  const board = await generateLeaderboard({ period: 'all' })
+  assert.equal(board.rows[0].testsCompleted, 1)
+  assert.equal(board.rows[0].accuracy, 45)
+  assert.equal(board.rows[0].totalXp, 324)
 })
 
 test('equal XP has stable ordering regardless of database order', async () => {
@@ -94,7 +130,7 @@ test('XP cache invalidation updates totals and rank after a new reward', async (
 })
 
 test('existing weekly and category consumers retain scoped test XP', async () => {
-  mockDatabase([learner('tests', 500), learner('activities', 1000)], [
+  const { assessmentQuery } = mockDatabase([learner('tests', 500), learner('activities', 1000)], [
     attempt('tests', 'test-1', 40), attempt('tests', 'test-1', 20),
   ])
   for (const params of [{ period: 'week' }, { period: 'all', category: 'IELTS' }]) {
@@ -102,4 +138,5 @@ test('existing weekly and category consumers retain scoped test XP', async () =>
     assert.equal(board.rows.length, 1)
     assert.equal(board.rows[0].totalXp, 40)
   }
+  assert.equal(assessmentQuery.mock.callCount(), 0)
 })

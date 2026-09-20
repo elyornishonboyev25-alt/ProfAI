@@ -65,6 +65,7 @@ const { getSATTest, getSATSectionTest, isSATTestComplete, satAvailabilityNote } 
 const { createSATAttempt, scoreSATModules, isSATAnswerCorrect } = await load('src/features/sat/practiceTest4.ts')
 const test = getSATTest(9)
 assert.equal(test.mockId, 9)
+assert.equal(test.difficulty, 'Easy')
 assert.equal(test.questionCount, 76)
 assert.equal(test.totalDurationSeconds, 99 * 60)
 assert.deepEqual(test.modules.map((m) => m.id), ['rw1', 'rw2', 'math1'])

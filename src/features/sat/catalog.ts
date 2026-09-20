@@ -96,7 +96,7 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
     mockId: 9,
     ...SAT_MAY_2026_US,
     badge: 'May 2026 US · Version 1',
-    difficulty: 'Medium',
+    difficulty: 'Easy',
   },
 }
 

@@ -94,3 +94,14 @@ Browser verification covered answer selection, autosave and reload/resume, both
 module transitions, restored Math Q10 at desktop/mobile sizes, perfect partial
 submission (76/76 with accuracy rather than a full score), Mistake Lab history,
 and the complete R&W section. No browser page errors occurred.
+
+## Overall difficulty review — 2026-09-20
+
+Overall catalog label: **Easy**, following review of both English modules and
+the user's Math feedback. Both English modules primarily use short passages,
+direct retrieval, straightforward vocabulary, agreement/verb forms, sentence
+boundaries, explicit transitions, and narrowly stated synthesis goals. R&W 1
+Q10/Q13–15 and R&W 2 Q7/Q10/Q13–15 require more inference or comparison, but
+these moderately demanding items do not make the modules hard overall.
+Individual question labels remain editorial Foundation/Medium estimates;
+the overall label is not a statistically calibrated SAT difficulty measure.

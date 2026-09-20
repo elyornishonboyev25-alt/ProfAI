@@ -513,12 +513,14 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
           <div className="space-y-2">
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Terms</p>
             {activeGroup.map((it) => (
-              <div key={it.id}>
-                <SaveWordButton entry={it} />
-                <button onClick={() => pickWord(activeGroupIndex, it.id)} className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-left text-sm font-semibold transition ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
+              <div key={it.id} className="relative">
+                <button onClick={() => pickWord(activeGroupIndex, it.id)} className={`flex w-full items-center gap-2 rounded-xl border py-2.5 pl-3.5 pr-12 text-left text-sm font-semibold transition ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
                   {activeMatches[it.id] ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : null}
                   {it.term}
                 </button>
+                <div className="absolute inset-y-0 right-1 flex items-center">
+                  <SaveWordButton entry={it} iconOnly />
+                </div>
               </div>
             ))}
           </div>

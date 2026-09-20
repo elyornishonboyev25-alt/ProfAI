@@ -120,7 +120,19 @@ export async function run() {
   assert.ok(container.querySelector(`a[href='${origin.path}']`))
 
   let completions: number[] = []
-  await render(<MatchingActivity entries={entries} rewardKey="ui-matching" onComplete={(accuracy) => completions.push(accuracy)} />)
+  await render(
+    <WordSaveProvider value={{ context: 'sat', origin }}>
+      <MatchingActivity entries={entries} rewardKey="ui-matching" onComplete={(accuracy) => completions.push(accuracy)} />
+    </WordSaveProvider>,
+  )
+  const saveHeart = container.querySelector<HTMLButtonElement>(`button[aria-label="Save ${entries[1].term} to My Words"]`)!
+  assert.ok(saveHeart)
+  assert.equal(saveHeart.textContent, '', 'Matching save controls must be icon-only')
+  await click(saveHeart)
+  assert.equal(getSavedWords('sat').length, 2)
+  assert.ok(saveHeart.disabled)
+  assert.equal(saveHeart.querySelector('svg')?.getAttribute('fill'), 'currentColor')
+  assert.match(container.textContent!, /0 \/ 6/, 'Saving must not match a term')
   await matchAll()
   assert.deepEqual(completions, [100])
   assert.match(container.textContent!, /All groups matched/)

@@ -3126,6 +3126,18 @@ export default function IELTSReadingInterface({
       if (block.inputMode) {
         return (
           <div className="my-3 space-y-3">
+            {block.options && block.options.length > 0 ? (
+              <div className="rounded-xl border border-red-100 bg-red-50/40 p-3">
+                <ul className="space-y-1 text-sm font-semibold text-slate-700">
+                  {block.options.map((option) => (
+                    <li key={option.letter}>
+                      <span className="mr-2 font-black text-slate-900">{option.letter}</span>
+                      {option.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {block.rows.map((row) => {
               const question = listeningQuestionByNumber.get(row.blank)
               if (!question) return null

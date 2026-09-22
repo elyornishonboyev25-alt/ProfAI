@@ -59,7 +59,7 @@ export async function run() {
   const entry = getIeltsFullTestCatalog('listening')[10]
   assert.equal(entry.testId, test.id)
   assert.ok(isAvailableIeltsTrackTest('listening', entry.testId))
-  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[11].testId))
+  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[12].testId))
   assert.equal(mockListeningTests.filter(item => item.id === test.id).length, 1)
   assert.ok(statSync(`public${test.continuousAudioUrl}`).size > 20_000_000)
   assert.deepEqual(test.sections.flatMap(section => section.questions.map(q => q.number)), Array.from({ length: 40 }, (_, i) => i + 1))

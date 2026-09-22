@@ -77,7 +77,7 @@ export default function IELTSSectionTests() {
       id: entry.testId,
       number: entry.index,
       title: `Listening Full Test ${entry.index}`,
-      subtitle: entry.index <= 10 ? 'Complete academic listening simulation' : 'New full test in preparation',
+      subtitle: isAvailableIeltsTrackTest('listening', entry.testId) ? 'Complete academic listening simulation' : 'New full test in preparation',
       badge: 'Full test',
       durationMinutes: 30,
       detail: '4 parts · 40 questions',

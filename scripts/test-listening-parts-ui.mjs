@@ -28,7 +28,7 @@ async function main() {
     dom.window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} })
     const outfile = join(directory, 'suite.cjs')
     await build({
-      entryPoints: ['scripts/tests/listening-parts-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
+      entryPoints: [process.argv[2] ?? 'scripts/tests/listening-parts-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
       outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'],
     })
     await createRequire(import.meta.url)(outfile).run()

@@ -142,6 +142,32 @@ export const evaluateReadingAnswers = (
     let sectionTotal = 0
     let sectionCorrect = 0
     let sectionSkipped = 0
+    const multiChoiceScores = new Map<string, number>()
+
+    // Listening's numbered slots share an unordered answer pool. Each correct
+    // choice earns one mark, including when the other choice is wrong or empty.
+    for (const group of section.groups ?? []) {
+      for (const block of group.blocks) {
+        if (block.kind !== 'multi-mcq') continue
+        const questions = block.blanks
+          .map((number) => section.questions.find((question) => question.number === number))
+          .filter((question): question is Question => Boolean(question))
+        const remainingChoices = new Set(questions.flatMap((question) =>
+          (Array.isArray(question.correctAnswer)
+            ? question.correctAnswer
+            : splitAnswerCandidates(question.correctAnswer)
+          ).map(normalizeSelectionValue),
+        ))
+        for (const question of questions) {
+          const candidates = toUserCandidates(answers[question.id], question.options)
+          const match = [...remainingChoices].find((expected) =>
+            candidates.some((candidate) => areEquivalentAnswers(candidate, expected)),
+          )
+          multiChoiceScores.set(question.id, match === undefined ? 0 : 1)
+          if (match !== undefined) remainingChoices.delete(match)
+        }
+      }
+    }
 
     for (const question of section.questions) {
       const userAnswer = answers[question.id]
@@ -151,7 +177,9 @@ export const evaluateReadingAnswers = (
 
       let score = 0
       if (!skipped) {
-        if (question.type === 'drag-drop-summary' && Array.isArray(question.correctAnswer)) {
+        if (multiChoiceScores.has(question.id)) {
+          score = multiChoiceScores.get(question.id)!
+        } else if (question.type === 'drag-drop-summary' && Array.isArray(question.correctAnswer)) {
           score = evaluateOrderedSlotScore(userAnswer, question.correctAnswer)
         } else {
           const checked = checkAnswer(

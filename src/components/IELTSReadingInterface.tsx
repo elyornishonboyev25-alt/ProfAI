@@ -3390,13 +3390,13 @@ export default function IELTSReadingInterface({
               )
             })}
           </div>
-          {questions.map((question) => reviewHint(question, 'mt-2 ml-8'))}
+          {questions.map((question) => <Fragment key={question.id}>{reviewHint(question, 'mt-2 ml-8')}</Fragment>)}
         </div>
       )
     }
 
     const renderTable = (block: Extract<ListeningBlock, { kind: 'table' }>) => (
-      <div className="my-2 rounded-xl border border-slate-300">
+      <div className="my-2 overflow-x-auto rounded-xl border border-slate-300">
         <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-slate-300 bg-slate-50">

@@ -40,7 +40,7 @@ import {
   type SpeakingSessionRecord,
 } from '@/store/speakingStore'
 import { fetchSpeakerByNickname, type SpeakerProfilePayload } from '@/lib/speakingApi'
-import { initialsOf } from '@/store/speakerSocialStore'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { lastSeenLabel } from '@/components/speaking/SpeakerDirectory'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 
@@ -125,7 +125,7 @@ export default function SpeakerProfile() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]">
-                {initialsOf(p.displayName)}
+                <ProfileAvatar src={p.avatarUrl} className="rounded-3xl" />
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </div>

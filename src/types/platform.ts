@@ -62,6 +62,7 @@ export type DashboardOverview = {
   miniLeaderboard: Array<{
     rank: number
     fullName: string
+    avatarUrl?: string | null
     totalXp: number
     accuracy: number
     rankTrend: 'up' | 'down' | 'same'

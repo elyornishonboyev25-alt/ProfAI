@@ -22,6 +22,7 @@ import {
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
 import { Skeleton } from '@/components/common/Skeleton'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -86,16 +87,6 @@ function achievementProgressLabel(current: number, target: number, unit: 'count'
   if (unit === 'percent') return `${current}% / ${target}%`
   if (unit === 'days') return `${current} / ${target} days`
   return `${current} / ${target} complete`
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
 }
 
 function StatCard({
@@ -233,7 +224,7 @@ export default function Dashboard() {
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 text-sm font-black text-blue-700">
-                {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="profile-avatar-media" /> : initials(user?.fullName || 'ProfAI Learner')}
+                <ProfileAvatar src={user?.avatarUrl} />
               </div>
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>
@@ -404,7 +395,7 @@ export default function Dashboard() {
                 {podium.map(({ row, place }) => {
                   return (
                     <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
-                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}>{initials(row.fullName)}</div>
+                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} className="rounded-full" /></div>
                       <p className="mt-2 text-[11px] font-black text-slate-800">{place}{place === 1 ? 'st' : place === 2 ? 'nd' : 'rd'}</p>
                     </div>
                   )
@@ -416,7 +407,7 @@ export default function Dashboard() {
                   {leaderboard.map((row) => (
                     <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
                       <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-slate-200 text-[9px] font-black text-slate-700">{initials(row.fullName)}</span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-slate-200"><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} /></span>
                       <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
                       <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')} XP</span>
                     </button>

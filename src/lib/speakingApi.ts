@@ -8,6 +8,7 @@ import { markXpActivitySynced } from '@/lib/xpApi'
 
 export type CommunitySpeaker = {
   id: string
+  avatarUrl: string | null
   nickname: string | null
   displayName: string
   online: boolean
@@ -34,6 +35,7 @@ export type SpeakerSessionRow = {
 export type SpeakerProfilePayload = {
   profile: {
     id: string
+    avatarUrl: string | null
     nickname: string | null
     displayName: string
     online: boolean

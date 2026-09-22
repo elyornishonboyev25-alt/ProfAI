@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Flame, Gauge, Mic, Search, UserRound } from 'lucide-react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { fetchCommunity, type CommunitySpeaker } from '@/lib/speakingApi'
-import { initialsOf } from '@/store/speakerSocialStore'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 export function lastSeenLabel(iso: string | null): string {
   if (!iso) return 'Never seen'
@@ -98,7 +98,7 @@ export default function SpeakerDirectory() {
             className="flex items-center gap-3 rounded-2xl border border-red-50 bg-white p-3 text-left transition hover:border-red-200 hover:shadow-[0_10px_24px_rgba(220,38,38,0.1)] disabled:cursor-default disabled:opacity-70"
           >
             <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-bold text-red-700">
-              {initialsOf(s.displayName)}
+              <ProfileAvatar src={s.avatarUrl} className="rounded-full" />
               <span
                 className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${s.online ? 'bg-emerald-500' : 'bg-slate-300'}`}
                 title={s.online ? 'Online now' : lastSeenLabel(s.lastSeen)}

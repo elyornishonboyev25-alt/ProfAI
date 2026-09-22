@@ -2,6 +2,7 @@ import { type ComponentType, type ReactNode } from 'react'
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Minus, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/components/ui/utils'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import type { StudentStatus } from './types'
 
 export function CenterPanel({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -91,10 +92,9 @@ export function StatusBadge({ status }: { status: StudentStatus }) {
 
 export function Avatar({ name, url, size = 'md' }: { name: string; url?: string | null; size?: 'sm' | 'md' | 'lg' }) {
   const sizeClass = size === 'lg' ? 'h-14 w-14 text-base' : size === 'sm' ? 'h-8 w-8 text-[10px]' : 'h-10 w-10 text-xs'
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
   return (
     <span className={cn('grid shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 font-black text-blue-700 ring-1 ring-blue-100', sizeClass)}>
-      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : initials}
+      <ProfileAvatar src={url} alt={name} />
     </span>
   )
 }

@@ -1605,7 +1605,7 @@ router.get(
     })
     const users = await prisma.user.findMany({
       where: { id: { in: grouped.map((g) => g.userId) } },
-      select: { id: true, nickname: true, fullName: true, lastActiveDate: true, currentStreak: true },
+      select: { id: true, nickname: true, fullName: true, avatarUrl: true, lastActiveDate: true, currentStreak: true },
     })
     const speakers = grouped
       .map((g) => {
@@ -1615,6 +1615,7 @@ router.get(
           id: u.id,
           nickname: u.nickname,
           displayName: u.nickname ?? u.fullName,
+          avatarUrl: u.avatarUrl ?? null,
           online: isOnline(u.lastActiveDate),
           lastSeen: u.lastActiveDate,
           streak: u.currentStreak,
@@ -1638,7 +1639,7 @@ router.get(
     const user = await prisma.user.findFirst({
       where: { nickname: { equals: nickname, mode: 'insensitive' } },
       select: {
-        id: true, nickname: true, fullName: true, lastActiveDate: true,
+        id: true, nickname: true, fullName: true, avatarUrl: true, lastActiveDate: true,
         currentStreak: true, longestStreak: true, level: true, xp: true, createdAt: true,
       },
     })
@@ -1663,6 +1664,7 @@ router.get(
         id: user.id,
         nickname: user.nickname,
         displayName: user.nickname ?? user.fullName,
+        avatarUrl: user.avatarUrl ?? null,
         online: isOnline(user.lastActiveDate),
         lastSeen: user.lastActiveDate,
         streak: user.currentStreak,
@@ -1839,6 +1841,7 @@ router.put(
     }
     if (fullName) {
       await prisma.user.update({ where: { id: userId }, data: { fullName } })
+      invalidateLeaderboardCache()
     }
     const profile = await prisma.userProfile.upsert({
       where: { userId },
@@ -1866,6 +1869,7 @@ router.post(
       data: { avatarUrl: dataUrl },
       select: { avatarUrl: true },
     })
+    invalidateLeaderboardCache()
     return res.json(updated)
   }),
 )
@@ -1875,6 +1879,7 @@ router.delete(
   requireAuth,
   asyncHandler(async (req, res) => {
     await prisma.user.update({ where: { id: req.user!.id }, data: { avatarUrl: null } })
+    invalidateLeaderboardCache()
     return res.status(204).send()
   }),
 )

@@ -25,6 +25,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
@@ -558,11 +559,7 @@ export default function Onboarding() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                           <div className="relative mx-auto shrink-0 sm:mx-0">
                             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gradient-to-br from-blue-500 to-indigo-700 text-2xl font-black text-white shadow-[0_14px_30px_rgba(37,99,235,0.3)] ring-4 ring-blue-200">
-                              {avatarPreview ? (
-                                <img src={avatarPreview} alt="Selected avatar" className="h-full w-full object-cover" />
-                              ) : (
-                                <User className="h-9 w-9" />
-                              )}
+                              <ProfileAvatar src={avatarPreview} alt="Selected avatar" />
                             </div>
                             <span className="absolute bottom-1 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-white">
                               <Camera className="h-3.5 w-3.5" />
@@ -604,7 +601,7 @@ export default function Onboarding() {
                                       active ? 'border-blue-500 shadow-[0_5px_14px_rgba(37,99,235,0.25)]' : 'border-white ring-1 ring-blue-100'
                                     }`}
                                   >
-                                    <img src={src} alt="" className="h-full w-full rounded-full object-cover" />
+                                    <ProfileAvatar src={src} className="rounded-full" />
                                   </button>
                                 )
                               })}

@@ -10,6 +10,7 @@ import {
   LogOut,
   Lock,
   Mail,
+  Pencil,
   Save,
   Search,
   ShieldAlert,
@@ -18,6 +19,7 @@ import {
   Target,
   Trash2,
   UserRound,
+  X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -242,6 +244,7 @@ export default function AccountProfile() {
   const user = useAuthStore((state: AuthState) => state.user)
   const setUserNickname = useAuthStore((state) => state.setUserNickname)
   const setUserAvatar = useAuthStore((state) => state.setUserAvatar)
+  const setUserFullName = useAuthStore((state) => state.setUserFullName)
   const refreshToken = useAuthStore((state: AuthState) => state.refreshToken)
   const clearSession = useAuthStore((state: AuthState) => state.clearSession)
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
@@ -255,6 +258,43 @@ export default function AccountProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl ?? null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const nameEditRef = useRef<HTMLButtonElement>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [savingName, setSavingName] = useState(false)
+  const [nameError, setNameError] = useState('')
+
+  const closeNameEditor = () => {
+    setEditingName(false)
+    setNameError('')
+    requestAnimationFrame(() => nameEditRef.current?.focus())
+  }
+
+  const saveName = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (savingName) return
+    const fullName = nameDraft.trim()
+    if (fullName.length < 2 || fullName.length > 120) {
+      setNameError('Use 2 to 120 characters for your name.')
+      return
+    }
+    if (fullName === user?.fullName) {
+      closeNameEditor()
+      return
+    }
+    setSavingName(true)
+    setNameError('')
+    try {
+      const result = await updateAccount({ fullName })
+      setUserFullName(result.fullName ?? fullName)
+      closeNameEditor()
+      pushToast({ type: 'success', title: 'Name updated', message: 'Your name has been saved.' })
+    } catch (error) {
+      setNameError(error instanceof Error ? error.message : 'Could not save your name. Please try again.')
+    } finally {
+      setSavingName(false)
+    }
+  }
 
   const savedNickname = user?.nickname ?? ''
   const [nicknameDraft, setNicknameDraft] = useState(savedNickname)
@@ -271,6 +311,8 @@ export default function AccountProfile() {
         if (!active) return
         setForm({ ...EMPTY_PROFILE, ...data.profile })
         setAvatarUrl(data.avatarUrl)
+        setUserAvatar(data.avatarUrl)
+        setUserFullName(data.fullName)
         if (data.nickname) setNicknameDraft(data.nickname)
       })
       .catch(() => {
@@ -281,7 +323,7 @@ export default function AccountProfile() {
     return () => {
       active = false
     }
-  }, [pushToast])
+  }, [pushToast, setUserAvatar, setUserFullName])
 
   useEffect(() => {
     setNicknameDraft(savedNickname)
@@ -491,15 +533,60 @@ export default function AccountProfile() {
                 </button>
               </div>
               {avatarUrl ? (
-                <button onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-600">
+                <button disabled={uploadingAvatar} onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-600 disabled:opacity-60">
                   <Trash2 className="h-3 w-3" /> Remove
                 </button>
               ) : null}
             </div>
 
             {/* Identity */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">{user?.fullName ?? 'Learner'}</h1>
+            <div className="min-w-0 text-center lg:text-left">
+              {editingName ? (
+                <form onSubmit={saveName} className="mx-auto max-w-lg lg:mx-0" onKeyDown={(event) => {
+                  if (event.key === 'Escape' && !savingName) {
+                    event.preventDefault()
+                    closeNameEditor()
+                  }
+                }}>
+                  <label htmlFor="profile-full-name" className="sr-only">Full name</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="profile-full-name"
+                      autoFocus
+                      autoComplete="name"
+                      value={nameDraft}
+                      onChange={(event) => { setNameDraft(event.target.value); setNameError('') }}
+                      maxLength={120}
+                      disabled={savingName}
+                      aria-invalid={Boolean(nameError)}
+                      aria-describedby={nameError ? 'profile-name-error' : undefined}
+                      className="input min-w-0 flex-1 !text-xl font-bold"
+                    />
+                    <button type="submit" disabled={savingName} aria-label="Save name" title="Save name" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
+                      {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    </button>
+                    <button type="button" disabled={savingName} onClick={closeNameEditor} aria-label="Cancel name editing" title="Cancel" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-60">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {nameError ? <p id="profile-name-error" role="alert" className="mt-2 text-sm text-red-600">{nameError}</p> : null}
+                </form>
+              ) : (
+                <div className="flex items-center justify-center gap-2 lg:justify-start">
+                  <h1 className="min-w-0 break-words text-3xl font-black tracking-tight text-slate-900">{user?.fullName ?? 'Learner'}</h1>
+                  <button
+                    ref={nameEditRef}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => { setNameDraft(user?.fullName ?? ''); setNameError(''); setEditingName(true) }}
+                    aria-label="Edit full name"
+                    title="Edit name"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
               <div className="mt-1 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                 {savedNickname ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-2.5 py-0.5 text-sm font-bold text-blue-700">

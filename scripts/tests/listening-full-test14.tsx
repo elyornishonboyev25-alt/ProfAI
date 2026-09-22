@@ -2,6 +2,7 @@ import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import { statSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
 import { listeningFullTest14 as test } from '../../src/data/listeningFullTest14'
 import { getIeltsFullTestCatalog, isAvailableIeltsTrackTest } from '../../src/utils/ieltsTrackCatalog'
@@ -64,7 +65,9 @@ export async function run() {
   for (let n = 1; n <= 4; n++) {
     if (n > 1) await part(n)
     if (n === 3) {
-      assert.equal(container.querySelector('figure img')?.getAttribute('src'), '/images/ielts-listening-test14-education-house.jpg')
+      const diagram = container.querySelector('figure img')?.getAttribute('src')
+      assert.match(diagram!, /^data:image\/jpeg;base64,/)
+      assert.equal(createHash('sha256').update(Buffer.from(diagram!.split(',')[1], 'base64')).digest('hex'), 'b8c6e7afb349e77fcd0c8bbae82a406f4071a7dee221fcb1c794a96692042e89')
       assert.equal(container.querySelectorAll('li').length, 9)
     }
     for (const question of test.sections[n - 1].questions) {

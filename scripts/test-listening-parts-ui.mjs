@@ -30,6 +30,7 @@ async function main() {
     await build({
       entryPoints: [process.argv[2] ?? 'scripts/tests/listening-parts-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
       outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'],
+      loader: { '.jpg': 'dataurl' },
     })
     await createRequire(import.meta.url)(outfile).run()
   } finally {

@@ -1,4 +1,5 @@
 import type { IELTSTest, ListeningOption, Question, Section } from '../types/ieltsTypes'
+import educationHouseDiagram from '../assets/ielts/listening-test14-education-house.jpg?inline'
 
 // User-supplied questions and timed transcript, IELTS version 57262.
 // Source comparisons (including the corrected Q29 key): docs/LISTENING_FULL_TEST_14_SOURCE.md.
@@ -97,7 +98,7 @@ const part3: Section = {
   groups: [
     { range: 'Questions 21 - 26', instruction: 'Label the diagram below. Choose SIX answers from the box and write the correct letter, A-I, next to questions 21-26.', blocks: [
       { kind: 'grid', columns: diagramOptions.map(option => option.letter), options: diagramOptions, inputMode: true, rows: [] },
-      { kind: 'image', src: '/images/ielts-listening-test14-education-house.jpg', alt: 'Education House diagram: cooling tower (21) at the left of the roof, weather station (22) at the right of the roof, shower tower (23) on the right wall, tank (24) in the basement, balcony (25) below the light shelf and windows (26) above it. Timber shutters, light shelf, basement, trees, arrows and all six original numbered spaces are retained.' },
+      { kind: 'image', src: educationHouseDiagram, alt: 'Education House diagram: cooling tower (21) at the left of the roof, weather station (22) at the right of the roof, shower tower (23) on the right wall, tank (24) in the basement, balcony (25) below the light shelf and windows (26) above it. Timber shutters, light shelf, basement, trees, arrows and all six original numbered spaces are retained.' },
       { kind: 'grid', columns: diagramOptions.map(option => option.letter), inputMode: true, rows: [
         { blank: 21, label: 'Cooling Tower' }, { blank: 22, label: 'Weather Station' },
         { blank: 23, label: 'Shower Tower' }, { blank: 24, label: 'Tank' },

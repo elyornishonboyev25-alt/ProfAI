@@ -60,7 +60,7 @@ The unwatermarked diagram is publicly linked from https://testpoint.uz/exams/54:
 https://testpoint.uz/media/exams/education_house_diagram.jpg
 
 Downloaded without modification to
-`public/images/ielts-listening-test14-education-house.jpg` (860 × 680, 59,310 bytes).
+`src/assets/ielts/listening-test14-education-house.jpg` (860 × 680, 59,310 bytes).
 SHA-256: `b8c6e7afb349e77fcd0c8bbae82a406f4071a7dee221fcb1c794a96692042e89`.
 
 Visually compared with the user's fourth screenshot: the original building,
@@ -68,6 +68,14 @@ trees, arrows, labels and Q21–26 numbered spaces match. No redraw, AI image,
 watermark removal or image editing was used. The A–I option bank is rendered
 above the original image with the shared Listening styling; six answer inputs
 follow it. This keeps the original figure intact on desktop and mobile.
+
+The image is imported with `?inline`, following the existing profile-avatar
+asset pattern. Vite includes its unchanged JPEG bytes in the test bundle, so
+rendering no longer depends on a separate public-image request or a previously
+cached response for that URL. The integration check verifies the embedded
+image's SHA-256 against the original above.
+The original public URL is retained for already-open sessions using the previous
+bundle. Browser validation also passed with the public-image endpoint absent.
 
 ## Audio
 

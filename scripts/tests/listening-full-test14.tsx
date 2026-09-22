@@ -106,8 +106,20 @@ export async function run() {
   assert.equal(submitted.detailedBreakdown?.readingAnalysis?.sectionSummaries.length, 4)
   await act(async () => root.unmount())
   root = createRoot(container)
-  await act(async () => root.render(<IELTSReadingInterface test={test} reviewPayload={{ result: submitted!, showCorrectAnswers: true }} onComplete={() => {}} onExit={() => {}} />))
+  // Analyze can reopen a test snapshot saved before the diagram was embedded.
+  const oldSnapshot = JSON.parse(JSON.stringify(test)) as typeof test
+  for (const group of oldSnapshot.sections[2].groups!) {
+    for (const block of group.blocks) {
+      if (block.kind === 'image') block.src = '/images/ielts-listening-test14-education-house.jpg'
+    }
+  }
+  await act(async () => root.render(<IELTSReadingInterface test={oldSnapshot} reviewPayload={{ result: submitted!, showCorrectAnswers: true }} onComplete={() => {}} onExit={() => {}} />))
   await part(3)
+  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /^data:image\/jpeg;base64,/)
+  await act(async () => container.querySelector('figure img')!.dispatchEvent(new window.Event('error')))
+  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /education-house\.jpg\?v=/)
+  await delay(1100)
+  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /education-house\.jpg\?v=/)
   assert.equal((container.querySelector('input[placeholder="21"]') as HTMLInputElement).value, 'F')
   assert.ok((container.querySelector('input[placeholder="21"]') as HTMLInputElement).disabled)
   await part(4)

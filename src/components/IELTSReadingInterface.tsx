@@ -32,6 +32,7 @@ import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
+import ListeningDiagram from './ListeningDiagram'
 
 // Utils
 import {
@@ -3484,12 +3485,7 @@ export default function IELTSReadingInterface({
         case 'table':
           return <div key={key}>{renderTable(block)}</div>
         case 'image':
-          return (
-            <figure key={key} className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <img src={block.src} alt={block.alt} className="mx-auto h-auto w-full max-w-3xl rounded-lg bg-white" />
-              {block.caption ? <figcaption className="px-1 pt-2 text-center text-xs font-medium text-slate-600">{block.caption}</figcaption> : null}
-            </figure>
-          )
+          return <ListeningDiagram key={key} src={block.src} alt={block.alt} caption={block.caption} />
         case 'space':
           return <div key={key} className="h-2" />
         default:

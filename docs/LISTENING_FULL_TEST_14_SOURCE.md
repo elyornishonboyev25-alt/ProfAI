@@ -77,6 +77,30 @@ image's SHA-256 against the original above.
 The original public URL is retained for already-open sessions using the previous
 bundle. Browser validation also passed with the public-image endpoint absent.
 
+### Diagram recovery
+
+`ListeningDiagram` recognises both the embedded JPEG and the original public
+URL retained in old Results/Analyze route snapshots. It first uses the embedded
+image and automatically switches to a versioned same-origin copy on a decoding
+or loading error. Both sources contain identical original bytes. Explicit image
+dimensions preserve the figure's layout while it loads. Recovery state survives
+ordinary timer rerenders and resets when a different source is rendered.
+
+If both sources fail, a visible retry control reloads only the diagram and
+bypasses a cached failed response; it never resets answers or reloads the test.
+Attempts are bounded to avoid error loops. This closes two observed code gaps:
+old review snapshots bypass current catalog assets, and the former bare image
+element had no loading-error recovery. The user's particular browser failure
+could not be reproduced from the live response alone, which returned a valid
+original JPEG and an intact embedded image.
+
+`node scripts/test-listening-diagram-browser.mjs` verifies in a real browser:
+old public-URL snapshots, eight offline remounts, corrupt-image recovery,
+rerenders after fallback, CSP-blocked data images, simultaneous source failures,
+bounded retries and recovery after service restoration. The Listening 14
+integration suite additionally reopens an old snapshot in Analyze and verifies
+its diagram recovery alongside the original answers and grading.
+
 ## Audio
 
 The four original recordings come from the four matching public source pages:

@@ -347,12 +347,23 @@ export default function IELTSReadingInterface({
     if (savedSession) {
       try {
         const data = JSON.parse(savedSession)
+        // Before v2, practice defaulted to the three Reading parts even for
+        // Listening. Repair that persisted default once, retaining answers and
+        // timing. Versioned selections (including deliberate subsets) are kept.
+        const savedParts = sanitizeSelectedParts(data.selectedParts, test.sections.length)
+        const hasLegacyListeningDefault = isListening && test.sections.length === 4
+          && data.partsSelectionVersion !== 2
+          && savedParts.length === 3 && savedParts.every((part, index) => part === index)
+        const restoredParts = hasLegacyListeningDefault
+          ? sanitizeSelectedParts(undefined, test.sections.length)
+          : savedParts
+        localStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
         setCurrentSectionIndex(data.currentSectionIndex ?? 0)
         setAnswers(data.answers ?? {})
         setTimeRemaining(data.timeRemaining ?? test.duration * 60)
         setIsTestActive(false)
         setTestMode(data.testMode ?? 'simulation')
-        setSelectedParts(sanitizeSelectedParts(data.selectedParts, test.sections.length))
+        setSelectedParts(restoredParts)
         setCustomTime(data.customTime ?? 60)
         setFlaggedQuestions(data.flaggedQuestions ?? [])
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
@@ -362,7 +373,7 @@ export default function IELTSReadingInterface({
         console.error("Failed to restore session", e)
       }
     }
-  }, [isReviewMode, sessionKey, test.duration, test.id, test.sections.length])
+  }, [isReviewMode, isListening, sessionKey, test.duration, test.id, test.sections.length])
 
   useEffect(() => {
     setSelectedParts((current) => sanitizeSelectedParts(current, test.sections.length))
@@ -392,6 +403,7 @@ export default function IELTSReadingInterface({
     if (!isTestActive) return // Only save if the test has started
 
     const sessionData = {
+      partsSelectionVersion: 2,
       currentSectionIndex,
       answers,
       timeRemaining,
@@ -1269,7 +1281,9 @@ export default function IELTSReadingInterface({
     launchPresetAppliedRef.current = true
     handleStartTest({
       mode: desiredMode,
-      selectedParts: desiredMode === 'practice' && desiredPart ? [desiredPart - 1] : undefined,
+      selectedParts: desiredMode === 'practice' && desiredPart
+        ? [desiredPart - 1]
+        : sanitizeSelectedParts(undefined, test.sections.length),
       customTime: desiredMode === 'practice' && desiredDuration ? desiredDuration : undefined,
     })
   }, [isReviewMode, isTestActive, launchPreset, test.sections.length])

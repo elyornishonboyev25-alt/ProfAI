@@ -110,7 +110,10 @@ function formatShortDuration(totalSeconds: number): string {
 
 function sanitizeSelectedParts(value: number[] | undefined, sectionCount: number): number[] {
   if (sectionCount <= 0) return []
-  const fallback = [0]
+  // A full test must include every part by default. This also protects a
+  // restored session that predates the selected-parts field from silently
+  // omitting the final section.
+  const fallback = Array.from({ length: sectionCount }, (_, index) => index)
   if (!value || value.length === 0) return fallback
 
   const normalized = Array.from(new Set(value))
@@ -250,7 +253,7 @@ export default function IELTSReadingInterface({
   const [isTestActive, setIsTestActive] = useState(isReviewMode)
   const [showModeModal, setShowModeModal] = useState(false)
   const [testMode, setTestMode] = useState<'practice' | 'simulation'>('simulation')
-  const [selectedParts, setSelectedParts] = useState<number[]>(() => sanitizeSelectedParts([0, 1, 2], test.sections.length))
+  const [selectedParts, setSelectedParts] = useState<number[]>(() => sanitizeSelectedParts(undefined, test.sections.length))
   const [customTime, setCustomTime] = useState(60)
   const [showNotes, setShowNotes] = useState(false)
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([])

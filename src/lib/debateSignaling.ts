@@ -5,7 +5,8 @@ import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
 // transport for real cross-device rooms. Mesh role is simple — the member who joins
 // LAST dials everyone already in the room, so no id comparison is needed.
 
-export type DebateMember = { id: string; userId: string; name: string }
+type DebateIdentity = { userId: string; name: string; avatarUrl?: string | null }
+export type DebateMember = DebateIdentity & { id: string }
 export type DebateTopic = {
   motion: string
   warmup: string
@@ -51,21 +52,21 @@ const DEBATE_TOPICS: DebateTopic[] = [
 
 // ── BroadcastChannel (local, cross-tab) ─────────────────────────────────────
 type BCMsg =
-  | { kind: 'hello'; from: string; userId: string; name: string }
-  | { kind: 'here'; from: string; userId: string; name: string; to: string; topic: DebateTopic }
+  | (DebateIdentity & { kind: 'hello'; from: string })
+  | (DebateIdentity & { kind: 'here'; from: string; to: string; topic: DebateTopic })
   | { kind: 'signal'; from: string; to: string; data: unknown }
   | { kind: 'bye'; from: string }
 
 export class BroadcastChannelDebateTransport implements DebateTransport {
   private channel: BroadcastChannel
   private selfId = `bd-${Math.random().toString(36).slice(2, 10)}`
-  private identity: { userId: string; name: string }
+  private identity: DebateIdentity
   private listener: ((e: DebateEvent) => void) | null = null
   private phase: 'idle' | 'joining' | 'in' = 'idle'
   private members = new Map<string, DebateMember>()
   private topic: DebateTopic = DEBATE_TOPICS[0]
 
-  constructor(identity: { userId: string; name: string }) {
+  constructor(identity: DebateIdentity) {
     this.identity = identity
     this.channel = new BroadcastChannel('smarttest-debate-signaling')
     this.channel.onmessage = (ev: MessageEvent<BCMsg>) => this.handle(ev.data)
@@ -75,7 +76,7 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
     this.phase = 'joining'
     this.members.clear()
     this.topic = DEBATE_TOPICS[Math.floor(Math.random() * DEBATE_TOPICS.length)]
-    this.post({ kind: 'hello', from: this.selfId, userId: this.identity.userId, name: this.identity.name })
+    this.post({ kind: 'hello', from: this.selfId, ...this.identity })
     // Collect "here" replies briefly, then finalise the room.
     window.setTimeout(() => {
       if (this.phase !== 'joining') return
@@ -97,9 +98,9 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
     if (msg.kind === 'hello') {
       if (this.phase === 'idle') return
       // Announce myself to the newcomer and adopt them as a peer (I'm the callee).
-      this.post({ kind: 'here', from: this.selfId, userId: this.identity.userId, name: this.identity.name, to: msg.from, topic: this.topic })
+      this.post({ kind: 'here', from: this.selfId, ...this.identity, to: msg.from, topic: this.topic })
       if (this.phase === 'in') {
-        this.listener?.({ type: 'peer_joined', peer: { id: msg.from, userId: msg.userId, name: msg.name } })
+        this.listener?.({ type: 'peer_joined', peer: { id: msg.from, userId: msg.userId, name: msg.name, avatarUrl: msg.avatarUrl } })
       }
       return
     }
@@ -107,9 +108,9 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
     if (msg.kind === 'here' && msg.to === this.selfId) {
       if (this.phase === 'joining') {
         this.topic = msg.topic || this.topic
-        this.members.set(msg.from, { id: msg.from, userId: msg.userId, name: msg.name })
+        this.members.set(msg.from, { id: msg.from, userId: msg.userId, name: msg.name, avatarUrl: msg.avatarUrl })
       } else if (this.phase === 'in') {
-        this.listener?.({ type: 'peer_joined', peer: { id: msg.from, userId: msg.userId, name: msg.name } })
+        this.listener?.({ type: 'peer_joined', peer: { id: msg.from, userId: msg.userId, name: msg.name, avatarUrl: msg.avatarUrl } })
       }
       return
     }
@@ -156,11 +157,11 @@ export class BroadcastChannelDebateTransport implements DebateTransport {
 export class WebSocketDebateTransport implements DebateTransport {
   private ws: WebSocket | null = null
   private url: string
-  private identity: { userId: string; name: string }
+  private identity: DebateIdentity
   private listener: ((e: DebateEvent) => void) | null = null
   private joined = false
 
-  constructor(url: string, identity: { userId: string; name: string }) {
+  constructor(url: string, identity: DebateIdentity) {
     this.url = url
     this.identity = identity
   }
@@ -177,7 +178,7 @@ export class WebSocketDebateTransport implements DebateTransport {
     }
     this.ws = ws
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'hello', userId: this.identity.userId, name: this.identity.name }))
+      ws.send(JSON.stringify({ type: 'hello', ...this.identity }))
       ws.send(JSON.stringify({ type: 'joinDebate' }))
     }
     ws.onmessage = (ev) => {
@@ -244,7 +245,7 @@ export class WebSocketDebateTransport implements DebateTransport {
   }
 }
 
-export function createDebateTransport(identity: { userId: string; name: string }): DebateTransport {
+export function createDebateTransport(identity: DebateIdentity): DebateTransport {
   const localFallback = (import.meta.env as Record<string, string | undefined>).VITE_SPEAKING_LOCAL_FALLBACK === 'true'
   return localFallback
     ? new BroadcastChannelDebateTransport(identity)

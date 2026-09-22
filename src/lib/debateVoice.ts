@@ -8,6 +8,7 @@ import type { DebateMember, DebateTopic, DebateTransport } from '@/lib/debateSig
 
 export type DebatePeerState = {
   id: string
+  avatarUrl?: string | null
   name: string
   userId: string
   stream: MediaStream | null
@@ -53,6 +54,7 @@ export function createDebateMesh(opts: {
         id: p.member.id,
         name: p.member.name,
         userId: p.member.userId,
+        avatarUrl: p.member.avatarUrl,
         stream: p.stream,
         connected: p.connected,
       })),

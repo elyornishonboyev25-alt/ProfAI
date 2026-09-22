@@ -192,36 +192,44 @@ export default function Onboarding() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
   const [saveError, setSaveError] = useState('')
 
   const firstNameRef = useRef<HTMLInputElement>(null)
   const saveAvatarFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) return
+    if (avatarUploading) return
     setAvatarUploading(true)
+    setAvatarError('')
     try {
       const dataUrl = await compressImageToDataUrl(file, { size: 320, quality: 0.86 })
       const result = await uploadAvatar(dataUrl)
       const next = result.avatarUrl ?? dataUrl
       setAvatarPreview(next)
       setUserAvatar(next)
-    } catch {
-      const localUrl = URL.createObjectURL(file)
-      setAvatarPreview(localUrl)
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Photo was not saved. Please try again.')
     } finally {
       setAvatarUploading(false)
     }
   }
 
   const choosePreset = async (fileName: string) => {
+    if (avatarUploading) return
     const src = `/assets/avatars/${fileName}`
-    setAvatarPreview(src)
-    setUserAvatar(src)
+    setAvatarUploading(true)
+    setAvatarError('')
     try {
       const response = await fetch(src)
+      if (!response.ok) throw new Error('Could not load this avatar. Please try again.')
       const blob = await response.blob()
-      await saveAvatarFile(new File([blob], fileName, { type: blob.type || 'image/png' }))
-    } catch {
-      // The local preset remains available even when the profile API is offline.
+      const dataUrl = await compressImageToDataUrl(new File([blob], fileName, { type: blob.type || 'image/png' }), { size: 320, quality: 0.86 })
+      const result = await uploadAvatar(dataUrl)
+      setAvatarPreview(src)
+      setUserAvatar(result.avatarUrl ?? dataUrl)
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Avatar was not saved. Please try again.')
+    } finally {
+      setAvatarUploading(false)
     }
   }
 
@@ -336,10 +344,12 @@ export default function Onboarding() {
   }
 
   const handleContinue = () => {
+    if (avatarUploading) return
     if (step < 6) goTo((step + 1) as StepId, 'forward')
   }
 
   const handleBack = () => {
+    if (avatarUploading) return
     if (step > 1) goTo((step - 1) as StepId, 'back')
     else {
       clearSession()
@@ -348,6 +358,7 @@ export default function Onboarding() {
   }
 
   const handleSkip = () => {
+    if (avatarUploading) return
     if (step < 6) {
       goTo((step + 1) as StepId, 'forward')
       return
@@ -595,6 +606,7 @@ export default function Onboarding() {
                                   <button
                                     key={fileName}
                                     type="button"
+                                    disabled={avatarUploading}
                                     aria-label={`Choose learner avatar ${index + 1}`}
                                     onClick={() => void choosePreset(fileName)}
                                     className={`aspect-square overflow-hidden rounded-full border-2 bg-white p-0.5 transition hover:-translate-y-0.5 ${
@@ -606,6 +618,7 @@ export default function Onboarding() {
                                 )
                               })}
                             </div>
+                            {avatarError ? <p role="alert" className="mt-2 text-xs font-semibold text-red-600">{avatarError}</p> : null}
                           </div>
                         </div>
                       </div>
@@ -1047,6 +1060,7 @@ export default function Onboarding() {
               <button
                 type="button"
                 onClick={handleBack}
+                disabled={avatarUploading}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -1057,6 +1071,7 @@ export default function Onboarding() {
                 <button
                   type="button"
                   onClick={handleSkip}
+                  disabled={avatarUploading}
                   className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                 >
                   Skip for now
@@ -1066,7 +1081,7 @@ export default function Onboarding() {
                   <button
                     type="button"
                     onClick={handleContinue}
-                    disabled={!canContinue}
+                    disabled={!canContinue || avatarUploading}
                     className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.34)] transition hover:shadow-[0_16px_32px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Continue

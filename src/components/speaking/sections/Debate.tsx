@@ -5,6 +5,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { createDebateTransport } from '@/lib/debateSignaling'
 import { createDebateMesh, type DebateMeshState } from '@/lib/debateVoice'
 import MicVisualizer from '@/components/speaking/MicVisualizer'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
 type Phase = 'setup' | 'searching' | 'in'
 
@@ -71,7 +72,7 @@ export default function Debate() {
       setError('Microphone access is required to join a debate. Please allow it and try again.')
       return
     }
-    const identity = { userId: user?.id ?? getGuestId(), name: user?.nickname ?? user?.fullName ?? 'Guest Speaker' }
+    const identity = { userId: user?.id ?? getGuestId(), name: user?.nickname ?? user?.fullName ?? 'Guest Speaker', avatarUrl: user?.avatarUrl }
     const transport = createDebateTransport(identity)
     const controller = createDebateMesh({
       transport,
@@ -188,9 +189,9 @@ export default function Debate() {
       </div>
 
       <div className="community-debate-speakers">
-        <SpeakerTile name={user?.nickname ?? user?.fullName ?? 'You'} stream={localStream} active={!muted} you muted={muted} connected />
+        <SpeakerTile name={user?.nickname ?? user?.fullName ?? 'You'} avatarUrl={user?.avatarUrl} stream={localStream} active={!muted} you muted={muted} connected />
         {mesh.peers.map((p) => (
-          <SpeakerTile key={p.id} name={p.name} stream={p.stream} active={p.connected} connected={p.connected} />
+          <SpeakerTile key={p.id} name={p.name} avatarUrl={p.avatarUrl} stream={p.stream} active={p.connected} connected={p.connected} />
         ))}
         {Array.from({ length: Math.max(0, mesh.capacity - everyone) }).map((_, i) => (
           <div key={`empty-${i}`} className="community-speaker-tile is-empty">
@@ -224,6 +225,7 @@ export default function Debate() {
 
 function SpeakerTile({
   name,
+  avatarUrl,
   stream,
   active,
   connected,
@@ -231,6 +233,7 @@ function SpeakerTile({
   muted,
 }: {
   name: string
+  avatarUrl?: string | null
   stream: MediaStream | null
   active: boolean
   connected: boolean
@@ -241,7 +244,7 @@ function SpeakerTile({
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="community-speaker-tile">
       <div className="relative">
         <div className={you ? 'community-speaker-avatar is-you' : 'community-speaker-avatar'}>
-          {name.slice(0, 1).toUpperCase()}
+          <ProfileAvatar src={avatarUrl} className="rounded-full" />
         </div>
         {muted ? (
           <span className="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-white">

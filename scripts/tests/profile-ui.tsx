@@ -6,6 +6,7 @@ import AccountProfile from '../../src/pages/AccountProfile'
 import { ProfileAvatar, DEFAULT_PROFILE_AVATAR } from '../../src/components/profile/ProfileAvatar'
 import { Avatar } from '../../src/features/learningCenter/components'
 import { useAuthStore } from '../../src/store/authStore'
+import { useProfileIdentitySync } from '../../src/hooks/useProfileIdentitySync'
 
 const container = document.getElementById('root')!
 const root = createRoot(container)
@@ -27,6 +28,7 @@ async function render(content: React.ReactNode) {
 }
 
 export async function run() {
+  assert.match(DEFAULT_PROFILE_AVATAR, /^data:image\/jpeg;base64,/, 'Fallback must work without an asset request')
   await render(<ProfileAvatar src="https://example.test/photo.jpg" />)
   assert.equal(image().getAttribute('src'), 'https://example.test/photo.jpg')
   assert.equal(image().getAttribute('referrerpolicy'), 'no-referrer')
@@ -109,6 +111,25 @@ export async function run() {
   await click(button('Edit full name'))
   await act(async () => input().dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   assert.equal(input(), null)
+  await render(null)
+  function IdentitySync() { useProfileIdentitySync(); return null }
+  const savedUser = useAuthStore.getState().user!
+  globalThis.fetch = async () => Response.json({ user: { ...savedUser, fullName: 'Server Name', avatarUrl: '/server-photo.jpg' } })
+  await render(<IdentitySync />)
+  assert.equal(useAuthStore.getState().user!.avatarUrl, '/server-photo.jpg', 'Opening the app refreshes a stale cached photo')
+  assert.equal(useAuthStore.getState().user!.fullName, 'Server Name')
+  await render(null)
+  let respond!: (response: Response) => void
+  globalThis.fetch = () => new Promise<Response>((resolve) => { respond = resolve })
+  await render(<IdentitySync />)
+  await act(async () => useAuthStore.getState().setUserAvatar('/just-uploaded.jpg'))
+  await act(async () => respond(Response.json({ user: { ...savedUser, avatarUrl: '/older-response.jpg' } })))
+  assert.equal(useAuthStore.getState().user!.avatarUrl, '/just-uploaded.jpg', 'A delayed refresh must not replace a newly saved photo')
+  await render(null)
+  await render(<IdentitySync />)
+  await act(async () => useAuthStore.getState().clearSession())
+  await act(async () => respond(Response.json({ user: savedUser })))
+  assert.equal(useAuthStore.getState().user, null, 'A late response must not restore a signed-out user')
   await act(async () => root.unmount())
   console.log('Profile UI passed: photo fallback and replacement, session sync, name validation, save, cancel, persistence and retry.')
 }

@@ -36,7 +36,7 @@ async function connect(name) {
     socket.once('open', resolve)
     socket.once('error', reject)
   })
-  socket.send(JSON.stringify({ type: 'hello', userId: name.toLowerCase(), name }))
+  socket.send(JSON.stringify({ type: 'hello', userId: name.toLowerCase(), name, avatarUrl: '/assets/avatars/learner-v3-01.png' }))
   return socket
 }
 
@@ -69,6 +69,7 @@ try {
   assert.equal(speakers[0].room.capacity, 5)
   assert.equal(typeof speakers[0].room.topic.motion, 'string')
   assert.equal(speakers[0].room.topic.followUps.length, 2)
+  assert.equal(speakers[1].room.members[0].avatarUrl, '/assets/avatars/learner-v3-01.png', 'Debate members retain their profile photos')
 
   const elevenOnline = await elevenOnlinePromise
   assert.equal(elevenOnline.rooms.debate.activeRooms, 3)
@@ -77,7 +78,9 @@ try {
   const tenOnlinePromise = waitFor(statsSocket, (message) => message.type === 'roomStats' && message.rooms.debate.online === 10)
   speakers[0].socket.close()
   await tenOnlinePromise
+  const joinedAvatar = waitFor(speakers[1].socket, (message) => message.type === 'debatePeerJoined')
   const replacement = await joinDebate(12)
+  assert.equal((await joinedAvatar).peer.avatarUrl, '/assets/avatars/learner-v3-01.png', 'Existing members receive a new peer photo')
   assert.equal(replacement.room.roomId, firstRoom, 'A newly open seat must be back-filled before creating another room.')
 
   const questions = await connect('Question learner')

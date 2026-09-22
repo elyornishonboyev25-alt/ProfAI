@@ -23,6 +23,7 @@ import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
+import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
 
 const globalJourneyEnabled = isPublicFeatureEnabled('globalJourney')
 const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
@@ -215,6 +216,7 @@ function LegacySpeakingRedirect() {
 }
 
 function App() {
+  useProfileIdentitySync()
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)

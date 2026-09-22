@@ -9,6 +9,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 
 type Client = {
   id: string
+  avatarUrl: string | null
   userId: string
   name: string
   ws: WebSocket
@@ -229,10 +230,10 @@ function joinDebate(client: Client) {
     roomNumber: room.number,
     capacity: DEBATE_ROOM_SIZE,
     topic: room.topic,
-    members: room.members.map((m) => ({ id: m.id, userId: m.userId, name: m.name })),
+    members: room.members.map((m) => ({ id: m.id, userId: m.userId, name: m.name, avatarUrl: m.avatarUrl })),
   })
   for (const m of room.members) {
-    send(m, { type: 'debatePeerJoined', peer: { id: client.id, userId: client.userId, name: client.name } })
+    send(m, { type: 'debatePeerJoined', peer: { id: client.id, userId: client.userId, name: client.name, avatarUrl: client.avatarUrl } })
   }
   room.members.push(client)
   client.debateRoom = room
@@ -306,6 +307,7 @@ function attach(server: Server) {
       id: genId(),
       userId: 'anon',
       name: 'Guest',
+      avatarUrl: null,
       ws,
       bucket: null,
       peer: null,
@@ -316,7 +318,7 @@ function attach(server: Server) {
     clients.add(client)
 
     ws.on('message', (raw) => {
-      let msg: { type?: string; userId?: string; name?: string; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string }
+      let msg: { type?: string; userId?: string; name?: string; avatarUrl?: unknown; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string }
       try {
         msg = JSON.parse(raw.toString())
       } catch {
@@ -327,6 +329,9 @@ function attach(server: Server) {
         case 'hello':
           client.userId = typeof msg.userId === 'string' ? msg.userId.slice(0, 120) : 'anon'
           client.name = typeof msg.name === 'string' ? msg.name.slice(0, 80) : 'Guest'
+          client.avatarUrl = typeof msg.avatarUrl === 'string' && msg.avatarUrl.length <= 700_000
+            && /^(data:image\/(png|jpe?g|webp|gif);base64,|https:\/\/|\/assets\/avatars\/)/.test(msg.avatarUrl)
+            ? msg.avatarUrl : null
           break
         case 'subscribeRoomStats':
           client.subscribedToRoomStats = true

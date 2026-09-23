@@ -30,6 +30,9 @@ export type SATQuestion = {
   assetWidth: number
   assetHeight: number
   explanation: string
+  /** Reviewed source HTML preserves MathML, tables, and passage formatting. */
+  sourceContent?: { context: string; task: string; explanation: string }
+  sourceQuestionId?: string
 }
 
 export type SATModule = {

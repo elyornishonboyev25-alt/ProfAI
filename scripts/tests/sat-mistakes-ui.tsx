@@ -4,7 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import SATMistakes from '../../src/pages/SATMistakes'
 import SATReview from '../../src/components/sat/SATReview'
-import { SAT_TEST_CATALOG, getSATSectionTest } from '../../src/features/sat/catalog'
+import { SAT_TEST_CATALOG, getSATSectionTest, getSATReviewTests } from '../../src/features/sat/catalog'
 import { createSATAttempt, scoreSATModules } from '../../src/features/sat/practiceTest4'
 import { loadSATAttemptHistory, saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useBadgeStore } from '../../src/store/badgeStore'
@@ -130,6 +130,15 @@ export async function run() {
   await render()
   assert.match(rows().find((row) => row.textContent!.includes(oldMath.title))!.textContent!, /Estimated Math340–370 \/ 800/)
   assert.match(rows().find((row) => row.textContent!.includes(readingWriting.title))!.textContent!, /Estimated R&W200–200 \/ 800/)
+
+  // Adding Test 9 Math 2 must not reinterpret a saved original 76-question result.
+  const legacyNine = getSATReviewTests().find((entry) => entry.id === 'may-2026-us-v1')!
+  const legacyAnswers = Object.fromEntries(legacyNine.modules.flatMap((module) => module.questions).map((q) => [q.id, q.correctAnswer]))
+  saveSATAttemptToHistory({ ...old, attemptId: 'legacy-nine', testId: legacyNine.id, answers: legacyAnswers }, 'submitted')
+  await render('/sat/mistakes?attempt=legacy-nine')
+  assert.match(text(), /Correct76\/76/)
+  assert.match(text(), /Math Module 2 is unavailable/)
+  assert.doesNotMatch(text(), /Estimated SAT range/)
 
   await render('/sat/mistakes?attempt=deleted')
   assert.match(container.querySelector('[role="status"]')!.textContent!, /no longer available/)

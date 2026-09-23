@@ -129,7 +129,7 @@ export default function MockSAT() {
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">
-                <Sparkles className="h-3.5 w-3.5" /> {isSATTestComplete(test) ? 'New official mock' : 'Partial practice test'}
+                <Sparkles className="h-3.5 w-3.5" /> {isSATTestComplete(test) ? (test.mockId >= 9 ? 'New practice mock' : 'New official mock') : 'Partial practice test'}
               </span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
                 {test.badge}

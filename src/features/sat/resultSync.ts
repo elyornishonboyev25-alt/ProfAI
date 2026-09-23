@@ -1,7 +1,7 @@
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { useAuthStore } from '@/store/authStore'
 import { loadSATAttempt, loadSATAttemptHistory } from './attemptStorage'
-import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from './catalog'
+import { getSATReviewTests, isSATTestComplete, type SATTestDefinition } from './catalog'
 import { isSATAnswerCorrect, scoreSATModules, type SATAttempt } from './practiceTest4'
 
 const pending = new Map<string, Promise<void>>()
@@ -67,9 +67,7 @@ export async function syncSATAttemptResult(
 }
 
 export async function syncSavedSATAttemptResults(userId: string): Promise<{ failed: number }> {
-  const tests = Object.values(SAT_TEST_CATALOG).flatMap((test) => [
-    test, getSATSectionTest(test.mockId, 'math'), getSATSectionTest(test.mockId, 'reading-writing'),
-  ])
+  const tests = getSATReviewTests()
   // Migrate completed attempts from the old per-test slots into history first.
   tests.forEach((test) => loadSATAttempt(test.id))
   const byId = new Map(tests.map((test) => [test.id, test]))

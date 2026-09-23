@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { syncSavedSATAttemptResults, syncSATAttemptResult } from '../../src/features/sat/resultSync'
 import { learningCenterApi } from '../../src/features/learningCenter/api'
 import { useAuthStore } from '../../src/store/authStore'
-import { SAT_TEST_CATALOG, getSATSectionTest } from '../../src/features/sat/catalog'
+import { SAT_TEST_CATALOG, getSATSectionTest, getSATReviewTests } from '../../src/features/sat/catalog'
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import type { AuthUser } from '../../src/types/platform'
@@ -20,7 +20,7 @@ export async function run() {
   saveSATAttemptToHistory({ ...old, attemptId: 'unfinished', status: 'active', submittedAt: undefined }, 'exit')
   const section = getSATSectionTest(8, 'math')
   saveSATAttemptToHistory({ ...old, attemptId: 'section', testId: section.id }, 'submitted')
-  const partial = SAT_TEST_CATALOG[9]
+  const partial = getSATReviewTests().find((entry) => entry.id === 'may-2026-us-v1')!
   saveSATAttemptToHistory({ ...old, attemptId: 'partial', testId: partial.id }, 'submitted')
   const slotBefore = localStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
   const calls: ResultInput[] = []

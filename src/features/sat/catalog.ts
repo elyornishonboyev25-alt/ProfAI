@@ -13,7 +13,8 @@ import {
 import { SAT_MAY_2026_INTL, SAT_MAY_2026_INTL_MODULES } from './may2026Intl'
 import { SAT_JUNE_2026_INTL, SAT_JUNE_2026_INTL_MODULES } from './june2026Intl'
 import { SAT_JUNE_2026_US } from './june2026Us'
-import { SAT_MAY_2026_US } from './may2026Us'
+import { SAT_MAY_2026_US, SAT_MAY_2026_US_LEGACY } from './may2026Us'
+import { SAT_QUESTION_BANK_TESTS } from './questionBank'
 import {
   SAT_NOVEMBER_2025_INTL,
   SAT_NOVEMBER_2025_INTL_MODULES,
@@ -95,9 +96,10 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
   9: {
     mockId: 9,
     ...SAT_MAY_2026_US,
-    badge: 'May 2026 US · Version 1',
+    badge: 'May 2026 US · Question Bank Math Module 2',
     difficulty: 'Easy',
   },
+  ...SAT_QUESTION_BANK_TESTS,
 }
 
 export function isSATTestComplete(test: SATTestDefinition): boolean {
@@ -126,6 +128,10 @@ export function getSATSectionTest(
   section?: string | null,
 ): SATTestDefinition {
   const test = getSATTest(mockId)
+  return selectSATSection(test, section)
+}
+
+function selectSATSection(test: SATTestDefinition, section?: string | null): SATTestDefinition {
   if (!isSATSection(section)) return test
 
   const modules = test.modules.filter((module) => module.section === section)
@@ -142,4 +148,15 @@ export function getSATSectionTest(
     missingModuleIds: test.missingModuleIds?.filter((id) => section === 'math' ? id.startsWith('math') : id.startsWith('rw')),
     badge: `${test.badge} · ${sectionTitle}`,
   }
+}
+
+/** Historical versions remain available for review, without appearing as new mocks. */
+export function getSATReviewTests(): SATTestDefinition[] {
+  const legacy: SATTestDefinition = {
+    mockId: 9, ...SAT_MAY_2026_US_LEGACY,
+    badge: 'May 2026 US · Original 76-question version', difficulty: 'Easy',
+  }
+  return [...Object.values(SAT_TEST_CATALOG), legacy].flatMap((test) => [
+    test, selectSATSection(test, 'math'), selectSATSection(test, 'reading-writing'),
+  ])
 }

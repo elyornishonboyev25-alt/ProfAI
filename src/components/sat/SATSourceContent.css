@@ -1,0 +1,17 @@
+.sat-source-content { overflow-wrap: break-word; }
+.sat-source-content > * + * { margin-top: 1em; }
+.sat-source-content p { margin-bottom: .7em; }
+.sat-source-content p:last-child { margin-bottom: 0; }
+.sat-source-content ul { list-style: disc; padding-left: 1.4em; }
+.sat-source-content ol { list-style: decimal; padding-left: 1.4em; }
+.sat-source-content li + li { margin-top: .45em; }
+.sat-source-content math { font-family: 'STIX Two Math', 'Cambria Math', serif; font-size: 1.08em; }
+.sat-source-content math[display='block'] { display: block; overflow-x: auto; padding: .5em 0; }
+.sat-source-content img { max-width: 100%; height: auto; margin: .7em auto; }
+.sat-source-content img.math-img { display: inline-block; margin: 0; vertical-align: middle; }
+.sat-source-content table { border-collapse: collapse; margin: 1em auto; font-size: .85em; max-width: 100%; }
+.sat-source-content th, .sat-source-content td { border: 1px solid #64748b; padding: .3em .5em; text-align: center; }
+.sat-source-content th { font-weight: 700; }
+.sat-source-content .sat-source-table { overflow-x: auto; }
+.sat-source-content blockquote { margin-left: 1em; }
+.sat-source-content u { text-underline-offset: .15em; }

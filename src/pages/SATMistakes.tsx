@@ -19,18 +19,13 @@ import {
   type SATAttemptHistoryEntry,
 } from '@/features/sat/attemptStorage'
 import {
-  getSATSectionTest,
+  getSATReviewTests,
   isSATTestComplete,
-  SAT_TEST_CATALOG,
   type SATTestDefinition,
 } from '@/features/sat/catalog'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
 
-const SAT_TESTS = Object.values(SAT_TEST_CATALOG).flatMap((test) => [
-  test,
-  getSATSectionTest(test.mockId, 'reading-writing'),
-  getSATSectionTest(test.mockId, 'math'),
-])
+const SAT_TESTS = getSATReviewTests()
 const SAT_TESTS_BY_ID = new Map(SAT_TESTS.map((test) => [test.id, test]))
 
 function loadHistoryWithLegacyResults() {

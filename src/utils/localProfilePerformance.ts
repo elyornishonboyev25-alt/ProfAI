@@ -1,4 +1,4 @@
-import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { getSATReviewTests, isSATTestComplete } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
 import { useSpeakingStore } from '@/store/speakingStore'
@@ -241,11 +241,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
       }
     })
 
-  const satDefinitions = Object.values(SAT_TEST_CATALOG).flatMap((test) => [
-    test,
-    getSATSectionTest(test.mockId, 'math'),
-    getSATSectionTest(test.mockId, 'reading-writing'),
-  ])
+  const satDefinitions = getSATReviewTests()
   const satAttempts: LocalDashboardAttempt[] = satDefinitions.flatMap((test) => {
     const attempt = loadSATAttempt(test.id)
     if (!attempt || attempt.status !== 'submitted') return []

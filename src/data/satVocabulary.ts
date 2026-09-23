@@ -1,3 +1,4 @@
+import questionBankVocabulary from './sat/questionBankVocabulary.json'
 import type { SatPack } from './vocabularyCollections'
 
 // Curated from the live SAT Reading & Writing prompts and answer choices.
@@ -3405,5 +3406,6 @@ export const satVocabularyPacks: SatPack[] = [
         ]
       }
     ]
-  }
+  },
+  ...questionBankVocabulary,
 ]

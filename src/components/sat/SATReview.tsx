@@ -26,6 +26,7 @@ import {
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import { isSATTestComplete, satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
+import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
@@ -74,8 +75,13 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
               imageClassName="max-h-[28rem] max-w-full object-contain"
             />
           ) : null}
-          {context ? <SATRichText text={context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
-          <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
+          {question.sourceContent ? <>
+            {question.sourceContent.context && <SATSourceContent html={question.sourceContent.context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" />}
+            <SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-xl font-semibold leading-8 text-slate-950" />
+          </> : <>
+            {context ? <SATRichText text={context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
+            <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
+          </>}
 
           {question.kind === 'multiple-choice' ? (
             <div className="mt-6 space-y-3.5">
@@ -91,7 +97,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
                     }`}>{choice.key}</span>
                     <span className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
-                      <SATRichText text={choice.text} />
+                      {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
                     </span>
                     <span className="ml-auto shrink-0 pt-1 text-[9px] font-black uppercase tracking-[0.08em]">
                       {isCorrectChoice ? <span className="text-emerald-700">Correct</span> : isUserChoice ? <span className="text-red-700">Your answer</span> : null}
@@ -121,7 +127,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><BookOpenCheck className="h-5 w-5" /></span>
           <div><p className="text-[9px] font-black uppercase tracking-[0.13em] text-blue-700">Answer explanation</p><h3 className="mt-0.5 text-lg font-black text-slate-950">Why this answer works</h3></div>
         </div>
-        <SATRichText text={question.explanation || 'Explanation unavailable.'} className="mt-4 text-sm font-medium leading-7 text-slate-700" />
+        {question.sourceContent ? <SATSourceContent html={question.sourceContent.explanation} className="mt-4 text-sm font-medium leading-7 text-slate-700" /> : <SATRichText text={question.explanation || 'Explanation unavailable.'} className="mt-4 text-sm font-medium leading-7 text-slate-700" />}
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-100 bg-white/80 px-3 py-3 text-[11px] font-bold leading-5 text-slate-600">
           <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" /> Review the rule or pattern, then explain the solution aloud in your own words before moving on.
         </div>

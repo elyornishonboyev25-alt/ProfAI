@@ -207,7 +207,7 @@ export default function SAT() {
   const targetScore = profile?.targetSatScore ?? 1400
   const targetProgress = Math.min(100, Math.max(1, Math.round((bestScore / targetScore) * 100)))
   const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
-  const mockSlots = Array.from({ length: 30 }, (_, index) => ({
+  const mockSlots = Array.from({ length: Math.max(30, availableTests.length) }, (_, index) => ({
     displayNumber: index + 1,
     test: availableTests[index],
   }))
@@ -339,7 +339,7 @@ export default function SAT() {
 
           <div className="grid min-h-[15rem] grid-cols-3 gap-4">
             {[
-              { label: 'Practice tests', value: `${completedTestIds.size}/${30}`, icon: Check },
+              { label: 'Practice tests', value: `${completedTestIds.size}/${mockSlots.length}`, icon: Check },
               { label: 'Best score', value: bestScore, icon: Flag },
               { label: 'Study hours', value: studyHours, icon: Clock3 },
             ].map(({ label, value, icon: Icon }) => (
@@ -358,10 +358,10 @@ export default function SAT() {
               <span className="block">
                 <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Available practice tests</span></span>
                 <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">Digital SAT mocks</span>
-                <span className="mt-1 block text-xs font-medium text-slate-500">Click to browse all 30 Reading &amp; Writing + Math simulations.</span>
+                <span className="mt-1 block text-xs font-medium text-slate-500">Click to browse all {mockSlots.length} Reading &amp; Writing + Math simulations.</span>
               </span>
               <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg sm:self-auto">
-                View 30 tests <ChevronDown className={`h-4 w-4 transition-transform ${showMockCatalog ? 'rotate-180' : ''}`} />
+                View {mockSlots.length} tests <ChevronDown className={`h-4 w-4 transition-transform ${showMockCatalog ? 'rotate-180' : ''}`} />
               </span>
             </button>
           </article>
@@ -374,7 +374,7 @@ export default function SAT() {
             <button type="button" onClick={() => navigate('/vocabulary/sat', { state: { from: '/sat' } })} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
               <BookOpenText className="h-6 w-6 text-red-500" />
               <span className="mt-4 block text-sm font-extrabold text-[#171823]">Vocabulary</span>
-              <span className="mt-1 block text-[11px] font-medium text-slate-500">600 SAT words</span>
+              <span className="mt-1 block text-[11px] font-medium text-slate-500">{availableTests.length * 40} SAT words</span>
             </button>
           </div>
 
@@ -392,10 +392,10 @@ export default function SAT() {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600">Practice library</p>
-                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">30 Digital SAT practice tests</h2>
+                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">{mockSlots.length} Digital SAT practice tests</h2>
                     </div>
                     <p className="text-xs font-bold text-slate-500">
-                      {availableTests.length} available · {30 - availableTests.length} coming soon
+                      {availableTests.length} available{mockSlots.length > availableTests.length ? ` · ${mockSlots.length - availableTests.length} coming soon` : ''}
                     </p>
                   </div>
 

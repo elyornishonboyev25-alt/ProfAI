@@ -34,6 +34,7 @@ import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
 import SATRichText from '@/components/sat/SATRichText'
+import SATSourceContent from '@/components/sat/SATSourceContent'
 import {
   isSATAnswerCorrect,
   SAT_TEST_TIMER_KEY,
@@ -741,7 +742,7 @@ export default function SATMockRun() {
                   </div>
                   <details className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
                     <summary className="cursor-pointer text-xs font-black text-slate-800">Step-by-step explanation</summary>
-                    <SATRichText text={currentQuestion.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" />
+                    {currentQuestion.sourceContent ? <SATSourceContent html={currentQuestion.sourceContent.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" /> : <SATRichText text={currentQuestion.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" />}
                   </details>
                 </motion.div>
               ) : null}

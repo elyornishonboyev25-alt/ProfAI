@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -161,41 +162,37 @@ export default function ShadowingLab() {
                 <div className="premium-top-controls">
                   <button onClick={() => navigate('/academic-skills')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Academic Skills
-                  </button>
+                     <UiText text={"Back to Academic Skills"} /> </button>
                   <span className="premium-top-chip">
                     <AudioLines className="h-3.5 w-3.5" />
-                    Shadowing Lab
-                  </span>
+                     <UiText text={"Shadowing Lab"} /> </span>
                 </div>
                 <h1 className="premium-section-title mt-4">
-                  Shadow any <span className="arena-title-accent-red">English video</span>
+                   <UiText text={"Shadow any"} /> <span className="arena-title-accent-red"> <UiText text={"English video"} /> </span>
                 </h1>
                 <p className="premium-section-subtitle max-w-2xl">
-                  Paste a YouTube link and we split it into sentence-by-sentence shadowing lines — loop each line,
-                  slow it down, record yourself and compare. Every clip you add is saved for the whole community.
-                </p>
+                   <UiText text={"Paste a YouTube link and we split it into sentence-by-sentence shadowing lines — loop each line, slow it down, record yourself and compare. Every clip you add is saved for the whole community."} /> </p>
               </div>
 
               <div className="grid grid-cols-3 gap-2 xl:w-full">
                 <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Clips</p>
+                  <p className="hero-metric-label"> <UiText text={"Clips"} /> </p>
                   <p className="hero-metric-value-sm">
                     <CountUp value={stats.clips} />
                   </p>
-                  <p className="hero-metric-note">In the library</p>
+                  <p className="hero-metric-note"> <UiText text={"In the library"} /> </p>
                 </div>
                 <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Lines</p>
+                  <p className="hero-metric-label"> <UiText text={"Lines"} /> </p>
                   <p className="hero-metric-value-sm">
                     <CountUp value={stats.lines} />
                   </p>
-                  <p className="hero-metric-note">To shadow</p>
+                  <p className="hero-metric-note"> <UiText text={"To shadow"} /> </p>
                 </div>
                 <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Source</p>
+                  <p className="hero-metric-label"> <UiText text={"Source"} /> </p>
                   <p className="hero-metric-value-sm hero-metric-value-compact">YouTube</p>
-                  <p className="hero-metric-note">English only</p>
+                  <p className="hero-metric-note"> <UiText text={"English only"} /> </p>
                 </div>
               </div>
             </div>
@@ -209,10 +206,9 @@ export default function ShadowingLab() {
             <div className="flex items-center gap-2">
               <BrandIcon icon={Wand2} soft />
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Add a video to shadow</h2>
+                <h2 className="text-lg font-bold text-slate-900"> <UiText text={"Add a video to shadow"} /> </h2>
                 <p className="text-xs text-slate-500">
-                  English videos with subtitles only — we check the language and screen the content automatically.
-                </p>
+                   <UiText text={"English videos with subtitles only — we check the language and screen the content automatically."} /> </p>
               </div>
             </div>
 
@@ -247,8 +243,7 @@ export default function ShadowingLab() {
             {submitting ? (
               <div className="mt-3 flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs font-semibold text-blue-700">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Reading the English captions and slicing them into shadowing lines… this can take a few seconds.
-              </div>
+                 <UiText text={"Reading the English captions and slicing them into shadowing lines… this can take a few seconds."} /> </div>
             ) : null}
             {submitError ? (
               <p className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700">
@@ -264,7 +259,7 @@ export default function ShadowingLab() {
 
             {/* Suggested + safety note */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Try:</span>
+              <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400"> <UiText text={"Try:"} /> </span>
               {SUGGESTED.map((s) => (
                 <button
                   key={s.url}
@@ -280,8 +275,7 @@ export default function ShadowingLab() {
             </div>
             <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Only English, embeddable, appropriate videos are accepted. Inappropriate or caption-less links are rejected.
-            </p>
+               <UiText text={"Only English, embeddable, appropriate videos are accepted. Inappropriate or caption-less links are rejected."} /> </p>
             </section>
           </Reveal>
         ) : null}
@@ -291,9 +285,8 @@ export default function ShadowingLab() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="inline-flex items-center gap-2 text-xl font-bold text-slate-900">
               <Layers className="h-5 w-5 text-blue-600" />
-              Community library
-            </h2>
-            <span className="soft-chip">{videos.length} clip{videos.length === 1 ? '' : 's'}</span>
+               <UiText text={"Community library"} /> </h2>
+            <span className="soft-chip">{videos.length}  <UiText text={"clip"} /> {videos.length === 1 ? '' : 's'}</span>
           </div>
 
           {loading ? (
@@ -307,13 +300,12 @@ export default function ShadowingLab() {
               <p className="text-sm font-semibold text-indigo-700">{loadError}</p>
               <button onClick={() => void refresh()} className="premium-back-btn-sm mt-3">
                 <Loader2 className="h-3.5 w-3.5" />
-                Retry
-              </button>
+                 <UiText text={"Retry"} /> </button>
             </div>
           ) : videos.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-blue-200 bg-white/70 p-10 text-center">
               <BrandIcon icon={AudioLines} soft />
-              <h3 className="mt-3 text-base font-bold text-slate-900">The library is empty.</h3>
+              <h3 className="mt-3 text-base font-bold text-slate-900"> <UiText text={"The library is empty."} /> </h3>
               <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
                 {canSubmitVideo
                   ? 'Paste an English YouTube link above (or tap a suggestion) to add the first shadowing clip.'
@@ -365,8 +357,7 @@ export default function ShadowingLab() {
                           <div className="mt-auto flex items-center gap-3 pt-3 text-[11px] font-semibold text-slate-500">
                             <span className="inline-flex items-center gap-1">
                               <Layers className="h-3.5 w-3.5 text-blue-500" />
-                              {v.segmentCount} lines
-                            </span>
+                              {v.segmentCount}  <UiText text={"lines"} /> </span>
                             <span className="inline-flex items-center gap-1">
                               <Globe className="h-3.5 w-3.5 text-blue-500" />
                               {v.captionKind === 'manual' ? 'Subtitles' : 'Auto'}

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -163,8 +164,7 @@ export default function Premium() {
           className="route-back-button mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </button>
+           <UiText text={"Back to Dashboard"} /> </button>
         {/* Hero */}
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 18 }}
@@ -177,15 +177,13 @@ export default function Premium() {
             ProfAI Premium
           </span>
           <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-[#1F2937] sm:text-5xl">
-            Unlock your{' '}
+             <UiText text={"Unlock your"} /> {' '}
             <span className="bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-amber-500 bg-clip-text text-transparent">
-              full potential
-            </span>
+               <UiText text={"full potential"} /> </span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-[#6B7280]">
-            Invest in adaptive feedback, mistake intelligence and a plan that changes with your progress—not access
-            to basic exam information. Built for targets up to <span className="font-bold text-blue-600">IELTS 9.0</span>{' '}
-            and <span className="font-bold text-blue-600">SAT 1600</span>.
+             <UiText text={"Invest in adaptive feedback, mistake intelligence and a plan that changes with your progress—not access to basic exam information. Built for targets up to"} /> <span className="font-bold text-blue-600">IELTS 9.0</span>{' '}
+             <UiText text={"and"} /> <span className="font-bold text-blue-600">SAT 1600</span>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
@@ -276,7 +274,7 @@ export default function Premium() {
                       : 'border border-blue-200 bg-white text-blue-700 hover:bg-blue-50'
                   }`}
                 >
-                  Choose {plan.name}
+                   <UiText text={"Choose"} /> {plan.name}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </motion.div>
@@ -297,13 +295,12 @@ export default function Premium() {
               <InfinityIcon className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-black text-[#1F2937]">Free plan</p>
+              <p className="text-sm font-black text-[#1F2937]"> <UiText text={"Free plan"} /> </p>
               <p className="text-xs text-slate-500">
-                Try the platform with limited practice attempts. Upgrade anytime to unlock everything.
-              </p>
+                 <UiText text={"Try the platform with limited practice attempts. Upgrade anytime to unlock everything."} /> </p>
             </div>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">$0 forever</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600"> <UiText text={"$0 forever"} /> </span>
         </motion.div>
 
         {/* Payment instructions */}
@@ -319,14 +316,11 @@ export default function Premium() {
           <div className="text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
               <ShieldCheck className="h-3 w-3" />
-              How to activate premium
-            </span>
+               <UiText text={"How to activate premium"} /> </span>
             <h2 className="mt-4 text-2xl font-black tracking-tight text-[#1F2937] sm:text-3xl">
-              Activate in 3 simple steps
-            </h2>
+               <UiText text={"Activate in 3 simple steps"} /> </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm text-[#6B7280]">
-              Payment is verified manually by our team to keep your account secure.
-            </p>
+               <UiText text={"Payment is verified manually by our team to keep your account secure."} /> </p>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -377,7 +371,7 @@ export default function Premium() {
 
               <div className="relative flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/65">Payment card</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/65"> <UiText text={"Payment card"} /> </p>
                   <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-black tracking-wide">
                     <Crown className="h-4 w-4 text-amber-300" />
                     ProfAI Premium
@@ -428,15 +422,14 @@ export default function Premium() {
 
                 <div className="mt-3.5 flex items-end justify-between">
                   <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">Card holder</p>
-                    <p className="text-sm font-bold tracking-wide text-white/95">PREMIUM ACCESS</p>
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55"> <UiText text={"Card holder"} /> </p>
+                    <p className="text-sm font-bold tracking-wide text-white/95"> <UiText text={"PREMIUM ACCESS"} /> </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">Status</p>
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55"> <UiText text={"Status"} /> </p>
                     <p className="inline-flex items-center gap-1 text-sm font-black tracking-wide text-amber-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-                      ACTIVE
-                    </p>
+                       <UiText text={"ACTIVE"} /> </p>
                   </div>
                 </div>
               </div>
@@ -449,12 +442,10 @@ export default function Premium() {
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-[0_12px_24px_rgba(37,99,235,0.32)]">
                   <Send className="h-5 w-5" />
                 </span>
-                <h3 className="mt-3.5 text-lg font-black text-[#1F2937]">Send your receipt</h3>
+                <h3 className="mt-3.5 text-lg font-black text-[#1F2937]"> <UiText text={"Send your receipt"} /> </h3>
                 <p className="mt-1.5 text-sm leading-6 text-[#6B7280]">
-                  After paying, send the receipt screenshot to{' '}
-                  <span className="font-bold text-blue-600">@{TELEGRAM_USERNAME}</span> on Telegram. Premium is usually
-                  activated within a few hours.
-                </p>
+                   <UiText text={"After paying, send the receipt screenshot to"} /> {' '}
+                  <span className="font-bold text-blue-600">@{TELEGRAM_USERNAME}</span>  <UiText text={"on Telegram. Premium is usually activated within a few hours."} /> </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {['Manual review', 'No card details stored', 'Fast activation'].map((tag) => (
@@ -477,15 +468,14 @@ export default function Premium() {
                 className="interactive-lift mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_14px_28px_rgba(37,99,235,0.32)] transition hover:shadow-[0_18px_36px_rgba(37,99,235,0.42)]"
               >
                 <Send className="h-4 w-4" />
-                Message @{TELEGRAM_USERNAME}
+                 <UiText text={"Message @"} /> {TELEGRAM_USERNAME}
               </a>
             </div>
           </div>
 
           <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-slate-400">
             <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-            Secure manual verification • Your data stays private
-          </p>
+             <UiText text={"Secure manual verification • Your data stays private"} /> </p>
         </motion.section>
       </div>
     </div>

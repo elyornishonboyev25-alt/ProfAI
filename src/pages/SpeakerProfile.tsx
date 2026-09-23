@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -132,7 +133,7 @@ export default function SpeakerProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-3xl font-black tracking-tight text-slate-900">{p.displayName}</h1>
-                {isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">YOU</span> : null}
+                {isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700"> <UiText text={"YOU"} /> </span> : null}
                 {p.nickname ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-xs font-semibold text-blue-700">
                     <BadgeCheck className="h-3.5 w-3.5" /> @{p.nickname}
@@ -256,7 +257,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
               <div key={s.id} className="flex items-center justify-between rounded-xl border border-blue-50 bg-white px-3 py-2">
                 <div>
                   <p className="text-sm font-bold text-slate-900">{s.modeLabel}</p>
-                  <p className="text-[11px] text-slate-500">{new Date(s.date).toLocaleDateString()} · {Math.round(s.durationSec / 60)} min</p>
+                  <p className="text-[11px] text-slate-500">{new Date(s.date).toLocaleDateString()} · {Math.round(s.durationSec / 60)}  <UiText text={"min"} /> </p>
                 </div>
                 <span className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-sm font-black text-white">
                   {s.overallBand.toFixed(1)}
@@ -275,8 +276,7 @@ function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => 
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
-        </button>
+          <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Back to Dashboard"} /> </button>
         {children}
       </div>
     </div>

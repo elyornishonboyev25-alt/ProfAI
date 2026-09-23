@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
@@ -217,8 +218,7 @@ export default function MockIELTSRun() {
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       <span className="inline-flex items-center gap-1">
                         <Clock3 className="h-3.5 w-3.5" />
-                        {section.durationMinutes} min
-                      </span>
+                        {section.durationMinutes}  <UiText text={"min"} /> </span>
                       <span>·</span>
                       <span>{section.meta}</span>
                     </p>
@@ -241,8 +241,7 @@ export default function MockIELTSRun() {
                         className="arena-primary-btn cta-sheen inline-flex items-center gap-2"
                       >
                         <PlayCircle className="h-4 w-4" />
-                        Start
-                      </button>
+                         <UiText text={"Start"} /> </button>
                     ) : isLocked ? (
                       <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-bold text-slate-400">
                         <Lock className="h-4 w-4" />

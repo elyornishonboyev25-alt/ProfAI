@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, Crown, LockKeyhole, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { useCopy } from '@/i18n/interface'
 
 type PremiumFeatureLockProps = {
   locked: boolean
@@ -27,6 +28,7 @@ export default function PremiumFeatureLock({
   children,
 }: PremiumFeatureLockProps) {
   const navigate = useNavigate()
+  const { c } = useCopy()
   const { minimalMotion } = useMotionPreferences()
 
   if (!locked) return <>{children}</>
@@ -57,14 +59,14 @@ export default function PremiumFeatureLock({
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-amber-700">
-                <Crown className="h-3 w-3" /> Premium analytics
+                <Crown className="h-3 w-3" /> {c('Premium analytics')}
               </span>
-              <span className={`mt-1 block font-black tracking-tight text-slate-950 ${compact ? 'text-xs' : 'text-sm'}`}>{title}</span>
-              {!compact ? <span className="mt-1 block text-[11px] leading-5 text-slate-600">{description}</span> : null}
+              <span className={`mt-1 block font-black tracking-tight text-slate-950 ${compact ? 'text-xs' : 'text-sm'}`}>{c(title)}</span>
+              {!compact ? <span className="mt-1 block text-[11px] leading-5 text-slate-600">{c(description)}</span> : null}
             </span>
           </span>
           <span className={`relative mt-3 flex items-center justify-between rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 font-black text-white shadow-[0_10px_24px_rgba(37,99,235,.26)] ${compact ? 'px-3 py-2 text-[10px]' : 'px-3.5 py-2.5 text-xs'}`}>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Upgrade to Premium</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> {c('Upgrade to Premium')}</span>
             <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
         </motion.button>

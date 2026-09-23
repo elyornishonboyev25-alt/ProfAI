@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 type NavigatorWithDeviceMemory = Navigator & {
@@ -24,9 +24,15 @@ function detectDeviceMotionCapabilities() {
 
 export function useMotionPreferences() {
   const prefersReducedMotion = useReducedMotion()
+  const [reducedEffects, setReducedEffects] = useState(() => typeof document !== 'undefined' && document.documentElement.dataset.effects === 'reduced')
+  useEffect(() => {
+    const update = () => setReducedEffects(document.documentElement.dataset.effects === 'reduced')
+    window.addEventListener('profai:effects-changed', update)
+    return () => window.removeEventListener('profai:effects-changed', update)
+  }, [])
   const [{ isLowPowerDevice, isCoarsePointer }] = useState(detectDeviceMotionCapabilities)
 
-  const reducedMotion = Boolean(prefersReducedMotion)
+  const reducedMotion = Boolean(prefersReducedMotion) || reducedEffects
   const minimalMotion = reducedMotion || isLowPowerDevice
   const allowHoverMotion = !minimalMotion && !isCoarsePointer
 

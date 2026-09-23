@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import UiText from '@/components/common/UiText'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, RotateCcw } from 'lucide-react'
 
@@ -144,16 +145,14 @@ export default function ResultsReview() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(155deg,#fff_0%,#fff5f5_55%,#fffaf8_100%)] px-4">
         <div className="w-full max-w-xl rounded-3xl border border-red-200 bg-white p-8 text-center shadow-[0_20px_46px_rgba(220,38,38,0.16)]">
-          <h1 className="text-3xl font-black text-slate-900">Review Data Not Found</h1>
+          <h1 className="text-3xl font-black text-slate-900"> <UiText text={"Review Data Not Found"} /> </h1>
           <p className="mt-2 text-sm text-slate-600">
-            This attempt is not available right now. Open it from Results or Analyze Mistakes.
-          </p>
+             <UiText text={"This attempt is not available right now. Open it from Results or Analyze Mistakes."} /> </p>
           <button type="button"
             onClick={() => navigate('/ielts/reading/tests')}
             className="route-back-button mt-5"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Reading Tests
-          </button>
+            <ArrowLeft className="h-4 w-4" />  <UiText text={"Back to Reading Tests"} /> </button>
         </div>
       </div>
     )
@@ -168,17 +167,14 @@ export default function ResultsReview() {
               onClick={goBackToResults}
               className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
             >
-              Back to Results
-            </button>
+               <UiText text={"Back to Results"} /> </button>
             <button type="button"
               onClick={() => navigate('/ielts/reading/tests')}
               className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
             >
-              Reading Catalog
-            </button>
+               <UiText text={"Reading Catalog"} /> </button>
             <span className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-black tracking-wide text-white">
-              FULL REVIEW
-            </span>
+               <UiText text={"FULL REVIEW"} /> </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -198,8 +194,7 @@ export default function ResultsReview() {
               className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
             >
               <RotateCcw className="h-4 w-4" />
-              Re-Do Test
-            </button>
+               <UiText text={"Re-Do Test"} /> </button>
           </div>
         </div>
       </header>
@@ -209,11 +204,10 @@ export default function ResultsReview() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-600">
-                Worked Test Window
-              </p>
+                 <UiText text={"Worked Test Window"} /> </p>
               <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">{test.title}</h1>
               <p className="mt-1 text-sm text-slate-500">
-                {selectedPart === 'all' ? 'All parts' : `Part ${selectedPart}`} | Accuracy {selectedSummary.accuracy}%
+                {selectedPart === 'all' ? 'All parts' : `Part ${selectedPart}`}  <UiText text={"| Accuracy"} /> {selectedSummary.accuracy}%
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -225,8 +219,7 @@ export default function ResultsReview() {
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                All Parts
-              </button>
+                 <UiText text={"All Parts"} /> </button>
               {analysis.sectionSummaries.map((summary) => (
                 <button type="button"
                   key={`review-part-${summary.partNumber}`}
@@ -237,7 +230,7 @@ export default function ResultsReview() {
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  Part {summary.partNumber}
+                   <UiText text={"Part"} /> {summary.partNumber}
                 </button>
               ))}
             </div>
@@ -245,19 +238,19 @@ export default function ResultsReview() {
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">Correct</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700"> <UiText text={"Correct"} /> </p>
               <p className="mt-1 text-xl font-black text-emerald-700">{selectedSummary.correctAnswers}</p>
             </article>
             <article className="rounded-xl border border-red-200 bg-red-50 px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-red-700">Incorrect</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-red-700"> <UiText text={"Incorrect"} /> </p>
               <p className="mt-1 text-xl font-black text-red-700">{selectedSummary.incorrectAnswers}</p>
             </article>
             <article className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-600">Skipped</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-600"> <UiText text={"Skipped"} /> </p>
               <p className="mt-1 text-xl font-black text-slate-700">{selectedSummary.skippedAnswers}</p>
             </article>
             <article className="rounded-xl border border-red-200 bg-white px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-red-700">Questions</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-red-700"> <UiText text={"Questions"} /> </p>
               <p className="mt-1 text-xl font-black text-slate-900">{selectedSummary.totalQuestions}</p>
             </article>
           </div>
@@ -266,11 +259,10 @@ export default function ResultsReview() {
         <section className="mt-4 surface-card p-3 sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-xl font-black text-slate-900">
-              Worked Questions ({visibleQuestions.length})
+               <UiText text={"Worked Questions ("} /> {visibleQuestions.length})
             </h2>
             <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-              Red = incorrect, Green = correct
-            </span>
+               <UiText text={"Red = incorrect, Green = correct"} /> </span>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -307,7 +299,7 @@ export default function ResultsReview() {
                         {question.displayNumber}
                       </span>
                       <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                        Part {question.partNumber}
+                         <UiText text={"Part"} /> {question.partNumber}
                       </span>
                     </div>
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badge.tone}`}>
@@ -319,9 +311,9 @@ export default function ResultsReview() {
                     {formatQuestionTypeLabel(question.questionType)}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">{question.prompt}</p>
-                  <p className={`mt-2 text-xs font-semibold ${answerTone}`}>Your answer: {userAnswer}</p>
+                  <p className={`mt-2 text-xs font-semibold ${answerTone}`}> <UiText text={"Your answer:"} /> {userAnswer}</p>
                   {showCorrectAnswer ? (
-                    <p className="mt-1 text-xs font-semibold text-emerald-700">Correct answer: {correctAnswer}</p>
+                    <p className="mt-1 text-xs font-semibold text-emerald-700"> <UiText text={"Correct answer:"} /> {correctAnswer}</p>
                   ) : null}
                 </article>
               )
@@ -335,8 +327,7 @@ export default function ResultsReview() {
             className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Answer Sheet
-          </button>
+             <UiText text={"Back to Answer Sheet"} /> </button>
         </div>
       </main>
     </div>

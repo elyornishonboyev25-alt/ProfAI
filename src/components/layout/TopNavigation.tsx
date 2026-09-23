@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -275,8 +276,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 className="interactive-lift rounded-xl border-blue-300 bg-white px-4 py-2 text-blue-800 hover:bg-blue-50"
                 onClick={() => handleNavigate('/login')}
               >
-                Sign In
-              </Button>
+                 <UiText text={"Sign In"} /> </Button>
               <Button
                 variant="primary"
                 className="cta-sheen interactive-lift rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-white hover:opacity-95"
@@ -292,8 +292,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 className="interactive-lift rounded-xl border border-blue-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-blue-50 hover:text-blue-800"
                 onClick={() => handleNavigate('/account')}
               >
-                <UserRound className="mr-1 h-4 w-4" /> Profile
-              </Button>
+                <UserRound className="mr-1 h-4 w-4" />  <UiText text={"Profile"} /> </Button>
               <Button
                 variant="ghost"
                 className="interactive-lift rounded-xl border border-blue-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-blue-50 hover:text-blue-800"
@@ -333,7 +332,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 ) : null}
               </div>
               <div className="flex flex-col gap-1 text-sm">
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/dashboard')}>Home</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/dashboard')}> <UiText text={"Home"} /> </button>
 
                 <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-400">Prep</p>
                 {prepItems.map((item) => {
@@ -349,14 +348,14 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   )
                 })}
 
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-400">More</p>
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-400"> <UiText text={"More"} /> </p>
                 <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={openMockFromLanding}>Mock Arena</button>
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/leaderboard')}>Leaderboard</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/leaderboard')}> <UiText text={"Leaderboard"} /> </button>
 
                 <div className="my-1.5 h-px bg-blue-100" />
                 {!user ? (
                   <>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/login')}>Sign In</button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/login')}> <UiText text={"Sign In"} /> </button>
                     <button
                       className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800"
                       onClick={() => handleNavigate('/register')}
@@ -366,7 +365,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   </>
                 ) : (
                   <>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/account')}>Profile</button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/account')}> <UiText text={"Profile"} /> </button>
                     <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={requestSignOut}>Sign Out</button>
                   </>
                 )}

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
@@ -355,8 +356,8 @@ export default function AnalyzeMistakes() {
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600">Delete Confirmation</p>
-              <h3 className="mt-1 text-2xl font-black text-slate-900">Are you sure?</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-600"> <UiText text={"Delete Confirmation"} /> </p>
+              <h3 className="mt-1 text-2xl font-black text-slate-900"> <UiText text={"Are you sure?"} /> </h3>
             </div>
             <button
               type="button"
@@ -379,15 +380,13 @@ export default function AnalyzeMistakes() {
               onClick={() => setConfirmState(null)}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Cancel
-            </button>
+               <UiText text={"Cancel"} /> </button>
             <button
               type="button"
               onClick={() => void confirmDelete()}
               className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(220,38,38,0.34)] hover:opacity-95"
             >
-              Yes, Delete
-            </button>
+               <UiText text={"Yes, Delete"} /> </button>
           </div>
         </motion.div>
       </div>
@@ -409,22 +408,19 @@ export default function AnalyzeMistakes() {
                 className="route-back-button"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back To IELTS Prep
-              </button>
+                 <UiText text={"Back To IELTS Prep"} /> </button>
               <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600">
                 <BrainCircuit className="h-4 w-4" />
-                IELTS mistake intelligence
-              </p>
+                 <UiText text={"IELTS mistake intelligence"} /> </p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                Analyze your <span className="text-red-600">mistakes.</span>
+                 <UiText text={"Analyze your"} /> <span className="text-red-600"> <UiText text={"mistakes."} /> </span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Reading and Writing attempts only. See recurring weak points, open the exact review and turn errors into a focused practice plan.
-              </p>
+                 <UiText text={"Reading and Writing attempts only. See recurring weak points, open the exact review and turn errors into a focused practice plan."} /> </p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-right">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-700">Saved Attempts</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-700"> <UiText text={"Saved Attempts"} /> </p>
                 <p className="text-2xl font-black text-slate-900">{attempts.length}</p>
               </div>
               <button
@@ -456,21 +452,21 @@ export default function AnalyzeMistakes() {
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg">
                     <Target className="h-4 w-4" />
                   </span>
-                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Reading accuracy</p>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500"> <UiText text={"Reading accuracy"} /> </p>
                   <p className="mt-1 text-3xl font-black text-slate-950">{insights.averageAccuracy.toFixed(0)}%</p>
                 </article>
                 <article className="rounded-2xl border border-slate-200 bg-white/90 p-4">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white shadow-lg">
                     <TriangleAlert className="h-4 w-4" />
                   </span>
-                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Weakest area</p>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500"> <UiText text={"Weakest area"} /> </p>
                   <p className="mt-1 line-clamp-2 text-base font-black text-slate-950">{insights.weakest}</p>
                 </article>
                 <article className="rounded-2xl border border-slate-200 bg-white/90 p-4">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg">
                     <CheckCircle2 className="h-4 w-4" />
                   </span>
-                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saved attempts</p>
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500"> <UiText text={"Saved attempts"} /> </p>
                   <p className="mt-1 text-3xl font-black text-slate-950">{attempts.length}</p>
                 </article>
               </div>
@@ -480,9 +476,8 @@ export default function AnalyzeMistakes() {
                   <div>
                     <p className="flex items-center gap-2 text-sm font-black text-slate-950">
                       <BarChart3 className="h-4 w-4 text-red-600" />
-                      Accuracy by question type
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">Aggregated from your saved Reading reviews.</p>
+                       <UiText text={"Accuracy by question type"} /> </p>
+                    <p className="mt-1 text-xs text-slate-500"> <UiText text={"Aggregated from your saved Reading reviews."} /> </p>
                   </div>
                 </div>
                 {insights.focusAreas.length ? (
@@ -500,12 +495,12 @@ export default function AnalyzeMistakes() {
                             className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-400"
                           />
                         </div>
-                        <p className="mt-1.5 text-[10px] font-bold text-slate-400">{area.incorrect} recurring errors</p>
+                        <p className="mt-1.5 text-[10px] font-bold text-slate-400">{area.incorrect}  <UiText text={"recurring errors"} /> </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">Finish an IELTS Reading test to unlock question-type analytics.</p>
+                  <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500"> <UiText text={"Finish an IELTS Reading test to unlock question-type analytics."} /> </p>
                 )}
               </article>
             </div>
@@ -513,10 +508,9 @@ export default function AnalyzeMistakes() {
             <aside className="rounded-2xl border border-red-100 bg-gradient-to-br from-slate-950 via-slate-900 to-red-950 p-5 text-white shadow-[0_22px_55px_rgba(15,23,42,0.22)]">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-200">
                 <Sparkles className="h-3.5 w-3.5" />
-                AI study plan
-              </span>
-              <h2 className="mt-4 text-xl font-black">Your next best actions</h2>
-              <p className="mt-2 text-xs leading-5 text-slate-300">Recommendations come from the mistakes stored in this IELTS workspace.</p>
+                 <UiText text={"AI study plan"} /> </span>
+              <h2 className="mt-4 text-xl font-black"> <UiText text={"Your next best actions"} /> </h2>
+              <p className="mt-2 text-xs leading-5 text-slate-300"> <UiText text={"Recommendations come from the mistakes stored in this IELTS workspace."} /> </p>
               <div className="mt-4 space-y-2">
                 {(insights.focusAreas.length ? insights.focusAreas.slice(0, 3) : [{ label: 'Reading diagnostic', accuracy: 0, incorrect: 0 }]).map((area, index) => (
                   <button
@@ -527,7 +521,7 @@ export default function AnalyzeMistakes() {
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/20 text-xs font-black text-red-200">{index + 1}</span>
                     <span className="min-w-0">
                       <b className="block truncate text-xs text-white">{area.label}</b>
-                      <small className="mt-0.5 block text-[10px] text-slate-400">Start targeted Reading practice</small>
+                      <small className="mt-0.5 block text-[10px] text-slate-400"> <UiText text={"Start targeted Reading practice"} /> </small>
                     </span>
                   </button>
                 ))}
@@ -536,8 +530,7 @@ export default function AnalyzeMistakes() {
                 onClick={() => navigate('/ai-tutor')}
                 className="cta-sheen mt-4 min-h-11 w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-xs font-black text-white shadow-lg"
               >
-                Build plan with ProfAI
-              </button>
+                 <UiText text={"Build plan with ProfAI"} /> </button>
             </aside>
           </div>
 
@@ -545,16 +538,15 @@ export default function AnalyzeMistakes() {
             <section className="mt-5 rounded-2xl border border-slate-200 bg-white/88 p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-black text-slate-950">Latest Reading answer review</h2>
-                  <p className="mt-1 text-xs text-slate-500">{insights.latestReading.testTitle} · incorrect and skipped answers</p>
+                  <h2 className="text-sm font-black text-slate-950"> <UiText text={"Latest Reading answer review"} /> </h2>
+                  <p className="mt-1 text-xs text-slate-500">{insights.latestReading.testTitle}  <UiText text={"· incorrect and skipped answers"} /> </p>
                 </div>
                 <button
                   onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}
                   className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  Open full review
-                </button>
+                   <UiText text={"Open full review"} /> </button>
               </div>
               <div className="mt-4 space-y-2">
                 {insights.latestReading.incorrectQuestions.slice(0, 5).map((question) => (
@@ -564,9 +556,9 @@ export default function AnalyzeMistakes() {
                     </span>
                     <div className="min-w-0">
                       <p className="truncate text-xs font-black text-slate-900">Q{question.displayNumber}. {question.prompt}</p>
-                      <p className="mt-1 text-[10px] font-bold text-slate-500">Part {question.partNumber} · {question.typeLabel}</p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-500"> <UiText text={"Part"} /> {question.partNumber} · {question.typeLabel}</p>
                     </div>
-                    <span className="rounded-full border border-red-200 bg-white px-2.5 py-1 text-[10px] font-black text-red-700">Needs review</span>
+                    <span className="rounded-full border border-red-200 bg-white px-2.5 py-1 text-[10px] font-black text-red-700"> <UiText text={"Needs review"} /> </span>
                   </div>
                 ))}
               </div>
@@ -575,11 +567,10 @@ export default function AnalyzeMistakes() {
 
           <div className="mt-5 space-y-2">
             {loading ? (
-              <div className="rounded-2xl border border-red-100 bg-white p-4 text-sm text-slate-500">Loading attempts...</div>
+              <div className="rounded-2xl border border-red-100 bg-white p-4 text-sm text-slate-500"> <UiText text={"Loading attempts..."} /> </div>
             ) : attempts.length === 0 ? (
               <div className="rounded-2xl border border-red-100 bg-white p-4 text-sm text-slate-500">
-                No attempts found yet. Complete a test and submit to populate this page.
-              </div>
+                 <UiText text={"No attempts found yet. Complete a test and submit to populate this page."} /> </div>
             ) : (
               attempts.map((attempt) => {
                 const isDeleting = busyAttemptId === attempt.id
@@ -620,8 +611,7 @@ export default function AnalyzeMistakes() {
                           className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
-                          Review
-                        </button>
+                           <UiText text={"Review"} /> </button>
                         <button
                           onClick={() => setConfirmState({ type: 'delete', attempt })}
                           disabled={isDeleting || isClearingAll}

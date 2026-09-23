@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Gem, Sparkles, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -170,24 +171,21 @@ export default function Vocabulary() {
                       className="premium-back-btn group"
                     >
                       <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
-                      Back to Academic Skills
-                    </motion.button>
+                       <UiText text={"Back to Academic Skills"} /> </motion.button>
                     <span className="premium-top-chip gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Vocabulary Arena
-                    </span>
+                       <UiText text={"Vocabulary Arena"} /> </span>
                   </div>
                   <h1 className="mt-4 text-4xl font-black leading-tight text-[#0f172a] sm:text-5xl">
-                    Build a stronger <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-red-500 bg-clip-text text-transparent">vocabulary.</span>
+                     <UiText text={"Build a stronger"} /> <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-red-500 bg-clip-text text-transparent"> <UiText text={"vocabulary."} /> </span>
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                    Four focused tracks. Choose one and start practising.
-                  </p>
+                     <UiText text={"Four focused tracks. Choose one and start practising."} /> </p>
                 </div>
                 <div className="relative overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(37,99,235,0.18)]">
                   <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-200/55 blur-2xl" />
                   <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-red-200/45 blur-2xl" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">Total Terms</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600"> <UiText text={"Total Terms"} /> </p>
                   <p className="mt-1 text-4xl font-black text-slate-900">
                     <CountUp value={ieltsStats.words + satStats.words} />
                   </p>
@@ -209,18 +207,16 @@ export default function Vocabulary() {
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <BookOpen className="h-3.5 w-3.5" />
-                    IELTS Academic Track
-                  </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">IELTS Vocabulary</h2>
+                     <UiText text={"IELTS Academic Track"} /> </div>
+                  <h2 className="mt-4 text-3xl font-black text-slate-900"> <UiText text={"IELTS Vocabulary"} /> </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Reading-focused roadmap with Day 1-30 plus Full Test 1-20. Full tests open by Passage 1, 2, and 3.
-                  </p>
+                     <UiText text={"Reading-focused roadmap with Day 1-30 plus Full Test 1-20. Full tests open by Passage 1, 2, and 3."} /> </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.books} books</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.tests} tests</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.passages} passages</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.books}  <UiText text={"books"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.tests}  <UiText text={"tests"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.passages}  <UiText text={"passages"} /> </span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open IELTS page -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open IELTS page ->"} /> </p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -233,9 +229,8 @@ export default function Vocabulary() {
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Star className="h-3.5 w-3.5" />
-                    SAT Advanced Track
-                  </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">SAT Vocabulary</h2>
+                     <UiText text={"SAT Advanced Track"} /> </div>
+                  <h2 className="mt-4 text-3xl font-black text-slate-900"> <UiText text={"SAT Vocabulary"} /> </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     {satStats.packs} full mocks, each with 2 English modules and 20 challenging words per module.
                   </p>
@@ -244,7 +239,7 @@ export default function Vocabulary() {
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.sections} modules</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.words} words</span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open SAT page -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open SAT page ->"} /> </p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -257,17 +252,15 @@ export default function Vocabulary() {
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
                     <BookOpenCheck className="h-3.5 w-3.5" />
-                    Articles Track
-                  </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">Articles Vocabulary</h2>
+                     <UiText text={"Articles Track"} /> </div>
+                  <h2 className="mt-4 text-3xl font-black text-slate-900"> <UiText text={"Articles Vocabulary"} /> </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    The key words from every article in the Reading Library — study each set with the same flashcards, matching, quiz, and typing drills.
-                  </p>
+                     <UiText text={"The key words from every article in the Reading Library — study each set with the same flashcards, matching, quiz, and typing drills."} /> </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.length} articles</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.reduce((s, a) => s + a.vocabulary.length, 0)} terms</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.length}  <UiText text={"articles"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{articles.reduce((s, a) => s + a.vocabulary.length, 0)}  <UiText text={"terms"} /> </span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-red-700 transition group-hover:translate-x-1">Open Articles page -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-red-700 transition group-hover:translate-x-1"> <UiText text={"Open Articles page ->"} /> </p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -280,9 +273,8 @@ export default function Vocabulary() {
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Bookmark className="h-3.5 w-3.5" />
-                    Personal Track
-                  </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">My Words</h2>
+                     <UiText text={"Personal Track"} /> </div>
+                  <h2 className="mt-4 text-3xl font-black text-slate-900"> <UiText text={"My Words"} /> </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Words saved from Vocabulary Studio, AI explanations, and your own additions — with links back to their sources.
                   </p>
@@ -292,7 +284,7 @@ export default function Vocabulary() {
                       {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')} saved
                     </span>
                   </div>
-                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1">Open My Words -&gt;</p>
+                  <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open My Words ->"} /> </p>
                 </button>
               </Tilt3D>
             </StaggerItem>
@@ -317,21 +309,18 @@ export default function Vocabulary() {
                       className="premium-back-btn"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
-                      Back to Vocabulary
-                    </button>
-                    <span className="premium-top-chip">IELTS Vocabulary Track</span>
+                       <UiText text={"Back to Vocabulary"} /> </button>
+                    <span className="premium-top-chip"> <UiText text={"IELTS Vocabulary Track"} /> </span>
                   </div>
-                  <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">IELTS Reading Vocabulary Studio</h1>
+                  <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl"> <UiText text={"IELTS Reading Vocabulary Studio"} /> </h1>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                    Reading vocabulary by roadmap: Day 1-30 and Full Test 1-20. Opening one test automatically closes the previous one.
-                  </p>
+                     <UiText text={"Reading vocabulary by roadmap: Day 1-30 and Full Test 1-20. Opening one test automatically closes the previous one."} /> </p>
                 </div>
                 <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">IELTS Stats</p>
-                  <p className="mt-1 text-lg font-extrabold text-slate-900">{ieltsStats.tests} tests / {ieltsStats.passages} passages</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600"> <UiText text={"IELTS Stats"} /> </p>
+                  <p className="mt-1 text-lg font-extrabold text-slate-900">{ieltsStats.tests}  <UiText text={"tests /"} /> {ieltsStats.passages}  <UiText text={"passages"} /> </p>
                   <p className="text-sm font-semibold text-blue-700">
-                    <CountUp value={ieltsStats.words} /> terms
-                  </p>
+                    <CountUp value={ieltsStats.words} />  <UiText text={"terms"} /> </p>
                 </div>
               </div>
             </section>
@@ -351,7 +340,7 @@ export default function Vocabulary() {
                   >
                     <div>
                       <p className="text-xl font-bold text-slate-900">{book.title}</p>
-                      <p className="text-xs font-semibold text-slate-500">{book.tests.length} tests available</p>
+                      <p className="text-xs font-semibold text-slate-500">{book.tests.length}  <UiText text={"tests available"} /> </p>
                     </div>
                     <ChevronDown
                       className={`h-5 w-5 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'rotate-180' : ''}`}
@@ -403,7 +392,7 @@ export default function Vocabulary() {
                                       className={`rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
                                     >
                                       <p className="text-sm font-bold text-slate-900">{section.title}</p>
-                                      <p className="mt-1 text-xs text-slate-500">{section.entries.length} terms</p>
+                                      <p className="mt-1 text-xs text-slate-500">{section.entries.length}  <UiText text={"terms"} /> </p>
                                       <button
                                         onClick={() => {
                                           if (test.available === false) return
@@ -465,8 +454,7 @@ export default function Vocabulary() {
                 <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} mocks / {satStats.sections} modules</p>
                 <p className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
                   <Gem className="h-4 w-4" />
-                  <CountUp value={satStats.words} /> terms
-                </p>
+                  <CountUp value={satStats.words} />  <UiText text={"terms"} /> </p>
               </div>
             </div>
           </section>
@@ -507,7 +495,7 @@ export default function Vocabulary() {
                           className={`rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/80 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
                         >
                           <p className="text-sm font-bold text-slate-900">{section.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{section.entries.length} terms</p>
+                          <p className="mt-1 text-xs text-slate-500">{section.entries.length}  <UiText text={"terms"} /> </p>
                           <button
                             onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`, { state: satNavigationState })}
                             className="mt-3 inline-flex items-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.35)]"

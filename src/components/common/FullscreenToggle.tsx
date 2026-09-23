@@ -1,5 +1,6 @@
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { useFullscreen } from '@/hooks/useFullscreen'
+import { useCopy } from '@/i18n/interface'
 
 /**
  * Site-wide fullscreen control — fully manual.
@@ -9,7 +10,8 @@ import { useFullscreen } from '@/hooks/useFullscreen'
  */
 export default function FullscreenToggle() {
   const { isFullscreen, supported, toggle } = useFullscreen()
-  const label = isFullscreen ? "To'liq ekrandan chiqish" : "To'liq ekran"
+  const { c } = useCopy()
+  const label = c(isFullscreen ? 'Exit full screen' : 'Full screen')
 
   if (!supported) return null
 

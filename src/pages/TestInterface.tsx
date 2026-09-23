@@ -1,4 +1,5 @@
-﻿import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import UiText from '@/components/common/UiText'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
 import { generateRandomReadingTest, mockReadingTests } from '../data/ieltsReadingPassages'

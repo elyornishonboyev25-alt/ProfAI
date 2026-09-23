@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import {
   useCallback,
   useEffect,
@@ -625,7 +626,7 @@ export default function SATMockRun() {
               onClick={() => { setMoreOpen((open) => !open); setToolsOpen(false) }}
               className="flex flex-col items-center px-2 py-1 font-serif text-xs font-bold text-slate-700"
             >
-              <EllipsisVertical className="h-6 w-6" /> <span className="hidden sm:block">More</span>
+              <EllipsisVertical className="h-6 w-6" /> <span className="hidden sm:block"> <UiText text={"More"} /> </span>
             </button>
           </div>
 
@@ -721,7 +722,7 @@ export default function SATMockRun() {
             <div className="mt-7 border-t border-slate-300 pt-5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-bold text-slate-500">Your response is saved automatically.</p>
-                {currentAnswer ? <button type="button" onClick={() => updateAnswer('')} className="text-xs font-black text-red-700">Clear</button> : null}
+                {currentAnswer ? <button type="button" onClick={() => updateAnswer('')} className="text-xs font-black text-red-700"> <UiText text={"Clear"} /> </button> : null}
               </div>
               <button
                 type="button"
@@ -760,9 +761,9 @@ export default function SATMockRun() {
             Question {questionIndex + 1} of {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
           </button>
           <div className="flex items-center justify-end gap-2">
-            <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg">Back</button>
+            <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg"> <UiText text={"Back"} /> </button>
             {questionIndex < currentModule.questions.length - 1 ? (
-              <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg">Next</button>
+              <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg"> <UiText text={"Next"} /> </button>
             ) : (
               <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base">Review module</button>
             )}
@@ -810,7 +811,7 @@ export default function SATMockRun() {
                 <p className="mt-4">Your answers, notes, highlights, and current position are saved automatically on this device.</p>
               </div>
               <footer className="flex justify-end border-t border-slate-300 bg-slate-50 px-5 py-4 sm:px-7">
-                <button type="button" onClick={() => setDirectionsOpen(false)} className="rounded-full bg-[#4053d7] px-6 py-3 font-serif text-base font-bold text-white">Continue</button>
+                <button type="button" onClick={() => setDirectionsOpen(false)} className="rounded-full bg-[#4053d7] px-6 py-3 font-serif text-base font-bold text-white"> <UiText text={"Continue"} /> </button>
               </footer>
             </motion.section>
           </motion.div>
@@ -868,10 +869,10 @@ export default function SATMockRun() {
                   })}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3 text-[9px] font-black text-slate-500">
-                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" /> Correct</span> : null}
-                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600" /> Incorrect</span> : null}
+                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" />  <UiText text={"Correct"} /> </span> : null}
+                  {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600" />  <UiText text={"Incorrect"} /> </span> : null}
                   <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> Answered</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-slate-300 bg-slate-50" /> Unanswered</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-slate-300 bg-slate-50" />  <UiText text={"Unanswered"} /> </span>
                   <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> Flagged</span>
                 </div>
               </div>
@@ -940,8 +941,7 @@ export default function SATMockRun() {
                   Delete note
                 </button>
                 <button type="button" onClick={saveNote} className="rounded-full bg-black px-5 py-2.5 text-[11px] font-black text-white">
-                  Save note
-                </button>
+                   <UiText text={"Save note"} /> </button>
               </div>
             </motion.section>
           </motion.div>

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
@@ -29,8 +30,7 @@ function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => 
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
-        </button>
+          <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Back to Dashboard"} /> </button>
         {children}
       </div>
     </div>
@@ -159,7 +159,7 @@ export default function PublicProfile() {
                   <AtSign className="h-6 w-6 text-blue-500" />
                   {p.nickname}
                 </h1>
-                {p.isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">YOU</span> : null}
+                {p.isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700"> <UiText text={"YOU"} /> </span> : null}
               </div>
               <p className="mt-1 text-sm font-semibold text-slate-500">
                 {p.online ? <span className="text-emerald-600">● Online now</span> : 'Offline'}
@@ -167,9 +167,9 @@ export default function PublicProfile() {
               </p>
               {p.bio ? <p className="mt-2 max-w-xl text-sm text-slate-600">{p.bio}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" /> Level {p.level}</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" />  <UiText text={"Level"} /> {p.level}</span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" /> {p.xp} XP</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Flame className="h-3.5 w-3.5 text-orange-500" /> {p.streak} day streak</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Flame className="h-3.5 w-3.5 text-orange-500" /> {p.streak}  <UiText text={"day streak"} /> </span>
                 {p.country ? <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><MapPin className="h-3.5 w-3.5 text-blue-500" /> {p.country}</span> : null}
               </div>
             </div>
@@ -275,8 +275,7 @@ export default function PublicProfile() {
                 </ProgressRing>
                 <div>
                   <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-                    <Trophy className="h-4 w-4 text-blue-600" /> Leaderboard
-                  </h3>
+                    <Trophy className="h-4 w-4 text-blue-600" />  <UiText text={"Leaderboard"} /> </h3>
                   <p className="mt-1 text-sm font-bold text-slate-700">{data.competitive.divisionLabel} division</p>
                   <p className="text-xs text-slate-500">Ranking score {Math.round(data.competitive.rankingScore)}</p>
                 </div>
@@ -300,7 +299,7 @@ export default function PublicProfile() {
                     <p className="truncate text-sm font-bold text-slate-900">{targetUniversity.name}</p>
                     <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS ${formatUniversityRank(targetUniversity, '#')}` : ''}</p>
                   </div>
-                  <span className="text-xs font-bold text-blue-600">View</span>
+                  <span className="text-xs font-bold text-blue-600"> <UiText text={"View"} /> </span>
                 </button>
               </article>
             </Reveal>
@@ -313,8 +312,7 @@ export default function PublicProfile() {
         <Reveal>
           <article className="surface-card p-6">
             <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-              <Award className="h-4 w-4 text-blue-600" /> Achievement badges
-            </h3>
+              <Award className="h-4 w-4 text-blue-600" />  <UiText text={"Achievement badges"} /> </h3>
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {showcaseBadges.map((b) => (
                 <div key={b.id} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-3">

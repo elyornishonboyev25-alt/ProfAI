@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, Bookmark, CheckCircle2, Clock3, Search, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -47,40 +48,39 @@ export default function Articles() {
         <header className="articles-arena-hero">
           <div className="articles-arena-topline">
             <button type="button" onClick={() => navigate('/academic-skills')} className="articles-arena-back route-back-button">
-              <ArrowLeft /> Academic Skills
-            </button>
+              <ArrowLeft />  <UiText text={"Academic Skills"} /> </button>
             <div className="articles-arena-brand" aria-label="ProfAI Reading Library">
               <BrandMark size={48} />
               <span>Prof<span>AI</span></span>
               <i />
-              <small>Reading Library</small>
+              <small> <UiText text={"Reading Library"} /> </small>
             </div>
           </div>
 
           <div className="articles-arena-hero-grid">
             <div className="articles-arena-intro">
-              <span className="articles-arena-kicker"><Sparkles /> Read. Understand. Grow.</span>
-              <h1>Reading <em>Library</em></h1>
-              <p>{articles.length} focused articles with instant AI word help and vocabulary practice.</p>
+              <span className="articles-arena-kicker"><Sparkles />  <UiText text={"Read. Understand. Grow."} /> </span>
+              <h1> <UiText text={"Reading"} /> <em> <UiText text={"Library"} /> </em></h1>
+              <p>{articles.length}  <UiText text={"focused articles with instant AI word help and vocabulary practice."} /> </p>
             </div>
 
             <div className="articles-arena-search-stack">
               <label className="articles-arena-search">
                 <Search aria-hidden="true" />
                 <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles or topics" aria-label="Search articles" />
-                {query ? <button type="button" onClick={() => setQuery('')}>Clear</button> : null}
+                {query ? <button type="button" onClick={() => setQuery('')}> <UiText text={"Clear"} /> </button> : null}
               </label>
               <div className="articles-arena-benefits" aria-label="Reading tools">
-                <span><BookOpen /> Level-matched</span>
-                <span><Sparkles /> AI word help</span>
-                <span><Bookmark /> Vocabulary sets</span>
+                <span><BookOpen />  <UiText text={"Level-matched"} /> </span>
+                <span><Sparkles />  <UiText text={"AI word help"} /> </span>
+                <span><Bookmark />  <UiText text={"Vocabulary sets"} /> </span>
               </div>
             </div>
 
             <div className="articles-arena-summary">
               <span className="articles-arena-summary-mark"><BookOpen /></span>
               <div>
-                <small>Your library</small>
+                <small> <UiText text={"Your library"} /> </small>
                 <strong>{completedCount > 0 ? `${completedCount} completed` : `${articles.length} ready to read`}</strong>
                 <p>{completedCount > 0 ? 'Keep your reading rhythm moving.' : 'Choose one article and start today.'}</p>
               </div>
@@ -91,7 +91,7 @@ export default function Articles() {
         <main className="articles-arena-layout">
           <aside className="articles-topic-panel" aria-label="Article topics">
             <div className="articles-topic-heading">
-              <div><small>Browse by</small><h2>Topic</h2></div>
+              <div><small> <UiText text={"Browse by"} /> </small><h2> <UiText text={"Topic"} /> </h2></div>
               <span>{articles.length}</span>
             </div>
             <div className="articles-topic-list">
@@ -106,15 +106,15 @@ export default function Articles() {
           <section className="articles-results" aria-labelledby="articles-results-title">
             <div className="articles-results-head">
               <div><small>{active === 'All' ? 'Curated for focused practice' : active}</small><h2 id="articles-results-title">{filtered.length} {filtered.length === 1 ? 'article' : 'articles'}</h2></div>
-              <span>Open any card to enter the distraction-free reader</span>
+              <span> <UiText text={"Open any card to enter the distraction-free reader"} /> </span>
             </div>
 
             {filtered.length === 0 ? (
               <div className="articles-empty-state">
                 <Search />
-                <h2>No matching articles</h2>
-                <p>Try another topic or clear your search.</p>
-                <button type="button" onClick={() => { setQuery(''); setActive('All') }}>Show all articles</button>
+                <h2> <UiText text={"No matching articles"} /> </h2>
+                <p> <UiText text={"Try another topic or clear your search."} /> </p>
+                <button type="button" onClick={() => { setQuery(''); setActive('All') }}> <UiText text={"Show all articles"} /> </button>
               </div>
             ) : (
               <div className="articles-card-grid">
@@ -127,13 +127,13 @@ export default function Articles() {
                       <div className="articles-library-card-body">
                         <div className="articles-library-meta">
                           <span>{article.category}</span>
-                          <small><Clock3 /> {article.readMinutes} min</small>
-                          {isRead ? <b><CheckCircle2 /> Read</b> : readPct > 0 ? <ProgressRing value={readPct} size={30} stroke={3.5}><span>{readPct}</span></ProgressRing> : null}
+                          <small><Clock3 /> {article.readMinutes}  <UiText text={"min"} /> </small>
+                          {isRead ? <b><CheckCircle2 />  <UiText text={"Read"} /> </b> : readPct > 0 ? <ProgressRing value={readPct} size={30} stroke={3.5}><span>{readPct}</span></ProgressRing> : null}
                         </div>
                         <h3>{article.title}</h3>
                         <p>{article.teaser}</p>
                         <div className="articles-library-footer">
-                          <small><BookOpen /> {articleWordCount(article).toLocaleString()} words · {article.vocabulary.length} vocab</small>
+                          <small><BookOpen /> {articleWordCount(article).toLocaleString()}  <UiText text={"words ·"} /> {article.vocabulary.length}  <UiText text={"vocab"} /> </small>
                           <strong>{isRead ? 'Read again' : readPct > 0 ? 'Continue' : 'Read'} <ArrowRight /></strong>
                         </div>
                       </div>

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -189,7 +190,7 @@ export default function RegisterModal() {
                   <Sparkles className="h-3.5 w-3.5" />
                   ProfAI Account
                 </p>
-                <h1 className="mt-3 text-3xl font-black tracking-tight text-[#1F2937]">Create your account</h1>
+                <h1 className="mt-3 text-3xl font-black tracking-tight text-[#1F2937]"> <UiText text={"Create your account"} /> </h1>
                 <p className="mt-2 text-sm leading-6 text-[#6B7280]">
                   No name required. Use your Gmail and password to save your plan, attempts, and streak.
                 </p>
@@ -197,7 +198,7 @@ export default function RegisterModal() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" aria-label="Registration form">
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Gmail address</span>
+                  <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Gmail address"} /> </span>
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                     <input
@@ -218,7 +219,7 @@ export default function RegisterModal() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="mb-1.5 block text-sm font-bold text-slate-700">Password</span>
+                    <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Password"} /> </span>
                     <div className="relative">
                       <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                       <input
@@ -233,7 +234,7 @@ export default function RegisterModal() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-1.5 block text-sm font-bold text-slate-700">Confirm password</span>
+                    <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Confirm password"} /> </span>
                     <div className="relative">
                       <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                       <input
@@ -251,7 +252,7 @@ export default function RegisterModal() {
                 {verificationSent ? (
                   <label className="block">
                     <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-bold text-slate-700">
-                      <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" />Verification code</span>
+                      <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" /> <UiText text={"Verification code"} /> </span>
                       <button type="button" onClick={() => void requestVerificationCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
                         <RefreshCw className="h-3 w-3" /> Resend
                       </button>
@@ -281,8 +282,7 @@ export default function RegisterModal() {
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs text-slate-700">
                   <p className="inline-flex items-center gap-1 font-black text-blue-700">
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    Secure sign-up
-                  </p>
+                     <UiText text={"Secure sign-up"} /> </p>
                   <p className="mt-1 leading-5">Password authentication keeps the account reusable.</p>
                 </div>
                 <div className="rounded-2xl border border-blue-100 bg-white/80 px-3 py-2 text-xs text-slate-700">
@@ -295,14 +295,13 @@ export default function RegisterModal() {
               </div>
 
               <p className="mt-6 text-center text-sm text-[#6B7280]">
-                Already have an account?{' '}
+                 <UiText text={"Already have an account?"} /> {' '}
                 <button
                   type="button"
                   onClick={handleLoginRedirect}
                   className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
                 >
-                  Sign in
-                </button>
+                   <UiText text={"Sign in"} /> </button>
               </p>
             </motion.div>
           </div>

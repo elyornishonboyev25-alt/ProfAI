@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   AtSign,
@@ -214,8 +215,7 @@ function CountryPicker({ value, onChange }: { value: string; onChange: (country:
       {open ? (
         <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-[80] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_22px_55px_rgba(15,23,42,0.24)]">
           <div className="flex items-center gap-2 border-b border-slate-100 px-2 pb-2 text-xs font-semibold text-slate-500">
-            <Search className="h-3.5 w-3.5" /> Select your country
-          </div>
+            <Search className="h-3.5 w-3.5" />  <UiText text={"Select your country"} /> </div>
           <ul id={listId} role="listbox" className="mt-1 max-h-56 overflow-y-auto overscroll-contain">
             {visibleCountries.map((option, index) => (
               <li key={option.code} role="option" aria-selected={option.name === value}>
@@ -231,7 +231,7 @@ function CountryPicker({ value, onChange }: { value: string; onChange: (country:
                 </button>
               </li>
             ))}
-            {!visibleCountries.length ? <li className="px-3 py-5 text-center text-xs font-medium text-slate-500">No country found</li> : null}
+            {!visibleCountries.length ? <li className="px-3 py-5 text-center text-xs font-medium text-slate-500"> <UiText text={"No country found"} /> </li> : null}
           </ul>
         </div>
       ) : null}
@@ -502,8 +502,7 @@ export default function AccountProfile() {
           <div className="premium-top-controls">
             <span className="premium-top-chip">
               <Sparkles className="h-3.5 w-3.5" />
-              My Profile
-            </span>
+               <UiText text={"My Profile"} /> </span>
             <button
               type="button"
               onClick={() => void signOut()}
@@ -511,8 +510,7 @@ export default function AccountProfile() {
               className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white/80 px-4 text-xs font-black text-blue-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-blue-50 disabled:opacity-60"
             >
               {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-              Log out
-            </button>
+               <UiText text={"Log out"} /> </button>
           </div>
 
           <div className="mt-5 grid gap-6 lg:grid-cols-[auto_1fr_auto] lg:items-center">
@@ -594,15 +592,13 @@ export default function AccountProfile() {
                     {savedNickname}
                   </span>
                 ) : (
-                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">Set a nickname below</span>
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700"> <UiText text={"Set a nickname below"} /> </span>
                 )}
                 <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-                  <Lock className="h-3 w-3" /> {user?.email} · only you
-                </span>
+                  <Lock className="h-3 w-3" /> {user?.email}  <UiText text={"· only you"} /> </span>
               </div>
               <p className="mt-2 text-sm text-slate-500">
-                Level {user?.level ?? 1} · {user?.xp ?? 0} XP · Profile {completion}% complete
-              </p>
+                 <UiText text={"Level"} /> {user?.level ?? 1} · {user?.xp ?? 0}  <UiText text={"XP · Profile"} /> {completion} <UiText text={"% complete"} /> </p>
             </div>
 
             {/* Quick actions */}
@@ -612,11 +608,9 @@ export default function AccountProfile() {
                 disabled={!savedNickname}
                 className="arena-primary-btn justify-center disabled:opacity-50"
               >
-                <UserRound className="mr-2 h-4 w-4" /> View public profile
-              </button>
+                <UserRound className="mr-2 h-4 w-4" />  <UiText text={"View public profile"} /> </button>
               <button onClick={() => navigate('/profile')} className="arena-secondary-btn justify-center">
-                <BarChart3 className="mr-2 h-4 w-4" /> Performance
-              </button>
+                <BarChart3 className="mr-2 h-4 w-4" />  <UiText text={"Performance"} /> </button>
             </div>
           </div>
         </section>
@@ -649,11 +643,9 @@ export default function AccountProfile() {
           <section id="identity" className="mt-6 scroll-mt-24 surface-card p-6">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
               <AtSign className="h-5 w-5 text-blue-600" />
-              Public nickname
-            </h2>
+               <UiText text={"Public nickname"} /> </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Other learners only ever see this handle — never your email. It is how people find you in the Community.
-            </p>
+               <UiText text={"Other learners only ever see this handle — never your email. It is how people find you in the Community."} /> </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex flex-1 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3">
                 <span className="text-lg font-bold text-blue-500">@</span>
@@ -674,11 +666,10 @@ export default function AccountProfile() {
                 className="arena-primary-btn justify-center disabled:opacity-50"
               >
                 {savingNickname ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Save nickname
-              </button>
+                 <UiText text={"Save nickname"} /> </button>
             </div>
-            {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-error-600">Already taken — try another.</p> : null}
-            {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-error-600">3–20 chars: letters, numbers or underscore, starting with a letter.</p> : null}
+            {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"Already taken — try another."} /> </p> : null}
+            {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"3–20 chars: letters, numbers or underscore, starting with a letter."} /> </p> : null}
           </section>
 
           {/* Personal + targets */}
@@ -686,68 +677,55 @@ export default function AccountProfile() {
             <article className="surface-card p-6">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <UserRound className="h-5 w-5 text-blue-600" />
-                Personal & exam targets
-              </h2>
+                 <UiText text={"Personal & exam targets"} /> </h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Phone
-                  <input value={form.phone ?? ''} onChange={(e) => updateField('phone', e.target.value)} className="input mt-1" placeholder="+998 ..." />
+                   <UiText text={"Phone"} /> <input value={form.phone ?? ''} onChange={(e) => updateField('phone', e.target.value)} className="input mt-1" placeholder="+998 ..." />
                 </label>
                 <div className="text-sm font-medium text-slate-700">
-                  <span>Country</span>
+                  <span> <UiText text={"Country"} /> </span>
                   <CountryPicker value={form.country ?? ''} onChange={(country) => updateField('country', country)} />
                 </div>
                 <label className="text-sm font-medium text-slate-700">
-                  Grade level
-                  <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder="11th grade / Gap year" />
+                   <UiText text={"Grade level"} /> <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder="11th grade / Gap year" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Profile style
-                  <select value={form.gender ?? 'PREFER_NOT_TO_SAY'} onChange={(e) => updateField('gender', e.target.value)} className="input mt-1">
-                    <option value="FEMALE">Girl</option>
-                    <option value="MALE">Boy</option>
-                    <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                   <UiText text={"Profile style"} /> <select value={form.gender ?? 'PREFER_NOT_TO_SAY'} onChange={(e) => updateField('gender', e.target.value)} className="input mt-1">
+                    <option value="FEMALE"> <UiText text={"Girl"} /> </option>
+                    <option value="MALE"> <UiText text={"Boy"} /> </option>
+                    <option value="PREFER_NOT_TO_SAY"> <UiText text={"Prefer not to say"} /> </option>
                   </select>
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Target exam
-                  <select value={form.targetExam ?? 'BOTH'} onChange={(e) => updateField('targetExam', e.target.value as ExamTargetKey)} className="input mt-1">
+                   <UiText text={"Target exam"} /> <select value={form.targetExam ?? 'BOTH'} onChange={(e) => updateField('targetExam', e.target.value as ExamTargetKey)} className="input mt-1">
                     <option value="BOTH">IELTS + SAT</option>
                     <option value="IELTS">IELTS</option>
                     <option value="SAT">SAT</option>
                   </select>
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Target score
-                  <input value={form.targetScore ?? ''} onChange={(e) => updateField('targetScore', e.target.value)} className="input mt-1" placeholder="IELTS 7.5 / SAT 1450" />
+                   <UiText text={"Target score"} /> <input value={form.targetScore ?? ''} onChange={(e) => updateField('targetScore', e.target.value)} className="input mt-1" placeholder="IELTS 7.5 / SAT 1450" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Exam date
-                  <input type="date" value={form.examDate ?? ''} onChange={(e) => updateField('examDate', e.target.value)} className="input mt-1" />
+                   <UiText text={"Exam date"} /> <input type="date" value={form.examDate ?? ''} onChange={(e) => updateField('examDate', e.target.value)} className="input mt-1" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Daily study hours
-                  <input type="number" min={1} max={12} value={form.dailyStudyHours ?? ''} onChange={(e) => updateField('dailyStudyHours', e.target.value ? Number(e.target.value) : null)} className="input mt-1" />
+                   <UiText text={"Daily study hours"} /> <input type="number" min={1} max={12} value={form.dailyStudyHours ?? ''} onChange={(e) => updateField('dailyStudyHours', e.target.value ? Number(e.target.value) : null)} className="input mt-1" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Current IELTS
-                  <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="N/A — not taken yet" />
+                   <UiText text={"Current IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="N/A — not taken yet" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Target IELTS
-                  <input type="number" min={0} max={9} step={0.5} value={form.targetIeltsScore ?? ''} onChange={(e) => updateField('targetIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="7.5" />
+                   <UiText text={"Target IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.targetIeltsScore ?? ''} onChange={(e) => updateField('targetIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="7.5" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Current SAT
-                  <input type="number" min={400} max={1600} step={50} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
+                   <UiText text={"Current SAT"} /> <input type="number" min={400} max={1600} step={50} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Target SAT
-                  <input type="number" min={400} max={1600} step={50} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore))} className="input mt-1" placeholder="1450" />
+                   <UiText text={"Target SAT"} /> <input type="number" min={400} max={1600} step={50} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore))} className="input mt-1" placeholder="1450" />
                 </label>
                 <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                  Target countries
-                  <input
+                   <UiText text={"Target countries"} /> <input
                     value={form.targetCountries.join(', ')}
                     onChange={(e) => updateField('targetCountries', e.target.value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5))}
                     className="input mt-1"
@@ -755,8 +733,7 @@ export default function AccountProfile() {
                   />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Field of study
-                  <input list="account-study-field-options" value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder="Type or choose a field..." autoComplete="off" />
+                   <UiText text={"Field of study"} /> <input list="account-study-field-options" value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder="Type or choose a field..." autoComplete="off" />
                   <datalist id="account-study-field-options">
                     {POPULAR_STUDY_FIELDS.map((field) => <option key={field} value={field} />)}
                   </datalist>
@@ -766,23 +743,20 @@ export default function AccountProfile() {
                   <input value={form.gpa ?? ''} onChange={(e) => updateField('gpa', e.target.value)} className="input mt-1" placeholder="3.8 / 4.0" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Degree level
-                  <select value={form.degreeLevel ?? 'bachelor'} onChange={(e) => updateField('degreeLevel', e.target.value)} className="input mt-1">
-                    <option value="bachelor">Bachelor</option>
-                    <option value="master">Master</option>
-                    <option value="phd">PhD</option>
+                   <UiText text={"Degree level"} /> <select value={form.degreeLevel ?? 'bachelor'} onChange={(e) => updateField('degreeLevel', e.target.value)} className="input mt-1">
+                    <option value="bachelor"> <UiText text={"Bachelor"} /> </option>
+                    <option value="master"> <UiText text={"Master"} /> </option>
+                    <option value="phd"> <UiText text={"PhD"} /> </option>
                   </select>
                 </label>
               </div>
               <label className="mt-3 block text-sm font-medium text-slate-700">
-                Bio
-                <textarea value={form.bio ?? ''} onChange={(e) => updateField('bio', e.target.value)} className="input mt-1 min-h-[92px] resize-y" placeholder="Short introduction, study goals, preferred pace..." />
+                 <UiText text={"Bio"} /> <textarea value={form.bio ?? ''} onChange={(e) => updateField('bio', e.target.value)} className="input mt-1 min-h-[92px] resize-y" placeholder="Short introduction, study goals, preferred pace..." />
               </label>
               <div className="mt-4">
                 <button type="button" onClick={() => void saveProfile()} disabled={saving} className="arena-primary-btn disabled:opacity-60">
                   {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Save profile
-                </button>
+                   <UiText text={"Save profile"} /> </button>
               </div>
             </article>
 
@@ -791,9 +765,8 @@ export default function AccountProfile() {
               <article id="privacy" className="scroll-mt-24 surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                   <ShieldCheck className="h-5 w-5 text-blue-600" />
-                  Privacy & visibility
-                </h2>
-                <p className="mt-1 text-xs text-slate-500">Control exactly what other learners can see. Your email is never shown to anyone.</p>
+                   <UiText text={"Privacy & visibility"} /> </h2>
+                <p className="mt-1 text-xs text-slate-500"> <UiText text={"Control exactly what other learners can see. Your email is never shown to anyone."} /> </p>
                 <div className="mt-4 space-y-2.5">
                   {PRIVACY_TOGGLES.map((t) => (
                     <PrivacyToggle key={t.key} label={t.label} detail={t.detail} enabled={Boolean(form[t.key])} onToggle={() => void toggleFlag(t.key)} />
@@ -805,8 +778,7 @@ export default function AccountProfile() {
               <article className="surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                   <GraduationCap className="h-5 w-5 text-blue-600" />
-                  Target university
-                </h2>
+                   <UiText text={"Target university"} /> </h2>
                 {targetUniversity ? (
                   <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
                     <div className="min-w-0">
@@ -814,15 +786,13 @@ export default function AccountProfile() {
                       <p className="text-xs text-slate-500">{targetUniversity.city}, {targetUniversity.country}{typeof targetUniversity.rank === 'number' ? ` · QS ${formatUniversityRank(targetUniversity, '#')}` : ''}</p>
                     </div>
                     <button onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)} className="shrink-0 text-xs font-bold text-blue-600 hover:underline">
-                      View
-                    </button>
+                       <UiText text={"View"} /> </button>
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-600">No target yet. Use the matcher to find a university that fits your scores.</p>
+                  <p className="mt-2 text-sm text-slate-600"> <UiText text={"No target yet. Use the matcher to find a university that fits your scores."} /> </p>
                 )}
                 <button onClick={() => navigate('/admission')} className="arena-secondary-btn mt-3 w-full justify-center">
-                  <Target className="mr-2 h-4 w-4" /> Find my university
-                </button>
+                  <Target className="mr-2 h-4 w-4" />  <UiText text={"Find my university"} /> </button>
               </article>
             </div>
           </section>
@@ -832,9 +802,8 @@ export default function AccountProfile() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <Sparkles className="h-5 w-5 text-blue-600" />
-                Achievement badges
-              </h2>
-              <span className="soft-chip">Earned from mock / exam results</span>
+                 <UiText text={"Achievement badges"} /> </h2>
+              <span className="soft-chip"> <UiText text={"Earned from mock / exam results"} /> </span>
             </div>
             <div className="mt-4">
               <BadgeShelf />
@@ -852,11 +821,10 @@ export default function AccountProfile() {
                   <ShieldAlert className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-error-600">Danger zone</p>
-                  <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">Permanently delete account</h2>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-error-600"> <UiText text={"Danger zone"} /> </p>
+                  <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950"> <UiText text={"Permanently delete account"} /> </h2>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
-                    Removes your profile, results, XP, saved vocabulary, AI history and every personal learning record. This action cannot be reversed.
-                  </p>
+                     <UiText text={"Removes your profile, results, XP, saved vocabulary, AI history and every personal learning record. This action cannot be reversed."} /> </p>
                 </div>
               </div>
               <button
@@ -864,29 +832,27 @@ export default function AccountProfile() {
                 onClick={() => setDeleteDialogOpen(true)}
                 className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-error-300 bg-white px-4 text-xs font-black text-error-700 shadow-sm hover:border-error-400 hover:bg-error-50"
               >
-                <Trash2 className="h-4 w-4" /> Delete account
-              </button>
+                <Trash2 className="h-4 w-4" />  <UiText text={"Delete account"} /> </button>
             </div>
           </section>
 
           <section className="mt-6 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/60 via-white to-emerald-50/50 px-4 py-3">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
               <Mail className="h-4 w-4" />
-              Your profile is saved to your account and stays on every device you sign in to.
-            </p>
+               <UiText text={"Your profile is saved to your account and stays on every device you sign in to."} /> </p>
           </section>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Profile complete</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Profile complete"} /> </p>
               <p className="mt-1 text-2xl font-black text-slate-900"><CountUp value={completion} suffix="%" /></p>
             </div>
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Account level</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Account level"} /> </p>
               <p className="mt-1 text-2xl font-black text-slate-900">{user?.level ?? 1}</p>
             </div>
             <div className="surface-card p-4 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">Visibility</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Visibility"} /> </p>
               <p className="mt-1 text-2xl font-black text-slate-900">{form.isPublic ? 'Public' : 'Private'}</p>
             </div>
           </div>

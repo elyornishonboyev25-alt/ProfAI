@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -53,9 +54,8 @@ function Overview() {
               <div>
                 <div className="premium-top-controls">
                   <button onClick={() => navigate('/vocabulary')} className="premium-back-btn">
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Vocabulary
-                  </button>
-                  <span className="premium-top-chip gap-1"><Sparkles className="h-3.5 w-3.5" /> My Words</span>
+                    <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Back to Vocabulary"} /> </button>
+                  <span className="premium-top-chip gap-1"><Sparkles className="h-3.5 w-3.5" />  <UiText text={"My Words"} /> </span>
                 </div>
                 <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">My Vocabulary</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -94,7 +94,7 @@ function Overview() {
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-600"><Plus className="h-3 w-3" /> {manual} added</span>
                   <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">{studio} Studio</span>
                 </div>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">Open <ArrowLeft className="h-3.5 w-3.5 rotate-180" /></span>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2"> <UiText text={"Open"} /> <ArrowLeft className="h-3.5 w-3.5 rotate-180" /></span>
               </button>
             )
           })}
@@ -181,8 +181,7 @@ function Collection({ context }: { context: VocabContext }) {
         <section className="rounded-[1.8rem] border border-blue-100 bg-white/90 p-5 shadow-[0_24px_54px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-7">
           <div className="premium-top-controls">
             <button onClick={() => navigate('/vocabulary/my-words')} className="premium-back-btn-sm">
-              <ArrowLeft className="h-4 w-4" /> My Words
-            </button>
+              <ArrowLeft className="h-4 w-4" />  <UiText text={"My Words"} /> </button>
             <span className="premium-top-chip gap-1"><Icon className="h-3.5 w-3.5" /> {meta.label}</span>
           </div>
           <h1 className="mt-4 text-2xl font-black text-slate-900 sm:text-3xl">My {meta.label} Words</h1>

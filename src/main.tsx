@@ -6,10 +6,12 @@ import MotionRuntime from './components/MotionRuntime.tsx'
 import AnalyticsRuntime from './components/analytics/AnalyticsRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
+import './styles/liquid.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 
 if (typeof window !== 'undefined') {
+  try { document.documentElement.dataset.effects = localStorage.getItem('profai-effects') === 'reduced' ? 'reduced' : 'full' } catch { /* Optional preference. */ }
   window.addEventListener('vite:preloadError', () => {
     void recoverFromStaleBuild(new Error('vite:preloadError'))
   })

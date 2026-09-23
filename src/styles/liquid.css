@@ -1,0 +1,313 @@
+/* ProfAI material system: glass on the control plane, stable reading surfaces. */
+:root {
+  --liquid-ink: #17202e;
+  --liquid-muted: #596574;
+  --liquid-red: #cf2836;
+  --liquid-line: rgba(115, 131, 149, .18);
+  --liquid-control: linear-gradient(130deg, rgba(255,255,255,.84), rgba(255,255,255,.51));
+  --liquid-shadow: 0 14px 42px rgba(45, 57, 77, .075), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(128,147,165,.1);
+  --liquid-ease: cubic-bezier(.2,.8,.2,1);
+  --app-text: var(--liquid-ink);
+  --arena-glass-strong: rgba(255,255,255,.91);
+  --arena-shadow: var(--liquid-shadow);
+}
+body { color: var(--liquid-ink); background: #f4f6f8; }
+.app-shell { background: radial-gradient(ellipse at 1% 0%, #e4f3f4 0, transparent 42%), radial-gradient(ellipse at 98% 4%, #fcebe5 0, transparent 38%), #f5f6f8; }
+.app-shell :where(a,button,input,textarea,select,[role='button']):focus-visible,
+.app-shell input[type='search']:focus-visible { outline: 3px solid #9e2535; outline-offset: 4px; }
+.glass-control, .app-shell .liquid-sidebar, .liquid-mobile-nav {
+  border: 1px solid rgba(255,255,255,.94);
+  background: var(--liquid-control);
+  box-shadow: var(--liquid-shadow);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+}
+.glass-surface { position: relative; border: 1px solid rgba(255,255,255,.95); border-radius: 24px; background: linear-gradient(135deg,rgba(255,255,255,.97),rgba(255,255,255,.82)); box-shadow: var(--liquid-shadow); }
+.liquid-page { max-width: 1440px; margin: 0 auto; padding: 18px 36px 48px; }
+.liquid-page-heading { margin: 6px 0 30px; max-width: 880px; }
+.liquid-page-heading h1 { font-size: clamp(30px, 3.2vw, 46px); font-weight: 760; letter-spacing: -.045em; line-height: 1.14; margin: 10px 0 12px; }
+.liquid-page-heading > p:not(.liquid-eyebrow) { color: var(--liquid-muted); font-size: 16px; line-height: 1.7; }
+.liquid-eyebrow { display: flex; align-items: center; gap: 9px; color: #a52c3b; font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; line-height: 1.5; }
+.liquid-eyebrow > span:first-child:not(:only-child), .liquid-status-dot { width: 6px; height: 6px; background: #d5414e; border-radius: 50%; flex-shrink: 0; }
+.liquid-lead { color: var(--liquid-muted); font-size: 19px; line-height: 1.75; }
+.liquid-button { display: inline-flex; justify-content: center; align-items: center; gap: 12px; min-height: 48px; padding: 12px 23px; border: 1px solid transparent; border-radius: 15px; font-size: 14px; font-weight: 650; text-align: center; line-height: 1.4; transition: transform 180ms var(--liquid-ease), box-shadow 180ms, background 180ms; }
+.liquid-button.primary { color: white; border-color: #cc3a45; background: linear-gradient(165deg,#ef6770 0%,#d93040 35%,#be2331 100%); box-shadow: 0 8px 20px #bb263226, inset 0 1px 0 #ffffff8a, inset 0 -1px 0 #9e1c2a70; }
+.liquid-button.secondary { color: #7f2834; border-color: #e6c5c9; background: linear-gradient(135deg,#ffffffc9,#fff6f69c); box-shadow: inset 0 1px 0 #fff; }
+.liquid-button:disabled { opacity: .55; cursor: wait; }
+.liquid-actions { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
+.liquid-text-link { display: inline-flex; align-items: center; gap: 9px; color: #ae2837; font-size: 13px; font-weight: 650; line-height: 1.5; }
+.liquid-icon-button { width: 42px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #fff; background: #ffffffa6; color: #536074; }
+.liquid-language { display: inline-flex; align-items: center; gap: 7px; color: #455268; font-size: 12px; }
+.liquid-language select { background: transparent; color: inherit; max-width: 116px; min-height: 40px; padding: 4px 3px; cursor: pointer; }
+.app-shell .liquid-sidebar { position: fixed; display: flex; flex-direction: column; width: 260px; inset: 18px auto 18px 18px; z-index: 40; border-radius: 28px; padding: 26px 16px 16px; overflow: auto; transition: transform 240ms var(--liquid-ease), opacity 240ms; }
+.app-shell .liquid-sidebar-concealed { transform: translateX(-115%); opacity: 0; pointer-events: none; }
+.liquid-brand-link { display: block; margin: 0 5px 34px; }
+.liquid-nav { flex: 1; }
+.liquid-nav-item { display: flex; align-items: center; gap: 13px; padding: 14px 13px; min-height: 54px; margin: 4px 0; border: 1px solid transparent; border-radius: 16px; color: #505c6d; font-size: 13px; font-weight: 550; line-height: 1.45; transition: background 180ms, color 180ms; }
+.liquid-nav-item svg { flex-shrink: 0; }
+.liquid-nav-item.is-current { background: linear-gradient(130deg,#fff8f8e6,#f8dfe38a); border-color: #fff; box-shadow: inset 0 1px 0 #fff, 0 5px 16px #aa293708; color: #b12435; }
+.liquid-secondary-nav { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--liquid-line); }
+.liquid-secondary-nav summary { display: flex; justify-content: space-between; padding: 10px 13px; cursor: pointer; font-size: 12px; color: #647084; list-style: none; }
+.liquid-secondary-nav summary::-webkit-details-marker { display: none; }
+.liquid-secondary-nav[open] summary svg { transform: rotate(180deg); }
+.liquid-secondary-nav a { display: flex; align-items: center; gap: 12px; padding: 11px 13px; font-size: 12px; color: #5d687a; border-radius: 12px; }
+.liquid-sidebar-footer { margin-top: 24px; padding: 12px 6px 0; border-top: 1px solid var(--liquid-line); }
+.liquid-account { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; }
+.liquid-account > span:nth-child(2) { flex: 1; min-width: 0; }
+.liquid-account strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.liquid-account small { display: block; font-size: 10px; color: #6c7686; margin-top: 3px; }
+.liquid-account img,.liquid-avatar { height: 35px; width: 35px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.liquid-avatar { display: grid; place-items: center; background: #f4dce0; color: #ab2939; font-weight: 650; }
+.workspace-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 16px 36px 0; min-height: 58px; }
+.workspace-toolbar-actions { display: flex; align-items: center; gap: 12px; }
+.workspace-mobile-brand { display: none; font-weight: 800; font-size: 22px; letter-spacing: -.055em; }
+.workspace-mobile-brand span { color: #cc2837; }
+.liquid-mobile-nav { display: none; }
+.liquid-results-details > summary { padding: 18px 22px; border: 1px solid white; border-radius: 16px; background: #ffffffac; cursor: pointer; color: #4a576a; font-size: 14px; font-weight: 600; }
+.liquid-results-details[open] > summary { margin-bottom: 20px; }
+.performance-studio { padding-bottom: 110px; }
+.liquid-mobile-tools { display: none; position: relative; }
+.liquid-mobile-tools summary { display: grid; place-items: center; list-style: none; width: 40px; height: 40px; cursor: pointer; border: 1px solid white; border-radius: 50%; background: #ffffff88; }
+.liquid-mobile-tools summary::-webkit-details-marker { display: none; }
+.liquid-mobile-tools nav { position: absolute; top: 48px; right: -90px; width: 230px; z-index: 60; border-radius: 20px; padding: 10px; }
+.liquid-mobile-tools nav a { display: block; padding: 12px; font-size: 13px; border-radius: 10px; }
+.liquid-mobile-tools nav a:hover { background: #fff9; }
+.liquid-section-tabs { display: flex; gap: 26px; flex-wrap: wrap; border-bottom: 1px solid var(--liquid-line); margin-bottom: 25px; }
+.liquid-section-tabs a { font-size: 13px; padding: 0 0 14px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 7px; }
+.liquid-section-tabs a[aria-current] { color: #b02c3b; border-bottom-color: #c42c3d; }
+.liquid-section-tabs span { padding: 1px 7px; background: #ffffffad; border-radius: 10px; font-size: 10px; }
+.liquid-university-search { padding: 22px; margin-bottom: 25px; }
+.liquid-search-row { display: flex; align-items: center; gap: 12px; }
+.liquid-search-field { display: flex; align-items: center; gap: 10px; background: #f6f7f9; border: 1px solid #dce2e9; border-radius: 13px; padding: 0 14px; flex: 1; min-width: 0; }
+.liquid-search-field input { background: transparent; min-width: 0; width: 100%; height: 48px; font-size: 13px; }
+.liquid-search-field svg { flex-shrink: 0; color: #728094; }
+.liquid-filter select { border: 1px solid #dce2e9; border-radius: 13px; background: #fff; height: 48px; padding: 0 12px; font-size: 12px; max-width: 210px; }
+.liquid-filter-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.liquid-search-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 11px; color: #687487; margin-top: 16px; }
+.liquid-search-meta button { font-size: 11px; }
+.liquid-university-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; }
+.liquid-university-card { overflow: hidden; }
+.liquid-campus-thumbnail { height: 175px; position: relative; background: #edf1f4; }
+.liquid-campus-thumbnail > img { width: 100%; height: 100%; object-fit: cover; }
+.liquid-photo-credit { position: absolute; bottom: 8px; right: 8px; padding: 3px 8px; background: #fff; border-radius: 7px; color: #4e596b; font-size: 9px; }
+.liquid-campus-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(130deg,#dce9ee,#f8e9e5); color: #576978; }
+.liquid-campus-placeholder span { font-size: 12px; }
+.liquid-university-copy { padding: 23px; }
+.liquid-university-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+.liquid-university-copy h2 { font-size: 19px; line-height: 1.35; font-weight: 700; letter-spacing: -.025em; }
+.liquid-university-copy > p { font-size: 12px; color: #687487; margin: 10px 0 18px; }
+.liquid-university-meta { display: flex; flex-wrap: wrap; gap: 9px; font-size: 10px; color: #566174; margin-bottom: 20px; }
+.liquid-university-meta span { background: #f1f4f7; padding: 5px 8px; border-radius: 8px; }
+.liquid-university-empty { padding: 50px 25px; display: flex; align-items: center; flex-direction: column; text-align: center; gap: 18px; }
+.liquid-university-empty h2 { font-size: 22px; font-weight: 700; }
+.liquid-university-empty p { font-size: 14px; color: #637083; }
+.liquid-load-more { display: flex; justify-content: center; margin: 30px 0; }
+.liquid-catalog-note { color: #677284; font-size: 11px; line-height: 1.8; margin: 25px 0; }
+.liquid-auth-showcase { position: relative; overflow: hidden; border-radius: 32px; min-height: 680px; background: #273240; color: white; }
+.liquid-auth-language { position: absolute; top: 16px; right: 24px; z-index: 50; padding: 0 14px; border-radius: 18px; }
+.liquid-auth-page { padding-top: 76px; padding-bottom: 36px; }
+.liquid-auth-page .panel-surface { background: linear-gradient(145deg,#fffffff5,#ffffffd9); box-shadow: var(--liquid-shadow); border-radius: 30px; }
+.liquid-auth-page input { box-shadow: none; border-color: #d8dfe8; border-radius: 12px; }
+.liquid-auth-page button[type='submit'] { background: linear-gradient(150deg,#ec5b67,#c42434); box-shadow: 0 8px 20px #b4263226,inset 0 1px 0 #ffffff85; border: 1px solid #d84652; border-radius: 14px; }
+.liquid-auth-page .panel-surface .text-blue-700,.liquid-auth-page .panel-surface .text-blue-600 { color: #a62939; }
+.liquid-auth-page .panel-surface > .pointer-events-none { display: none; }
+.liquid-marketing-nav > a:first-child p:first-child { font-size: 20px; }
+.liquid-marketing-nav > a:first-child p:last-child { font-size: 10px; }
+.liquid-brand-link p:first-child { font-size: 20px; }
+.liquid-brand-link p:last-child { font-size: 10px; color: #647084; }
+/* Shared surfaces reach legacy readers, profiles, libraries, and workspaces. */
+.app-shell :is(.ui-surface,.ui-page-header,.surface-card,.panel-surface,.app-panel,.apple-glass-card,.hero-metric-card,.card) { box-shadow: var(--liquid-shadow); border-color: #ffffffeb; background: linear-gradient(135deg,#fffffff5,#ffffffe0); }
+.app-shell .workspace-page :is(.premium-hero,.ui-page-hero) { box-shadow: var(--liquid-shadow); background: linear-gradient(135deg,#fffffff0,#fff7f7c9); border: 1px solid white; }
+.app-shell .workspace-page .premium-section-title { font-size: clamp(30px,3.7vw,46px); letter-spacing: -.04em; line-height: 1.15; }
+.app-shell .workspace-page .premium-section-subtitle { color: #586576; font-size: 14px; line-height: 1.8; }
+.app-shell .workspace-page :is(.ui-action-primary,.btn-primary) { background: linear-gradient(155deg,#ec5d68,#c62738); color: white; border: 1px solid #d94755; box-shadow: inset 0 1px 0 #ffffff80,0 7px 17px #bf23351c; }
+.app-shell .workspace-page :is(.ui-action-secondary,.route-back-button) { background: #ffffffba; border: 1px solid #dce1e8; box-shadow: inset 0 1px 0 #fff; color: #596679; }
+.liquid-auth-showcase > img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; }
+.liquid-auth-showcase::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg,#14213033,transparent 30%,#142130d9); }
+.liquid-auth-brand { position: relative; z-index: 1; display: flex; gap: 12px; align-items: center; padding: 30px; }
+.liquid-auth-brand strong { font-size: 22px; }
+.liquid-auth-story { position: absolute; bottom: 0; left: 0; right: 0; padding: 36px; z-index: 1; }
+.liquid-auth-story h2 { font-weight: 720; font-size: 36px; letter-spacing: -.04em; line-height: 1.15; margin: 16px 0; }
+.liquid-auth-story p { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+.liquid-auth-story span { font-size: 14px; line-height: 1.8; color: #f1f3f6; }
+@media(max-width:1199px) { .liquid-university-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:1023px) { .liquid-mobile-tools { display: block; }.liquid-auth-showcase { display: none; } }
+@media(max-width:700px) { .liquid-search-row { flex-wrap: wrap; }.liquid-search-field { flex-basis: 100%; }.liquid-filter { flex: 1; }.liquid-filter select { max-width: 100%; width: 100%; }.liquid-search-row .liquid-button { padding: 12px 16px; }.liquid-filter-grid { grid-template-columns: 1fr; gap: 0; }.liquid-filter-grid .liquid-form-field { margin: 15px 0 0; }.liquid-university-grid { grid-template-columns: 1fr; }.liquid-campus-thumbnail { height: 195px; }.liquid-section-tabs { gap: 18px; }.liquid-section-tabs a { font-size: 12px; } }
+.study-object { display: block; background-image: url('/assets/study/study-objects-transparent.png'); background-size: 300% 200%; background-position: var(--object-position); width: 180px; aspect-ratio: 1; flex-shrink: 0; pointer-events: none; }
+.liquid-study-illustration { width: 160px; height: 140px; display: flex; align-items: center; justify-content: center; }
+.liquid-study-illustration .study-object { width: 140px; }
+.liquid-study-illustration.is-compact { width: 120px; height: 100px; }
+.liquid-study-illustration.is-compact .study-object { width: 105px; }
+.liquid-arena-backdrop { position: absolute; inset: 0; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 0 0,#dceef277,transparent 50%),radial-gradient(ellipse at 100% 0,#f8e3df66,transparent 50%); }
+.liquid-arena-backdrop.is-fixed { position: fixed; }
+.app-shell .workspace-background .ambient-sphere,.app-shell .workspace-background .ambient-grid { display: none; }
+.app-shell .workspace-background .ambient-mesh { opacity: .35; }
+.liquid-heading-with-tabs { display: flex; align-items: center; justify-content: space-between; max-width: none; gap: 24px; }
+.liquid-heading-with-tabs > div > p { font-size: 14px; color: var(--liquid-muted); line-height: 1.7; }
+.liquid-track-tabs { display: flex; padding: 5px; border-radius: 50px; flex-shrink: 0; }
+.liquid-track-tabs a { padding: 10px 20px; font-size: 12px; border-radius: 30px; font-weight: 650; }
+.liquid-track-tabs a[aria-current] { background: linear-gradient(150deg,#ee606a,#c82938); color: #fff; box-shadow: inset 0 1px 0 #fffb,0 3px 9px #c92a3820; }
+.liquid-skill-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; }
+.liquid-skill-card { display: flex; align-items: center; gap: 10px; padding: 28px; text-align: left; width: 100%; transition: transform 220ms var(--liquid-ease),box-shadow 220ms; }
+.liquid-skill-card > div { flex: 1; }
+.liquid-skill-card h2 { font-size: clamp(22px,2.4vw,30px); line-height: 1.2; font-weight: 730; letter-spacing: -.04em; margin: 11px 0; }
+.liquid-skill-card p:not(.liquid-eyebrow) { font-size: 13px; color: var(--liquid-muted); line-height: 1.8; margin-bottom: 22px; }
+.liquid-skill-card .study-object { width: clamp(95px,10vw,145px); }
+.liquid-progress-details { margin-top: 25px; padding: 24px; }
+.liquid-progress-details > summary { display: flex; align-items: center; justify-content: space-between; list-style: none; font-size: 14px; font-weight: 650; cursor: pointer; }
+.liquid-progress-details[open] > summary { margin-bottom: 24px; }
+.liquid-progress-details h2 { display: flex; align-items: center; gap: 9px; font-weight: 650; font-size: 17px; }
+.liquid-progress-details p { font-size: 12px; color: var(--liquid-muted); margin: 13px 0; line-height: 1.7; }
+.liquid-score-list > div { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--liquid-line); gap: 15px; font-size: 13px; }
+.liquid-catalog { margin-top: 26px; padding: 25px; }
+.liquid-catalog-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; gap: 20px; }
+.liquid-catalog-toggle strong { display: block; font-size: 21px; font-weight: 700; letter-spacing: -.03em; margin: 10px 0 6px; }
+.liquid-catalog-toggle small { color: var(--liquid-muted); font-size: 12px; }
+.liquid-test-list { margin-top: 20px; }
+.liquid-test-list > a { display: flex; align-items: center; justify-content: space-between; padding: 17px 2px; border-top: 1px solid var(--liquid-line); gap: 15px; }
+.liquid-test-list strong { font-weight: 600; font-size: 14px; }
+.liquid-test-list small { display: block; color: var(--liquid-muted); font-size: 11px; margin-top: 6px; }
+@media(max-width:700px) { .liquid-skill-grid { grid-template-columns: 1fr; }.liquid-skill-card { padding: 24px; }.liquid-skill-card .study-object { width: 110px; }.liquid-heading-with-tabs { align-items: flex-start; flex-direction: column; gap: 15px; }.liquid-track-tabs a { padding: 8px 20px; } }
+.liquid-exam-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.liquid-exam-card { padding: 32px; display: flex; align-items: flex-start; flex-direction: column; overflow: hidden; }
+.liquid-exam-art { align-self: flex-end; height: 130px; margin-bottom: -52px; }
+.liquid-exam-art .study-object { width: 155px; }
+.liquid-exam-card h2 { font-size: 38px; font-weight: 760; letter-spacing: -.04em; margin: 8px 0 16px; }
+.liquid-exam-card > p:not(.liquid-eyebrow) { font-size: 14px; line-height: 1.8; color: var(--liquid-muted); max-width: 360px; }
+.liquid-skill-links { width: 100%; margin: 24px 0; flex: 1; }
+.liquid-skill-links a { display: flex; align-items: center; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--liquid-line); font-size: 14px; }
+.liquid-skill-links a svg:last-child { margin-left: auto; color: #b42b3c; }
+.liquid-resource-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 28px; margin-top: 26px; }
+.liquid-resource-row h3 { font-size: 16px; font-weight: 650; }
+.liquid-resource-row p { font-size: 13px; color: var(--liquid-muted); margin-top: 7px; }
+.liquid-resource-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; margin-top: 28px; }
+.liquid-resource-card { padding: 25px; display: flex; align-items: flex-start; flex-direction: column; }
+.liquid-resource-card .study-object { width: 120px; margin: -6px 0 14px; }
+.liquid-resource-card h2 { font-size: 21px; font-weight: 700; letter-spacing: -.025em; }
+.liquid-resource-card p { margin: 12px 0 24px; color: var(--liquid-muted); font-size: 14px; line-height: 1.7; flex: 1; }
+.liquid-feature-icon { display: inline-grid; place-items: center; width: 52px; height: 52px; border: 1px solid #fff; border-radius: 17px; background: #fcebed; color: #b92b3d; margin-bottom: 18px; }
+.liquid-admission-hero { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+.liquid-admission-hero > div { padding: 40px; }
+.liquid-admission-hero h2 { font-size: 32px; font-weight: 730; letter-spacing: -.04em; margin: 14px 0; }
+.liquid-admission-hero p:not(.liquid-eyebrow) { color: var(--liquid-muted); line-height: 1.8; font-size: 14px; margin-bottom: 24px; }
+.liquid-admission-hero img { width: 100%; height: 100%; object-fit: cover; max-height: 370px; }
+.liquid-landing { max-width: 1500px; margin: 0 auto; padding: 20px 40px 0; }
+.liquid-marketing-nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 20px; border-radius: 24px; position: relative; z-index: 10; }
+.liquid-marketing-nav > nav { display: flex; gap: 28px; font-size: 13px; font-weight: 550; color: #535e6d; }
+.liquid-nav-actions { display: flex; align-items: center; gap: 18px; }
+.liquid-nav-actions .liquid-button { min-height: 42px; padding: 9px 18px; }
+.liquid-hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; padding: 88px 15px 90px; }
+.liquid-hero h1 { font-size: clamp(42px,5vw,73px); line-height: 1.09; letter-spacing: -.055em; font-weight: 760; margin: 25px 0; }
+.liquid-hero h1 span { color: #ac2d3b; }
+.liquid-hero .liquid-lead { max-width: 560px; font-size: 17px; }
+.liquid-hero .liquid-actions { margin-top: 32px; }
+.liquid-hero-footnote { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; color: #687486; font-size: 11px; margin-top: 28px; }
+.liquid-hero-footnote i { width: 3px; height: 3px; border-radius: 50%; background: #aab2bc; }
+.liquid-hero-art { position: relative; padding: 0 12px 25px 0; }
+.liquid-hero-photo { overflow: hidden; border-radius: 32px 80px 32px 32px; aspect-ratio: 1.07; border: 6px solid #ffffff9c; box-shadow: 0 26px 65px #5360701a; }
+.liquid-hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+.liquid-floating-card { position: absolute; bottom: 0; left: -36px; right: 30px; border-radius: 24px; padding: 12px 20px 12px 10px; display: flex; align-items: center; gap: 14px; }
+.liquid-floating-card .study-object { width: 80px; }
+.liquid-floating-card > div { flex: 1; }
+.liquid-floating-card small { color: #9b2b3c; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+.liquid-floating-card strong { display: block; font-size: 20px; letter-spacing: -.02em; margin: 3px 0; }
+.liquid-floating-card div > span { color: #5b6775; font-size: 11px; }
+.liquid-mini-arrow { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 50%; color: #aa2637; background: #fff8; }
+.liquid-floating-label { display: flex; gap: 9px; align-items: center; position: absolute; top: 24px; right: -9px; border-radius: 30px; padding: 12px 18px; font-size: 11px; font-weight: 600; }
+.liquid-section { padding: 35px 15px 55px; scroll-margin-top: 24px; }
+.liquid-section h2, .liquid-final-cta h2 { font-size: clamp(26px,3vw,37px); letter-spacing: -.045em; font-weight: 700; line-height: 1.2; margin-top: 12px; }
+.liquid-path-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; margin-top: 32px; }
+.liquid-path-card { display: flex; flex-direction: column; padding: 27px; transition: transform 220ms var(--liquid-ease), box-shadow 220ms; }
+.liquid-path-art { display: flex; align-items: flex-start; justify-content: space-between; }
+.liquid-path-art .study-object { width: 125px; margin: -10px 0 15px -12px; }
+.liquid-path-art > span:not(.study-object) { color: #929aa7; font-size: 11px; }
+.liquid-path-card h3 { font-size: 24px; font-weight: 710; letter-spacing: -.035em; margin: 10px 0; }
+.liquid-path-card > p:not(.liquid-eyebrow) { color: var(--liquid-muted); font-size: 14px; line-height: 1.8; margin-bottom: 24px; flex: 1; }
+.liquid-how { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; margin-top: 25px; }
+.liquid-how img { border-radius: 24px; width: 100%; height: 230px; object-fit: cover; margin-top: 28px; }
+.liquid-how ol { align-self: center; }
+.liquid-how li { display: flex; gap: 20px; padding: 27px 0; border-bottom: 1px solid var(--liquid-line); }
+.liquid-how li > span { font-size: 13px; color: #b13242; padding-top: 5px; }
+.liquid-how h3 { font-size: 20px; font-weight: 650; letter-spacing: -.025em; }
+.liquid-how li p { color: var(--liquid-muted); font-size: 14px; line-height: 1.8; margin-top: 9px; }
+.liquid-final-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 38px; margin: 20px 15px 40px; }
+.liquid-footer { display: flex; align-items: center; gap: 28px; padding: 25px 15px 30px; border-top: 1px solid var(--liquid-line); color: #697382; font-size: 12px; }
+.liquid-footer > span { flex: 1; }
+.liquid-home-grid { display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 24px; }
+.liquid-focus-card { padding: 34px; overflow: hidden; display: flex; align-items: center; min-height: 295px; }
+.liquid-focus-card > div { position: relative; z-index: 1; flex: 1; }
+.liquid-focus-card h2 { font-size: clamp(25px,2.6vw,36px); font-weight: 740; line-height: 1.16; letter-spacing: -.04em; max-width: 480px; margin: 16px 0; }
+.liquid-focus-card p:not(.liquid-eyebrow) { font-size: 14px; line-height: 1.8; color: var(--liquid-muted); max-width: 350px; margin-bottom: 23px; }
+.liquid-focus-card > .study-object { width: 195px; margin: 0 -8px 0 8px; }
+.liquid-week-card { padding: 27px; }
+.liquid-week-card h2 { font-weight: 650; font-size: 16px; }
+.liquid-week-days { display: flex; justify-content: space-between; margin: 25px 0; gap: 4px; }
+.liquid-week-days > div { display: flex; align-items: center; flex-direction: column; gap: 8px; font-size: 9px; color: #647084; }
+.liquid-week-days i { width: 18px; height: 18px; border-radius: 50%; background: #e7ebef; display: grid; place-items: center; }
+.liquid-week-days i.active { background: #56816b; color: white; }
+.liquid-week-stat { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--liquid-line); padding: 14px 0; font-size: 11px; color: #667182; }
+.liquid-week-stat strong { font-size: 16px; color: var(--liquid-ink); }
+.liquid-home-goal { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 23px; }
+.liquid-goal-chip { display: inline-flex; align-items: center; gap: 10px; padding: 9px 14px; border: 1px solid #fff; border-radius: 14px; background: #ffffffab; font-size: 12px; }
+.liquid-goal-chip svg { color: #b12f40; }
+.liquid-activity { padding: 28px; margin-top: 24px; }
+.liquid-activity header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+.liquid-activity h2 { font-weight: 680; font-size: 17px; }
+.liquid-empty { padding: 24px 0 12px; color: #627082; font-size: 13px; line-height: 1.7; }
+.liquid-empty strong { color: #3a4659; font-size: 15px; display: block; margin-bottom: 5px; }
+.liquid-activity-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--liquid-line); }
+.liquid-activity-row > div { flex: 1; min-width: 0; }
+.liquid-activity-row strong { font-weight: 600; font-size: 13px; }
+.liquid-activity-row small { display: block; color: #6e7989; font-size: 11px; margin-top: 4px; }
+.liquid-inline-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1px solid #ecd5bd; background: #fff8ef; color: #82501f; padding: 13px 18px; border-radius: 14px; margin-bottom: 20px; font-size: 13px; }
+.liquid-onboarding { padding: 24px; min-height: 100dvh; }
+.liquid-onboarding > header { display: flex; justify-content: space-between; max-width: 1240px; margin: auto; gap: 20px; align-items: center; }
+.liquid-onboarding-panel { max-width: 700px; margin: 55px auto; padding: 40px; }
+.liquid-onboarding-panel h1 { font-size: 35px; font-weight: 750; line-height: 1.18; letter-spacing: -.045em; margin: 15px 0; }
+.liquid-onboarding-panel > p:not(.liquid-eyebrow) { color: #657182; font-size: 14px; line-height: 1.8; }
+.liquid-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 28px 0; }
+.liquid-choice { border: 1px solid #dce1e8; background: #fff9; border-radius: 19px; text-align: left; padding: 19px; display: flex; flex-direction: column; gap: 8px; min-height: 145px; }
+.liquid-choice.selected { border-color: #d56a77; background: #fff2f3; box-shadow: 0 0 0 2px #cc35400a, inset 0 1px 0 #fff; }
+.liquid-choice svg { color: #b53343; }
+.liquid-choice strong { font-size: 16px; }
+.liquid-choice small { color: #697487; line-height: 1.5; }
+.liquid-onboarding-panel footer { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-top: 25px; }
+.liquid-form-field { display: flex; flex-direction: column; gap: 10px; margin: 24px 0; font-size: 13px; font-weight: 600; }
+.liquid-form-field select { background: #fff; border: 1px solid #d7dfe7; border-radius: 12px; min-height: 48px; padding: 10px 14px; }
+.liquid-page .liquid-loading { height: 300px; border-radius: 24px; background: linear-gradient(110deg,#ffffff80,#fff,#ffffff80); animation: liquid-arrive 450ms both; }
+@keyframes liquid-arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+.liquid-page-heading, .liquid-hero-copy { animation: liquid-arrive 440ms var(--liquid-ease) both; }
+@media (hover:hover) and (pointer:fine) {
+  .liquid-button:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 12px 26px #a3263226,inset 0 1px 0 #ffffff9c; }
+  .liquid-button:not(:disabled):active { transform: translateY(0) scale(.985); }
+  .liquid-nav-item:hover,.liquid-secondary-nav a:hover { background-color: #ffffffaa; }
+  .liquid-path-card:hover,.liquid-resource-card:hover { transform: translateY(-3px); }
+}
+@media (max-width:1199px) { .liquid-home-grid { grid-template-columns: 1fr; }.liquid-week-card { display: grid; grid-template-columns: 1fr 1fr; column-gap: 30px; }.liquid-week-days { margin: 12px 0; }.liquid-week-stat { grid-row: 2; }.liquid-hero { gap: 35px; }.liquid-marketing-nav > nav { gap: 16px; } }
+@media (max-width:1023px) {
+  .app-shell .liquid-sidebar { display: none; }
+  .workspace-toolbar { justify-content: space-between; padding: 14px 22px 0; }
+  .workspace-mobile-brand { display: block; }
+  .liquid-mobile-nav { display: flex; position: fixed; z-index: 45; bottom: max(12px,env(safe-area-inset-bottom)); left: 16px; right: 16px; margin: auto; max-width: 480px; padding: 7px; border-radius: 24px; }
+  .liquid-mobile-nav a { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 8px 3px; border-radius: 17px; color: #647083; font-size: 10px; line-height: 1.3; }
+  .liquid-mobile-nav a.is-current { background: linear-gradient(140deg,#fff,#f4dbdf); color: #b22e3c; box-shadow: inset 0 1px 0 #fff; }
+  .liquid-page { padding: 22px 24px 95px; }.liquid-landing { padding: 16px 24px 0; }.liquid-marketing-nav > nav { display: none; }.liquid-hero { padding-top: 60px; }.liquid-resource-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:700px) {
+  .liquid-page { padding: 16px 18px 95px; }.liquid-page-heading { margin: 12px 0 25px; }.liquid-page-heading h1 { font-size: 31px; }.liquid-page-heading > p:not(.liquid-eyebrow) { font-size: 14px; }
+  .liquid-landing { padding: 12px 16px 0; }.liquid-marketing-nav { padding: 9px 11px; gap: 8px; border-radius: 20px; }.liquid-marketing-nav .liquid-nav-actions { gap: 7px; }.liquid-marketing-nav .liquid-language svg { display: none; }.liquid-marketing-nav .liquid-button { padding: 9px 12px; font-size: 12px; }
+  .liquid-marketing-nav .liquid-brand-link { margin: 0; }.liquid-hero { grid-template-columns: 1fr; padding: 48px 5px 25px; gap: 35px; }.liquid-hero h1 { font-size: 46px; }.liquid-hero .liquid-lead { font-size: 16px; }.liquid-hero-art { max-width: 500px; margin: 5px 5px 10px 15px; }.liquid-floating-card { left: -15px; right: 10px; }.liquid-hero-photo { aspect-ratio: 1.4; }
+  .liquid-section { padding: 35px 4px; }.liquid-path-grid { grid-template-columns: 1fr; }.liquid-path-card { padding: 25px; }.liquid-path-art { height: 100px; }.liquid-path-art .study-object { width: 100px; }.liquid-path-card h3 { font-size: 24px; }
+  .liquid-how { grid-template-columns: 1fr; gap: 15px; }.liquid-how img { height: 200px; }.liquid-final-cta { flex-direction: column; align-items: flex-start; padding: 28px; margin: 10px 0 30px; }.liquid-footer { flex-wrap: wrap; gap: 15px; }.liquid-footer > span { flex: auto; }.liquid-footer > a:first-child { width: 100%; }
+  .liquid-exam-grid,.liquid-admission-hero { grid-template-columns: 1fr; }.liquid-exam-card { padding: 25px; }.liquid-admission-hero > div { padding: 28px; }.liquid-admission-hero img { height: 180px; }.liquid-resource-grid { gap: 14px; }.liquid-resource-card { padding: 20px; }.liquid-resource-card h2 { font-size: 18px; }.liquid-resource-card p { font-size: 12px; }.liquid-resource-card .study-object { width: 95px; }
+  .liquid-focus-card { padding: 26px; min-height: 320px; align-items: flex-start; }.liquid-focus-card > div { padding-top: 4px; }.liquid-focus-card > .study-object { position: absolute; right: 8px; top: 12px; width: 105px; opacity: .9; }.liquid-focus-card h2 { max-width: 75%; font-size: 28px; margin-top: 24px; }.liquid-focus-card p:not(.liquid-eyebrow) { max-width: 90%; }.liquid-focus-card .liquid-eyebrow { max-width: 68%; }
+  .liquid-home-goal { gap: 8px; }.liquid-goal-chip { font-size: 11px; }.liquid-home-goal > a { font-size: 11px; }.liquid-activity { padding: 22px; }.liquid-activity header { align-items: flex-start; }.liquid-activity header a { font-size: 11px; }.liquid-resource-row { padding: 22px; }.workspace-toolbar { padding: 12px 18px 0; }.workspace-toolbar-actions { gap: 9px; }.workspace-toolbar-actions .liquid-icon-button:first-child { display: none; }
+  .liquid-onboarding { padding: 18px; }.liquid-onboarding-panel { padding: 26px; margin: 30px auto; }.liquid-onboarding-panel h1 { font-size: 29px; }.liquid-choice-grid { gap: 10px; }.liquid-choice { padding: 15px; }.liquid-choice strong { font-size: 14px; }.liquid-choice small { font-size: 11px; }
+}
+@media (max-width:380px) { .liquid-resource-grid { grid-template-columns: 1fr; }.liquid-marketing-nav .liquid-language { font-size: 10px; }.liquid-hero h1 { font-size: 40px; }.liquid-choice-grid { grid-template-columns: 1fr; }.liquid-focus-card > .study-object { width: 85px; } }
+@supports not (backdrop-filter:blur(1px)) { .glass-control,.app-shell .liquid-sidebar,.liquid-mobile-nav { background: #f8f9fb; } }
+@media (max-width:380px) { .workspace-toolbar-actions { gap: 5px; }.workspace-toolbar-actions > .liquid-icon-button { width: 32px; min-height: 36px; }.liquid-language { gap: 3px; font-size: 11px; }.workspace-mobile-brand { font-size: 20px; } }
+html[data-effects='reduced'] .glass-control,html[data-effects='reduced'] .liquid-sidebar,html[data-effects='reduced'] .liquid-mobile-nav { backdrop-filter: none; -webkit-backdrop-filter: none; background: #f8f9fb; }
+html[data-effects='reduced'] *,html[data-effects='reduced'] *::before,html[data-effects='reduced'] *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+@media (forced-colors:active) { .glass-control,.glass-surface,.liquid-mobile-nav,.liquid-button,.liquid-choice { border: 1px solid CanvasText; }.liquid-nav-item.is-current,.liquid-choice.selected,.liquid-mobile-nav .is-current { outline: 2px solid Highlight; }.study-object { display: none; } }

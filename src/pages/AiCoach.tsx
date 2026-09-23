@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -581,8 +582,7 @@ export default function AiCoach() {
                 onClick={() => void loadDashboard()}
                 className="rounded-xl border border-indigo-300/40 bg-indigo-500/20 px-4 py-2 text-sm font-semibold hover:bg-indigo-500/30"
               >
-                Retry
-              </button>
+                 <UiText text={"Retry"} /> </button>
               {requiresLogin ? (
                 <button
                   type="button"
@@ -679,7 +679,7 @@ export default function AiCoach() {
                                 : 'border-slate-700 bg-slate-900/70 text-slate-400'
                             }`}
                           >
-                            Part {part}
+                             <UiText text={"Part"} /> {part}
                           </button>
                         ))}
                       </div>
@@ -825,11 +825,11 @@ export default function AiCoach() {
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-semibold text-white">{module.label}</p>
                           <span className="rounded-full border border-indigo-400/40 bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-100">
-                            Band {module.band.toFixed(1)}
+                             <UiText text={"Band"} /> {module.band.toFixed(1)}
                           </span>
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
-                          Attempts {module.attempts} | Accuracy {module.accuracy.toFixed(1)}% | SkillPower {module.skillPower.toFixed(1)}
+                          Attempts {module.attempts}  <UiText text={"| Accuracy"} /> {module.accuracy.toFixed(1)}% | SkillPower {module.skillPower.toFixed(1)}
                         </p>
                       </div>
                     ))}

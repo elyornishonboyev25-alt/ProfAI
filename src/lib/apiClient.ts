@@ -62,7 +62,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new Error('Backend API ishlamayapti. Backend serverni ishga tushiring.')
+    throw new Error('Unable to connect. Check your connection and try again.')
   }
 
   if (response.status === 401 && auth) {

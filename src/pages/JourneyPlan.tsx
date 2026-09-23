@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -71,7 +72,7 @@ export default function JourneyPlan() {
   }
 
   if (status === 'error') {
-    return <div className="grid min-h-[70vh] place-items-center px-4"><section role="alert" className="w-full max-w-lg rounded-[2rem] border border-white bg-white/75 p-8 text-center shadow-2xl backdrop-blur-2xl"><RefreshCw className="mx-auto h-7 w-7 text-red-500" /><h1 className="mt-5 text-2xl font-black text-slate-950">We couldn’t load your plan</h1><p className="mt-3 text-sm leading-6 text-slate-600">{error}</p><button type="button" onClick={() => void loadPlan()} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"><RefreshCw className="h-4 w-4" /> Try again</button></section></div>
+    return <div className="grid min-h-[70vh] place-items-center px-4"><section role="alert" className="w-full max-w-lg rounded-[2rem] border border-white bg-white/75 p-8 text-center shadow-2xl backdrop-blur-2xl"><RefreshCw className="mx-auto h-7 w-7 text-red-500" /><h1 className="mt-5 text-2xl font-black text-slate-950">We couldn’t load your plan</h1><p className="mt-3 text-sm leading-6 text-slate-600">{error}</p><button type="button" onClick={() => void loadPlan()} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"><RefreshCw className="h-4 w-4" />  <UiText text={"Try again"} /> </button></section></div>
   }
 
   if (!plan?.result) {

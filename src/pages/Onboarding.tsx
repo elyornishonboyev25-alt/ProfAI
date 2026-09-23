@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -352,6 +353,7 @@ export default function Onboarding() {
     if (avatarUploading) return
     if (step > 1) goTo((step - 1) as StepId, 'back')
     else {
+      if (user?.onboardingCompleted) { navigate('/dashboard'); return }
       clearSession()
       navigate('/', { replace: true })
     }
@@ -685,8 +687,7 @@ export default function Onboarding() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                          Country
-                        </span>
+                           <UiText text={"Country"} /> </span>
                         <div className="relative">
                           <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
@@ -860,7 +861,7 @@ export default function Onboarding() {
                                 />
                               </label>
                               <label>
-                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Target score</span>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400"> <UiText text={"Target score"} /> </span>
                                 <input
                                   type="number"
                                   min={400}
@@ -931,7 +932,7 @@ export default function Onboarding() {
 
                   {step === 5 ? (
                     <div>
-                      <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-500">Target countries</p>
+                      <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-500"> <UiText text={"Target countries"} /> </p>
                       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                         {DESTINATIONS.map((destination) => {
                           const active = targetCountries.includes(destination.value)
@@ -1021,7 +1022,7 @@ export default function Onboarding() {
                             <p className="line-clamp-1 text-[11px] text-slate-500">{targetCountries.join(' · ')}</p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Target exam</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"> <UiText text={"Target exam"} /> </p>
                             <p className="mt-1 text-base font-black text-slate-900">{selectedExamCard.label}</p>
                             <p className="text-[11px] text-slate-500">
                               {targetExam === 'IELTS'
@@ -1074,8 +1075,7 @@ export default function Onboarding() {
                   disabled={avatarUploading}
                   className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                 >
-                  Skip for now
-                  <ArrowRight className="h-3.5 w-3.5" />
+                   <UiText text={"Skip for now"} /> <ArrowRight className="h-3.5 w-3.5" />
                 </button>
                 {step < 6 ? (
                   <button
@@ -1084,8 +1084,7 @@ export default function Onboarding() {
                     disabled={!canContinue || avatarUploading}
                     className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.34)] transition hover:shadow-[0_16px_32px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
+                     <UiText text={"Continue"} /> <ArrowRight className="h-4 w-4" />
                   </button>
                 ) : (
                   <div className="flex flex-col items-end">

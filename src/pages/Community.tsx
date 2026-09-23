@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -211,7 +212,7 @@ export default function Community() {
             <BrandLockup className="community-brand" />
             <button type="button" onClick={() => navigate('/dashboard')} className="community-back-btn route-back-button">
               <ArrowLeft className="h-4 w-4" />
-              <span>Dashboard</span>
+              <span> <UiText text={"Dashboard"} /> </span>
             </button>
           </div>
 
@@ -270,9 +271,9 @@ export default function Community() {
           <div className="community-feed">
             <div className="community-feed-heading">
               <div>
-                <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> Smart matching</span>
-                <h1>Find your next <em>study partner.</em></h1>
-                <p>Connect with learners who share your target, country and momentum.</p>
+                <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" />  <UiText text={"Smart matching"} /> </span>
+                <h1> <UiText text={"Find your next"} /> <em> <UiText text={"study partner."} /> </em></h1>
+                <p> <UiText text={"Connect with learners who share your target, country and momentum."} /> </p>
               </div>
               <div className="community-feed-meta"><span className="community-live-dot" />{loading ? 'Matching learners...' : `${visibleResults.length} profiles found`}</div>
             </div>
@@ -282,9 +283,9 @@ export default function Community() {
               {!loading && !error && visibleResults.length === 0 ? (
                 <div className="community-empty">
                   <span><Users className="h-8 w-8" /></span>
-                  <h2>No matching learners yet</h2>
-                  <p>Remove one or two filters to discover more study partners.</p>
-                  <button type="button" onClick={clearFilters}>Show all learners</button>
+                  <h2> <UiText text={"No matching learners yet"} /> </h2>
+                  <p> <UiText text={"Remove one or two filters to discover more study partners."} /> </p>
+                  <button type="button" onClick={clearFilters}> <UiText text={"Show all learners"} /> </button>
                 </div>
               ) : null}
 
@@ -308,18 +309,18 @@ export default function Community() {
           <aside className="community-suggestions">
             <div className="community-glass-panel community-suggestion-panel">
               <div className="community-suggestion-heading">
-                <div><span><Sparkles className="h-4 w-4" /> Recommended</span><h2>Suggested partners</h2></div>
+                <div><span><Sparkles className="h-4 w-4" />  <UiText text={"Recommended"} /> </span><h2> <UiText text={"Suggested partners"} /> </h2></div>
                 <BadgeCheck className="h-6 w-6 text-red-500" />
               </div>
-              <p className="community-suggestion-copy">Best matches from your active filters and study goals.</p>
+              <p className="community-suggestion-copy"> <UiText text={"Best matches from your active filters and study goals."} /> </p>
               <div className="community-suggestion-list">
                 {suggested.map((learner) => (
                   <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)} />
                 ))}
-                {!loading && suggested.length === 0 ? <p className="community-suggestion-empty">Suggestions will appear when a learner matches.</p> : null}
+                {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
               </div>
               <div className="community-suggestion-legend">
-                <span><Zap /><small>ACTIVE</small></span><span><Flame /><small>STREAK</small></span><span><Award /><small>BADGES</small></span>
+                <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
               </div>
             </div>
           </aside>
@@ -360,7 +361,7 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
         <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" /> {eyebrow}</span>
         <h1>{heading}</h1>
         <p>{description}</p>
-        <button type="button" onClick={() => onModeChange('people')} className="community-back-btn route-back-button mt-4"><ArrowLeft className="h-4 w-4" /> Back to Community</button>
+        <button type="button" onClick={() => onModeChange('people')} className="community-back-btn route-back-button mt-4"><ArrowLeft className="h-4 w-4" />  <UiText text={"Back to Community"} /> </button>
       </div>
 
       <nav className="community-mode-nav" aria-label="Switch study room">
@@ -373,7 +374,7 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
       {live && !trial.isPremium ? (
         <div className={cn('community-trial-banner', trial.locked && 'is-locked')}>
           <span>{trial.locked ? 'Free live speaking time used up.' : `${Math.max(0, Math.ceil(trial.secondsRemaining / 60))} free minutes remaining`}</span>
-          {trial.locked ? <button type="button" onClick={() => window.location.assign('/premium')}>Unlock live rooms</button> : null}
+          {trial.locked ? <button type="button" onClick={() => window.location.assign('/premium')}> <UiText text={"Unlock live rooms"} /> </button> : null}
         </div>
       ) : null}
 
@@ -388,7 +389,7 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
 }
 
 function SpeakingLocked({ onUpgrade }: { onUpgrade: () => void }) {
-  return <div className="community-empty"><span><Mic className="h-8 w-8" /></span><h2>Live practice is ready</h2><p>Upgrade for unlimited partner and debate sessions.</p><button type="button" onClick={onUpgrade}>View Premium</button></div>
+  return <div className="community-empty"><span><Mic className="h-8 w-8" /></span><h2> <UiText text={"Live practice is ready"} /> </h2><p> <UiText text={"Upgrade for unlimited partner and debate sessions."} /> </p><button type="button" onClick={onUpgrade}> <UiText text={"View Premium"} /> </button></div>
 }
 
 function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
@@ -420,7 +421,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
       {featured ? (
         <span className="community-top-badge">
           <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
-          <span>Top learner this week</span>
+          <span> <UiText text={"Top learner this week"} /> </span>
         </span>
       ) : null}
       <div className="community-avatar-ring">
@@ -431,13 +432,13 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
       <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || 'Global learner'}</p>
       <div className="community-goal-row"><span>{targetLabel(learner)}</span><span>{learner.targetUniversitySlug || `Level ${learner.level}`}</span></div>
       <div className="community-stat-row">
-        <span><b>{learner.xp.toLocaleString()}</b><small>XP earned</small></span>
-        <span><b>{learner.streak}</b><small>day streak</small></span>
+        <span><b>{learner.xp.toLocaleString()}</b><small> <UiText text={"XP earned"} /> </small></span>
+        <span><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>
         <span><b>{learner.online ? 'Live' : learner.badgeCount}</b><small>{learner.online ? 'online now' : 'badges'}</small></span>
       </div>
       <div className="community-card-footer">
         <span className="community-match-mini"><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} />{score}%</span>
-        <button type="button" disabled={!learner.nickname} onClick={onOpen}>View profile</button>
+        <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /> </button>
       </div>
     </motion.article>
   )
@@ -447,7 +448,7 @@ function SuggestedPartner({ learner, score, onOpen }: { learner: LearnerSearchRe
   return (
     <button type="button" disabled={!learner.nickname} onClick={onOpen} className="community-suggested-card">
       <span className="community-suggested-avatar"><ProfileAvatar src={learner.avatarUrl} alt="" /></span>
-      <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em>View match</em></span>
+      <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em> <UiText text={"View match"} /> </em></span>
       <span className="community-match-ring" style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties}><b>{score}%</b></span>
     </button>
   )

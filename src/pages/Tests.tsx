@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import type { ComponentType, SVGProps } from 'react'
 import { ArrowRight, BookOpen, Calculator, Headphones, Mic2, PenSquare, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -129,7 +130,7 @@ export default function Tests() {
               </div>
               <div className="hero-metric-card interactive-lift">
                 <p className="hero-metric-label">Question Bank</p>
-                <p className="hero-metric-value-sm hero-metric-value-compact">Refresh</p>
+                <p className="hero-metric-value-sm hero-metric-value-compact"> <UiText text={"Refresh"} /> </p>
                 <p className="hero-metric-note">New premium sets loading</p>
               </div>
             </div>
@@ -176,7 +177,7 @@ export default function Tests() {
                     ))}
                   </div>
                   <p className={`mt-6 inline-flex items-center text-sm font-semibold transition group-hover:translate-x-1 ${linkToneClass(track.tone)}`}>
-                    Open {track.title}
+                     <UiText text={"Open"} /> {track.title}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </p>
                 </button>

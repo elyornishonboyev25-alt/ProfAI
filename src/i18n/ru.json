@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Главная",
+    "dashboard": "Главная",
+    "tests": "Тесты",
+    "sat": "SAT",
+    "ielts": "IELTS",
+    "profile": "Профиль",
+    "login": "Войти",
+    "logout": "Выйти",
+    "darkMode": "Тёмная тема",
+    "lightMode": "Светлая тема"
+  },
+  "home": {
+    "title": "ProfAI",
+    "subtitle": "Ваш путь к зарубежному университету",
+    "description": "Подготовка к SAT и IELTS, английский язык, поиск университетов и инструкции по поступлению — на одной платформе.",
+    "getStarted": "Начать",
+    "exploreTests": "Открыть тесты",
+    "features": {
+      "adaptive": "Адаптивное обучение",
+      "ai": "Оценка с ИИ",
+      "progress": "Отслеживание прогресса",
+      "gamification": "Обучение в игровой форме"
+    }
+  },
+  "dashboard": {
+    "title": "Главная",
+    "welcome": "С возвращением",
+    "recentTests": "Недавние тесты",
+    "stats": {
+      "testsTaken": "Пройдено тестов",
+      "averageScore": "Средний балл",
+      "studyStreak": "Дней подряд",
+      "rank": "Место в рейтинге"
+    },
+    "quickActions": {
+      "continueTest": "Продолжить тест",
+      "newTest": "Новый тест",
+      "viewProgress": "Посмотреть прогресс"
+    }
+  },
+  "tests": {
+    "title": "Тесты",
+    "selectGrade": "Выберите класс",
+    "selectSubject": "Выберите предмет",
+    "difficulty": {
+      "easy": "Лёгкий",
+      "medium": "Средний",
+      "hard": "Сложный"
+    },
+    "startTest": "Начать тест",
+    "duration": "Продолжительность",
+    "questions": "Вопросы"
+  },
+  "sat": {
+    "title": "Подготовка к SAT",
+    "readingWriting": "Чтение и письмо",
+    "math": "Математика",
+    "fullTest": "Полный пробный тест",
+    "sections": {
+      "reading": "Чтение",
+      "writing": "Письмо и язык",
+      "mathNoCalc": "Математика без калькулятора",
+      "mathCalc": "Математика с калькулятором"
+    }
+  },
+  "ielts": {
+    "title": "Подготовка к IELTS",
+    "listening": "Аудирование",
+    "reading": "Чтение",
+    "writing": "Письмо",
+    "speaking": "Говорение",
+    "academic": "Академический",
+    "general": "Общий",
+    "fullTest": "Полный пробный тест"
+  },
+  "test": {
+    "title": "Тест",
+    "question": "Вопрос",
+    "next": "Далее",
+    "previous": "Назад",
+    "submit": "Отправить",
+    "timeRemaining": "Осталось времени",
+    "markForReview": "Отметить для проверки",
+    "review": "Проверка"
+  },
+  "results": {
+    "title": "Результаты теста",
+    "score": "Балл",
+    "correct": "Верно",
+    "incorrect": "Неверно",
+    "timeSpent": "Затрачено времени",
+    "reviewAnswers": "Разбор ответов",
+    "downloadReport": "Скачать отчёт",
+    "shareResults": "Поделиться результатами",
+    "nextSteps": "Следующие шаги"
+  }
+}

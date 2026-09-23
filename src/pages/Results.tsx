@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import UiText from '@/components/common/UiText'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -303,11 +304,10 @@ export default function Results() {
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[linear-gradient(155deg,#fff_0%,#fff5f5_55%,#fffaf8_100%)] px-4 py-8">
         <AnimatedBackground />
         <div className="relative z-10 w-full max-w-lg rounded-3xl border border-red-200 bg-white/95 p-8 text-center shadow-[0_24px_52px_rgba(220,38,38,0.16)]">
-          <h1 className="text-3xl font-black text-slate-900">No Results Found</h1>
-          <p className="mt-2 text-sm text-slate-600">Open the reading test and submit at least one attempt.</p>
+          <h1 className="text-3xl font-black text-slate-900"> <UiText text={"No Results Found"} /> </h1>
+          <p className="mt-2 text-sm text-slate-600"> <UiText text={"Open the reading test and submit at least one attempt."} /> </p>
           <Link to="/ielts/reading/tests" className="arena-primary-btn mt-6">
-            Return to Reading Tests
-          </Link>
+             <UiText text={"Return to Reading Tests"} /> </Link>
         </div>
       </div>
     )
@@ -326,11 +326,11 @@ export default function Results() {
                 className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700">Reading Tests</span>
+                <span className="text-sm font-semibold text-slate-700"> <UiText text={"Reading Tests"} /> </span>
               </button>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600">Result Studio</p>
-                <h1 className="text-lg font-black text-slate-900">IELTS Reading Result</h1>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600"> <UiText text={"Result Studio"} /> </p>
+                <h1 className="text-lg font-black text-slate-900"> <UiText text={"IELTS Reading Result"} /> </h1>
               </div>
             </div>
           </div>
@@ -343,13 +343,12 @@ export default function Results() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <span className="premium-top-chip">
-                  Unified Result Flow
-                </span>
+                   <UiText text={"Unified Result Flow"} /> </span>
                 <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
                   {test.title}
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  Completed{' '}
+                   <UiText text={"Completed"} /> {' '}
                   {new Date(result.date).toLocaleString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -361,22 +360,19 @@ export default function Results() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Open Access
-                </span>
+                   <UiText text={"Open Access"} /> </span>
                 <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
                   <Clock3 className="h-3.5 w-3.5" />
-                  Time spent {formatSpentTime(result.timeSpent)}
+                   <UiText text={"Time spent"} /> {formatSpentTime(result.timeSpent)}
                 </span>
                 {!result.isPartial ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Full submit
-                  </span>
+                     <UiText text={"Full submit"} /> </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                     <TriangleAlert className="h-3.5 w-3.5" />
-                    Partial submit
-                  </span>
+                     <UiText text={"Partial submit"} /> </span>
                 )}
               </div>
             </div>
@@ -389,38 +385,38 @@ export default function Results() {
                     <p className="text-2xl font-black leading-none text-slate-900">
                       <CountUp value={effectiveBandScore} decimals={1} />
                     </p>
-                    <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-red-600">Band</p>
+                    <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-red-600"> <UiText text={"Band"} /> </p>
                   </div>
                 </ProgressRing>
-                <p className="hero-metric-note mt-1.5">Estimated score</p>
+                <p className="hero-metric-note mt-1.5"> <UiText text={"Estimated score"} /> </p>
               </div>
               <div className="hero-metric-card">
-                <p className="hero-metric-label">Accuracy</p>
+                <p className="hero-metric-label"> <UiText text={"Accuracy"} /> </p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={analysis.summary.accuracy} suffix="%" />
                 </p>
-                <p className="hero-metric-note">Overall precision</p>
+                <p className="hero-metric-note"> <UiText text={"Overall precision"} /> </p>
               </div>
               <div className="hero-metric-card">
-                <p className="hero-metric-label">Correct</p>
+                <p className="hero-metric-label"> <UiText text={"Correct"} /> </p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={analysis.summary.correctAnswers} />
                 </p>
-                <p className="hero-metric-note">Right answers</p>
+                <p className="hero-metric-note"> <UiText text={"Right answers"} /> </p>
               </div>
               <div className="hero-metric-card">
-                <p className="hero-metric-label">Incorrect</p>
+                <p className="hero-metric-label"> <UiText text={"Incorrect"} /> </p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={analysis.summary.incorrectAnswers} />
                 </p>
-                <p className="hero-metric-note">Need correction</p>
+                <p className="hero-metric-note"> <UiText text={"Need correction"} /> </p>
               </div>
               <div className="hero-metric-card">
-                <p className="hero-metric-label">Skipped</p>
+                <p className="hero-metric-label"> <UiText text={"Skipped"} /> </p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={analysis.summary.skippedAnswers} />
                 </p>
-                <p className="hero-metric-note">Unanswered</p>
+                <p className="hero-metric-note"> <UiText text={"Unanswered"} /> </p>
               </div>
             </div>
           </section>
@@ -431,8 +427,8 @@ export default function Results() {
               <article className="surface-card p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500">Performance map</p>
-                    <h3 className="mt-1 text-2xl font-black text-slate-900">Your result, clearly explained</h3>
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500"> <UiText text={"Performance map"} /> </p>
+                    <h3 className="mt-1 text-2xl font-black text-slate-900"> <UiText text={"Your result, clearly explained"} /> </h3>
                   </div>
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
                     {analysis.summary.accuracy >= 70 ? 'Strong attempt' : 'Growth opportunity'}
@@ -485,7 +481,7 @@ export default function Results() {
                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 text-white shadow-[0_12px_26px_rgba(220,38,38,.3)]">
                   <Sparkles className="h-5 w-5" />
                 </div>
-                <h3 className="mt-3 text-xl font-black text-slate-900">AI recommendations</h3>
+                <h3 className="mt-3 text-xl font-black text-slate-900"> <UiText text={"AI recommendations"} /> </h3>
                 <div className="mt-4 flex-1 space-y-3">
                   {recommendations.map((recommendation, index) => (
                     <div key={recommendation} className="flex gap-3 rounded-2xl border border-red-100 bg-red-50/55 p-3">
@@ -509,10 +505,9 @@ export default function Results() {
           <section className="mt-5 surface-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="text-2xl font-black text-slate-900">Answer Sheet</h3>
+                <h3 className="text-2xl font-black text-slate-900"> <UiText text={"Answer Sheet"} /> </h3>
                 <p className="text-sm text-slate-500">
-                  Your answers and status only. Correct answers appear only when enabled.
-                </p>
+                   <UiText text={"Your answers and status only. Correct answers appear only when enabled."} /> </p>
               </div>
               <button
                 type="button"
@@ -559,7 +554,7 @@ export default function Results() {
                         </div>
 
                         <p className="mt-1 truncate text-[11px] font-semibold text-slate-700" title={userAnswer}>
-                          Your: {userAnswer}
+                           <UiText text={"Your:"} /> {userAnswer}
                         </p>
 
                         {question.status !== 'correct' ? (
@@ -567,12 +562,12 @@ export default function Results() {
                             {question.status === 'incorrect' ? 'Status: wrong' : 'Status: skipped'}
                           </p>
                         ) : (
-                          <p className="mt-0.5 text-[10px] font-semibold text-emerald-600">Status: correct</p>
+                          <p className="mt-0.5 text-[10px] font-semibold text-emerald-600"> <UiText text={"Status: correct"} /> </p>
                         )}
 
                         {showCorrectAnswers && question.status !== 'correct' ? (
                           <p className="mt-0.5 truncate text-[10px] font-semibold text-emerald-700" title={correctAnswer}>
-                            Correct: {correctAnswer}
+                             <UiText text={"Correct:"} /> {correctAnswer}
                           </p>
                         ) : null}
                       </article>
@@ -590,32 +585,28 @@ export default function Results() {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               <Home className="h-4 w-4" />
-              Back to Home
-            </button>
+               <UiText text={"Back to Home"} /> </button>
             <button
               type="button"
               onClick={() => navigate('/ielts/reading/tests')}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               <BookOpen className="h-4 w-4" />
-              Reading Tests
-            </button>
+               <UiText text={"Reading Tests"} /> </button>
             <button
               type="button"
               onClick={activateFullReview}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100"
             >
               <Target className="h-4 w-4" />
-              Full Review
-            </button>
+               <UiText text={"Full Review"} /> </button>
             <button
               type="button"
               onClick={startRetake}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-300 bg-gradient-to-r from-red-500 to-rose-500 px-3 py-2.5 text-sm font-bold text-white hover:from-red-400 hover:to-rose-400"
             >
               <RotateCcw className="h-4 w-4" />
-              Re-Do Test
-            </button>
+               <UiText text={"Re-Do Test"} /> </button>
           </section>
 
         </main>

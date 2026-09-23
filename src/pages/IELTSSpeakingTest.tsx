@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -531,8 +532,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       {/* Footer nav */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
         <button onClick={goPrev} disabled={index === 0} className="arena-secondary-btn disabled:opacity-50">
-          <ChevronLeft className="mr-1 h-4 w-4" /> Previous
-        </button>
+          <ChevronLeft className="mr-1 h-4 w-4" />  <UiText text={"Previous"} /> </button>
         {index < items.length - 1 ? (
           <button onClick={goNext} className="arena-primary-btn">
             Next question <ChevronRight className="ml-1 h-4 w-4" />

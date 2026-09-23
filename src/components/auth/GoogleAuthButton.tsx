@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { apiClient } from '@/lib/apiClient'
+import { useCopy } from '@/i18n/interface'
 
 type GoogleCredentialResponse = {
   credential: string
@@ -19,6 +20,7 @@ type GoogleInitializeOptions = {
 }
 
 type GoogleRenderButtonOptions = {
+  locale?: string
   type?: 'standard' | 'icon'
   theme?: 'outline' | 'filled_blue' | 'filled_black'
   size?: 'large' | 'medium' | 'small'
@@ -58,6 +60,7 @@ type GoogleConfigResponse = {
 const SCRIPT_ID = 'google-identity-script'
 
 export default function GoogleAuthButton({ mode, disabled = false, onCredential }: GoogleAuthButtonProps) {
+  const { c, language } = useCopy()
   const { minimalMotion } = useMotionPreferences()
   const frontendGoogleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '').trim()
   const [googleClientId, setGoogleClientId] = useState(frontendGoogleClientId)
@@ -156,6 +159,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
 
       const renderWidth = Math.max(230, Math.min(300, buttonContainer.clientWidth || 260))
       window.google.accounts.id.renderButton(buttonContainer, {
+        locale: language === 'ru' ? 'ru' : 'en',
         theme: 'outline',
         size: 'medium',
         shape: 'pill',
@@ -178,7 +182,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
     const script = existingScript ?? document.createElement('script')
     if (!existingScript) {
       script.id = SCRIPT_ID
-      script.src = 'https://accounts.google.com/gsi/client'
+      script.src = `https://accounts.google.com/gsi/client?hl=${language === 'ru' ? 'ru' : 'en'}`
       script.async = true
       script.defer = true
       document.head.appendChild(script)
@@ -199,7 +203,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
       script.removeEventListener('load', handleLoad)
       script.removeEventListener('error', handleError)
     }
-  }, [googleClientId, mode])
+  }, [googleClientId, mode, language])
 
   return (
     <div className="space-y-2">
@@ -214,7 +218,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
           />
         ) : (
           <div className="flex min-h-[36px] items-center justify-center rounded-full border border-dashed border-blue-200 bg-blue-50/45 px-4 py-2 text-center text-[11px] font-semibold text-blue-700">
-            {isResolvingClientId ? 'Resolving Google OAuth...' : 'Google OAuth is not configured yet.'}
+            {c(isResolvingClientId ? 'Connecting to Google...' : 'Google sign-in is currently unavailable. Use your email instead.')}
           </div>
         )}
 
@@ -222,13 +226,13 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
           <div className="absolute inset-0 flex items-center justify-center rounded-full bg-white/85 backdrop-blur-[1px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Connecting...
+              {c('Connecting...')}
             </span>
           </div>
         ) : null}
       </div>
 
-      {setupMessage ? <p className="text-center text-xs text-error-600">{setupMessage}</p> : null}
+      {setupMessage ? <p className="text-center text-xs text-error-600">{c('Google sign-in could not connect. Please try again or use your email.')}</p> : null}
     </div>
   )
 }

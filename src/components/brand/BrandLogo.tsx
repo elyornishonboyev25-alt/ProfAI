@@ -1,5 +1,6 @@
 ﻿import { useId } from 'react'
 import { cn } from '@/components/ui/utils'
+import { useCopy } from '@/i18n/interface'
 
 type BrandMarkProps = {
   size?: number
@@ -119,12 +120,13 @@ export function BrandLockup({
   subtitle = 'Your Path to Universities Abroad',
   iconSize = 42,
 }: BrandLockupProps) {
+  const { c } = useCopy()
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <BrandMark size={iconSize} className={iconClassName} />
       <div>
         <p className={cn('text-sm font-black tracking-tight text-slate-900', titleClassName)}>Prof<span className="text-red-600">AI</span></p>
-        <p className={cn('text-xs font-medium text-slate-700', subtitleClassName)}>{subtitle}</p>
+        <p className={cn('text-xs font-medium text-slate-700', subtitleClassName)}>{c(subtitle)}</p>
       </div>
     </div>
   )

@@ -1,76 +1,18 @@
-import PillarHub, { type PillarHubCard } from '@/components/journey/PillarHub'
-
-const SKILL_STUDIOS: PillarHubCard[] = [
-  {
-    title: 'Vocabulary Studio',
-    description: 'Turn unfamiliar words from practice and reading into focused, repeatable study activities.',
-    eyebrow: 'Language foundation',
-    action: 'Build vocabulary',
-    path: '/vocabulary',
-    visual: 'vocabulary',
-    details: ['Personal word bank', 'Focused revision'],
-  },
-  {
-    title: 'Reading Library',
-    description: 'Read structured articles, inspect language in context and build stronger comprehension habits.',
-    eyebrow: 'Academic reading',
-    action: 'Browse articles',
-    path: '/articles',
-    visual: 'academic-reading',
-    details: ['Curated reading', 'Context learning'],
-  },
-  {
-    title: 'Listening Studio',
-    description: 'Train listening comprehension with captions, playback controls and focused repetition.',
-    eyebrow: 'Listening fluency',
-    action: 'Open podcasts',
-    path: '/podcast',
-    visual: 'listening',
-    details: ['Active listening', 'Flexible playback'],
-  },
-  {
-    title: 'Shadowing Lab',
-    description: 'Repeat spoken English line by line to improve rhythm, pronunciation and listening control.',
-    eyebrow: 'Pronunciation',
-    action: 'Start shadowing',
-    path: '/shadowing-lab',
-    visual: 'shadowing',
-    details: ['Guided repetition', 'Speech rhythm'],
-  },
-  {
-    title: 'Writing Lab',
-    description: 'Practice clear, structured responses and use feedback to revise your own work.',
-    eyebrow: 'Academic writing',
-    action: 'Open Writing Lab',
-    path: '/writing-lab',
-    visual: 'writing',
-    details: ['Structured practice', 'Revision feedback'],
-  },
-  {
-    title: 'Speaking Lab',
-    description: 'Build confident spoken answers through guided practice, reflection and repeat attempts.',
-    eyebrow: 'Academic speaking',
-    action: 'Open Speaking Lab',
-    path: '/speaking-lab',
-    visual: 'speaking',
-    details: ['Guided prompts', 'Repeat attempts'],
-  },
+import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
+import StudyObject, { type StudyObjectKind } from '@/components/visuals/StudyObject'
+import { useCopy } from '@/i18n/interface'
+const resources: { title: string; description: string; path: string; object: StudyObjectKind }[] = [
+  { title: 'Vocabulary', description: 'Review saved words and build lasting recall.', path: '/vocabulary', object: 'book' },
+  { title: 'Articles', description: 'Read, discover new words, and understand more.', path: '/articles', object: 'book' },
+  { title: 'Podcasts', description: 'Listen with transcripts at your own pace.', path: '/podcast', object: 'headphones' },
+  { title: 'Shadowing', description: 'Repeat, record, and refine your pronunciation.', path: '/shadowing-lab', object: 'microphone' },
+  { title: 'Writing practice', description: 'Develop clear, structured written answers.', path: '/writing-lab', object: 'notebook' },
+  { title: 'Speaking practice', description: 'Practice expressing your ideas with confidence.', path: '/speaking-lab', object: 'microphone' },
 ]
-
 export default function AcademicSkills() {
-  return (
-    <PillarHub
-      eyebrow="Academic skills studio"
-      title={
-        <>
-          Build academic <span className="text-red-600">confidence.</span>
-        </>
-      }
-      description="Develop the English skills behind stronger exams, clearer applications and confident university study."
-      highlights={['Reading', 'Listening', 'Writing', 'Speaking']}
-      cards={SKILL_STUDIOS}
-      showBack={false}
-      note="These studios support independent skill development. They complement exam preparation and do not replace a university's official language or academic requirements."
-    />
-  )
+  const { c } = useCopy()
+  return <div className="workspace-page liquid-page"><header className="liquid-page-heading"><Link to="/test-preparation" className="liquid-text-link">{c('Preparation')}</Link><h1>{c('Build your English skills')}</h1><p>{c('Small exercises for the skills behind your score.')}</p></header>
+    <div className="liquid-resource-grid">{resources.map(item => <Link key={item.path} to={item.path} className="glass-surface liquid-resource-card"><StudyObject kind={item.object} /><h2>{c(item.title)}</h2><p>{c(item.description)}</p><span className="liquid-text-link">{c('Open practice')}<ArrowRight size={17} /></span></Link>)}</div>
+  </div>
 }

@@ -1,5 +1,8 @@
 ﻿import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import { russianInterface } from './interface'
+import russianUI from './ru-ui.json'
+import russianTranslation from './ru.json'
 
 const translation = {
   nav: {
@@ -102,19 +105,30 @@ const translation = {
 }
 
 const resources = {
-  en: { translation },
-  uz: { translation },
+  en: { translation, interface: {} },
+  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface } },
+}
+
+function savedLanguage() {
+  try { return localStorage.getItem('profai-language') === 'ru' ? 'ru' : 'en' } catch { return 'en' }
+}
+function applyLanguage(language: string) {
+  document.documentElement.lang = language === 'ru' ? 'ru' : 'en'
+  try { localStorage.setItem('profai-language', document.documentElement.lang) } catch { /* Optional preference. */ }
 }
 
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en',
+    lng: savedLanguage(),
+    supportedLngs: ['en', 'ru'],
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
   })
 
+applyLanguage(i18n.language)
+i18n.on('languageChanged', applyLanguage)
 export default i18n

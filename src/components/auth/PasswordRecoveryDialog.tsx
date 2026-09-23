@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle2, KeyRound, Loader2, Lock, Mail, RefreshCw, ShieldCheck, X } from 'lucide-react'
@@ -132,7 +133,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
             <p className="mt-2 text-sm leading-6 text-slate-500">We will send a one-time 6-digit code to the Gmail linked to your account.</p>
 
             <label className="mt-6 block">
-              <span className="mb-1.5 block text-sm font-bold text-slate-700">Gmail address</span>
+              <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Gmail address"} /> </span>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                 <input value={email} onChange={(event) => { setEmail(event.target.value); setCodeSent(false) }} disabled={busy} type="email" autoComplete="email" className="input h-12 rounded-2xl border-blue-100 bg-white pl-11 font-semibold" placeholder="name@gmail.com" />
@@ -143,8 +144,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
               <div className="mt-4 space-y-4">
                 <label className="block">
                   <span className="mb-1.5 flex items-center justify-between text-sm font-bold text-slate-700">
-                    Verification code
-                    <button type="button" disabled={busy} onClick={() => void requestCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
+                     <UiText text={"Verification code"} /> <button type="button" disabled={busy} onClick={() => void requestCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
                       <RefreshCw className="h-3 w-3" /> Resend
                     </button>
                   </span>
@@ -152,14 +152,14 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label>
-                    <span className="mb-1.5 block text-sm font-bold text-slate-700">New password</span>
+                    <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"New password"} /> </span>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                       <input value={newPassword} onChange={(event) => setNewPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100 pl-11" placeholder="8+ characters" />
                     </div>
                   </label>
                   <label>
-                    <span className="mb-1.5 block text-sm font-bold text-slate-700">Confirm password</span>
+                    <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Confirm password"} /> </span>
                     <input value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100" placeholder="Repeat password" />
                   </label>
                 </div>

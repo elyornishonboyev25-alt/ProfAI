@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
@@ -30,41 +31,38 @@ export default function AdmissionLessons() {
                 <div className="premium-top-controls">
                   <span className="premium-top-chip">
                     <GraduationCap className="h-3.5 w-3.5" />
-                    Study-Abroad Track
-                  </span>
+                     <UiText text={"Study-Abroad Track"} /> </span>
                 </div>
                 <h1 className="premium-section-title mt-4">
-                  Study Abroad <span className="arena-title-accent-red">Lessons</span>
+                   <UiText text={"Study Abroad"} /> <span className="arena-title-accent-red"> <UiText text={"Lessons"} /> </span>
                 </h1>
                 <p className="premium-section-subtitle max-w-3xl">
-                  A {LESSON_COUNT}-lesson roadmap that walks you through the entire journey — five phases, from your first
-                  decision to thriving on campus. Follow it in order, or jump straight to the phase you need next.
-                </p>
+                  A {LESSON_COUNT} <UiText text={"-lesson roadmap that walks you through the entire journey — five phases, from your first decision to thriving on campus. Follow it in order, or jump straight to the phase you need next."} /> </p>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
                 <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Lessons</p>
+                  <p className="hero-metric-label"> <UiText text={"Lessons"} /> </p>
                   <p className="hero-metric-value-sm">
                     <CountUp value={LESSON_COUNT} />
                   </p>
-                  <p className="hero-metric-note">Across 5 phases</p>
+                  <p className="hero-metric-note"> <UiText text={"Across 5 phases"} /> </p>
                 </div>
                 <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Study time</p>
+                  <p className="hero-metric-label"> <UiText text={"Study time"} /> </p>
                   <p className="hero-metric-value-sm">
                     ≈ <CountUp value={studyHours} />h
                   </p>
-                  <p className="hero-metric-note">Self-paced</p>
+                  <p className="hero-metric-note"> <UiText text={"Self-paced"} /> </p>
                 </div>
                 <div className="hero-metric-card interactive-lift flex-row items-center gap-3">
                   <ProgressRing value={(completed.size / LESSON_COUNT) * 100} size={68} stroke={7}>
                     <span className="text-xs font-black text-slate-900">{Math.round((completed.size / LESSON_COUNT) * 100)}%</span>
                   </ProgressRing>
                   <div>
-                    <p className="hero-metric-label">Overall progress</p>
+                    <p className="hero-metric-label"> <UiText text={"Overall progress"} /> </p>
                     <p className="mt-1 text-lg font-black text-slate-900">{completed.size}/{LESSON_COUNT}</p>
-                    <p className="text-[10px] font-semibold text-slate-500">Lessons completed</p>
+                    <p className="text-[10px] font-semibold text-slate-500"> <UiText text={"Lessons completed"} /> </p>
                   </div>
                 </div>
               </div>
@@ -94,8 +92,7 @@ export default function AdmissionLessons() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
-                        Phase {phaseIndex + 1} · {phaseLessons.length} lessons
-                      </p>
+                         <UiText text={"Phase"} /> {phaseIndex + 1} · {phaseLessons.length}  <UiText text={"lessons"} /> </p>
                       <h2 className="text-xl font-black tracking-tight sm:text-2xl">{phase.title}</h2>
                       <p className="mt-0.5 text-[13px] font-medium text-white/80">{phase.subtitle}</p>
                     </div>
@@ -143,8 +140,7 @@ export default function AdmissionLessons() {
                           <span className="inline-flex items-center gap-3 text-[11px] font-semibold text-slate-400">
                             <span className="inline-flex items-center gap-1">
                               <Clock3 className="h-3.5 w-3.5" />
-                              {lesson.durationMin} min
-                            </span>
+                              {lesson.durationMin}  <UiText text={"min"} /> </span>
                             <span className={`rounded-full border px-2 py-0.5 ${LEVEL_TONE[lesson.level]}`}>
                               {lesson.level}
                             </span>

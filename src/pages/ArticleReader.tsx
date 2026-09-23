@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -402,18 +403,17 @@ export default function ArticleReader() {
                 </Link>
 
                 <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-3 text-[1.12rem] font-medium text-slate-500 md:flex lg:text-[1.28rem]">
-                  <Link to="/dashboard" className="transition hover:text-red-700">Home</Link>
+                  <Link to="/dashboard" className="transition hover:text-red-700"> <UiText text={"Home"} /> </Link>
                   <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-                  <Link to="/articles" className="transition hover:text-red-700">Library</Link>
+                  <Link to="/articles" className="transition hover:text-red-700"> <UiText text={"Library"} /> </Link>
                   <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-                  <Link to="/articles" className="transition hover:text-red-700">Articles</Link>
+                  <Link to="/articles" className="transition hover:text-red-700"> <UiText text={"Articles"} /> </Link>
                   <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
                   <span className="max-w-[28rem] truncate font-bold text-slate-950">{article.title}</span>
                 </nav>
 
                 <Link to="/articles" className="route-back-button md:hidden">
-                  <ArrowLeft className="h-4 w-4" /> Articles
-                </Link>
+                  <ArrowLeft className="h-4 w-4" />  <UiText text={"Articles"} /> </Link>
               </div>
 
               <button
@@ -443,8 +443,7 @@ export default function ArticleReader() {
                       prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-700'
                     } route-back-button`}
                   >
-                    <ArrowLeft className="h-3.5 w-3.5" /> All articles
-                  </Link>
+                    <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"All articles"} /> </Link>
                   <h1
                     className="max-w-5xl text-4xl leading-[1.08] tracking-[-0.025em] sm:text-5xl lg:text-[3.65rem]"
                     style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
@@ -456,14 +455,13 @@ export default function ArticleReader() {
                       prefs.theme === 'dark' ? 'border-slate-600 bg-slate-800 text-slate-200' : 'border-white bg-white/75 text-slate-800 shadow-sm'
                     }`}>
                       <Clock3 className="h-4 w-4 text-red-500" />
-                      {article.readMinutes} min · {article.category}
+                      {article.readMinutes}  <UiText text={"min ·"} /> {article.category}
                       <span className="ml-1 h-1.5 w-20 overflow-hidden rounded-full bg-slate-200">
                         <span className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.max(8, progressValue)}%` }} />
                       </span>
                     </span>
                     <span className={`text-xs font-semibold ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {wordCount.toLocaleString()} words
-                    </span>
+                      {wordCount.toLocaleString()}  <UiText text={"words"} /> </span>
                   </div>
                   <p className={`mt-6 max-w-4xl text-base leading-7 sm:text-lg ${prefs.theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                     {article.teaser}
@@ -498,14 +496,13 @@ export default function ArticleReader() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="inline-flex items-center gap-2">
                         <BookOpenCheck className={`h-5 w-5 ${prefs.theme === 'dark' ? 'text-rose-300' : 'text-red-600'}`} />
-                        <h3 className="text-lg font-black">Key vocabulary ({article.vocabulary.length})</h3>
+                        <h3 className="text-lg font-black"> <UiText text={"Key vocabulary ("} /> {article.vocabulary.length})</h3>
                       </div>
                       <Link
                         to={`/vocabulary/articles/${article.slug}`}
                         className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-3.5 py-2 text-xs font-bold text-white shadow-[0_8px_20px_rgba(220,38,38,0.24)]"
                       >
-                        <Sparkles className="h-3.5 w-3.5" /> Study set
-                      </Link>
+                        <Sparkles className="h-3.5 w-3.5" />  <UiText text={"Study set"} /> </Link>
                     </div>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {article.vocabulary.map((entry) => (
@@ -575,7 +572,7 @@ export default function ArticleReader() {
 
               <div className="space-y-6">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="inline-flex whitespace-nowrap items-center gap-2.5 text-base font-bold text-slate-900"><Type className="h-5 w-5 text-red-600" /> Font size</span>
+                  <span className="inline-flex whitespace-nowrap items-center gap-2.5 text-base font-bold text-slate-900"><Type className="h-5 w-5 text-red-600" />  <UiText text={"Font size"} /> </span>
                   <div className="article-reader-segmented flex items-center rounded-[1.4rem] p-1.5">
                     <button
                       type="button"
@@ -600,7 +597,7 @@ export default function ArticleReader() {
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-base font-bold text-slate-900">Contrast</span>
+                  <span className="text-base font-bold text-slate-900"> <UiText text={"Contrast"} /> </span>
                   <div className="article-reader-segmented flex items-center gap-1 rounded-[1.4rem] p-1.5">
                     {([
                       { value: 'light' as ReaderTheme, label: 'Light', icon: Sun },
@@ -650,8 +647,7 @@ export default function ArticleReader() {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-2.5 text-[1.35rem] font-black text-slate-950">
-                  <StickyNote className="h-6 w-6 text-red-600" /> Notes
-                </span>
+                  <StickyNote className="h-6 w-6 text-red-600" />  <UiText text={"Notes"} /> </span>
                 <span className="grid h-7 min-w-7 place-items-center rounded-full bg-red-600 px-2 text-xs font-black text-white shadow-[0_8px_16px_rgba(220,38,38,0.24)]">{notes.length}</span>
               </div>
               {notePreviews.length > 0 ? (
@@ -668,8 +664,7 @@ export default function ArticleReader() {
                 </div>
               ) : (
                 <span className="article-reader-empty-note mt-6 flex min-h-28 items-center justify-center rounded-[1.5rem] border border-dashed border-red-200/80 bg-white/32 px-5 py-7 text-center text-sm font-medium leading-6 text-slate-500">
-                  Select text and add your first note.
-                </span>
+                   <UiText text={"Select text and add your first note."} /> </span>
               )}
             </button>
 
@@ -682,8 +677,8 @@ export default function ArticleReader() {
                 <Mic2 className="h-7 w-7" />
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-[1.6rem] font-black text-slate-950">Ask AI <MessageCircle className="h-6 w-6" /></span>
-                <span className="mt-1 block whitespace-nowrap text-sm font-medium text-slate-500">Select text for word help</span>
+                <span className="flex items-center gap-2 text-[1.6rem] font-black text-slate-950"> <UiText text={"Ask AI"} /> <MessageCircle className="h-6 w-6" /></span>
+                <span className="mt-1 block whitespace-nowrap text-sm font-medium text-slate-500"> <UiText text={"Select text for word help"} /> </span>
               </span>
             </button>
           </aside>
@@ -719,15 +714,13 @@ export default function ArticleReader() {
               className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
             >
               <StickyNote className="h-3.5 w-3.5" />
-              Note
-            </button>
+               <UiText text={"Note"} /> </button>
             <button
               onClick={onAskAI}
               className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-2.5 py-1.5 text-xs font-bold text-white"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Ask AI
-            </button>
+               <UiText text={"Ask AI"} /> </button>
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -752,8 +745,7 @@ export default function ArticleReader() {
               className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-gradient-to-r from-white via-red-50/70 to-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
             >
               <Trash2 className="h-4 w-4" />
-              Highlightni o'chirish
-            </button>
+               <UiText text={"Remove highlight"} /> </button>
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -773,8 +765,7 @@ export default function ArticleReader() {
               <div className="flex items-center justify-between border-b border-red-100 bg-gradient-to-r from-red-50 to-rose-50 px-4 py-3.5">
                 <h3 className="inline-flex items-center gap-2 font-black text-slate-900">
                   <StickyNote className="h-5 w-5 text-red-600" />
-                  Reading notes
-                </h3>
+                   <UiText text={"Reading notes"} /> </h3>
                 <button onClick={() => setNotesOpen(false)} aria-label="Close notes" className="rounded-lg p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-700">
                   <X className="h-5 w-5" />
                 </button>
@@ -803,13 +794,12 @@ export default function ArticleReader() {
                   className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
                 >
                   <Check className="h-4 w-4" />
-                  Save note
-                </button>
+                   <UiText text={"Save note"} /> </button>
               </div>
 
               <div className="flex-1 space-y-2.5 overflow-y-auto p-4">
                 {notes.length === 0 ? (
-                  <p className="mt-6 text-center text-sm text-slate-400">No notes yet. Select text and tap “Note”, or write one above.</p>
+                  <p className="mt-6 text-center text-sm text-slate-400"> <UiText text={"No notes yet. Select text and tap “Note”, or write one above."} /> </p>
                 ) : (
                   notes.map((note) => (
                     <div key={note.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Home, ArrowLeft, Send, MessageCircleWarning } from 'lucide-react'
@@ -59,10 +60,9 @@ export default function NotFound() {
         >
           <span className="arena-title-accent-red">404</span>
         </motion.h1>
-        <h2 className="mt-2 text-2xl font-bold text-slate-900">This page took a gap year</h2>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900"> <UiText text={"This page took a gap year"} /> </h2>
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
-          The page you are looking for went studying abroad. Let&apos;s get you back to where the practice happens.
-        </p>
+           <UiText text={"The page you are looking for went studying abroad. Let's get you back to where the practice happens."} /> </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
@@ -70,22 +70,19 @@ export default function NotFound() {
             className="cta-sheen interactive-lift inline-flex items-center rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.32)]"
           >
             <Home className="mr-2 h-4 w-4" />
-            Go to Dashboard
-          </Link>
+             <UiText text={"Go to Dashboard"} /> </Link>
           <Link
             to="/test-preparation"
             className="interactive-lift inline-flex items-center rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Test Preparation
-          </Link>
+             <UiText text={"Test Preparation"} /> </Link>
           <a
             href="mailto:support@profai.uz?subject=ProfAI%20404%20report"
             className="interactive-lift inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
           >
             <MessageCircleWarning className="mr-2 h-4 w-4" />
-            Report a problem
-          </a>
+             <UiText text={"Report a problem"} /> </a>
         </div>
       </motion.div>
     </div>

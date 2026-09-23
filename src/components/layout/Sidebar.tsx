@@ -1,203 +1,42 @@
-import { type ComponentType, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  BookOpenText,
-  BarChart3,
-  Building2,
-  FileText,
-  Gauge,
-  GraduationCap,
-  Headphones,
-  Languages,
-  Route,
-  Trophy,
-  Users,
-} from 'lucide-react'
-import { cn } from '../ui/utils'
-import { BrandMark } from '@/components/brand/BrandLogo'
-import { PRODUCT_NAVIGATION } from '@/config/productNavigation'
+import { useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { Bot, Building2, ChevronDown, Settings, Trophy, Users, Route } from 'lucide-react'
+import { BrandLockup } from '@/components/brand/BrandLogo'
+import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
+import { useAuthStore } from '@/store/authStore'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
-
-type NavItem = {
-  id: string
-  label: string
-  description?: string
-  icon: ComponentType<{ className?: string }>
-  path: string
-  aliases?: string[]
-  matches?: (pathname: string) => boolean
-}
-
-const JOURNEY_PRIMARY_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Journey Home', description: "Today's priorities", icon: Gauge, path: '/dashboard' },
-  ...PRODUCT_NAVIGATION,
-]
-
-const JOURNEY_SECONDARY_ITEMS: NavItem[] = [
-  { id: 'performance', label: 'Progress', icon: BarChart3, path: '/profile' },
-  { id: 'learning-center', label: 'Learning Center', icon: Building2, path: '/learning-center' },
-  { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
-]
-
-const LEGACY_PRIMARY_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Gauge, path: '/dashboard' },
-  { id: 'ielts', label: 'IELTS Mock', icon: BookOpenText, path: '/ielts', aliases: ['/mock/ielts'] },
-  { id: 'sat', label: 'SAT Mock', icon: GraduationCap, path: '/sat', aliases: ['/mock/sat'] },
-  {
-    id: 'admission',
-    label: 'Admission Hub',
-    description: 'Top universities',
-    icon: Building2,
-    path: '/admission/universities',
-    aliases: ['/admission'],
-  },
-]
-
-const LEGACY_SECONDARY_ITEMS: NavItem[] = [
-  { id: 'learning-center', label: 'Learning Center', icon: Building2, path: '/learning-center' },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
-  { id: 'performance', label: 'Performance', icon: BarChart3, path: '/profile' },
-  { id: 'articles', label: 'Articles', icon: FileText, path: '/articles' },
-  { id: 'podcast', label: 'Podcast', icon: Headphones, path: '/podcast' },
-  { id: 'community', label: 'Community', icon: Users, path: '/community', aliases: ['/speaking-community'] },
-  { id: 'vocabulary', label: 'Vocabulary', icon: Languages, path: '/vocabulary' },
-]
+import { useCopy } from '@/i18n/interface'
+import LanguageSelector from './LanguageSelector'
 
 export function Sidebar({ concealed = false }: { concealed?: boolean }) {
-  const sidebarRef = useRef<HTMLElement>(null)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const journeyEnabled = isPublicFeatureEnabled('globalJourney')
-  const diagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
-  const primaryItems = journeyEnabled ? JOURNEY_PRIMARY_ITEMS : LEGACY_PRIMARY_ITEMS
-  const secondaryItems = journeyEnabled
-    ? [
-        ...(diagnosticEnabled ? [{ id: 'journey-plan', label: 'My Journey Plan', icon: Route, path: '/journey-plan' }] : []),
-        ...JOURNEY_SECONDARY_ITEMS,
-      ]
-    : LEGACY_SECONDARY_ITEMS
-
+  const ref = useRef<HTMLElement>(null)
+  const { pathname } = useLocation()
+  const user = useAuthStore(s => s.user)
+  const { c } = useCopy()
   useEffect(() => {
-    const element = sidebarRef.current
-    if (!element) return
-    if (concealed) element.setAttribute('inert', '')
-    else element.removeAttribute('inert')
+    if (concealed) ref.current?.setAttribute('inert', '')
+    else ref.current?.removeAttribute('inert')
   }, [concealed])
-
-  const isActive = (item: NavItem) => {
-    if (item.matches) return item.matches(location.pathname)
-    const { path, aliases = [] } = item
-    if (path === '/dashboard') return location.pathname === '/' || location.pathname === '/dashboard'
-    if (location.pathname.startsWith(path)) return true
-    return aliases.some((alias) => location.pathname.startsWith(alias))
-  }
-
-  const renderItem = (item: NavItem, primary: boolean) => {
-    const active = isActive(item)
-    const Icon = item.icon
-
-    return (
-      <button
-        key={item.id}
-        type="button"
-        onClick={() => navigate(item.path)}
-        aria-current={active ? 'page' : undefined}
-        className={cn(
-          'group relative flex w-full items-center text-left transition-all duration-200',
-          primary
-            ? 'min-h-[3.25rem] gap-3 rounded-[1rem] px-3 py-2.5 text-[13px] font-bold'
-            : 'min-h-11 gap-3 rounded-xl px-3 py-2 text-[13px] font-semibold',
-          primary && active
-            ? 'sidebar-primary-active text-white'
-            : primary
-              ? 'text-slate-800 hover:bg-white/80 hover:shadow-[0_10px_24px_rgba(107,35,45,0.08)]'
-              : active
-                ? 'bg-blue-50/90 text-blue-700'
-                : 'text-slate-600 hover:bg-white/70 hover:text-slate-950',
-        )}
-      >
-        <span
-          className={cn(
-            'flex shrink-0 items-center justify-center transition-colors',
-            primary ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg',
-            primary && active
-              ? 'sidebar-primary-active-icon bg-white/12 text-white'
-              : primary
-                ? 'border border-slate-200/80 bg-white/85 text-slate-600 group-hover:border-blue-200 group-hover:text-blue-700'
-                : active
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-slate-400 group-hover:text-blue-500',
-          )}
-        >
-          <Icon className={primary ? 'h-[19px] w-[19px]' : 'h-[18px] w-[18px]'} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate">{item.label}</span>
-          {item.description ? (
-            <span className={cn('mt-0.5 block truncate text-[10px] font-semibold', active ? 'text-blue-100/80' : 'text-slate-400')}>
-              {item.description}
-            </span>
-          ) : null}
-        </span>
-      </button>
-    )
-  }
-
-  return (
-    <aside
-      ref={sidebarRef}
-      aria-hidden={concealed}
-      className={cn(
-        'profai-sidebar fixed bottom-5 left-5 top-5 z-40 hidden w-[17.5rem] flex-col transition-[transform,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none lg:flex',
-        concealed ? '-translate-x-[115%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100',
-      )}
-    >
-      <div className="flex h-full min-h-0 flex-col px-4 py-5">
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="flex min-h-16 items-center gap-3 rounded-2xl px-2.5 text-left transition hover:bg-white/65"
-        >
-          <BrandMark size={51} className="drop-shadow-[0_11px_13px_rgba(220,38,38,0.32)]" />
-          <div className="min-w-0">
-            <p className="truncate text-[1.55rem] font-black leading-none tracking-[-0.06em] text-slate-900">
-              Prof<span className="text-red-600">AI</span>
-            </p>
-            <p className="mt-1 truncate text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">
-              {journeyEnabled ? 'Plan. Prepare. Apply.' : 'Learn. Practice. Achieve.'}
-            </p>
-          </div>
-        </button>
-
-        <nav className="no-scrollbar mt-5 min-h-0 flex-1 overflow-y-auto" aria-label="Primary navigation">
-          <div className="sidebar-primary-cluster rounded-[1.55rem] p-2">
-            <p className="sidebar-core-heading mb-1 px-2 pt-1 text-[9px] font-black uppercase tracking-[0.19em]">
-              {journeyEnabled ? 'Your university journey' : 'Core learning'}
-            </p>
-            <div className="space-y-1">{primaryItems.map((item) => renderItem(item, true))}</div>
-          </div>
-
-          <div className="mx-3 my-4 flex items-center gap-2" aria-hidden="true">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {journeyEnabled ? 'Student tools' : 'Explore'}
-            </span>
-            <span className="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-200 to-transparent" />
-          </div>
-
-          <div className="space-y-0.5 px-1">{secondaryItems.map((item) => renderItem(item, false))}</div>
-        </nav>
-
-        <div className="mt-4 rounded-2xl border border-white/80 bg-white/45 px-3 py-2.5 text-center shadow-inner">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
-            {journeyEnabled ? 'One connected journey' : 'Your path to'}
-          </p>
-          <p className="mt-0.5 text-xs font-black text-slate-700">
-            {journeyEnabled ? 'From preparation to application' : 'Top universities abroad'}
-          </p>
-        </div>
-      </div>
-    </aside>
-  )
+  return <aside ref={ref} aria-hidden={concealed} className={`profai-sidebar liquid-sidebar ${concealed ? 'liquid-sidebar-concealed' : ''}`}>
+    <NavLink to="/dashboard" className="liquid-brand-link" aria-label="ProfAI"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
+    <nav aria-label={c('Home')} className="liquid-nav">
+      {WORKSPACE_NAVIGATION.map(item => <NavLink key={item.path} to={item.path} aria-current={item.matches(pathname) ? 'page' : undefined} className={`liquid-nav-item ${item.matches(pathname) ? 'is-current' : ''}`}>
+        <item.icon size={20} aria-hidden="true" /><span>{c(item.label)}</span>
+      </NavLink>)}
+      <details className="liquid-secondary-nav">
+        <summary>{c('Study tools')}<ChevronDown size={15} /></summary>
+        <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
+        <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
+        <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>
+        <NavLink to="/learning-center"><Building2 size={18} />{c('Learning Center')}</NavLink>
+        {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('My journey plan')}</NavLink>}
+      </details>
+    </nav>
+    <div className="liquid-sidebar-footer"><LanguageSelector />
+      <NavLink to="/account" className="liquid-account">
+        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <span className="liquid-avatar">{(user?.fullName || 'P').slice(0, 1)}</span>}
+        <span><strong>{user?.fullName || 'ProfAI'}</strong><small>{c('Account settings')}</small></span><Settings size={17} />
+      </NavLink>
+    </div>
+  </aside>
 }

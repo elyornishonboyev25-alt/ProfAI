@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
@@ -249,8 +250,7 @@ export default function MockIELTS() {
                     ) : finished ? (
                       <div className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Completed
-                      </div>
+                         <UiText text={"Completed"} /> </div>
                     ) : null}
 
                     <div className="mt-auto flex items-center justify-between pt-4">

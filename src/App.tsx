@@ -2,6 +2,8 @@ import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
+import WorkspaceToolbar from '@/components/layout/WorkspaceToolbar'
+import LanguageSelector from '@/components/layout/LanguageSelector'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
@@ -25,7 +27,6 @@ import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
 
-const globalJourneyEnabled = isPublicFeatureEnabled('globalJourney')
 const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 
 const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
@@ -68,6 +69,7 @@ const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
 const Onboarding = lazy(() => import('@/pages/Onboarding'))
+const QuickOnboarding = lazy(() => import('@/pages/QuickOnboarding'))
 const Premium = lazy(() => import('@/pages/Premium'))
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'))
 const IELTSWritingTests = lazy(() => import('@/pages/IELTSWritingTests'))
@@ -255,7 +257,7 @@ function App() {
     pathname === '/speaking-lab' ||
     pathname === '/shadowing-lab' ||
     pathname === '/podcast' ||
-    pathname === '/onboarding' ||
+    (pathname === '/onboarding' || pathname === '/focus') ||
     pathname === '/diagnostic' ||
     pathname.startsWith('/articles') ||
     pathname.startsWith('/admission') ||
@@ -296,7 +298,7 @@ function App() {
 
   const pathParts = pathname.split('/').filter(Boolean)
   const isFocusContentMode =
-    pathname === '/onboarding' ||
+    (pathname === '/onboarding' || pathname === '/focus') ||
     pathname.startsWith('/sat/') ||
     pathname.startsWith('/ielts/') ||
     pathname.startsWith('/ielts/speaking/test/') ||
@@ -314,17 +316,7 @@ function App() {
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')
 
-  const isImmersiveHub = [
-    '/ielts',
-    '/sat',
-    '/articles',
-    '/podcast',
-    '/shadowing-lab',
-    '/admission/universities',
-    '/admission/shortlist',
-    '/vocabulary',
-    '/community',
-  ].includes(pathname)
+  const isImmersiveHub = false
 
   // The workspace shell is route-owned, not auth-owned. This keeps its geometry
   // stable if a request is refreshing the session or if a session expires while
@@ -334,19 +326,15 @@ function App() {
     !isPublicStandalone &&
     !isTestMode &&
     !isFocusContentMode &&
-    !isVocabularyMode &&
-    !isLeaderboardMode &&
-    !isIeltsMockMode &&
-    pathname !== '/ielts'
+    !isIeltsMockMode
   const sidebarVisible = showSidebar && !isImmersiveHub
   const isAiTutorMode = pathname === '/ai-tutor'
   const showMobileNav =
-    Boolean(user) &&
     !isPublicStandalone &&
     !isTestMode &&
     !isFocusContentMode &&
     !isIeltsMockMode &&
-    pathname !== '/onboarding' &&
+    pathname !== '/onboarding' && pathname !== '/focus' &&
     !isLiveCommunityMode
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic && !isLearningCenterMode
 
@@ -418,7 +406,7 @@ function App() {
 
   // New accounts enter onboarding once. Completing the review or skipping its
   // final step persists the flag, so learners can edit their profile later.
-  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && !pathname.startsWith('/shared/results/')) {
+  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && pathname !== '/focus' && !pathname.startsWith('/shared/results/')) {
     return <Navigate to="/onboarding" replace />
   }
   if (user?.onboardingCompleted && pathname === '/onboarding') {
@@ -429,14 +417,15 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
+      {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
-      <NicknameGate />
+      {user?.onboardingCompleted && (pathname === '/community' || pathname === '/speaking-community' || pathname.startsWith('/speaker/')) ? <NicknameGate /> : null}
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {!isAiTutorMode && !isGuestExperience && !isLearningCenterMode ? <DeferredFloatingAIAssistant /> : null}
+          {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}
           {!isExamModeActive && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive && !isAiTutorMode && !isGuestExperience && !isLearningCenterMode ? <FullscreenToggle /> : null}
+          {!isExamModeActive && isFocusContentMode && pathname !== '/onboarding' && pathname !== '/focus' ? <FullscreenToggle /> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
       ) : null}
@@ -450,6 +439,7 @@ function App() {
               sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
             }`}
           >
+            {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
               className={`flex min-h-full flex-col ${
                 isTestMode
@@ -469,13 +459,13 @@ function App() {
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route
                         path="/test-preparation"
-                        element={globalJourneyEnabled ? <AnimatedRoute><TestPreparation /></AnimatedRoute> : <Navigate to="/ielts" replace />}
+                        element={<AnimatedRoute><TestPreparation /></AnimatedRoute>}
                       />
                       <Route
                         path="/academic-skills"
-                        element={globalJourneyEnabled ? <AnimatedRoute><AcademicSkills /></AnimatedRoute> : <Navigate to="/articles" replace />}
+                        element={<AnimatedRoute><AcademicSkills /></AnimatedRoute>}
                       />
-                      <Route path="/tests" element={<Navigate to={globalJourneyEnabled ? '/test-preparation' : '/ielts'} replace />} />
+                      <Route path="/tests" element={<Navigate to="/test-preparation" replace />} />
                       <Route
                         path="/tests/:id/attempt"
                         element={
@@ -487,7 +477,7 @@ function App() {
                         }
                       />
                       <Route path="/leaderboard" element={<AnimatedRoute><Leaderboard /></AnimatedRoute>} />
-                      <Route path="/mock" element={<Navigate to={globalJourneyEnabled ? '/test-preparation' : '/ielts'} replace />} />
+                      <Route path="/mock" element={<Navigate to="/test-preparation" replace />} />
                       <Route
                         path="/mock/ielts"
                         element={
@@ -845,11 +835,13 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <AnimatedRoute>
-                              <Onboarding />
+                              <QuickOnboarding />
                             </AnimatedRoute>
                           </ProtectedRoute>
                         }
                       />
+                      <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><QuickOnboarding /></AnimatedRoute></ProtectedRoute>} />
+                      <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Onboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
                     </Routes>
                 </Suspense>

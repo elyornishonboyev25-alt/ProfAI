@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { LogIn, UserPlus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -44,10 +45,9 @@ export default function PremiumRoute({ children, showGuestBanner = false }: Prem
         >
           <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">Guest Preview</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700"> <UiText text={"Guest Preview"} /> </p>
               <p className="text-sm font-medium text-slate-700">
-                Explore all sections freely. Create an account to save progress across devices.
-              </p>
+                 <UiText text={"Explore all sections freely. Create an account to save progress across devices."} /> </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -55,15 +55,13 @@ export default function PremiumRoute({ children, showGuestBanner = false }: Prem
                 className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.3)] transition hover:opacity-95"
               >
                 <UserPlus className="h-4 w-4" />
-                Register
-              </button>
+                 <UiText text={"Register"} /> </button>
               <button
                 onClick={() => navigate('/login')}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-white/95 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
               >
                 <LogIn className="h-4 w-4" />
-                Sign In
-              </button>
+                 <UiText text={"Sign In"} /> </button>
             </div>
           </div>
         </motion.section>

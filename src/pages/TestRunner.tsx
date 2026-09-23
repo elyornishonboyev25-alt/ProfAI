@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import UiText from '@/components/common/UiText'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Clock3, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react'
@@ -215,7 +216,7 @@ export default function TestRunner() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-[#1F2937]">{test.title}</h1>
-            <p className="mt-1 text-sm text-[#6B7280]">{test.category} | {test.difficulty} | {test.questions.length} questions</p>
+            <p className="mt-1 text-sm text-[#6B7280]">{test.category} | {test.difficulty} | {test.questions.length}  <UiText text={"questions"} /> </p>
           </div>
           <div className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
             <Clock3 className="mr-2 h-4 w-4" />
@@ -225,7 +226,7 @@ export default function TestRunner() {
 
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between text-xs text-[#6B7280]">
-            <span>Progress</span>
+            <span> <UiText text={"Progress"} /> </span>
             <span>{answeredCount}/{test.questions.length} answered</span>
           </div>
           <div className="h-2.5 rounded-full bg-slate-100">
@@ -285,12 +286,10 @@ export default function TestRunner() {
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                   {review?.isCorrect ? (
                     <span className="inline-flex items-center text-green-700">
-                      <CheckCircle2 className="mr-1 h-4 w-4" /> Correct
-                    </span>
+                      <CheckCircle2 className="mr-1 h-4 w-4" />  <UiText text={"Correct"} /> </span>
                   ) : (
                     <span className="inline-flex items-center text-red-700">
-                      <AlertTriangle className="mr-1 h-4 w-4" /> Incorrect
-                    </span>
+                      <AlertTriangle className="mr-1 h-4 w-4" />  <UiText text={"Incorrect"} /> </span>
                   )}
                 </div>
               ) : null}
@@ -328,7 +327,7 @@ export default function TestRunner() {
                 <span className="font-bold">+{result.xpEarned}</span>
               </p>
               <p className="mt-1 text-sm text-indigo-800">
-                Correct {result.correctAnswers}/{result.totalQuestions} | Level {result.levelBefore} to {result.levelAfter}
+                 <UiText text={"Correct"} /> {result.correctAnswers}/{result.totalQuestions} | Level {result.levelBefore} to {result.levelAfter}
               </p>
 
               {result.leveledUp ? (

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -167,7 +168,7 @@ export default function NotificationsBell() {
             >
             <div className="flex shrink-0 items-center justify-between border-b border-blue-100 bg-gradient-to-r from-white via-indigo-50/60 to-white px-4 py-3.5">
               <div>
-                <p className="text-sm font-black tracking-tight text-slate-900">Notifications</p>
+                <p className="text-sm font-black tracking-tight text-slate-900"> <UiText text={"Notifications"} /> </p>
                 <p className="text-[10px] font-bold text-slate-400">{unreadCount ? `${unreadCount} unread` : 'You are all caught up'}</p>
               </div>
               <div className="flex items-center gap-1">
@@ -277,7 +278,7 @@ export default function NotificationsBell() {
                             {TRACK_LABELS[badge.track] ?? badge.track} · Tier {badge.tier}
                           </span>
                           <span className="block text-[11px] text-slate-500">
-                            Band {badge.band.toFixed(1)} ·{' '}
+                             <UiText text={"Band"} /> {badge.band.toFixed(1)} ·{' '}
                             {new Date(badge.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         </span>

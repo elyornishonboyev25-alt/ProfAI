@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
@@ -120,7 +121,7 @@ export default function SharedResult() {
               <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[0.98] tracking-[-0.045em] text-slate-950 sm:text-6xl">
                 {result.testTitle}
               </h1>
-              <p className="mt-3 text-sm font-semibold text-slate-500">Completed {attempted}</p>
+              <p className="mt-3 text-sm font-semibold text-slate-500"> <UiText text={"Completed"} /> {attempted}</p>
             </div>
 
             <div className="flex items-end gap-3">
@@ -139,7 +140,7 @@ export default function SharedResult() {
           <div className="rounded-[2rem] border border-white/90 bg-white/72 p-5 shadow-[0_22px_58px_rgba(15,23,42,0.09)] backdrop-blur-2xl sm:p-7">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.17em] text-indigo-600">Performance</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.17em] text-indigo-600"> <UiText text={"Performance"} /> </p>
                 <h2 className="mt-1 text-2xl font-black text-slate-950">A clear look at the attempt</h2>
               </div>
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">{result.accuracy}% accuracy</span>

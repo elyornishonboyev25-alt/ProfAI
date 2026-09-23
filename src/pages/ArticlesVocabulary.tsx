@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { ArrowLeft, BookOpenCheck, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
@@ -19,12 +20,10 @@ export default function ArticlesVocabulary() {
                 <div className="premium-top-controls">
                   <button onClick={() => navigate('/vocabulary')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    Back to Vocabulary
-                  </button>
+                     <UiText text={"Back to Vocabulary"} /> </button>
                   <span className="premium-top-chip gap-1">
                     <BookOpenCheck className="h-3.5 w-3.5" />
-                    Articles Vocabulary
-                  </span>
+                     <UiText text={"Articles Vocabulary"} /> </span>
                 </div>
                 <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">Article Vocabulary Studio</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -34,8 +33,8 @@ export default function ArticlesVocabulary() {
               </div>
               <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Article Sets</p>
-                <p className="mt-1 text-lg font-extrabold text-slate-900">{articles.length} articles</p>
-                <p className="text-sm font-semibold text-blue-700"><CountUp value={totalTerms} /> terms</p>
+                <p className="mt-1 text-lg font-extrabold text-slate-900">{articles.length}  <UiText text={"articles"} /> </p>
+                <p className="text-sm font-semibold text-blue-700"><CountUp value={totalTerms} />  <UiText text={"terms"} /> </p>
               </div>
             </div>
           </section>
@@ -58,8 +57,7 @@ export default function ArticlesVocabulary() {
                     <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
                       <span className="text-xs font-semibold text-slate-500">{article.vocabulary.length} key terms</span>
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 transition group-hover:gap-2">
-                        <Sparkles className="h-3.5 w-3.5" /> Study set
-                      </span>
+                        <Sparkles className="h-3.5 w-3.5" />  <UiText text={"Study set"} /> </span>
                     </div>
                   </div>
                 </button>

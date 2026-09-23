@@ -1,3 +1,5 @@
+import UiText from '@/components/common/UiText'
+import { useCopy } from '@/i18n/interface'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -44,6 +46,7 @@ type VerificationResponse = {
 }
 
 export default function Register() {
+  const { c } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const setSession = useAuthStore((state: AuthState) => state.setSession)
@@ -167,7 +170,7 @@ export default function Register() {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden px-4 py-10">
+    <div className="liquid-auth-page relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden px-4 py-10">
       <div className="pointer-events-none absolute inset-0">
         <motion.div
           initial={minimalMotion ? false : { opacity: 0, scale: 0.92 }}
@@ -207,15 +210,11 @@ export default function Register() {
               <BrandMark size={58} className="shadow-[0_18px_34px_rgba(30,64,175,0.35)]" />
               <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
                 <Sparkles className="h-3.5 w-3.5" />
-                Study abroad with AI
-              </p>
+                 <UiText text={"Study abroad with AI"} /> </p>
               <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight">
-                Your journey to a university abroad starts here.
-              </h1>
+                 <UiText text={"Your journey to a university abroad starts here."} /> </h1>
               <p className="mt-4 text-sm leading-7 text-slate-300">
-                Join ProfAI and turn your study-abroad prep into a daily streak. Earn XP, unlock
-                achievements, and let your AI coach build the roadmap from SAT &amp; IELTS to your dream university.
-              </p>
+                 <UiText text={"Join ProfAI and turn your study-abroad prep into a daily streak. Earn XP, unlock achievements, and let your AI coach build the roadmap from SAT & IELTS to your dream university."} /> </p>
             </div>
 
             <div className="space-y-3">
@@ -234,17 +233,15 @@ export default function Register() {
             <BrandMark size={54} className="mx-auto shadow-[0_14px_26px_rgba(37,99,235,0.32)] lg:hidden" />
             <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Password sign-up
-            </p>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#1F2937]">Create your account</h1>
+               <UiText text={"Password sign-up"} /> </p>
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-[#1F2937]"> <UiText text={"Create your account"} /> </h1>
             <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-              Start securely with Gmail. Your name, avatar and study goals are collected once in the guided setup.
-            </p>
+               <UiText text={"Start securely with Gmail, then choose your study goal."} /> </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" aria-label="Registration form">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-bold text-slate-700">Gmail address</span>
+              <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Gmail address"} /> </span>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                 <input
@@ -260,12 +257,12 @@ export default function Register() {
                   })}
                 />
               </div>
-              {errors.email ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.email.message}</p> : null}
+              {errors.email ? <p className="mt-1.5 text-xs font-semibold text-error-600">{c(errors.email.message || '')}</p> : null}
             </label>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-bold text-slate-700">Password</span>
+                <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Password"} /> </span>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                   <input
@@ -276,11 +273,11 @@ export default function Register() {
                     {...register('password')}
                   />
                 </div>
-                {errors.password ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.password.message}</p> : null}
+                {errors.password ? <p className="mt-1.5 text-xs font-semibold text-error-600">{c(errors.password.message || '')}</p> : null}
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm font-bold text-slate-700">Confirm password</span>
+                <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Confirm password"} /> </span>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                   <input
@@ -291,17 +288,16 @@ export default function Register() {
                     {...register('confirmPassword')}
                   />
                 </div>
-                {errors.confirmPassword ? <p className="mt-1.5 text-xs font-semibold text-error-600">{errors.confirmPassword.message}</p> : null}
+                {errors.confirmPassword ? <p className="mt-1.5 text-xs font-semibold text-error-600">{c(errors.confirmPassword.message || '')}</p> : null}
               </label>
             </div>
 
             {verificationSent ? (
               <label className="block">
                 <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-bold text-slate-700">
-                  <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" />Verification code</span>
+                  <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" /> <UiText text={"Verification code"} /> </span>
                   <button type="button" onClick={() => void requestVerificationCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
-                    <RefreshCw className="h-3 w-3" /> Resend code
-                  </button>
+                    <RefreshCw className="h-3 w-3" />  <UiText text={"Resend code"} /> </button>
                 </span>
                 <input
                   value={verificationCode}
@@ -311,7 +307,7 @@ export default function Register() {
                   className="input h-12 rounded-2xl border-blue-200 bg-blue-50/50 text-center text-xl font-black tracking-[0.35em]"
                   placeholder="000000"
                 />
-                <p className="mt-1.5 text-xs text-slate-500">The code expires in 10 minutes and can be used once.</p>
+                <p className="mt-1.5 text-xs text-slate-500"> <UiText text={"The code expires in 10 minutes and can be used once."} /> </p>
               </label>
             ) : null}
 
@@ -325,10 +321,10 @@ export default function Register() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {verificationSent ? 'Verifying...' : 'Sending code...'}
+                  {c(verificationSent ? 'Verifying...' : 'Sending code...')}
                 </>
               ) : (
-                verificationSent ? 'Verify & create account' : 'Send Gmail verification code'
+                c(verificationSent ? 'Verify & create account' : 'Send Gmail verification code')
               )}
             </motion.button>
           </form>
@@ -336,8 +332,7 @@ export default function Register() {
           <div className="my-5 flex items-center gap-4">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-100 to-blue-200/70" />
             <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              or sign up with
-            </span>
+               <UiText text={"or sign up with"} /> </span>
             <span className="h-px flex-1 bg-gradient-to-l from-transparent via-blue-100 to-blue-200/70" />
           </div>
 
@@ -346,18 +341,15 @@ export default function Register() {
           <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-slate-700">
             <p className="inline-flex items-center gap-1.5 font-black text-blue-700">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Secure sign-up
-            </p>
+               <UiText text={"Secure sign-up"} /> </p>
             <p className="mt-1 leading-5">
-              Your session is saved on this device after account creation.
-            </p>
+               <UiText text={"Your session is saved on this device after account creation."} /> </p>
           </div>
 
           <p className="mt-6 text-center text-sm text-[#6B7280]">
-            Already have an account?{' '}
+             <UiText text={"Already have an account?"} /> {' '}
             <Link to="/login" className="font-black text-blue-600 transition-colors hover:text-blue-700">
-              Sign in
-            </Link>
+               <UiText text={"Sign in"} /> </Link>
           </p>
         </div>
       </motion.div>

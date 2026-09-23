@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -1123,8 +1124,7 @@ export default function Podcast() {
                   {/* A–B loop */}
                   <div>
                     <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                      <Repeat className="h-3.5 w-3.5" /> A–B repeat
-                    </p>
+                      <Repeat className="h-3.5 w-3.5" />  <UiText text={"A–B repeat"} /> </p>
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
@@ -1150,8 +1150,7 @@ export default function Podcast() {
                           onClick={clearLoop}
                           className="rounded-lg bg-white/10 px-2 py-1 text-[11px] font-bold text-slate-300 transition hover:bg-white/20"
                         >
-                          Clear
-                        </button>
+                           <UiText text={"Clear"} /> </button>
                       ) : null}
                     </div>
                   </div>
@@ -1163,8 +1162,7 @@ export default function Podcast() {
                     className="flex w-full items-center justify-between rounded-lg bg-white/5 px-2.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Repeat1 className="h-4 w-4" /> Loop whole video
-                    </span>
+                      <Repeat1 className="h-4 w-4" />  <UiText text={"Loop whole video"} /> </span>
                     <span className={`h-4 w-7 rounded-full p-0.5 transition ${loopVideo ? 'bg-red-500' : 'bg-slate-600'}`}>
                       <span className={`block h-3 w-3 rounded-full bg-white transition ${loopVideo ? 'translate-x-3' : ''}`} />
                     </span>
@@ -1172,7 +1170,7 @@ export default function Podcast() {
 
                   {/* Caption size */}
                   <div>
-                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">Caption size</p>
+                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400"> <UiText text={"Caption size"} /> </p>
                     <div className="flex gap-1">
                       {CAPTION_SIZES.map((size) => (
                         <button
@@ -1192,8 +1190,7 @@ export default function Podcast() {
                   {/* Sleep timer */}
                   <div>
                     <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                      <Timer className="h-3.5 w-3.5" /> Sleep timer
-                    </p>
+                      <Timer className="h-3.5 w-3.5" />  <UiText text={"Sleep timer"} /> </p>
                     <div className="flex flex-wrap gap-1">
                       <button
                         type="button"
@@ -1202,8 +1199,7 @@ export default function Podcast() {
                           sleepUntil === null ? 'bg-red-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                         }`}
                       >
-                        Off
-                      </button>
+                         <UiText text={"Off"} /> </button>
                       {SLEEP_OPTIONS.map((min) => (
                         <button
                           key={min}
@@ -1226,8 +1222,7 @@ export default function Podcast() {
                     className="flex w-full items-center justify-between rounded-lg bg-white/5 px-2.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Keyboard className="h-4 w-4" /> Keyboard shortcuts
-                    </span>
+                      <Keyboard className="h-4 w-4" />  <UiText text={"Keyboard shortcuts"} /> </span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </motion.div>
@@ -1313,8 +1308,7 @@ export default function Podcast() {
         {mini ? (
           <div className="absolute left-2 top-2 z-40 flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" /> Mini
-            </span>
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" />  <UiText text={"Mini"} /> </span>
             <button
               type="button"
               onClick={() => setMini(false)}
@@ -1331,7 +1325,7 @@ export default function Podcast() {
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950">
             <div className="flex flex-col items-center gap-3 text-slate-300">
               <Loader2 className="h-9 w-9 animate-spin text-red-400" />
-              <p className="text-sm font-semibold">Loading player…</p>
+              <p className="text-sm font-semibold"> <UiText text={"Loading player…"} /> </p>
             </div>
           </div>
         ) : null}
@@ -1395,7 +1389,7 @@ export default function Podcast() {
               >
                 <RotateCcw className="h-7 w-7" />
               </button>
-              <p className="text-sm font-bold text-white">Watch again</p>
+              <p className="text-sm font-bold text-white"> <UiText text={"Watch again"} /> </p>
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -1422,8 +1416,7 @@ export default function Podcast() {
               />
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/75 to-red-950/60 backdrop-blur-[2px]" />
               <span className="relative z-10 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-red-100 backdrop-blur-xl">
-                <Pause className="h-3 w-3" /> Paused
-              </span>
+                <Pause className="h-3 w-3" />  <UiText text={"Paused"} /> </span>
               <p className="relative z-10 max-w-xl text-base font-semibold leading-7 text-white sm:text-lg">{episode.title}</p>
               <span className="podcast-play-orb relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-white transition group-hover:scale-105">
                 <Play className="h-7 w-7 translate-x-0.5" />
@@ -1493,7 +1486,7 @@ export default function Podcast() {
           <div className="flex items-center justify-between gap-3">
             <button type="button" onClick={() => navigate('/academic-skills')} className="podcast-soft-button route-back-button group">
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              <span className="hidden sm:inline">Academic Skills</span>
+              <span className="hidden sm:inline"> <UiText text={"Academic Skills"} /> </span>
             </button>
             <div className="flex items-center gap-3">
               <span className="podcast-logo-orb"><GraduationCap className="h-6 w-6" /></span>
@@ -1502,7 +1495,7 @@ export default function Podcast() {
             <div className="flex items-center gap-2">
               {canSubmitVideo ? (
                 <button type="button" onClick={() => setShowAddPanel((value) => !value)} className="podcast-soft-button text-red-700">
-                  <Plus className="h-4 w-4" /><span className="hidden sm:inline">Add podcast</span>
+                  <Plus className="h-4 w-4" /><span className="hidden sm:inline"> <UiText text={"Add podcast"} /> </span>
                 </button>
               ) : null}
               <button type="button" onClick={() => setShowHelp(true)} className="podcast-icon-button" aria-label="Keyboard shortcuts">
@@ -1511,9 +1504,9 @@ export default function Podcast() {
             </div>
           </div>
           <div className="mt-5 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-red-300/90">Listen · Learn · Level up</p>
-            <h1 className="mt-2 text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl">English Podcasts</h1>
-            <p className="mt-2 text-base font-medium text-white/55 sm:text-xl">Train your ears daily</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-red-300/90"> <UiText text={"Listen · Learn · Level up"} /> </p>
+            <h1 className="mt-2 text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl"> <UiText text={"English Podcasts"} /> </h1>
+            <p className="mt-2 text-base font-medium text-white/55 sm:text-xl"> <UiText text={"Train your ears daily"} /> </p>
           </div>
           <div className="podcast-level-dock absolute -bottom-8 left-1/2 flex -translate-x-1/2 gap-2 rounded-[1.75rem] p-2 sm:gap-3">
             {LEVELS.map((level) => (
@@ -1542,7 +1535,7 @@ export default function Podcast() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-red-600 shadow-sm"><Sparkles className="h-5 w-5" /></span>
-                    <div><h2 className="text-lg font-black">Add a podcast to listen</h2><p className="text-xs text-slate-500">Paste any public English YouTube video — AI creates synced subtitles when needed.</p></div>
+                    <div><h2 className="text-lg font-black"> <UiText text={"Add a podcast to listen"} /> </h2><p className="text-xs text-slate-500"> <UiText text={"Paste any public English YouTube video — AI creates synced subtitles when needed."} /> </p></div>
                   </div>
                   <button type="button" onClick={() => setShowAddPanel(false)} className="podcast-icon-button"><X className="h-4 w-4" /></button>
                 </div>
@@ -1555,16 +1548,16 @@ export default function Podcast() {
                     {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{addingPodcast ? 'Analyzing…' : 'Add & listen'}
                   </button>
                 </form>
-                {addingPodcast ? <p className="podcast-import-status mt-3"><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking the source, artwork and available captions…</p> : null}
+                {addingPodcast ? <p className="podcast-import-status mt-3"><Loader2 className="h-3.5 w-3.5 animate-spin" /> <UiText text={"Checking the source, artwork and available captions…"} /> </p> : null}
                 <AnimatePresence mode="popLayout">
                   {podcastError ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-error mt-3">{podcastError}</motion.p> : null}
                   {podcastNotice ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-success mt-3"><CheckCircle2 className="h-3.5 w-3.5" />{podcastNotice}</motion.p> : null}
                 </AnimatePresence>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Try:</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400"> <UiText text={"Try:"} /> </span>
                   {SUGGESTED_PODCASTS.map((suggestion) => <button key={suggestion.url} type="button" disabled={addingPodcast} onClick={() => void addPodcast(suggestion.url)} className="podcast-suggestion"><Sparkles className="h-3 w-3" />{suggestion.label}</button>)}
                 </div>
-                <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400"><ShieldCheck className="h-3.5 w-3.5" />Public, embeddable English videos only. Audio is processed securely and is never stored.</p>
+                <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400"><ShieldCheck className="h-3.5 w-3.5" /> <UiText text={"Public, embeddable English videos only. Audio is processed securely and is never stored."} /> </p>
               </div>
             </motion.section>
           ) : null}
@@ -1582,7 +1575,7 @@ export default function Podcast() {
           <main className="podcast-main min-w-0">
             <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : 0.2, duration: 0.5 }}>
               <div className="podcast-featured-heading mb-4 flex items-end justify-between gap-4 px-1">
-                <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600">Featured episode</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
+                <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600"> <UiText text={"Featured episode"} /> </p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
                 <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex">
                   {captionsAvailable ? <Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" /> : <Headphones className="mr-1.5 h-3.5 w-3.5 text-red-500" />}
                   {captionsAvailable ? 'English captions' : 'Audio ready'}
@@ -1590,14 +1583,14 @@ export default function Podcast() {
               </div>
               <div className="relative">
                 {mini ? <div className="aspect-video w-full rounded-[2rem] border border-dashed border-slate-300 bg-white/30" /> : null}
-                {mini ? <button type="button" onClick={() => setMini(false)} className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm font-bold text-slate-500"><PictureInPicture2 className="h-7 w-7" />Return player here</button> : null}
+                {mini ? <button type="button" onClick={() => setMini(false)} className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm font-bold text-slate-500"><PictureInPicture2 className="h-7 w-7" /> <UiText text={"Return player here"} /> </button> : null}
                 {playerShell}
               </div>
             </motion.div>
 
             <div className="podcast-library-heading mt-7 flex items-center justify-between gap-3 px-1">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Podcast library</p><h2 className="text-xl font-black text-slate-950">All saved episodes</h2></div>
-              <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length} episode{visibleEpisodes.length === 1 ? '' : 's'}</span>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"> <UiText text={"Podcast library"} /> </p><h2 className="text-xl font-black text-slate-950"> <UiText text={"All saved episodes"} /> </h2></div>
+              <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length}  <UiText text={"episode"} /> {visibleEpisodes.length === 1 ? '' : 's'}</span>
             </div>
             {visibleEpisodes.length > 0 ? (
               <div className="podcast-episode-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -1615,11 +1608,11 @@ export default function Podcast() {
                 ))}
               </div>
             ) : (
-              <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800">No {activeLevel} {activeCategory.toLowerCase()} episodes yet</p><p className="mt-1 text-sm text-slate-500">Choose another level or category{canSubmitVideo ? ', or add a podcast.' : '.'}</p></div>
+              <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800"> <UiText text={"No"} /> {activeLevel} {activeCategory.toLowerCase()}  <UiText text={"episodes yet"} /> </p><p className="mt-1 text-sm text-slate-500"> <UiText text={"Choose another level or category"} /> {canSubmitVideo ? ', or add a podcast.' : '.'}</p></div>
             )}
 
             <button type="button" onClick={() => setShowDetails((value) => !value)} className="podcast-details-toggle mt-6 w-full">
-              <span className="flex items-center gap-2"><Captions className="h-4 w-4 text-red-500" />Transcript, bookmarks &amp; practice tools</span><ChevronRight className={`h-4 w-4 transition ${showDetails ? 'rotate-90' : ''}`} />
+              <span className="flex items-center gap-2"><Captions className="h-4 w-4 text-red-500" /> <UiText text={"Transcript, bookmarks & practice tools"} /> </span><ChevronRight className={`h-4 w-4 transition ${showDetails ? 'rotate-90' : ''}`} />
             </button>
             <AnimatePresence>
               {showDetails ? (
@@ -1627,8 +1620,8 @@ export default function Podcast() {
                   <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_.8fr_.8fr]">
                     <article className="podcast-detail-card podcast-transcript-card">
                       <div className="flex items-center justify-between gap-3">
-                        <h3><Captions className="h-4 w-4 text-red-500" />Transcript</h3>
-                        <span className="podcast-live-pill"><span />Synced</span>
+                        <h3><Captions className="h-4 w-4 text-red-500" /> <UiText text={"Transcript"} /> </h3>
+                        <span className="podcast-live-pill"><span /> <UiText text={"Synced"} /> </span>
                       </div>
                       {transcriptCues.length ? (
                         <div className="pod-scroll mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
@@ -1655,15 +1648,15 @@ export default function Podcast() {
                             <p className="text-sm font-black text-slate-800">{captionsAvailable ? 'Captions live on the player' : 'Podcast ready without a transcript'}</p>
                             <p className="mt-1 text-xs leading-5 text-slate-500">
                               {captionsAvailable
-                                ? <>Press <b className="text-red-600">C</b> or use the CC control to show English subtitles.</>
+                                ? <> <UiText text={"Press"} /> <b className="text-red-600">C</b>  <UiText text={"or use the CC control to show English subtitles."} /> </>
                                 : 'Playback, speed, loops and bookmarks still work normally. YouTube CC will appear if the creator enables it.'}
                             </p>
                           </div>
                         </div>
                       )}
                     </article>
-                    <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" />Bookmarks</h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" />Add</button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label="Remove bookmark"><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500">Press <b>N</b> to save the current moment on this device.</p>}</article>
-                    <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" />Practice flow</h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> {step.title}</p></div> })}</div></article>
+                    <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" /> <UiText text={"Bookmarks"} /> </h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" /> <UiText text={"Add"} /> </button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label="Remove bookmark"><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500"> <UiText text={"Press"} /> <b>N</b>  <UiText text={"to save the current moment on this device."} /> </p>}</article>
+                    <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" /> <UiText text={"Practice flow"} /> </h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> {step.title}</p></div> })}</div></article>
                   </div>
                 </motion.div>
               ) : null}
@@ -1671,7 +1664,7 @@ export default function Podcast() {
           </main>
 
           <motion.aside initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.28 }} className="podcast-glass podcast-continue xl:sticky xl:top-5">
-            <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950">Continue listening</h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
+            <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950"> <UiText text={"Continue listening"} /> </h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
             <div className="mt-5 flex items-center gap-3">
               <img src={artworkUrl} onError={(event) => handleArtworkError(event, episode)} alt="" className="podcast-continue-artwork h-20 w-20 rounded-2xl object-cover shadow-lg" />
               <div className="min-w-0"><p className="line-clamp-2 font-black leading-5 text-slate-900">{episode.title}</p><p className="mt-1 text-sm font-semibold text-slate-500">{formatTime(duration || currentTime)}</p></div>
@@ -1684,8 +1677,8 @@ export default function Podcast() {
             </div>
             <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/55 pt-5 text-center">
               <button type="button" onClick={toggleCaptions} className={`podcast-quick-tool ${captionsOn ? 'is-active' : ''}`}><Captions className="h-4 w-4" /><span>CC</span></button>
-              <button type="button" onClick={addBookmark} className="podcast-quick-tool"><BookmarkPlus className="h-4 w-4" /><span>Save</span></button>
-              <button type="button" onClick={toggleMini} className={`podcast-quick-tool ${mini ? 'is-active' : ''}`}><PictureInPicture2 className="h-4 w-4" /><span>Mini</span></button>
+              <button type="button" onClick={addBookmark} className="podcast-quick-tool"><BookmarkPlus className="h-4 w-4" /><span> <UiText text={"Save"} /> </span></button>
+              <button type="button" onClick={toggleMini} className={`podcast-quick-tool ${mini ? 'is-active' : ''}`}><PictureInPicture2 className="h-4 w-4" /><span> <UiText text={"Mini"} /> </span></button>
             </div>
           </motion.aside>
         </div>
@@ -1711,8 +1704,7 @@ export default function Podcast() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="inline-flex items-center gap-2 text-lg font-black text-white">
-                  <Keyboard className="h-5 w-5 text-indigo-300" /> Keyboard shortcuts
-                </h3>
+                  <Keyboard className="h-5 w-5 text-indigo-300" />  <UiText text={"Keyboard shortcuts"} /> </h3>
                 <button
                   type="button"
                   onClick={() => setShowHelp(false)}

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Crown, Sparkles } from 'lucide-react'
@@ -81,8 +82,8 @@ export default function IELTSSpeakingTests() {
               <h2 className="mt-4 text-2xl font-black text-slate-950">Free sessions used</h2>
               <p className="mt-2 text-sm text-slate-600">Premium gives you unlimited AI speaking feedback.</p>
               <div className="mt-5 flex justify-center gap-2">
-                <button type="button" onClick={() => setShowTrialGate(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700">Close</button>
-                <button type="button" onClick={() => navigate('/premium')} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white">View Premium</button>
+                <button type="button" onClick={() => setShowTrialGate(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"> <UiText text={"Close"} /> </button>
+                <button type="button" onClick={() => navigate('/premium')} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white"> <UiText text={"View Premium"} /> </button>
               </div>
             </motion.div>
           </div>

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Lightbulb, Target } from 'lucide-react'
@@ -79,12 +80,11 @@ export default function AdmissionLesson() {
       <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
         <AmbientBackdrop variant="red" />
         <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
-          <h1 className="text-2xl font-black text-slate-900">Lesson not found</h1>
-          <p className="mt-2 text-slate-500">This lesson doesn’t exist or hasn’t been added yet.</p>
+          <h1 className="text-2xl font-black text-slate-900"> <UiText text={"Lesson not found"} /> </h1>
+          <p className="mt-2 text-slate-500"> <UiText text={"This lesson doesn’t exist or hasn’t been added yet."} /> </p>
           <button type="button" onClick={() => navigate('/admission/lessons')} className="premium-back-btn mt-6">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to lessons
-          </button>
+             <UiText text={"Back to lessons"} /> </button>
         </div>
       </div>
     )
@@ -113,8 +113,7 @@ export default function AdmissionLesson() {
                 className="route-back-button"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                All lessons
-              </button>
+                 <UiText text={"All lessons"} /> </button>
 
               <div className="mt-5 flex items-center gap-3">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
@@ -122,13 +121,12 @@ export default function AdmissionLesson() {
                 </span>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
-                    Lesson {String(lesson.order).padStart(2, '0')} · {phase.title}
+                     <UiText text={"Lesson"} /> {String(lesson.order).padStart(2, '0')} · {phase.title}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] font-semibold text-white/80">
                     <span className="inline-flex items-center gap-1">
                       <Clock3 className="h-3.5 w-3.5" />
-                      {lesson.durationMin} min read
-                    </span>
+                      {lesson.durationMin}  <UiText text={"min read"} /> </span>
                     <span className="rounded-full bg-white/15 px-2 py-0.5">{lesson.level}</span>
                   </div>
                 </div>
@@ -151,8 +149,7 @@ export default function AdmissionLesson() {
             <div className="mt-9 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
               <h3 className="flex items-center gap-2 text-base font-black text-slate-900">
                 <CheckCircle2 className="h-5 w-5" style={{ color: accent }} />
-                Key takeaways
-              </h3>
+                 <UiText text={"Key takeaways"} /> </h3>
               <ul className="mt-3 space-y-2">
                 {lesson.keyTakeaways.map((point, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-[14px] leading-6 text-slate-700">
@@ -174,8 +171,7 @@ export default function AdmissionLesson() {
               <Target className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: accent }} />
               <div>
                 <p className="text-[12px] font-black uppercase tracking-[0.1em]" style={{ color: accent }}>
-                  Your action step
-                </p>
+                   <UiText text={"Your action step"} /> </p>
                 <p className="mt-1 text-[15px] leading-7 text-slate-700">{lesson.actionStep}</p>
               </div>
             </div>
@@ -226,7 +222,7 @@ export default function AdmissionLesson() {
               >
                 <ArrowLeft className="h-5 w-5 flex-shrink-0 text-slate-400 transition group-hover:-translate-x-1" />
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Previous</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"> <UiText text={"Previous"} /> </span>
                   <span className="block truncate text-[14px] font-bold text-slate-800">{prev.title}</span>
                 </span>
               </button>
@@ -239,7 +235,7 @@ export default function AdmissionLesson() {
                 className="group flex items-center justify-end gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:border-slate-300 hover:shadow-md"
               >
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Next</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"> <UiText text={"Next"} /> </span>
                   <span className="block truncate text-[14px] font-bold text-slate-800">{next.title}</span>
                 </span>
                 <ArrowRight className="h-5 w-5 flex-shrink-0 text-slate-400 transition group-hover:translate-x-1" />
@@ -251,8 +247,8 @@ export default function AdmissionLesson() {
                 style={{ background: phase.gradient }}
               >
                 <span>
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Finished!</span>
-                  <span className="block text-[14px] font-bold">Explore universities →</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-white/70"> <UiText text={"Finished!"} /> </span>
+                  <span className="block text-[14px] font-bold"> <UiText text={"Explore universities →"} /> </span>
                 </span>
               </button>
             )}

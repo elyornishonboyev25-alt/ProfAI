@@ -1,3 +1,5 @@
+import UiText from '@/components/common/UiText'
+import { useCopy } from '@/i18n/interface'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -219,22 +221,24 @@ function safeCount(value: number) {
 }
 
 function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill in.' }: { label: string; hint?: string }) {
+  const { c } = useCopy()
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
         <Activity className="h-5 w-5" />
       </span>
-      <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
-      <p className="text-[11px] text-slate-400">{hint}</p>
+      <p className="mt-2 text-sm font-bold text-slate-600">{c(label)}</p>
+      <p className="text-[11px] text-slate-400">{c(hint)}</p>
     </div>
   )
 }
 
 export default function Profile() {
+  const { c, language } = useCopy()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const isGuestPreview = !user
-  const { data: fetchedData, loading } = useAsyncData<ProfileOverview | null>(
+  const { data: fetchedData, loading, error, refetch } = useAsyncData<ProfileOverview | null>(
     () => (user ? apiClient.get('/profile/overview') : Promise.resolve(null)),
     [user],
   )
@@ -315,6 +319,10 @@ export default function Profile() {
   return (
     <div className="performance-studio workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative mx-auto w-full max-w-7xl">
+      <header className="liquid-page-heading"><p className="liquid-eyebrow">{c('Your progress')}</p><h1>{c('My Results')}</h1><p>{c('Review your practice history and choose what to work on next.')}</p></header>
+      {error && <div className="liquid-inline-error" role="alert"><span>{c('Unable to refresh your activity.')}</span><button onClick={() => void refetch()}>{c('Try again')}</button></div>}
+      <div className="liquid-actions mb-6"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}>{c('Start practicing')}<ArrowUpRight size={17} /></button><button className="liquid-text-link" onClick={() => navigate('/analyze-mistakes')}>{c('Review mistakes')}</button></div>
+      <details className="liquid-results-details"><summary>{c('Skills, achievements & detailed analytics')}</summary>
       <Reveal>
         <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
 
@@ -329,27 +337,25 @@ export default function Profile() {
                 <div className="premium-top-controls">
                   <span className="premium-top-chip">
                     <Trophy className="h-3.5 w-3.5" />
-                    Performance Studio
-                  </span>
+                     <UiText text={"Performance Studio"} /> </span>
                 </div>
-                <h1 className="premium-section-title mt-4">
-                  Welcome back, <span className="arena-title-accent-red">{data.profile.fullName.split(' ')[0]}</span>
-                </h1>
+                <h2 className="premium-section-title mt-4">
+                   <UiText text={"Welcome back,"} /> <span className="arena-title-accent-red">{data.profile.fullName.split(' ')[0]}</span>
+                </h2>
                 <p className="premium-section-subtitle">
-                  Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher.
-                </p>
+                   <UiText text={"Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher."} /> </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5">
                     <Award className="h-4 w-4 text-amber-600" />
                     <span className="text-sm font-bold text-amber-700">
-                      Level <CountUp value={data.profile.level} />
+                       <UiText text={"Level"} /> <CountUp value={data.profile.level} />
                     </span>
                   </div>
                   {data.competitive && data.competitive.rank > 0 ? (
                     <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1.5">
                       <Trophy className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-bold text-blue-700">
-                        Rank #<CountUp value={data.competitive.rank} />
+                         <UiText text={"Rank #"} /> <CountUp value={data.competitive.rank} />
                       </span>
                       {data.competitive.rankTrend === 'up' && data.competitive.rankDelta !== 0 ? (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
@@ -371,19 +377,19 @@ export default function Profile() {
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600">XP Vault</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600"> <UiText text={"XP Vault"} /> </p>
                       <p className="mt-1 text-4xl font-black tracking-tight text-slate-900">
                         <CountUp value={data.profile.xp} />
                       </p>
-                      <p className="mt-1 text-[11px] font-medium text-slate-500">Total XP earned</p>
+                      <p className="mt-1 text-[11px] font-medium text-slate-500"> <UiText text={"Total XP earned"} /> </p>
                     </div>
                     <XPGem size={64} />
                   </div>
 
                   <div className="mt-4">
                     <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold text-slate-600">
-                      <span>Level {data.profile.level}</span>
-                      <span>{xpToNext} XP to L{data.profile.level + 1}</span>
+                      <span> <UiText text={"Level"} /> {data.profile.level}</span>
+                      <span>{xpToNext}  <UiText text={"XP to L"} /> {data.profile.level + 1}</span>
                     </div>
                     <AnimatedBar value={data.levelProgress.progressPercent} height={9} />
                   </div>
@@ -403,8 +409,8 @@ export default function Profile() {
           >
             <ArenaMetricMark icon={Sparkles} tone="blue" size="sm" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black text-slate-900">Preview mode</span>
-              <span className="block text-[12px] text-slate-500">Create an account to track real XP, ranking and saved attempts.</span>
+              <span className="block text-sm font-black text-slate-900"> <UiText text={"Preview mode"} /> </span>
+              <span className="block text-[12px] text-slate-500"> <UiText text={"Create an account to track real XP, ranking and saved attempts."} /> </span>
             </span>
             <ArrowUpRight className="h-5 w-5 shrink-0 text-blue-500" />
           </button>
@@ -418,13 +424,12 @@ export default function Profile() {
           >
             <ArenaMetricMark icon={BrainCircuit} tone="amber" size="sm" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black text-slate-900">Live AI analytics are Premium</span>
+              <span className="block text-sm font-black text-slate-900"> <UiText text={"Live AI analytics are Premium"} /> </span>
               <span className="block text-[12px] text-slate-500">
-                Your XP, level and streak are shown below. Unlock the AI skill matrix, ranking and insights with Premium.
-              </span>
+                 <UiText text={"Your XP, level and streak are shown below. Unlock the AI skill matrix, ranking and insights with Premium."} /> </span>
             </span>
             <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-bold text-white sm:inline-flex">
-              Go Premium <ArrowUpRight className="h-3.5 w-3.5" />
+               <UiText text={"Go Premium"} /> <ArrowUpRight className="h-3.5 w-3.5" />
             </span>
           </button>
         </Reveal>
@@ -446,7 +451,7 @@ export default function Profile() {
                   <article className="performance-metric-card group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/80 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
                     <div className="flex items-center justify-between">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{c(card.label)}</p>
                       <ArenaMetricMark icon={Icon} tone={card.tone} />
                     </div>
                     <p className="relative mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
@@ -460,8 +465,7 @@ export default function Profile() {
                     </p>
                     <div className="relative mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                      Live data
-                    </div>
+                       <UiText text={"Live data"} /> </div>
                   </article>
                   </PremiumFeatureLock>
               </StaggerItem>
@@ -482,7 +486,7 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ArenaMetricMark icon={BrainCircuit} tone="blue" size="sm" />
-                <h2 className="text-lg font-black tracking-tight text-slate-900">Skill Matrix</h2>
+                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Skill Matrix"} /> </h2>
               </div>
               <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
                 IELTS + SAT
@@ -512,7 +516,7 @@ export default function Profile() {
                   </ResponsiveContainer>
                 </div>
                 <div className="space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">IELTS Tracks</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700"> <UiText text={"IELTS Tracks"} /> </p>
                   {ieltsSkills.map((skill) => (
                     <div key={skill.key}>
                       <div className="mb-1 flex items-center justify-between">
@@ -522,7 +526,7 @@ export default function Profile() {
                       <AnimatedBar value={safePercent(skill.skillPower)} height={6} />
                     </div>
                   ))}
-                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">SAT Tracks</p>
+                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700"> <UiText text={"SAT Tracks"} /> </p>
                   {satSkills.map((skill) => (
                     <div key={skill.key}>
                       <div className="mb-1 flex items-center justify-between">
@@ -549,7 +553,7 @@ export default function Profile() {
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
               <ArenaMetricMark icon={Target} tone="indigo" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900">Accuracy Score</h2>
+              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Accuracy Score"} /> </h2>
             </div>
 
             {loading ? (
@@ -561,18 +565,18 @@ export default function Profile() {
                     <p className="text-3xl font-black tracking-tight text-slate-900">
                       <CountUp value={averageAccuracy} decimals={1} suffix="%" />
                     </p>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Avg accuracy</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500"> <UiText text={"Avg accuracy"} /> </p>
                   </div>
                 </ProgressRing>
                 <div className="mt-5 grid w-full grid-cols-2 gap-3">
                   <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Avg Score</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600"> <UiText text={"Avg Score"} /> </p>
                     <p className="mt-1 text-lg font-black text-slate-900">
                       <CountUp value={averageScore} decimals={1} suffix="%" />
                     </p>
                   </div>
                   <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Test XP only</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700"> <UiText text={"Test XP only"} /> </p>
                     <p className="mt-1 inline-flex items-center gap-1 text-lg font-black text-slate-900">
                       <Zap className="h-4 w-4 fill-amber-400 text-amber-500" />
                       <CountUp value={data.stats.totalXpFromAttempts} />
@@ -599,8 +603,8 @@ export default function Profile() {
             <div className="flex items-center gap-2">
               <ArenaMetricMark icon={TrendingUp} tone="blue" size="sm" />
               <div>
-                <h2 className="text-lg font-black tracking-tight text-slate-900">XP Momentum</h2>
-                <p className="text-[11px] font-medium text-slate-500">Cumulative XP earned over recent attempts</p>
+                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"XP Momentum"} /> </h2>
+                <p className="text-[11px] font-medium text-slate-500"> <UiText text={"Cumulative XP earned over recent attempts"} /> </p>
               </div>
             </div>
           </div>
@@ -651,8 +655,8 @@ export default function Profile() {
             <div className="flex items-center gap-2">
               <ArenaMetricMark icon={Activity} tone="indigo" size="sm" />
               <div>
-                <h2 className="text-lg font-black tracking-tight text-slate-900">Weekly Activity</h2>
-                <p className="text-[11px] font-medium text-slate-500">Practice, focused study time and XP earned each day</p>
+                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Weekly Activity"} /> </h2>
+                <p className="text-[11px] font-medium text-slate-500"> <UiText text={"Practice, focused study time and XP earned each day"} /> </p>
               </div>
             </div>
             {loading ? (
@@ -687,7 +691,7 @@ export default function Profile() {
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
             <div className="flex items-center gap-2">
               <ArenaMetricMark icon={Sparkles} tone="amber" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900">Achievements</h2>
+              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Achievements"} /> </h2>
             </div>
             {loading ? (
               <div className="mt-4 space-y-3">
@@ -712,8 +716,7 @@ export default function Profile() {
                         </span>
                       ) : (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          <CheckCircle2 className="h-3 w-3" /> Earned
-                        </span>
+                          <CheckCircle2 className="h-3 w-3" />  <UiText text={"Earned"} /> </span>
                       )}
                     </div>
                   </StaggerItem>
@@ -724,14 +727,15 @@ export default function Profile() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
                   <Sparkles className="h-5 w-5" />
                 </span>
-                <p className="mt-3 text-sm font-bold text-slate-700">No achievements yet</p>
-                <p className="mt-1 text-xs text-slate-500">Complete tests to unlock badges and bonus XP.</p>
+                <p className="mt-3 text-sm font-bold text-slate-700"> <UiText text={"No achievements yet"} /> </p>
+                <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete tests to unlock badges and bonus XP."} /> </p>
               </div>
             )}
           </article>
         </Reveal>
       </section>
 
+      </details>
       {/* ── Recent attempts ─────────────────────────────────────── */}
       <Reveal className="mt-6">
         <article className="surface-card relative overflow-hidden p-6">
@@ -739,7 +743,7 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ArenaMetricMark icon={Activity} tone="blue" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900">Recent Attempts</h2>
+              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Recent Attempts"} /> </h2>
             </div>
           </div>
 
@@ -774,7 +778,7 @@ export default function Profile() {
                       />
                     </div>
                     <p className="mt-2 text-[10px] font-medium text-slate-400">
-                      {new Date(attempt.completedAt).toLocaleString('en-US', {
+                      {new Date(attempt.completedAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -790,15 +794,14 @@ export default function Profile() {
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                 <Activity className="h-5 w-5" />
               </span>
-              <p className="mt-3 text-sm font-bold text-slate-700">No attempts yet</p>
-              <p className="mt-1 text-xs text-slate-500">Complete a test to start earning XP and build your history.</p>
+              <p className="mt-3 text-sm font-bold text-slate-700"> <UiText text={"No attempts yet"} /> </p>
+              <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete a test to start earning XP and build your history."} /> </p>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/test-preparation')}
                 className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]"
               >
-                Browse tests
-                <ArrowUpRight className="h-4 w-4" />
+                 <UiText text={"Browse tests"} /> <ArrowUpRight className="h-4 w-4" />
               </button>
             </div>
           )}

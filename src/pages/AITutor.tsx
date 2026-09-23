@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { motion } from 'framer-motion'
 import {
   AudioLines,
@@ -66,13 +67,12 @@ export default function AITutor() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-lg font-black text-slate-950">ProfAI Coach</h1>
+                <h1 className="truncate text-lg font-black text-slate-950"> <UiText text={"ProfAI Coach"} /> </h1>
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
               </div>
-              <p className="hidden truncate text-xs font-semibold text-slate-500 sm:block">Personal guidance grounded in your ProfAI journey</p>
+              <p className="hidden truncate text-xs font-semibold text-slate-500 sm:block"> <UiText text={"Personal guidance grounded in your ProfAI journey"} /> </p>
               <span className="mt-1 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-700">
-                <ShieldCheck className="h-3 w-3" /> Account-private conversation
-              </span>
+                <ShieldCheck className="h-3 w-3" />  <UiText text={"Account-private conversation"} /> </span>
             </div>
           </div>
           <button
@@ -80,8 +80,8 @@ export default function AITutor() {
             className="ml-auto inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 sm:px-4 sm:text-sm"
           >
             <Mic2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Start voice session</span>
-            <span className="sm:hidden">Voice</span>
+            <span className="hidden sm:inline"> <UiText text={"Start voice session"} /> </span>
+            <span className="sm:hidden"> <UiText text={"Voice"} /> </span>
           </button>
         </header>
 
@@ -93,14 +93,12 @@ export default function AITutor() {
                 <div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-emerald-700">
                     <Sparkles className="h-3 w-3" />
-                    Context connected
-                  </span>
-                  <h2 className="mt-2 text-lg font-black text-slate-950">Hello, {firstName}</h2>
+                     <UiText text={"Context connected"} /> </span>
+                  <h2 className="mt-2 text-lg font-black text-slate-950"> <UiText text={"Hello,"} /> {firstName}</h2>
                 </div>
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Pick a focus for this conversation. Your chat stays in place while the coaching style adapts.
-              </p>
+                 <UiText text={"Pick a focus for this conversation. Your chat stays in place while the coaching style adapts."} /> </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {CAPABILITIES.map(({ icon: Icon, label }) => (
                   <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-600">
@@ -115,8 +113,8 @@ export default function AITutor() {
               <div className="flex items-center gap-2 px-2 pb-3 pt-1">
                 <BrainCircuit className="h-4 w-4 text-blue-600" />
                 <div>
-                  <h2 className="text-sm font-black text-slate-950">Conversation mode</h2>
-                  <p className="text-[10px] font-medium text-slate-500">Sets ProfAI’s focus — no page change</p>
+                  <h2 className="text-sm font-black text-slate-950"> <UiText text={"Conversation mode"} /> </h2>
+                  <p className="text-[10px] font-medium text-slate-500"> <UiText text={"Sets ProfAI’s focus — no page change"} /> </p>
                 </div>
               </div>
               <div className="-mx-0.5 flex min-w-0 max-w-full gap-2 overflow-x-auto px-0.5 pb-1 lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0">

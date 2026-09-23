@@ -81,6 +81,7 @@ export const checkAnswer = (
   userAnswer: string | number | string[] | undefined,
   correctAnswer: string | string[],
   options?: string[],
+  strictAnswerMatch = false,
 ): boolean | number => {
   if (Array.isArray(correctAnswer)) {
     const userSelections = Array.isArray(userAnswer) ? userAnswer : []
@@ -111,7 +112,9 @@ export const checkAnswer = (
   const userCandidates = toUserCandidates(userAnswer, options)
 
   return userCandidates.some((candidate) =>
-    correctCandidates.some((expected) => areEquivalentAnswers(candidate, expected)),
+    correctCandidates.some((expected) => strictAnswerMatch
+      ? normalizeText(candidate) === normalizeText(expected)
+      : areEquivalentAnswers(candidate, expected)),
   )
 }
 
@@ -186,6 +189,7 @@ export const evaluateReadingAnswers = (
             userAnswer as string | number | string[] | undefined,
             question.correctAnswer,
             question.options,
+            question.strictAnswerMatch,
           )
           score =
             typeof checked === 'number' ? clamp(checked, 0, maxScore) : checked ? maxScore : 0

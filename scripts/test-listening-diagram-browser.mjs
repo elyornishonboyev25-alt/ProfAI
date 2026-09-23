@@ -12,18 +12,22 @@ const WebSocket = requireBackend('ws')
 
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-listening-diagram-'))
-  const legacy = '/images/ielts-listening-test14-education-house.jpg'
+  const raceVillage = process.argv.includes('--test15')
+  const filename = raceVillage ? 'listening-test15-race-village.png' : 'listening-test14-education-house.jpg'
+  const legacy = `/images/ielts-${filename}`
+  const width = raceVillage ? 411 : 860
+  const height = raceVillage ? 315 : 680
   const source = `
     import React from 'react'; import {createRoot} from 'react-dom/client';
     import Diagram from './src/components/ListeningDiagram';
     const root=createRoot(document.getElementById('root')); let version=0;
-    const draw=()=>root.render(<Diagram key={version} src="${legacy}" alt="Education House" />);
+    const draw=()=>root.render(<Diagram key={version} src="${legacy}" alt="${raceVillage ? 'Map of Race Village' : 'Education House'}" />);
     window.redraw=draw;
     window.reopen=()=>{version++;draw()};
     draw();
   `
-  const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl' }, define: { 'process.env.NODE_ENV': '"production"' } })
-  const original = await readFile('src/assets/ielts/listening-test14-education-house.jpg')
+  const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl', '.png': 'dataurl' }, define: { 'process.env.NODE_ENV': '"production"' } })
+  const original = await readFile(`src/assets/ielts/${filename}`)
   const requests = []
   let allowImages = true
   const server = createServer((req, res) => {
@@ -35,7 +39,7 @@ async function main() {
     } else if (req.url === '/fixture.js') {
       res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text)
     } else if (req.url.startsWith(legacy) && allowImages) {
-      res.setHeader('Content-Type', 'image/jpeg'); res.end(original)
+      res.setHeader('Content-Type', raceVillage ? 'image/png' : 'image/jpeg'); res.end(original)
     } else { res.writeHead(503); res.end('temporarily unavailable') }
   })
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
@@ -78,7 +82,7 @@ async function main() {
       }
       assert.fail(expression)
     }
-    const decoded = `document.querySelector('img')?.complete && document.querySelector('img')?.naturalWidth===860 && document.querySelector('img')?.naturalHeight===680`
+    const decoded = `document.querySelector('img')?.complete && document.querySelector('img')?.naturalWidth===${width} && document.querySelector('img')?.naturalHeight===${height}`
     const base = `http://127.0.0.1:${server.address().port}`
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
     await send('Page.navigate', { url: base })
@@ -91,7 +95,7 @@ async function main() {
       await until(decoded)
     }
     assert.ok(await evaluate('document.body.scrollWidth <= innerWidth'))
-    console.log('PASS: old snapshot, repeated section reopen, offline decoding, unchanged 860x680 image and mobile layout')
+    console.log(`PASS: old snapshot, repeated section reopen, offline decoding, unchanged ${width}x${height} image and mobile layout`)
     await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
     await evaluate(`document.querySelector('img').src='data:image/jpeg;base64,broken'`)
     await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
@@ -100,7 +104,7 @@ async function main() {
     console.log('PASS: decoder error automatically recovers; ordinary rerenders retain the working fallback')
     await send('Page.navigate', { url: base + '/restricted' })
     await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
-    console.log('PASS: a policy blocking inline images falls back to the byte-identical same-origin JPEG')
+    console.log('PASS: a policy blocking inline images falls back to the byte-identical same-origin image')
     allowImages = false
     await send('Network.setCacheDisabled', { cacheDisabled: true })
     await send('Page.navigate', { url: base + '/restricted' })

@@ -52,6 +52,7 @@ const LISTENING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
   12: 'ielts-listening-12',
   13: 'ielts-listening-13',
   14: 'ielts-listening-14',
+  15: 'ielts-listening-15',
 }
 
 const MOCK_READING_DAYS = new Set([10, 20, 30])
@@ -141,6 +142,7 @@ const CURRENTLY_AVAILABLE_TRACK_TESTS: Record<IeltsTrackType, Set<string>> = {
     'ielts-listening-12',
     'ielts-listening-13',
     'ielts-listening-14',
+    'ielts-listening-15',
   ]),
 }
 

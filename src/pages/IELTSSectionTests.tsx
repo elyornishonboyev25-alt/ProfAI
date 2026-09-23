@@ -79,7 +79,7 @@ export default function IELTSSectionTests() {
       title: `Listening Full Test ${entry.index}`,
       subtitle: isAvailableIeltsTrackTest('listening', entry.testId) ? 'Complete academic listening simulation' : 'New full test in preparation',
       badge: 'Full test',
-      durationMinutes: 30,
+      durationMinutes: entry.testId === 'ielts-listening-15' ? 32 : 30,
       detail: '4 parts · 40 questions',
       available: isAvailableIeltsTrackTest('listening', entry.testId),
       completed: completedTestIds.has(entry.testId),

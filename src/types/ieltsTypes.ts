@@ -17,6 +17,7 @@ export interface Question {
     | 'drag-drop-summary'
     options?: string[]
     correctAnswer: string | string[] // string[] for multi-slot questions
+    strictAnswerMatch?: boolean // Match complete normalized answers, not shared first words.
     explanation?: string
     location?: string // For Reading/Listening (paragraph or timestamp)
     userAnswer?: string | string[]

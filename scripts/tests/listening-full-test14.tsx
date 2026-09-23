@@ -35,7 +35,7 @@ export async function run() {
   const entry = getIeltsFullTestCatalog('listening')[13]
   assert.equal(entry.testId, test.id)
   assert.ok(isAvailableIeltsTrackTest('listening', test.id))
-  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[14].testId))
+  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[15].testId))
   assert.ok(statSync(`public${test.continuousAudioUrl}`).size > 10_000_000)
   assert.deepEqual(test.sections.flatMap(section => section.questions.map(q => q.number)), Array.from({ length: 40 }, (_, i) => i + 1))
   const full = evaluateReadingAnswers(test.sections, perfect)

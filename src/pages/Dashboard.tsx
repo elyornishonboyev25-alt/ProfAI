@@ -10,6 +10,7 @@ import { loadLearningFocus } from '@/utils/learningFocus'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { useCopy } from '@/i18n/interface'
 import StudyObject from '@/components/visuals/StudyObject'
+import { formatDashboardDay, formatDashboardActivityDate } from '@/utils/dashboardDates'
 
 const cache = new Map<string, DashboardOverview>()
 function emptyOverview(): DashboardOverview {
@@ -41,7 +42,6 @@ export default function Dashboard() {
   const goal = application ? c('University Applications') : explore ? c('Choose a goal') : sat ? `SAT ${overview.targets?.targetSatScore || profile?.targetSatScore || ''}` : `IELTS ${overview.targets?.targetIeltsScore || profile?.targetIeltsScore || ''}`
   const title = application ? 'Find your university' : explore ? 'Choose a goal' : sat ? 'Start your SAT practice' : 'Start your IELTS practice'
   const destination = application ? '/admission/universities' : explore ? '/test-preparation' : sat ? '/sat' : '/ielts'
-  const dateFormatter = new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' })
   const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
   const activities = overview.activityTimeline.slice(0, 3)
   return <div className="workspace-page liquid-page liquid-home">
@@ -50,10 +50,10 @@ export default function Dashboard() {
     <div className="liquid-home-goal"><span className="liquid-goal-chip"><Target size={17} />{c('My goal')} <strong>{goal}</strong></span><Link to="/focus" className="liquid-text-link">{c('Edit goal')}<ArrowRight size={14} /></Link></div>
     <div className="liquid-home-grid">
       <section className="glass-surface liquid-focus-card"><div><p className="liquid-eyebrow">{c('Today’s focus')}</p><h2>{c(title)}</h2><p>{c(application ? 'Build a shortlist of places where you would like to study.' : 'Choose a skill and start with an exercise that fits your day.')}</p><Link to={destination} className="liquid-button primary">{c(application ? 'Explore universities' : explore ? 'Explore preparation' : 'Start practicing')}<ArrowRight size={18} /></Link></div><StudyObject kind={application ? 'globe' : sat ? 'calculator' : 'headphones'} /></section>
-      <section className="glass-surface liquid-week-card" aria-busy={loading}><h2>{c('This week')}</h2><div className="liquid-week-days">{overview.weeklyProgress.slice(-7).map(day => <div key={day.date}><span>{dateFormatter.format(new Date(day.date + 'T12:00:00'))}</span><i className={day.active ? 'active' : ''}>{day.active && <Check size={11} />}</i></div>)}</div><div className="liquid-week-stat"><span>{c('Study time')}</span><strong>{Math.round(overview.metrics.weeklyStudySeconds / 60)} {language === 'ru' ? 'мин' : 'min'}</strong></div><div className="liquid-week-stat"><span>{c('Completed practices')}</span><strong>{overview.weeklyProgress.reduce((sum, d) => sum + d.testsCompleted, 0)}</strong></div></section>
+      <section className="glass-surface liquid-week-card" aria-busy={loading}><h2>{c('This week')}</h2><div className="liquid-week-days">{overview.weeklyProgress.slice(-7).map(day => <div key={day.date}><span>{formatDashboardDay(day.date, language)}</span><i className={day.active ? 'active' : ''}>{day.active && <Check size={11} />}</i></div>)}</div><div className="liquid-week-stat"><span>{c('Study time')}</span><strong>{Math.round(overview.metrics.weeklyStudySeconds / 60)} {language === 'ru' ? 'мин' : 'min'}</strong></div><div className="liquid-week-stat"><span>{c('Completed practices')}</span><strong>{overview.weeklyProgress.reduce((sum, d) => sum + d.testsCompleted, 0)}</strong></div></section>
     </div>
     <section className="glass-surface liquid-activity"><header><h2>{c('Your recent activity')}</h2><Link to="/profile" className="liquid-text-link">{c('View all results')}<ArrowRight size={15} /></Link></header>
-      {loading && !base ? <p role="status" className="liquid-empty">{c('Loading your workspace')}</p> : activities.length ? activities.map(item => <div className="liquid-activity-row" key={item.id}><Clock3 size={18} /><div><strong>{item.title}</strong><small>{new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric' }).format(new Date(item.date))}</small></div></div>) : <div className="liquid-empty"><History size={23} className="mb-3" /><strong>{c('Your first result belongs here.')}</strong><p>{c('Complete a practice to begin building your progress history.')}</p></div>}
+      {loading && !base ? <p role="status" className="liquid-empty">{c('Loading your workspace')}</p> : activities.length ? activities.map(item => <div className="liquid-activity-row" key={item.id}><Clock3 size={18} /><div><strong>{item.title}</strong><small>{formatDashboardActivityDate(item.date, language)}</small></div></div>) : <div className="liquid-empty"><History size={23} className="mb-3" /><strong>{c('Your first result belongs here.')}</strong><p>{c('Complete a practice to begin building your progress history.')}</p></div>}
     </section>
     {overview.journeyPlan?.result && <Link to="/journey-plan" className="glass-surface liquid-resource-row"><div><h3>{c('My journey plan')}</h3><p>{overview.journeyPlan.result.readinessLabel}</p></div><ArrowRight size={20} /></Link>}
     <div className="liquid-exam-grid">

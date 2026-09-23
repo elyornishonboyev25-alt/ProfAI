@@ -65,6 +65,11 @@ enhanced web material with opaque fallback, reduced motion, and clear contrast.
 - Production Russian Google button confirmed. Authentication itself was not exercised.
 
 ## Boundaries
+- Home date regression fixed after a production screenshot exposed it: the API
+  sends full ISO timestamps, while the redesigned week labels appended a second
+  time component. `node scripts/test-dashboard-dates.mjs` covers server timestamps,
+  date-only fallbacks, Russian, four time zones and invalid values. Browser QA now
+  includes a successful dashboard response, not only failed-request fallback data.
 - Account writes in browser QA were intercepted against an isolated test session;
   no real learner account was modified. Live OAuth, email delivery, payments, voice
   calls and every individual exam were not end-to-end tested by this UI change.

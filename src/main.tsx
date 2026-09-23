@@ -7,6 +7,7 @@ import AnalyticsRuntime from './components/analytics/AnalyticsRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
 import './styles/liquid.css'
+import './styles/liquid-completion.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 

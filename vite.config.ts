@@ -27,7 +27,8 @@ export default defineConfig({
       manifest: {
         name: 'ProfAI',
         short_name: 'ProfAI',
-        description: 'SAT va IELTS uchun shaxsiy AI repetitor va premium analytics platformasi',
+        description: 'IELTS, SAT and university applications in one learning workspace.',
+        lang: 'en',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',

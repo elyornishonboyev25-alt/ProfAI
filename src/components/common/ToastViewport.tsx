@@ -1,5 +1,7 @@
 ﻿import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect } from 'react'
+import { useCopy } from '@/i18n/interface'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { CheckCircle2, AlertCircle, Info } from 'lucide-react'
 import { useToastStore, type ToastItem, type ToastState, type ToastType } from '@/store/toastStore'
 
@@ -19,6 +21,8 @@ const tone = {
 }
 
 export function ToastViewport() {
+  const { c } = useCopy()
+  const { minimalMotion } = useMotionPreferences()
   const toasts = useToastStore((state: ToastState) => state.toasts)
   const removeToast = useToastStore((state: ToastState) => state.removeToast)
 
@@ -37,7 +41,7 @@ export function ToastViewport() {
   }, [toasts, removeToast])
 
   return (
-    <div className="pointer-events-none fixed right-4 top-24 z-[90] flex w-full max-w-sm flex-col gap-2">
+    <div className="pointer-events-none fixed right-4 top-24 z-[90] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
       <AnimatePresence>
         {toasts.map((toast: ToastItem) => {
           const toastTone = tone[toast.type as ToastType]
@@ -46,7 +50,7 @@ export function ToastViewport() {
           return (
             <motion.div
               key={toast.id}
-              initial={{ opacity: 0, y: -14, scale: 0.95, rotateX: -8 }}
+              initial={minimalMotion ? false : { opacity: 0, y: -14, scale: 0.95, rotateX: -8 }}
               animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
               exit={{ opacity: 0, y: -12, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 360, damping: 24, mass: 0.9 }}
@@ -57,8 +61,8 @@ export function ToastViewport() {
               <div className="flex gap-2">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold">{toast.title}</p>
-                  {toast.message ? <p className="mt-0.5 text-xs">{toast.message}</p> : null}
+                  <p className="text-sm font-semibold">{c(toast.title)}</p>
+                  {toast.message ? <p className="mt-0.5 break-words text-xs">{c(toast.message)}</p> : null}
                 </div>
               </div>
               <motion.span

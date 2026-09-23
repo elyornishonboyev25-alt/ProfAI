@@ -40,6 +40,7 @@ import {
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
 import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
+import { saveLearningFocus } from '@/utils/learningFocus'
 import { clearGuestDiagnosticHandoff, loadGuestDiagnosticHandoff, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6
@@ -380,12 +381,12 @@ export default function Onboarding() {
     navigate(takeGuestDiagnosticDestination('/dashboard'), { replace: true })
   }
 
-  const generatePlan = () => {
+  const generatePlan = async () => {
     if (!nameReady || stage !== 'idle') return
     setSaveError('')
     setStage('generating')
 
-    window.setTimeout(async () => {
+    try {
       const profile: OnboardingProfile = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -396,7 +397,7 @@ export default function Onboarding() {
         fieldOfStudy: fieldOfStudy.trim(),
         targetExam,
         daysToExam: Math.max(1, resolvedDays),
-        dailyHours: Math.max(3, dailyHours),
+        dailyHours,
         ieltsExamDate: targetExam === 'SAT' ? undefined : ieltsExamDate || undefined,
         satExamDate: targetExam === 'IELTS' ? undefined : satExamDate || undefined,
         currentIeltsScore: targetExam === 'SAT' ? undefined : currentIeltsScore ?? undefined,
@@ -407,13 +408,6 @@ export default function Onboarding() {
       }
 
       const plan = await generateAdaptiveWeeklyPlan(profile, undefined, new Date())
-      saveOnboardingProfile(profile, user?.id)
-      saveWeeklyPlan(plan, user?.id)
-      saveToAccountProfile(profile.firstName, profile.lastName, targetExam)
-      setUserFullName(`${profile.firstName} ${profile.lastName}`.trim())
-      // Persist the exam target to the permanent backend profile so it pre-fills
-      // the profile page and survives across devices (best-effort).
-      try {
         await updateAccount({
           fullName: `${profile.firstName} ${profile.lastName}`.trim(),
           gender,
@@ -436,28 +430,28 @@ export default function Onboarding() {
           fieldOfStudy: fieldOfStudy.trim(),
           onboardingCompletedAt: new Date().toISOString(),
         })
+        saveOnboardingProfile(profile, user?.id)
+        saveWeeklyPlan(plan, user?.id)
+        saveToAccountProfile(profile.firstName, profile.lastName, targetExam)
+        saveLearningFocus(targetExam === 'SAT' ? 'SAT' : 'IELTS', user?.id)
+        setUserFullName(`${profile.firstName} ${profile.lastName}`.trim())
         setOnboardingCompleted(true)
         clearGuestDiagnosticHandoff()
         captureAnalyticsEvent('onboarding_completed', {
           completion_method: 'generated_plan',
           target_exam: targetExam,
         })
-      } catch (requestError) {
-        setStage('idle')
-        setSaveError(requestError instanceof Error ? requestError.message : 'Your profile could not be saved. Please try again.')
-        return
-      }
-
       setStage('success')
-      window.setTimeout(() => {
         setFlashToast({
           type: 'success',
           title: 'Your study plan is ready',
-          message: 'Your personalized 7-day rolling plan is live on your dashboard.',
+          message: 'Your study goals are saved.',
         })
         navigate(takeGuestDiagnosticDestination('/dashboard'))
-      }, 1100)
-    }, 2200)
+    } catch {
+      setStage('idle')
+      setSaveError('Your profile could not be saved. Please try again.')
+    }
   }
 
   const meta = STEP_META[step - 1]

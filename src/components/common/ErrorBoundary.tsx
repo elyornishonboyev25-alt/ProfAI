@@ -1,5 +1,6 @@
 ﻿import React from 'react'
 import { isStaleBuildError, recoverFromStaleBuild } from '@/utils/staleBuildRecovery'
+import UiText from './UiText'
 
 type ErrorBoundaryProps = {
   children: React.ReactNode
@@ -35,12 +36,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <div className="mx-auto my-16 w-full max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
           <h2 className="text-2xl font-semibold text-red-700">
-            {this.state.staleBuild ? 'Updating ProfAI' : 'Something went wrong'}
+            <UiText text={this.state.staleBuild ? 'Updating ProfAI' : 'Something went wrong'} />
           </h2>
           <p className="mt-3 text-sm text-red-600">
-            {this.state.staleBuild
+            <UiText text={this.state.staleBuild
               ? 'The latest version is being loaded. This page will refresh automatically.'
-              : this.state.message}
+              : 'We could not display this page. Reload it to try again.'} />
           </p>
           <button
             className="mt-6 rounded-xl bg-primary-600 px-4 py-2 text-white"
@@ -49,7 +50,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               else window.location.reload()
             }}
           >
-            {this.state.staleBuild ? 'Update now' : 'Reload page'}
+            <UiText text={this.state.staleBuild ? 'Update now' : 'Reload page'} />
           </button>
         </div>
       )

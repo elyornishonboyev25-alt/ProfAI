@@ -1,590 +1,72 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Award,
-  Building2,
-  CalendarDays,
-  CircleDollarSign,
-  ExternalLink,
-  GraduationCap,
-  Globe2,
-  Heart,
-  Landmark,
-  Leaf,
-  MapPin,
-  Radar as RadarIcon,
-  Sparkles,
-  Star,
-  TrendingUp,
-  Trophy,
-  Users,
-} from 'lucide-react'
-import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { ArrowLeft, Bookmark, Building2, ExternalLink, MapPin } from 'lucide-react'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityRadar from '@/components/admission/UniversityRadar'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
-import { formatUniversityRank, getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
+import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
-import { useToastStore, type ToastState } from '@/store/toastStore'
-
-function money(value: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
-}
-
-const PERIOD_LABELS = {
-  'academic-year': 'academic year',
-  'calendar-year': 'year',
-  month: 'month',
-} as const
-
-function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<typeof useUniversityCampusImage> }) {
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    setLoaded(false)
-  }, [image?.src])
-
-  return (
-    <>
-      <img
-        src="/assets/admission/campus-hero.webp"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover opacity-80"
-        decoding="async"
-        fetchPriority="high"
-      />
-      {image ? (
-        <img
-          src={image.src}
-          alt={`${name} campus`}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-80' : 'opacity-0'}`}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          referrerPolicy="no-referrer"
-          onLoad={() => setLoaded(true)}
-        />
-      ) : null}
-    </>
-  )
-}
+import { useToastStore } from '@/store/toastStore'
+import { useCopy } from '@/i18n/interface'
 
 export default function AdmissionUniversity() {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { c, language } = useCopy()
   const { slug } = useParams<{ slug: string }>()
+  const location = useLocation()
   const university = slug ? getUniversityBySlug(slug) : undefined
   const { scores } = useAdmissionScores()
-  const campusImage = useUniversityCampusImage(university?.name ?? '')
+  const image = useUniversityCampusImage(university?.name ?? '')
+  const [imageFailed, setImageFailed] = useState(false)
+  const [analyticsOpen, setAnalyticsOpen] = useState(false)
   const { isShortlisted, toggleShortlist } = useUniversityShortlist()
-  const pushToast = useToastStore((state: ToastState) => state.pushToast)
-  const admissionReturnTo = (location.state as { admissionReturnTo?: unknown } | null)?.admissionReturnTo === '/admission/shortlist'
-    ? '/admission/shortlist'
-    : '/admission/universities'
-
-  if (!university) {
-    return (
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
-        <AmbientBackdrop variant="red" />
-        <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
-          <h1 className="text-2xl font-black text-slate-900">University not found</h1>
-          <p className="mt-2 text-slate-500">This profile doesn’t exist or hasn’t been added yet.</p>
-          <button type="button" onClick={() => navigate('/admission/universities')} className="premium-back-btn mt-6">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to rankings
-          </button>
-        </div>
-      </div>
-    )
-  }
-
+  const pushToast = useToastStore(state => state.pushToast)
+  useEffect(() => { setImageFailed(false); setAnalyticsOpen(false) }, [slug, image?.src])
+  const back = (location.state as { admissionReturnTo?: unknown } | null)?.admissionReturnTo === '/admission/shortlist' ? '/admission/shortlist' : '/admission/universities'
+  const locale = language === 'ru' ? 'ru-RU' : 'en-US'
+  const number = (value: number | undefined) => typeof value === 'number' ? value.toLocaleString(locale) : '—'
+  const money = (amount: number, currency: string) => new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
+  if (!university) return <main className="workspace-page liquid-page"><section className="glass-surface liquid-university-empty"><Building2 size={34} /><h1>{c('University not found')}</h1><p>{c('This profile doesn’t exist or hasn’t been added yet.')}</p><Link to="/admission/universities" className="liquid-button primary">{c('Explore universities')}</Link></section></main>
   const u = university
-  const accent = u.brand.accent
+  const cost = u.costOfLiving
+  const saved = isShortlisted(u.slug)
   const indicators = presentIndicators(u.indicators)
   const students = u.students
-  const cost = u.costOfLiving
-  const hasDetailedStudents = students && typeof students.undergraduate === 'number'
-  const shortlisted = isShortlisted(u.slug)
-
-  const handleShortlist = () => {
+  const period = cost ? c(cost.period === 'month' ? '/ month' : cost.period === 'academic-year' ? '/ academic year' : '/ year') : ''
+  const costRange = cost ? money(cost.amount, cost.currency) + (cost.maxAmount ? '–' + money(cost.maxAmount, cost.currency) : '') : ''
+  function save() {
     const added = toggleShortlist(u.slug)
-    pushToast({
-      type: added ? 'success' : 'info',
-      title: added ? 'Added to shortlist' : 'Removed from shortlist',
-      message: added
-        ? `${u.shortName} is saved in your Admission Hub shortlist.`
-        : `${u.shortName} was removed from your shortlist.`,
-    })
+    pushToast({ type: added ? 'success' : 'info', title: c(added ? 'Added to shortlist' : 'Removed from shortlist'), message: u.name })
   }
-
-  const keyFacts: { icon: typeof Landmark; label: string; value: string }[] = [
-    ...(typeof u.founded === 'number' ? [{ icon: CalendarDays, label: 'Founded', value: String(u.founded) }] : []),
-    { icon: Landmark, label: 'Institution', value: u.type },
-    ...(students ? [{ icon: Users, label: 'Students', value: `${hasDetailedStudents ? '' : '≈ '}${students.total.toLocaleString()}` }] : []),
-    ...(students && typeof students.international === 'number'
-      ? [{ icon: Globe2, label: 'International', value: `${hasDetailedStudents ? '' : '≈ '}${students.international.toLocaleString()}` }]
-      : []),
-  ]
-
-  return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <AmbientBackdrop variant="red" />
-
-      <div className="relative mx-auto w-full max-w-5xl space-y-6">
-        {/* ----------------------------- Hero ----------------------------- */}
-        <Reveal>
-          <section
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 p-6 text-white shadow-[0_30px_70px_rgba(15,23,42,0.28)] sm:p-9"
-            style={{ background: u.brand.gradient }}
-          >
-            <CampusHeroMedia name={u.name} image={campusImage} />
-            <div
-              className="absolute inset-0"
-              style={{ background: `linear-gradient(90deg, ${accent}dc 0%, ${accent}a8 46%, rgba(15,23,42,0.56) 100%)` }}
-            />
-            <div
-              className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
-              style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
-            />
-            <div className="relative">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <button
-                  onClick={() => navigate(admissionReturnTo)}
-                  className="route-back-button"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to Universities
-                </button>
-                <button
-                  type="button"
-                  onClick={handleShortlist}
-                  aria-pressed={shortlisted}
-                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-white/80 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] shadow-lg backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/90 ${shortlisted ? 'text-red-600' : 'text-slate-900'}`}
-                >
-                  <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
-                  {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
-                </button>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
-                <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={104} rounded="1.5rem" priority />
-                <div className="min-w-0">
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
-                    <Trophy className="h-3.5 w-3.5" />
-                    {typeof u.rank === 'number' ? `${formatUniversityRank(u, '#')} · ${QS_EDITION}` : 'Official university profile'}
-                  </div>
-                  <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-4xl">{u.name}</h1>
-                  <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/80">
-                    <MapPin className="h-4 w-4" />
-                    {u.countryEmoji} {u.city}, {u.country}
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">{u.type}</span>
-                    {typeof u.founded === 'number' ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        Founded {u.founded}
-                      </span>
-                    ) : null}
-                    {u.website ? (
-                      <a
-                        href={u.website}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-[12px] font-bold text-slate-900 transition hover:bg-white/90"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Visit website
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              {/* Highlight stat cards */}
-              <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">QS World Ranking</p>
-                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? formatUniversityRank(u, '#') : 'Not ranked'}</p>
-                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS rank listed'}</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">Overall Score</p>
-                  <p className="mt-1 text-3xl font-black">
-                    {typeof u.overallScore === 'number' ? <CountUp value={u.overallScore} decimals={Number.isInteger(u.overallScore) ? 0 : 1} /> : '—'}
-                  </p>
-                  <p className="text-[12px] font-medium text-white/70">out of 100</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
-                    {typeof u.subjectRank === 'number' ? 'Subject Ranking' : 'Citations / Faculty'}
-                  </p>
-                  <p className="mt-1 text-3xl font-black">
-                    {typeof u.subjectRank === 'number'
-                      ? `#${u.subjectRank}`
-                      : (u.indicators.citationsPerFaculty ?? '—')}
-                  </p>
-                  <p className="text-[12px] font-medium text-white/70">
-                    {typeof u.subjectRank === 'number' ? 'QS WUR by Subject' : 'QS indicator'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {campusImage && (
-              <a
-                href={campusImage.attributionUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="absolute bottom-2 right-4 z-10 text-[9px] font-semibold text-white/55 transition hover:text-white/90"
-                onClick={(event) => event.stopPropagation()}
-              >
-                Campus photo · Wikimedia Commons
-              </a>
-            )}
-          </section>
-        </Reveal>
-
-        {/* ----------------------- About + Radar ----------------------- */}
-        <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
-          <Reveal delay={0.04} className="h-full">
-            <section className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                  <GraduationCap className="h-4 w-4" />
-                </span>
-                About {u.shortName}
-              </h2>
-              <p className="mt-4 flex-1 text-[15px] leading-7 text-slate-600">{u.about}</p>
-              <p className="mt-3 text-[14px] font-semibold italic text-slate-500">{u.tagline}</p>
-
-              {/* Key facts */}
-              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-4">
-                {keyFacts.map((fact) => (
-                  <div key={fact.label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                    <fact.icon className="h-4 w-4" style={{ color: accent }} />
-                    <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{fact.label}</p>
-                    <p className="mt-0.5 text-[13px] font-black leading-snug text-slate-900">{fact.value}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </Reveal>
-
-          <Reveal delay={0.06} className="h-full">
-            <section className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <h2 className="flex items-center gap-2 text-base font-black tracking-tight text-slate-900">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                  <RadarIcon className="h-3.5 w-3.5" />
-                </span>
-                QS Performance
-              </h2>
-              {indicators.length > 0 ? (
-                <>
-                  <div className="mt-2 h-64 w-full sm:h-72">
-                    <UniversityRadar indicators={u.indicators} accent={accent} />
-                  </div>
-                  <p className="text-center text-[11px] font-medium text-slate-400">All indicators scored out of 100</p>
-                </>
-              ) : (
-                <div className="mt-5 flex flex-1 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
-                  QS indicator breakdown is not included for this profile.
-                </div>
-              )}
-            </section>
-          </Reveal>
-        </div>
-
-        {/* ----------------------- Rankings & Ratings ----------------------- */}
-        <Reveal delay={0.04}>
-          <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-            <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                <Trophy className="h-4 w-4" />
-              </span>
-              Rankings &amp; Ratings
-            </h2>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <RankCard icon={Trophy} label="QS World University Rankings" value={typeof u.rank === 'number' ? formatUniversityRank(u, '#') : 'Not listed'} accent={accent} />
-              {typeof u.subjectRank === 'number' ? (
-                <RankCard icon={Star} label="QS WUR Ranking by Subject" value={`#${u.subjectRank}`} accent={accent} />
-              ) : (
-                <RankCard icon={Award} label="Overall Score" value={typeof u.overallScore === 'number' ? String(u.overallScore) : 'Not listed'} accent={accent} />
-              )}
-              {typeof u.sustainabilityRank === 'number' ? (
-                <RankCard icon={Leaf} label="QS Sustainability Ranking" value={`#${u.sustainabilityRank}`} accent={accent} />
-              ) : (
-                <RankCard icon={Globe2} label="Location" value={`${u.countryEmoji} ${u.city}`} accent={accent} />
-              )}
-            </div>
-
-            {/* Indicator breakdown */}
-            <h3 className="mt-7 text-sm font-bold uppercase tracking-[0.12em] text-slate-400">Ranking criteria</h3>
-            <div className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-              {indicators.map(({ meta, value }) => (
-                <div key={meta.key}>
-                  <div className="flex items-center justify-between text-[13px] font-semibold text-slate-700">
-                    <span>{meta.label}</span>
-                    <span className="font-black text-slate-900">{value}</span>
-                  </div>
-                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full" style={{ width: `${value}%`, background: accent }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Rank over time */}
-            {u.rankHistory && u.rankHistory.length > 1 ? (
-              <div className="mt-8">
-                <h3 className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-[0.12em] text-slate-400">
-                  <TrendingUp className="h-4 w-4" style={{ color: accent }} />
-                  QS rank over time
-                </h3>
-                <div className="mt-4 flex flex-wrap gap-x-2.5 gap-y-3">
-                  {u.rankHistory.map((point) => (
-                    <div key={point.year} className="flex flex-col items-center gap-1.5">
-                      <span
-                        className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-1 text-[13px] font-black text-white"
-                        style={{ background: accent }}
-                      >
-                        {point.rank}
-                      </span>
-                      <span className="text-[11px] font-semibold text-slate-400">{point.year}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-[12px] font-medium text-slate-500">
-                  A decade-plus at <span className="font-bold" style={{ color: accent }}>#{u.rank}</span> — among the most
-                  stable records in global higher education.
-                </p>
-              </div>
-            ) : null}
-          </section>
-        </Reveal>
-
-        {/* ----------------------- Admission requirements ----------------------- */}
-        {u.admission?.bachelor && u.admission.bachelor.length > 0 ? (
-          <Reveal delay={0.04}>
-            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                  <Award className="h-4 w-4" />
-                </span>
-                Admission · Bachelor
-              </h2>
-              <p className="mt-2 text-[13px] text-slate-500">{u.admission.note}</p>
-              <div className="mt-5">
-                <AdmissionScoreComparison university={u} scores={scores} />
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {u.admission.bachelor.map((req) => (
-                  <div key={req.label} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{req.label}</p>
-                    <p className="mt-1.5 text-base font-black leading-snug text-slate-900">{req.value}</p>
-                    {req.detail ? <p className="mt-1 text-[10px] leading-4 text-slate-500">{req.detail}</p> : null}
-                    {req.sourceUrl ? (
-                      <a href={req.sourceUrl} target="_blank" rel="noreferrer noopener" className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-red-600 hover:underline">
-                        Official source <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-              {u.admission.verifiedAt ? <p className="mt-3 text-right text-[10px] font-medium text-slate-400">Verified {u.admission.verifiedAt}</p> : null}
-            </section>
-          </Reveal>
-        ) : null}
-
-        {/* ----------------------- Cost of Living + Campus ----------------------- */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {cost ? (
-            <Reveal delay={0.04} className="h-full">
-              <section className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                      <CircleDollarSign className="h-4 w-4" />
-                    </span>
-                    Cost of Living
-                  </h2>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                    {money(cost.amount, cost.currency)}{cost.maxAmount ? `–${money(cost.maxAmount, cost.currency)}` : ''} / {PERIOD_LABELS[cost.period]}
-                  </span>
-                </div>
-                <div className="mt-5 flex-1 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-                  <p className="text-sm font-black leading-snug text-slate-900">{cost.label}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {cost.includes.map((item) => (
-                      <span key={item} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">{item}</span>
-                    ))}
-                  </div>
-                  {cost.note ? <p className="mt-4 text-[12px] leading-5 text-slate-500">{cost.note}</p> : null}
-                </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-slate-400">
-                  <span>{cost.academicYear ? `Published period: ${cost.academicYear}` : 'Current official published figure'} · Verified {cost.verifiedAt}</span>
-                  <a href={cost.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-bold text-red-600 hover:underline">
-                    Official cost source <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </section>
-            </Reveal>
-          ) : null}
-
-          {u.campus ? (
-            <Reveal delay={0.06} className="h-full">
-              <section className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                    <Building2 className="h-4 w-4" />
-                  </span>
-                  Campus location
-                </h2>
-                <div className="mt-5 flex flex-1 flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-                  <div>
-                    <p className="text-base font-black text-slate-900">{u.campus.name}</p>
-                    <p className="mt-1 text-[13px] text-slate-500">{u.campus.address}</p>
-                  </div>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(u.campus.mapsQuery)}`}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-bold text-white"
-                    style={{ background: accent }}
-                  >
-                    <MapPin className="h-4 w-4" />
-                    Open in Maps
-                  </a>
-                </div>
-              </section>
-            </Reveal>
-          ) : null}
-        </div>
-
-        {/* ----------------------- Students & Staff (detailed) ----------------------- */}
-        {hasDetailedStudents && students ? (
-          <Reveal delay={0.04}>
-            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
-                  <Users className="h-4 w-4" />
-                </span>
-                Students &amp; Staff
-              </h2>
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                <StudentStat
-                  label="Total students"
-                  total={students.total}
-                  parts={[
-                    { label: 'Undergraduate', value: students.undergraduate ?? 0, color: accent },
-                    { label: 'Postgraduate', value: students.postgraduate ?? 0, color: '#94a3b8' },
-                  ]}
-                />
-                <StudentStat
-                  label="International students"
-                  total={students.international ?? 0}
-                  parts={[
-                    { label: 'Undergraduate', value: students.internationalUndergraduate ?? 0, color: accent },
-                    { label: 'Postgraduate', value: students.internationalPostgraduate ?? 0, color: '#94a3b8' },
-                  ]}
-                />
-                <StudentStat
-                  label="Total faculty staff"
-                  total={students.facultyStaff ?? 0}
-                  parts={[
-                    { label: 'Domestic', value: students.domesticStaffPct ?? 0, color: accent, isPct: true },
-                    { label: 'International', value: students.internationalStaffPct ?? 0, color: '#94a3b8', isPct: true },
-                  ]}
-                />
-              </div>
-            </section>
-          </Reveal>
-        ) : null}
-
-        {u.sources && u.sources.length > 0 ? (
-          <Reveal delay={0.04}>
-            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}><ExternalLink className="h-4 w-4" /></span>
-                Official sources
-              </h2>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {u.sources.map((source) => (
-                  <a key={source.url} href={source.url} target="_blank" rel="noreferrer noopener" className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-red-200 hover:text-red-700">
-                    {source.label}<ExternalLink className="h-4 w-4 shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </section>
-          </Reveal>
-        ) : null}
-
-        <Reveal delay={0.04}>
-          <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            Rankings from {QS_EDITION}; available admissions and student costs from official university sources.
-          </p>
-        </Reveal>
+  return <main className="workspace-page liquid-page liquid-university-detail">
+    <Link to={back} className="liquid-text-link mb-6"><ArrowLeft size={16} />{c(back.endsWith('shortlist') ? 'Saved universities' : 'Universities')}</Link>
+    <section className="glass-surface liquid-university-intro">
+      <div className="liquid-university-banner">{image && !imageFailed ? <><img src={image.src} alt={u.name} onError={() => setImageFailed(true)} /><a className="liquid-photo-credit" href={image.attributionUrl} target="_blank" rel="noopener noreferrer">{c('Photo source')}</a></> : <div className="liquid-campus-placeholder"><Building2 size={54} strokeWidth={1} /><span>{u.shortName}</span></div>}</div>
+      <div className="liquid-university-intro-copy">
+        <div className="liquid-university-top"><UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={60} rounded="16px" priority /><button type="button" onClick={save} aria-pressed={saved} className="liquid-button secondary"><Bookmark size={17} fill={saved ? 'currentColor' : 'none'} />{c(saved ? 'Saved' : 'Save university')}</button></div>
+        <header className="liquid-page-heading"><p className="liquid-eyebrow">{c('University profile')}</p><h1>{u.name}</h1><p><MapPin size={16} className="inline mr-2" />{u.city}, {c(u.country)}</p></header>
+        <div className="liquid-actions"><a className="liquid-button primary" href={u.website} target="_blank" rel="noopener noreferrer">{c('Visit official website')}<ExternalLink size={16} /></a><span className="liquid-catalog-note">{c('Founded')}: {u.founded} · {c(u.type)}</span></div>
       </div>
-    </div>
-  )
-}
-
-/* --------------------------- small presentational helpers --------------------------- */
-
-function RankCard({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: typeof Trophy
-  label: string
-  value: string
-  accent: string
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-      <Icon className="h-5 w-5" style={{ color: accent }} />
-      <p className="mt-2 text-2xl font-black text-slate-900">{value}</p>
-      <p className="mt-0.5 text-[12px] font-semibold leading-snug text-slate-500">{label}</p>
-    </div>
-  )
-}
-
-function StudentStat({
-  label,
-  total,
-  parts,
-}: {
-  label: string
-  total: number
-  parts: { label: string; value: number; color: string; isPct?: boolean }[]
-}) {
-  const sum = parts.reduce((s, p) => s + p.value, 0) || 1
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-      <p className="mt-1 text-3xl font-black text-slate-900">{total.toLocaleString()}</p>
-      <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-slate-200">
-        {parts.map((p) => (
-          <div key={p.label} style={{ width: `${(p.value / sum) * 100}%`, background: p.color }} />
-        ))}
-      </div>
-      <div className="mt-2.5 space-y-1">
-        {parts.map((p) => (
-          <div key={p.label} className="flex items-center justify-between text-[12px]">
-            <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
-              <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color }} />
-              {p.label}
-            </span>
-            <span className="font-bold text-slate-800">{p.isPct ? `${p.value}%` : p.value.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+    </section>
+    <nav className="liquid-section-tabs mt-7" aria-label={c('University profile')}><a href="#university-overview">{c('Overview')}</a><a href="#university-requirements">{c('Entry requirements')}</a>{cost && <a href="#university-costs">{c('Living costs')}</a>}<a href="#university-sources">{c('Sources')}</a></nav>
+    <section id="university-overview" className="glass-surface liquid-detail-section"><h2>{c('About the university')}</h2><p>{u.about}</p><p>{u.tagline}</p><dl className="liquid-fact-grid"><div><dt>{c('QS rank')}</dt><dd>{typeof u.rank === 'number' ? '#' + (u.rankTied ? '=' : '') + u.rank : '—'}</dd><small>{QS_EDITION}</small></div><div><dt>{c('Students')}</dt><dd>{number(students?.total)}</dd></div><div><dt>{c('International students')}</dt><dd>{number(students?.international)}</dd></div>{cost && <div><dt>{c('Living costs')}</dt><dd>{costRange}</dd><small>{period}</small></div>}</dl></section>
+    <section id="university-requirements" className="glass-surface liquid-detail-section"><h2>{c('Entry requirements')}</h2><p>{c('Confirm requirements for your course and intake on the official university website.')}</p>
+      {u.admission?.bachelor?.length ? <><p>{u.admission.note}</p><AdmissionScoreComparison university={u} scores={scores} /><div className="liquid-requirement-grid">{u.admission.bachelor.map((requirement, index) => <article key={requirement.label + index}><h3>{requirement.label}</h3><strong>{requirement.value}</strong>{requirement.detail && <p>{requirement.detail}</p>}{requirement.sourceUrl && <a className="liquid-text-link" href={requirement.sourceUrl} target="_blank" rel="noopener noreferrer">{c('Official source')}<ExternalLink size={13} /></a>}</article>)}</div>{u.admission.verifiedAt && <p className="liquid-catalog-note">{c('Last verified')}: {u.admission.verifiedAt}</p>}</> : <p className="liquid-empty">{c('Course-specific requirements are available on the official website.')}</p>}
+    </section>
+    {cost && <section id="university-costs" className="glass-surface liquid-detail-section"><h2>{c('Living costs')}</h2><p className="liquid-cost-total">{costRange} <small>{period}</small></p><h3>{cost.label}</h3><ul className="liquid-detail-list">{cost.includes.map(item => <li key={item}>{c(item)}</li>)}</ul>{cost.note && <p>{cost.note}</p>}<p className="liquid-catalog-note">{c('Published period')}: {cost.academicYear || '—'} · {c('Last verified')}: {cost.verifiedAt}</p><a className="liquid-text-link" href={cost.sourceUrl} target="_blank" rel="noopener noreferrer">{c('Official cost source')}<ExternalLink size={15} /></a></section>}
+    {u.campus && <section className="glass-surface liquid-detail-section"><h2>{c('Campus location')}</h2><h3>{u.campus.name}</h3><p>{u.campus.address}</p><a className="liquid-text-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(u.campus.mapsQuery)}`} target="_blank" rel="noopener noreferrer">{c('Open in Maps')}<ExternalLink size={15} /></a></section>}
+    <details className="glass-surface liquid-detail-section liquid-detail-disclosure" open={analyticsOpen} onToggle={event => setAnalyticsOpen(event.currentTarget.open)}><summary>{c('Rankings, indicators & student statistics')}</summary>
+      {analyticsOpen && <>
+        <dl className="liquid-fact-grid"><div><dt>{c('Overall Score')}</dt><dd>{number(u.overallScore)}</dd><small>{c('out of 100')}</small></div><div><dt>{c('Subject Ranking')}</dt><dd>{typeof u.subjectRank === 'number' ? '#' + u.subjectRank : '—'}</dd></div><div><dt>{c('Sustainability Ranking')}</dt><dd>{typeof u.sustainabilityRank === 'number' ? '#' + u.sustainabilityRank : '—'}</dd></div></dl>
+        {indicators.length ? <><div className="liquid-university-radar"><UniversityRadar indicators={u.indicators} accent={u.brand.accent} /></div><dl className="liquid-indicator-list">{indicators.map(({ meta, value }) => <div key={meta.key}><dt>{c(meta.label)}</dt><dd>{value} / 100</dd></div>)}</dl></> : <p>{c('QS indicator breakdown is not included for this profile.')}</p>}
+        {u.rankHistory?.length ? <><h3>{c('QS rank over time')}</h3><div className="liquid-rank-history">{u.rankHistory.map(point => <div key={point.year}><span>{point.year}</span><strong>#{point.rank}</strong></div>)}</div></> : null}
+        {students && <><h3>{c('Students & Staff')}</h3><dl className="liquid-fact-grid">{[
+          ['Undergraduate', students.undergraduate], ['Postgraduate', students.postgraduate], ['Total faculty staff', students.facultyStaff],
+          ['International undergraduate', students.internationalUndergraduate], ['International postgraduate', students.internationalPostgraduate],
+        ].map(([label, value]) => <div key={String(label)}><dt>{c(String(label))}</dt><dd>{number(typeof value === 'number' ? value : undefined)}</dd></div>)}</dl></>}
+      </>}
+    </details>
+    <section id="university-sources" className="glass-surface liquid-detail-section"><h2>{c('Official sources')}</h2><div className="liquid-source-list">{u.sources?.map(source => <a key={source.url} className="liquid-text-link" href={source.url} target="_blank" rel="noopener noreferrer">{source.label}<ExternalLink size={15} /></a>)}<a href={u.website} target="_blank" rel="noopener noreferrer" className="liquid-text-link">{c('University website')}<ExternalLink size={15} /></a></div><p className="liquid-catalog-note">{c('Confirm current requirements and costs on each university’s official website.')}</p></section>
+  </main>
 }

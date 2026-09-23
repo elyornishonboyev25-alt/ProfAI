@@ -1,6 +1,8 @@
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from 'recharts'
 import { presentIndicators } from '@/data/admission'
 import type { QSIndicators } from '@/data/admission'
+import { useCopy } from '@/i18n/interface'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 
 // A QS-performance radar (spider) chart. Renders every indicator the university has a
 // value for, on a 0–100 scale, in the school's brand colour. ResponsiveContainer makes
@@ -12,7 +14,9 @@ export default function UniversityRadar({
   indicators: QSIndicators
   accent: string
 }) {
-  const data = presentIndicators(indicators).map(({ meta, value }) => ({ label: meta.short, value }))
+  const { c } = useCopy()
+  const { minimalMotion } = useMotionPreferences()
+  const data = presentIndicators(indicators).map(({ meta, value }) => ({ label: c(meta.short), value }))
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -24,14 +28,14 @@ export default function UniversityRadar({
         />
         <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} tickCount={5} />
         <Radar
-          name="QS score"
+          name={c('QS score')}
           dataKey="value"
           stroke={accent}
           fill={accent}
           fillOpacity={0.28}
           strokeWidth={2}
           dot={{ r: 2.5, fill: accent, strokeWidth: 0 }}
-          isAnimationActive
+          isAnimationActive={!minimalMotion}
           animationDuration={800}
         />
       </RadarChart>

@@ -1,6 +1,7 @@
 import { CheckCircle2, CircleAlert, MinusCircle } from 'lucide-react'
 import type { AdmissionRequirement, University } from '@/data/admission'
 import type { AdmissionScores } from '@/hooks/useAdmissionScores'
+import { useCopy } from '@/i18n/interface'
 
 type Props = {
   university: University
@@ -34,6 +35,7 @@ function Metric({
   compact: boolean
   comparison: NonNullable<AdmissionRequirement['comparison']>
 }) {
+  const { c } = useCopy()
   const target = targetOf(requirement, comparison)
   const gap = target !== null && userScore !== null ? Math.max(0, target - userScore) : null
   const meets = gap === 0
@@ -45,7 +47,7 @@ function Metric({
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.11em] text-slate-400">{kind}</p>
           <p className={`${compact ? 'text-[11px]' : 'text-sm'} mt-0.5 font-bold leading-snug text-slate-800`}>
-            {requirement?.value ?? 'No policy listed'}
+            {requirement?.value ?? c('No policy listed')}
           </p>
         </div>
         {meets ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" /> : gap && gap > 0 ? <CircleAlert className="h-4 w-4 shrink-0 text-amber-600" /> : <MinusCircle className="h-4 w-4 shrink-0 text-slate-400" />}
@@ -53,16 +55,16 @@ function Metric({
       {!compact ? (
         <p className="mt-1.5 text-[11px] font-semibold text-slate-600">
           {userScore === null
-            ? 'Profile score not added yet'
+            ? c('Profile score not added yet')
             : target === null
-              ? `Your score: ${formatScore(kind, userScore)} · no numeric cutoff to compare`
+              ? `${c('Your score')}: ${formatScore(kind, userScore)} · ${c('No numeric cutoff to compare')}`
               : meets
-                ? `Your ${formatScore(kind, userScore)} meets the published ${isRecommendation ? 'competitive score' : 'minimum'}`
-                : `${isRecommendation ? 'Competitive-score gap' : 'You need'}: +${formatScore(kind, gap as number)}`}
+                ? `${formatScore(kind, userScore)} · ${c(isRecommendation ? 'Meets the published competitive score' : 'Meets the published minimum')}`
+                : `${c('Score gap')}: +${formatScore(kind, gap as number)}`}
         </p>
       ) : gap !== null ? (
         <p className={`mt-1 text-[10px] font-black ${meets ? 'text-emerald-700' : 'text-amber-700'}`}>
-          {meets ? 'Score met' : `Need +${formatScore(kind, gap)}`}
+          {meets ? c('Score met') : `${c('Score gap')}: +${formatScore(kind, gap)}`}
         </p>
       ) : null}
     </div>

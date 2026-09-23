@@ -2,6 +2,7 @@
 import { initReactI18next } from 'react-i18next'
 import { russianInterface } from './interface'
 import russianUI from './ru-ui.json'
+import russianCompletion from './ru-completion.json'
 import russianTranslation from './ru.json'
 
 const translation = {
@@ -106,7 +107,7 @@ const translation = {
 
 const resources = {
   en: { translation, interface: {} },
-  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface } },
+  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface, ...russianCompletion } },
 }
 
 function savedLanguage() {

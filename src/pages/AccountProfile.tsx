@@ -251,6 +251,8 @@ export default function AccountProfile() {
 
   const [form, setForm] = useState<AccountProfileFields>(EMPTY_PROFILE)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [saving, setSaving] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -306,6 +308,7 @@ export default function AccountProfile() {
   useEffect(() => {
     let active = true
     setLoading(true)
+    setLoadError(false)
     fetchAccount()
       .then((data) => {
         if (!active) return
@@ -317,13 +320,13 @@ export default function AccountProfile() {
       })
       .catch(() => {
         if (!active) return
-        pushToast({ type: 'info', title: 'Offline', message: 'Could not load your saved profile. Changes will sync when the server is reachable.' })
+        setLoadError(true)
       })
       .finally(() => active && setLoading(false))
     return () => {
       active = false
     }
-  }, [pushToast, setUserAvatar, setUserFullName])
+  }, [loadAttempt, setUserAvatar, setUserFullName])
 
   useEffect(() => {
     setNicknameDraft(savedNickname)
@@ -331,6 +334,7 @@ export default function AccountProfile() {
 
   // Live nickname availability check.
   useEffect(() => {
+    let cancelled = false
     if (nickDebounce.current) window.clearTimeout(nickDebounce.current)
     const v = nicknameDraft.trim()
     if (!v || v === savedNickname) {
@@ -344,9 +348,10 @@ export default function AccountProfile() {
     setNickStatus('checking')
     nickDebounce.current = window.setTimeout(async () => {
       const ok = await checkNicknameAvailable(v)
-      setNickStatus(ok ? 'available' : 'taken')
+      if (!cancelled) setNickStatus(ok ? 'available' : 'taken')
     }, 450)
     return () => {
+      cancelled = true
       if (nickDebounce.current) window.clearTimeout(nickDebounce.current)
     }
   }, [nicknameDraft, savedNickname])
@@ -364,6 +369,7 @@ export default function AccountProfile() {
   }
 
   const saveProfile = async () => {
+    if (loading || loadError || saving) return
     setSaving(true)
     try {
       const res = await updateAccount({
@@ -620,6 +626,12 @@ export default function AccountProfile() {
         <div className="mt-6 flex items-center justify-center py-16 text-slate-400">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
+      ) : loadError ? (
+        <section className="surface-card mt-6 p-8" role="alert">
+          <h2 className="text-xl font-bold"><UiText text="Unable to load your saved profile." /></h2>
+          <p className="my-4 text-slate-600"><UiText text="Your saved information is unchanged. Please try again." /></p>
+          <button className="liquid-button primary" onClick={() => setLoadAttempt(value => value + 1)}><UiText text="Try again" /></button>
+        </section>
       ) : (
         <>
           <nav className="sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">

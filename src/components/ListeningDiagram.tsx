@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { EducationHouseDrawing } from './EducationHouseDiagram'
 import educationHouse from '../assets/ielts/listening-test14-education-house.jpg?inline'
 import raceVillage from '../assets/ielts/listening-test15-race-village.png?inline'
 
@@ -68,6 +69,9 @@ function DiagramImage({ src, alt, caption }: Props) {
 }
 
 export default function ListeningDiagram(props: Props) {
+  if (findDiagram(props.src)?.path === educationHousePath) {
+    return <figure className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2"><div className="mx-auto max-w-3xl"><EducationHouseDrawing /></div>{props.caption ? <figcaption>{props.caption}</figcaption> : null}</figure>
+  }
   // Reset recovery when a different diagram is displayed, not on every timer tick.
   return <DiagramImage key={findDiagram(props.src)?.path ?? props.src} {...props} />
 }

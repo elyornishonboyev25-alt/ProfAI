@@ -33,6 +33,7 @@ import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
+import EducationHouseDiagram from './EducationHouseDiagram'
 
 // Utils
 import {
@@ -3062,7 +3063,7 @@ export default function IELTSReadingInterface({
   // Renders the listening rich-layout blocks (notes / flow / grid / mcq / table)
   // using the exact same visual language as the Reading question panel.
   const renderListeningGroup = (group: ListeningGroup, groupKey: number) => {
-    const blankInput = (number: number, width: 'sm' | 'md' | 'lg' | 'xl' = 'md') => {
+    const blankInput = (number: number, width: 'sm' | 'md' | 'lg' | 'xl' = 'md', onDiagram = false) => {
       const question = listeningQuestionByNumber.get(number)
       if (!question) return null
       const meta = getQuestionReviewMeta(question)
@@ -3084,15 +3085,18 @@ export default function IELTSReadingInterface({
               ? 'min-w-[180px] max-w-[240px]'
               : 'min-w-[100px] max-w-[168px]'
       return (
-        <span id={`question-card-${question.id}`} className="mx-1 inline-flex flex-col items-start align-middle">
+        <span id={`question-card-${question.id}`} className={onDiagram ? 'relative inline-flex w-full flex-col items-start align-middle' : 'mx-1 inline-flex flex-col items-start align-middle'}>
           <input
             type="text"
+            aria-label={onDiagram ? `Question ${number}: ${question.text}` : undefined}
+            maxLength={onDiagram ? 1 : undefined}
+            autoComplete={onDiagram ? 'off' : undefined}
             value={inputValue}
-            onChange={(event) => handleAnswerChange(question.id, event.target.value)}
+            onChange={(event) => handleAnswerChange(question.id, onDiagram ? event.target.value.toUpperCase() : event.target.value)}
             onFocus={() => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(question.id))}
             disabled={isReviewMode}
             placeholder={String(number)}
-            className={`inline-flex h-9 ${widthCls} rounded-lg border px-2 text-center text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
+            className={`inline-flex ${onDiagram ? 'h-7 w-full min-w-0 bg-white text-base' : `h-9 ${widthCls} text-sm`} rounded-lg border px-2 text-center font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
               isReviewMode && reviewShowCorrectAnswers
                 ? isWrong
                   ? 'border-red-300 bg-red-50/70 text-red-700'
@@ -3102,6 +3106,11 @@ export default function IELTSReadingInterface({
                 : 'border-red-200'
             }`}
           />
+          {onDiagram && !isReviewMode ? (
+            <button type="button" aria-label={`Flag question ${number}`} aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))} onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))} className="absolute -bottom-3 left-1/2 rounded bg-white text-slate-400 hover:text-red-600">
+              <BookmarkIcon className={`h-3 w-3 ${flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id)) ? 'fill-red-500 text-red-500' : ''}`} />
+            </button>
+          ) : null}
           {isReviewMode && reviewShowCorrectAnswers && correctAnswerText ? (
             <span className="mt-1 inline-flex max-w-[240px] items-center rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.04em] text-emerald-700">
               Correct: {correctAnswerText}
@@ -3486,6 +3495,8 @@ export default function IELTSReadingInterface({
           return <div key={key}>{renderTable(block)}</div>
         case 'image':
           return <ListeningDiagram key={key} src={block.src} alt={block.alt} caption={block.caption} />
+        case 'diagram':
+          return <EducationHouseDiagram key={key} renderAnswer={number => blankInput(number, 'sm', true)} />
         case 'space':
           return <div key={key} className="h-2" />
         default:
@@ -3493,12 +3504,22 @@ export default function IELTSReadingInterface({
       }
     }
 
+    // Saved attempts can contain the former image + separate answer rows. Upgrade
+    // only their layout; keep the saved questions, keys and answers untouched.
+    const blocks = currentSection.id === 'lt14-part3' && group.blocks.some(block => block.kind === 'image')
+      ? group.blocks.flatMap((block): ListeningBlock[] => {
+          if (block.kind === 'image') return [{ kind: 'diagram', diagram: 'education-house' }]
+          if (block.kind === 'grid' && block.rows.length && block.rows.every(row => row.blank >= 21 && row.blank <= 26)) return []
+          return [block]
+        })
+      : group.blocks
+
     return (
       <section key={groupKey} className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{group.range}</h4>
         <p className="mt-1 text-sm text-slate-700">{group.instruction}</p>
         <div className="mt-2 rounded-xl border border-red-100 bg-white px-3 py-3">
-          {group.blocks.map((block, index) => renderBlock(block, index))}
+          {blocks.map((block, index) => renderBlock(block, index))}
         </div>
       </section>
     )

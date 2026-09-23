@@ -69,7 +69,7 @@ watermark removal or image editing was used. The A–I option bank is rendered
 above the original image with the shared Listening styling; six answer inputs
 follow it. This keeps the original figure intact on desktop and mobile.
 
-The image is imported with `?inline`, following the existing profile-avatar
+Initially, the image was imported with `?inline`, following the existing profile-avatar
 asset pattern. Vite includes its unchanged JPEG bytes in the test bundle, so
 rendering no longer depends on a separate public-image request or a previously
 cached response for that URL. The integration check verifies the embedded
@@ -77,7 +77,7 @@ image's SHA-256 against the original above.
 The original public URL is retained for already-open sessions using the previous
 bundle. Browser validation also passed with the public-image endpoint absent.
 
-### Diagram recovery
+### Previous image recovery (superseded)
 
 `ListeningDiagram` recognises both the embedded JPEG and the original public
 URL retained in old Results/Analyze route snapshots. It first uses the embedded
@@ -100,6 +100,36 @@ rerenders after fallback, CSP-blocked data images, simultaneous source failures,
 bounded retries and recovery after service restoration. The Listening 14
 integration suite additionally reopens an old snapshot in Analyze and verifies
 its diagram recovery alongside the original answers and grading.
+
+### Native diagram and on-diagram answers (23 September 2026)
+
+The user still encountered the failure screen after the embedded JPEG and public
+fallback were added. The exact browser-specific cause was not established. Test
+14 now uses native inline SVG paths, with no `img`, SVG `image`, image URL,
+asynchronous image decoding, or retry state. The background is memoized so audio
+ticks and typing do not rebuild the drawing. Test 15 retains its image recovery.
+
+`src/assets/ielts/education-house-paths.json` is the diagram's source artwork.
+It preserves every RGB pixel of the original 860 x 680 JPEG: horizontal runs of
+identical pixels were merged vertically and grouped by color into filled paths.
+No resampling, tracing approximation, label replacement or creative redraw was
+used. The original JPEG was decoded with Windows System.Drawing into a 24-bit
+BMP before conversion. Reconstructing all 584,800 pixels from these paths yields
+SHA-256 `88e1e091fced059b6056b80193fd10689f52ff582e8bfe9b2221de5f2560e143`.
+Run `node scripts/test-education-house-paths.mjs` to verify this integrity check.
+
+Questions 21–26 are positioned over the six original dotted answer spaces. The
+printed numbers, arrows, labels, trees and building remain in the background.
+Controls use the shared answer state, navigation IDs, flags and review colors.
+The diagram scrolls horizontally within its own frame on narrow screens, keeping
+the answer fields usable. No duplicate answer rows are rendered underneath.
+Old Analyze snapshots are upgraded only at rendering time; saved questions,
+answer keys and submitted answers are preserved.
+
+`node scripts/test-listening-diagram-browser.mjs` checks old URLs, offline
+reopening, rerenders and `img-src 'none'` in real Edge. `--test15` retains the
+other map's fallback regression checks. The full Test 14 integration suite checks
+all 40 answers, six on-diagram controls, flags, scoring and old Analyze snapshots.
 
 ## Audio
 

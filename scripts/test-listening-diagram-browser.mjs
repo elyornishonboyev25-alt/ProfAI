@@ -33,7 +33,7 @@ async function main() {
   const server = createServer((req, res) => {
     requests.push(req.url)
     if (req.url === '/' || req.url === '/restricted') {
-      if (req.url === '/restricted') res.setHeader('Content-Security-Policy', "img-src 'self'")
+      if (req.url === '/restricted') res.setHeader('Content-Security-Policy', raceVillage ? "img-src 'self'" : "img-src 'none'")
       res.setHeader('Content-Type', 'text/html')
       res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}#root{max-width:768px;margin:auto}figure{margin:0}img{display:block;width:100%;height:auto}</style><div id="root"></div><script src="/fixture.js"></script>')
     } else if (req.url === '/fixture.js') {
@@ -82,7 +82,9 @@ async function main() {
       }
       assert.fail(expression)
     }
-    const decoded = `document.querySelector('img')?.complete && document.querySelector('img')?.naturalWidth===${width} && document.querySelector('img')?.naturalHeight===${height}`
+    const decoded = raceVillage
+      ? `document.querySelector('img')?.complete && document.querySelector('img')?.naturalWidth===${width} && document.querySelector('img')?.naturalHeight===${height}`
+      : `document.querySelector('svg[data-education-house]')?.getAttribute('viewBox')==='0 0 860 680' && document.querySelectorAll('svg[data-education-house] path').length>2000 && !document.querySelector('img, image')`
     const base = `http://127.0.0.1:${server.address().port}`
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
     await send('Page.navigate', { url: base })
@@ -97,6 +99,17 @@ async function main() {
     assert.ok(await evaluate('document.body.scrollWidth <= innerWidth'))
     console.log(`PASS: old snapshot, repeated section reopen, offline decoding, unchanged ${width}x${height} image and mobile layout`)
     await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
+    if (!raceVillage) {
+      await send('Page.navigate', { url: base + '/restricted' })
+      await until(decoded)
+      await evaluate('void(window.originalDrawing=document.querySelector("svg[data-education-house]"))')
+      for (let n = 0; n < 10; n++) await evaluate('window.redraw()')
+      assert.ok(await evaluate('window.originalDrawing===document.querySelector("svg[data-education-house]")'))
+      assert.equal(requests.filter(url => url.startsWith(legacy)).length, 0)
+      console.log('PASS: original native drawing survives a policy blocking ALL images, no image requests and no remount on rerender')
+      await send('Browser.close').catch(() => {})
+      return
+    }
     await evaluate(`document.querySelector('img').src='data:image/jpeg;base64,broken'`)
     await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
     for (let n = 0; n < 3; n++) await evaluate('window.redraw()')

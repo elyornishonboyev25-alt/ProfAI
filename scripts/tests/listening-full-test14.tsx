@@ -2,7 +2,6 @@ import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import { statSync } from 'node:fs'
-import { createHash } from 'node:crypto'
 import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
 import { listeningFullTest14 as test } from '../../src/data/listeningFullTest14'
 import { getIeltsFullTestCatalog, isAvailableIeltsTrackTest } from '../../src/utils/ieltsTrackCatalog'
@@ -65,9 +64,16 @@ export async function run() {
   for (let n = 1; n <= 4; n++) {
     if (n > 1) await part(n)
     if (n === 3) {
-      const diagram = container.querySelector('figure img')?.getAttribute('src')
-      assert.match(diagram!, /^data:image\/jpeg;base64,/)
-      assert.equal(createHash('sha256').update(Buffer.from(diagram!.split(',')[1], 'base64')).digest('hex'), 'b8c6e7afb349e77fcd0c8bbae82a406f4071a7dee221fcb1c794a96692042e89')
+      const diagram = container.querySelector('svg[data-education-house]')
+      assert.equal(diagram?.getAttribute('viewBox'), '0 0 860 680')
+      assert.equal(container.querySelectorAll('figure img, figure image').length, 0)
+      assert.equal(container.querySelectorAll('[data-diagram-answer] input').length, 6)
+      for (let number = 21; number <= 26; number++) {
+        assert.equal(container.querySelectorAll(`#question-card-lt14-q${number}`).length, 1)
+      }
+      const flag = container.querySelector('[aria-label="Flag question 21"]') as HTMLButtonElement
+      await act(async () => flag.click())
+      assert.equal(flag.getAttribute('aria-pressed'), 'true')
       assert.equal(container.querySelectorAll('li').length, 9)
     }
     for (const question of test.sections[n - 1].questions) {
@@ -109,17 +115,19 @@ export async function run() {
   // Analyze can reopen a test snapshot saved before the diagram was embedded.
   const oldSnapshot = JSON.parse(JSON.stringify(test)) as typeof test
   for (const group of oldSnapshot.sections[2].groups!) {
-    for (const block of group.blocks) {
-      if (block.kind === 'image') block.src = '/images/ielts-listening-test14-education-house.jpg'
-    }
+    group.blocks = group.blocks.flatMap(block => block.kind === 'diagram' ? [
+      { kind: 'image' as const, src: '/images/ielts-listening-test14-education-house.jpg', alt: 'Education House' },
+      { kind: 'grid' as const, columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'], inputMode: true, rows: [21, 22, 23, 24, 25, 26].map(blank => ({ blank, label: String(blank) })) },
+    ] : [block])
   }
   await act(async () => root.render(<IELTSReadingInterface test={oldSnapshot} reviewPayload={{ result: submitted!, showCorrectAnswers: true }} onComplete={() => {}} onExit={() => {}} />))
   await part(3)
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /^data:image\/jpeg;base64,/)
-  await act(async () => container.querySelector('figure img')!.dispatchEvent(new window.Event('error')))
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /education-house\.jpg\?v=/)
+  const nativeDiagram = container.querySelector('svg[data-education-house]')
+  assert.ok(nativeDiagram)
+  assert.equal(container.querySelectorAll('figure img').length, 0)
+  assert.equal(container.querySelectorAll('[data-diagram-answer] input:disabled').length, 6)
   await delay(1100)
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /education-house\.jpg\?v=/)
+  assert.equal(container.querySelector('svg[data-education-house]'), nativeDiagram)
   assert.equal((container.querySelector('input[placeholder="21"]') as HTMLInputElement).value, 'F')
   assert.ok((container.querySelector('input[placeholder="21"]') as HTMLInputElement).disabled)
   await part(4)

@@ -126,6 +126,13 @@ the answer fields usable. No duplicate answer rows are rendered underneath.
 Old Analyze snapshots are upgraded only at rendering time; saved questions,
 answer keys and submitted answers are preserved.
 
+The six answer fields now have a uniform width and right-centered flags. The two
+left-side fields sit immediately below their original numbered spaces to keep
+the arrows clear; the original artwork is unchanged. Clicking an already-filled
+field selects its letter so another letter replaces it directly. The SVG has a
+separate composited paint layer and does not participate in pointer hit testing,
+avoiding repeated work on its 61,078 pixel rectangles during focus/caret updates.
+
 `node scripts/test-listening-diagram-browser.mjs` checks old URLs, offline
 reopening, rerenders and `img-src 'none'` in real Edge. `--test15` retains the
 other map's fallback regression checks. The full Test 14 integration suite checks

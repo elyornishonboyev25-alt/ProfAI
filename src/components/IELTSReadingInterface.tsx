@@ -3128,6 +3128,7 @@ export default function IELTSReadingInterface({
               setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(question.id))
               if (onDiagram) event.currentTarget.select()
             }}
+            onClick={onDiagram ? event => event.currentTarget.select() : undefined}
             disabled={isReviewMode}
             placeholder={String(number)}
             className={`inline-flex ${onDiagram ? 'h-8 w-full min-w-0 bg-white text-base leading-none caret-red-600' : `h-9 ${widthCls} text-sm`} rounded-lg border px-2 text-center font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
@@ -3142,8 +3143,7 @@ export default function IELTSReadingInterface({
           />
           {onDiagram && !isReviewMode ? (
             <button type="button" aria-label={`Flag question ${number}`} aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))} onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))}
-              // The two left-hand labels have arrows directly beside their blanks.
-              style={{ top: number === 25 || number === 26 ? -16 : 4 }}
+              style={{ top: 4 }}
               className="absolute left-full ml-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
               <BookmarkIcon className={`pointer-events-none h-3.5 w-3.5 ${flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id)) ? 'fill-red-500 text-red-500' : ''}`} />
             </button>

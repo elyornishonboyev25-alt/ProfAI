@@ -12,16 +12,15 @@ const WebSocket = requireBackend('ws')
 
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-listening-diagram-'))
-  const raceVillage = process.argv.includes('--test15')
-  const filename = raceVillage ? 'listening-test15-race-village.png' : 'listening-test14-education-house.jpg'
+  const filename = 'listening-test15-race-village.png'
   const legacy = `/images/ielts-${filename}`
-  const width = raceVillage ? 411 : 860
-  const height = raceVillage ? 315 : 680
   const source = `
     import React from 'react'; import {createRoot} from 'react-dom/client';
     import Diagram from './src/components/ListeningDiagram';
+    import original from './src/assets/ielts/listening-test15-race-village.png?inline';
     const root=createRoot(document.getElementById('root')); let version=0;
-    const draw=()=>root.render(<Diagram key={version} src="${legacy}" alt="${raceVillage ? 'Map of Race Village' : 'Education House'}" />);
+    window.showEmbedded=()=>root.render(<Diagram key={++version} src={original} alt="Race Village" />);
+    const draw=()=>root.render(<Diagram key={version} src="${legacy}" alt="Map of Race Village" />);
     window.redraw=draw;
     window.reopen=()=>{version++;draw()};
     draw();
@@ -29,17 +28,16 @@ async function main() {
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl', '.png': 'dataurl' }, define: { 'process.env.NODE_ENV': '"production"' } })
   const original = await readFile(`src/assets/ielts/${filename}`)
   const requests = []
-  let allowImages = true
   const server = createServer((req, res) => {
     requests.push(req.url)
     if (req.url === '/' || req.url === '/restricted') {
-      if (req.url === '/restricted') res.setHeader('Content-Security-Policy', raceVillage ? "img-src 'self'" : "img-src 'none'")
+      if (req.url === '/restricted') res.setHeader('Content-Security-Policy', "img-src 'none'")
       res.setHeader('Content-Type', 'text/html')
-      res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}#root{max-width:768px;margin:auto}figure{margin:0}img{display:block;width:100%;height:auto}</style><div id="root"></div><script src="/fixture.js"></script>')
+      res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}#root{max-width:768px;margin:auto}figure{margin:0}svg{display:block;width:100%;height:auto}</style><div id="root"></div><script src="/fixture.js"></script>')
     } else if (req.url === '/fixture.js') {
       res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text)
-    } else if (req.url.startsWith(legacy) && allowImages) {
-      res.setHeader('Content-Type', raceVillage ? 'image/png' : 'image/jpeg'); res.end(original)
+    } else if (req.url === '/reference.png') {
+      res.setHeader('Content-Type', 'image/png'); res.end(original)
     } else { res.writeHead(503); res.end('temporarily unavailable') }
   })
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
@@ -82,53 +80,36 @@ async function main() {
       }
       assert.fail(expression)
     }
-    const decoded = raceVillage
-      ? `document.querySelector('img')?.complete && document.querySelector('img')?.naturalWidth===${width} && document.querySelector('img')?.naturalHeight===${height}`
-      : `document.querySelector('svg[data-education-house]')?.getAttribute('viewBox')==='0 0 860 680' && document.querySelectorAll('svg[data-education-house] path').length>2000 && !document.querySelector('img, image')`
+    const drawn = `document.querySelector('svg[data-race-village] path') && !document.querySelector('img, image')`
     const base = `http://127.0.0.1:${server.address().port}`
-    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
-    await send('Page.navigate', { url: base })
-    await until(decoded)
-    assert.equal(requests.filter(url => url.startsWith(legacy)).length, 0, 'Old snapshots should recover without fetching the old URL')
+    await send('Page.navigate', {url:base})
+    await until(drawn)
+    assert.equal(requests.filter(url=>/\.(png|jpg)/.test(url)).length,0)
+    const difference=await evaluate(`(async()=>{
+      const svg=document.querySelector('svg[data-race-village]').cloneNode(true);
+      svg.setAttribute('width','411');svg.setAttribute('height','315');svg.removeAttribute('class');
+      const vector=new Image(),original=new Image();
+      const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml'}));
+      vector.src=url;original.src='/reference.png';await Promise.all([vector.decode(),original.decode()]);
+      const canvas=document.createElement('canvas');canvas.width=411;canvas.height=315;
+      const ctx=canvas.getContext('2d');ctx.drawImage(original,0,0);const expected=ctx.getImageData(0,0,411,315).data;
+      ctx.clearRect(0,0,411,315);ctx.drawImage(vector,0,0);const actual=ctx.getImageData(0,0,411,315).data;
+      let differences=0;for(let i=0;i<actual.length;i++)if(actual[i]!==expected[i])differences++;
+      URL.revokeObjectURL(url);return differences;
+    })()`)
+    assert.equal(difference,0,'SVG must exactly preserve every original pixel, including labels')
+    console.log('PASS: native SVG drawing matches the original map exactly')
+    await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true})
+    await send('Page.navigate',{url:base+'/restricted'})
+    await until(drawn)
     await send('Network.enable')
-    await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 })
-    for (let n = 0; n < 8; n++) {
-      await evaluate('window.reopen()')
-      await until(decoded)
-    }
+    await send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0})
+    const before=requests.length
+    for(let i=0;i<5;i++){await evaluate('window.reopen()');await until(drawn)}
+    await evaluate('window.showEmbedded()');await until(drawn)
+    assert.equal(requests.length,before)
     assert.ok(await evaluate('document.body.scrollWidth <= innerWidth'))
-    console.log(`PASS: old snapshot, repeated section reopen, offline decoding, unchanged ${width}x${height} image and mobile layout`)
-    await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
-    if (!raceVillage) {
-      await send('Page.navigate', { url: base + '/restricted' })
-      await until(decoded)
-      await evaluate('void(window.originalDrawing=document.querySelector("svg[data-education-house]"))')
-      for (let n = 0; n < 10; n++) await evaluate('window.redraw()')
-      assert.ok(await evaluate('window.originalDrawing===document.querySelector("svg[data-education-house]")'))
-      assert.equal(requests.filter(url => url.startsWith(legacy)).length, 0)
-      console.log('PASS: original native drawing survives a policy blocking ALL images, no image requests and no remount on rerender')
-      await send('Browser.close').catch(() => {})
-      return
-    }
-    await evaluate(`document.querySelector('img').src='data:image/jpeg;base64,broken'`)
-    await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
-    for (let n = 0; n < 3; n++) await evaluate('window.redraw()')
-    await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
-    console.log('PASS: decoder error automatically recovers; ordinary rerenders retain the working fallback')
-    await send('Page.navigate', { url: base + '/restricted' })
-    await until(`${decoded} && document.querySelector('img').src.includes('?v=')`)
-    console.log('PASS: a policy blocking inline images falls back to the byte-identical same-origin image')
-    allowImages = false
-    await send('Network.setCacheDisabled', { cacheDisabled: true })
-    await send('Page.navigate', { url: base + '/restricted' })
-    await until(`document.querySelector('button')?.textContent==='Retry diagram'`)
-    const count = requests.length
-    await new Promise(resolve => setTimeout(resolve, 600))
-    assert.equal(requests.length, count, 'Failure must not loop requests')
-    allowImages = true
-    await evaluate(`document.querySelector('button').click()`)
-    await until(`${decoded} && document.querySelector('img').src.includes('&retry=')`)
-    console.log('PASS: complete failure shows recovery control; retry bypasses a failed cached response without reloading the test')
+    console.log('PASS: public-URL and embedded saved snapshots render offline with all image loads blocked; mobile layout fits')
     await send('Browser.close').catch(() => {})
   } finally {
     socket?.close(); browser.kill(); await exited
@@ -138,8 +119,4 @@ async function main() {
   }
 }
 
-if (process.argv.includes('--test15')) {
-  await import('./test-race-village-svg.mjs')
-} else {
-  main().catch(error => { console.error(error); process.exitCode = 1 })
-}
+main().catch(error => { console.error(error); process.exitCode = 1 })

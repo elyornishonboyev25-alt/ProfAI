@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EducationHouseDrawing } from './EducationHouseDiagram'
+import RaceVillageDiagram from './RaceVillageDiagram'
 import educationHouse from '../assets/ielts/listening-test14-education-house.jpg?inline'
 import raceVillage from '../assets/ielts/listening-test15-race-village.png?inline'
 
@@ -69,6 +70,9 @@ function DiagramImage({ src, alt, caption }: Props) {
 }
 
 export default function ListeningDiagram(props: Props) {
+  if (findDiagram(props.src)?.path === '/images/ielts-listening-test15-race-village.png') {
+    return <RaceVillageDiagram caption={props.caption} />
+  }
   if (findDiagram(props.src)?.path === educationHousePath) {
     return <figure className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2"><div className="mx-auto max-w-3xl"><EducationHouseDrawing /></div>{props.caption ? <figcaption>{props.caption}</figcaption> : null}</figure>
   }

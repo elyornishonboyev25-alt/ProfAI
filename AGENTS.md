@@ -7,3 +7,8 @@
 ## IELTS content integrity
 
 - Before adding a Listening, Reading, Writing, or Speaking test, check the live repository catalog and source content for duplicates. Add it only when it is not already present; otherwise, tell the user that it already exists and request a different test.
+
+## IELTS diagrams and Listening completion
+
+- When the user supplies a map or small diagram, reproduce its original geometry, labels and details as an inline SVG/code drawing. Do not rely on a raster image, external image request, or image decoder for the displayed drawing. Keep it working in the test and Analyze/review, including saved attempts.
+- Listening tests, including full mocks and practice, must not display or end on a separate countdown timer. Automatically submit 20 seconds after the final audio track ends. Earlier playlist tracks, loading failures and review playback must not submit the test. Reading, Writing and Speaking timing remains unchanged.

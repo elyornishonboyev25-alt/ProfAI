@@ -28,6 +28,7 @@ import { IELTSTest, TestResult, Section, Question, ListeningGroup, ListeningBloc
 // Components
 import SplitScreen from './SplitScreen'
 import Timer from './Timer'
+import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
@@ -245,6 +246,7 @@ export default function IELTSReadingInterface({
   const [audioDuration, setAudioDuration] = useState(0)
   const [audioError, setAudioError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const submissionStartedRef = useRef(false)
   // True while a clip is meant to be playing. Lets us block external pauses
   // (media keys / OS controls) and avoid fighting an intentional stop.
   const shouldPlayRef = useRef(false)
@@ -609,7 +611,11 @@ export default function IELTSReadingInterface({
 
   const handleListeningAudioEnded = () => {
     const next = currentAudioIndex + 1
-    if (next < listeningAudioSources.length && listeningAudioSources[next]) {
+    if (next < listeningAudioSources.length) {
+      if (!listeningAudioSources[next]) {
+        handleAudioLoadError()
+        return
+      }
       setCurrentAudioIndex(next)
     } else {
       shouldPlayRef.current = false
@@ -1224,6 +1230,14 @@ export default function IELTSReadingInterface({
     selectedParts?: number[]
     customTime?: number
   }) => {
+    submissionStartedRef.current = false
+    if (isListening) {
+      stopListeningAudio()
+      setAudioStarted(false)
+      setAudioDone(false)
+      setCurrentAudioIndex(0)
+      setAudioError(null)
+    }
     const effectiveMode = preset?.mode ?? testMode
     const effectiveCustomTime = preset?.customTime ?? customTime
     const normalizedParts = sanitizeSelectedParts(preset?.selectedParts ?? selectedParts, test.sections.length)
@@ -1293,7 +1307,7 @@ export default function IELTSReadingInterface({
   const getCurrentTimeSpent = () => {
     const elapsedByClock = Math.max(0, (testMode === 'practice' && customTime !== -1 ? customTime : test.duration) * 60 - Math.max(0, timeRemaining))
     const elapsedByTimestamp = startedAtRef.current ? Math.max(0, Math.round((Date.now() - startedAtRef.current) / 1000)) : 0
-    return Math.max(elapsedByClock, elapsedByTimestamp)
+    return isListening ? elapsedByTimestamp : Math.max(elapsedByClock, elapsedByTimestamp)
   }
 
   const completeAndSubmitTest = (leaderboardEligible = true) => {
@@ -1335,7 +1349,8 @@ export default function IELTSReadingInterface({
   }
 
   const beginSubmitLoading = (leaderboardEligible = true) => {
-    if (showSubmitLoading) return
+    if (submissionStartedRef.current) return
+    submissionStartedRef.current = true
     stopListeningAudio()
     setShowSubmitLoading(true)
     window.setTimeout(() => {
@@ -1374,10 +1389,24 @@ export default function IELTSReadingInterface({
   }
 
   const handleTimeUp = () => {
-    if (isReviewMode) return
+    if (isReviewMode || isListening) return
     if (showSubmitLoading) return
     beginSubmitLoading(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
   }
+
+  useListeningAutoSubmit(
+    isListening && !isReviewMode && isTestActive && audioStarted && !audioError && !showSubmitLoading,
+    audioDone,
+    () => {
+      if (submissionStartedRef.current) return
+      submissionStartedRef.current = true
+      setShowSubmitConfirmModal(false)
+      setIntegrityWarning(null)
+      stopListeningAudio()
+      setIsTestActive(false)
+      completeAndSubmitTest(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
+    },
+  )
 
   const handleAnswerChange = (qId: string, value: string | number | string[]) => {
     if (isReviewMode) return
@@ -2875,7 +2904,7 @@ export default function IELTSReadingInterface({
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Customizable session time
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {isListening ? 'Audio followed by 20 seconds to check answers' : 'Customizable session time'}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Select specific parts to practice
@@ -2901,7 +2930,7 @@ export default function IELTSReadingInterface({
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-bold text-rose-400">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> Strict {test.duration}-minute limit
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> {isListening ? 'Finishes 20 seconds after the audio ends' : `Strict ${test.duration}-minute limit`}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Official scoring algorithms
@@ -3626,6 +3655,7 @@ export default function IELTSReadingInterface({
       >
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-10">
           {renderListeningAudioPanel()}
+          {audioDone && !isReviewMode ? <p role="status" className="mb-4 rounded-xl border border-red-100 bg-white p-3 text-sm text-slate-700">Audio finished. You have 20 seconds to check your answers before automatic submission.</p> : null}
           {/* Compact part header bar */}
           <div className="mb-5 overflow-hidden rounded-2xl border border-red-100 shadow-[0_10px_26px_rgba(220,38,38,0.10)]">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-5 py-3 text-white">
@@ -6080,7 +6110,7 @@ export default function IELTSReadingInterface({
               </div>
             </div>
 
-            {!isReviewMode ? (
+            {!isReviewMode && !isListening ? (
               <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 px-2 py-1 shadow-[0_14px_30px_rgba(220,38,38,0.16)]">
                 <span className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-100 bg-white px-3.5 text-slate-700">
                   <ClockIcon className="h-4 w-4 text-red-500" />
@@ -6095,11 +6125,11 @@ export default function IELTSReadingInterface({
                   />
                 </span>
               </div>
-            ) : (
+            ) : isReviewMode ? (
               <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 rounded-2xl border border-red-100 bg-white px-3 py-2 shadow-[0_12px_26px_rgba(220,38,38,0.15)]">
                 <span className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Review Mode</span>
               </div>
-            )}
+            ) : null}
 
             <div className="flex items-center gap-2 shrink-0">
               <button type="button" onClick={toggleFullscreen} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Full screen">
@@ -6347,8 +6377,8 @@ export default function IELTSReadingInterface({
                     </div>
                   </div>
 
-                  {/* Time Limit */}
-                  <div>
+                  {/* Reading-only wall-clock duration. Listening follows its audio. */}
+                  {!isListening && <div>
                     <span className="mb-5 block text-xs font-black uppercase tracking-[0.2em] text-slate-400">2. Session Duration</span>
                     <div className="relative">
                       <button type="button"
@@ -6390,7 +6420,7 @@ export default function IELTSReadingInterface({
                         )}
                       </AnimatePresence>
                     </div>
-                  </div>
+                  </div>}
 
                   <button type="button"
                     onClick={() => handleStartTest()}

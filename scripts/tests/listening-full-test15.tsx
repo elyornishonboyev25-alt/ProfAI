@@ -2,7 +2,6 @@ import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import { statSync } from 'node:fs'
-import { createHash } from 'node:crypto'
 import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
 import { listeningFullTest15 as test } from '../../src/data/listeningFullTest15'
 import { getIeltsFullTestCatalog, isAvailableIeltsTrackTest } from '../../src/utils/ieltsTrackCatalog'
@@ -62,9 +61,8 @@ export async function run() {
   for (let n = 1; n <= 4; n++) {
     if (n > 1) await part(n)
     if (n === 2) {
-      const diagram = container.querySelector('figure img')?.getAttribute('src')
-      assert.match(diagram!, /^data:image\/png;base64,/)
-      assert.equal(createHash('sha256').update(Buffer.from(diagram!.split(',')[1], 'base64')).digest('hex'), '09c1b757957715253de91c61032e2e6ac282dd378d33a463906f02c97b2f0627')
+      assert.ok(container.querySelector('svg[data-race-village] path'))
+      assert.equal(container.querySelectorAll('figure img, figure image').length, 0)
     }
     for (const question of test.sections[n - 1].questions) {
       if (question.type === 'multiple-choice') {
@@ -103,11 +101,8 @@ export async function run() {
   }
   await act(async () => root.render(<IELTSReadingInterface test={oldSnapshot} reviewPayload={{ result: submitted!, showCorrectAnswers: true }} onComplete={() => {}} onExit={() => {}} />))
   await part(2)
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /^data:image\/png;base64,/)
-  await act(async () => container.querySelector('figure img')!.dispatchEvent(new window.Event('error')))
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /race-village\.png\?v=/)
-  await delay(1100)
-  assert.match(container.querySelector('figure img')!.getAttribute('src')!, /race-village\.png\?v=/)
+  assert.ok(container.querySelector('svg[data-race-village] path'))
+  assert.equal(container.querySelectorAll('figure img, figure image').length, 0)
   assert.equal((container.querySelector('input[placeholder="15"]') as HTMLInputElement).value, 'F')
   assert.ok((container.querySelector('input[placeholder="15"]') as HTMLInputElement).disabled)
   await part(4)

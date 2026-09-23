@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Crown, Sparkles, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -53,7 +54,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
           Premium
         </span>
 
-        <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900">Upgrade to Premium</h3>
+        <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Upgrade to Premium"} /> </h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           You&apos;ve used your {used}/{FREE_ATTEMPT_LIMIT} free test attempts. Unlock unlimited attempts, full mock
           arenas, and every premium track. AI coaching stays free for everyone.

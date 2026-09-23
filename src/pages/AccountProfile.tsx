@@ -538,8 +538,7 @@ export default function AccountProfile() {
               </div>
               {avatarUrl ? (
                 <button disabled={uploadingAvatar} onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-600 disabled:opacity-60">
-                  <Trash2 className="h-3 w-3" /> Remove
-                </button>
+                  <Trash2 className="h-3 w-3" />  <UiText text={"Remove"} /> </button>
               ) : null}
             </div>
 
@@ -581,7 +580,7 @@ export default function AccountProfile() {
                   <button
                     ref={nameEditRef}
                     type="button"
-                    disabled={loading}
+                    disabled={loading || loadError}
                     onClick={() => { setNameDraft(user?.fullName ?? ''); setNameError(''); setEditingName(true) }}
                     aria-label="Edit full name"
                     title="Edit name"

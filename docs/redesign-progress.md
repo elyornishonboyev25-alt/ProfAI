@@ -19,7 +19,8 @@ enhanced web material with opaque fallback, reduced motion, and clear contrast.
   reduced motion and opaque glass fallback.
 - Four primary desktop/mobile destinations; secondary tools in a disclosure menu.
 - English default and persistent Russian selection, including Google sign-in locale.
-  The interface catalog contains 736 phrases, plus the nested legacy translation catalog.
+  Shared navigation, primary flows and static interface labels have Russian translations,
+  alongside the nested legacy translation catalog.
 - New landing, authentication presentation, two-step onboarding and editable focus.
   Detailed study setup remains available at `/study-profile`. Nickname selection is
   contextual to the community rather than blocking initial setup.
@@ -30,19 +31,34 @@ enhanced web material with opaque fallback, reduced motion, and clear contrast.
   photo attribution and graceful image fallback. The existing matcher is retained.
 - Additional practice groups vocabulary, articles, podcasts, shadowing, writing
   and speaking. No test banks or learning material were removed.
+- IELTS/SAT catalogs and the article library have searchable, responsive cards.
+  SAT section catalogs show 12 tests at a time. Planned IELTS tests are opt-in.
+- University profiles separate requirements, costs, sources and optional statistics;
+  ranking bands/ties, missing data and campus-photo failures are handled explicitly.
+- Account loading failures block editing the unloaded profile and offer retry.
+  Cross-device goal editing loads saved targets before allowing changes. Advanced
+  setup catches plan-generation failures and saves locally only after the server succeeds.
+- Contextual nickname selection uses a keyboard-accessible native dialog with
+  cancellable availability checks, network retry and a session-level defer option.
+- Integrated upstream main through `5c8e92111`, retaining Listening diagram/audio
+  fixes, SAT historical reviews, profile name editing and the 40-test SAT catalog.
 - Results prioritize practice history; detailed analytics and achievements expand
   on request. Legacy readers, exam tools, community and Learning Center retain their
   specialized layouts with shared material styling and translated static UI labels.
 
 ## Verification — 2026-09-23
-- `npm run build`: passed, including TypeScript, speaking-bank validation, Vite and PWA.
-- `npx eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0`: passed.
+- `npm run build`: passed, including TypeScript, content validators, Vite and PWA.
+- `npm run lint`: passed across the repository.
 - `git diff --check`: passed.
-- Interface catalog audit: no missing keys used by `UiText` or literal `c(...)` calls.
 - Production browser checks passed: university search, shortlist add/remove, language
   switching and persistence, reduced effects, failed onboarding save, successful
   retry, SAT request payload, editing focus, dashboard goal and analytics disclosure.
   No runtime exceptions were recorded in that scenario.
+- Additional browser checks passed: cross-device goal loading failure/retry,
+  preserving a saved SAT target of 1250, account failure/retry protection, SAT
+  pagination/search/reset/destination, university statistics disclosure and article
+  search; nickname availability, failed-save retry and Escape dismissal.
+  No runtime exceptions were recorded, including missing profile scores.
 - Reviewed desktop landing/dashboard and phone layouts for landing, IELTS, SAT,
   results, university discovery, login and additional practice. Checked widths of
   320, 390 and 1440 pixels; no horizontal overflow or broken images on sampled pages.
@@ -56,10 +72,10 @@ enhanced web material with opaque fallback, reduced motion, and clear contrast.
   their original language. Unmapped legacy dynamic labels fall back to English.
 - Language/effect preferences and Applications/Explore focus are saved on the device.
   Exam targets use the existing account API. Shortlists keep their existing device storage.
-- Full-repository lint also encounters pre-existing top-level-await parser errors in
-  `backend/scripts/smoke-speaking-rooms.mjs` and the unrelated untracked SAT importer.
-  The changed application source passes lint. Build emits large existing-content
-  chunk and stale Browserslist-data warnings, without failing.
+- JavaScript lint parsing now supports the existing top-level-await scripts.
+  Build still warns about large content chunks (the expanded SAT catalog is about
+  16.5 MB before compression) and stale Browserslist data. Cold-network performance
+  of the entire SAT bank has not been optimized by this redesign.
 - Local settings, QA files, intermediate images, build output and unrelated SAT
   import work are excluded from the redesign commit. The final transparent study
   sprite is an intentional production source asset.

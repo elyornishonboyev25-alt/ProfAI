@@ -1,4 +1,7 @@
 {
+  "Start test": "Начать тест",
+  "SAT Prep": "Подготовка к SAT",
+  "Review": "Разбор",
   "Find a test": "Найти тест",
   "Search tests": "Поиск тестов",
   "Show planned tests": "Показать запланированные тесты",
@@ -157,5 +160,10 @@
   "Show more tests": "Показать ещё тесты",
   "modules": "модуля",
   "Saved progress": "Сохранённый прогресс",
-  "Your profile could not be saved. Please try again.": "Не удалось сохранить профиль. Попробуйте ещё раз."
+  "Your profile could not be saved. Please try again.": "Не удалось сохранить профиль. Попробуйте ещё раз.",
+  "Domestic staff (%)": "Местные сотрудники (%)",
+  "International staff (%)": "Иностранные сотрудники (%)",
+  "Some modules are unavailable.": "Некоторые модули недоступны.",
+  "Math Module 2 is unavailable. Practice the available modules; a full SAT or Math score is not provided.": "Математический модуль 2 недоступен. Можно пройти доступные модули, но общий балл SAT или Math не рассчитывается.",
+  "This test is currently in preview mode. Choose an available test from the catalog.": "Этот тест доступен только для предварительного просмотра. Выберите доступный тест в каталоге."
 }

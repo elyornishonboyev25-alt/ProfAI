@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
-import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { getSATSectionTest, satAvailabilityNote, isSATSection, SAT_TEST_CATALOG } from '@/features/sat/catalog'
 import StudyObject from '@/components/visuals/StudyObject'
 import { useCopy } from '@/i18n/interface'
 
@@ -35,7 +35,7 @@ export default function SATSection() {
       const completed = attempt?.status === 'submitted'
       return <article key={test.id} className="glass-surface liquid-test-card">
         <div className="liquid-test-card-top"><span className="liquid-eyebrow">{c(isMath ? 'Math' : 'Reading & Writing')}</span>{completed && <span className="liquid-completed"><CheckCircle2 size={15} />{c('Completed')}</span>}</div>
-        <h2>{c('Practice Test')} {test.mockId}</h2><p>{c(test.badge)}</p>
+        <h2>{c('Practice Test')} {test.mockId}</h2><p>{c(test.badge)}</p>{satAvailabilityNote(test) && <p>{c(satAvailabilityNote(test)!)}</p>}
         <div className="liquid-test-card-meta"><span><Clock3 size={14} />{Math.round(test.totalDurationSeconds / 60)} {c('min')}</span><span>{test.questionCount} {c('questions')}</span><span>{test.modules.length} {c('modules')}</span></div>
         {attempt && <p>{c(completed ? 'Completed' : 'Saved progress')}: {answered}/{test.questionCount}</p>}
         <Link className="liquid-button primary" to={`/mock/sat/${test.mockId}?section=${section}`}>{c(completed ? 'Review' : attempt?.status === 'active' ? 'Continue' : 'Start test')}<ArrowRight size={16} /></Link>

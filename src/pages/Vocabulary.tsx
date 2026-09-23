@@ -236,8 +236,8 @@ export default function Vocabulary() {
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.packs} mocks</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.sections} modules</span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.words} words</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.sections}  <UiText text={"modules"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{satStats.words}  <UiText text={"words"} /> </span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open SAT page ->"} /> </p>
                 </button>
@@ -281,8 +281,7 @@ export default function Vocabulary() {
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">SAT · Reading · Listening · Article</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">
-                      {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')} saved
-                    </span>
+                      {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')}  <UiText text={"saved"} /> </span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open My Words ->"} /> </p>
                 </button>
@@ -442,16 +441,16 @@ export default function Vocabulary() {
                     <ArrowLeft className="h-3.5 w-3.5" />
                     {fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'}
                   </button>
-                  <span className="premium-top-chip">SAT Vocabulary Track</span>
+                  <span className="premium-top-chip"> <UiText text={"SAT Vocabulary Track"} /> </span>
                 </div>
-                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">SAT Vocabulary</h1>
+                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl"> <UiText text={"SAT Vocabulary"} /> </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                   Choose a SAT Full Mock and study 20 challenging words from each English module.
                 </p>
               </div>
               <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">SAT Stats</p>
-                <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} mocks / {satStats.sections} modules</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600"> <UiText text={"SAT Stats"} /> </p>
+                <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} mocks / {satStats.sections}  <UiText text={"modules"} /> </p>
                 <p className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
                   <Gem className="h-4 w-4" />
                   <CountUp value={satStats.words} />  <UiText text={"terms"} /> </p>

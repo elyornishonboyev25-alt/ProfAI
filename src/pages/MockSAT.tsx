@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -142,7 +143,7 @@ export default function MockSAT() {
               </span>
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
-              All {test.questionCount} questions from {test.subtitle}, with original graphs,
+               <UiText text={"All"} /> {test.questionCount} questions from {test.subtitle}, with original graphs,
               autosave, review tools, explanations, and {isSATTestComplete(test) ? 'SAT range scoring' : 'accuracy feedback'}.
             </p>
 
@@ -281,8 +282,7 @@ export default function MockSAT() {
                     onClick={() => void openRunner(existingAttempt!.mode, true)}
                     className="rounded-xl bg-amber-600 px-3 py-2 text-[11px] font-black text-white shadow-sm"
                   >
-                    Resume
-                  </button>
+                     <UiText text={"Resume"} /> </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -321,7 +321,7 @@ export default function MockSAT() {
               }`}
             >
               {selectedMode === 'exam' ? <Expand className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-              Start {selectedMode === 'exam' ? 'Exam' : 'Practice'} Mode
+               <UiText text={"Start"} /> {selectedMode === 'exam' ? 'Exam' : 'Practice'} Mode
               <ArrowRight className="h-4 w-4" />
             </button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[9px] font-bold text-slate-400">

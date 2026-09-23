@@ -1,7 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Bookmark, BookOpen, Search, SlidersHorizontal } from 'lucide-react'
-import { getUniversities, QS_EDITION, type University } from '@/data/admission'
+import { formatUniversityRank, getUniversities, QS_EDITION, type University } from '@/data/admission'
 import { estimateRequirements } from '@/data/admission/match'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
@@ -16,8 +16,8 @@ function UniversityCard({ university, saved, toggle, returnTo }: { university: U
   return <article className="glass-surface liquid-university-card">
     <UniversityCampusThumbnail university={university} />
     <div className="liquid-university-copy"><div className="liquid-university-top"><UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={40} rounded="10px" /><button className="liquid-icon-button" type="button" onClick={toggle} aria-pressed={saved} aria-label={c(saved ? 'Remove from shortlist' : 'Save university') + ': ' + university.name}><Bookmark size={19} fill={saved ? 'currentColor' : 'none'} /></button></div>
-      <h2><Link to={`/admission/universities/${university.slug}`} state={{ admissionReturnTo: returnTo }}>{university.name}</Link></h2><p>{university.city}, {university.country}</p>
-      <div className="liquid-university-meta"><span>{typeof university.rank === 'number' ? `QS ${QS_EDITION.match(/\d{4}/)?.[0] || ''} · #${university.rank}` : c('Ranking not listed')}</span><span>{budget ? budget + ' ' + c(cost?.period === 'month' ? '/ month' : '/ year') : c('Budget not published')}</span></div>
+      <h2><Link to={`/admission/universities/${university.slug}`} state={{ admissionReturnTo: returnTo }}>{university.name}</Link></h2><p>{university.city}, {c(university.country)}</p>
+      <div className="liquid-university-meta"><span>{typeof university.rank === 'number' ? `QS ${QS_EDITION.match(/\d{4}/)?.[0] || ''} · ${formatUniversityRank(university, '#')}` : c('Ranking not listed')}</span><span>{budget ? budget + ' ' + c(cost?.period === 'month' ? '/ month' : '/ year') : c('Budget not published')}</span></div>
       <Link to={`/admission/universities/${university.slug}`} state={{ admissionReturnTo: returnTo }} className="liquid-text-link">{c('View university')}<ArrowRight size={16} /></Link>
     </div>
   </article>

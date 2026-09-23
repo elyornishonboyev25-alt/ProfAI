@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useMemo, useRef, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Volume2 } from 'lucide-react'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
@@ -199,8 +200,7 @@ export default function VocabularyActivity() {
           <h3 className="mt-3 text-2xl font-black text-slate-900">{title}</h3>
           <p className="mt-2 text-sm text-slate-600">No words here yet. Select a word while studying and tap “Ask AI”, or add one manually.</p>
           <Link to={trackPath} state={navigationState} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Link>
+            <ArrowLeft className="h-4 w-4" />  <UiText text={"Back"} /> </Link>
         </div>
       </div>
     )
@@ -230,8 +230,7 @@ export default function VocabularyActivity() {
               {activity ? (
                 <Link to={trackPath} state={navigationState} className={backClass}>
                   <RotateCcw className="mr-1 h-4 w-4" />
-                  Track
-                </Link>
+                   <UiText text={"Track"} /> </Link>
               ) : null}
             </div>
             <h1 className="mt-4 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h1>
@@ -253,7 +252,7 @@ export default function VocabularyActivity() {
               </section>
               <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} />
               <section className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Vocabulary</p>
+                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400"> <UiText text={"Vocabulary"} /> </p>
                 <TermPreview entries={entries} />
               </section>
             </>

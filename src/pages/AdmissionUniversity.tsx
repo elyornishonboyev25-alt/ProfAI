@@ -4,7 +4,7 @@ import { ArrowLeft, Bookmark, Building2, ExternalLink, MapPin } from 'lucide-rea
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityRadar from '@/components/admission/UniversityRadar'
 import AdmissionScoreComparison from '@/components/admission/AdmissionScoreComparison'
-import { getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
+import { formatUniversityRank, getUniversityBySlug, presentIndicators, QS_EDITION } from '@/data/admission'
 import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
@@ -46,11 +46,11 @@ export default function AdmissionUniversity() {
       <div className="liquid-university-intro-copy">
         <div className="liquid-university-top"><UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={60} rounded="16px" priority /><button type="button" onClick={save} aria-pressed={saved} className="liquid-button secondary"><Bookmark size={17} fill={saved ? 'currentColor' : 'none'} />{c(saved ? 'Saved' : 'Save university')}</button></div>
         <header className="liquid-page-heading"><p className="liquid-eyebrow">{c('University profile')}</p><h1>{u.name}</h1><p><MapPin size={16} className="inline mr-2" />{u.city}, {c(u.country)}</p></header>
-        <div className="liquid-actions"><a className="liquid-button primary" href={u.website} target="_blank" rel="noopener noreferrer">{c('Visit official website')}<ExternalLink size={16} /></a><span className="liquid-catalog-note">{c('Founded')}: {u.founded} · {c(u.type)}</span></div>
+        <div className="liquid-actions">{u.website && <a className="liquid-button primary" href={u.website} target="_blank" rel="noopener noreferrer">{c('Visit official website')}<ExternalLink size={16} /></a>}<span className="liquid-catalog-note">{c('Founded')}: {u.founded ?? '—'} · {c(u.type)}</span></div>
       </div>
     </section>
     <nav className="liquid-section-tabs mt-7" aria-label={c('University profile')}><a href="#university-overview">{c('Overview')}</a><a href="#university-requirements">{c('Entry requirements')}</a>{cost && <a href="#university-costs">{c('Living costs')}</a>}<a href="#university-sources">{c('Sources')}</a></nav>
-    <section id="university-overview" className="glass-surface liquid-detail-section"><h2>{c('About the university')}</h2><p>{u.about}</p><p>{u.tagline}</p><dl className="liquid-fact-grid"><div><dt>{c('QS rank')}</dt><dd>{typeof u.rank === 'number' ? '#' + (u.rankTied ? '=' : '') + u.rank : '—'}</dd><small>{QS_EDITION}</small></div><div><dt>{c('Students')}</dt><dd>{number(students?.total)}</dd></div><div><dt>{c('International students')}</dt><dd>{number(students?.international)}</dd></div>{cost && <div><dt>{c('Living costs')}</dt><dd>{costRange}</dd><small>{period}</small></div>}</dl></section>
+    <section id="university-overview" className="glass-surface liquid-detail-section"><h2>{c('About the university')}</h2><p>{u.about}</p><p>{u.tagline}</p><dl className="liquid-fact-grid"><div><dt>{c('QS rank')}</dt><dd>{typeof u.rank === 'number' ? formatUniversityRank(u, '#') : '—'}</dd><small>{QS_EDITION}</small></div><div><dt>{c('Students')}</dt><dd>{number(students?.total)}</dd></div><div><dt>{c('International students')}</dt><dd>{number(students?.international)}</dd></div>{cost && <div><dt>{c('Living costs')}</dt><dd>{costRange}</dd><small>{period}</small></div>}</dl></section>
     <section id="university-requirements" className="glass-surface liquid-detail-section"><h2>{c('Entry requirements')}</h2><p>{c('Confirm requirements for your course and intake on the official university website.')}</p>
       {u.admission?.bachelor?.length ? <><p>{u.admission.note}</p><AdmissionScoreComparison university={u} scores={scores} /><div className="liquid-requirement-grid">{u.admission.bachelor.map((requirement, index) => <article key={requirement.label + index}><h3>{requirement.label}</h3><strong>{requirement.value}</strong>{requirement.detail && <p>{requirement.detail}</p>}{requirement.sourceUrl && <a className="liquid-text-link" href={requirement.sourceUrl} target="_blank" rel="noopener noreferrer">{c('Official source')}<ExternalLink size={13} /></a>}</article>)}</div>{u.admission.verifiedAt && <p className="liquid-catalog-note">{c('Last verified')}: {u.admission.verifiedAt}</p>}</> : <p className="liquid-empty">{c('Course-specific requirements are available on the official website.')}</p>}
     </section>
@@ -63,10 +63,10 @@ export default function AdmissionUniversity() {
         {u.rankHistory?.length ? <><h3>{c('QS rank over time')}</h3><div className="liquid-rank-history">{u.rankHistory.map(point => <div key={point.year}><span>{point.year}</span><strong>#{point.rank}</strong></div>)}</div></> : null}
         {students && <><h3>{c('Students & Staff')}</h3><dl className="liquid-fact-grid">{[
           ['Undergraduate', students.undergraduate], ['Postgraduate', students.postgraduate], ['Total faculty staff', students.facultyStaff],
-          ['International undergraduate', students.internationalUndergraduate], ['International postgraduate', students.internationalPostgraduate],
+          ['Domestic staff (%)', students.domesticStaffPct], ['International staff (%)', students.internationalStaffPct], ['International undergraduate', students.internationalUndergraduate], ['International postgraduate', students.internationalPostgraduate],
         ].map(([label, value]) => <div key={String(label)}><dt>{c(String(label))}</dt><dd>{number(typeof value === 'number' ? value : undefined)}</dd></div>)}</dl></>}
       </>}
     </details>
-    <section id="university-sources" className="glass-surface liquid-detail-section"><h2>{c('Official sources')}</h2><div className="liquid-source-list">{u.sources?.map(source => <a key={source.url} className="liquid-text-link" href={source.url} target="_blank" rel="noopener noreferrer">{source.label}<ExternalLink size={15} /></a>)}<a href={u.website} target="_blank" rel="noopener noreferrer" className="liquid-text-link">{c('University website')}<ExternalLink size={15} /></a></div><p className="liquid-catalog-note">{c('Confirm current requirements and costs on each university’s official website.')}</p></section>
+    <section id="university-sources" className="glass-surface liquid-detail-section"><h2>{c('Official sources')}</h2><div className="liquid-source-list">{u.sources?.map(source => <a key={source.url} className="liquid-text-link" href={source.url} target="_blank" rel="noopener noreferrer">{source.label}<ExternalLink size={15} /></a>)}{u.website && <a href={u.website} target="_blank" rel="noopener noreferrer" className="liquid-text-link">{c('University website')}<ExternalLink size={15} /></a>}</div><p className="liquid-catalog-note">{c('Confirm current requirements and costs on each university’s official website.')}</p></section>
   </main>
 }

@@ -3191,7 +3191,7 @@ export default function IELTSReadingInterface({
               const globalIdx = getCurrentSectionGlobalIndex(question.id)
               const isFlagged = flaggedQuestions.includes(globalIdx)
               return (
-                <div key={row.blank} id={`question-card-${question.id}`} className="flex items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-3">
+                <div key={row.blank} id={`question-card-${question.id}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-3">
                   <button
                     type="button"
                     onClick={() => handleFlagQuestion(globalIdx)}
@@ -3200,7 +3200,7 @@ export default function IELTSReadingInterface({
                   >
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
-                  <p className="text-[15px] leading-snug text-slate-900">
+                  <p className="min-w-0 flex-1 basis-[120px] text-[15px] leading-snug text-slate-900">
                     <span className="mr-2 font-black">{row.blank}.</span>{row.label}
                   </p>
                   {blankInput(row.blank, 'md')}

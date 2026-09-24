@@ -1,64 +1,483 @@
+import UiText from '@/components/common/UiText'
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Check, Target, Clock3, History } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useNavigate } from 'react-router-dom'
+import {
+  ArrowRight,
+  AlertCircle,
+  Award,
+  BarChart3,
+  Building2,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  Flame,
+  GraduationCap,
+  MapPin,
+  Mic2,
+  Route,
+  Settings,
+  RefreshCw,
+  Sparkles,
+  Trophy,
+} from 'lucide-react'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import NotificationsBell from '@/components/layout/NotificationsBell'
+import { Skeleton } from '@/components/common/Skeleton'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { apiClient } from '@/lib/apiClient'
+import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { DashboardOverview } from '@/types/platform'
-import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { loadLearningFocus } from '@/utils/learningFocus'
+import {
+  getDashboardExamScores,
+  getDashboardLearningMetrics,
+  getNextDashboardAchievement,
+  type DashboardLearningKey,
+} from '@/utils/dashboardMetrics'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
-import { useCopy } from '@/i18n/interface'
-import StudyObject from '@/components/visuals/StudyObject'
-import { formatDashboardDay, formatDashboardActivityDate } from '@/utils/dashboardDates'
+import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 
-const cache = new Map<string, DashboardOverview>()
-function emptyOverview(): DashboardOverview {
+const emptyWeek = Array.from({ length: 7 }, (_, index) => {
+  const date = new Date()
+  date.setHours(12, 0, 0, 0)
+  date.setDate(date.getDate() - (6 - index))
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
   return {
-    metrics: { totalTests: 0, averageScore: 0, weeklyStudySeconds: 0, currentRank: null, currentStreak: 0 },
-    weeklyProgress: Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(); date.setDate(date.getDate() - 6 + index)
-      return { date: `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`, label: '', testsCompleted: 0, questionsAnswered: 0, studyTimeSec: 0, active: false }
-    }),
-    recommendedTests: [], activityTimeline: [], miniLeaderboard: [],
+    date: `${year}-${month}-${day}`,
+    label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+    testsCompleted: 0,
+    questionsAnswered: 0,
+    studyTimeSec: 0,
+    active: false,
   }
+})
+
+const EMPTY_OVERVIEW: DashboardOverview = {
+  metrics: { totalTests: 0, averageScore: 0, weeklyStudySeconds: 0, currentRank: null, currentStreak: 0 },
+  weeklyProgress: emptyWeek,
+  recommendedTests: [],
+  activityTimeline: [],
+  miniLeaderboard: [],
 }
-export default function Dashboard() {
-  const { c, language } = useCopy()
-  const user = useAuthStore(s => s.user)
-  const profile = loadOnboardingProfile(user?.id)
-  const key = user?.id || 'guest'
-  const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(async () => {
-    const fresh = await apiClient.get<DashboardOverview>('/dashboard/overview', { auth: Boolean(user) })
-    cache.set(key, fresh); return fresh
-  }, [key])
-  const base = data || cache.get(key)
-  const overview = useMemo(() => user ? mergeLocalDashboardPerformance(base || emptyOverview(), user.id) : (base || emptyOverview()), [base, user])
-  const focus = loadLearningFocus(user?.id)
-  const exam = overview.targets?.targetExam || profile?.targetExam || 'IELTS'
-  const application = focus === 'APPLICATIONS'
-  const sat = focus === 'SAT' || (!focus && exam === 'SAT')
-  const explore = focus === 'EXPLORE'
-  const goal = application ? c('University Applications') : explore ? c('Choose a goal') : sat ? `SAT ${overview.targets?.targetSatScore || profile?.targetSatScore || ''}` : `IELTS ${overview.targets?.targetIeltsScore || profile?.targetIeltsScore || ''}`
-  const title = application ? 'Find your university' : explore ? 'Choose a goal' : sat ? 'Start your SAT practice' : 'Start your IELTS practice'
-  const destination = application ? '/admission/universities' : explore ? '/test-preparation' : sat ? '/sat' : '/ielts'
-  const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
-  const activities = overview.activityTimeline.slice(0, 3)
-  return <div className="workspace-page liquid-page liquid-home">
-    <header className="liquid-page-heading"><p className="liquid-eyebrow">{c('Home')}</p><h1>{c(overview.metrics.totalTests ? 'Welcome back,' : 'Welcome,')} {firstName}.</h1><p>{c('Your next step starts here.')}</p></header>
-    {error && <div className="liquid-inline-error" role="alert"><span>{c('Unable to refresh your activity.')}</span><button onClick={() => void refetch()}>{c('Try again')}</button></div>}
-    <div className="liquid-home-goal"><span className="liquid-goal-chip"><Target size={17} />{c('My goal')} <strong>{goal}</strong></span><Link to="/focus" className="liquid-text-link">{c('Edit goal')}<ArrowRight size={14} /></Link></div>
-    <div className="liquid-home-grid">
-      <section className="glass-surface liquid-focus-card"><div><p className="liquid-eyebrow">{c('Today’s focus')}</p><h2>{c(title)}</h2><p>{c(application ? 'Build a shortlist of places where you would like to study.' : 'Choose a skill and start with an exercise that fits your day.')}</p><Link to={destination} className="liquid-button primary">{c(application ? 'Explore universities' : explore ? 'Explore preparation' : 'Start practicing')}<ArrowRight size={18} /></Link></div><StudyObject kind={application ? 'globe' : sat ? 'calculator' : 'headphones'} /></section>
-      <section className="glass-surface liquid-week-card" aria-busy={loading}><h2>{c('This week')}</h2><div className="liquid-week-days">{overview.weeklyProgress.slice(-7).map(day => <div key={day.date}><span>{formatDashboardDay(day.date, language)}</span><i className={day.active ? 'active' : ''}>{day.active && <Check size={11} />}</i></div>)}</div><div className="liquid-week-stat"><span>{c('Study time')}</span><strong>{Math.round(overview.metrics.weeklyStudySeconds / 60)} {language === 'ru' ? 'мин' : 'min'}</strong></div><div className="liquid-week-stat"><span>{c('Completed practices')}</span><strong>{overview.weeklyProgress.reduce((sum, d) => sum + d.testsCompleted, 0)}</strong></div></section>
-    </div>
-    <section className="glass-surface liquid-activity"><header><h2>{c('Your recent activity')}</h2><Link to="/profile" className="liquid-text-link">{c('View all results')}<ArrowRight size={15} /></Link></header>
-      {loading && !base ? <p role="status" className="liquid-empty">{c('Loading your workspace')}</p> : activities.length ? activities.map(item => <div className="liquid-activity-row" key={item.id}><Clock3 size={18} /><div><strong>{item.title}</strong><small>{formatDashboardActivityDate(item.date, language)}</small></div></div>) : <div className="liquid-empty"><History size={23} className="mb-3" /><strong>{c('Your first result belongs here.')}</strong><p>{c('Complete a practice to begin building your progress history.')}</p></div>}
+
+const dashboardOverviewCache = new Map<string, DashboardOverview>()
+
+const learningCards = [
+  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
+  { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
+  { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap },
+  { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2 },
+  { key: 'vocabulary', title: 'Vocabulary', path: '/vocabulary', icon: Sparkles },
+] as const
+
+function bestAvailableScore(...scores: Array<number | null | undefined>) {
+  const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
+  return available.length ? Math.max(...available) : 0
+}
+
+function formatStudyTime(seconds: number) {
+  if (seconds > 3600) return `${Number((seconds / 3600).toFixed(2))}h`
+  if (seconds > 0 && seconds < 60) return '<1 min'
+  return `${Math.round(seconds / 60)} min`
+}
+
+function achievementProgressLabel(current: number, target: number, unit: 'count' | 'days' | 'minutes' | 'percent') {
+  if (unit === 'minutes') return `${(current / 60).toFixed(1)} / ${(target / 60).toFixed(0)}h`
+  if (unit === 'percent') return `${current}% / ${target}%`
+  if (unit === 'days') return `${current} / ${target} days`
+  return `${current} / ${target} complete`
+}
+
+function StatCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  note: string
+  icon: typeof Clock3
+}) {
+  return (
+    <article className="dashboard-stat-card group">
+      <span className="dashboard-stat-icon"><Icon className="h-[18px] w-[18px]" /></span>
+      <p className="dashboard-stat-label text-[13px] font-semibold leading-5 text-slate-600"><UiText text={label} /></p>
+      <p className={`dashboard-stat-value ${value === 'Unranked' ? 'dashboard-stat-value-long' : ''} font-black leading-none tracking-tight text-slate-950`}>{value}</p>
+      <p className="dashboard-stat-note text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400"><UiText text={note} /></p>
+    </article>
+  )
+}
+
+function JourneyPlanPreview({ plan, onOpen }: { plan: NonNullable<DashboardOverview['journeyPlan']>; onOpen: () => void }) {
+  const destinations = plan.answers.destinations?.slice(0, 2).join(' · ') || 'Destination not set'
+  const priorities = plan.result.priorities.slice(0, 3)
+  const scoreStyle = { background: `conic-gradient(#60a5fa ${plan.result.overallScore}%, rgba(255,255,255,.14) 0)` }
+
+  return (
+    <section className="relative mt-4 overflow-hidden rounded-[2rem] bg-slate-950 p-5 text-white shadow-[0_26px_72px_rgba(15,23,42,.22)] sm:p-7">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_16%,rgba(37,99,235,.55),transparent_30%),radial-gradient(circle_at_8%_100%,rgba(239,68,68,.25),transparent_34%)]" />
+      <div className="pointer-events-none absolute -right-14 -top-20 h-64 w-64 rounded-full border border-white/10" />
+      <div className="relative grid gap-6 xl:grid-cols-[1fr_minmax(28rem,.95fr)_auto] xl:items-center">
+        <div className="flex items-center gap-4">
+          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-[0_14px_42px_rgba(37,99,235,.28)]" style={scoreStyle}>
+            <div className="grid h-[76px] w-[76px] place-items-center rounded-full bg-slate-950 text-center"><div><b className="block text-2xl font-black leading-none">{plan.result.overallScore}</b><span className="mt-1 block text-[7px] font-black uppercase tracking-[.13em] text-blue-200">Readiness</span></div></div>
+          </div>
+          <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.18em] text-blue-200"> <UiText text={"Your university journey"} /> </p><h2 className="mt-1 text-xl font-black tracking-[-.035em] sm:text-2xl">{plan.result.readinessLabel}</h2><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-slate-300"><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><GraduationCap className="h-3.5 w-3.5 text-red-300" /> {plan.answers.intendedMajor || 'Major not set'}</span><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><MapPin className="h-3.5 w-3.5 text-blue-300" /> {destinations}</span></div></div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-3">
+          {priorities.map((priority, index) => <div key={priority.key} className="rounded-2xl border border-white/10 bg-white/[.07] p-3 backdrop-blur-xl"><span className="text-[8px] font-black uppercase tracking-[.15em] text-red-300">Next 0{index + 1}</span><p className="mt-1.5 text-[11px] font-black leading-4 text-white">{priority.title}</p></div>)}
+        </div>
+
+        <button type="button" onClick={onOpen} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-slate-950 shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50">Open my plan <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+      </div>
+      <div className="relative mt-5 flex items-start gap-2 border-t border-white/10 pt-4 text-[10px] font-semibold leading-5 text-slate-400"><Route className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-300" /><span>Your saved readiness priorities now stay with your ProfAI account and can be opened from any device.</span></div>
     </section>
-    {overview.journeyPlan?.result && <Link to="/journey-plan" className="glass-surface liquid-resource-row"><div><h3>{c('My journey plan')}</h3><p>{overview.journeyPlan.result.readinessLabel}</p></div><ArrowRight size={20} /></Link>}
-    <div className="liquid-exam-grid">
-      <Link to="/academic-skills" className="glass-surface liquid-resource-row"><div><h3>{c('Additional practice')}</h3><p>{c('Audio, articles, vocabulary and pronunciation.')}</p></div><ArrowRight size={20} /></Link>
-      <Link to="/admission" className="glass-surface liquid-resource-row"><div><h3>{c('Application guidance')}</h3><p>{c('Your saved universities and step-by-step lessons.')}</p></div><ArrowRight size={20} /></Link>
+  )
+}
+
+export default function Dashboard() {
+  const navigate = useNavigate()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const profile = loadOnboardingProfile(user?.id)
+  const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
+
+  const dashboardCacheKey = user?.id ?? 'guest'
+  const cachedOverview = dashboardOverviewCache.get(dashboardCacheKey) ?? null
+  const { data, loading, error, refetch } = useAsyncData<DashboardOverview>(
+    async () => {
+      const freshOverview = await apiClient.get<DashboardOverview>('/dashboard/overview', { auth: Boolean(user) })
+      dashboardOverviewCache.set(dashboardCacheKey, freshOverview)
+      return freshOverview
+    },
+    [user?.id],
+  )
+
+  const baseOverview = data ?? cachedOverview ?? EMPTY_OVERVIEW
+  const isInitialLoading = loading && !cachedOverview
+  const overview = useMemo(
+    () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
+    [baseOverview, user],
+  )
+  const localMetrics = useMemo(
+    () => user ? getDashboardLearningMetrics(user.id) : null,
+    [overview, user],
+  )
+  const measuredScores = useMemo(
+    () => user ? getDashboardExamScores(user.id) : { ielts: null, sat: null },
+    [overview, user],
+  )
+  const nextAchievement = useMemo(() => getNextDashboardAchievement(overview), [overview])
+  const targetExam = overview.targets?.targetExam ?? profile?.targetExam ?? 'IELTS'
+  const ieltsCurrent = bestAvailableScore(
+    measuredScores.ielts,
+    overview.targets?.currentIeltsScore,
+    profile?.currentIeltsScore,
+  )
+  const satCurrent = bestAvailableScore(
+    measuredScores.sat,
+    overview.targets?.currentSatScore,
+    profile?.currentSatScore,
+  )
+  const examTargets = [
+    ...(targetExam !== 'SAT'
+      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: overview.targets?.targetIeltsScore ?? profile?.targetIeltsScore ?? 7.5 }]
+      : []),
+    ...(targetExam !== 'IELTS'
+      ? [{ label: 'SAT' as const, current: satCurrent, target: overview.targets?.targetSatScore ?? profile?.targetSatScore ?? 1450 }]
+      : []),
+  ]
+  const targetProgress = Math.max(0, Math.min(100, Math.round(
+    examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
+  )))
+
+  const chartData = useMemo(
+    () => overview.weeklyProgress.map((day) => ({ ...day, activity: day.studyTimeSec ?? 0 })),
+    [overview.weeklyProgress],
+  )
+  const chartUsesHours = chartData.some((day) => day.activity > 3600)
+  const weeklyStudyTimeLabel = formatStudyTime(overview.metrics.weeklyStudySeconds)
+  const leaderboard = overview.miniLeaderboard.slice(0, 3)
+  const podium = [
+    { row: leaderboard[1], place: 2 },
+    { row: leaderboard[0], place: 1 },
+    { row: leaderboard[2], place: 3 },
+  ].filter((item): item is { row: NonNullable<typeof item.row>; place: number } => Boolean(item.row))
+  const currentRank = overview.metrics.currentRank
+    ?? overview.miniLeaderboard.find((row) => row.isCurrentUser)?.rank
+    ?? null
+
+  return (
+    <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
+      <div className="dashboard-main-shell mx-auto max-w-[98rem]">
+        {error ? (
+          <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> Dashboard data could not refresh. The values below may be out of date.</span>
+            <button type="button" onClick={() => void refetch()} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-black shadow-sm transition hover:bg-amber-100">
+              <RefreshCw className="h-3.5 w-3.5" />  <UiText text={"Try again"} /> </button>
+          </div>
+        ) : null}
+        <header className="dashboard-entrance-header flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="dashboard-avatar-ring">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 text-sm font-black text-blue-700">
+                <ProfileAvatar src={user?.avatarUrl} />
+              </div>
+              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700"> <UiText text={"Your learning dashboard"} /> </p>
+              <h1 className="truncate text-2xl font-black tracking-[-0.04em] text-[#101222] sm:text-4xl">
+                 <UiText text={"Welcome back,"} /> {firstName}
+              </h1>
+              <p className="mt-1 text-xs font-medium text-slate-500"> <UiText text={"Small steps today. Big results tomorrow."} /> </p>
+            </div>
+            <span className="dashboard-streak hidden sm:inline-flex" title="Current streak">
+              <Flame className="h-5 w-5 fill-current" />
+              <strong>{overview.metrics.currentStreak}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => navigate('/learning-center')} aria-label="Open Learning Center" title="Learning Center" className="dashboard-icon-button">
+              <Building2 className="h-5 w-5" />
+            </button>
+            <NotificationsBell />
+            <button type="button" onClick={() => navigate('/account')} aria-label="Profile settings" className="dashboard-icon-button">
+              <Settings className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
+          <article className="dashboard-target-card dashboard-card-sheen">
+            <span className="dashboard-target-ribbon" aria-hidden="true" />
+            <span className="dashboard-target-orb" aria-hidden="true" />
+            <div className="relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70"> <UiText text={"Your target"} /> </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {examTargets.map((exam) => (
+                  <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
+                    {exam.label} <span className="text-white/75">{exam.target}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="dashboard-progress-orbit">
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="41"
+                  fill="none"
+                  stroke="#fff"
+                  strokeLinecap="round"
+                  strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 41}`}
+                  strokeDashoffset={2 * Math.PI * 41 * (1 - targetProgress / 100)}
+                />
+              </svg>
+              <div className="relative text-center">
+                <p className="text-4xl font-black tracking-[-0.05em]">{targetProgress}%</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/70"> <UiText text={"on track"} /> </p>
+              </div>
+            </div>
+
+            <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {examTargets.map((exam) => (
+                <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
+                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
+                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
+              className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-blue-950 shadow-lg transition hover:-translate-y-0.5"
+            >
+               <UiText text={"Continue preparing"} /> <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </article>
+
+          <div className="min-w-0 space-y-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
+              <StatCard
+                label="Practices completed"
+                value={String(overview.metrics.totalTests)}
+                note={`${localMetrics?.completedMocks ?? 0} full mocks`}
+                icon={CheckCircle2}
+              />
+              <StatCard label="Average score" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Scored practice" icon={BarChart3} />
+              <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
+            </div>
+
+            <article className="dashboard-glass-card p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600"> <UiText text={"Weekly activity"} /> </p>
+                  <h2 className="mt-1 text-lg font-black text-slate-950"> <UiText text={"Your study rhythm"} /> </h2>
+                </div>
+                <button type="button" onClick={() => navigate('/profile')} className="inline-flex items-center gap-1 text-xs font-black text-red-600 hover:text-red-700">
+                   <UiText text={"Full performance"} /> <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="mt-3 h-52">
+                {isInitialLoading ? (
+                  <Skeleton className="h-full w-full rounded-2xl" />
+                ) : (
+                  <ResponsiveContainer>
+                    <BarChart data={chartData} margin={{ top: 8, right: 2, left: -24, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#1e3a8a" />
+                          <stop offset="55%" stopColor="#2563eb" />
+                          <stop offset="100%" stopColor="#60a5fa" />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 10 }}
+                        tickFormatter={(value: number) => `${Number((value / (chartUsesHours ? 3600 : 60)).toFixed(2))}${chartUsesHours ? 'h' : 'm'}`}
+                      />
+                      <Tooltip
+                        formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}
+                        contentStyle={{ border: '1px solid #bfdbfe', borderRadius: 14, fontSize: 12 }}
+                        cursor={{ fill: 'rgba(59,130,246,.06)' }}
+                      />
+                      <Bar
+                        dataKey="activity"
+                        fill="url(#dashboardBars)"
+                        radius={[10, 10, 3, 3]}
+                        maxBarSize={42}
+                        isAnimationActive={false}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </article>
+          </div>
+
+          <div className="space-y-4">
+            <article
+              className="dashboard-glass-card dashboard-leaderboard-preview cursor-pointer p-5"
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate('/leaderboard')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate('/leaderboard')
+                }
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Leaderboard"} /> </p>
+                  <h2 className="mt-1 text-lg font-black text-slate-950"> <UiText text={"Top learners"} /> </h2>
+                </div>
+                <span className="flex items-center gap-1 text-[10px] font-black text-blue-700">
+                   <UiText text={"View all"} /> <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+
+              <div className="mt-5 flex items-end justify-center gap-2">
+                {podium.map(({ row, place }) => {
+                  return (
+                    <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
+                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} className="rounded-full" /></div>
+                      <p className="mt-2 text-[11px] font-black text-slate-800">{place}{place === 1 ? 'st' : place === 2 ? 'nd' : 'rd'}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {leaderboard.length ? (
+                <div className="mt-5 divide-y divide-slate-200/75">
+                  {leaderboard.map((row) => (
+                    <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
+                      <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-slate-200"><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} /></span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
+                      <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')} XP</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-5 rounded-xl bg-slate-50 px-3 py-4 text-center text-xs font-semibold text-slate-500">
+                   <UiText text={"Complete a scored practice to join the board."} /> </p>
+              )}
+            </article>
+
+            <article className="dashboard-glass-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="dashboard-medal-icon"><Award className="h-5 w-5" /></span>
+                <div>
+                  <p className="text-sm font-black text-slate-900"> <UiText text={"Next achievement"} /> </p>
+                  <p className="text-[10px] font-semibold text-slate-500">{nextAchievement.description}</p>
+                </div>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
+                <div
+                  style={{ transform: `scaleX(${nextAchievement.progress / 100})` }}
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400"
+                />
+              </div>
+              <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
+                {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
+              </p>
+            </article>
+          </div>
+        </section>
+
+        {overview.journeyPlan?.result ? <JourneyPlanPreview plan={overview.journeyPlan} onOpen={() => navigate('/journey-plan')} /> : null}
+
+        <section className="dashboard-entrance-learning dashboard-glass-card mt-4 p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600"> <UiText text={"Continue learning"} /> </p>
+              <h2 className="mt-1 text-xl font-black text-slate-950"> <UiText text={"Pick up where you left off"} /> </h2>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {learningCards.map((card) => {
+              const Icon = card.icon
+              const metric = localMetrics?.learning[card.key as DashboardLearningKey] ?? {
+                progress: 0,
+                completed: 0,
+                total: 1,
+                detail: 'No activity yet',
+              }
+              return (
+                <button key={card.title} type="button" onClick={() => navigate(card.path)} className="dashboard-learning-card group">
+                  <div className="flex items-start justify-between">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700"><Icon className="h-4 w-4" /></span>
+                    <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
+                  </div>
+                  <h3 className="mt-3 text-sm font-black text-slate-900"><UiText text={card.title} /></h3>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
+                    <div className="h-full rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400" style={{ width: `${metric.progress}%` }} />
+                  </div>
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
+                     <UiText text={"Continue"} /> <ArrowRight className="h-3 w-3" />
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      </div>
     </div>
-  </div>
+  )
 }

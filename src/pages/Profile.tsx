@@ -1,5 +1,4 @@
 import UiText from '@/components/common/UiText'
-import { useCopy } from '@/i18n/interface'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -221,20 +220,18 @@ function safeCount(value: number) {
 }
 
 function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill in.' }: { label: string; hint?: string }) {
-  const { c } = useCopy()
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
         <Activity className="h-5 w-5" />
       </span>
-      <p className="mt-2 text-sm font-bold text-slate-600">{c(label)}</p>
-      <p className="text-[11px] text-slate-400">{c(hint)}</p>
+      <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
+      <p className="text-[11px] text-slate-400">{hint}</p>
     </div>
   )
 }
 
 export default function Profile() {
-  const { c, language } = useCopy()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const isGuestPreview = !user
@@ -319,10 +316,7 @@ export default function Profile() {
   return (
     <div className="performance-studio workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative mx-auto w-full max-w-7xl">
-      <header className="liquid-page-heading"><p className="liquid-eyebrow">{c('Your progress')}</p><h1>{c('My Results')}</h1><p>{c('Review your practice history and choose what to work on next.')}</p></header>
-      {error && <div className="liquid-inline-error" role="alert"><span>{c('Unable to refresh your activity.')}</span><button onClick={() => void refetch()}>{c('Try again')}</button></div>}
-      <div className="liquid-actions mb-6"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}>{c('Start practicing')}<ArrowUpRight size={17} /></button><button className="liquid-text-link" onClick={() => navigate('/analyze-mistakes')}>{c('Review mistakes')}</button></div>
-      <details className="liquid-results-details"><summary>{c('Skills, achievements & detailed analytics')}</summary>
+      {error && <div className="liquid-inline-error mb-5" role="alert"><span><UiText text="Unable to refresh your activity." /></span><button onClick={() => void refetch()}><UiText text="Try again" /></button></div>}
       <Reveal>
         <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
 
@@ -339,11 +333,12 @@ export default function Profile() {
                     <Trophy className="h-3.5 w-3.5" />
                      <UiText text={"Performance Studio"} /> </span>
                 </div>
-                <h2 className="premium-section-title mt-4">
-                   <UiText text={"Welcome back,"} /> <span className="arena-title-accent-red">{data.profile.fullName.split(' ')[0]}</span>
-                </h2>
+                <h1 className="premium-section-title mt-4">
+                   <UiText text={"Your learning"} /> <span className="arena-title-accent-red"> <UiText text={"progress."} /> </span>
+                </h1>
                 <p className="premium-section-subtitle">
                    <UiText text={"Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher."} /> </p>
+                <div className="results-actions"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}> <UiText text={"Start practicing"} /> <ArrowUpRight size={16} /></button><button className="liquid-button secondary" onClick={() => navigate('/analyze-mistakes')}> <UiText text={"Review mistakes"} /> <BrainCircuit size={16} /></button></div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5">
                     <Award className="h-4 w-4 text-amber-600" />
@@ -451,7 +446,7 @@ export default function Profile() {
                   <article className="performance-metric-card group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/80 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
                     <div className="flex items-center justify-between">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{c(card.label)}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
                       <ArenaMetricMark icon={Icon} tone={card.tone} />
                     </div>
                     <p className="relative mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
@@ -735,7 +730,6 @@ export default function Profile() {
         </Reveal>
       </section>
 
-      </details>
       {/* ── Recent attempts ─────────────────────────────────────── */}
       <Reveal className="mt-6">
         <article className="surface-card relative overflow-hidden p-6">
@@ -768,7 +762,7 @@ export default function Profile() {
                         {attempt.test.category} · {attempt.test.difficulty}
                       </span>
                       <span className="text-[11px] font-bold text-slate-700">
-                        {safePercent(attempt.percentage).toFixed(1)}% ({safePercent(attempt.finalScore).toFixed(1)}%)
+                        {safePercent(attempt.percentage).toFixed(1)}%
                       </span>
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-blue-100/60">
@@ -778,7 +772,7 @@ export default function Profile() {
                       />
                     </div>
                     <p className="mt-2 text-[10px] font-medium text-slate-400">
-                      {new Date(attempt.completedAt).toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', {
+                      {new Date(attempt.completedAt).toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -798,7 +792,7 @@ export default function Profile() {
               <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete a test to start earning XP and build your history."} /> </p>
               <button
                 type="button"
-                onClick={() => navigate('/test-preparation')}
+                onClick={() => navigate('/dashboard')}
                 className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]"
               >
                  <UiText text={"Browse tests"} /> <ArrowUpRight className="h-4 w-4" />

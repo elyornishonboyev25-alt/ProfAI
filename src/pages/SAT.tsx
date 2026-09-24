@@ -1,43 +1,454 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, BookOpen, Check, ChevronDown, FileSearch } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
-import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { isSATTestComplete, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import UiText from '@/components/common/UiText'
+import { useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpenText,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  FileSearch,
+  Flag,
+  LibraryBig,
+  Lock,
+  Sparkles,
+} from 'lucide-react'
+import { useAuthStore, type AuthState } from '@/store/authStore'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
+import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
-import { scoreSATModules } from '@/features/sat/practiceTest4'
-import { useCopy } from '@/i18n/interface'
-import StudyObject from '@/components/visuals/StudyObject'
+import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
+import { ARENA_GLASS_SURFACE, ArenaBackdrop, StudyIllustration } from '@/components/visuals/ArenaVisuals'
+
+type AttemptWithTest = {
+  attempt: SATAttempt
+  test: SATTestDefinition
+}
+
+const glassCard = ARENA_GLASS_SURFACE
+
+function ProgressRing({ value, size = 126 }: { value: number; size?: number }) {
+  const radius = 45
+  const circumference = 2 * Math.PI * radius
+  const progress = circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} aria-label={`${value}% complete`}>
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 110 110" aria-hidden="true">
+        <defs>
+          <linearGradient id={`sat-ring-${value}-${size}`} x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ef353d" />
+            <stop offset="100%" stopColor="#9f2028" />
+          </linearGradient>
+        </defs>
+        <circle cx="55" cy="55" r={radius} fill="none" stroke="rgba(148,163,184,.24)" strokeWidth="11" />
+        <circle
+          cx="55"
+          cy="55"
+          r={radius}
+          fill="none"
+          stroke={`url(#sat-ring-${value}-${size})`}
+          strokeLinecap="round"
+          strokeWidth="11"
+          strokeDasharray={circumference}
+          strokeDashoffset={progress}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[1.75rem] font-extrabold tracking-[-0.05em] text-[#141521] sm:text-[2rem]">
+        {value}%
+      </span>
+    </div>
+  )
+}
+
+function SubjectCard({
+  title,
+  topics,
+  progress,
+  subject,
+  onStart,
+}: {
+  title: string
+  topics: string[]
+  progress: number
+  subject: 'math' | 'reading'
+  onStart: () => void
+}) {
+  return (
+    <motion.article whileHover={{ y: -4 }} className={`${glassCard} min-h-[24rem] p-6 sm:p-7`}>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(116deg,rgba(255,255,255,.62)_0%,rgba(255,255,255,.08)_47%,rgba(205,220,242,.2)_48%,rgba(255,255,255,.05)_100%)]" />
+      <div className="relative flex h-full flex-col">
+        <h2 className="text-[1.7rem] font-extrabold leading-tight tracking-[-0.045em] text-[#12131f] sm:text-[2rem]">{title}</h2>
+        <div className="mt-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-extrabold text-[#1b1c27]">Topics</h3>
+            <ul className="mt-1 space-y-1 text-base font-medium leading-6 text-[#292a35] sm:text-lg">
+              {topics.map((topic) => <li key={topic}>{topic}</li>)}
+            </ul>
+          </div>
+          <ProgressRing value={progress} />
+        </div>
+        <div className="mt-auto flex items-end justify-between gap-4 pt-3">
+          <StudyIllustration variant={subject === 'math' ? 'sat-math' : 'sat-reading'} compact />
+          <button
+            type="button"
+            onClick={onStart}
+            className="group mb-1 inline-flex min-w-[9.5rem] items-center justify-center gap-2 rounded-full border border-red-300/70 bg-gradient-to-b from-[#ee4248] to-[#d5222c] px-7 py-3 text-lg font-extrabold text-white shadow-[0_12px_24px_rgba(220,38,38,.3),inset_0_2px_3px_rgba(255,255,255,.55)] hover:-translate-y-0.5 hover:brightness-105"
+          >
+             <UiText text={"Start"} /> <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  )
+}
+
+function ScoreChart({ scores }: { scores: number[] }) {
+  const values = scores.slice(-5)
+
+  if (!values.length) {
+    return (
+      <div className="mt-4 flex h-[13.5rem] flex-col items-center justify-center rounded-[1.4rem] border border-dashed border-slate-300/80 bg-white/25 px-5 text-center">
+        <Flag className="h-7 w-7 text-slate-400" />
+        <p className="mt-3 text-sm font-extrabold text-slate-700"> <UiText text={"No completed test yet"} /> </p>
+        <p className="mt-1 max-w-[15rem] text-[11px] font-medium leading-5 text-slate-500"> <UiText text={"Your verified SAT scores will appear here after you submit a full mock."} /> </p>
+      </div>
+    )
+  }
+
+  const points = values.map((score, index) => {
+    const x = values.length === 1 ? 164 : 34 + (index / (values.length - 1)) * 256
+    const y = 162 - ((score - 400) / 1200) * 132
+    return { x, y: Math.min(162, Math.max(30, y)), score }
+  })
+  const line = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const area = `${line} L ${points[points.length - 1]?.x ?? 290} 174 L ${points[0]?.x ?? 34} 174 Z`
+
+  return (
+    <svg className="mt-4 h-[13.5rem] w-full" viewBox="0 0 310 190" role="img" aria-label={`SAT score trend: ${values.join(', ')}`}>
+      <defs>
+        <linearGradient id="score-area" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#ef353d" stopOpacity=".28" />
+          <stop offset="100%" stopColor="#ef353d" stopOpacity=".02" />
+        </linearGradient>
+      </defs>
+      {[1600, 1200, 800, 400].map((score) => {
+        const y = 162 - ((score - 400) / 1200) * 132
+        return (
+          <g key={score}>
+            <line x1="34" y1={y} x2="300" y2={y} stroke="rgba(148,163,184,.2)" strokeWidth="1" />
+            <text x="0" y={y + 3} fill="#7b8494" fontSize="9" fontWeight="700">{score}</text>
+          </g>
+        )
+      })}
+      {values.length > 1 ? <path d={area} fill="url(#score-area)" /> : null}
+      {values.length > 1 ? <path d={line} fill="none" stroke="#d9343d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" /> : null}
+      {points.map((point, index) => (
+        <g key={`${point.x}-${point.y}`}>
+          <circle cx={point.x} cy={point.y} r="9" fill="rgba(255,255,255,.65)" />
+          <circle cx={point.x} cy={point.y} r="5.5" fill={index === points.length - 1 ? '#ef353d' : '#b43038'} />
+          <text x={point.x} y={Math.max(17, point.y - 13)} textAnchor="middle" fill="#991b1b" fontSize="10" fontWeight="800">{point.score}</text>
+          <text x={point.x} y="187" textAnchor="middle" fill="#7b8494" fontSize="8" fontWeight="700">Test {scores.length - values.length + index + 1}</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
 
 export default function SAT() {
-  const { c } = useCopy()
-  const user = useAuthStore(s => s.user)
+  const navigate = useNavigate()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const { minimalMotion } = useMotionPreferences()
+  const [showMockCatalog, setShowMockCatalog] = useState(false)
+  const mockCatalogRef = useRef<HTMLElement>(null)
   const profile = loadOnboardingProfile(user?.id)
-  const [catalogOpen,setCatalogOpen] = useState(false)
-  const tests = useMemo(()=>Object.values(SAT_TEST_CATALOG).sort((a,b)=>a.mockId-b.mockId),[])
-  const attempts = useMemo(()=>tests.map(test=>({test,attempt:loadSATAttempt(test.id)})).filter(item=>item.attempt).sort((a,b)=>b.attempt!.updatedAt-a.attempt!.updatedAt),[tests,user?.id])
-  const active = attempts.find(item=>item.attempt?.status==='active')
-  const completed = useMemo(() => {
-    const history = loadSATAttemptHistory().filter(entry => entry.attempt.status === 'submitted').sort((a,b) => a.savedAt - b.savedAt)
-    return tests.flatMap(test => {
-      const attempt = history.find(entry => entry.attempt.testId === test.id)?.attempt
-        ?? attempts.find(item => item.test.id === test.id && item.attempt?.status === 'submitted')?.attempt
-      return attempt ? [{ test, attempt }] : []
+
+  const attempts = useMemo<AttemptWithTest[]>(() => (
+    Object.values(SAT_TEST_CATALOG)
+      .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
+      .filter((item): item is AttemptWithTest => Boolean(item.attempt))
+      .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
+  ), [])
+  const sectionAttempts = useMemo<AttemptWithTest[]>(() => (
+    Object.values(SAT_TEST_CATALOG)
+      .flatMap((test) => (['math', 'reading-writing'] as const).map((section) => getSATSectionTest(test.mockId, section)))
+      .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
+      .filter((item): item is AttemptWithTest => Boolean(item.attempt))
+  ), [])
+
+  const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
+  const firstCompletedFullAttempts = useMemo(() => {
+    const fullTestsById = new Map(Object.values(SAT_TEST_CATALOG).map((test) => [test.id, test]))
+    const firstCompletedAttemptByTest = new Map<string, AttemptWithTest>()
+
+    loadSATAttemptHistory()
+      .filter(({ attempt }) => attempt.status === 'submitted' && fullTestsById.has(attempt.testId))
+      .sort((a, b) => a.savedAt - b.savedAt)
+      .forEach(({ attempt }) => {
+        if (!firstCompletedAttemptByTest.has(attempt.testId)) {
+          firstCompletedAttemptByTest.set(attempt.testId, {
+            attempt,
+            test: fullTestsById.get(attempt.testId)!,
+          })
+        }
+      })
+
+    return [...firstCompletedAttemptByTest.values()]
+      .sort((a, b) => (a.attempt.submittedAt ?? a.attempt.updatedAt) - (b.attempt.submittedAt ?? b.attempt.updatedAt))
+  }, [])
+  const completedTestIds = new Set(firstCompletedFullAttempts.map(({ test }) => test.id))
+  const scoreHistory = firstCompletedFullAttempts.filter(({ test }) => isSATTestComplete(test)).map(({ attempt, test }) => (
+    scoreSATModules(test.modules, attempt.answers).midpoint
+  ))
+  const bestScore = scoreHistory.length ? Math.max(...scoreHistory) : (profile?.currentSatScore ?? 0)
+  const targetScore = profile?.targetSatScore ?? 1400
+  const targetProgress = Math.min(100, Math.max(0, Math.round((bestScore / targetScore) * 100)))
+  const availableTests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
+  const mockSlots = Array.from({ length: Math.max(30, availableTests.length) }, (_, index) => ({
+    displayNumber: index + 1,
+    test: availableTests[index],
+  }))
+
+  const answeredBySection = (section: 'math' | 'reading-writing') => {
+    const latest = [...attempts, ...sectionAttempts]
+      .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
+      .find(({ test }) => test.modules.some((module) => module.section === section))
+    if (!latest) return 0
+    const questions = latest.test.modules.flatMap((module) => module.questions).filter((question) => question.section === section)
+    const answered = questions.filter((question) => latest.attempt.answers[question.id]?.trim()).length
+    return Math.round((answered / Math.max(1, questions.length)) * 100)
+  }
+
+  const activityLog = loadActivityLog(user?.id)
+  const trackedStudyMinutes = Object.values(activityLog).reduce((total, day) => (
+    total + (day['sat-math'] ?? 0) + (day['sat-rw'] ?? 0) + (day.mock ?? 0)
+  ), 0)
+  const savedAttemptMinutes = [...attempts, ...sectionAttempts].reduce((total, { attempt, test }) => {
+    const endedAt = attempt.submittedAt ?? attempt.terminatedAt ?? attempt.updatedAt
+    const elapsedMinutes = Math.floor(Math.max(0, endedAt - attempt.startedAt) / 60_000)
+    return total + Math.min(elapsedMinutes, Math.ceil(test.totalDurationSeconds / 60))
+  }, 0)
+  const studyMinutes = Math.max(trackedStudyMinutes, savedAttemptMinutes)
+  const studyHours = studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`
+  const recentProgress = activeAttempt
+    ? Math.round((Object.keys(activeAttempt.attempt.answers).length / activeAttempt.test.questionCount) * 100)
+    : completedTestIds.size ? 100 : 0
+
+  const toggleMockCatalog = () => {
+    if (showMockCatalog) {
+      setShowMockCatalog(false)
+      return
+    }
+
+    setShowMockCatalog(true)
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        mockCatalogRef.current?.scrollIntoView({
+          behavior: minimalMotion ? 'auto' : 'smooth',
+          block: 'start',
+        })
+      })
     })
-  }, [tests, attempts])
-  const scores = completed.filter(item => isSATTestComplete(item.test)).map(item=>scoreSATModules(item.test.modules,item.attempt.answers).midpoint)
-  const best = scores.length ? Math.max(...scores) : null
-  return <div className="workspace-page liquid-page">
-    <header className="liquid-page-heading liquid-heading-with-tabs"><div><Link className="liquid-text-link" to="/test-preparation">{c('Preparation')}</Link><h1>{c('SAT preparation')}</h1><p>{c('Build confidence in Math and Reading & Writing.')}</p></div><div className="glass-control liquid-track-tabs"><Link to="/ielts">IELTS</Link><Link to="/sat" aria-current="page">SAT</Link></div></header>
-    {active && <Link className="glass-surface liquid-resource-row mb-6" to={`/mock/sat/${active.test.mockId}`}><div><p className="liquid-eyebrow">{c('Continue test')}</p><h3>{active.test.title}</h3></div><ArrowRight size={20} /></Link>}
-    <div className="liquid-skill-grid">
-      <Link to="/sat/math" className="glass-surface liquid-skill-card"><div><p className="liquid-eyebrow">SAT</p><h2>{c('Math')}</h2><p>{c('Algebra, advanced math and problem solving.')}</p><span className="liquid-text-link">{c('Open tests')}<ArrowRight size={17} /></span></div><StudyObject kind="calculator" /></Link>
-      <Link to="/sat/reading-writing" className="glass-surface liquid-skill-card"><div><p className="liquid-eyebrow">SAT</p><h2>{c('Reading & Writing')}</h2><p>{c('Evidence, grammar and clear expression.')}</p><span className="liquid-text-link">{c('Open tests')}<ArrowRight size={17} /></span></div><StudyObject kind="book" /></Link>
+  }
+
+  return (
+    <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
+      <ArenaBackdrop />
+      <div className="relative z-10 mx-auto max-w-[112rem]">
+        <button
+          type="button"
+          onClick={() => navigate('/test-preparation')}
+          className="route-back-button"
+        >
+          <ArrowLeft className="h-4 w-4" />  <UiText text={"Test Preparation"} /> </button>
+
+        <motion.header
+          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/82 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-red-600">
+            <Sparkles className="h-3 w-3" /> Digital SAT command center
+          </div>
+          <h1 className="mt-3 text-5xl font-extrabold tracking-[-0.06em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]"> <UiText text={"SAT Arena"} /> </h1>
+          <p className="mx-auto mt-3 max-w-3xl text-base font-medium tracking-[-0.025em] text-[#262733] sm:text-xl lg:text-[2rem]">
+            Math + Reading &amp; Writing — your path to {targetScore}+
+          </p>
+        </motion.header>
+
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.54fr)]">
+          <SubjectCard
+            title="SAT Math"
+            topics={['Algebra', 'Problem Solving', 'Advanced Math']}
+            progress={answeredBySection('math')}
+            subject="math"
+            onStart={() => navigate('/sat/math')}
+          />
+          <SubjectCard
+            title="SAT Reading & Writing"
+            topics={['Evidence', 'Grammar', 'Revision']}
+            progress={answeredBySection('reading-writing')}
+            subject="reading"
+            onStart={() => navigate('/sat/reading-writing')}
+          />
+
+          <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
+            <article className={`${glassCard} p-6 sm:p-7`}>
+              <h2 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.04em] text-[#151621]"> <UiText text={"Continue where"} /> <br className="hidden xl:block" />  <UiText text={"you left off"} /> </h2>
+              <div className="mt-5 rounded-[1.55rem] border border-white/90 bg-white/42 p-5 shadow-[0_12px_30px_rgba(55,65,100,.08),inset_0_1px_0_white]">
+                <p className="text-sm font-semibold text-slate-600">{activeAttempt ? 'Recent lesson' : 'Recommended next'}</p>
+                <h3 className="mt-1 text-base font-extrabold leading-snug text-[#22232e]">
+                  {activeAttempt ? activeAttempt.test.title : availableTests[0]?.title ?? 'Digital SAT Practice'}
+                </h3>
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-300/70">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#9f2028] to-[#ef353d]" style={{ width: `${Math.max(10, recentProgress)}%` }} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/mock/sat/${activeAttempt?.test.mockId ?? availableTests[0]?.mockId ?? 1}`)}
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-red-700 hover:text-red-500"
+                >
+                  {activeAttempt ? 'Continue test' : 'Start practice'} <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </article>
+
+            <article className={`${glassCard} p-6 sm:p-7`}>
+              <h2 className="text-[1.65rem] font-extrabold tracking-[-0.045em] text-[#151621]"> <UiText text={"Score-trend chart"} /> </h2>
+              <ScoreChart scores={scoreHistory} />
+              {scoreHistory.length ? (
+                <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>{scoreHistory.length} completed {scoreHistory.length === 1 ? 'test' : 'tests'}</span><span>Latest: {scoreHistory[scoreHistory.length - 1]}</span>
+                </div>
+              ) : null}
+            </article>
+          </aside>
+
+          <article className={`${glassCard} flex min-h-[15rem] items-center justify-between gap-4 p-6 sm:p-7`}>
+            <div>
+              <p className="text-xl font-extrabold tracking-[-0.035em] text-[#191a25]"> <UiText text={"Target score"} /> </p>
+              <p className="mt-3 text-5xl font-extrabold tracking-[-0.065em] text-[#11121d] sm:text-6xl">{targetScore}+</p>
+              <p className="mt-3 text-xs font-bold text-slate-500"> <UiText text={"Best score:"} /> {bestScore || '—'}</p>
+            </div>
+            <ProgressRing value={targetProgress} size={134} />
+          </article>
+
+          <div className="grid min-h-[15rem] grid-cols-3 gap-4">
+            {[
+              { label: 'Practice tests', value: `${completedTestIds.size}/${mockSlots.length}`, icon: Check },
+              { label: 'Best score', value: bestScore || '—', icon: Flag },
+              { label: 'Study hours', value: studyHours, icon: Clock3 },
+            ].map(({ label, value, icon: Icon }) => (
+              <article key={label} className={`${glassCard} flex flex-col justify-center p-4 sm:p-5`}>
+                <Icon className="mb-5 h-5 w-5 text-red-500" />
+                <p className="text-xs font-semibold leading-5 text-[#343540] sm:text-sm">{label}:</p>
+                <p className="mt-2 text-2xl font-extrabold tracking-[-0.05em] text-[#151621] sm:text-3xl lg:text-[2.15rem]">{value}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_auto]">
+          <article className={`${glassCard} p-6 sm:p-7`}>
+            <button type="button" onClick={toggleMockCatalog} className="flex w-full flex-col gap-5 text-left sm:flex-row sm:items-center sm:justify-between" aria-expanded={showMockCatalog} aria-controls="sat-mock-catalog">
+              <span className="block">
+                <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-4 w-4" /><span className="text-[10px] font-extrabold uppercase tracking-[0.16em]"> <UiText text={"Available practice tests"} /> </span></span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-[-0.045em] text-[#151621]"> <UiText text={"Digital SAT mocks"} /> </span>
+                <span className="mt-1 block text-xs font-medium text-slate-500">Click to browse all {mockSlots.length} Reading &amp; Writing + Math simulations.</span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-[#171823] px-5 py-3 text-xs font-extrabold text-white shadow-lg sm:self-auto">
+                 <UiText text={"View"} /> {mockSlots.length}  <UiText text={"tests"} /> <ChevronDown className={`h-4 w-4 transition-transform ${showMockCatalog ? 'rotate-180' : ''}`} />
+              </span>
+            </button>
+          </article>
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[24rem]">
+            <button type="button" onClick={() => navigate('/sat/mistakes')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+              <FileSearch className="h-6 w-6 text-red-500" />
+              <span className="mt-4 block text-sm font-extrabold text-[#171823]"> <UiText text={"Mistake lab"} /> </span>
+              <span className="mt-1 block text-[11px] font-medium text-slate-500"> <UiText text={"Review weak domains"} /> </span>
+            </button>
+            <button type="button" onClick={() => navigate('/vocabulary/sat', { state: { from: '/sat' } })} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+              <BookOpenText className="h-6 w-6 text-red-500" />
+              <span className="mt-4 block text-sm font-extrabold text-[#171823]"> <UiText text={"Vocabulary"} /> </span>
+              <span className="mt-1 block text-[11px] font-medium text-slate-500">{availableTests.length * 40} SAT words</span>
+            </button>
+          </div>
+
+          <AnimatePresence initial={false}>
+            {showMockCatalog ? (
+              <motion.article
+                ref={mockCatalogRef}
+                id="sat-mock-catalog"
+                initial={minimalMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={minimalMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
+                className={`${glassCard} scroll-mt-5 lg:col-span-2`}
+              >
+                <div className="p-6 sm:p-7">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600"> <UiText text={"Practice library"} /> </p>
+                      <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.045em] text-[#151621]">{mockSlots.length}  <UiText text={"Digital SAT practice tests"} /> </h2>
+                    </div>
+                    <p className="text-xs font-bold text-slate-500">
+                      {availableTests.length} available{mockSlots.length > availableTests.length ? ` · ${mockSlots.length - availableTests.length} coming soon` : ''}
+                    </p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6">
+                    {mockSlots.map(({ displayNumber, test }) => {
+                      const completed = test ? completedTestIds.has(test.id) : false
+                      const difficultyStyle = test?.difficulty === 'Hard'
+                        ? 'border-rose-200 bg-rose-50 text-rose-700'
+                        : test?.difficulty === 'Medium'
+                          ? 'border-amber-200 bg-amber-50 text-amber-700'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+
+                      return (
+                        <button
+                          key={displayNumber}
+                          type="button"
+                          disabled={!test}
+                          aria-label={test ? `Practice Test ${displayNumber}, ${test.difficulty}${completed ? ', completed' : ''}` : `Practice Test ${displayNumber}, coming soon`}
+                          onClick={() => test && navigate(`/mock/sat/${test.mockId}`)}
+                          className={`group min-h-[8.5rem] rounded-[1.35rem] border p-4 text-left ${test
+                            ? 'border-red-200/80 bg-gradient-to-br from-white to-red-50/70 shadow-[0_12px_28px_rgba(185,28,28,.1)] hover:-translate-y-1 hover:border-red-300'
+                            : 'cursor-not-allowed border-white/70 bg-white/28 opacity-70'
+                          }`}
+                        >
+                          <span className="flex items-start justify-between gap-2">
+                            <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-extrabold ${test ? 'bg-red-600 text-white shadow-md' : 'bg-slate-200/80 text-slate-500'}`}>
+                              {String(displayNumber).padStart(2, '0')}
+                            </span>
+                            {test ? (
+                              <span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${difficultyStyle}`}>
+                                {test.difficulty}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="mt-4 block text-sm font-extrabold text-[#171823]">Test {displayNumber}</span>
+                          {test && !isSATTestComplete(test) ? <span className="mt-1 block text-[10px] font-bold text-amber-700">3 modules · Math 2 unavailable</span> : null}
+                          <span className={`mt-1 inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider ${completed ? 'text-emerald-700' : test ? 'text-blue-700' : 'text-slate-500'}`}>
+                            {completed
+                              ? <><CheckCircle2 className="h-3 w-3" />  <UiText text={"Completed"} /> </>
+                              : test
+                                ? <><Check className="h-3 w-3" /> Available</>
+                                : <><Lock className="h-3 w-3" />  <UiText text={"Coming soon"} /> </>}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </motion.article>
+            ) : null}
+          </AnimatePresence>
+        </section>
+      </div>
     </div>
-    <section className="glass-surface liquid-catalog"><button className="liquid-catalog-toggle" onClick={()=>setCatalogOpen(!catalogOpen)} aria-expanded={catalogOpen} aria-controls="sat-mock-catalog"><span><span className="liquid-eyebrow">{c('Full mock tests')}</span><strong>{c('Digital SAT practice tests')}</strong><small>{tests.length} {c('available tests')}</small></span><ChevronDown size={22} className={catalogOpen ? 'rotate-180' : ''} /></button>
-      {catalogOpen && <div id="sat-mock-catalog" className="liquid-test-list">{tests.map(test=><Link key={test.id} to={`/mock/sat/${test.mockId}`}><span><strong>{test.title}</strong><small>{Math.round(test.totalDurationSeconds/60)} {c('minutes')} · {test.questionCount} {c('questions')}</small>{!isSATTestComplete(test) && <small>{c('Some modules are unavailable.')}</small>}</span>{completed.some(item=>item.test.id===test.id) ? <Check size={19} /> : <ArrowRight size={19} />}</Link>)}</div>}
-    </section>
-    <div className="liquid-exam-grid"><Link to="/sat/mistakes" className="glass-surface liquid-resource-row"><div><h3>{c('Review mistakes')}</h3><p>{c('Review your answers and see what to work on next.')}</p></div><FileSearch size={22} /></Link><Link to="/vocabulary/sat" state={{ from: '/sat' }} className="glass-surface liquid-resource-row"><div><h3>{c('Vocabulary')}</h3><p>{c('Review saved words and build lasting recall.')}</p></div><BookOpen size={22} /></Link></div>
-    <details className="glass-surface liquid-progress-details"><summary>{c('My Results')}<ChevronDown size={18} /></summary><div className="liquid-score-list"><div><span>{c('Target score')}</span><strong>{profile?.targetSatScore || '—'}</strong></div><div><span>{c('Best score')}</span><strong>{best || '—'}</strong></div><div><span>{c('Completed practices')}</span><strong>{completed.length}</strong></div></div>{!scores.length && <p>{c('Scores appear after completed practice.')}</p>}<Link to="/profile" className="liquid-text-link">{c('View all results')}<ArrowRight size={16} /></Link></details>
-  </div>
+  )
 }

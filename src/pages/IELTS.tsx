@@ -1,65 +1,264 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, CalendarDays, Check, ChevronDown, FileSearch } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Clock3,
+  FileSearch,
+  Flag,
+  Sparkles,
+  X,
+} from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
-import { loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
-import { useCopy } from '@/i18n/interface'
-import StudyObject, { type StudyObjectKind } from '@/components/visuals/StudyObject'
+import { loadActivityLog, loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import {
+  ARENA_GLASS_SURFACE,
+  ArenaBackdrop,
+  StudyIllustration,
+  type StudyIllustrationVariant,
+} from '@/components/visuals/ArenaVisuals'
 
-const skills: { id: 'listening' | 'reading' | 'writing' | 'speaking'; title: string; description: string; object: StudyObjectKind }[] = [
-  { id: 'listening', title: 'Listening', description: 'Conversations, monologues and academic talks.', object: 'headphones' },
-  { id: 'reading', title: 'Reading', description: 'Understand passages and find the evidence.', object: 'book' },
-  { id: 'writing', title: 'Writing', description: 'Develop clear answers for Task 1 and Task 2.', object: 'notebook' },
-  { id: 'speaking', title: 'Speaking', description: 'Practice interviews, long turns and discussions.', object: 'microphone' },
+type SkillId = 'listening' | 'reading' | 'writing' | 'speaking'
+type SkillScore = Record<SkillId, number>
+
+const DAY_MS = 86_400_000
+const SKILLS: Array<{
+  id: SkillId
+  title: string
+  topics: string[]
+  tests: number
+  visual: StudyIllustrationVariant
+}> = [
+  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 30, visual: 'ielts-listening' },
+  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 30, visual: 'ielts-reading' },
+  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 30, visual: 'ielts-writing' },
+  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 30, visual: 'ielts-speaking' },
 ]
-function localToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
-function stored(key: string, fallback = '') { try { return localStorage.getItem(key) || fallback } catch { return fallback } }
-function validBand(value: unknown) { return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 9 ? value : null }
-export default function IELTS() {
-  const { c, language } = useCopy()
-  const user = useAuthStore(s => s.user)
-  const sessions = useSpeakingStore(s => s.sessions)
-  const navigate = useNavigate()
-  const { state } = useLocation()
-  const profile = loadOnboardingProfile(user?.id)
-  const dateKey = `smarttest:ielts-exam-date:${user?.id || 'guest'}`
-  const timeKey = `smarttest:ielts-exam-time:${user?.id || 'guest'}`
-  const [date, setDate] = useState(() => stored(dateKey, profile?.ieltsExamDate))
-  const [time, setTime] = useState(() => stored(timeKey, '08:00'))
-  const [draft, setDraft] = useState(date)
-  const [draftTime, setDraftTime] = useState(time)
-  const [editing, setEditing] = useState(false)
-  const [saveError, setSaveError] = useState(false)
-  useEffect(() => { const next = stored(dateKey, loadOnboardingProfile(user?.id)?.ieltsExamDate); setDate(next); setDraft(next); setTime(stored(timeKey,'08:00')); setDraftTime(stored(timeKey,'08:00')) }, [dateKey,timeKey,user?.id])
-  const scores = useMemo(() => {
-    const history = getReadingAnalysisHistory(user?.id)
-    const listening = history.find(item => /listening/i.test(item.testId + item.testTitle))
-    const reading = history.find(item => !/listening/i.test(item.testId + item.testTitle))
-    const speaking = selectUserSessions(sessions, user?.id ?? null).slice(-1)[0]
-    return { listening: validBand(listening?.bandScore), reading: validBand(reading?.bandScore), writing: validBand(getWritingAnalysisHistory(user?.id)[0]?.overallBand), speaking: validBand(speaking?.overallBand) }
-  }, [sessions,user?.id])
-  function saveDate() {
-    if (!draft || draft < localToday()) return
-    try {
-      localStorage.setItem(dateKey,draft); localStorage.setItem(timeKey,draftTime)
-      if (profile) saveOnboardingProfile({ ...profile, ieltsExamDate: draft, daysToExam: Math.max(0,Math.ceil((new Date(draft+'T'+draftTime).getTime()-Date.now())/86400000)) },user?.id)
-      setDate(draft); setTime(draftTime); setEditing(false); setSaveError(false)
-    } catch { setSaveError(true) }
+
+const GLASS = ARENA_GLASS_SURFACE
+
+let catalogPreloadPromise: Promise<unknown> | null = null
+
+function preloadIeltsCatalogs() {
+  if (!catalogPreloadPromise) {
+    catalogPreloadPromise = Promise.all([
+      import('@/pages/IELTSSectionTests'),
+      import('@/pages/IELTSWritingTests'),
+      import('@/pages/IELTSSpeakingTests'),
+    ])
   }
-  return <div className="workspace-page liquid-page">
-    <header className="liquid-page-heading liquid-heading-with-tabs"><div><Link className="liquid-text-link" to="/test-preparation">{c('Preparation')}</Link><h1>{c('IELTS preparation')}</h1><p>{c('One skill at a time. One step closer.')}</p></div><div className="glass-control liquid-track-tabs"><Link to="/ielts" aria-current="page">IELTS</Link><Link to="/sat">SAT</Link></div></header>
-    <div className="liquid-skill-grid">{skills.map(skill => <button key={skill.id} className="glass-surface liquid-skill-card" onClick={() => navigate(`/ielts/${skill.id}/tests`, { state: state?.entry === 'mock-ielts' ? state : { entry: 'ielts-hub' } })}>
-      <div><p className="liquid-eyebrow">IELTS</p><h2>{c(skill.title)}</h2><p>{c(skill.description)}</p><span className="liquid-text-link">{c('Open tests')}<ArrowRight size={17} /></span></div><StudyObject kind={skill.object} />
-    </button>)}</div>
-    <Link to="/mock/ielts" state={{ from: 'ielts' }} className="glass-surface liquid-resource-row"><div><p className="liquid-eyebrow">{c('Full mock tests')}</p><h3>{c('Practice all four skills in one flow')}</h3></div><ArrowRight /></Link>
-    <div className="liquid-exam-grid"><Link to="/academic-skills" className="glass-surface liquid-resource-row"><div><h3>{c('Additional practice')}</h3><p>{c('Audio, articles, vocabulary and pronunciation.')}</p></div><ArrowRight size={19} /></Link><Link to="/analyze-mistakes" className="glass-surface liquid-resource-row"><div><h3>{c('Review mistakes')}</h3><p>{c('Review your answers and see what to work on next.')}</p></div><FileSearch size={20} /></Link></div>
-    <details className="glass-surface liquid-progress-details"><summary>{c('My Results')} &amp; {c('Exam plan')}<ChevronDown size={18} /></summary><div className="liquid-exam-grid">
-      <section><h2>{c('Your IELTS overview')}</h2><div className="liquid-score-list">{skills.map(skill => <div key={skill.id}><span>{c(skill.title)}</span><strong>{scores[skill.id]?.toFixed(1) || '—'}</strong></div>)}</div><p>{c('Scores appear after completed practice.')}</p></section>
-      <section><h2><CalendarDays size={18} />{c('Exam plan')}</h2><p>{date ? new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-GB',{dateStyle:'medium',timeStyle:'short'}).format(new Date(date+'T'+time)) : c('Use the date from your official booking.')}</p>
-        {editing ? <div><label className="liquid-form-field">{c('Exam date')}<input className="input" type="date" min={localToday()} value={draft} onChange={e=>setDraft(e.target.value)} /></label><label className="liquid-form-field">{c('Exam time')}<input className="input" type="time" value={draftTime} onChange={e=>setDraftTime(e.target.value)} /></label><div className="liquid-actions"><button className="liquid-button primary" disabled={!draft || draft < localToday() || !draftTime} onClick={saveDate}><Check size={17} />{c('Save')}</button><button className="liquid-text-link" onClick={()=>setEditing(false)}>{c('Cancel')}</button></div>{saveError && <p role="alert">{c('We could not save your choices. Please try again.')}</p>}</div> : <button className="liquid-text-link" onClick={()=>setEditing(true)}>{c(date ? 'Change date' : 'Set exam date')}</button>}
-      </section></div></details>
-  </div>
+  return catalogPreloadPromise
+}
+
+function localToday() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+function examDateKey(userId?: string) { return `smarttest:ielts-exam-date:${userId?.trim() || 'guest'}` }
+function examTimeKey(userId?: string) { return `smarttest:ielts-exam-time:${userId?.trim() || 'guest'}` }
+
+function loadExamDate(userId?: string) {
+  if (typeof window === 'undefined') return ''
+  const value = window.localStorage.getItem(examDateKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+  return value >= localToday() ? value : ''
+}
+
+function loadExamTime(userId?: string) {
+  if (typeof window === 'undefined') return '08:00'
+  return window.localStorage.getItem(examTimeKey(userId)) || '08:00'
+}
+
+function saveExam(date: string, time: string, userId?: string) {
+  window.localStorage.setItem(examDateKey(userId), date)
+  window.localStorage.setItem(examTimeKey(userId), time)
+  const profile = loadOnboardingProfile(userId)
+  if (!profile) return
+  const distance = new Date(`${date}T${time}:00`).getTime() - Date.now()
+  saveOnboardingProfile({ ...profile, ieltsExamDate: date, daysToExam: Math.max(0, Math.ceil(distance / DAY_MS)) }, userId)
+}
+
+function validBand(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 9 ? value : 0
+}
+
+function formatBand(value: number) { return value > 0 ? value.toFixed(1) : '—' }
+
+function ProgressRing({ band, label = 'Band' }: { band: number; label?: string }) {
+  const percent = Math.round((band / 9) * 100)
+  const radius = 45
+  const circumference = Math.PI * 2 * radius
+  return (
+    <div className="relative h-[7.25rem] w-[7.25rem] shrink-0" aria-label={`${label} ${formatBand(band)}`}>
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 110 110" aria-hidden="true">
+        <circle cx="55" cy="55" r={radius} fill="none" stroke="rgba(148,163,184,.23)" strokeWidth="11" />
+        <circle cx="55" cy="55" r={radius} fill="none" stroke="url(#ielts-ring)" strokeWidth="11" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - (percent / 100) * circumference} />
+        <defs><linearGradient id="ielts-ring"><stop stopColor="#ef353d" /><stop offset="1" stopColor="#a91f29" /></linearGradient></defs>
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center leading-none text-slate-900">
+        <small className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500"><UiText text={label} /></small>
+        <strong className="mt-1 text-2xl font-black tracking-[-.05em]">{formatBand(band)}</strong>
+      </span>
+    </div>
+  )
+}
+
+function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      onPointerEnter={() => void preloadIeltsCatalogs()}
+      onPointerDown={() => void preloadIeltsCatalogs()}
+      className={`${GLASS} group min-h-[24rem] min-w-0 p-6 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_30px_72px_rgba(185,28,28,.13),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-7`}
+    >
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_94%_4%,rgba(239,68,68,.14),transparent_34%),linear-gradient(116deg,rgba(255,255,255,.54)_0%,rgba(255,255,255,.08)_47%,rgba(191,219,254,.22)_48%,rgba(255,255,255,.04)_100%)]" />
+      <div className="relative flex h-full flex-col">
+        <h2 className="text-[1.7rem] font-black leading-tight tracking-[-0.045em] text-[#12131f] sm:text-[2rem]"><UiText text={skill.title} /></h2>
+
+        <div className="mt-5 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="text-base font-black text-[#1b1c27] sm:text-lg">Skills</h3>
+            <ul className="mt-1 space-y-1 text-base font-semibold leading-6 text-[#353744] sm:text-lg">
+              {skill.topics.map((topic) => <li key={topic}>{topic}</li>)}
+            </ul>
+          </div>
+          <ProgressRing band={score} />
+        </div>
+
+        <div className="mt-auto flex items-end justify-between gap-4 pt-4">
+          <div className="relative" aria-hidden="true">
+            <StudyIllustration variant={skill.visual} compact />
+            <span className="absolute bottom-1 right-0 rounded-full border border-red-100/80 bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-red-700 backdrop-blur-md">{skill.tests} full tests</span>
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#d91f2b] to-[#ef353d] px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,.24),inset_0_1px_0_rgba(255,255,255,.35)]">
+             <UiText text={"Open tests"} /> <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+export default function IELTS() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const user = useAuthStore((state: AuthState) => state.user)
+  const speakingSessions = useSpeakingStore((state) => state.sessions)
+  const { minimalMotion } = useMotionPreferences()
+  const [examDate, setExamDate] = useState(() => loadExamDate(user?.id))
+  const [examTime, setExamTime] = useState(() => loadExamTime(user?.id))
+  const [editingDate, setEditingDate] = useState(false)
+  const [draftDate, setDraftDate] = useState(examDate)
+  const [draftTime, setDraftTime] = useState(examTime)
+  const [now, setNow] = useState(Date.now())
+  const entry = location.state as { entry?: string; from?: string } | null
+  const fromMock = entry?.entry === 'mock-ielts'
+
+  const scores = useMemo<SkillScore>(() => {
+    const objective = getReadingAnalysisHistory(user?.id)
+    const listening = objective.find((item) => `${item.testId} ${item.testTitle}`.toLowerCase().includes('listening'))
+    const reading = objective.find((item) => !`${item.testId} ${item.testTitle}`.toLowerCase().includes('listening'))
+    const writing = getWritingAnalysisHistory(user?.id)[0]
+    const userSpeaking = selectUserSessions(speakingSessions, user?.id ?? null)
+    const speaking = userSpeaking[userSpeaking.length - 1]
+    return { listening: validBand(listening?.bandScore), reading: validBand(reading?.bandScore), writing: validBand(writing?.overallBand), speaking: validBand(speaking?.overallBand) }
+  }, [speakingSessions, user?.id])
+
+  const completed = Object.values(scores).filter(Boolean)
+  const overall = completed.length ? Math.round((completed.reduce((sum, value) => sum + value, 0) / completed.length) * 2) / 2 : 0
+  const profile = loadOnboardingProfile(user?.id)
+  const target = profile?.targetIeltsScore ?? 8
+  const activity = loadActivityLog(user?.id)
+  const studyMinutes = Object.values(activity).reduce((sum, day) => sum + Object.entries(day).filter(([key]) => key.startsWith('ielts') || key === 'mock').reduce((daily, [, value]) => daily + value, 0), 0)
+  const remainingMs = examDate ? Math.max(0, new Date(`${examDate}T${examTime}:00`).getTime() - now) : null
+  const remainingDays = remainingMs === null ? null : Math.ceil(remainingMs / DAY_MS)
+
+  useEffect(() => {
+    setExamDate(loadExamDate(user?.id))
+    setExamTime(loadExamTime(user?.id))
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!examDate) return
+    const id = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(id)
+  }, [examDate])
+
+  useEffect(() => {
+    const preloadId = window.setTimeout(() => {
+      void preloadIeltsCatalogs()
+    }, 280)
+    return () => window.clearTimeout(preloadId)
+  }, [])
+
+  const openSkill = (id: SkillId) => {
+    const path = `/ielts/${id}/tests`
+    navigate(path, { state: fromMock ? { entry: 'mock-ielts', from: entry?.from ?? 'tests' } : { entry: 'ielts-hub' } })
+  }
+
+  return (
+    <main className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+      <ArenaBackdrop />
+      <div className="relative z-10 mx-auto max-w-[112rem]">
+        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/test-preparation')} className="route-back-button">
+          <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Test Preparation'}
+        </button>
+
+        <motion.header
+          initial={minimalMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+        >
+          <div className="relative inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600">
+            <Sparkles className="h-3 w-3" /> IELTS command center
+          </div>
+          <h1 className="relative mt-3 text-[2.55rem] font-extrabold tracking-[-.065em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">IELTS <span className="text-red-600"> <UiText text={"Arena"} /> </span></h1>
+          <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]">Listening + Reading + Writing + Speaking — your path to Band {target}+</p>
+        </motion.header>
+
+        <section className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
+          {SKILLS.slice(0, 2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}
+          <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
+            <article className={`${GLASS} p-6`}>
+              <h2 className="text-2xl font-black tracking-[-.045em] text-slate-900"> <UiText text={"Your IELTS overview"} /> </h2>
+              <div className="mt-5 flex items-center justify-between gap-4 rounded-[1.5rem] border border-white/90 bg-white/45 p-4">
+                <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Overall band</p><p className="mt-2 text-4xl font-black text-slate-900">{formatBand(overall)}</p><p className="mt-1 text-xs font-semibold text-slate-500">{completed.length}/4 skills scored</p></div>
+                <ProgressRing band={overall} label="Overall" />
+              </div>
+              <div className="mt-5 space-y-3">{SKILLS.map((skill) => <div key={skill.id} className="grid grid-cols-[5rem_1fr_2rem] items-center gap-2 text-xs font-bold"><span className="text-slate-600">{skill.title.replace('IELTS ', '')}</span><span className="h-2 overflow-hidden rounded-full bg-slate-200"><i className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(scores[skill.id] / 9) * 100}%` }} /></span><b className="text-right text-slate-900">{formatBand(scores[skill.id])}</b></div>)}</div>
+            </article>
+
+            <article className={`${GLASS} p-6`}>
+              <div className="flex items-center justify-between"><div><p className="text-xs font-extrabold uppercase tracking-wider text-red-600"> <UiText text={"Exam plan"} /> </p><h2 className="mt-1 text-2xl font-black text-slate-900">{remainingDays === null ? 'Set your test date' : remainingDays === 0 ? 'Exam day' : `${remainingDays} days to go`}</h2></div><CalendarDays className="h-7 w-7 text-blue-600" /></div>
+              <p className="mt-2 text-sm font-medium text-slate-500">{examDate ? new Date(`${examDate}T${examTime}:00`).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Use the date from your official booking.'}</p>
+              {editingDate ? <div className="mt-4 grid gap-2"><input type="date" min={localToday()} value={draftDate} onChange={(event) => setDraftDate(event.target.value)} className="input" /><input type="time" value={draftTime} onChange={(event) => setDraftTime(event.target.value)} className="input" /><div className="flex gap-2"><button type="button" disabled={!draftDate} onClick={() => { saveExam(draftDate, draftTime, user?.id); setExamDate(draftDate); setExamTime(draftTime); setEditingDate(false) }} className="ui-action ui-action-primary flex-1"><Check className="h-4 w-4" />  <UiText text={"Save"} /> </button><button type="button" onClick={() => setEditingDate(false)} className="ui-action ui-action-secondary" aria-label="Cancel"><X className="h-4 w-4" /></button></div></div> : <button type="button" onClick={() => { setDraftDate(examDate); setDraftTime(examTime); setEditingDate(true) }} className="ui-action ui-action-secondary mt-4 w-full">{examDate ? 'Change date' : 'Set exam date'}</button>}
+            </article>
+          </aside>
+
+          {SKILLS.slice(2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}
+        </section>
+
+        <section className="mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
+          <article className={`${GLASS} flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-7`}>
+            <div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-red-600"> <UiText text={"Full IELTS mock"} /> </p><h2 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-900"> <UiText text={"Practice all four skills in one flow"} /> </h2><p className="mt-1 text-sm font-medium text-slate-500"> <UiText text={"Use verified results to update your overview."} /> </p></div>
+            <button type="button" onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6">Start full mock <ArrowRight className="h-4 w-4" /></button>
+          </article>
+          <div className="grid grid-cols-3 gap-3">
+            {[{ label: 'Target band', value: `${target}+`, icon: Flag }, { label: 'Completed', value: `${completed.length}/4`, icon: Check }, { label: 'Study time', value: studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`, icon: Clock3 }].map(({ label, value, icon: Icon }) => <article key={label} className={`${GLASS} flex min-h-[9rem] flex-col justify-center p-4`}><Icon className="mb-3 h-5 w-5 text-red-500" /><p className="text-[11px] font-semibold text-slate-500"><UiText text={label} /></p><strong className="mt-1 text-2xl font-black tracking-[-.05em] text-slate-900">{value}</strong></article>)}
+          </div>
+        </section>
+
+        <button type="button" onClick={() => navigate('/analyze-mistakes')} className={`${GLASS} mt-5 flex w-full items-center justify-between gap-4 p-5 text-left`}><span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-5 w-5" /></span><span><b className="block text-base font-black text-slate-900"> <UiText text={"Mistake lab"} /> </b><small className="text-slate-500">Review weak skills and missed answers</small></span></span><ArrowRight className="h-5 w-5 text-red-600" /></button>
+      </div>
+    </main>
+  )
 }

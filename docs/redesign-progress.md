@@ -1,5 +1,26 @@
 # ProfAI glass redesign
 
+## Design revision — 2026-09-24
+The latest user screenshots supersede the simplified content layouts below.
+- Preserve the glass sidebar and change its preparation label to `IELTS · SAT`.
+- Restore Dashboard, IELTS/SAT hubs and catalogs, and Applications hub, discovery
+  and university profiles from the pre-redesign `5c8e92111` layouts. Keep current
+  test content, Listening completion logic and account fixes. Do not restore fake
+  SAT starting scores or decorative progress values.
+- Results now shows its full overview, skill analytics, achievements and history
+  without a collapsed analytics wrapper, with clear practice/review actions.
+- Remove the Analyze Mistakes back button. Replace its dark “AI study plan” card
+  with “Practice priorities”, derived from actual saved errors, with links to
+  Reading practice and the latest saved review. It does not claim AI generation.
+- Replace the native language select with a viewport-aware, keyboard-accessible
+  English/Russian/Uzbek menu. English remains the default; the choice persists.
+  Add Uzbek navigation and primary interface translations. Original exam content,
+  university descriptions and unmapped legacy copy retain their source language.
+- The old ISO-date concatenation is absent from the restored Dashboard; the date
+  regression utility and test remain available.
+
+The following sections document the earlier iteration and its validation history.
+
 ## Accepted direction
 English default; Russian optional and persistent. Four primary destinations: Home,
 Preparation, University Applications, My Results. Photoreal study illustrations,

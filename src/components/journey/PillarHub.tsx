@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import type { ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -58,7 +59,7 @@ export default function PillarHub({
         {showBack ? (
           <button type="button" onClick={() => navigate(backPath)} className="route-back-button">
             <ArrowLeft className="h-4 w-4" />
-            {backLabel}
+            <UiText text={backLabel} />
           </button>
         ) : null}
 
@@ -73,13 +74,13 @@ export default function PillarHub({
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/65 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-red-600 shadow-[0_9px_25px_rgba(30,41,59,.06)] backdrop-blur-xl sm:text-xs">
             <Sparkles className="h-3.5 w-3.5" />
-            {eyebrow}
+            <UiText text={eyebrow} />
           </div>
           <h1 className="mt-3 max-w-full break-words text-[clamp(2.1rem,5.8vw,4rem)] font-black leading-[.98] tracking-[-.05em] text-[#070a18] [overflow-wrap:anywhere] sm:leading-[.94] sm:tracking-[-.055em]">
             {title}
           </h1>
           <p className="mx-auto mt-3 max-w-4xl text-sm font-medium leading-6 text-slate-600 sm:text-base sm:leading-7 lg:text-lg">
-            {description}
+            <UiText text={description} />
           </p>
 
           <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -89,7 +90,7 @@ export default function PillarHub({
                 className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/46 px-3.5 py-2 text-xs font-extrabold text-slate-700 shadow-[0_8px_22px_rgba(30,41,59,.05),inset_0_1px_0_rgba(255,255,255,.96)] backdrop-blur-xl sm:text-sm"
               >
                 <Check className="h-3.5 w-3.5 text-red-600" strokeWidth={3} />
-                {highlight}
+                <UiText text={highlight} />
               </span>
             ))}
           </div>
@@ -126,17 +127,17 @@ export default function PillarHub({
                     </span>
                   </div>
 
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 sm:text-xs">{card.eyebrow}</p>
+                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 sm:text-xs"><UiText text={card.eyebrow} /></p>
                   <h2 className={cn('mt-2 max-w-full break-words font-black leading-[1.02] tracking-[-.04em] text-[#080b18]', isTrackLayout ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-[1.7rem]')}>
-                    {card.title}
+                    <UiText text={card.title} />
                   </h2>
-                  <p className="mt-3 text-sm font-medium leading-6 text-slate-600 sm:text-base">{card.description}</p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-slate-600 sm:text-base"><UiText text={card.description} /></p>
 
                   <div className={cn('mt-4 grid gap-2', isTrackLayout && 'sm:grid-cols-2')}>
                     {card.details.map((detail) => (
                       <span key={detail} className="inline-flex min-w-0 items-center gap-2 rounded-xl border border-white/75 bg-white/36 px-3 py-2.5 text-xs font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,.88)] backdrop-blur-lg sm:text-sm">
                         <Check className="h-3.5 w-3.5 shrink-0 text-red-600" strokeWidth={3} />
-                        {detail}
+                        <UiText text={detail} />
                       </span>
                     ))}
                   </div>
@@ -149,7 +150,7 @@ export default function PillarHub({
                     )}
                     aria-label={`${card.action}: ${card.title}`}
                   >
-                    {card.action}
+                    <UiText text={card.action} />
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
@@ -160,7 +161,7 @@ export default function PillarHub({
 
         <div className="mx-auto max-w-4xl px-2 pb-10 pt-6 text-center sm:pb-14 sm:pt-7">
           <p className="rounded-2xl border border-white/90 bg-white/58 px-5 py-3 text-xs font-medium leading-5 text-slate-500 shadow-[0_12px_34px_rgba(30,41,59,.06)] backdrop-blur-xl sm:text-sm sm:leading-6">
-            {note}
+            <UiText text={note} />
           </p>
         </div>
       </div>

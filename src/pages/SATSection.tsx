@@ -1,46 +1,119 @@
-import { useState } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import UiText from '@/components/common/UiText'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpenText,
+  Calculator,
+  CheckCircle2,
+  Clock3,
+  FileQuestion,
+} from 'lucide-react'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
-import { getSATSectionTest, satAvailabilityNote, isSATSection, SAT_TEST_CATALOG } from '@/features/sat/catalog'
-import StudyObject from '@/components/visuals/StudyObject'
-import { useCopy } from '@/i18n/interface'
+import {
+  getSATSectionTest,
+  isSATSection,
+  SAT_TEST_CATALOG,
+  satAvailabilityNote,
+} from '@/features/sat/catalog'
+
+function formatMinutes(seconds: number) {
+  return `${Math.round(seconds / 60)} min`
+}
 
 export default function SATSection() {
+  const navigate = useNavigate()
   const { section } = useParams<{ section: string }>()
-  const { c } = useCopy()
-  const [search, setSearch] = useState('')
-  const [limit, setLimit] = useState(12)
+
   if (!isSATSection(section)) return <Navigate to="/sat" replace />
+
   const isMath = section === 'math'
+  const title = isMath ? 'SAT Math' : 'SAT Reading & Writing'
+  const description = isMath
+    ? 'Only Math practice tests are shown here. Each test contains the two Math modules.'
+    : 'Only Reading & Writing practice tests are shown here. Each test contains the two Reading & Writing modules.'
   const tests = Object.values(SAT_TEST_CATALOG)
     .sort((a, b) => a.mockId - b.mockId)
-    .map(test => getSATSectionTest(test.mockId, section))
-    .filter(test => `${c('Practice Test')} ${test.mockId} ${test.badge}`.toLowerCase().includes(search.trim().toLowerCase()))
+    .map((test) => getSATSectionTest(test.mockId, section))
 
-  return <main className="workspace-page liquid-page">
-    <Link to="/sat" className="liquid-text-link mb-6"><ArrowLeft size={16} />{c('SAT Prep')}</Link>
-    <header className="liquid-page-heading liquid-catalog-heading">
-      <div><p className="liquid-eyebrow">{c('Section practice')}</p><h1>SAT {c(isMath ? 'Math' : 'Reading & Writing')}</h1><p>{c(isMath ? 'Practice the two Math modules at your own pace.' : 'Build confidence with the two Reading & Writing modules.')}</p></div>
-      <StudyObject kind={isMath ? 'calculator' : 'book'} />
-    </header>
-    <section className="glass-surface liquid-library-controls" aria-label={c('Find a test')}>
-      <label className="liquid-search-field"><Search size={18} /><span className="sr-only">{c('Search tests')}</span><input type="search" placeholder={c('Search tests')} value={search} onChange={event => { setSearch(event.target.value); setLimit(12) }} /></label>
-    </section>
-    <p className="liquid-catalog-note" role="status">{c('Available tests')}: {tests.length}</p>
-    {!tests.length && <section className="glass-surface liquid-university-empty"><h2>{c('No tests found.')}</h2><button className="liquid-button secondary" onClick={() => setSearch('')}>{c('Clear search')}</button></section>}
-    <div className="liquid-test-grid">{tests.slice(0, limit).map(test => {
-      const attempt = loadSATAttempt(test.id)
-      const answered = Object.values(attempt?.answers ?? {}).filter(answer => answer.trim()).length
-      const completed = attempt?.status === 'submitted'
-      return <article key={test.id} className="glass-surface liquid-test-card">
-        <div className="liquid-test-card-top"><span className="liquid-eyebrow">{c(isMath ? 'Math' : 'Reading & Writing')}</span>{completed && <span className="liquid-completed"><CheckCircle2 size={15} />{c('Completed')}</span>}</div>
-        <h2>{c('Practice Test')} {test.mockId}</h2><p>{c(test.badge)}</p>{satAvailabilityNote(test) && <p>{c(satAvailabilityNote(test)!)}</p>}
-        <div className="liquid-test-card-meta"><span><Clock3 size={14} />{Math.round(test.totalDurationSeconds / 60)} {c('min')}</span><span>{test.questionCount} {c('questions')}</span><span>{test.modules.length} {c('modules')}</span></div>
-        {attempt && <p>{c(completed ? 'Completed' : 'Saved progress')}: {answered}/{test.questionCount}</p>}
-        <Link className="liquid-button primary" to={`/mock/sat/${test.mockId}?section=${section}`}>{c(completed ? 'Review' : attempt?.status === 'active' ? 'Continue' : 'Start test')}<ArrowRight size={16} /></Link>
-      </article>
-    })}</div>
-    {tests.length > limit && <button className="liquid-button secondary mt-6" onClick={() => setLimit(value => value + 12)}>{c('Show more tests')}</button>}
-  </main>
+  return (
+    <main className="workspace-page min-h-screen bg-[linear-gradient(145deg,#eef3f9_0%,#f8fafc_48%,#fff2f2_100%)] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[88rem]">
+        <button
+          type="button"
+          onClick={() => navigate('/sat')}
+          className="route-back-button"
+        >
+          <ArrowLeft className="h-4 w-4" />  <UiText text={"SAT Prep"} /> </button>
+
+        <header className="mt-5 overflow-hidden rounded-[2rem] border border-white/90 bg-white/70 p-6 shadow-[0_24px_70px_rgba(55,65,100,0.12)] backdrop-blur-2xl sm:p-9">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Section practice"} /> </p>
+              <h1 className="mt-2 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-6xl">{title}</h1>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base"><UiText text={description} /></p>
+            </div>
+            <span className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.6rem] text-white shadow-xl ${isMath ? 'bg-gradient-to-br from-red-500 to-rose-700' : 'bg-gradient-to-br from-blue-500 to-indigo-700'}`}>
+              {isMath ? <Calculator className="h-9 w-9" /> : <BookOpenText className="h-9 w-9" />}
+            </span>
+          </div>
+        </header>
+
+        <section className="mt-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600"> <UiText text={"Available tests"} /> </p>
+              <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-slate-950">Choose a {title.replace('SAT ', '')} test</h2>
+            </div>
+            <p className="text-xs font-bold text-slate-500">{tests.length} available</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {tests.map((test) => {
+              const attempt = loadSATAttempt(test.id)
+              const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
+              const action = attempt?.status === 'active' ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Start test'
+
+              return (
+                <article key={test.id} className="rounded-[1.8rem] border border-white/90 bg-white/75 p-5 shadow-[0_20px_55px_rgba(15,23,42,.09)] backdrop-blur-xl sm:p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <span className={`inline-flex rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${isMath ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                        {isMath ? 'Math only' : 'Reading & Writing only'}
+                      </span>
+                      <h3 className="mt-3 text-xl font-black tracking-[-0.03em] text-slate-950"> <UiText text={"Practice Test"} /> {test.mockId}</h3>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">{test.badge}</p>
+                      {satAvailabilityNote(test) ? <p className="mt-2 text-xs font-semibold text-amber-700">{satAvailabilityNote(test)}</p> : null}
+                    </div>
+                    {attempt?.status === 'submitted' ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> : <FileQuestion className="h-6 w-6 text-slate-400" />}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <span className="rounded-xl bg-slate-100 px-3 py-2 text-[10px] font-black text-slate-600">{test.questionCount}  <UiText text={"questions"} /> </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-[10px] font-black text-slate-600"><Clock3 className="h-3.5 w-3.5" /> {formatMinutes(test.totalDurationSeconds)}</span>
+                    <span className="rounded-xl bg-slate-100 px-3 py-2 text-[10px] font-black text-slate-600">{test.modules.length}  <UiText text={"modules"} /> </span>
+                  </div>
+
+                  {attempt ? (
+                    <div className="mt-5">
+                      <div className="flex justify-between text-[10px] font-black text-slate-500"><span>{attempt.status === 'submitted' ? 'Completed' : 'Saved progress'}</span><span>{answered}/{test.questionCount}</span></div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-red-500" style={{ width: `${Math.round((answered / test.questionCount) * 100)}%` }} /></div>
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/mock/sat/${test.mockId}?section=${section}`)}
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-black text-white shadow-lg hover:-translate-y-0.5"
+                  >
+                    {action} <ArrowRight className="h-4 w-4" />
+                  </button>
+                </article>
+              )
+            })}
+          </div>
+        </section>
+      </div>
+    </main>
+  )
 }

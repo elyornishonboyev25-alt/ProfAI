@@ -165,5 +165,13 @@
   "International staff (%)": "Иностранные сотрудники (%)",
   "Some modules are unavailable.": "Некоторые модули недоступны.",
   "Math Module 2 is unavailable. Practice the available modules; a full SAT or Math score is not provided.": "Математический модуль 2 недоступен. Можно пройти доступные модули, но общий балл SAT или Math не рассчитывается.",
-  "This test is currently in preview mode. Choose an available test from the catalog.": "Этот тест доступен только для предварительного просмотра. Выберите доступный тест в каталоге."
+  "This test is currently in preview mode. Choose an available test from the catalog.": "Этот тест доступен только для предварительного просмотра. Выберите доступный тест в каталоге.",
+  "Practice priorities": "Направления практики",
+  "What to work on next": "Над чем поработать дальше",
+  "Based on your saved mistakes. Review a weak area, then practise Reading.": "На основе сохранённых ошибок. Повторите сложную тему, затем переходите к практике чтения.",
+  "Practice Reading": "Практика чтения",
+  "Review your answers": "Разбор ваших ответов",
+  "Start with a Reading test to discover your practice priorities.": "Пройдите тест по чтению, чтобы определить направления практики.",
+  "Your learning": "Ваш учебный",
+  "progress.": "прогресс."
 }

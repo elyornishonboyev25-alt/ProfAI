@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft,
   BarChart3,
   BrainCircuit,
   CheckCircle2,
@@ -402,13 +401,7 @@ export default function AnalyzeMistakes() {
         <section className="rounded-[2rem] border border-white/90 bg-white/78 p-6 shadow-[0_28px_75px_rgba(127,29,29,0.14)] backdrop-blur-2xl sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <button
-                type="button"
-                onClick={() => navigate('/ielts')}
-                className="route-back-button"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                 <UiText text={"Back To IELTS Prep"} /> </button>
+
               <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-red-600">
                 <BrainCircuit className="h-4 w-4" />
                  <UiText text={"IELTS mistake intelligence"} /> </p>
@@ -505,32 +498,13 @@ export default function AnalyzeMistakes() {
               </article>
             </div>
 
-            <aside className="rounded-2xl border border-red-100 bg-gradient-to-br from-slate-950 via-slate-900 to-red-950 p-5 text-white shadow-[0_22px_55px_rgba(15,23,42,0.22)]">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-red-200">
-                <Sparkles className="h-3.5 w-3.5" />
-                 <UiText text={"AI study plan"} /> </span>
-              <h2 className="mt-4 text-xl font-black"> <UiText text={"Your next best actions"} /> </h2>
-              <p className="mt-2 text-xs leading-5 text-slate-300"> <UiText text={"Recommendations come from the mistakes stored in this IELTS workspace."} /> </p>
-              <div className="mt-4 space-y-2">
-                {(insights.focusAreas.length ? insights.focusAreas.slice(0, 3) : [{ label: 'Reading diagnostic', accuracy: 0, incorrect: 0 }]).map((area, index) => (
-                  <button
-                    key={area.label}
-                    onClick={() => navigate('/ielts/reading/tests')}
-                    className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-white/10 bg-white/8 px-3 text-left transition hover:bg-white/14"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/20 text-xs font-black text-red-200">{index + 1}</span>
-                    <span className="min-w-0">
-                      <b className="block truncate text-xs text-white">{area.label}</b>
-                      <small className="mt-0.5 block text-[10px] text-slate-400"> <UiText text={"Start targeted Reading practice"} /> </small>
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => navigate('/ai-tutor')}
-                className="cta-sheen mt-4 min-h-11 w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-xs font-black text-white shadow-lg"
-              >
-                 <UiText text={"Build plan with ProfAI"} /> </button>
+            <aside className="practice-priorities">
+              <span className="priority-eyebrow"><Sparkles size={15} /><UiText text="Practice priorities" /></span>
+              <h2><UiText text="What to work on next" /></h2>
+              <p><UiText text="Based on your saved mistakes. Review a weak area, then practise Reading." /></p>
+              {insights.focusAreas.length ? <ol className="priority-list">{insights.focusAreas.slice(0,3).map((area,index)=><li key={area.label}><span>{index+1}</span><div><strong>{area.label}</strong><small>{area.incorrect} <UiText text="recurring errors" /> · {area.accuracy.toFixed(0)}%</small></div></li>)}</ol> : <p className="my-6"><UiText text="Start with a Reading test to discover your practice priorities." /></p>}
+              <button className="liquid-button primary w-full mt-5" onClick={() => navigate('/ielts/reading/tests')}><UiText text="Practice Reading" /><ExternalLink size={15} /></button>
+              {insights.latestReading && <button className="liquid-button secondary w-full mt-3" onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}><UiText text="Review your answers" /></button>}
             </aside>
           </div>
 

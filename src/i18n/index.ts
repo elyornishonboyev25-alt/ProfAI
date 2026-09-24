@@ -4,6 +4,7 @@ import { russianInterface } from './interface'
 import russianUI from './ru-ui.json'
 import russianCompletion from './ru-completion.json'
 import russianTranslation from './ru.json'
+import uzbekUI from './uz-ui.json'
 
 const translation = {
   nav: {
@@ -105,16 +106,23 @@ const translation = {
   },
 }
 
+function localizeTree(value: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key,
+    typeof item === 'string' ? (uzbekUI as Record<string, string>)[item] || item
+      : item && typeof item === 'object' ? localizeTree(item as Record<string, unknown>) : item,
+  ]))
+}
 const resources = {
   en: { translation, interface: {} },
   ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface, ...russianCompletion } },
+  uz: { translation: localizeTree(translation), interface: uzbekUI },
 }
 
 function savedLanguage() {
-  try { return localStorage.getItem('profai-language') === 'ru' ? 'ru' : 'en' } catch { return 'en' }
+  try { const saved = localStorage.getItem('profai-language'); return saved === 'ru' || saved === 'uz' ? saved : 'en' } catch { return 'en' }
 }
 function applyLanguage(language: string) {
-  document.documentElement.lang = language === 'ru' ? 'ru' : 'en'
+  document.documentElement.lang = language === 'ru' || language === 'uz' ? language : 'en'
   try { localStorage.setItem('profai-language', document.documentElement.lang) } catch { /* Optional preference. */ }
 }
 
@@ -123,7 +131,7 @@ i18n
   .init({
     resources,
     lng: savedLanguage(),
-    supportedLngs: ['en', 'ru'],
+    supportedLngs: ['en', 'ru', 'uz'],
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,

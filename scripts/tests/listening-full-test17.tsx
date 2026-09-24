@@ -44,7 +44,7 @@ export async function run() {
   assert.equal(getIeltsFullTestCatalog('listening')[16].testId, test.id)
   assert.ok(isAvailableIeltsTrackTest('listening', test.id))
   assert.equal(mockListeningTests.filter(item => item.id === test.id).length, 1)
-  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[17].testId))
+  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[18].testId))
   const audio = readFileSync(`public${test.continuousAudioUrl}`)
   assert.equal(audio.length, 23874861)
   assert.equal(createHash('sha256').update(audio).digest('hex'), '374bd5f847d50bbfb88c20369f95b7b569a4a3423cec83bb43211a48327dda4a')

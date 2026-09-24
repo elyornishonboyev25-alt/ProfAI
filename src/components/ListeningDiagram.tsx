@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { EducationHouseDrawing } from './EducationHouseDiagram'
 import RaceVillageDiagram from './RaceVillageDiagram'
 import CollegePlanDiagram from './CollegePlanDiagram'
+import PennyfieldPlanDiagram from './PennyfieldPlanDiagram'
 import educationHouse from '../assets/ielts/listening-test14-education-house.jpg?inline'
 import raceVillage from '../assets/ielts/listening-test15-race-village.png?inline'
 
@@ -72,6 +73,9 @@ function DiagramImage({ src, alt, caption }: Props) {
 
 export default function ListeningDiagram(props: Props) {
   // Stable identifier survives serialized test snapshots in Results/Analyze.
+  if (props.src.split('?')[0].endsWith('/ielts-listening-test18-pennyfield-plan.svg')) {
+    return <PennyfieldPlanDiagram caption={props.caption} />
+  }
   if (props.src.split('?')[0].endsWith('/ielts-listening-test17-college-plan.svg')) {
     return <CollegePlanDiagram caption={props.caption} />
   }

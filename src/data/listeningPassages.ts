@@ -16,6 +16,7 @@ import { listeningFullTest15 } from './listeningFullTest15'
 import { listeningFullTest16 } from './listeningFullTest16'
 import { listeningFullTest17 } from './listeningFullTest17'
 import { listeningFullTest18 } from './listeningFullTest18'
+import { listeningFullTest19 } from './listeningFullTest19'
 
 const AUDIO_BASE = '/audio/ielts-listening'
 const IMAGE_BASE = '/images/ielts-listening'
@@ -306,4 +307,5 @@ export const mockListeningTests: IELTSTest[] = [
   listeningFullTest16,
   listeningFullTest17,
   listeningFullTest18,
+  listeningFullTest19,
 ]

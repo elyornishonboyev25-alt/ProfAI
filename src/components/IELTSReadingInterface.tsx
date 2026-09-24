@@ -3471,7 +3471,7 @@ export default function IELTSReadingInterface({
               <tr key={rowIndex} className="border-b border-slate-300 last:border-b-0">
                 {row.map((cell, cellIndex) => (
                   <td key={cellIndex} className="border-l border-slate-300 px-2 py-2 align-top text-slate-900 first:border-l-0">
-                    <span className="inline-flex flex-wrap items-center leading-loose">{segs(cell.segments)}</span>
+                    <span className="whitespace-pre-line leading-loose">{segs(cell.segments)}</span>
                   </td>
                 ))}
               </tr>

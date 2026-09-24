@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, Building2, ChevronDown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
+import { Bot, Building2, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
@@ -37,7 +37,11 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('My journey plan')}</NavLink>}
       </details>
     </nav>
-    <div className="liquid-sidebar-footer"><LanguageSelector />
+    <div className="liquid-sidebar-footer">
+      <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c('Upgrade')} title={collapsed ? c('Upgrade') : undefined}>
+        <Crown size={19} aria-hidden="true" /><span>{c('Upgrade')}</span>
+      </NavLink>
+      <LanguageSelector />
       <NavLink to="/account" className="liquid-account">
         {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <span className="liquid-avatar">{(user?.fullName || 'P').slice(0, 1)}</span>}
         <span><strong>{user?.fullName || 'ProfAI'}</strong><small>{c('Account settings')}</small></span><Settings size={17} />

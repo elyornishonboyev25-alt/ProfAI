@@ -68,11 +68,17 @@
 .liquid-sidebar-toggle:hover { background:#fff0f2; color:#b32639; }
 .app-shell .liquid-sidebar .liquid-nav-item { font-size:14px; font-weight:650; }
 .app-shell .liquid-sidebar .liquid-nav-item.is-current { color:white; border-color:#d54858; background:linear-gradient(120deg,#a82135,#db3a4a 75%,#f26c75); box-shadow:0 10px 20px #b82f4250,inset 0 1px #ffffff80; }
+.liquid-upgrade-link { display:flex; align-items:center; justify-content:center; gap:10px; min-height:46px; margin-bottom:12px; padding:10px 14px; border:1px solid #ca3247; border-radius:14px; color:#fff; background:linear-gradient(120deg,#a82135,#db3a4a 75%,#f26c75); box-shadow:0 9px 20px #b82f4230,inset 0 1px #ffffff70; font-size:13px; font-weight:750; line-height:1.2; transition:transform .18s,box-shadow .18s,filter .18s; }
+.liquid-upgrade-link svg { flex-shrink:0; }
+.liquid-upgrade-link:hover { color:#fff; transform:translateY(-2px); box-shadow:0 13px 25px #b82f4240,inset 0 1px #ffffff70; filter:saturate(1.08); }
+.liquid-upgrade-link:active { transform:translateY(0); }
 .app-shell .liquid-sidebar-collapsed { width:72px; padding:17px 9px; }
 .liquid-sidebar-collapsed .liquid-sidebar-heading { min-height:64px; justify-content:center; }
 .liquid-sidebar-collapsed .liquid-brand-link,.liquid-sidebar-collapsed .liquid-nav-item span,.liquid-sidebar-collapsed .liquid-secondary-nav,.liquid-sidebar-collapsed .language-trigger,.liquid-sidebar-collapsed .liquid-account>span:nth-child(2),.liquid-sidebar-collapsed .liquid-account>svg { display:none; }
 .liquid-sidebar-collapsed .liquid-nav-item { justify-content:center; padding:12px; min-height:50px; }
 .liquid-sidebar-collapsed .liquid-sidebar-footer { padding:12px 0 0; }
+.liquid-sidebar-collapsed .liquid-upgrade-link { min-height:48px; padding:10px; }
+.liquid-sidebar-collapsed .liquid-upgrade-link span { display:none; }
 .liquid-sidebar-collapsed .liquid-account { justify-content:center; padding:8px 0; }
 .liquid-sidebar-collapsed .liquid-account img,.liquid-sidebar-collapsed .liquid-account .liquid-avatar { width:36px; height:36px; }
 @media(max-width:1023px) { .liquid-sidebar-toggle { display:none; } }

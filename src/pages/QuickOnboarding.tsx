@@ -16,7 +16,7 @@ export default function QuickOnboarding() {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   const complete = useAuthStore(s => s.setOnboardingCompleted)
-  const previous = loadOnboardingProfile(user?.id)
+  const previous = loadOnboardingProfile(user?.id, user?.fullName)
   const [focus, setFocus] = useState<LearningFocus>(loadLearningFocus(user?.id) || (previous?.targetExam === 'SAT' ? 'SAT' : 'IELTS'))
   const [step, setStep] = useState(1)
   const [ielts, setIelts] = useState(previous?.targetIeltsScore || 7)
@@ -56,7 +56,7 @@ export default function QuickOnboarding() {
         } : {}),
       })
       if (hasExam) {
-        const names = (user?.fullName || 'Learner').trim().split(' ')
+        const names = (user?.fullName || 'Learner').trim().split(/\s+/)
         saveOnboardingProfile({
           ...previous, firstName: previous?.firstName || names[0], lastName: previous?.lastName || names.slice(1).join(' '),
           targetExam: selected, daysToExam: previous?.daysToExam || 90, dailyHours: minutes / 60,

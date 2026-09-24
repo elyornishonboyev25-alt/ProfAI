@@ -112,7 +112,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const profile = loadOnboardingProfile(user?.id)
-  const firstName = (profile?.firstName || user?.fullName || 'Learner').split(' ')[0]
+  const firstName = (user?.fullName?.trim() || profile?.firstName || 'Learner').split(/\s+/)[0]
 
   const dashboardCacheKey = user?.id ?? 'guest'
   const cachedOverview = dashboardOverviewCache.get(dashboardCacheKey) ?? null

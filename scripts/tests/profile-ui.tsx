@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import AccountProfile from '../../src/pages/AccountProfile'
+import Dashboard from '../../src/pages/Dashboard'
 import { ProfileAvatar, DEFAULT_PROFILE_AVATAR } from '../../src/components/profile/ProfileAvatar'
 import { Avatar } from '../../src/features/learningCenter/components'
 import { useAuthStore } from '../../src/store/authStore'
 import { useProfileIdentitySync } from '../../src/hooks/useProfileIdentitySync'
+import { loadOnboardingProfile, saveOnboardingProfile } from '../../src/utils/weeklyPlanner'
 
 const container = document.getElementById('root')!
 const root = createRoot(container)
@@ -64,15 +66,27 @@ export async function run() {
     }
     if (path.endsWith('/profile/account')) return Response.json(account)
     if (path.endsWith('/profile/badges')) return Response.json({ badges: [] })
+    if (path.endsWith('/dashboard/overview')) return Response.json({
+      metrics: { totalTests: 0, averageScore: 0, weeklyStudySeconds: 0, currentRank: null, currentStreak: 0 },
+      weeklyProgress: [], recommendedTests: [], activityTimeline: [], miniLeaderboard: [],
+    })
     throw new Error(`Unexpected request: ${path}`)
   }
   useAuthStore.setState({ user: {
     id: 'profile-ui-user', fullName: 'Stale Name', avatarUrl: '/stale.jpg', nickname: 'learner',
     email: account.email, role: 'USER', premium: false, xp: 0, level: 1, currentStreak: 0, onboardingCompleted: true,
   }, accessToken: 'test-token' })
-  const page = () => <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AccountProfile /></MemoryRouter>
+  const oldStudyProfile = {
+    firstName: 'Old', lastName: 'Onboarding Surname', targetExam: 'IELTS' as const,
+    daysToExam: 60, dailyHours: 3, createdAt: '2026-09-01T00:00:00.000Z',
+  }
+  saveOnboardingProfile(oldStudyProfile, 'profile-ui-user')
+  saveOnboardingProfile({ ...oldStudyProfile, firstName: 'Other' }, 'other-user')
+  const page = () => <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AccountProfile /><section data-testid="dashboard"><Dashboard /></section></MemoryRouter>
+  const greeting = () => container.querySelector('[data-testid="dashboard"] h1')!.textContent!
   await render(page())
   assert.equal(container.querySelector('h1')!.textContent, 'Saved Learner')
+  assert.match(greeting(), /Welcome back,\s*Saved/, 'Dashboard ignores the stale onboarding name')
   assert.equal(useAuthStore.getState().user!.avatarUrl, account.avatarUrl, 'Server photo refreshes the shared session')
   assert.equal(input(), null, 'The editor is hidden until the pencil is clicked')
   await click(button('Edit full name'))
@@ -92,11 +106,19 @@ export async function run() {
   assert.deepEqual(writes[0], { fullName: 'Updated Learner' }, 'Saving a name leaves other profile fields alone')
   assert.equal(container.querySelector('h1')!.textContent, 'Updated Learner')
   assert.equal(useAuthStore.getState().user!.fullName, 'Updated Learner')
+  assert.match(greeting(), /Welcome back,\s*Updated/, 'An already mounted dashboard updates immediately after saving')
+  assert.deepEqual(loadOnboardingProfile('profile-ui-user', 'Updated Learner'), {
+    ...oldStudyProfile, firstName: 'Updated', lastName: 'Learner',
+  }, 'Study setup uses the saved identity while retaining study settings')
+  assert.equal(loadOnboardingProfile('profile-ui-user', '  Updated   Family Name ')!.lastName, 'Family Name')
+  assert.equal(loadOnboardingProfile('profile-ui-user', 'Updated')!.lastName, '', 'A single name clears the old surname')
+  assert.equal(loadOnboardingProfile('other-user')!.firstName, 'Other', 'Another account is unaffected')
   assert.equal(JSON.parse(localStorage.getItem('smart-test-pro-auth-v2')!).state.user.fullName, 'Updated Learner')
   assert.equal(input(), null)
   await render(null)
   await render(page())
   assert.equal(container.querySelector('h1')!.textContent, 'Updated Learner', 'Saved name survives remounting')
+  assert.match(greeting(), /Welcome back,\s*Updated/, 'Dashboard retains the saved name after returning')
 
   failSave = true
   await click(button('Edit full name'))
@@ -123,8 +145,10 @@ export async function run() {
   globalThis.fetch = () => new Promise<Response>((resolve) => { respond = resolve })
   await render(<IdentitySync />)
   await act(async () => useAuthStore.getState().setUserAvatar('/just-uploaded.jpg'))
+  await act(async () => useAuthStore.getState().setUserFullName('Just Saved Name'))
   await act(async () => respond(Response.json({ user: { ...savedUser, avatarUrl: '/older-response.jpg' } })))
   assert.equal(useAuthStore.getState().user!.avatarUrl, '/just-uploaded.jpg', 'A delayed refresh must not replace a newly saved photo')
+  assert.equal(useAuthStore.getState().user!.fullName, 'Just Saved Name', 'A delayed refresh must not replace a newly saved name')
   await render(null)
   await render(<IdentitySync />)
   await act(async () => useAuthStore.getState().clearSession())

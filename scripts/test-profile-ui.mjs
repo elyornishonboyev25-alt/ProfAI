@@ -21,12 +21,13 @@ async function main() {
     globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window)
     globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window)
     globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} }
+    globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} }
     dom.window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} })
     const outfile = join(directory, 'suite.cjs')
     await build({
       entryPoints: ['scripts/tests/profile-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
       outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'],
-      loader: { '.jpg': 'dataurl' },
+      loader: { '.jpg': 'dataurl', '.png': 'dataurl' },
     })
     await createRequire(import.meta.url)(outfile).run()
   } finally {

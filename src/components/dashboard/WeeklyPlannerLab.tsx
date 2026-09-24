@@ -960,7 +960,7 @@ export default function WeeklyPlannerLab() {
           <div className="mt-4 grid gap-3 lg:grid-cols-3">
             <div className="rounded-2xl border border-blue-100 bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-blue-600">Learner</p>
-              <p className="mt-1 text-lg font-black text-slate-900">{profile.firstName} {profile.lastName}</p>
+              <p className="mt-1 text-lg font-black text-slate-900">{user?.fullName?.trim() || `${profile.firstName} ${profile.lastName}`.trim()}</p>
             </div>
             <div className="rounded-2xl border border-blue-100 bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-blue-600">Target Exam</p>

@@ -238,7 +238,7 @@ export default function Onboarding() {
   // Prefill from an existing profile (if the learner is re-running setup) or the
   // account display name so the first step is never empty.
   useEffect(() => {
-    const existing = loadOnboardingProfile(user?.id)
+    const existing = loadOnboardingProfile(user?.id, user?.fullName)
     if (existing) {
       setFirstName(existing.firstName)
       setLastName(existing.lastName)

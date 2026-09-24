@@ -3514,7 +3514,7 @@ export default function IELTSReadingInterface({
             <div key={key} className="my-2 flex flex-col items-center">
               {block.boxes.map((box, boxIndex) => (
                 <Fragment key={boxIndex}>
-                  <div className="w-full rounded-xl border border-red-200 bg-red-50/30 px-4 py-3 text-center text-[15px] leading-relaxed text-slate-900">
+                  <div className="w-full whitespace-pre-line rounded-xl border border-red-200 bg-red-50/30 px-4 py-3 text-center text-[15px] leading-relaxed text-slate-900">
                     {segs(box.segments)}
                   </div>
                   {boxIndex < block.boxes.length - 1 ? <span className="my-1 text-2xl leading-none text-red-400">↓</span> : null}

@@ -37,7 +37,7 @@ export async function run() {
   assert.equal(getIeltsFullTestCatalog('listening')[18].testId, test.id)
   assert.ok(isAvailableIeltsTrackTest('listening', test.id))
   assert.equal(mockListeningTests.filter(item => item.id === test.id).length, 1)
-  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[19].testId))
+  assert.ok(!isAvailableIeltsTrackTest('listening', getIeltsFullTestCatalog('listening')[20].testId))
   assert.ok(readFileSync(`public${test.continuousAudioUrl}`).length > 10000000)
   assert.equal(test.totalQuestions, 40)
   assert.deepEqual(test.sections.map(section => section.questions.length), [10, 10, 10, 10])

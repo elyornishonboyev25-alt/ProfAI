@@ -4,7 +4,7 @@ const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'erkiinov09@gmail.com',
 ])
 
-const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7'])
+const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7', 'erkinov'])
 
 export function isPremiumUser(input: { role: 'USER' | 'ADMIN'; email: string; nickname?: string | null }) {
   if (input.role === 'ADMIN') return true

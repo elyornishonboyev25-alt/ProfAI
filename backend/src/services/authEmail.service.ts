@@ -1,15 +1,13 @@
-import { env, isProduction } from '../config/env.js'
+import { env } from '../config/env.js'
 
-export type AuthCodePurpose = 'REGISTER' | 'RESET_PASSWORD'
-
-type DeliveryResult = {
-  developmentCode?: string
-}
+export type AuthCodePurpose = 'REGISTER' | 'RESET_PASSWORD' | 'SIGN_IN'
 
 function emailCopy(purpose: AuthCodePurpose, code: string) {
   const isRegistration = purpose === 'REGISTER'
-  const title = isRegistration ? 'Confirm your ProfAI account' : 'Reset your ProfAI password'
-  const lead = isRegistration
+  const title = purpose === 'SIGN_IN' ? 'Sign in to ProfAI' : isRegistration ? 'Confirm your ProfAI account' : 'Reset your ProfAI password'
+  const lead = purpose === 'SIGN_IN'
+    ? 'Use this verification code to sign in or create your ProfAI account.'
+    : isRegistration
     ? 'Use this verification code to finish creating your ProfAI account.'
     : 'Use this verification code to choose a new ProfAI password.'
 
@@ -39,20 +37,15 @@ function emailCopy(purpose: AuthCodePurpose, code: string) {
   }
 }
 
-export async function sendAuthCode(email: string, code: string, purpose: AuthCodePurpose): Promise<DeliveryResult> {
+export async function sendAuthCode(email: string, code: string, purpose: AuthCodePurpose): Promise<void> {
   if (!env.RESEND_API_KEY.trim()) {
-    if (isProduction) {
-      throw new Error('Email delivery is not configured.')
-    }
-
-    // Local development remains testable without an email provider. The route
-    // returns this value only outside production and never stores it in plain text.
-    return { developmentCode: code }
+    throw new Error('Email delivery is not configured.')
   }
 
   const copy = emailCopy(purpose, code)
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
+    signal: AbortSignal.timeout(15_000),
     headers: {
       Authorization: `Bearer ${env.RESEND_API_KEY}`,
       'Content-Type': 'application/json',
@@ -70,5 +63,4 @@ export async function sendAuthCode(email: string, code: string, purpose: AuthCod
     throw new Error(`Email provider rejected the request (${response.status}).`)
   }
 
-  return {}
 }

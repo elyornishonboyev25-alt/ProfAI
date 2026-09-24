@@ -52,7 +52,12 @@ const verificationRequestSchema = z.object({
   email: z.string().email().refine((value) => value.toLowerCase().endsWith('@gmail.com'), {
     message: 'Use your Gmail address.',
   }),
-  purpose: z.enum(['REGISTER', 'RESET_PASSWORD']),
+  purpose: z.enum(['REGISTER', 'RESET_PASSWORD', 'SIGN_IN']),
+})
+
+const emailLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email().endsWith('@gmail.com'),
+  verificationCode: z.string().regex(/^\d{6}$/),
 })
 
 const passwordResetSchema = z.object({
@@ -103,14 +108,25 @@ async function validateVerificationCode(email: string, purpose: AuthCodePurpose,
   const valid = crypto.timingSafeEqual(Buffer.from(suppliedHash), Buffer.from(verification.codeHash))
 
   if (!valid) {
-    await prisma.authVerificationCode.update({
-      where: { id: verification.id },
+    await prisma.authVerificationCode.updateMany({
+      where: { id: verification.id, consumedAt: null, attempts: { lt: AUTH_CODE_MAX_ATTEMPTS } },
       data: { attempts: { increment: 1 } },
     })
     return { ok: false as const, code: 'CODE_INVALID' }
   }
 
-  return { ok: true as const, verificationId: verification.id }
+  // Claim the code atomically: concurrent submissions must not reuse it.
+  const claimed = await prisma.authVerificationCode.updateMany({
+    where: {
+      id: verification.id,
+      consumedAt: null,
+      attempts: { lt: AUTH_CODE_MAX_ATTEMPTS },
+      expiresAt: { gt: new Date() },
+    },
+    data: { consumedAt: new Date() },
+  })
+  if (claimed.count !== 1) return { ok: false as const, code: 'CODE_INVALID' }
+  return { ok: true as const }
 }
 
 function sanitizeUser(user: {
@@ -223,6 +239,12 @@ router.post(
   asyncHandler(async (req, res) => {
     const email = normalizeEmail(req.body.email)
     const purpose = req.body.purpose as AuthCodePurpose
+    if (!env.RESEND_API_KEY.trim()) {
+      return res.status(503).json({
+        message: 'Email delivery is not configured. Please contact support or continue with Google.',
+        code: 'EMAIL_NOT_CONFIGURED',
+      })
+    }
     const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } })
 
     if (purpose === 'REGISTER' && existingUser) {
@@ -242,6 +264,15 @@ router.post(
       })
     }
 
+    const recentCode = await prisma.authVerificationCode.findFirst({
+      where: { email, createdAt: { gt: new Date(Date.now() - 60_000) } },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (recentCode) {
+      res.setHeader('Retry-After', '60')
+      return res.status(429).json({ message: 'Please wait one minute before requesting another code.', code: 'CODE_COOLDOWN' })
+    }
+
     const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, '0')
     await prisma.authVerificationCode.deleteMany({
       where: { email, purpose, consumedAt: null },
@@ -256,12 +287,11 @@ router.post(
     })
 
     try {
-      const delivery = await sendAuthCode(email, code, purpose)
+      await sendAuthCode(email, code, purpose)
       return res.status(202).json({
         delivered: true,
         expiresInSec: AUTH_CODE_TTL_MS / 1000,
         message: 'Verification code sent. Check your Gmail inbox and spam folder.',
-        ...delivery,
       })
     } catch {
       await prisma.authVerificationCode.delete({ where: { id: verification.id } }).catch(() => undefined)
@@ -320,11 +350,6 @@ router.post(
         avatarUrl: true,
         profile: { select: { onboardingCompletedAt: true } },
       },
-    })
-
-    await prisma.authVerificationCode.update({
-      where: { id: verification.verificationId },
-      data: { consumedAt: new Date() },
     })
 
     const tokens = await issueAuthTokens({
@@ -396,6 +421,44 @@ router.post(
 )
 
 router.post(
+  '/email/login',
+  authRateLimit,
+  validateBody(emailLoginSchema),
+  asyncHandler(async (req, res) => {
+    const email = normalizeEmail(req.body.email)
+    const verification = await validateVerificationCode(email, 'SIGN_IN', req.body.verificationCode)
+    if (!verification.ok) {
+      return res.status(400).json({
+        message: verification.code === 'CODE_EXPIRED'
+          ? 'Verification code expired. Request a new code.'
+          : 'The verification code is incorrect or no longer valid.',
+        code: verification.code,
+      })
+    }
+
+    // An existing user's profile and progress are preserved. New accounts can
+    // set a password later using the same verified-email recovery flow.
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        fullName: deriveFullNameFromEmail(email),
+        passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
+      },
+      include: { profile: { select: { onboardingCompletedAt: true } } },
+    })
+    const tokens = await issueAuthTokens({
+      userId: user.id,
+      role: user.role,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    })
+    return res.json({ user: sanitizeUser(user), ...tokens })
+  }),
+)
+
+router.post(
   '/password/reset',
   authRateLimit,
   validateBody(passwordResetSchema),
@@ -424,10 +487,6 @@ router.post(
       prisma.refreshToken.updateMany({
         where: { userId: user.id, revokedAt: null },
         data: { revokedAt: new Date() },
-      }),
-      prisma.authVerificationCode.update({
-        where: { id: verification.verificationId },
-        data: { consumedAt: new Date() },
       }),
     ])
 

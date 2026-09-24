@@ -42,7 +42,6 @@ type AuthSessionPayload = {
 type VerificationResponse = {
   message: string
   expiresInSec: number
-  developmentCode?: string
 }
 
 export default function Register() {
@@ -54,6 +53,7 @@ export default function Register() {
   const { minimalMotion } = useMotionPreferences()
   const [verificationSent, setVerificationSent] = useState(false)
   const [verificationCode, setVerificationCode] = useState('')
+  const [sendingCode, setSendingCode] = useState(false)
 
   // Pre-fill the email when arriving from the "Account not found" CTA on /login.
   const prefillEmail = (location.state as { email?: string } | null)?.email ?? ''
@@ -74,10 +74,12 @@ export default function Register() {
   })
 
   const requestVerificationCode = async () => {
+    if (sendingCode) return
     const valid = await trigger('email')
     if (!valid) return
     const email = getValues('email').trim().toLowerCase()
 
+    setSendingCode(true)
     try {
       const response = await apiClient.post<VerificationResponse>(
         '/auth/verification/request',
@@ -85,7 +87,7 @@ export default function Register() {
         { auth: false },
       )
       setVerificationSent(true)
-      if (response.developmentCode) setVerificationCode(response.developmentCode)
+      setVerificationCode('')
       pushToast({ type: 'success', title: 'Check your Gmail', message: response.message })
     } catch (error) {
       if (error instanceof ApiError && error.code === 'ACCOUNT_EXISTS') {
@@ -94,6 +96,8 @@ export default function Register() {
         return
       }
       pushToast({ type: 'error', title: 'Code not sent', message: error instanceof Error ? error.message : 'Please try again.' })
+    } finally {
+      setSendingCode(false)
     }
   }
 
@@ -246,6 +250,7 @@ export default function Register() {
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                 <input
                   type="email"
+                  disabled={sendingCode || isSubmitting}
                   autoComplete="email"
                   className="input h-12 rounded-2xl border-blue-100 bg-white/90 pl-11 font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                   placeholder="name@gmail.com"
@@ -296,7 +301,7 @@ export default function Register() {
               <label className="block">
                 <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-bold text-slate-700">
                   <span className="inline-flex items-center gap-1.5"><KeyRound className="h-4 w-4 text-blue-500" /> <UiText text={"Verification code"} /> </span>
-                  <button type="button" onClick={() => void requestVerificationCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
+                  <button type="button" disabled={sendingCode || isSubmitting} onClick={() => void requestVerificationCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 disabled:opacity-50">
                     <RefreshCw className="h-3 w-3" />  <UiText text={"Resend code"} /> </button>
                 </span>
                 <input
@@ -314,7 +319,7 @@ export default function Register() {
             <motion.button
               whileHover={minimalMotion ? undefined : { y: -2 }}
               whileTap={minimalMotion ? undefined : { scale: 0.985 }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || sendingCode}
               type="submit"
               className="interactive-lift cta-sheen flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.34)] transition hover:shadow-[0_22px_44px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
             >

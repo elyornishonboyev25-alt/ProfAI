@@ -17,6 +17,7 @@ import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import { takeFlashToast } from '@/utils/authFlash'
 import type { AuthUser } from '@/types/platform'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
+import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 
@@ -55,6 +56,8 @@ export default function Login() {
   // Google path (we don't decode the token client-side).
   const [notFound, setNotFound] = useState<{ email?: string } | null>(null)
   const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [codeMode, setCodeMode] = useState(true)
 
   // Show the one-shot toast stashed before a hard redirect (e.g. after logout).
   useEffect(() => {
@@ -80,6 +83,15 @@ export default function Login() {
       password: '',
     },
   })
+
+  const handleEmailSession = async (payload: EmailAuthSession) => {
+    setSession(payload)
+    const diagnosticClaimed = await claimStoredGuestDiagnostic()
+    captureAnalyticsEvent('login_completed', { method: 'email_code' })
+    if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'email_code' })
+    const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
+    navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
+  }
 
   const onSubmit = async (values: LoginFormValues) => {
     const email = values.email.trim().toLowerCase()
@@ -260,6 +272,11 @@ export default function Login() {
           ) : null}
 
           {/* Form */}
+          <div className="mb-4 flex gap-2" role="group" aria-label="Sign in method">
+            <button type="button" aria-pressed={codeMode} onClick={() => setCodeMode(true)} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${codeMode ? 'bg-blue-100 text-blue-700' : 'text-slate-500'}`}>{c('Email code')}</button>
+            <button type="button" aria-pressed={!codeMode} onClick={() => setCodeMode(false)} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${!codeMode ? 'bg-blue-100 text-blue-700' : 'text-slate-500'}`}>{c('Password')}</button>
+          </div>
+          {codeMode ? <EmailCodeForm initialEmail={getValues('email')} onAuthenticated={handleEmailSession} onRecover={(email) => { setRecoveryEmail(email); setRecoveryOpen(true) }} /> : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" aria-label="Login form">
             <div>
               <label htmlFor="email" className="mb-1 block text-[13px] font-semibold text-slate-700">
@@ -281,7 +298,7 @@ export default function Login() {
             <div>
               <div className="mb-1 flex items-center justify-between gap-3">
                 <label htmlFor="password" className="text-[13px] font-semibold text-slate-700"> <UiText text={"Password"} /> </label>
-                <button type="button" onClick={() => setRecoveryOpen(true)} className="text-[11px] font-bold text-blue-600 transition hover:text-blue-800"> <UiText text={"Forgot password?"} /> </button>
+                <button type="button" onClick={() => { setRecoveryEmail(getValues('email')); setRecoveryOpen(true) }} className="text-[11px] font-bold text-blue-600 transition hover:text-blue-800"> <UiText text={"Forgot password?"} /> </button>
               </div>
               <div className="group relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
@@ -323,6 +340,7 @@ export default function Login() {
               )}
             </motion.button>
           </form>
+          )}
 
           {/* Divider */}
           <div className="my-4 flex items-center gap-3">
@@ -360,7 +378,7 @@ export default function Login() {
         </div>
         </div>
       </motion.div>
-      <PasswordRecoveryDialog open={recoveryOpen} initialEmail={getValues('email')} onClose={() => setRecoveryOpen(false)} />
+      <PasswordRecoveryDialog open={recoveryOpen} initialEmail={recoveryEmail} onClose={() => setRecoveryOpen(false)} />
     </div>
   )
 }

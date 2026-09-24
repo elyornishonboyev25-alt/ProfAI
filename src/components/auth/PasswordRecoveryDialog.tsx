@@ -14,7 +14,6 @@ type Props = {
 type VerificationResponse = {
   message: string
   expiresInSec: number
-  developmentCode?: string
 }
 
 export default function PasswordRecoveryDialog({ open, initialEmail = '', onClose }: Props) {
@@ -38,6 +37,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
   }, [initialEmail, open])
 
   const requestCode = async () => {
+    if (busy) return
     const normalized = email.trim().toLowerCase()
     if (!/^[^\s@]+@gmail\.com$/i.test(normalized)) {
       pushToast({ type: 'error', title: 'Gmail required', message: 'Enter the Gmail address used for your ProfAI account.' })
@@ -52,7 +52,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
         { auth: false },
       )
       setCodeSent(true)
-      if (response.developmentCode) setCode(response.developmentCode)
+      setCode('')
       pushToast({ type: 'success', title: 'Check your Gmail', message: response.message })
     } catch (error) {
       pushToast({ type: 'error', title: 'Code not sent', message: error instanceof Error ? error.message : 'Please try again.' })
@@ -136,7 +136,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
               <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Gmail address"} /> </span>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
-                <input value={email} onChange={(event) => { setEmail(event.target.value); setCodeSent(false) }} disabled={busy} type="email" autoComplete="email" className="input h-12 rounded-2xl border-blue-100 bg-white pl-11 font-semibold" placeholder="name@gmail.com" />
+                <input value={email} onChange={(event) => { setEmail(event.target.value); setCodeSent(false); setCode('') }} disabled={busy} type="email" autoComplete="email" className="input h-12 rounded-2xl border-blue-100 bg-white pl-11 font-semibold" placeholder="name@gmail.com" />
               </div>
             </label>
 

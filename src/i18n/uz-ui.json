@@ -1,4 +1,11 @@
 {
+  "Unlimited": "Cheksiz",
+  "Current plan": "Joriy tarif",
+  "Unlimited is active": "Cheksiz tarif faol",
+  "Your account has full premium access. No additional payment is needed.": "Hisobingizda barcha premium imkoniyatlar ochiq. Qo‘shimcha to‘lov talab qilinmaydi.",
+  "Unlimited practice attempts": "Cheksiz mashq urinishlari",
+  "All premium study sections": "Barcha premium o‘quv bo‘limlari",
+  "AI analysis and speaking tools": "AI tahlili va gapirish mashqlari",
   "Home": "Bosh sahifa",
   "Dashboard": "Boshqaruv paneli",
   "Upgrade": "Tarifni yangilash",

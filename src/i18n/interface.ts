@@ -1,6 +1,13 @@
 import { useTranslation } from 'react-i18next'
 
 export const russianInterface: Record<string, string> = {
+  'Unlimited': 'Безлимитный',
+  'Current plan': 'Текущий тариф',
+  'Unlimited is active': 'Безлимитный тариф активен',
+  'Your account has full premium access. No additional payment is needed.': 'Вашему аккаунту открыт полный премиум-доступ. Дополнительная оплата не требуется.',
+  'Unlimited practice attempts': 'Неограниченное количество попыток',
+  'All premium study sections': 'Все премиум-разделы для подготовки',
+  'AI analysis and speaking tools': 'Анализ с ИИ и инструменты разговорной практики',
   'Connecting to Google...': 'Подключение к Google...', 'Connecting...': 'Подключение...',
   'Google sign-in is currently unavailable. Use your email instead.': 'Вход через Google сейчас недоступен. Используйте электронную почту.',
   'Google sign-in could not connect. Please try again or use your email.': 'Не удалось подключиться к Google. Повторите попытку или используйте почту.',

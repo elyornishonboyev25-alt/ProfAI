@@ -25,6 +25,8 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { BrandMark } from '@/components/brand/BrandLogo'
+import { useAuthStore } from '@/store/authStore'
+import { isPremiumUser } from '@/utils/premiumAccess'
 
 const TELEGRAM_USERNAME = 'nishonboyv7'
 const TELEGRAM_URL = `https://t.me/${TELEGRAM_USERNAME}`
@@ -142,6 +144,7 @@ export default function Premium() {
   const { minimalMotion } = useMotionPreferences()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [copied, setCopied] = useState(false)
+  const user = useAuthStore((state) => state.user)
 
   const handleCopyCard = async () => {
     try {
@@ -153,6 +156,49 @@ export default function Premium() {
     } catch {
       pushToast({ type: 'error', title: 'Copy failed', message: 'Please copy the card number manually.' })
     }
+  }
+
+  if (isPremiumUser(user)) {
+    return (
+      <div className="workspace-page min-h-screen px-4 py-10 sm:px-6 lg:px-10">
+        <div className="mx-auto w-full max-w-3xl">
+          <button onClick={() => navigate('/dashboard')} className="route-back-button mb-6">
+            <ArrowLeft className="h-4 w-4" />
+            <UiText text="Back to Dashboard" />
+          </button>
+          <section className="rounded-[2rem] border border-amber-200 bg-white/95 p-7 shadow-xl sm:p-10" aria-labelledby="premium-status-title">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-blue-600 text-white">
+                <Crown className="h-7 w-7" />
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                <BadgeCheck className="h-5 w-5" />
+                <UiText text="Current plan" />
+              </span>
+            </div>
+            <h1 id="premium-status-title" className="mt-6 text-3xl font-black tracking-tight text-slate-800 sm:text-4xl">
+              <UiText text="Unlimited is active" />
+            </h1>
+            <p className="mt-2 text-sm font-semibold text-blue-700">{user?.nickname ? `@${user.nickname}` : user?.fullName}</p>
+            <p className="mt-4 leading-7 text-slate-600">
+              <UiText text="Your account has full premium access. No additional payment is needed." />
+            </p>
+            <ul className="mt-6 space-y-3">
+              {['Unlimited practice attempts', 'All premium study sections', 'AI analysis and speaking tools'].map((feature) => (
+                <li key={feature} className="flex items-center gap-3 text-slate-700">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <UiText text={feature} />
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => navigate('/dashboard')} className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-bold text-white transition hover:bg-blue-700">
+              <UiText text="Back to Dashboard" />
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </section>
+        </div>
+      </div>
+    )
   }
 
   return (

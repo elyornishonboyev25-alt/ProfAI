@@ -6,12 +6,14 @@ import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useCopy } from '@/i18n/interface'
+import { isPremiumUser } from '@/utils/premiumAccess'
 import LanguageSelector from './LanguageSelector'
 
 export function Sidebar({ concealed = false, collapsed = false, onToggle }: { concealed?: boolean; collapsed?: boolean; onToggle: () => void }) {
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
   const user = useAuthStore(s => s.user)
+  const premiumLabel = isPremiumUser(user) ? 'Unlimited' : 'Upgrade'
   const { c } = useCopy()
   useEffect(() => {
     if (concealed) ref.current?.setAttribute('inert', '')
@@ -38,8 +40,8 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
       </details>
     </nav>
     <div className="liquid-sidebar-footer">
-      <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c('Upgrade')} title={collapsed ? c('Upgrade') : undefined}>
-        <Crown size={19} aria-hidden="true" /><span>{c('Upgrade')}</span>
+      <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c(premiumLabel)} title={collapsed ? c(premiumLabel) : undefined}>
+        <Crown size={19} aria-hidden="true" /><span>{c(premiumLabel)}</span>
       </NavLink>
       <LanguageSelector />
       <NavLink to="/account" className="liquid-account">

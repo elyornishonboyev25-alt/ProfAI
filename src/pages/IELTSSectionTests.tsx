@@ -17,13 +17,14 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 
 const CARD_EASE = [0.22, 1, 0.36, 1] as const
 
-export default function IELTSSectionTests() {
+export default function IELTSSectionTests({ sectionOverride, embedded = false }: { sectionOverride?: 'reading' | 'listening'; embedded?: boolean } = {}) {
   const navigate = useNavigate()
   const location = useLocation()
   const { section } = useParams<{ section: string }>()
   const user = useAuthStore((state: AuthState) => state.user)
-  const validSection = section === 'reading' || section === 'listening'
-  const track = (validSection ? section : 'reading') as IeltsTrackType
+  const selectedSection = sectionOverride ?? section
+  const validSection = selectedSection === 'reading' || selectedSection === 'listening'
+  const track = (validSection ? selectedSection : 'reading') as IeltsTrackType
   const trial = useFeatureTrial(track)
   const [showTrialGate, setShowTrialGate] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -145,6 +146,7 @@ export default function IELTSSectionTests() {
       </AnimatePresence>
 
       <CompactIeltsCatalog
+        embedded={embedded}
         section={track}
         rows={visibleRows}
         searchTerm={searchTerm}

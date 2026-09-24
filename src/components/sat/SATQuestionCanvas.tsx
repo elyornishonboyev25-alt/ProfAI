@@ -136,6 +136,7 @@ export default function SATQuestionCanvas({
   )
   const displayedStrokes = useMemo(() => (draft ? [...sourceStrokes, draft] : sourceStrokes), [draft, sourceStrokes])
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
+  const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
 
   const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (!highlightEnabled) return
@@ -204,8 +205,8 @@ export default function SATQuestionCanvas({
   ) : null
 
   return (
-    <div className="grid min-h-[calc(100vh-12.6rem)] min-w-0 bg-[#f7f8fa] md:grid-cols-2">
-      <section className="relative min-w-0 border-b border-slate-300 px-5 py-7 md:border-b-0 md:border-r md:px-8 md:py-8 xl:px-12">
+    <div className={`grid min-h-[calc(100vh-12.6rem)] min-w-0 bg-[#f7f8fa] ${hasSeparateSource ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+      {hasSeparateSource ? <section className="relative min-w-0 border-b border-slate-300 px-5 py-7 md:border-b-0 md:border-r md:px-8 md:py-8 xl:px-12">
         <HighlightLayer
           enabled={highlightEnabled}
           surface="passage"
@@ -232,15 +233,11 @@ export default function SATQuestionCanvas({
             <SATSourceContent html={question.sourceContent.context} className="font-serif text-[18px] font-medium leading-[1.65] text-[#171717] sm:text-[19px] lg:text-[20px]" />
           ) : !question.sourceContent && context ? (
             <SATRichText text={context} className="break-words font-serif text-[18px] font-medium leading-[1.65] text-[#171717] sm:text-[19px] lg:text-[20px]" />
-          ) : (
-            <div className="hidden min-h-24 items-center justify-center text-center font-serif text-sm font-semibold text-slate-400 md:flex">
-              Use the question panel to the right.
-            </div>
-          )}
+          ) : null}
 
           {originalView}
         </div>
-      </section>
+      </section> : null}
 
       <section className="relative min-w-0 bg-[#f7f8fa]">
         <HighlightLayer
@@ -268,10 +265,13 @@ export default function SATQuestionCanvas({
         </div>
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
 
-        <div className="mx-auto max-w-3xl px-5 py-5 sm:px-8 xl:px-12">
+        <div className={`mx-auto px-5 py-5 sm:px-8 xl:px-12 ${hasSeparateSource ? 'max-w-3xl' : 'max-w-5xl'}`}>
+          {!hasSeparateSource && question.visual ? <figure className="mb-7 rounded-xl border border-slate-300 bg-white p-4"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="mx-auto max-h-[28rem] w-auto max-w-full object-contain" /></figure> : null}
+          {!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-5 font-serif text-[19px] leading-[1.65] text-[#171717]" /> : context ? <SATRichText text={context} className="mb-5 font-serif text-[19px] leading-[1.65] text-[#171717]" /> : null)}
           {question.sourceContent ? (
             <SATSourceContent html={question.sourceContent.task} className="font-serif text-[19px] font-bold leading-[1.6] text-[#151515] sm:text-[20px] lg:text-[21px]" />
           ) : <SATRichText text={task} className="break-words font-serif text-[19px] font-bold leading-[1.6] text-[#151515] sm:text-[20px] lg:text-[21px]" />}
+          {!hasSeparateSource ? originalView : null}
 
           {question.kind === 'multiple-choice' ? (
             <div className="mt-6 space-y-3.5" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>

@@ -6,7 +6,7 @@ import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 
-export default function IELTSWritingTests() {
+export default function IELTSWritingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -43,6 +43,7 @@ export default function IELTSWritingTests() {
 
   return (
     <CompactIeltsCatalog
+      embedded={embedded}
       section="writing"
       rows={visibleRows}
       searchTerm={searchTerm}

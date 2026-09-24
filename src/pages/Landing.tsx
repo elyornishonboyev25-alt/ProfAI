@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Globe2,
   GraduationCap,
+  Headphones,
   Languages,
   Mail,
   Menu,
@@ -250,38 +251,14 @@ function JourneyPreview() {
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
-      <motion.div className="landing-orbit landing-orbit-one" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, 9, -3, 0], y: [0, -12, 5, 0], rotate: [0, 5, -3, 0] }} transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }} />
-      <motion.div className="landing-orbit landing-orbit-two" aria-hidden="true" animate={reduceMotion ? undefined : { x: [0, -8, 5, 0], y: [0, 9, -6, 0], rotate: [0, -6, 4, 0] }} transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }} />
       <motion.div className="landing-preview-tilt" style={{ rotateX, rotateY, transformPerspective: 1200 }}>
-        <div className="landing-glass landing-preview-glass landing-university-scene relative overflow-hidden rounded-[2.25rem]">
-          <motion.div className="landing-preview-sheen" aria-hidden="true" animate={reduceMotion ? undefined : { x: ['-140%', '180%'] }} transition={{ duration: 6.5, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }} />
-          <svg className="landing-university-routes" viewBox="0 0 620 520" aria-hidden="true">
-            <motion.path d="M 94 134 C 176 66, 230 106, 310 152 S 447 100, 530 142" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.5, delay: 0.35, ease: EASE }} />
-            <motion.path d="M 82 367 C 167 422, 236 376, 310 337 S 449 402, 548 348" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: reduceMotion ? 0 : 1.5, delay: 0.52, ease: EASE }} />
-          </svg>
-          <div className="landing-scene-label"><span className="landing-connected-dot" /> Live journey signal</div>
-          {UNIVERSITY_SIGNALS.map((university, index) => (
-            <motion.div
-              key={university.name}
-              className={`landing-university-plaque ${university.className}`}
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.72, y: 18 }}
-              animate={reduceMotion ? { opacity: 1, scale: 1, y: 0 } : { opacity: 1, scale: 1, y: [0, index % 2 === 0 ? -8 : 7, 0], rotate: [0, index % 2 === 0 ? -1.2 : 1.2, 0] }}
-              transition={reduceMotion ? { duration: 0 } : { opacity: { duration: 0.45, delay: 0.28 + university.delay }, scale: { duration: 0.55, delay: 0.28 + university.delay, ease: EASE }, y: { duration: 6.4 + index * 0.35, repeat: Infinity, ease: 'easeInOut', delay: university.delay }, rotate: { duration: 7.2 + index * 0.3, repeat: Infinity, ease: 'easeInOut', delay: university.delay } }}
-            >
-              <span className="landing-university-monogram">{university.name.slice(0, 1)}</span>
-              <span><b>{university.name}</b><small>{university.meta}</small></span>
-            </motion.div>
-          ))}
-          <div className="landing-scene-core">
-            <motion.div className="landing-core-halo" aria-hidden="true" animate={reduceMotion ? undefined : { scale: [0.94, 1.05, 0.94], opacity: [0.48, 0.78, 0.48] }} transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }} />
-            <p>Your university journey</p>
-            <strong><span>TOP</span> 100</strong>
-            <em>one connected plan</em>
-          </div>
-          <div className="landing-scene-progress" aria-label="Profile, preparation, research and application connected in one journey">
-            {['Profile', 'Prepare', 'Research', 'Apply'].map((stage, index) => <div key={stage}><span className={index === 0 ? 'is-active' : ''} />{stage}</div>)}
-            <motion.i initial={reduceMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reduceMotion ? 0 : 1.15, delay: 0.8, ease: EASE }} />
-          </div>
+        <div className="relative overflow-hidden rounded-[2.2rem] border border-white bg-white/90 p-4 shadow-[0_38px_90px_rgba(31,48,87,.17)] sm:p-6">
+          <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-blue-200/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-rose-200/50 blur-3xl" />
+          <div className="relative flex items-center justify-between border-b border-slate-100 pb-4"><div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white"><GraduationCap size={21} /></span><div><strong className="block text-sm font-black text-slate-950">Your journey workspace</strong><small className="text-[11px] font-semibold text-slate-500">A preview of what connects here</small></div></div><span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> START HERE</span></div>
+          <div className="relative mt-5 rounded-[1.5rem] bg-[linear-gradient(130deg,#132046,#234ca5)] p-6 text-white sm:p-8"><div className="absolute right-0 top-0 h-36 w-36 rounded-full border border-white/15 translate-x-8 -translate-y-8" /><p className="text-[10px] font-black uppercase tracking-[.2em] text-blue-200">One connected plan</p><h3 className="relative mt-3 max-w-xs text-3xl font-black leading-[1.1] tracking-[-.05em] sm:text-4xl">From your first practice to your next application.</h3><div className="relative mt-7 flex items-center gap-2">{['Prepare', 'Improve', 'Explore', 'Apply'].map((step, index) => <div key={step} className="min-w-0 flex-1"><div className={`h-1.5 rounded-full ${index === 0 ? 'bg-rose-400' : 'bg-white/25'}`} /><span className="mt-2 block text-[9px] font-black uppercase tracking-[.1em] text-white/75">{step}</span></div>)}</div></div>
+          <div className="relative mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-[1.3rem] border border-rose-100 bg-rose-50/75 p-4"><Headphones className="h-6 w-6 text-rose-600" /><p className="mt-5 text-xs font-black uppercase tracking-[.14em] text-rose-600">Test preparation</p><strong className="mt-1 block text-lg font-black text-slate-950">IELTS + Digital SAT</strong><p className="mt-1 text-xs text-slate-600">Practice, results and review.</p></div><div className="rounded-[1.3rem] border border-blue-100 bg-blue-50/75 p-4"><GraduationCap className="h-6 w-6 text-blue-600" /><p className="mt-5 text-xs font-black uppercase tracking-[.14em] text-blue-600">University research</p><strong className="mt-1 block text-lg font-black text-slate-950">Find your direction</strong><p className="mt-1 text-xs text-slate-600">Explore options with a clear plan.</p></div></div>
+          <div className="relative mt-4 flex items-center justify-between rounded-[1.15rem] border border-slate-100 bg-white p-4"><div><p className="text-[10px] font-black uppercase tracking-[.15em] text-slate-400">Explore your options</p><div className="mt-2 flex items-center gap-2">{UNIVERSITY_SIGNALS.slice(0, 3).map((university) => <span key={university.name} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-700">{university.name}</span>)}</div></div><ArrowRight className="h-5 w-5 text-blue-600" /></div>
         </div>
       </motion.div>
     </motion.div>

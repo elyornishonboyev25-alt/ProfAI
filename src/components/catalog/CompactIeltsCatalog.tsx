@@ -36,6 +36,7 @@ type CompactIeltsCatalogProps = {
   onBack: () => void
   onLaunch: (row: CompactIeltsTestRow) => void
   headerExtra?: ReactNode
+  embedded?: boolean
 }
 
 const SECTION_META = {
@@ -73,6 +74,7 @@ export default function CompactIeltsCatalog({
   onBack,
   onLaunch,
   headerExtra,
+  embedded = false,
 }: CompactIeltsCatalogProps) {
   const meta = SECTION_META[section]
   const HeroIcon = meta.icon
@@ -80,8 +82,8 @@ export default function CompactIeltsCatalog({
   const availableCount = rows.filter((row) => row.available).length
 
   return (
-    <main className="mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-      <section className="relative isolate overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(125deg,rgba(255,255,255,.92),rgba(255,247,247,.72)_46%,rgba(232,241,255,.76))] px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.1),inset_0_1px_0_white] sm:px-8 sm:py-7 lg:px-10">
+    <div id={embedded ? section : undefined} className={`${embedded ? 'scroll-mt-24' : 'mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7'}`}>
+      {!embedded ? <section className="relative isolate overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(125deg,rgba(255,255,255,.92),rgba(255,247,247,.72)_46%,rgba(232,241,255,.76))] px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.1),inset_0_1px_0_white] sm:px-8 sm:py-7 lg:px-10">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,rgba(248,113,113,.2),transparent_34%),radial-gradient(circle_at_100%_0%,rgba(96,165,250,.22),transparent_38%)]" />
         <div className="pointer-events-none absolute inset-x-[12%] top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
@@ -127,9 +129,9 @@ export default function CompactIeltsCatalog({
             </div>
           </div>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="relative mt-5 overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6">
+      <section className={`relative overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6 ${embedded ? '' : 'mt-5'}`}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
 
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -201,6 +203,6 @@ export default function CompactIeltsCatalog({
           </div>
         )}
       </section>
-    </main>
+    </div>
   )
 }

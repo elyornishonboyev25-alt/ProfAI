@@ -16,6 +16,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   isSATAnswerCorrect,
   scoreSATModules,
@@ -46,6 +47,25 @@ function formatDuration(seconds: number) {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   return hours ? `${hours}h ${minutes}m` : `${Math.max(1, minutes)}m`
+}
+
+function AnimatedScore({ value }: { value: number }) {
+  const reduceMotion = useReducedMotion()
+  const [displayed, setDisplayed] = useState(reduceMotion ? value : 0)
+  useEffect(() => {
+    if (reduceMotion) { setDisplayed(value); return }
+    let frame = 0
+    let start = 0
+    const tick = (time: number) => {
+      if (!start) start = time
+      const progress = Math.min(1, (time - start) / 1450)
+      setDisplayed(Math.round(value * (1 - Math.pow(1 - progress, 3))))
+      if (progress < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [reduceMotion, value])
+  return <span>{displayed}</span>
 }
 
 function statusMeta(question: SATQuestion, attempt: SATAttempt) {
@@ -210,27 +230,28 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const headline = !submitted ? 'Your saved answers are ready to review.' : !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(145deg,#eef6ff_0%,#f8fafc_46%,#fff5f4_100%)] px-3 py-4 sm:px-5 lg:px-7">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_8%_4%,#ffe5e8_0%,transparent_29%),radial-gradient(circle_at_91%_9%,#dbeaff_0%,transparent_33%),linear-gradient(155deg,#f7faff,#fff9f9)] px-3 py-5 sm:px-5 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-[96rem]">
-        <header className="overflow-hidden rounded-[2rem] border border-white/90 bg-white/85 shadow-[0_26px_75px_rgba(15,23,42,.11)] backdrop-blur-2xl">
-          <div className="grid lg:grid-cols-[1fr_23rem]">
-            <div className="p-5 sm:p-8">
+        <header className="overflow-hidden rounded-[2.5rem] border border-white bg-white/90 shadow-[0_34px_90px_rgba(33,52,96,.12)] backdrop-blur-2xl">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_28rem]">
+            <div className="relative overflow-hidden p-6 sm:p-9 lg:p-12">
+              <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rounded-full bg-rose-100/50 blur-3xl" />
               <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={onBack ?? (() => navigate(backPath))} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600"><ArrowLeft className="h-3.5 w-3.5" /> {returnLabel}</button>
                 <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> {test.title} · {submitted ? 'Completed' : 'Saved incomplete'}</span>
               </div>
-              <p className="mt-6 text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Personal score report</p>
-              <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">{headline}</h1>
+              <p className="mt-8 text-[11px] font-black uppercase tracking-[0.22em] text-red-600">Personal score report</p>
+              <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.06] tracking-[-0.055em] text-slate-950 sm:text-5xl lg:text-[3.75rem]">{headline}</h1>
               <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500">{submitted ? `Your submitted answers across ${modules.length} modules are shown below.` : 'This attempt was saved before submission. Review your answers and unanswered questions below.'}</p>
-              <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
                   ['Correct', `${report.correct}/${allQuestions.length}`], ['Accuracy', `${report.percent}%`], ['Time used', elapsed], ['Flagged', String(attempt.flagged.length)],
-                ].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3"><p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">{label}</p><p className="mt-1 text-lg font-black text-slate-950">{value}</p></div>)}
+                ].map(([label, value]) => <div key={label} className="rounded-[1.2rem] border border-slate-100 bg-[linear-gradient(145deg,#fff,#f5f8ff)] p-4 shadow-[0_6px_20px_rgba(43,64,110,.04)]"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-950">{value}</p></div>)}
               </div>
             </div>
-            <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-950 p-6 text-white sm:p-8">
-              <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl" />
-              <div className="relative flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/60">{!submitted ? 'Saved incomplete' : !completeTest ? 'Available-module accuracy' : onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-2 text-5xl font-black tracking-tight">{!submitted ? '—' : completeTest ? `${displayedRange[0]}–${displayedRange[1]}` : `${report.percent}%`}</p></div><Award className="h-8 w-8 text-cyan-300" /></div>
+            <div className="relative flex min-h-[22rem] flex-col justify-between overflow-hidden bg-[linear-gradient(145deg,#234ac0_0%,#3935ae_54%,#11182e_100%)] p-7 text-white sm:p-10">
+              <div className="absolute -right-12 -top-12 h-60 w-60 rounded-full bg-cyan-300/20 blur-3xl" /><div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-rose-400/20 blur-3xl" />
+              <div className="relative flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">{!submitted ? 'Saved incomplete' : !completeTest ? 'Available-module accuracy' : onlySection === 'math' ? 'Estimated Math range' : onlySection === 'reading-writing' ? 'Estimated R&W range' : 'Estimated score range'}</p><p className="mt-4 text-[clamp(2.8rem,5vw,5rem)] font-black leading-none tracking-[-.07em]">{!submitted ? '—' : completeTest ? <><AnimatedScore value={displayedRange[0]} />–<AnimatedScore value={displayedRange[1]} /></> : <><AnimatedScore value={report.percent} />%</>}</p><p className="mt-3 text-xs font-semibold text-white/65">{submitted ? 'Your results are ready to explore' : 'Return when you are ready to finish'}</p></div><div className="rounded-2xl border border-white/20 bg-white/10 p-3"><Award className="h-7 w-7 text-cyan-200" /></div></div>
               {satAvailabilityNote(test) ? <p className="relative mt-4 text-xs leading-5 text-white/80">{satAvailabilityNote(test)}</p> : null}
               <div className="relative mt-8 space-y-3">
                 {readingWritingTotal ? <div><div className="flex justify-between text-[10px] font-black"><span>Reading & Writing</span><span>{submitted ? `${report.readingWritingRange[0]}–${report.readingWritingRange[1]}` : `${report.readingWritingRaw}/${readingWritingTotal} correct`}</span></div><div className="mt-1.5 h-2 rounded-full bg-white/15"><div className="h-full rounded-full bg-cyan-300" style={{ width: `${(report.readingWritingRaw / readingWritingTotal) * 100}%` }} /></div></div> : null}
@@ -240,14 +261,14 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
           </div>
         </header>
 
-        <section className="mt-4 grid gap-4 lg:grid-cols-[1fr_21rem]">
-          <div className="rounded-[1.6rem] border border-white/90 bg-white/82 p-5 shadow-sm sm:p-6">
+        <section className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="rounded-[2rem] border border-white bg-white/85 p-6 shadow-[0_20px_54px_rgba(33,52,96,.07)] sm:p-8">
             <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-black uppercase tracking-[0.14em] text-blue-600">Skill performance</p><h2 className="mt-1 text-xl font-black">Where your next points are hiding</h2></div><TrendingUp className="h-5 w-5 text-blue-600" /></div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {domainStats.map((stat) => <div key={stat.domain} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><div className="flex items-start justify-between gap-3"><p className="text-xs font-black text-slate-800">{stat.domain}</p><span className="text-xs font-black text-slate-950">{stat.percent}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className={`h-full rounded-full ${stat.percent >= 75 ? 'bg-emerald-500' : stat.percent >= 55 ? 'bg-blue-500' : 'bg-amber-500'}`} style={{ width: `${stat.percent}%` }} /></div><p className="mt-2 text-[9px] font-bold text-slate-400">{stat.correct} of {stat.total} correct</p></div>)}
+              {domainStats.map((stat) => <div key={stat.domain} className="rounded-[1.3rem] border border-slate-100 bg-[linear-gradient(140deg,#f8fbff,#fff)] p-5"><div className="flex items-start justify-between gap-3"><p className="text-sm font-black text-slate-800">{stat.domain}</p><span className="text-sm font-black text-slate-950">{stat.percent}%</span></div><div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-200"><motion.div initial={{ width: 0 }} whileInView={{ width: `${stat.percent}%` }} viewport={{ once: true }} transition={{ duration: 1, ease: 'easeOut' }} className={`h-full rounded-full ${stat.percent >= 75 ? 'bg-emerald-500' : stat.percent >= 55 ? 'bg-blue-500' : 'bg-amber-500'}`} /></div><p className="mt-3 text-[10px] font-bold text-slate-500">{stat.correct} of {stat.total} correct</p></div>)}
             </div>
           </div>
-          <div className="rounded-[1.6rem] border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
+          <div className="rounded-[2rem] border border-amber-100 bg-gradient-to-br from-[#fff9ec] via-white to-[#fff6f5] p-6 shadow-[0_20px_54px_rgba(113,72,23,.07)]">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500 text-white"><Target className="h-5 w-5" /></span>
             <p className="mt-4 text-[9px] font-black uppercase tracking-[0.13em] text-amber-700">Recommended next focus</p>
             <h2 className="mt-1 text-xl font-black text-slate-950">{weakest?.domain}</h2>

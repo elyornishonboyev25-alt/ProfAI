@@ -50,6 +50,7 @@ let catalogPreloadPromise: Promise<unknown> | null = null
 function preloadIeltsCatalogs() {
   if (!catalogPreloadPromise) {
     catalogPreloadPromise = Promise.all([
+      import('@/pages/IELTSTestLibrary'),
       import('@/pages/IELTSSectionTests'),
       import('@/pages/IELTSWritingTests'),
       import('@/pages/IELTSSpeakingTests'),
@@ -201,7 +202,7 @@ export default function IELTS() {
   }, [])
 
   const openSkill = (id: SkillId) => {
-    const path = `/ielts/${id}/tests`
+    const path = `/ielts/tests#${id}`
     navigate(path, { state: fromMock ? { entry: 'mock-ielts', from: entry?.from ?? 'tests' } : { entry: 'ielts-hub' } })
   }
 

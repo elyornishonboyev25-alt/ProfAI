@@ -9,7 +9,7 @@ import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { getCompletedSpeakingTestIds, getIeltsSpeakingDayCatalog } from '@/utils/ieltsSpeakingCatalog'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 
-export default function IELTSSpeakingTests() {
+export default function IELTSSpeakingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -91,6 +91,7 @@ export default function IELTSSpeakingTests() {
       </AnimatePresence>
 
       <CompactIeltsCatalog
+        embedded={embedded}
         section="speaking"
         rows={visibleRows}
         searchTerm={searchTerm}

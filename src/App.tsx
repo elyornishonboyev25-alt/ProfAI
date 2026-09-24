@@ -46,7 +46,7 @@ const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const SATMockRun = lazy(() => import('@/pages/SATMockRun'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
 const IELTSSection = lazy(() => import('@/pages/IELTSSection'))
-const IELTSSectionTests = lazy(() => import('@/pages/IELTSSectionTests'))
+const IELTSTestLibrary = lazy(() => import('@/pages/IELTSTestLibrary'))
 const Vocabulary = lazy(() => import('@/pages/Vocabulary'))
 const VocabularyActivity = lazy(() => import('@/pages/VocabularyActivity'))
 const ArticlesVocabulary = lazy(() => import('@/pages/ArticlesVocabulary'))
@@ -72,9 +72,7 @@ const Onboarding = lazy(() => import('@/pages/Onboarding'))
 const QuickOnboarding = lazy(() => import('@/pages/QuickOnboarding'))
 const Premium = lazy(() => import('@/pages/Premium'))
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'))
-const IELTSWritingTests = lazy(() => import('@/pages/IELTSWritingTests'))
 const IELTSWritingTest = lazy(() => import('@/pages/IELTSWritingTest'))
-const IELTSSpeakingTests = lazy(() => import('@/pages/IELTSSpeakingTests'))
 const IELTSSpeakingTest = lazy(() => import('@/pages/IELTSSpeakingTest'))
 const TestRunner = lazy(() => import('@/pages/TestRunner'))
 const Articles = lazy(() => import('@/pages/Articles'))
@@ -110,8 +108,9 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 
 function RouteLoader() {
   const { pathname } = useLocation()
+  const user = useAuthStore((state) => state.user)
 
-  if (pathname === '/dashboard' || pathname === '/') {
+  if (pathname === '/dashboard' || (pathname === '/' && user)) {
     return (
       <div className="dashboard-route-loader workspace-page min-h-screen px-3 pb-8 pt-3 sm:px-5 sm:pt-5" role="status" aria-label="Opening dashboard">
         <div className="dashboard-loader-shell mx-auto max-w-[98rem]">
@@ -539,11 +538,12 @@ function App() {
                       <Route path="/sat/:section" element={<AnimatedRoute><SATSection /></AnimatedRoute>} />
                       <Route path="/sat/calculator" element={<AnimatedRoute><SATCalculator /></AnimatedRoute>} />
                       <Route path="/ielts" element={<AnimatedRoute><IELTS /></AnimatedRoute>} />
-                      <Route path="/ielts/writing/tests" element={<AnimatedRoute><IELTSWritingTests /></AnimatedRoute>} />
-                      <Route path="/ielts/speaking/tests" element={<AnimatedRoute><IELTSSpeakingTests /></AnimatedRoute>} />
+                      <Route path="/ielts/tests" element={<AnimatedRoute><IELTSTestLibrary /></AnimatedRoute>} />
+                      <Route path="/ielts/writing/tests" element={<AnimatedRoute><IELTSTestLibrary /></AnimatedRoute>} />
+                      <Route path="/ielts/speaking/tests" element={<AnimatedRoute><IELTSTestLibrary /></AnimatedRoute>} />
                       <Route path="/ielts/speaking/test/:id" element={<AnimatedRoute><IELTSSpeakingTest /></AnimatedRoute>} />
                       <Route path="/ielts/writing/test/:id" element={<AnimatedRoute><IELTSWritingTest /></AnimatedRoute>} />
-                      <Route path="/ielts/:section/tests" element={<AnimatedRoute><IELTSSectionTests /></AnimatedRoute>} />
+                      <Route path="/ielts/:section/tests" element={<AnimatedRoute><IELTSTestLibrary /></AnimatedRoute>} />
                       <Route path="/ielts/:section" element={<AnimatedRoute><IELTSSection /></AnimatedRoute>} />
                       <Route
                         path="/vocabulary"

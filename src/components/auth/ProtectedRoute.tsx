@@ -1,5 +1,5 @@
 import UiText from '@/components/common/UiText'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LogIn, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -8,6 +8,7 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
   const openRegisterModal = useRegisterModalStore((state: RegisterModalState) => state.openRegisterModal)
@@ -44,7 +45,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                <UiText text={"Register"} /> </motion.button>
             <motion.button
               whileTap={minimalMotion ? undefined : { scale: 0.985 }}
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login', { state: { from: { pathname: location.pathname } } })}
               className="inline-flex items-center justify-center rounded-xl border border-blue-300 bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
             >
               <LogIn className="mr-2 h-4 w-4" />

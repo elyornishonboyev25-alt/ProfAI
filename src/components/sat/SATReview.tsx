@@ -80,13 +80,13 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
   const correct = isSATAnswerCorrect(question, response)
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-6">
+      <section className="overflow-hidden rounded-[1.7rem] border border-slate-200/80 bg-white shadow-[0_12px_34px_rgba(32,55,99,.05)]">
+        <div className="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-[linear-gradient(90deg,#f5f9ff,#fff9f9)] px-5 py-4 sm:px-7">
           <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-blue-700">{question.domain}</span>
           <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-slate-500 ring-1 ring-slate-200">{question.skill}</span>
           <span className="ml-auto text-[9px] font-black text-slate-400">{question.difficulty}</span>
         </div>
-        <div className="p-4 sm:p-7">
+        <div className="p-5 sm:p-8">
           {question.visual ? (
             <SATVisual
               asset={question.visual.asset}
@@ -96,10 +96,10 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
             />
           ) : null}
           {question.sourceContent ? <>
-            {question.sourceContent.context && <SATSourceContent html={question.sourceContent.context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" />}
+            {question.sourceContent.context && <SATSourceContent html={question.sourceContent.context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" />}
             <SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-xl font-semibold leading-8 text-slate-950" />
           </> : <>
-            {context ? <SATRichText text={context} className="rounded-2xl bg-slate-50 px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
+            {context ? <SATRichText text={context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
             <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
           </>}
 
@@ -109,8 +109,8 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
                 const isCorrectChoice = choice.key === question.correctAnswer
                 const isUserChoice = choice.key === response
                 return (
-                  <div key={choice.key} className={`flex items-start gap-3 rounded-2xl border p-3.5 ${
-                    isCorrectChoice ? 'border-emerald-300 bg-emerald-50' : isUserChoice ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
+                  <div key={choice.key} className={`flex items-start gap-3 rounded-[1.2rem] border p-4 transition-colors ${
+                    isCorrectChoice ? 'border-emerald-300 bg-emerald-50 shadow-[0_5px_18px_rgba(16,185,129,.08)]' : isUserChoice ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
                   }`}>
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
                       isCorrectChoice ? 'bg-emerald-600 text-white' : isUserChoice ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
@@ -142,7 +142,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
         </div>
       </section>
 
-      <section className="rounded-[1.6rem] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
+      <section className="rounded-[1.7rem] border border-blue-100 bg-[linear-gradient(135deg,#eff6ff,#fff)] p-6 shadow-[0_14px_36px_rgba(37,99,235,.06)] sm:p-7">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><BookOpenCheck className="h-5 w-5" /></span>
           <div><p className="text-[9px] font-black uppercase tracking-[0.13em] text-blue-700">Answer explanation</p><h3 className="mt-0.5 text-lg font-black text-slate-950">Why this answer works</h3></div>
@@ -190,8 +190,23 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     if (filter === 'flagged') return attempt.flagged.includes(question.id)
     return true
   })
+  const chooseFilter = (nextFilter: ReviewFilter, nextModule: 'all' | SATModuleId = moduleFilter) => {
+    const firstMatch = allQuestions.find((question) => {
+      if (nextModule !== 'all' && question.moduleId !== nextModule) return false
+      const response = attempt.answers[question.id]
+      const correct = isSATAnswerCorrect(question, response)
+      if (nextFilter === 'correct') return correct
+      if (nextFilter === 'incorrect') return Boolean(response?.trim()) && !correct
+      if (nextFilter === 'unanswered') return !response?.trim()
+      if (nextFilter === 'flagged') return attempt.flagged.includes(question.id)
+      return true
+    })
+    setFilter(nextFilter)
+    setModuleFilter(nextModule)
+    if (firstMatch) setSelectedId(firstMatch.id)
+  }
   const selectedQuestion = allQuestions.find((question) => question.id === selectedId) ?? filteredQuestions[0] ?? allQuestions[0]
-  const selectedIndex = allQuestions.findIndex((question) => question.id === selectedQuestion.id)
+  const visibleIndex = filteredQuestions.findIndex((question) => question.id === selectedQuestion.id)
   const selectedResponse = attempt.answers[selectedQuestion.id]
   const selectedStatus = statusMeta(selectedQuestion, attempt)
   const StatusIcon = selectedStatus.icon
@@ -216,6 +231,15 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const displayedMidpoint = Math.round((displayedRange[0] + displayedRange[1]) / 2)
   const weakest = domainStats[0]
   const elapsed = formatDuration(Math.max(0, ((attempt.submittedAt ?? attempt.updatedAt) - attempt.startedAt) / 1000))
+  const reviewWeakSpots = () => {
+    const missed = allQuestions.filter((question) => question.domain === weakest?.domain && !isSATAnswerCorrect(question, attempt.answers[question.id]))
+    const next = missed.find((question) => attempt.answers[question.id]?.trim()) ?? missed[0]
+    if (next) {
+      chooseFilter(attempt.answers[next.id]?.trim() ? 'incorrect' : 'unanswered', 'all')
+      setSelectedId(next.id)
+    } else chooseFilter('all', 'all')
+    document.getElementById('sat-deep-review')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   useEffect(() => {
     if (historyReview || !submitted || !completeTest || onlySection || displayedMidpoint < 1400) return
@@ -273,28 +297,28 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             <p className="mt-4 text-[9px] font-black uppercase tracking-[0.13em] text-amber-700">Recommended next focus</p>
             <h2 className="mt-1 text-xl font-black text-slate-950">{weakest?.domain}</h2>
             <p className="mt-2 text-xs font-medium leading-5 text-slate-600">Start with the missed questions in this domain. Write one rule from each explanation, then retry without notes.</p>
-            <button type="button" onClick={() => { setFilter('incorrect'); setModuleFilter('all'); const next = allQuestions.find((question) => question.domain === weakest?.domain && !isSATAnswerCorrect(question, attempt.answers[question.id])); if (next) setSelectedId(next.id) }} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-[10px] font-black text-white">Review weak spots <ArrowRight className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={reviewWeakSpots} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3.5 text-xs font-black text-white transition hover:bg-blue-800">Review weak spots <ArrowRight className="h-4 w-4" /></button>
           </div>
         </section>
 
-        <section className="mt-4 grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
-          <aside className="rounded-[1.6rem] border border-white/90 bg-white/85 p-4 shadow-[0_18px_45px_rgba(15,23,42,.08)] xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)]">
-            <div className="flex items-center justify-between"><div><p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-600">Deep review</p><h2 className="mt-1 text-lg font-black">Question navigator</h2></div><BookOpenCheck className="h-5 w-5 text-red-500" /></div>
-            <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">{(['all', 'correct', 'incorrect', 'unanswered', 'flagged'] as ReviewFilter[]).map((value) => <button type="button" key={value} onClick={() => setFilter(value)} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[9px] font-black capitalize ${filter === value ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-500'}`}>{value}</button>)}</div>
-            <select value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value as 'all' | SATModuleId)} className="mt-3 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-black text-slate-600 outline-none"><option value="all">All {modules.length} modules</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.shortTitle}</option>)}</select>
-            <div className="mt-3 max-h-[calc(100vh-15rem)] space-y-1.5 overflow-y-auto pr-1">
+        <section id="sat-deep-review" className="mt-6 grid scroll-mt-6 gap-5 xl:grid-cols-[23rem_minmax(0,1fr)]">
+          <aside className="rounded-[2rem] border border-white bg-white/90 p-5 shadow-[0_22px_60px_rgba(33,52,96,.1)] xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)]">
+            <div className="flex items-center justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">Deep review</p><h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">Question navigator</h2></div><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><BookOpenCheck className="h-5 w-5" /></span></div>
+            <div className="mt-5 flex gap-1.5 overflow-x-auto pb-1">{(['all', 'correct', 'incorrect', 'unanswered', 'flagged'] as ReviewFilter[]).map((value) => <button type="button" key={value} onClick={() => chooseFilter(value)} className={`shrink-0 rounded-xl px-3 py-2 text-[10px] font-black capitalize transition ${filter === value ? 'bg-slate-950 text-white shadow-[0_8px_17px_rgba(15,23,42,.18)]' : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50'}`}>{value}</button>)}</div>
+            <select value={moduleFilter} onChange={(event) => chooseFilter(filter, event.target.value as 'all' | SATModuleId)} className="mt-4 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-400"><option value="all">All {modules.length} modules</option>{modules.map((module) => <option key={module.id} value={module.id}>{module.shortTitle}</option>)}</select>
+            <div className="mt-4 max-h-[calc(100vh-15rem)] space-y-2 overflow-y-auto pr-1">
               {filteredQuestions.map((question) => { const status = statusMeta(question, attempt); const Icon = status.icon; return <button type="button" key={question.id} onClick={() => setSelectedId(question.id)} className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left ${selectedQuestion.id === question.id ? 'border-blue-200 bg-blue-50' : 'border-transparent bg-slate-50 hover:border-slate-200'}`}><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${status.className}`}><Icon className="h-3.5 w-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-[10px] font-black text-slate-900">{modules.find((module) => module.id === question.moduleId)?.shortTitle} · Q{question.number}</span><span className="mt-0.5 block truncate text-[9px] font-bold text-slate-400">{question.skill}</span></span>{attempt.flagged.includes(question.id) ? <Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> : null}<ChevronRight className="h-3.5 w-3.5 text-slate-300" /></button> })}
               {!filteredQuestions.length ? <p className="rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-[10px] font-bold text-slate-400">No questions match this filter.</p> : null}
             </div>
           </aside>
 
-          <article className="min-w-0 rounded-[1.8rem] border border-white/90 bg-white/85 p-3 shadow-[0_20px_55px_rgba(15,23,42,.09)] sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-4"><div><p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{selectedModule?.title}</p><h2 className="mt-1 text-xl font-black">Question {selectedQuestion.number}</h2></div><div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black ${selectedStatus.className}`}><StatusIcon className="h-4 w-4" />{selectedStatus.label}</div></div>
-            <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} />
+          <article className="min-w-0 rounded-[2rem] border border-white bg-white/90 p-4 shadow-[0_24px_64px_rgba(33,52,96,.1)] sm:p-7">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-5"><div><p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">{selectedModule?.title}</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Question {selectedQuestion.number}</h2></div><div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black ${selectedStatus.className}`}><StatusIcon className="h-4 w-4" />{selectedStatus.label}</div></div>
+            {filteredQuestions.length ? <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} /> : <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-20 text-center text-sm font-semibold text-slate-500">No questions match this filter. Choose another status or module to continue reviewing.</div>}
             <div className="mt-4 flex items-center justify-between gap-2">
-              <button type="button" disabled={selectedIndex <= 0} onClick={() => setSelectedId(allQuestions[selectedIndex - 1].id)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[10px] font-black text-slate-600 disabled:opacity-30"><ArrowLeft className="h-3.5 w-3.5" /> Previous</button>
-              <span className="text-[9px] font-black text-slate-400">{selectedIndex + 1} / {allQuestions.length}</span>
-              <button type="button" disabled={selectedIndex >= allQuestions.length - 1} onClick={() => setSelectedId(allQuestions[selectedIndex + 1].id)} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-[10px] font-black text-white disabled:opacity-30">Next <ArrowRight className="h-3.5 w-3.5" /></button>
+              <button type="button" disabled={visibleIndex <= 0} onClick={() => setSelectedId(filteredQuestions[visibleIndex - 1].id)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-blue-300 disabled:opacity-30"><ArrowLeft className="h-4 w-4" /> Previous</button>
+              <span className="text-xs font-black text-slate-500">{visibleIndex < 0 ? 0 : visibleIndex + 1} / {filteredQuestions.length}</span>
+              <button type="button" disabled={visibleIndex < 0 || visibleIndex >= filteredQuestions.length - 1} onClick={() => setSelectedId(filteredQuestions[visibleIndex + 1].id)} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-blue-700 disabled:opacity-30">Next <ArrowRight className="h-4 w-4" /></button>
             </div>
           </article>
         </section>

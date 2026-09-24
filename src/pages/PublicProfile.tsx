@@ -1,6 +1,6 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import {
   ArrowLeft,
@@ -25,12 +25,13 @@ import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achi
 import { useAuthStore } from '@/store/authStore'
 import { mergeLocalPublicProfilePerformance } from '@/utils/localProfilePerformance'
 
-function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
+function Shell({ children, onBack, backLabel }: { children: React.ReactNode; onBack?: () => void; backLabel?: string }) {
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Back to Dashboard"} /> </button>
+        {onBack ? <button onClick={onBack} className="premium-back-btn">
+          <ArrowLeft className="h-3.5 w-3.5" /> {backLabel}
+        </button> : null}
         {children}
       </div>
     </div>
@@ -50,6 +51,10 @@ function Info({ icon, title, text }: { icon: React.ReactNode; title: string; tex
 export default function PublicProfile() {
   const { nickname = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = (location.state as { from?: string } | null)?.from
+  const backPath = returnTo === '/community' || returnTo === '/account' ? returnTo : null
+  const shellBack = { onBack: backPath ? () => navigate(backPath) : undefined, backLabel: backPath === '/community' ? 'Back to Community' : 'Back to Account' }
   const user = useAuthStore((state) => state.user)
   const [serverData, setServerData] = useState<PublicProfilePayload | null>(null)
   const [loading, setLoading] = useState(true)
@@ -116,7 +121,7 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <Shell onBack={() => navigate('/dashboard')}>
+      <Shell {...shellBack}>
         <div className="flex items-center justify-center py-16 text-slate-400">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
@@ -126,7 +131,7 @@ export default function PublicProfile() {
 
   if (error) {
     return (
-      <Shell onBack={() => navigate('/dashboard')}>
+      <Shell {...shellBack}>
         {error.status === 403 ? (
           <Info icon={<Lock className="h-6 w-6" />} title="This profile is private" text="This learner has chosen to keep their profile hidden." />
         ) : (
@@ -142,7 +147,7 @@ export default function PublicProfile() {
   const v = data.visibility
 
   return (
-    <Shell onBack={() => navigate('/dashboard')}>
+    <Shell {...shellBack}>
       {/* Identity hero */}
       <Reveal>
         <section className="premium-hero p-6 sm:p-8">

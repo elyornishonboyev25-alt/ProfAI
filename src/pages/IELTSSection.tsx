@@ -8,7 +8,7 @@ export default function IELTSSection() {
   const { section } = useParams<{ section: string }>()
   const navigationState = (location.state as { entry?: string; from?: string } | null)
   const fromMock = navigationState?.entry === 'mock-ielts'
-  const mockFrom = navigationState?.from ?? 'tests'
+  const mockFrom = navigationState?.from ?? 'dashboard'
 
   if (!section || !validSections.includes(section as IeltsSectionKey)) {
     return <Navigate to="/ielts" replace />

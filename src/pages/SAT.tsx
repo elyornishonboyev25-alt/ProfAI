@@ -3,7 +3,6 @@ import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   ArrowRight,
   BookOpenText,
   Check,
@@ -259,13 +258,6 @@ export default function SAT() {
     <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
       <ArenaBackdrop />
       <div className="relative z-10 mx-auto max-w-[112rem]">
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="route-back-button"
-        >
-          <ArrowLeft className="h-4 w-4" />  <UiText text={"Dashboard"} /> </button>
-
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

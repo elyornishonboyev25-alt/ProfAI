@@ -210,10 +210,6 @@ export default function Community() {
         <header className="community-header">
           <div className="community-brand-row">
             <BrandLockup className="community-brand" />
-            <button type="button" onClick={() => navigate('/dashboard')} className="community-back-btn route-back-button">
-              <ArrowLeft className="h-4 w-4" />
-              <span> <UiText text={"Dashboard"} /> </span>
-            </button>
           </div>
 
           {mode === 'people' ? <div className="community-search-bar">
@@ -299,7 +295,7 @@ export default function Community() {
                         score={matchScore(learner, account)}
                         featured={learner.weeklyChampion === true}
                         index={index}
-                        onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)}
+                        onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })}
                       />
                     ))}
               </div>
@@ -315,7 +311,7 @@ export default function Community() {
               <p className="community-suggestion-copy"> <UiText text={"Best matches from your active filters and study goals."} /> </p>
               <div className="community-suggestion-list">
                 {suggested.map((learner) => (
-                  <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`)} />
+                  <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
                 ))}
                 {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
               </div>
@@ -331,6 +327,7 @@ export default function Community() {
 }
 
 function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode, 'people'>; onModeChange: (mode: CommunityMode) => void }) {
+  const navigate = useNavigate()
   const trial = useCommunityTrial()
   const live = mode === 'debate' || mode === 'partner'
   const heading = mode === 'debate'
@@ -374,13 +371,13 @@ function SpeakingWorkspace({ mode, onModeChange }: { mode: Exclude<CommunityMode
       {live && !trial.isPremium ? (
         <div className={cn('community-trial-banner', trial.locked && 'is-locked')}>
           <span>{trial.locked ? 'Free live speaking time used up.' : `${Math.max(0, Math.ceil(trial.secondsRemaining / 60))} free minutes remaining`}</span>
-          {trial.locked ? <button type="button" onClick={() => window.location.assign('/premium')}> <UiText text={"Unlock live rooms"} /> </button> : null}
+          {trial.locked ? <button type="button" onClick={() => navigate('/premium')}> <UiText text={"Unlock live rooms"} /> </button> : null}
         </div>
       ) : null}
 
       <div className="community-speaking-surface">
-        {mode === 'debate' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Debate /> : null}
-        {mode === 'partner' ? trial.locked ? <SpeakingLocked onUpgrade={() => window.location.assign('/premium')} /> : <Partner onExit={() => onModeChange('people')} /> : null}
+        {mode === 'debate' ? trial.locked ? <SpeakingLocked onUpgrade={() => navigate('/premium')} /> : <Debate /> : null}
+        {mode === 'partner' ? trial.locked ? <SpeakingLocked onUpgrade={() => navigate('/premium')} /> : <Partner onExit={() => onModeChange('people')} /> : null}
         {mode === 'questions' ? <DiscussionRoom roomId="hard-questions" title="Hard Questions" description="Ask difficult questions and work through answers together." /> : null}
         {mode === 'admissions' ? <DiscussionRoom roomId="study-abroad" title="Study Abroad Lounge" description="A shared room for applications, scholarships, visas and university life." /> : null}
       </div>

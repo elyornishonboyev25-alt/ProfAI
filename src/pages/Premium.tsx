@@ -141,6 +141,11 @@ const PAYMENT_STEPS = [
 
 export default function Premium() {
   const navigate = useNavigate()
+  const goBack = () => {
+    const historyIndex = window.history.state?.idx
+    if (typeof historyIndex === 'number' && historyIndex > 0) navigate(-1)
+    else navigate('/dashboard')
+  }
   const { minimalMotion } = useMotionPreferences()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [copied, setCopied] = useState(false)
@@ -162,9 +167,9 @@ export default function Premium() {
     return (
       <div className="workspace-page min-h-screen px-4 py-10 sm:px-6 lg:px-10">
         <div className="mx-auto w-full max-w-3xl">
-          <button onClick={() => navigate('/dashboard')} className="route-back-button mb-6">
+          <button onClick={goBack} className="route-back-button mb-6">
             <ArrowLeft className="h-4 w-4" />
-            <UiText text="Back to Dashboard" />
+            <UiText text="Back" />
           </button>
           <section className="rounded-[2rem] border border-amber-200 bg-white/95 p-7 shadow-xl sm:p-10" aria-labelledby="premium-status-title">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -206,11 +211,11 @@ export default function Premium() {
 
       <div className="relative mx-auto w-full max-w-6xl">
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={goBack}
           className="route-back-button mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
-           <UiText text={"Back to Dashboard"} /> </button>
+           <UiText text={"Back"} /> </button>
         {/* Hero */}
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 18 }}

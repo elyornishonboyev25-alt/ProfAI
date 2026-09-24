@@ -43,6 +43,8 @@ import {
 type ResultLocationState = {
   result?: TestResult
   test?: IELTSTest
+  mock?: { id: string; section: string }
+  from?: string
 }
 
 const EMPTY_ANALYSIS: ReadingAnalysisReport = {
@@ -78,7 +80,7 @@ export default function Results() {
   const location = useLocation()
   const navigate = useNavigate()
   const authUser = useAuthStore((state) => state.user)
-  const { result, test } = (location.state as ResultLocationState) || {}
+  const { result, test, mock, from } = (location.state as ResultLocationState) || {}
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)
   const [sharingResult, setSharingResult] = useState(false)
@@ -86,6 +88,12 @@ export default function Results() {
 
   const hasPayload = Boolean(result && test)
   const resolvedTestId = result?.testId ?? test?.id ?? ''
+  const isListeningTest = `${resolvedTestId} ${test?.title ?? ''} ${test?.module ?? ''}`.toLowerCase().includes('listening')
+  const testType = isListeningTest ? 'listening' : 'reading'
+  const catalogPath = `/ielts/${testType}/tests`
+  const backPath = mock?.id ? `/mock/ielts/${mock.id}` : catalogPath
+  const backLabel = mock?.id ? 'Full Mock' : `${isListeningTest ? 'Listening' : 'Reading'} Tests`
+  const goBack = () => navigate(backPath, mock?.id ? { state: { from } } : undefined)
 
   const allSections = useMemo(
     () => (hasPayload ? (((test as IELTSTest).sections as Section[]) ?? []) : []),
@@ -228,12 +236,12 @@ export default function Results() {
 
   const startRetake = () => {
     if (!resolvedTestId) return
-    navigate(`/test/reading/${resolvedTestId}`)
+    navigate(`/test/${testType}/${resolvedTestId}`)
   }
 
   const activateFullReview = () => {
     if (!resolvedTestId) return
-    navigate(`/test/reading/${resolvedTestId}`, {
+    navigate(`/test/${testType}/${resolvedTestId}`, {
       state: {
         reviewPayload: {
           result,
@@ -241,6 +249,8 @@ export default function Results() {
         },
         sourceTest: test,
         fromResults: true,
+        mock,
+        from,
       },
     })
   }
@@ -322,15 +332,15 @@ export default function Results() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => navigate('/ielts/reading/tests')}
+                onClick={goBack}
                 className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
               >
                 <ArrowLeft className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700"> <UiText text={"Reading Tests"} /> </span>
+                <span className="text-sm font-semibold text-slate-700">{backLabel}</span>
               </button>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600"> <UiText text={"Result Studio"} /> </p>
-                <h1 className="text-lg font-black text-slate-900"> <UiText text={"IELTS Reading Result"} /> </h1>
+                <h1 className="text-lg font-black text-slate-900">IELTS {isListeningTest ? 'Listening' : 'Reading'} Result</h1>
               </div>
             </div>
           </div>
@@ -588,11 +598,11 @@ export default function Results() {
                <UiText text={"Back to Home"} /> </button>
             <button
               type="button"
-              onClick={() => navigate('/ielts/reading/tests')}
+              onClick={goBack}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               <BookOpen className="h-4 w-4" />
-               <UiText text={"Reading Tests"} /> </button>
+               {backLabel} </button>
             <button
               type="button"
               onClick={activateFullReview}

@@ -1,6 +1,6 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   AtSign,
@@ -48,6 +48,10 @@ import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 export default function SpeakerProfile() {
   const { id = 'me' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromSpeakingCommunity = (location.state as { from?: string } | null)?.from === '/speaking-community'
+  const backPath = fromSpeakingCommunity ? '/speaking-community' : '/dashboard'
+  const backLabel = fromSpeakingCommunity ? 'Back to Speaking Community' : 'Back to Dashboard'
   const user = useAuthStore((state: AuthState) => state.user)
 
   const nickname = id === 'me' ? user?.nickname ?? null : id
@@ -96,14 +100,14 @@ export default function SpeakerProfile() {
   // ── Guards ────────────────────────────────────────────────────────────────
   if (!user) {
     return (
-      <Shell onBack={() => navigate('/dashboard')}>
+      <Shell onBack={() => navigate(backPath)} backLabel={backLabel}>
         <Info text="Sign in to view speaker profiles." />
       </Shell>
     )
   }
   if (id === 'me' && !user.nickname) {
     return (
-      <Shell onBack={() => navigate('/dashboard')}>
+      <Shell onBack={() => navigate(backPath)} backLabel={backLabel}>
         <div className="surface-card flex flex-col items-center p-10 text-center">
           <AtSign className="h-10 w-10 text-blue-400" />
           <h2 className="mt-3 text-xl font-black text-slate-900">Choose a nickname first</h2>
@@ -112,14 +116,14 @@ export default function SpeakerProfile() {
       </Shell>
     )
   }
-  if (loading) return <Shell onBack={() => navigate('/dashboard')}><Info text="Loading profile…" /></Shell>
-  if (error || !data) return <Shell onBack={() => navigate('/dashboard')}><Info text={error ?? 'Profile not found.'} /></Shell>
+  if (loading) return <Shell onBack={() => navigate(backPath)} backLabel={backLabel}><Info text="Loading profile…" /></Shell>
+  if (error || !data) return <Shell onBack={() => navigate(backPath)} backLabel={backLabel}><Info text={error ?? 'Profile not found.'} /></Shell>
 
   const p = data.profile
   const percentile = p.rank && p.totalSpeakers ? Math.max(1, Math.round(100 - ((p.rank - 1) / p.totalSpeakers) * 100)) : null
 
   return (
-    <Shell onBack={() => navigate('/dashboard')}>
+    <Shell onBack={() => navigate(backPath)} backLabel={backLabel}>
       {/* Identity hero */}
       <Reveal>
         <section className="premium-hero p-6 sm:p-8">
@@ -271,12 +275,13 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
   )
 }
 
-function Shell({ children, onBack }: { children: React.ReactNode; onBack: () => void }) {
+function Shell({ children, onBack, backLabel }: { children: React.ReactNode; onBack: () => void; backLabel: string }) {
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Back to Dashboard"} /> </button>
+          <ArrowLeft className="h-3.5 w-3.5" /> {backLabel}
+        </button>
         {children}
       </div>
     </div>

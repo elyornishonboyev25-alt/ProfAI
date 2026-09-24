@@ -2,7 +2,6 @@ import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
-  ArrowLeft,
   ArrowUpRight,
   Crown,
   Flame,
@@ -173,8 +172,6 @@ export default function Leaderboard() {
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => navigate('/dashboard')} className="premium-back-btn-sm">
-                  <ArrowLeft className="h-3.5 w-3.5" />  <UiText text={"Dashboard"} /> </button>
                 <p className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
                   <Sparkles className="h-3.5 w-3.5" />
                    <UiText text={"XP Ranking Board"} /> </p>

@@ -279,7 +279,7 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
         rTags={rTags} setRTags={setRTags}
         rNote={rNote} setRNote={setRNote}
         onSubmit={submitRating}
-        onViewProfile={() => peerUserId && navigate(`/speaker/${peerUserId}`)}
+        onViewProfile={() => peerUserId && navigate(`/speaker/${peerUserId}`, { state: { from: '/speaking-community' } })}
         onExit={onExit}
       />
     )

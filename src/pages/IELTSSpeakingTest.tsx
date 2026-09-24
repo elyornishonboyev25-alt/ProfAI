@@ -99,6 +99,14 @@ export default function IELTSSpeakingTest() {
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
   const mockContext = (location.state as { mock?: { id: string; section: string } } | null)?.mock
+  const mockFrom = (location.state as { from?: string } | null)?.from
+  const exitTest = () => {
+    if (mockContext?.id) {
+      navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })
+      return
+    }
+    navigate('/ielts/speaking/tests', { state: location.state })
+  }
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const addSession = useSpeakingStore((s) => s.addSession)
@@ -128,7 +136,7 @@ export default function IELTSSpeakingTest() {
   if (!mode) {
     content = (
       <div className="mx-auto max-w-2xl px-4 py-10">
-        <button onClick={() => navigate('/ielts/speaking/tests')} className="premium-back-btn mb-4">
+        <button onClick={exitTest} className="premium-back-btn mb-4">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Speaking Tests
         </button>
         <p className="text-sm text-slate-600">Speaking test not found.</p>
@@ -138,7 +146,7 @@ export default function IELTSSpeakingTest() {
     content = (
       <FullMockRunner
         mock={mode.mock}
-        onExit={() => navigate('/ielts/speaking/tests')}
+        onExit={exitTest}
         onSaved={(analysis) => {
           const localSession = addSession({
             userId: user?.id ?? null,
@@ -210,7 +218,7 @@ export default function IELTSSpeakingTest() {
     content = (
       <DayRunner
         day={mode.day}
-        onExit={() => navigate('/ielts/speaking/tests')}
+        onExit={exitTest}
         onComplete={() => markSpeakingTestCompleted(mode.day.id, user?.id)}
       />
     )

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   ArrowRight,
   BookOpenCheck,
   CalendarDays,
@@ -94,7 +93,7 @@ export default function JourneyPlan() {
     <div className="workspace-page relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-6">
       <div className="mx-auto max-w-[92rem]">
         <header className="mb-5 flex flex-wrap items-center justify-between gap-3 px-1">
-          <div className="flex items-center gap-3"><button type="button" onClick={() => navigate('/dashboard')} aria-label="Back to dashboard" className="grid h-11 w-11 place-items-center rounded-2xl border border-white bg-white/65 text-slate-600 shadow-sm backdrop-blur-xl transition hover:bg-white hover:text-slate-950"><ArrowLeft className="h-4 w-4" /></button><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">Personal university workspace</p><h1 className="text-2xl font-black tracking-[-.04em] text-slate-950 sm:text-3xl">My Journey Plan</h1></div></div>
+          <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">Personal university workspace</p><h1 className="text-2xl font-black tracking-[-.04em] text-slate-950 sm:text-3xl">My Journey Plan</h1></div>
           <div className="flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/85 px-3.5 py-2 text-[10px] font-black uppercase tracking-[.13em] text-emerald-800"><ShieldCheck className="h-3.5 w-3.5" /> Account-private</div>
         </header>
 

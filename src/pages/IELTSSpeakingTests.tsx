@@ -95,7 +95,7 @@ export default function IELTSSpeakingTests() {
         rows={visibleRows}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts')}
+        onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
         onLaunch={handleLaunch}
         headerExtra={!speakingTrial.isPremium && Number.isFinite(speakingTrial.remaining) ? (
           <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-700">

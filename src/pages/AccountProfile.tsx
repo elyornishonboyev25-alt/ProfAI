@@ -609,7 +609,7 @@ export default function AccountProfile() {
             {/* Quick actions */}
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => navigate(savedNickname ? `/u/${savedNickname}` : '/account')}
+                onClick={() => navigate(savedNickname ? `/u/${savedNickname}` : '/account', { state: { from: '/account' } })}
                 disabled={!savedNickname}
                 className="arena-primary-btn justify-center disabled:opacity-50"
               >

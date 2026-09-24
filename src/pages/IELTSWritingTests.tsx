@@ -10,7 +10,7 @@ export default function IELTSWritingTests() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const navigationState = location.state as { entry?: string } | null
+  const navigationState = location.state as { entry?: string; from?: string; mock?: { id: string; section: string } } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
   const [searchTerm, setSearchTerm] = useState('')
   const deferredSearchTerm = useDeferredValue(searchTerm)
@@ -47,8 +47,8 @@ export default function IELTSWritingTests() {
       rows={visibleRows}
       searchTerm={searchTerm}
       onSearchChange={setSearchTerm}
-      onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts')}
-      onLaunch={(row) => row.available && navigate(`/ielts/writing/test/${row.id}`)}
+      onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
+      onLaunch={(row) => row.available && navigate(`/ielts/writing/test/${row.id}`, { state: navigationState })}
     />
   )
 }

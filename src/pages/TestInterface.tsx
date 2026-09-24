@@ -164,6 +164,8 @@ export default function TestInterface() {
       state: {
         result: results,
         test: testData,
+        mock: mockContext,
+        from: mockFrom,
       },
     })
   }
@@ -174,8 +176,15 @@ export default function TestInterface() {
         state: {
           result: reviewPayload.result,
           test: testData ?? sourceTest ?? undefined,
+          mock: mockContext,
+          from: mockFrom,
         },
       })
+      return
+    }
+
+    if (mockContext?.id) {
+      navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })
       return
     }
 
@@ -284,5 +293,3 @@ export default function TestInterface() {
 
   return <div>Unsupported Test Type</div>
 }
-
-

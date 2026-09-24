@@ -9,6 +9,9 @@ type WritingTestNavState = {
   autoStart?: boolean
   timerEnabled?: boolean
   durationMinutes?: number
+  entry?: string
+  from?: string
+  mock?: { id: string; section: string }
 } | null
 
 export default function IELTSWritingTest() {
@@ -21,7 +24,11 @@ export default function IELTSWritingTest() {
   const fullTest = useMemo(() => (id ? getWritingFullTestById(id) : null), [id])
 
   const handleExit = () => {
-    navigate('/ielts/writing/tests')
+    if (navState?.mock?.id) {
+      navigate(`/mock/ielts/${navState.mock.id}`, { state: { from: navState.from } })
+      return
+    }
+    navigate('/ielts/writing/tests', { state: navState })
   }
 
   if (fullTest?.available) {

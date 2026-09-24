@@ -47,7 +47,7 @@ export default function SpeakerDirectory() {
   }, [speakers, query])
 
   const openProfile = (s: CommunitySpeaker) => {
-    if (s.nickname) navigate(`/speaker/${s.nickname}`)
+    if (s.nickname) navigate(`/speaker/${s.nickname}`, { state: { from: '/speaking-community' } })
   }
 
   if (!user) {
@@ -68,7 +68,7 @@ export default function SpeakerDirectory() {
           <UserRound className="h-5 w-5 text-red-600" /> Community Speakers
         </h2>
         <button
-          onClick={() => (user.nickname ? navigate(`/speaker/${user.nickname}`) : navigate('/speaker/me'))}
+          onClick={() => navigate(user.nickname ? `/speaker/${user.nickname}` : '/speaker/me', { state: { from: '/speaking-community' } })}
           className="arena-secondary-btn text-sm"
         >
           My profile

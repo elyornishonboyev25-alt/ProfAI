@@ -157,7 +157,7 @@ export default function AdmissionUniversity() {
                   className="route-back-button"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to Universities
+                  {admissionReturnTo === '/admission/shortlist' ? 'Back to Shortlist' : 'Back to Universities'}
                 </button>
                 <button
                   type="button"

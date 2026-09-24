@@ -209,9 +209,11 @@ export default function IELTS() {
     <main className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <ArenaBackdrop />
       <div className="relative z-10 mx-auto max-w-[112rem]">
-        <button type="button" onClick={() => navigate(fromMock ? '/mock/ielts' : '/dashboard')} className="route-back-button">
-          <ArrowLeft className="h-4 w-4" /> {fromMock ? 'Mock IELTS' : 'Dashboard'}
-        </button>
+        {fromMock ? (
+          <button type="button" onClick={() => navigate('/mock/ielts', { state: { from: entry?.from } })} className="route-back-button">
+            <ArrowLeft className="h-4 w-4" /> Mock IELTS
+          </button>
+        ) : null}
 
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}

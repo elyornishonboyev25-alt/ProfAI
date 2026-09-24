@@ -792,7 +792,7 @@ export default function Profile() {
               <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete a test to start earning XP and build your history."} /> </p>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/test-preparation')}
                 className="interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]"
               >
                  <UiText text={"Browse tests"} /> <ArrowUpRight className="h-4 w-4" />

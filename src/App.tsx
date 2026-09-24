@@ -219,6 +219,14 @@ function LegacySpeakingRedirect() {
 
 function App() {
   useProfileIdentitySync()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('profai-sidebar-collapsed') === 'true' } catch { return false }
+  })
+  const toggleSidebar = () => setSidebarCollapsed(previous => {
+    const next = !previous
+    try { localStorage.setItem('profai-sidebar-collapsed', String(next)) } catch { /* Optional preference. */ }
+    return next
+  })
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
@@ -432,11 +440,11 @@ function App() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <div className="flex flex-1">
-          {showSidebar ? <Sidebar concealed={isImmersiveHub} /> : null}
+          {showSidebar ? <Sidebar concealed={isImmersiveHub} collapsed={sidebarCollapsed} onToggle={toggleSidebar} /> : null}
 
           <main
             className={`min-w-0 w-full flex-1 overflow-x-clip ${
-              sidebarVisible ? 'lg:ml-[18.75rem]' : 'ml-0'
+              sidebarVisible ? (sidebarCollapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'
             }`}
           >
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}

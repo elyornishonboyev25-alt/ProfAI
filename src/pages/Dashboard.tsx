@@ -6,15 +6,12 @@ import {
   AlertCircle,
   Award,
   BarChart3,
-  Building2,
   BookOpen,
   CheckCircle2,
   Clock3,
   Flame,
   GraduationCap,
-  MapPin,
   Mic2,
-  Route,
   Settings,
   RefreshCw,
   Sparkles,
@@ -111,34 +108,6 @@ function StatCard({
   )
 }
 
-function JourneyPlanPreview({ plan, onOpen }: { plan: NonNullable<DashboardOverview['journeyPlan']>; onOpen: () => void }) {
-  const destinations = plan.answers.destinations?.slice(0, 2).join(' · ') || 'Destination not set'
-  const priorities = plan.result.priorities.slice(0, 3)
-  const scoreStyle = { background: `conic-gradient(#60a5fa ${plan.result.overallScore}%, rgba(255,255,255,.14) 0)` }
-
-  return (
-    <section className="relative mt-4 overflow-hidden rounded-[2rem] bg-slate-950 p-5 text-white shadow-[0_26px_72px_rgba(15,23,42,.22)] sm:p-7">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_16%,rgba(37,99,235,.55),transparent_30%),radial-gradient(circle_at_8%_100%,rgba(239,68,68,.25),transparent_34%)]" />
-      <div className="pointer-events-none absolute -right-14 -top-20 h-64 w-64 rounded-full border border-white/10" />
-      <div className="relative grid gap-6 xl:grid-cols-[1fr_minmax(28rem,.95fr)_auto] xl:items-center">
-        <div className="flex items-center gap-4">
-          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-[0_14px_42px_rgba(37,99,235,.28)]" style={scoreStyle}>
-            <div className="grid h-[76px] w-[76px] place-items-center rounded-full bg-slate-950 text-center"><div><b className="block text-2xl font-black leading-none">{plan.result.overallScore}</b><span className="mt-1 block text-[7px] font-black uppercase tracking-[.13em] text-blue-200">Readiness</span></div></div>
-          </div>
-          <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.18em] text-blue-200"> <UiText text={"Your university journey"} /> </p><h2 className="mt-1 text-xl font-black tracking-[-.035em] sm:text-2xl">{plan.result.readinessLabel}</h2><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-slate-300"><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><GraduationCap className="h-3.5 w-3.5 text-red-300" /> {plan.answers.intendedMajor || 'Major not set'}</span><span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[.07] px-2.5 py-1.5"><MapPin className="h-3.5 w-3.5 text-blue-300" /> {destinations}</span></div></div>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-3">
-          {priorities.map((priority, index) => <div key={priority.key} className="rounded-2xl border border-white/10 bg-white/[.07] p-3 backdrop-blur-xl"><span className="text-[8px] font-black uppercase tracking-[.15em] text-red-300">Next 0{index + 1}</span><p className="mt-1.5 text-[11px] font-black leading-4 text-white">{priority.title}</p></div>)}
-        </div>
-
-        <button type="button" onClick={onOpen} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-slate-950 shadow-xl transition hover:-translate-y-0.5 hover:bg-blue-50">Open my plan <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
-      </div>
-      <div className="relative mt-5 flex items-start gap-2 border-t border-white/10 pt-4 text-[10px] font-semibold leading-5 text-slate-400"><Route className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-300" /><span>Your saved readiness priorities now stay with your ProfAI account and can be opened from any device.</span></div>
-    </section>
-  )
-}
-
 export default function Dashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -193,6 +162,7 @@ export default function Dashboard() {
   const targetProgress = Math.max(0, Math.min(100, Math.round(
     examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
   )))
+  const hasCurrentScore = examTargets.some((exam) => exam.current > 0)
 
   const chartData = useMemo(
     () => overview.weeklyProgress.map((day) => ({ ...day, activity: day.studyTimeSec ?? 0 })),
@@ -223,13 +193,13 @@ export default function Dashboard() {
         <header className="dashboard-entrance-header flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
-              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 text-sm font-black text-blue-700">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-black text-red-700">
                 <ProfileAvatar src={user?.avatarUrl} />
               </div>
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700"> <UiText text={"Your learning dashboard"} /> </p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-700"> <UiText text={"Your learning dashboard"} /> </p>
               <h1 className="truncate text-2xl font-black tracking-[-0.04em] text-[#101222] sm:text-4xl">
                  <UiText text={"Welcome back,"} /> {firstName}
               </h1>
@@ -242,9 +212,6 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <button type="button" onClick={() => navigate('/learning-center')} aria-label="Open Learning Center" title="Learning Center" className="dashboard-icon-button">
-              <Building2 className="h-5 w-5" />
-            </button>
             <NotificationsBell />
             <button type="button" onClick={() => navigate('/account')} aria-label="Profile settings" className="dashboard-icon-button">
               <Settings className="h-5 w-5" />
@@ -257,7 +224,7 @@ export default function Dashboard() {
             <span className="dashboard-target-ribbon" aria-hidden="true" />
             <span className="dashboard-target-orb" aria-hidden="true" />
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70"> <UiText text={"Your target"} /> </p>
+              <p className="dashboard-target-heading text-base font-bold"> <UiText text={"Your target"} /> </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {examTargets.map((exam) => (
                   <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
@@ -283,8 +250,8 @@ export default function Dashboard() {
                 />
               </svg>
               <div className="relative text-center">
-                <p className="text-4xl font-black tracking-[-0.05em]">{targetProgress}%</p>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/70"> <UiText text={"on track"} /> </p>
+                <p className="text-4xl font-black tracking-[-0.05em]">{hasCurrentScore ? `${targetProgress}%` : '—'}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/80"> <UiText text={hasCurrentScore ? 'toward target' : 'No score yet'} /> </p>
               </div>
             </div>
 
@@ -299,7 +266,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
-              className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-blue-950 shadow-lg transition hover:-translate-y-0.5"
+              className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
             >
                <UiText text={"Continue preparing"} /> <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -321,7 +288,7 @@ export default function Dashboard() {
             <article className="dashboard-glass-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600"> <UiText text={"Weekly activity"} /> </p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Weekly activity"} /> </p>
                   <h2 className="mt-1 text-lg font-black text-slate-950"> <UiText text={"Your study rhythm"} /> </h2>
                 </div>
                 <button type="button" onClick={() => navigate('/profile')} className="inline-flex items-center gap-1 text-xs font-black text-red-600 hover:text-red-700">
@@ -336,9 +303,9 @@ export default function Dashboard() {
                     <BarChart data={chartData} margin={{ top: 8, right: 2, left: -24, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#1e3a8a" />
-                          <stop offset="55%" stopColor="#2563eb" />
-                          <stop offset="100%" stopColor="#60a5fa" />
+                          <stop offset="0%" stopColor="#9f2436" />
+                          <stop offset="55%" stopColor="#d73549" />
+                          <stop offset="100%" stopColor="#fb9ba4" />
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
@@ -352,7 +319,7 @@ export default function Dashboard() {
                       <Tooltip
                         formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}
                         contentStyle={{ border: '1px solid #bfdbfe', borderRadius: 14, fontSize: 12 }}
-                        cursor={{ fill: 'rgba(59,130,246,.06)' }}
+                        cursor={{ fill: 'rgba(207,40,54,.06)' }}
                       />
                       <Bar
                         dataKey="activity"
@@ -386,7 +353,7 @@ export default function Dashboard() {
                   <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Leaderboard"} /> </p>
                   <h2 className="mt-1 text-lg font-black text-slate-950"> <UiText text={"Top learners"} /> </h2>
                 </div>
-                <span className="flex items-center gap-1 text-[10px] font-black text-blue-700">
+                <span className="flex items-center gap-1 text-[10px] font-black text-red-700">
                    <UiText text={"View all"} /> <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </div>
@@ -430,7 +397,7 @@ export default function Dashboard() {
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
                 <div
                   style={{ transform: `scaleX(${nextAchievement.progress / 100})` }}
-                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400"
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-rose-900 via-red-600 to-rose-300"
                 />
               </div>
               <p className="mt-2 text-right text-[10px] font-bold text-slate-400">
@@ -440,12 +407,10 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {overview.journeyPlan?.result ? <JourneyPlanPreview plan={overview.journeyPlan} onOpen={() => navigate('/journey-plan')} /> : null}
-
         <section className="dashboard-entrance-learning dashboard-glass-card mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600"> <UiText text={"Continue learning"} /> </p>
+              <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Continue learning"} /> </p>
               <h2 className="mt-1 text-xl font-black text-slate-950"> <UiText text={"Pick up where you left off"} /> </h2>
             </div>
           </div>
@@ -461,13 +426,13 @@ export default function Dashboard() {
               return (
                 <button key={card.title} type="button" onClick={() => navigate(card.path)} className="dashboard-learning-card group">
                   <div className="flex items-start justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700"><Icon className="h-4 w-4" /></span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-700"><Icon className="h-4 w-4" /></span>
                     <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
                   </div>
                   <h3 className="mt-3 text-sm font-black text-slate-900"><UiText text={card.title} /></h3>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
-                    <div className="h-full rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400" style={{ width: `${metric.progress}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-rose-900 via-red-600 to-rose-300" style={{ width: `${metric.progress}%` }} />
                   </div>
                   <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
                      <UiText text={"Continue"} /> <ArrowRight className="h-3 w-3" />

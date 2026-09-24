@@ -261,10 +261,10 @@ export default function SAT() {
       <div className="relative z-10 mx-auto max-w-[112rem]">
         <button
           type="button"
-          onClick={() => navigate('/test-preparation')}
+          onClick={() => navigate('/dashboard')}
           className="route-back-button"
         >
-          <ArrowLeft className="h-4 w-4" />  <UiText text={"Test Preparation"} /> </button>
+          <ArrowLeft className="h-4 w-4" />  <UiText text={"Dashboard"} /> </button>
 
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}

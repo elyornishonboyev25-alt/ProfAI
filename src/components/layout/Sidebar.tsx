@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, Building2, ChevronDown, Settings, Trophy, Users, Route } from 'lucide-react'
+import { Bot, Building2, ChevronDown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
@@ -8,7 +8,7 @@ import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useCopy } from '@/i18n/interface'
 import LanguageSelector from './LanguageSelector'
 
-export function Sidebar({ concealed = false }: { concealed?: boolean }) {
+export function Sidebar({ concealed = false, collapsed = false, onToggle }: { concealed?: boolean; collapsed?: boolean; onToggle: () => void }) {
   const ref = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
   const user = useAuthStore(s => s.user)
@@ -17,10 +17,15 @@ export function Sidebar({ concealed = false }: { concealed?: boolean }) {
     if (concealed) ref.current?.setAttribute('inert', '')
     else ref.current?.removeAttribute('inert')
   }, [concealed])
-  return <aside ref={ref} aria-hidden={concealed} className={`profai-sidebar liquid-sidebar ${concealed ? 'liquid-sidebar-concealed' : ''}`}>
-    <NavLink to="/dashboard" className="liquid-brand-link" aria-label="ProfAI"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
-    <nav aria-label={c('Home')} className="liquid-nav">
-      {WORKSPACE_NAVIGATION.map(item => <NavLink key={item.path} to={item.path} aria-current={item.matches(pathname) ? 'page' : undefined} className={`liquid-nav-item ${item.matches(pathname) ? 'is-current' : ''}`}>
+  return <aside ref={ref} aria-hidden={concealed} className={`profai-sidebar liquid-sidebar ${concealed ? 'liquid-sidebar-concealed' : ''} ${collapsed ? 'liquid-sidebar-collapsed' : ''}`}>
+    <div className="liquid-sidebar-heading">
+      <NavLink to="/dashboard" className="liquid-brand-link" aria-label="ProfAI"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
+      <button type="button" className="liquid-sidebar-toggle" onClick={onToggle} aria-label={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')} aria-expanded={!collapsed} title={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')}>
+        {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+      </button>
+    </div>
+    <nav aria-label={c('Dashboard')} className="liquid-nav">
+      {WORKSPACE_NAVIGATION.map(item => <NavLink key={item.path} to={item.path} title={collapsed ? c(item.label) : undefined} aria-label={c(item.label)} aria-current={item.matches(pathname) ? 'page' : undefined} className={`liquid-nav-item ${item.matches(pathname) ? 'is-current' : ''}`}>
         <item.icon size={20} aria-hidden="true" /><span>{c(item.label)}</span>
       </NavLink>)}
       <details className="liquid-secondary-nav">

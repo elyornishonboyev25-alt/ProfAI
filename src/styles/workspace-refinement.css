@@ -35,7 +35,18 @@
 .profai-dashboard .dashboard-target-card .dashboard-target-cta { color:#8e2136; box-shadow:0 8px 18px #52152522; }
 .profai-dashboard .dashboard-target-card .dashboard-target-cta svg { color:#bd273a; }
 .profai-dashboard .dashboard-glass-card,.profai-dashboard .dashboard-stat-card,.profai-dashboard .dashboard-learning-card { background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(255,255,255,.82)); border-color:rgba(255,255,255,.95); box-shadow:var(--liquid-shadow); }
-.profai-dashboard .dashboard-stat-icon { border-color:#f4cdd1; color:#b8273c; background:#fff1f2; }
+.profai-dashboard .dashboard-stat-card {
+  border-color:rgba(202,215,232,.85);
+  background:
+    radial-gradient(circle at 8% 0%,rgba(255,255,255,.96),transparent 56%),
+    linear-gradient(145deg,#f9fbff 0%,#f0f5fb 52%,#e5edf7 100%);
+  box-shadow:0 18px 42px rgba(51,70,100,.12),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(148,163,184,.15);
+}
+.profai-dashboard .dashboard-stat-icon { border-color:#dbe5f2; color:#b8273c; background:linear-gradient(145deg,#fff,#f3f7fc); box-shadow:0 5px 14px rgba(51,70,100,.08),inset 0 1px 0 #fff; }
+.profai-dashboard .dashboard-stat-note { color:#64748b; }
+@media(hover:hover) and (pointer:fine) {
+  .profai-dashboard .dashboard-stat-card:hover { border-color:#c5d5e9; box-shadow:0 24px 48px rgba(51,70,100,.16),inset 0 1px 0 #fff; }
+}
 .profai-dashboard .dashboard-icon-button:hover,.profai-dashboard button[aria-label='Notifications']:hover { color:#be263b; }
 .profai-dashboard .dashboard-leaderboard-preview:hover,.profai-dashboard .dashboard-leaderboard-preview:focus-visible { border-color:#f1b3bc; box-shadow:0 18px 38px #ad273c17; }
 .profai-dashboard .dashboard-entrance-learning { background:transparent; border:0; box-shadow:none; padding:4px 0 0; }

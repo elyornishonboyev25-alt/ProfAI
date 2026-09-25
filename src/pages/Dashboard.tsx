@@ -75,7 +75,7 @@ function bestAvailableScore(...scores: Array<number | null | undefined>) {
 }
 
 function formatStudyTime(seconds: number) {
-  if (seconds > 3600) return `${Number((seconds / 3600).toFixed(2))}h`
+  if (seconds >= 3600) return `${Number((seconds / 3600).toFixed(2))}h`
   if (seconds > 0 && seconds < 60) return '<1 min'
   return `${Math.round(seconds / 60)} min`
 }
@@ -313,7 +313,9 @@ export default function Dashboard() {
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#94a3b8', fontSize: 10 }}
-                        tickFormatter={(value: number) => `${Number((value / 3600).toFixed(2))}h`}
+                        tickFormatter={(value: number) => value < 3600
+                          ? `${Number((value / 60).toFixed(2))}m`
+                          : `${Number((value / 3600).toFixed(2))}h`}
                       />
                       <Tooltip
                         formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}

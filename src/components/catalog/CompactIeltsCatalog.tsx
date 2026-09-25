@@ -194,14 +194,10 @@ export default function CompactIeltsCatalog({
                     : 'cursor-not-allowed border-slate-200/80 bg-white/48 opacity-75'
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">
-                      IELTS <UiText text={meta.label} /> {String(row.number).padStart(2, '0')}
-                    </p>
-                    <h3 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{row.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
-                  </div>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">
+                    IELTS <UiText text={meta.label} /> {String(row.number).padStart(2, '0')}
+                  </p>
                   {row.completed ? (
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
                       <CheckCircle2 className="h-3.5 w-3.5" />  <UiText text={"Completed"} /> </span>
@@ -209,6 +205,8 @@ export default function CompactIeltsCatalog({
                     <Lock className="h-5 w-5 shrink-0 text-slate-400" />
                   ) : null}
                 </div>
+                <h3 className={`mt-3 font-black tracking-[-0.04em] text-slate-950 ${section === 'listening' ? 'whitespace-nowrap text-[clamp(1rem,2.2vw,1.5rem)]' : 'text-2xl'}`}>{row.title}</h3>
+                <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">

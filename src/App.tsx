@@ -442,7 +442,7 @@ function App() {
           {showSidebar ? <Sidebar concealed={isImmersiveHub} collapsed={sidebarCollapsed} onToggle={toggleSidebar} /> : null}
 
           <main
-            className={`min-w-0 w-full flex-1 overflow-x-clip ${
+            className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${
               sidebarVisible ? (sidebarCollapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'
             }`}
           >

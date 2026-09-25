@@ -23,7 +23,10 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
     <div className="liquid-sidebar-heading">
       <NavLink to="/dashboard" className="liquid-brand-link" aria-label="ProfAI"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
       <button type="button" className="liquid-sidebar-toggle" onClick={onToggle} aria-label={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')} aria-expanded={!collapsed} title={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')}>
-        {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+        <span className="liquid-sidebar-toggle-icon" aria-hidden="true">
+          <PanelLeftClose className="liquid-sidebar-toggle-close" size={20} strokeWidth={1.9} />
+          <PanelLeftOpen className="liquid-sidebar-toggle-open" size={20} strokeWidth={1.9} />
+        </span>
       </button>
     </div>
     <nav aria-label={c('Dashboard')} className="liquid-nav">

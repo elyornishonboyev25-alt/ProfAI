@@ -70,11 +70,44 @@
 }
 
 /* Desktop navigation collapses to an icon rail while preserving direct links. */
-.app-shell .liquid-sidebar { background:linear-gradient(155deg,#ffffffed,#fff7f8db); box-shadow:0 22px 52px #4a2b3613,inset 0 1px #fff; }
-.liquid-sidebar-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:4px; min-height:78px; }
-.liquid-sidebar-heading .liquid-brand-link { min-width:0; margin:0 0 22px 5px; }
-.liquid-sidebar-toggle { display:grid; place-items:center; flex:0 0 auto; width:36px; height:36px; border:1px solid #e9dfe2; border-radius:11px; color:#667386; background:#ffffffb8; transition:background .18s,color .18s; }
-.liquid-sidebar-toggle:hover { background:#fff0f2; color:#b32639; }
+.app-shell .liquid-sidebar {
+  overflow-x:hidden;
+  background:linear-gradient(155deg,#ffffffed,#fff7f8db);
+  box-shadow:0 22px 52px #4a2b3613,inset 0 1px #fff;
+  transition:width 420ms cubic-bezier(.22,1,.36,1),padding 420ms cubic-bezier(.22,1,.36,1),transform 240ms var(--liquid-ease),opacity 240ms;
+}
+@media(min-width:1024px) {
+  .app-shell .workspace-main { transition:margin-left 420ms cubic-bezier(.22,1,.36,1); }
+}
+.liquid-sidebar-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:4px; min-height:78px; transition:min-height 420ms cubic-bezier(.22,1,.36,1),gap 380ms cubic-bezier(.22,1,.36,1); }
+.liquid-sidebar-heading .liquid-brand-link { min-width:0; max-width:180px; overflow:hidden; white-space:nowrap; margin:0 0 22px 5px; opacity:1; transition:max-width 380ms cubic-bezier(.22,1,.36,1),margin 380ms cubic-bezier(.22,1,.36,1),opacity 200ms ease,transform 380ms cubic-bezier(.22,1,.36,1),visibility 0s; }
+.liquid-sidebar-toggle {
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  width:44px;
+  height:44px;
+  border:1px solid #d9e2ee;
+  border-radius:15px;
+  color:#485a72;
+  background:linear-gradient(145deg,#fff 10%,#f0f4fa 100%);
+  box-shadow:0 8px 18px rgba(48,64,88,.1),inset 0 1px 0 #fff;
+  cursor:pointer;
+  transition:transform 220ms cubic-bezier(.22,1,.36,1),border-color 220ms ease,color 220ms ease,background 220ms ease,box-shadow 220ms ease;
+}
+.liquid-sidebar-toggle:hover { transform:translateY(-2px); border-color:#f0b8c0; color:#b32639; background:linear-gradient(145deg,#fff,#fff1f3); box-shadow:0 12px 24px rgba(128,42,58,.14),inset 0 1px 0 #fff; }
+.liquid-sidebar-toggle:active { transform:scale(.94); box-shadow:0 4px 10px rgba(48,64,88,.12),inset 0 1px 0 #fff; }
+.liquid-sidebar-toggle-icon { position:relative; width:20px; height:20px; }
+.liquid-sidebar-toggle-icon svg { position:absolute; inset:0; transition:opacity 180ms ease,transform 300ms cubic-bezier(.22,1,.36,1); }
+.liquid-sidebar-toggle-open { opacity:0; transform:translateX(-5px) scale(.8); }
+.liquid-sidebar-collapsed .liquid-sidebar-toggle-close { opacity:0; transform:translateX(5px) scale(.8); }
+.liquid-sidebar-collapsed .liquid-sidebar-toggle-open { opacity:1; transform:translateX(0) scale(1); }
+.app-shell .liquid-sidebar .liquid-nav-item { transition:gap 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),background 180ms,color 180ms; }
+.liquid-sidebar .liquid-nav-item span,.liquid-sidebar .liquid-upgrade-link span,.liquid-sidebar .liquid-account>span:nth-child(2) { max-width:180px; overflow:hidden; white-space:nowrap; opacity:1; transition:max-width 340ms cubic-bezier(.22,1,.36,1),opacity 160ms ease,transform 340ms cubic-bezier(.22,1,.36,1); }
+.liquid-sidebar .liquid-account>svg { flex-shrink:0; max-width:20px; opacity:1; transition:max-width 340ms cubic-bezier(.22,1,.36,1),opacity 160ms ease; }
+.liquid-sidebar .liquid-secondary-nav,.liquid-sidebar .liquid-language { overflow:hidden; max-height:420px; opacity:1; transition:max-height 380ms cubic-bezier(.22,1,.36,1),opacity 180ms ease,margin 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),visibility 0s; }
+.liquid-sidebar .liquid-upgrade-link { transition:gap 380ms cubic-bezier(.22,1,.36,1),transform 180ms,box-shadow 180ms,filter 180ms; }
+.liquid-sidebar .liquid-account { transition:gap 380ms cubic-bezier(.22,1,.36,1); }
 .app-shell .liquid-sidebar .liquid-nav-item { font-size:14px; font-weight:650; }
 .app-shell .liquid-sidebar .liquid-nav-item.is-current { color:white; border-color:#d54858; background:linear-gradient(120deg,#a82135,#db3a4a 75%,#f26c75); box-shadow:0 10px 20px #b82f4250,inset 0 1px #ffffff80; }
 .liquid-upgrade-link { display:flex; align-items:center; justify-content:center; gap:10px; min-height:46px; margin-bottom:12px; padding:10px 14px; border:1px solid #ca3247; border-radius:14px; color:#fff; background:linear-gradient(120deg,#a82135,#db3a4a 75%,#f26c75); box-shadow:0 9px 20px #b82f4230,inset 0 1px #ffffff70; font-size:13px; font-weight:750; line-height:1.2; transition:transform .18s,box-shadow .18s,filter .18s; }
@@ -82,15 +115,23 @@
 .liquid-upgrade-link:hover { color:#fff; transform:translateY(-2px); box-shadow:0 13px 25px #b82f4240,inset 0 1px #ffffff70; filter:saturate(1.08); }
 .liquid-upgrade-link:active { transform:translateY(0); }
 .app-shell .liquid-sidebar-collapsed { width:72px; padding:17px 9px; }
-.liquid-sidebar-collapsed .liquid-sidebar-heading { min-height:64px; justify-content:center; }
-.liquid-sidebar-collapsed .liquid-brand-link,.liquid-sidebar-collapsed .liquid-nav-item span,.liquid-sidebar-collapsed .liquid-secondary-nav,.liquid-sidebar-collapsed .language-trigger,.liquid-sidebar-collapsed .liquid-account>span:nth-child(2),.liquid-sidebar-collapsed .liquid-account>svg { display:none; }
-.liquid-sidebar-collapsed .liquid-nav-item { justify-content:center; padding:12px; min-height:50px; }
+.liquid-sidebar-collapsed .liquid-sidebar-heading { min-height:64px; gap:0; justify-content:center; }
+.liquid-sidebar-collapsed .liquid-brand-link { max-width:0; margin:0; opacity:0; transform:translateX(-8px); visibility:hidden; pointer-events:none; transition:max-width 380ms cubic-bezier(.22,1,.36,1),margin 380ms cubic-bezier(.22,1,.36,1),opacity 200ms ease,transform 380ms cubic-bezier(.22,1,.36,1),visibility 0s 380ms; }
+.liquid-sidebar-collapsed .liquid-nav-item span,.liquid-sidebar-collapsed .liquid-upgrade-link span,.liquid-sidebar-collapsed .liquid-account>span:nth-child(2) { max-width:0; opacity:0; transform:translateX(-8px); }
+.liquid-sidebar-collapsed .liquid-account>svg { max-width:0; opacity:0; }
+.liquid-sidebar-collapsed .liquid-secondary-nav,.liquid-sidebar-collapsed .liquid-language { max-height:0; margin:0; padding:0; border-color:transparent; opacity:0; visibility:hidden; pointer-events:none; transition:max-height 380ms cubic-bezier(.22,1,.36,1),opacity 180ms ease,margin 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),visibility 0s 380ms; }
+.liquid-sidebar-collapsed .liquid-nav-item { justify-content:center; gap:0; padding:12px; min-height:50px; }
 .liquid-sidebar-collapsed .liquid-sidebar-footer { padding:12px 0 0; }
-.liquid-sidebar-collapsed .liquid-upgrade-link { min-height:48px; padding:10px; }
-.liquid-sidebar-collapsed .liquid-upgrade-link span { display:none; }
-.liquid-sidebar-collapsed .liquid-account { justify-content:center; padding:8px 0; }
+.liquid-sidebar-collapsed .liquid-upgrade-link { gap:0; min-height:48px; padding:10px; }
+.liquid-sidebar-collapsed .liquid-account { justify-content:center; gap:0; padding:8px 0; }
 .liquid-sidebar-collapsed .liquid-account img,.liquid-sidebar-collapsed .liquid-account .liquid-avatar { width:36px; height:36px; }
 @media(max-width:1023px) { .liquid-sidebar-toggle { display:none; } }
+@media(prefers-reduced-motion:reduce) {
+  .app-shell .liquid-sidebar,.app-shell .workspace-main,.liquid-sidebar-heading,.liquid-sidebar-heading .liquid-brand-link,.liquid-sidebar-toggle,.liquid-sidebar-toggle-icon svg,.app-shell .liquid-sidebar .liquid-nav-item,.liquid-sidebar .liquid-nav-item span,.liquid-sidebar .liquid-upgrade-link span,.liquid-sidebar .liquid-account>span:nth-child(2),.liquid-sidebar .liquid-account>svg,.liquid-sidebar .liquid-secondary-nav,.liquid-sidebar .liquid-language { transition:none; }
+}
+html[data-motion='minimal'] .app-shell .liquid-sidebar,
+html[data-motion='minimal'] .app-shell .workspace-main,
+html[data-motion='minimal'] .liquid-sidebar :is(.liquid-sidebar-heading,.liquid-brand-link,.liquid-sidebar-toggle,.liquid-sidebar-toggle-icon svg,.liquid-nav-item,.liquid-nav-item span,.liquid-upgrade-link span,.liquid-account>span:nth-child(2),.liquid-account>svg,.liquid-secondary-nav,.liquid-language) { transition:none; }
 
 /* Match the loading geometry and palette to the real dashboard. */
 .dashboard-loader-shell { background:linear-gradient(135deg,#fffffff2,#fff9f9de); box-shadow:0 18px 45px #482b3610; }

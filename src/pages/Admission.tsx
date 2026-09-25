@@ -31,7 +31,7 @@ export default function Admission() {
       <div className="relative mx-auto w-full max-w-6xl space-y-7">
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
-          <section className="premium-hero min-h-[29rem] p-6 sm:p-9">
+          <section className="premium-hero p-6 shadow-[0_28px_70px_rgba(30,64,175,.12)] sm:p-9">
             <img
               src="/assets/admission/campus-hero.webp"
               alt=""
@@ -68,6 +68,10 @@ export default function Admission() {
                       {phase.title}
                     </span>
                   ))}
+                </div>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button type="button" onClick={() => navigate('/admission/lessons')} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-red-700 px-5 py-3 text-sm font-black text-white shadow-[0_13px_30px_rgba(220,38,38,.2)] transition hover:-translate-y-0.5">Explore lessons <ArrowRight className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => navigate('/admission/universities')} className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-white/90 px-5 py-3 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50">Browse universities <Globe2 className="h-4 w-4" /></button>
                 </div>
               </div>
 

@@ -26,6 +26,7 @@ import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
+import ReportIssueModal from '@/components/support/ReportIssueModal'
 
 const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 
@@ -236,6 +237,12 @@ function LegacySpeakingRedirect() {
 }
 
 function App() {
+  const [reportOpen, setReportOpen] = useState(false)
+  useEffect(() => {
+    const openReport = () => setReportOpen(true)
+    window.addEventListener('profai:report-issue', openReport)
+    return () => window.removeEventListener('profai:report-issue', openReport)
+  }, [])
   useProfileIdentitySync()
   const location = useLocation()
   const pathname = location.pathname
@@ -866,6 +873,7 @@ function App() {
         </WorkspaceFrame>
       </div>
       {showMobileNav ? <MobileBottomNav /> : null}
+      <ReportIssueModal open={reportOpen} onClose={() => setReportOpen(false)} />
     </div>
   )
 }

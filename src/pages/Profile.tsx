@@ -318,7 +318,7 @@ export default function Profile() {
       <div className="relative mx-auto w-full max-w-7xl">
       {error && <div className="liquid-inline-error mb-5" role="alert"><span><UiText text="Unable to refresh your activity." /></span><button onClick={() => void refetch()}><UiText text="Try again" /></button></div>}
       <Reveal>
-        <section className="premium-hero relative overflow-hidden p-6 sm:p-9">
+        <section className="premium-hero relative overflow-hidden border border-white/90 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,.98),transparent_38%),radial-gradient(circle_at_92%_80%,rgba(254,226,226,.55),transparent_40%),linear-gradient(125deg,#fff,#f2f7ff)] p-6 shadow-[0_28px_70px_rgba(30,64,175,.12)] sm:p-9">
 
           {loading ? (
             <>
@@ -340,6 +340,7 @@ export default function Profile() {
                    <UiText text={"Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher."} /> </p>
                 <div className="results-actions"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}> <UiText text={"Start practicing"} /> <ArrowUpRight size={16} /></button><button className="liquid-button secondary" onClick={() => navigate('/analyze-mistakes')}> <UiText text={"Review mistakes"} /> <BrainCircuit size={16} /></button></div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={() => navigate('/leaderboard')} className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-bold text-red-700 transition hover:bg-red-100"><Trophy className="h-4 w-4" /> View leaderboard <ArrowUpRight className="h-3.5 w-3.5" /></button>
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5">
                     <Award className="h-4 w-4 text-amber-600" />
                     <span className="text-sm font-bold text-amber-700">
@@ -368,7 +369,7 @@ export default function Profile() {
 
               {/* XP gem progress card */}
               <div className="rounded-3xl">
-                <div className="relative overflow-hidden rounded-3xl border border-blue-100/80 bg-gradient-to-br from-white via-amber-50/30 to-indigo-50/50 p-5 shadow-[0_18px_44px_rgba(37,99,235,0.12)]">
+                <div className="relative overflow-hidden rounded-3xl border border-red-100/80 bg-gradient-to-br from-white via-red-50/30 to-blue-50/60 p-6 shadow-[0_18px_44px_rgba(37,99,235,0.12)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
                   <div className="flex items-start justify-between gap-3">
                     <div>

@@ -255,6 +255,43 @@
   .community-crown-emblem svg { animation: none; }
 }
 
+/* Let the community grow with its content inside the workspace sidebar. */
+.community-page { height: auto; min-height: 100dvh; overflow: visible; }
+.community-shell { height: auto; overflow: visible; padding-block: 2rem 4rem; }
+.community-header { grid-template-columns: 1fr; gap: 1.25rem; }
+.community-search-bar { grid-template-columns: minmax(230px,1fr) auto; min-height: 76px; border-radius: 1.75rem; }
+.community-search-field { height: 54px; }
+.community-layout { grid-template-columns: minmax(205px,240px) minmax(0,1fr); min-height: auto; overflow: visible; align-items: start; gap: 1.5rem; padding: 1.4rem; }
+.community-feed { min-height: auto; }
+.community-feed-heading { min-height: auto; align-items: end; padding: .25rem 0 1.25rem; }
+.community-feed-heading h1 { font-size: clamp(1.85rem,3vw,2.8rem); }
+.community-card-viewport { overflow: visible; padding: 1.2rem .3rem .3rem; mask-image: none; }
+.community-card-grid { grid-template-columns: repeat(auto-fit,minmax(min(100%,245px),1fr)); gap: 1.35rem; }
+.community-learner-card { min-height: 410px; padding-inline: 1.25rem; }
+.community-stat-row small { font-size: .62rem; white-space: normal; line-height: 1.2; }
+.community-suggestions { grid-column: 1/-1; }
+.community-suggestion-panel { display: block; }
+.community-suggestion-list { grid-template-columns: repeat(auto-fit,minmax(min(100%,230px),1fr)); }
+.community-suggestion-copy { grid-column: auto; }
+.community-suggestion-legend { max-width: 25rem; }
+@media (max-width: 1300px) {
+  .community-search-bar { grid-template-columns: 1fr; }
+  .community-header-filters { flex-wrap: wrap; }
+}
+@media (max-width: 850px) {
+  .community-layout { grid-template-columns: 1fr; }
+  .community-left-column { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .community-suggestions { grid-column: auto; }
+}
+@media (max-width: 580px) {
+  .community-shell { padding: 1rem .8rem 4rem; }
+  .community-layout { padding: 1rem; border-radius: 1.75rem; }
+  .community-left-column { grid-template-columns: 1fr; }
+  .community-feed-heading { display: block; }
+  .community-card-grid { grid-template-columns: 1fr; }
+  .community-suggestion-list { grid-template-columns: 1fr; }
+}
+
 /* Unified Community + Speaking workspace. The page now uses the single global
    SphereField; legacy local orbs stay disabled to avoid a second GPU layer. */
 .community-mode-nav { display: flex; gap: .5rem; overflow-x: auto; padding: .15rem; scrollbar-width: none; }

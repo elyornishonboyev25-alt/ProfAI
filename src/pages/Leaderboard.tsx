@@ -22,7 +22,6 @@ import { isPremiumUser } from '@/utils/premiumAccess'
 import { motion } from 'framer-motion'
 import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
-import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
@@ -96,6 +95,7 @@ export default function Leaderboard() {
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<LeaderboardResponse | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week')
 
   useEffect(() => {
     let active = true
@@ -115,7 +115,7 @@ export default function Leaderboard() {
         const sync = await syncSavedSATAttemptResults(user.id)
         if (!active || useAuthStore.getState().user?.id !== user.id) return
         if (sync.failed) setError('Some saved SAT results could not sync. Retry to update your test statistics.')
-        const payload = await apiClient.get<LeaderboardResponse>('/leaderboard?period=all', { auth: true })
+        const payload = await apiClient.get<LeaderboardResponse>(`/leaderboard?period=${period}`, { auth: true })
         if (!active) return
         setData(payload)
       } catch (fetchError) {
@@ -130,7 +130,7 @@ export default function Leaderboard() {
     return () => {
       active = false
     }
-  }, [user, reloadKey])
+  }, [user, reloadKey, period])
 
   const rows = useMemo(() => data?.rows ?? [], [data])
   const currentUserRow = useMemo(() => rows.find((row) => row.isCurrentUser) ?? null, [rows])
@@ -148,7 +148,7 @@ export default function Leaderboard() {
 
   const topTen = rows.slice(0, 10)
   const leader = rows[0] ?? null
-  const currentXp = currentUserRow?.totalXp ?? user?.xp ?? 0
+  const currentXp = currentUserRow?.totalXp ?? (period === 'all' ? user?.xp ?? 0 : 0)
   const nextRank = currentUserRow ? rows.find((row) => row.rank === currentUserRow.rank - 1) : null
   const xpToNextRank = nextRank ? Math.max(0, nextRank.totalXp - currentXp + 1) : 0
   const leaderProgress = leader && leader.totalXp > 0 ? Math.min(100, currentXp / leader.totalXp * 100) : 0
@@ -181,8 +181,11 @@ export default function Leaderboard() {
                  <UiText text={"Global"} /> <span className="arena-title-accent-red"> <UiText text={"Leaderboard"} /> </span>
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Ranked by total profile XP, highest first. Every awarded XP counts across all activities.
+                {period === 'all' ? 'All time profile XP across every activity.' : `Verified XP earned ${period === 'week' ? 'this week' : 'this month'}.`} See the leaders and your place on the board.
               </p>
+              <div className="mt-5 inline-flex flex-wrap gap-1 rounded-2xl border border-white/90 bg-white/75 p-1.5 shadow-sm" role="group" aria-label="Leaderboard period">
+                {([['week', 'This Week'], ['month', 'Month'], ['all', 'All Time']] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setPeriod(value)} aria-pressed={period === value} className={`rounded-xl px-4 py-2 text-sm font-black transition ${period === value ? 'bg-gradient-to-r from-red-500 to-red-700 text-white shadow-[0_9px_20px_rgba(220,38,38,.24)]' : 'text-slate-600 hover:bg-red-50 hover:text-red-700'}`}>{label}</button>)}
+              </div>
             </div>
 
             <Tilt3D className="w-full rounded-3xl sm:w-auto" max={5}>
@@ -208,7 +211,7 @@ export default function Leaderboard() {
           </div>
 
           <p className="relative z-10 mt-6 text-xs font-semibold text-blue-700">
-            All time · All activities · Same XP as your profile
+            {period === 'all' ? 'All time · All activities · Same XP as your profile' : `Current ${period === 'week' ? 'week' : 'month'} · Verified activity XP`}
           </p>
         </section>
       </Reveal>
@@ -306,7 +309,7 @@ export default function Leaderboard() {
                             color: 'white',
                           }}
                         >
-                          <ProfileAvatar src={row.avatarUrl} alt="" className="rounded-full" />
+                          {String(row.rank).padStart(2, '0')}
                         </div>
                         {isFirst ? (
                           <Crown
@@ -412,9 +415,6 @@ export default function Leaderboard() {
                           {isTopThree ? <Crown className={`h-4 w-4 ${medalColor}`} /> : `#${row.rank}`}
                         </span>
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-[11px] font-bold text-blue-700">
-                            <ProfileAvatar src={row.avatarUrl} alt="" className="rounded-full" />
-                          </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-slate-900">
                               {row.fullName}
@@ -455,11 +455,20 @@ export default function Leaderboard() {
                 No rankings yet. Earn XP to start climbing!
               </div>
             )}
+            {currentUserRow && currentUserRow.rank > 10 ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-white px-4 py-3 shadow-[0_12px_25px_rgba(220,38,38,.1)]"><span className="inline-flex items-center gap-3"><b className="text-lg font-black text-red-700">#{currentUserRow.rank}</b><span><strong className="block text-sm font-black text-slate-950">You · {currentUserRow.fullName}</strong><small className="text-xs font-medium text-slate-500">{currentUserRow.testsCompleted} tests · {currentUserRow.accuracy.toFixed(0)}% accuracy</small></span></span><strong className="text-sm font-black text-red-700">{currentUserRow.totalXp.toLocaleString('en-US')} XP</strong></div> : null}
           </article>
           </PremiumFeatureLock>
         </Reveal>
 
         <div className="space-y-4">
+          <Reveal>
+            <article className="surface-card overflow-hidden border-red-100 bg-[linear-gradient(140deg,#fff,#fff3f3_55%,#edf4ff)] p-5">
+              <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><Shield size={22} /></span><div><p className="text-[10px] font-black uppercase tracking-[.15em] text-red-600">YOUR LEAGUE</p><h3 className="text-lg font-black text-slate-950">{currentUserRow?.divisionLabel ?? 'Build your ranking'}</h3></div></div>
+              <p className="mt-4 text-sm leading-6 text-slate-600">{currentUserRow ? `You are #${currentUserRow.rank} on the ${period === 'all' ? 'all time' : period === 'week' ? 'weekly' : 'monthly'} board. Keep earning XP to move up.` : 'Complete activities to appear on the leaderboard.'}</p>
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-700 transition-all" style={{ width: `${currentUserRow ? Math.max(8, Math.min(100, (11 - Math.min(currentUserRow.rank, 10)) * 10)) : 0}%` }} /></div>
+              <p className="mt-2 text-xs font-bold text-red-700">{currentUserRow?.rank && currentUserRow.rank <= 10 ? 'Top 10 achieved' : 'Top 10 goal'}</p>
+            </article>
+          </Reveal>
           <Reveal>
             <PremiumFeatureLock locked={premiumLocked} title="Unlock Your XP Progress" compact>
             <article className="surface-card relative overflow-hidden border-amber-200 p-5">
@@ -467,7 +476,7 @@ export default function Leaderboard() {
               <div className="flex items-center gap-3">
                 <ArenaMetricMark icon={Crown} tone="amber" />
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">Total profile XP</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">{period === 'all' ? 'Total profile XP' : `${period === 'week' ? 'Weekly' : 'Monthly'} XP`}</p>
                   <h3 className="text-lg font-black text-slate-900">Your XP Progress</h3>
                 </div>
               </div>
@@ -502,8 +511,7 @@ export default function Leaderboard() {
                 <h3 className="text-base font-black tracking-tight text-slate-900"> <UiText text={"How XP Works"} /> </h3>
               </div>
               <p className="mt-3 text-xs leading-5 text-slate-600">
-                Your leaderboard XP is the same total shown on your profile. Tests, vocabulary,
-                speaking, writing and other rewarded learning activities all contribute.
+                {period === 'all' ? 'Your leaderboard XP is the same total shown on your profile. Tests, vocabulary, speaking, writing and other rewarded learning activities all contribute.' : 'This period shows XP earned during the selected time window. Keep practicing to climb the board.'}
               </p>
               <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-900">
                 More total XP = a higher rank

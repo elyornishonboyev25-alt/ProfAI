@@ -84,7 +84,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     voiceState, voiceLevel, voiceSupported, isListening,
     interimTranscript, startVoice, stopVoice,
     voiceLang, setVoiceLang, voiceError,
-    chatThreads, activeThread, activeThreadId, threadsLoading, memories,
+    chatThreads, activeThread, activeThreadId, threadsLoading, threadsLoaded, memories,
     createNewChat, selectChat, renameChat, deleteChat, forgetMemory,
   } = tutor
 
@@ -95,6 +95,12 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   ] as const
 
   const isPage = variant === 'page'
+  const openedPageChat = useRef(false)
+  useEffect(() => {
+    if (!isPage || !user || openedPageChat.current || (hasPremium && !threadsLoaded)) return
+    openedPageChat.current = true
+    void createNewChat()
+  }, [createNewChat, hasPremium, isPage, threadsLoaded, user])
   const [panel, setPanel] = useState<'chats' | 'memory' | null>(null)
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')

@@ -1,11 +1,12 @@
 import UiText from '@/components/common/UiText'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
-import { AmbientBackdrop, CountUp, ProgressRing, Reveal, Stagger, StaggerItem } from '@/components/fx'
+import { ArrowRight, BookOpen, CheckCircle2, GraduationCap, Route, Sparkles } from 'lucide-react'
+import { AmbientBackdrop, CountUp, ProgressRing, Reveal } from '@/components/fx'
 import LucideIcon from '@/components/admission/LucideIcon'
 import { getLessonsByPhase, lessonPhases, LESSON_COUNT, totalLessonMinutes } from '@/data/admission'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
+import '@/styles/admission-roadmap.css'
 
 const LEVEL_TONE: Record<string, string> = {
   Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -18,9 +19,10 @@ export default function AdmissionLessons() {
   const studyHours = Math.round(totalLessonMinutes / 60)
   const [completed, setCompleted] = useState<Set<string>>(() => getCompletedLessons())
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
+  const nextLesson = lessonPhases.flatMap((phase) => getLessonsByPhase(phase.id)).find((lesson) => !completed.has(lesson.slug))
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className="admission-roadmap-page workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-6xl space-y-7">
@@ -70,13 +72,15 @@ export default function AdmissionLessons() {
           </section>
         </Reveal>
 
+        {nextLesson ? <button type="button" onClick={() => navigate(`/admission/lessons/${nextLesson.slug}`)} className="roadmap-next-link"><span className="roadmap-next-icon"><Sparkles size={21} /></span><span><small>YOUR NEXT MILESTONE</small><strong>Lesson {nextLesson.order}: {nextLesson.title}</strong></span><span className="roadmap-next-action">Continue <ArrowRight size={17} /></span></button> : <div className="roadmap-next-link"><span className="roadmap-next-icon"><CheckCircle2 size={21} /></span><span><small>ROADMAP COMPLETE</small><strong>All {LESSON_COUNT} lessons finished. Great work!</strong></span></div>}
+
         {/* Phases */}
         {lessonPhases.map((phase, phaseIndex) => {
           const phaseLessons = getLessonsByPhase(phase.id)
           const phaseDone = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length
           return (
             <Reveal key={phase.id} delay={0.03}>
-              <section>
+              <section className="roadmap-phase" style={{ '--phase-accent': phase.accent } as CSSProperties}>
                 {/* Phase header */}
                 <div
                   className="relative overflow-hidden rounded-[1.5rem] p-5 text-white shadow-[0_18px_44px_rgba(15,23,42,0.18)] sm:p-6"
@@ -112,45 +116,17 @@ export default function AdmissionLessons() {
                   </div>
                 </div>
 
-                {/* Lessons grid */}
-                <Stagger className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {phaseLessons.map((lesson) => (
-                    <StaggerItem key={lesson.id} className="h-full">
-                      <button
-                        onClick={() => navigate(`/admission/lessons/${lesson.slug}`)}
-                        className="group flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.12)]"
-                        style={{ borderTop: `3px solid ${phase.accent}` }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm"
-                            style={{ background: completed.has(lesson.slug) ? 'linear-gradient(135deg,#10b981,#059669)' : phase.gradient }}
-                          >
-                            {completed.has(lesson.slug) ? <CheckCircle2 className="h-5 w-5" /> : <LucideIcon name={lesson.icon} className="h-5 w-5" />}
-                          </span>
-                          <span className="text-2xl font-black text-slate-100 transition group-hover:text-slate-200">
-                            {String(lesson.order).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <h3 className="mt-3 text-[15px] font-black leading-snug tracking-tight text-slate-900">
-                          {lesson.title}
-                        </h3>
-                        <p className="mt-2 flex-1 text-[13px] leading-6 text-slate-600 line-clamp-3">{lesson.summary}</p>
-                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                          <span className="inline-flex items-center gap-3 text-[11px] font-semibold text-slate-400">
-                            <span className="inline-flex items-center gap-1">
-                              <Clock3 className="h-3.5 w-3.5" />
-                              {lesson.durationMin}  <UiText text={"min"} /> </span>
-                            <span className={`rounded-full border px-2 py-0.5 ${LEVEL_TONE[lesson.level]}`}>
-                              {lesson.level}
-                            </span>
-                          </span>
-                          <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-slate-500" />
-                        </div>
-                      </button>
-                    </StaggerItem>
-                  ))}
-                </Stagger>
+                <div className="roadmap-steps">
+                  {phaseLessons.map((lesson) => {
+                    const done = completed.has(lesson.slug)
+                    const current = nextLesson?.slug === lesson.slug
+                    return <button key={lesson.id} type="button" onClick={() => navigate(`/admission/lessons/${lesson.slug}`)} className={`roadmap-step ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}`} aria-label={`Open lesson ${lesson.order}: ${lesson.title}`}>
+                      <span className="roadmap-step-marker">{done ? <CheckCircle2 size={22} /> : current ? <Route size={22} /> : <BookOpen size={19} />}</span>
+                      <span className="roadmap-step-copy"><small>LESSON {String(lesson.order).padStart(2, '0')} · {lesson.durationMin} MIN</small><strong>{lesson.title}</strong><span>{lesson.summary}</span><em className={`roadmap-level ${LEVEL_TONE[lesson.level]}`}>{done ? 'Completed' : current ? 'Up next' : lesson.level}</em></span>
+                      <ArrowRight className="roadmap-step-arrow" size={19} />
+                    </button>
+                  })}
+                </div>
               </section>
             </Reveal>
           )

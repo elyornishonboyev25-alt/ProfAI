@@ -72,6 +72,12 @@ body { color: var(--liquid-ink); background: #f4f6f8; }
 .liquid-mobile-tools nav { position: absolute; top: 48px; right: -90px; width: 230px; z-index: 60; border-radius: 20px; padding: 10px; }
 .liquid-mobile-tools nav a { display: block; padding: 12px; font-size: 13px; border-radius: 10px; }
 .liquid-mobile-tools nav a:hover { background: #fff9; }
+.liquid-mobile-tools nav button { display: block; width: 100%; border-radius: 10px; padding: 12px; color: #334155; font-size: 13px; text-align: left; }
+.liquid-mobile-tools nav button:hover { background: #fff9; }
+.liquid-support-link { display: flex; width: 100%; min-height: 43px; align-items: center; gap: 12px; border: 1px solid rgba(226,232,240,.95); border-radius: 13px; padding: 9px 12px; color: #475569; background: rgba(255,255,255,.7); font-size: 13px; font-weight: 700; text-align: left; transition: background .2s,color .2s,border-color .2s; }
+.liquid-support-link:hover { border-color: #fecaca; color: #b91c1c; background: #fff1f2; }
+.liquid-sidebar-collapsed .liquid-support-link { justify-content: center; padding-inline: 0; }
+.liquid-sidebar-collapsed .liquid-support-link span { display: none; }
 .liquid-section-tabs { display: flex; gap: 26px; flex-wrap: wrap; border-bottom: 1px solid var(--liquid-line); margin-bottom: 25px; }
 .liquid-section-tabs a { font-size: 13px; padding: 0 0 14px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 7px; }
 .liquid-section-tabs a[aria-current] { color: #b02c3b; border-bottom-color: #c42c3d; }

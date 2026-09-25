@@ -162,9 +162,26 @@ model User {
   learningCenterAssignmentSubmissions LearningCenterAssignmentSubmission[]
   learningCenterNotesAuthored         LearningCenterTeacherNote[]          @relation("LearningCenterNoteAuthor")
   learningCenterNotesReceived         LearningCenterTeacherNote[]          @relation("LearningCenterNoteStudent")
+  issueReports                        IssueReport[]
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+model IssueReport {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  email       String
+  category    String
+  description String
+  pagePath    String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 // A tenant workspace for an IELTS/SAT school. Product permissions are scoped

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
+import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route, CircleHelp } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
@@ -38,10 +38,11 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
         <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
         <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>
-        {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('My journey plan')}</NavLink>}
+        {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('Study Plan')}</NavLink>}
       </details>
     </nav>
     <div className="liquid-sidebar-footer">
+      <button type="button" className="liquid-support-link" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} title={collapsed ? 'Report an issue' : undefined} aria-label="Report an issue"><CircleHelp size={19} aria-hidden="true" /><span>Report an issue</span></button>
       <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c(premiumLabel)} title={collapsed ? c(premiumLabel) : undefined}>
         <Crown size={19} aria-hidden="true" /><span>{c(premiumLabel)}</span>
       </NavLink>

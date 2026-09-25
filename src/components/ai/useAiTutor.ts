@@ -642,6 +642,7 @@ export function useAiTutor() {
     activeThread,
     activeThreadId,
     threadsLoading,
+    threadsLoaded,
     memories,
     messages,
     isSending,

@@ -253,6 +253,12 @@ router.post(
         code: 'ACCOUNT_EXISTS',
       })
     }
+    if (purpose === 'SIGN_IN' && !existingUser) {
+      return res.status(404).json({
+        message: 'No account found for this email. Create an account to get started.',
+        code: 'ACCOUNT_NOT_FOUND',
+      })
+    }
 
     // Password recovery never exposes whether an address exists. This prevents
     // account enumeration while keeping the UI response consistent.
@@ -421,11 +427,68 @@ router.post(
 )
 
 router.post(
+  '/email/register',
+  authRateLimit,
+  validateBody(emailLoginSchema),
+  asyncHandler(async (req, res) => {
+    const email = normalizeEmail(req.body.email)
+    const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+    if (existing) {
+      return res.status(409).json({
+        message: 'This Gmail is already registered. Sign in to continue with the same account.',
+        code: 'ACCOUNT_EXISTS',
+      })
+    }
+
+    const verification = await validateVerificationCode(email, 'REGISTER', req.body.verificationCode)
+    if (!verification.ok) {
+      return res.status(400).json({
+        message: verification.code === 'CODE_EXPIRED'
+          ? 'Verification code expired. Request a new code.'
+          : 'The verification code is incorrect or no longer valid.',
+        code: verification.code,
+      })
+    }
+
+    let user
+    try {
+      user = await prisma.user.create({
+        data: {
+          email,
+          fullName: deriveFullNameFromEmail(email),
+          passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
+        },
+        include: { profile: { select: { onboardingCompletedAt: true } } },
+      })
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+        return res.status(409).json({ message: 'This Gmail is already registered. Sign in instead.', code: 'ACCOUNT_EXISTS' })
+      }
+      throw error
+    }
+    const tokens = await issueAuthTokens({
+      userId: user.id,
+      role: user.role,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    })
+    return res.status(201).json({ user: sanitizeUser(user), ...tokens })
+  }),
+)
+
+router.post(
   '/email/login',
   authRateLimit,
   validateBody(emailLoginSchema),
   asyncHandler(async (req, res) => {
     const email = normalizeEmail(req.body.email)
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { profile: { select: { onboardingCompletedAt: true } } },
+    })
+    if (!user) {
+      return res.status(404).json({ message: 'No account found for this email. Create an account to get started.', code: 'ACCOUNT_NOT_FOUND' })
+    }
     const verification = await validateVerificationCode(email, 'SIGN_IN', req.body.verificationCode)
     if (!verification.ok) {
       return res.status(400).json({
@@ -436,18 +499,6 @@ router.post(
       })
     }
 
-    // An existing user's profile and progress are preserved. New accounts can
-    // set a password later using the same verified-email recovery flow.
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: {
-        email,
-        fullName: deriveFullNameFromEmail(email),
-        passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
-      },
-      include: { profile: { select: { onboardingCompletedAt: true } } },
-    })
     const tokens = await issueAuthTokens({
       userId: user.id,
       role: user.role,

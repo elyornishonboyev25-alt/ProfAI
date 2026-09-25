@@ -1,17 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
     <linearGradient id="pa-cap" x1="10" y1="9" x2="54" y2="36" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FF5A4D" />
-      <stop offset="52%" stop-color="#F23B2E" />
-      <stop offset="100%" stop-color="#DC2626" />
+      <stop offset="0%" stop-color="#e7686d" />
+      <stop offset="47%" stop-color="#a52d3a" />
+      <stop offset="100%" stop-color="#222a3a" />
     </linearGradient>
     <linearGradient id="pa-base" x1="18" y1="29" x2="46" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F23B2E" />
-      <stop offset="100%" stop-color="#C81E1E" />
+      <stop offset="0%" stop-color="#d2363e" />
+      <stop offset="48%" stop-color="#942330" />
+      <stop offset="100%" stop-color="#202839" />
     </linearGradient>
     <linearGradient id="pa-tassel" x1="46" y1="22" x2="56" y2="46" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FF6B5E" />
-      <stop offset="100%" stop-color="#E11D2B" />
+      <stop offset="0%" stop-color="#4b3448" />
+      <stop offset="100%" stop-color="#25293a" />
     </linearGradient>
     <clipPath id="pa-clip">
       <path d="M32 8.4 59.4 21.4 32 34.4 4.6 21.4Z" />
@@ -20,14 +21,17 @@
 
   <!-- Cap base (the headband that rests on the head) -->
   <path d="M16.6 26.8 32 34.1 47.4 26.8 47.4 38.4C47.4 43.1 40.5 46.4 32 46.4 23.5 46.4 16.6 43.1 16.6 38.4Z" fill="url(#pa-base)" />
-  <path d="M16.6 26.8 32 34.1 47.4 26.8" stroke="white" stroke-opacity="0.28" stroke-width="1.1" fill="none" />
+  <path d="M16.6 26.8 32 34.1 47.4 26.8" stroke="#fca5aa" stroke-opacity="0.65" stroke-width="1.1" fill="none" />
 
   <!-- Mortarboard (top-down, in perspective) -->
   <path d="M32 8.4 59.4 21.4 32 34.4 4.6 21.4Z" fill="url(#pa-cap)" />
-  <path d="M32 8.4 59.4 21.4 32 34.4 4.6 21.4Z" stroke="white" stroke-opacity="0.55" stroke-width="0.9" />
+  <path d="M32 8.4 59.4 21.4 32 34.4 4.6 21.4Z" stroke="#f6c9cd" stroke-opacity="0.8" stroke-width="0.9" />
+  <path d="M8 21.1 31 10.3 54 21.1" stroke="white" stroke-opacity=".27" stroke-width=".8" />
+  <path d="M4.6 21.4 32 34.4l27.4-13v3.1L32 37.6 4.6 24.5Z" fill="#202839" />
+  <path d="M5.2 24.1 32 36.9l26.8-12.8" stroke="#f9b1b7" stroke-opacity=".75" stroke-width=".8" />
 
   <!-- World map on the board — simplified continents (study abroad) -->
-  <g clip-path="url(#pa-clip)" fill="white" fill-opacity="0.94">
+  <g clip-path="url(#pa-clip)" fill="#ffd3d5" fill-opacity="0.93">
     <path d="M18.6 19.1c1.4-1 3.1-1.1 4.2-.3.9.7.5 1.7-.3 2.3-.7.5-.4 1.3.3 1.6.9.4.6 1.4-.5 1.7-1.7.5-3.6-.2-4.4-1.4-.8-1.2-.4-2.9.7-3.5Z" />
     <path d="M25.7 25.4c1-.2 1.8.5 1.7 1.6-.1 1.2-.9 2.4-1.8 2.6-.8.2-1.3-.5-1.1-1.5.1-.8-.3-1-.7-1.3-.7-.5-.1-1.6 1.9-1.4Z" />
     <path d="M32.2 17.1c1.3-.5 2.6-.2 2.7.7.1.8-.7 1-.3 1.7.4.7-.2 1.3-1.2 1.2-1.4-.1-2.6-.9-2.6-1.9 0-.7.5-1.3.7-1.4Z" />
@@ -38,13 +42,10 @@
 
   <!-- Tassel cord running from the centre button out to the AI bob -->
   <path d="M32 21.4C42 20.4 51.4 21 51.2 25.4 51.1 28 51 30 50.9 32" stroke="url(#pa-tassel)" stroke-width="2.1" stroke-linecap="round" fill="none" />
-  <circle cx="32" cy="21.4" r="2.3" fill="white" />
-  <circle cx="32" cy="21.4" r="1" fill="#F23B2E" />
+  <circle cx="32" cy="21.4" r="2.3" fill="#ffd3d5" />
+  <circle cx="32" cy="21.4" r="1" fill="#822b3a" />
 
   <!-- Tassel bob -->
   <path d="M50.9 31c1.9 0 3 1.2 3 2.8 0 1.5-.7 4.8-1.4 6.5-.5 1.2-2.7 1.2-3.2 0-.7-1.7-1.4-5-1.4-6.5 0-1.6 1.1-2.8 3-2.8Z" fill="url(#pa-tassel)" />
 
-  <!-- AI bob badge -->
-  <circle cx="50.9" cy="27.4" r="6.4" fill="white" stroke="#F23B2E" stroke-opacity="0.18" stroke-width="0.8" />
-  <text x="50.9" y="29.9" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.6" font-weight="800" letter-spacing="-0.2" fill="#E2231A">AI</text>
 </svg>

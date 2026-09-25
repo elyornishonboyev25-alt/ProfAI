@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
-import { Bookmark, FileImage, ScanText, SpellCheck2 } from 'lucide-react'
+import { Bookmark, FileImage, SpellCheck2 } from 'lucide-react'
 import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
@@ -126,83 +126,8 @@ export default function SATQuestionCanvas({
   answerState,
   practicePanel,
 }: Props) {
-  const activeId = useRef<string | null>(null)
-  const draftRef = useRef<HighlightStroke | null>(null)
-  const [draft, setDraft] = useState<HighlightStroke | null>(null)
-  const [sourceOpen, setSourceOpen] = useState(false)
-  const sourceStrokes = useMemo(
-    () => strokes.filter((stroke) => (stroke.surface ?? 'source') === 'source'),
-    [strokes],
-  )
-  const displayedStrokes = useMemo(() => (draft ? [...sourceStrokes, draft] : sourceStrokes), [draft, sourceStrokes])
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
   const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
-
-  const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!highlightEnabled) return
-    event.currentTarget.setPointerCapture(event.pointerId)
-    const next: HighlightStroke = {
-      id: crypto.randomUUID(),
-      color: highlightColor,
-      width: 34,
-      points: [toPoint(event)],
-      surface: 'source',
-    }
-    activeId.current = next.id
-    draftRef.current = next
-    setDraft(next)
-  }
-
-  const extendStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!highlightEnabled || !activeId.current || !draftRef.current) return
-    const next = { ...draftRef.current, points: [...draftRef.current.points, toPoint(event)] }
-    draftRef.current = next
-    setDraft(next)
-  }
-
-  const finishStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeId.current) return
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-    if (draftRef.current?.points.length) onChange([...strokes, draftRef.current])
-    activeId.current = null
-    draftRef.current = null
-    setDraft(null)
-  }
-
-  const originalView = question.asset ? (
-    <div className="mt-7 border-t border-slate-300 pt-4">
-      <button
-        type="button"
-        onClick={() => setSourceOpen((open) => !open)}
-        className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 transition hover:text-blue-700"
-      >
-        <ScanText className="h-4 w-4" /> {sourceOpen ? 'Hide original paper view' : 'Open original paper view'}
-      </button>
-      {sourceOpen ? (
-        <div className="mt-3 overflow-auto rounded-xl border border-slate-300 bg-slate-200 p-3">
-          <div
-            className="relative mx-auto origin-top transition-all"
-            style={{ width: '100%', maxWidth: `${Math.max(760, question.assetWidth)}px`, aspectRatio: `${question.assetWidth} / ${question.assetHeight}` }}
-          >
-            <img src={question.asset} alt={`Original paper layout for question ${question.number}`} draggable={false} className="h-full w-full select-none rounded-lg bg-white object-contain" />
-            <svg
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="none"
-              className={`absolute inset-0 h-full w-full touch-none rounded-lg ${highlightEnabled ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'}`}
-              onPointerDown={startStroke}
-              onPointerMove={extendStroke}
-              onPointerUp={finishStroke}
-              onPointerCancel={finishStroke}
-            >
-              {displayedStrokes.map((stroke) => (
-                <polyline key={stroke.id} points={stroke.points.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={stroke.color} strokeWidth={stroke.width} strokeLinecap="round" strokeLinejoin="round" opacity="0.38" />
-              ))}
-            </svg>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  ) : null
 
   return (
     <div className={`grid min-h-[calc(100vh-12.6rem)] min-w-0 bg-[#f7f8fa] ${hasSeparateSource ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
@@ -214,14 +139,14 @@ export default function SATQuestionCanvas({
           strokes={strokes}
           onChange={onChange}
         />
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[44rem]">
           {question.visual ? (
             <figure className="mb-7 overflow-hidden rounded-xl border border-slate-300 bg-white p-4">
               <SATVisual
                 asset={question.visual.asset}
                 alt={question.visual.alt}
                 className="mx-auto"
-                imageClassName="mx-auto max-h-[28rem] w-auto max-w-full object-contain"
+                imageClassName="mx-auto max-h-[19rem] w-auto max-w-full object-contain"
               />
               <figcaption className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
                 <FileImage className="h-4 w-4" /> Reference visual · not drawn to scale unless stated
@@ -235,7 +160,6 @@ export default function SATQuestionCanvas({
             <SATRichText text={context} className="break-words font-serif text-[18px] font-medium leading-[1.65] text-[#171717] sm:text-[19px] lg:text-[20px]" />
           ) : null}
 
-          {originalView}
         </div>
       </section> : null}
 
@@ -265,13 +189,12 @@ export default function SATQuestionCanvas({
         </div>
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
 
-        <div className={`mx-auto px-5 py-5 sm:px-8 xl:px-12 ${hasSeparateSource ? 'max-w-3xl' : 'max-w-5xl'}`}>
-          {!hasSeparateSource && question.visual ? <figure className="mb-7 rounded-xl border border-slate-300 bg-white p-4"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="mx-auto max-h-[28rem] w-auto max-w-full object-contain" /></figure> : null}
+        <div className={`mx-auto px-5 py-5 sm:px-8 xl:px-10 ${hasSeparateSource ? 'max-w-[44rem]' : 'max-w-[48rem]'}`}>
+          {!hasSeparateSource && question.visual ? <figure className="mb-5 rounded-xl border border-slate-300 bg-white p-3"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="mx-auto max-h-[19rem] w-auto max-w-full object-contain" /></figure> : null}
           {!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-5 font-serif text-[19px] leading-[1.65] text-[#171717]" /> : context ? <SATRichText text={context} className="mb-5 font-serif text-[19px] leading-[1.65] text-[#171717]" /> : null)}
           {question.sourceContent ? (
             <SATSourceContent html={question.sourceContent.task} className="font-serif text-[19px] font-bold leading-[1.6] text-[#151515] sm:text-[20px] lg:text-[21px]" />
           ) : <SATRichText text={task} className="break-words font-serif text-[19px] font-bold leading-[1.6] text-[#151515] sm:text-[20px] lg:text-[21px]" />}
-          {!hasSeparateSource ? originalView : null}
 
           {question.kind === 'multiple-choice' ? (
             <div className="mt-6 space-y-3.5" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>

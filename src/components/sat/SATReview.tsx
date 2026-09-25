@@ -92,15 +92,15 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
               asset={question.visual.asset}
               alt={question.visual.alt}
               className="mx-auto mb-6 border border-slate-200 bg-slate-50 p-3"
-              imageClassName="max-h-[28rem] max-w-full object-contain"
+              imageClassName="max-h-[20rem] max-w-[min(100%,42rem)] object-contain"
             />
           ) : null}
           {question.sourceContent ? <>
             {question.sourceContent.context && <SATSourceContent html={question.sourceContent.context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" />}
-            <SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-xl font-semibold leading-8 text-slate-950" />
+            <SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-lg font-semibold leading-7 text-slate-950" />
           </> : <>
             {context ? <SATRichText text={context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
-            <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-xl font-semibold leading-8 text-slate-950`} />
+            <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-lg font-semibold leading-7 text-slate-950`} />
           </>}
 
           {question.kind === 'multiple-choice' ? (

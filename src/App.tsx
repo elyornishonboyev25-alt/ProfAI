@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
+import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import WorkspaceToolbar from '@/components/layout/WorkspaceToolbar'
@@ -29,7 +29,6 @@ import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
 
 const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 
-const RegisterModal = lazy(() => import('@/components/auth/RegisterModal'))
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
@@ -175,14 +174,16 @@ function DeferredTalkOverlay() {
 
 function DeferredRegisterModal() {
   const isOpen = useRegisterModalStore((state) => state.isOpen)
+  const closeRegisterModal = useRegisterModalStore((state) => state.closeRegisterModal)
+  const navigate = useNavigate()
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (!isOpen) return
+    closeRegisterModal()
+    navigate('/register')
+  }, [isOpen, closeRegisterModal, navigate])
 
-  return (
-    <Suspense fallback={null}>
-      <RegisterModal />
-    </Suspense>
-  )
+  return null
 }
 
 function DeferredAchievementCelebration() {
@@ -209,6 +210,24 @@ function AnimatedRoute({ children, dashboardEntrance = false }: { children: Reac
   )
 }
 
+function WorkspaceFrame({ showSidebar, children }: { showSidebar: boolean; children: ReactNode }) {
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('profai-sidebar-collapsed') === 'true' } catch { return false }
+  })
+  const toggleSidebar = () => setCollapsed((previous) => {
+    const next = !previous
+    try { localStorage.setItem('profai-sidebar-collapsed', String(next)) } catch { /* Optional preference. */ }
+    return next
+  })
+
+  return <div className="flex flex-1">
+    {showSidebar ? <Sidebar collapsed={collapsed} onToggle={toggleSidebar} /> : null}
+    <main className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${showSidebar ? (collapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'}`}>
+      {children}
+    </main>
+  </div>
+}
+
 function LegacySpeakingRedirect() {
   const { search } = useLocation()
   const legacy = new URLSearchParams(search).get('section')
@@ -218,14 +237,6 @@ function LegacySpeakingRedirect() {
 
 function App() {
   useProfileIdentitySync()
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return localStorage.getItem('profai-sidebar-collapsed') === 'true' } catch { return false }
-  })
-  const toggleSidebar = () => setSidebarCollapsed(previous => {
-    const next = !previous
-    try { localStorage.setItem('profai-sidebar-collapsed', String(next)) } catch { /* Optional preference. */ }
-    return next
-  })
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
@@ -307,7 +318,7 @@ function App() {
   const isFocusContentMode =
     (pathname === '/onboarding' || pathname === '/focus') ||
     pathname.startsWith('/sat/') ||
-    pathname.startsWith('/ielts/') ||
+    (pathname.startsWith('/ielts/') && !/^\/ielts\/(?:tests|(?:listening|reading|writing|speaking)\/tests)$/.test(pathname)) ||
     pathname.startsWith('/ielts/speaking/test/') ||
     pathname.startsWith('/ielts/writing/test/') ||
     (pathname.startsWith('/articles/') && pathParts.length > 1) ||
@@ -323,8 +334,6 @@ function App() {
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')
 
-  const isImmersiveHub = false
-
   // The workspace shell is route-owned, not auth-owned. This keeps its geometry
   // stable if a request is refreshing the session or if a session expires while
   // the learner is already on a workspace page. Public and focused experiences
@@ -334,7 +343,6 @@ function App() {
     !isTestMode &&
     !isFocusContentMode &&
     !isIeltsMockMode
-  const sidebarVisible = showSidebar && !isImmersiveHub
   const isAiTutorMode = pathname === '/ai-tutor'
   const showMobileNav =
     !isPublicStandalone &&
@@ -438,14 +446,7 @@ function App() {
       ) : null}
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        <div className="flex flex-1">
-          {showSidebar ? <Sidebar concealed={isImmersiveHub} collapsed={sidebarCollapsed} onToggle={toggleSidebar} /> : null}
-
-          <main
-            className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${
-              sidebarVisible ? (sidebarCollapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'
-            }`}
-          >
+        <WorkspaceFrame showSidebar={showSidebar}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
               className={`flex min-h-full flex-col ${
@@ -862,8 +863,7 @@ function App() {
               )}
               {showMobileNav ? <div className="h-20 lg:hidden" aria-hidden /> : null}
             </div>
-          </main>
-        </div>
+        </WorkspaceFrame>
       </div>
       {showMobileNav ? <MobileBottomNav /> : null}
     </div>

@@ -72,16 +72,18 @@
 /* Desktop navigation collapses to an icon rail while preserving direct links. */
 .app-shell .liquid-sidebar {
   overflow-x:hidden;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
   border-color:rgba(219,229,242,.94);
   background:
     radial-gradient(circle at 5% 0%,rgba(255,255,255,.92),transparent 42%),
     radial-gradient(circle at 100% 6%,rgba(191,219,254,.28),transparent 40%),
     linear-gradient(155deg,rgba(251,252,255,.98),rgba(243,247,252,.97) 56%,rgba(235,242,250,.96));
   box-shadow:0 24px 60px rgba(37,56,87,.13),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(148,163,184,.14);
-  transition:width 420ms cubic-bezier(.22,1,.36,1),padding 420ms cubic-bezier(.22,1,.36,1),transform 240ms var(--liquid-ease),opacity 240ms;
+  transition:width 260ms cubic-bezier(.22,1,.36,1),padding 260ms cubic-bezier(.22,1,.36,1),transform 240ms var(--liquid-ease),opacity 240ms;
 }
 @media(min-width:1024px) {
-  .app-shell .workspace-main { transition:margin-left 420ms cubic-bezier(.22,1,.36,1); }
+  .app-shell .workspace-main { transition:margin-left 260ms cubic-bezier(.22,1,.36,1); }
 }
 .liquid-sidebar-heading { position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:4px; min-height:78px; transition:min-height 420ms cubic-bezier(.22,1,.36,1),gap 380ms cubic-bezier(.22,1,.36,1); }
 .liquid-sidebar-heading::after { position:absolute; inset:auto 5px 0; height:1px; background:linear-gradient(90deg,transparent,#dbe5f2 18%,#dbe5f2 82%,transparent); content:''; }

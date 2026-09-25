@@ -91,6 +91,7 @@ beforeEach(() => {
 after(async () => { globalThis.fetch = realFetch; await new Promise((resolve) => server.close(resolve)) })
 
 test('email is delivered through provider, stored hashed, and never returned to browser', async () => {
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   const result = await request()
   assert.equal(result.status, 202)
   assert.equal(result.body.delivered, true)
@@ -101,18 +102,26 @@ test('email is delivered through provider, stored hashed, and never returned to 
   assert.equal((await request()).status, 429)
 })
 
-test('verified new Gmail creates one account; consumed code cannot be replayed', async () => {
-  await request()
+test('verified new Gmail creates one account through the create-account flow', async () => {
+  await request('REGISTER')
   const body = { email, verificationCode: deliveredCode() }
-  const result = await post('/email/login', body)
-  assert.equal(result.status, 200)
+  const result = await post('/email/register', body)
+  assert.equal(result.status, 201)
   assert.equal(users.length, 1)
   assert.equal(result.body.user.onboardingCompleted, false)
   assert.ok(result.body.accessToken)
   assert.ok(result.body.refreshToken)
   assert.equal(result.body.user.passwordHash, undefined)
-  assert.equal((await post('/email/login', body)).status, 400)
+  assert.equal((await post('/email/register', body)).status, 409)
   assert.equal(tokens.length, 1)
+})
+
+test('sign-in cannot create an account or send a sign-in code to an unknown Gmail', async () => {
+  const response = await request()
+  assert.equal(response.status, 404)
+  assert.equal(response.body.code, 'ACCOUNT_NOT_FOUND')
+  assert.equal(sent.length, 0)
+  assert.equal(users.length, 0)
 })
 
 test('existing account identity and progress survive code sign-in', async () => {
@@ -127,6 +136,7 @@ test('existing account identity and progress survive code sign-in', async () => 
 })
 
 test('concurrent verification admits only one session', async () => {
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   await request()
   const body = { email, verificationCode: deliveredCode() }
   const results = await Promise.all([post('/email/login', body), post('/email/login', body)])
@@ -135,17 +145,19 @@ test('concurrent verification admits only one session', async () => {
 })
 
 test('five wrong codes lock the challenge, including a subsequent correct code', async () => {
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   await request()
   const correct = deliveredCode()
   const wrong = correct === '000000' ? '000001' : '000000'
   for (let index = 0; index < 5; index++) assert.equal((await post('/email/login', { email, verificationCode: wrong })).status, 400)
   const result = await post('/email/login', { email, verificationCode: correct })
   assert.equal(result.body.code, 'CODE_LOCKED')
-  assert.equal(users.length, 0)
+  assert.equal(users.length, 1)
 })
 
 test('expired and wrong-purpose codes are rejected', async () => {
   await request('REGISTER')
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   assert.equal((await post('/email/login', { email, verificationCode: deliveredCode() })).status, 400)
   codes[0].purpose = 'SIGN_IN'
   codes[0].expiresAt = new Date(0)
@@ -154,6 +166,7 @@ test('expired and wrong-purpose codes are rejected', async () => {
 })
 
 test('resending invalidates the previous challenge', async () => {
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   await request()
   const previousId = codes[0].id
   codes[0].createdAt = new Date(Date.now() - 61_000)
@@ -168,6 +181,7 @@ test('missing configuration and provider failures never report success', async (
   assert.equal(sent.length, 0)
   env.RESEND_API_KEY = 'test-email-provider-key'
   providerFails = true
+  await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })
   assert.equal((await request()).body.code, 'EMAIL_DELIVERY_FAILED')
   assert.equal(codes.length, 0)
 })

@@ -60,7 +60,7 @@ function explanationFor(question: JuneQuestion) {
     ? question.choices.find((choice) => choice.key === question.correctAnswer)?.text
     : question.correctAnswer
 
-  return `**Step 1:** Read the exact source notation in the original paper view and identify the relationship being tested.
+  return `**Step 1:** Read the notation in the question and identify the relationship being tested.
 
 **Step 2:** ${question.rationale}
 

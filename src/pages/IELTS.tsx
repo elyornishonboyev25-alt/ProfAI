@@ -45,18 +45,11 @@ const SKILLS: Array<{
 
 const GLASS = ARENA_GLASS_SURFACE
 
-let catalogPreloadPromise: Promise<unknown> | null = null
-
-function preloadIeltsCatalogs() {
-  if (!catalogPreloadPromise) {
-    catalogPreloadPromise = Promise.all([
-      import('@/pages/IELTSTestLibrary'),
-      import('@/pages/IELTSSectionTests'),
-      import('@/pages/IELTSWritingTests'),
-      import('@/pages/IELTSSpeakingTests'),
-    ])
-  }
-  return catalogPreloadPromise
+function preloadIeltsCatalog(skill: SkillId) {
+  void import('@/pages/IELTSTestLibrary')
+  if (skill === 'writing') void import('@/pages/IELTSWritingTests')
+  else if (skill === 'speaking') void import('@/pages/IELTSSpeakingTests')
+  else void import('@/pages/IELTSSectionTests')
 }
 
 function localToday() {
@@ -117,8 +110,8 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
     <button
       type="button"
       onClick={onOpen}
-      onPointerEnter={() => void preloadIeltsCatalogs()}
-      onPointerDown={() => void preloadIeltsCatalogs()}
+      onPointerEnter={() => preloadIeltsCatalog(skill.id)}
+      onPointerDown={() => preloadIeltsCatalog(skill.id)}
       className={`${GLASS} group min-h-[24rem] min-w-0 p-6 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_30px_72px_rgba(185,28,28,.13),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-7`}
     >
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_94%_4%,rgba(239,68,68,.14),transparent_34%),linear-gradient(116deg,rgba(255,255,255,.54)_0%,rgba(255,255,255,.08)_47%,rgba(191,219,254,.22)_48%,rgba(255,255,255,.04)_100%)]" />
@@ -193,13 +186,6 @@ export default function IELTS() {
     const id = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(id)
   }, [examDate])
-
-  useEffect(() => {
-    const preloadId = window.setTimeout(() => {
-      void preloadIeltsCatalogs()
-    }, 280)
-    return () => window.clearTimeout(preloadId)
-  }, [])
 
   const openSkill = (id: SkillId) => {
     const path = `/ielts/tests#${id}`

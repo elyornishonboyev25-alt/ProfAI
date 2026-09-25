@@ -7,7 +7,7 @@
 .sat-source-content li + li { margin-top: .45em; }
 .sat-source-content math { font-family: 'STIX Two Math', 'Cambria Math', serif; font-size: 1.08em; }
 .sat-source-content math[display='block'] { display: block; overflow-x: auto; padding: .5em 0; }
-.sat-source-content img { max-width: 100%; height: auto; margin: .7em auto; }
+.sat-source-content img { display: block; max-width: min(100%, 42rem); max-height: 20rem; width: auto; height: auto; object-fit: contain; margin: .7em auto; }
 .sat-source-content img.math-img { display: inline-block; margin: 0; vertical-align: middle; }
 .sat-source-content table { border-collapse: collapse; margin: 1em auto; font-size: .85em; max-width: 100%; }
 .sat-source-content th, .sat-source-content td { border: 1px solid #64748b; padding: .3em .5em; text-align: center; }

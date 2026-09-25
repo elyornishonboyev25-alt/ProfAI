@@ -1,12 +1,12 @@
-import UiText from '@/components/common/UiText'
-import { useCopy } from '@/i18n/interface'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { ArrowRight, Eye, EyeOff, Flame, Loader2, Lock, Mail, ShieldCheck, Sparkles, Star, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
+import UiText from '@/components/common/UiText'
+import { useCopy } from '@/i18n/interface'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
@@ -14,52 +14,36 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
-import { takeFlashToast } from '@/utils/authFlash'
-import type { AuthUser } from '@/types/platform'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
+import { takeFlashToast } from '@/utils/authFlash'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
+import type { AuthUser } from '@/types/platform'
+import '@/styles/auth-cinema.css'
 
 const loginSchema = z.object({
-  email: z
-    .string()
-    .email('Valid Gmail address is required')
-    .refine((value) => value.toLowerCase().endsWith('@gmail.com'), 'Use your Gmail address'),
+  email: z.string().email('Valid Gmail address is required').refine((value) => value.toLowerCase().endsWith('@gmail.com'), 'Use your Gmail address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
-
-type AuthSessionPayload = {
-  user: AuthUser
-  accessToken: string
-  refreshToken: string
-}
-
-const TRUST_CHIPS = [
-  { icon: Flame, label: 'Daily streaks' },
-  { icon: Star, label: 'XP & levels' },
-  { icon: Sparkles, label: 'AI coach' },
-] as const
+type AuthSessionPayload = { user: AuthUser; accessToken: string; refreshToken: string }
 
 export default function Login() {
   const { c } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
+  const createMode = location.pathname === '/register'
   const setSession = useAuthStore((state: AuthState) => state.setSession)
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const { minimalMotion } = useMotionPreferences()
   const [showPassword, setShowPassword] = useState(false)
-  // Set when sign-in fails because the email isn't registered yet — drives the
-  // inline "create an account" call-to-action below. `email` is omitted for the
-  // Google path (we don't decode the token client-side).
+  const [codeMode, setCodeMode] = useState(false)
   const [notFound, setNotFound] = useState<{ email?: string } | null>(null)
   const [recoveryOpen, setRecoveryOpen] = useState(false)
   const [recoveryEmail, setRecoveryEmail] = useState('')
-  const [codeMode, setCodeMode] = useState(true)
 
-  // Show the one-shot toast stashed before a hard redirect (e.g. after logout).
   useEffect(() => {
     const flash = takeFlashToast()
     if (flash) pushToast(flash)
@@ -71,313 +55,143 @@ export default function Login() {
   }, [location.state])
   const initialEmail = (location.state as { email?: string } | null)?.email ?? ''
 
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
+  const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: initialEmail,
-      password: '',
-    },
+    defaultValues: { email: initialEmail, password: '' },
   })
 
-  const handleEmailSession = async (payload: EmailAuthSession) => {
+  const finishEmailAuth = async (payload: EmailAuthSession) => {
     setSession(payload)
     const diagnosticClaimed = await claimStoredGuestDiagnostic()
-    captureAnalyticsEvent('login_completed', { method: 'email_code' })
+    captureAnalyticsEvent(createMode ? 'signup_completed' : 'login_completed', { method: 'email_code' })
     if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'email_code' })
     const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
     navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
   }
 
-  const onSubmit = async (values: LoginFormValues) => {
+  const signInWithPassword = async (values: LoginFormValues) => {
     const email = values.email.trim().toLowerCase()
     try {
-      const payload = await apiClient.post<AuthSessionPayload>(
-        '/auth/login',
-        {
-          email,
-          password: values.password,
-        },
-        { auth: false },
-      )
-
+      const payload = await apiClient.post<AuthSessionPayload>('/auth/login', { email, password: values.password }, { auth: false })
       setNotFound(null)
       setSession(payload)
       const diagnosticClaimed = await claimStoredGuestDiagnostic()
       captureAnalyticsEvent('login_completed', { method: 'password' })
       if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'password_login' })
-      pushToast({
-        type: 'success',
-        title: 'Signed in successfully',
-        message: 'Welcome back to ProfAI.',
-      })
+      pushToast({ type: 'success', title: 'Signed in successfully', message: 'Welcome back to ProfAI.' })
       const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
       navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
     } catch (error) {
-      // Unregistered email → show an explicit "create account" call-to-action
-      // instead of a generic error toast.
       if (error instanceof ApiError && error.code === 'ACCOUNT_NOT_FOUND') {
         setNotFound({ email })
         return
       }
-      pushToast({
-        type: 'error',
-        title: 'Sign in failed',
-        message: error instanceof Error ? error.message : 'Unable to sign in',
-      })
+      pushToast({ type: 'error', title: 'Sign in failed', message: error instanceof Error ? error.message : 'Unable to sign in' })
     }
   }
 
   const handleGoogleCredential = async (idToken: string) => {
     try {
-      const payload = await apiClient.post<AuthSessionPayload>(
-        '/auth/google',
-        { idToken, allowCreate: false },
-        { auth: false },
-      )
-
+      const payload = await apiClient.post<AuthSessionPayload>('/auth/google', { idToken, allowCreate: createMode }, { auth: false })
       setNotFound(null)
       setSession(payload)
       const diagnosticClaimed = await claimStoredGuestDiagnostic()
-      captureAnalyticsEvent('login_completed', { method: 'google' })
-      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'google_login' })
-      pushToast({
-        type: 'success',
-        title: 'Signed in with Google',
-        message: 'Welcome to ProfAI.',
-      })
-      // Full reload guarantees the persisted session is hydrated and the
-      // destination route renders immediately (fixes the blank-until-refresh
-      // behaviour after the Google popup closes).
+      captureAnalyticsEvent(createMode ? 'signup_completed' : 'login_completed', { method: 'google' })
+      if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: createMode ? 'google' : 'google_login' })
+      pushToast({ type: 'success', title: createMode ? 'Account ready' : 'Signed in with Google', message: 'Welcome to ProfAI.' })
       const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
       window.location.assign(payload.user.onboardingCompleted ? destination : '/onboarding')
     } catch (error) {
-      // No account yet for this Google email — guide them to register instead
-      // of silently creating one from the sign-in screen.
-      if (error instanceof ApiError && error.code === 'ACCOUNT_NOT_FOUND') {
+      if (!createMode && error instanceof ApiError && error.code === 'ACCOUNT_NOT_FOUND') {
         setNotFound({})
         return
       }
       const message = error instanceof Error ? error.message : 'Google sign-in failed'
-      pushToast({
-        type: 'error',
-        title: 'Google sign in failed',
-        message,
-      })
+      pushToast({ type: 'error', title: 'Google sign-in failed', message })
       throw new Error(message)
     }
   }
 
   return (
-    <div className="workspace-page relative flex min-h-[calc(100dvh-80px)] items-center justify-center overflow-hidden px-4 py-8 sm:px-6 lg:py-10">
-      <motion.div
+    <div className="auth-cinema-page workspace-page">
+      <motion.main
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: minimalMotion ? 0.14 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="relative grid w-full max-w-[430px] items-stretch lg:max-w-6xl lg:grid-cols-[1.08fr_.92fr] lg:gap-5"
+        transition={{ duration: minimalMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="auth-cinema-shell"
       >
-        {/* Aspirational showcase (desktop only) — concept 11-Login-Desktop */}
-        <AuthShowcasePanel quote="Your university journey remembers where you stopped." />
+        <AuthShowcasePanel />
 
-        <div className="relative flex">
-        {/* Soft glow halo behind the card */}
-        <div className="pointer-events-none absolute -inset-[1.5px] -z-10 rounded-[1.95rem] bg-gradient-to-br from-blue-300/45 via-indigo-200/25 to-orange-200/40 blur-md" />
-
-        <div className="panel-surface relative flex w-full flex-col justify-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/84 px-6 py-7 shadow-[0_34px_90px_rgba(30,64,175,0.2)] backdrop-blur-3xl sm:px-8 lg:px-10 lg:py-9">
-          {/* Top accent line */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
-
-          <div className="mb-7 grid grid-cols-2 rounded-2xl border border-slate-200/70 bg-slate-100/70 p-1.5 shadow-inner">
-            <span className="flex min-h-11 items-center justify-center rounded-xl bg-white text-sm font-extrabold text-blue-700 shadow-[0_8px_22px_rgba(37,99,235,0.12)] ring-1 ring-blue-100">
-               <UiText text={"Sign in"} /> </span>
-            <Link
-              to="/register"
-              className="flex min-h-11 items-center justify-center rounded-xl text-sm font-bold text-slate-600 transition hover:bg-white/75 hover:text-slate-950"
-            >
-               <UiText text={"I'm new here"} /> </Link>
-          </div>
-
-          {/* Brand + heading */}
-          <div className="mb-7 text-center">
-            <div className="relative mx-auto inline-flex">
-              <motion.span
-                aria-hidden
-                initial={minimalMotion ? false : { opacity: 0.5, scale: 0.92 }}
-                animate={minimalMotion ? undefined : { opacity: [0.45, 0.75, 0.45], scale: [0.96, 1.06, 0.96] }}
-                transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 -z-10 rounded-2xl bg-blue-500/25 blur-xl"
-              />
-              <span className="flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-white bg-white/90 shadow-[0_18px_38px_rgba(37,99,235,.24)]">
-                <BrandMark size={50} />
-              </span>
+        <section className="auth-cinema-form-side" aria-label={createMode ? 'Create account' : 'Sign in'}>
+          <div className="auth-cinema-form-inner">
+            <div className="auth-cinema-lockup">
+              <BrandMark size={50} />
+              <strong>Prof<span>AI</span></strong>
             </div>
 
-            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
-              <Sparkles className="h-3 w-3" />
-               <UiText text={"Your progress is ready"} /> </span>
+            <nav className="auth-cinema-tabs" aria-label="Account access">
+              <Link to="/login" aria-current={!createMode ? 'page' : undefined} className={!createMode ? 'is-active' : ''}><UiText text="Sign in" /></Link>
+              <Link to="/register" aria-current={createMode ? 'page' : undefined} className={createMode ? 'is-active' : ''}><UiText text="Create account" /></Link>
+            </nav>
 
-            <h1 className="mt-3 text-[1.9rem] font-black leading-[1.08] tracking-[-0.035em] text-slate-950">
-               <UiText text={"Pick up exactly where you left off."} /> </h1>
-            <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-slate-500">
-               <UiText text={"Your plan, XP, streak and university roadmap are waiting inside."} /> </p>
-          </div>
+            <div className="auth-cinema-intro">
+              <span><Sparkles size={14} /> {c(createMode ? 'Your next chapter starts here' : 'Your progress is ready')}</span>
+              <h1>{c(createMode ? 'Create your account.' : 'Welcome back.')}</h1>
+              <p>{c(createMode ? 'Enter your Gmail and confirm the code to begin your journey.' : 'Pick up your IELTS, SAT, and university journey where you left off.')}</p>
+            </div>
 
-          {/* Account-not-found call-to-action */}
-          {notFound ? (
-            <motion.div
-              initial={minimalMotion ? false : { opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: minimalMotion ? 0.12 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 p-4 text-left shadow-[0_10px_24px_rgba(217,119,6,0.12)]"
-            >
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-                  <UserPlus className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-slate-900"> <UiText text={"Account not found"} /> </p>
-                  <p className="mt-0.5 text-[13px] leading-5 text-slate-600">
-                    {notFound.email ? (
-                      <>
-                         <UiText text={"We couldn't find an account for"} /> {' '}
-                        <span className="font-bold text-slate-800">{notFound.email}</span> <UiText text={". Create one to get started."} /> </>
-                    ) : (
-                      <> <UiText text={"We couldn't find an account for that Google email. Create one to get started."} /> </>
-                    )}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate('/register', notFound.email ? { state: { email: notFound.email } } : undefined)
-                      }
-                      className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)] transition hover:opacity-95"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                       <UiText text={"Create an account"} /> </button>
-                    <button
-                      type="button"
-                      onClick={() => setNotFound(null)}
-                      className="inline-flex items-center rounded-xl border border-amber-200 bg-white px-4 py-2 text-sm font-bold text-amber-700 transition hover:bg-amber-50"
-                    >
-                       <UiText text={"Try again"} /> </button>
-                  </div>
+            {!createMode && notFound && (
+              <div className="auth-cinema-notice" role="status">
+                <UserPlus size={19} />
+                <div>
+                  <strong>{c('Account not found')}</strong>
+                  <p>{notFound.email ? `${notFound.email} — ${c('Create one to get started.')}` : c('We could not find an account for that Google email.')}</p>
+                  <Link to="/register" state={notFound.email ? { email: notFound.email } : undefined}>{c('Create an account')} <ArrowRight size={15} /></Link>
                 </div>
               </div>
-            </motion.div>
-          ) : null}
+            )}
 
-          {/* Form */}
-          <div className="mb-4 flex gap-2" role="group" aria-label="Sign in method">
-            <button type="button" aria-pressed={codeMode} onClick={() => setCodeMode(true)} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${codeMode ? 'bg-blue-100 text-blue-700' : 'text-slate-500'}`}>{c('Email code')}</button>
-            <button type="button" aria-pressed={!codeMode} onClick={() => setCodeMode(false)} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${!codeMode ? 'bg-blue-100 text-blue-700' : 'text-slate-500'}`}>{c('Password')}</button>
-          </div>
-          {codeMode ? <EmailCodeForm initialEmail={getValues('email')} onAuthenticated={handleEmailSession} onRecover={(email) => { setRecoveryEmail(email); setRecoveryOpen(true) }} /> : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" aria-label="Login form">
-            <div>
-              <label htmlFor="email" className="mb-1 block text-[13px] font-semibold text-slate-700">
-                 <UiText text={"Gmail address"} /> </label>
-              <div className="group relative">
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  className="input h-12 rounded-2xl border-blue-100 bg-white/95 pl-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(37,99,235,0.12)]"
-                  placeholder="name@gmail.com"
-                  {...register('email')}
-                />
-              </div>
-              {errors.email ? <p className="mt-1 text-xs font-medium text-error-600">{c(errors.email.message || '')}</p> : null}
-            </div>
+            {createMode ? (
+              <EmailCodeForm key="create" intent="create-account" initialEmail={initialEmail} onAuthenticated={finishEmailAuth} />
+            ) : codeMode ? (
+              <>
+                <EmailCodeForm key="signin-code" initialEmail={getValues('email')} onAuthenticated={finishEmailAuth} onRecover={(email) => { setRecoveryEmail(email); setRecoveryOpen(true) }} />
+                <button type="button" className="auth-cinema-switch-method" onClick={() => setCodeMode(false)}>{c('Use your password instead')}</button>
+              </>
+            ) : (
+              <form onSubmit={handleSubmit(signInWithPassword)} className="auth-cinema-password-form" aria-label="Sign in with password">
+                <label htmlFor="auth-email">{c('Gmail address')}</label>
+                <div className="auth-cinema-input-wrap">
+                  <Mail size={19} />
+                  <input id="auth-email" type="email" autoComplete="email" placeholder="name@gmail.com" {...register('email')} />
+                </div>
+                {errors.email && <p className="auth-cinema-error">{c(errors.email.message || '')}</p>}
 
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-3">
-                <label htmlFor="password" className="text-[13px] font-semibold text-slate-700"> <UiText text={"Password"} /> </label>
-                <button type="button" onClick={() => { setRecoveryEmail(getValues('email')); setRecoveryOpen(true) }} className="text-[11px] font-bold text-blue-600 transition hover:text-blue-800"> <UiText text={"Forgot password?"} /> </button>
-              </div>
-              <div className="group relative">
-                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400 transition-colors group-focus-within:text-blue-500" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  className="input h-12 rounded-2xl border-blue-100 bg-white/95 pl-11 pr-11 text-sm font-semibold shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition focus:shadow-[0_10px_26px_rgba(37,99,235,0.12)]"
-                  placeholder={c('Enter your password')}
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                  aria-label={c(showPassword ? 'Hide password' : 'Show password')}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <div className="auth-cinema-label-row">
+                  <label htmlFor="auth-password">{c('Password')}</label>
+                  <button type="button" onClick={() => { setRecoveryEmail(getValues('email')); setRecoveryOpen(true) }}>{c('Forgot password?')}</button>
+                </div>
+                <div className="auth-cinema-input-wrap">
+                  <Lock size={19} />
+                  <input id="auth-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder={c('Enter your password')} {...register('password')} />
+                  <button type="button" className="auth-cinema-eye" aria-label={c(showPassword ? 'Hide password' : 'Show password')} onClick={() => setShowPassword((value) => !value)}>{showPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button>
+                </div>
+                {errors.password && <p className="auth-cinema-error">{c(errors.password.message || '')}</p>}
+
+                <button className="auth-cinema-submit" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
+                  {c(isSubmitting ? 'Signing in...' : 'Continue')}
                 </button>
-              </div>
-              {errors.password ? <p className="mt-1 text-xs font-medium text-error-600">{c(errors.password.message || '')}</p> : null}
-            </div>
+                <button type="button" className="auth-cinema-switch-method" onClick={() => setCodeMode(true)}>{c('Sign in with a Gmail code instead')}</button>
+              </form>
+            )}
 
-            <motion.button
-              whileHover={minimalMotion ? undefined : { y: -1 }}
-              whileTap={minimalMotion ? undefined : { scale: 0.985 }}
-              disabled={isSubmitting}
-              type="submit"
-              className="interactive-lift cta-sheen group mt-1 flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#1D4ED8] via-[#EF3333] to-[#C5162E] px-4 text-sm font-black text-white shadow-[0_16px_32px_rgba(37,99,235,0.34)] transition hover:shadow-[0_20px_42px_rgba(37,99,235,0.44)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                   <UiText text={"Signing in..."} /> </>
-              ) : (
-                <span className="inline-flex items-center gap-2">
-                   <UiText text={"Sign in"} /> <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              )}
-            </motion.button>
-          </form>
-          )}
-
-          {/* Divider */}
-          <div className="my-4 flex items-center gap-3">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-100 to-blue-200/70" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-               <UiText text={"or continue with"} /> </span>
-            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-blue-100 to-blue-200/70" />
+            <div className="auth-cinema-divider"><span />{c('or continue with')}<span /></div>
+            <div className="auth-cinema-google"><GoogleAuthButton mode={createMode ? 'signup' : 'signin'} onCredential={handleGoogleCredential} /></div>
+            <p className="auth-cinema-privacy"><ShieldCheck size={15} /> {c('Your Gmail is verified before an account is created.')}</p>
           </div>
-
-          {/* Google */}
-          <GoogleAuthButton mode="signin" onCredential={handleGoogleCredential} />
-
-          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-             <UiText text={"Use your existing Google account — no password needed."} /> </p>
-
-          {/* Gamified trust chips */}
-          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-blue-50 pt-4">
-            {TRUST_CHIPS.map(({ icon: Icon, label }) => (
-              <span
-                key={c(label)}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-blue-100/80 bg-blue-50/70 px-2 py-1 text-center text-[9.5px] font-bold text-blue-700/90"
-              >
-                <Icon className="h-3 w-3" />
-                {c(label)}
-              </span>
-            ))}
-          </div>
-
-          <p className="mt-4 text-center text-[13px] text-[#6B7280]">
-             <UiText text={"New account?"} /> {' '}
-            <Link to="/register" className="font-bold text-blue-600 transition-colors hover:text-blue-700">
-               <UiText text={"Create one now"} /> </Link>
-          </p>
-        </div>
-        </div>
-      </motion.div>
+        </section>
+      </motion.main>
       <PasswordRecoveryDialog open={recoveryOpen} initialEmail={recoveryEmail} onClose={() => setRecoveryOpen(false)} />
     </div>
   )

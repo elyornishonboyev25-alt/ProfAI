@@ -1,0 +1,46 @@
+.profai-notifications-panel {
+  border: 1px solid rgba(255, 255, 255, .88);
+  background: linear-gradient(135deg, rgba(248, 251, 255, .96), rgba(241, 246, 253, .93) 57%, rgba(236, 249, 255, .95));
+  box-shadow: 0 28px 75px rgba(30, 49, 78, .23), inset 0 1px 0 #fff;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.profai-notifications-panel::before {
+  position: absolute;
+  inset: -4rem -5rem auto auto;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 50%;
+  background: rgba(246, 111, 119, .18);
+  filter: blur(40px);
+  pointer-events: none;
+  content: '';
+}
+.profai-notifications-action {
+  border: 1px solid rgba(216, 68, 81, .38);
+  background: rgba(255, 255, 255, .62);
+  box-shadow: 0 5px 15px rgba(185, 45, 59, .1), inset 0 1px 0 #fff;
+}
+.profai-streak-card {
+  border: 1px solid rgba(255, 202, 207, .68);
+  background: radial-gradient(circle at 82% 5%, rgba(255, 213, 213, .55), transparent 40%), linear-gradient(120deg, #9d3047, #df4651 62%, #c4313a);
+  box-shadow: 0 18px 28px rgba(181, 42, 57, .24), inset 0 1px 0 rgba(255,255,255,.48);
+}
+.profai-streak-card::after {
+  position: absolute;
+  right: -12%;
+  bottom: -65%;
+  width: 70%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .42);
+  transform: rotate(-25deg);
+  pointer-events: none;
+  content: '';
+}
+.profai-notification-row {
+  box-shadow: 0 8px 20px rgba(46, 65, 90, .07), inset 0 1px 0 rgba(255,255,255,.9);
+  backdrop-filter: blur(8px);
+}
+.profai-notification-row:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(46, 65, 90, .12); }
+@media (prefers-reduced-motion: reduce) { .profai-notification-row:hover { transform: none; } }

@@ -23,17 +23,17 @@ export default function LearningCenterPortal() {
 
   return (
     <div className="learning-center lc-portal min-h-screen text-slate-900">
-      <header className="lc-portal-header">
+      {!user ? <header className="lc-portal-header">
         <Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI student platform"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span><span className="ml-3 hidden border-l border-slate-200 pl-3 text-xs font-semibold tracking-normal text-slate-500 sm:inline">Learning Center</span></span></Link>
         <div className="flex items-center gap-3"><span className="hidden text-xs font-medium text-slate-500 md:block">A better space to teach.</span><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></div>
-      </header>
-      <main className="mx-auto max-w-[1320px] px-4 pb-12 sm:px-8 lg:px-10">
+      </header> : null}
+      <main className="mx-auto max-w-[1320px] px-4 pb-12 pt-5 sm:px-6 lg:px-8 lg:pt-8">
         <section className="lc-hero">
-          <div className="relative z-10 py-2 lg:py-6">
-            <span className="lc-eyebrow"><span className="h-2 w-2 rounded-full bg-red-500" /> THE SPACE BEHIND EVERY SUCCESS</span>
-            <h1 className="mt-6 max-w-2xl text-[2.8rem] font-bold leading-[1.07] tracking-[-.055em] text-slate-950 sm:text-6xl xl:text-[4.5rem]">Great teaching.<br />Stronger students.<br /><span className="text-blue-600">One workspace.</span></h1>
-            <p className="mt-6 max-w-lg text-base leading-7 text-slate-500">Bring your people, practice and progress together. A clear view of every IELTS and SAT learner, with more time for what you do best.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><button type="button" onClick={create} className={`${primaryButton} min-h-12 px-5`}><Plus className="h-4 w-4" /> Create a workspace</button><a href="#workspaces" className={`${secondaryButton} min-h-12 px-5`}>Your workspaces <ArrowDown className="h-4 w-4" /></a></div>
+          <div className="relative z-10 min-w-0 py-2 lg:py-6">
+            <span className="lc-eyebrow"><span className="lc-eyebrow-dot" /> PROFAI LEARNING CENTER</span>
+            <h1 className="mt-6 max-w-2xl text-[2.7rem] font-black leading-[1.07] tracking-[-.06em] text-slate-950 sm:text-[3.5rem] 2xl:text-[4.2rem]">Lead every learner.<br /><span className="lc-gradient-text">See every win.</span></h1>
+            <p className="mt-6 max-w-lg text-base font-medium leading-7 text-slate-600">One connected place for IELTS and SAT teaching: organize your people, assign practice and turn progress into clear next steps.</p>
+            <div className="mt-8 flex flex-wrap gap-3">{workspaces.length ? <Link to={`/learning-center/${workspaces[0].slug}`} className={`${primaryButton} min-h-12 px-5`}>Open your workspace <ArrowRight className="h-4 w-4" /></Link> : <button type="button" onClick={create} className={`${primaryButton} min-h-12 px-5`}><Plus className="h-4 w-4" /> Create a workspace</button>}<a href="#workspaces" className={`${secondaryButton} min-h-12 px-5`}>Explore workspaces <ArrowDown className="h-4 w-4" /></a></div>
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500">{['IELTS & SAT', 'Teacher & student roles', 'Progress insights'].map((label) => <span key={label} className="flex items-center gap-1.5"><Check className="h-4 w-4 text-blue-600" />{label}</span>)}</div>
           </div>
           <WorkspacePreview />

@@ -329,7 +329,7 @@ function App() {
   const isPublicStandalone =
     isAuthPage ||
     isGuestExperience ||
-    isLearningCenterMode ||
+    (isLearningCenterMode && !user) ||
     pathname === '/premium' ||
     pathname.startsWith('/shared/results/') ||
     pathname.startsWith('/speaker/')

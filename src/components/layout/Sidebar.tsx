@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, Building2, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
+import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
@@ -38,7 +38,6 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
         <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
         <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>
-        <NavLink to="/learning-center"><Building2 size={18} />{c('Learning Center')}</NavLink>
         {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('My journey plan')}</NavLink>}
       </details>
     </nav>

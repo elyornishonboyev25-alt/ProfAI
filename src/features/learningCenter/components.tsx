@@ -9,7 +9,7 @@ import type { StudentStatus } from './types'
 export function CenterPanel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <section className={cn(
-      'lc-panel relative overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-sm',
+      'lc-panel relative overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/90 shadow-sm',
       className,
     )}>
       {children}
@@ -24,10 +24,10 @@ export function CenterPageHeading({ eyebrow, title, description, action }: {
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="lc-page-heading flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow ? <p className="text-[10px] font-bold uppercase tracking-[.22em] text-blue-600">{eyebrow}</p> : null}
-        <h1 className="mt-1 text-3xl font-bold tracking-[-.045em] text-slate-950 sm:text-[2.35rem]">{title}</h1>
+        <h1 className="mt-1 text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-[2.35rem]">{title}</h1>
         {description ? <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">{description}</p> : null}
       </div>
       {action}
@@ -53,7 +53,7 @@ export function MetricCard({ label, value, note, icon: Icon, accent = 'blue', tr
     <motion.article
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative overflow-hidden rounded-[1.45rem] border border-white/80 bg-white/90 p-4 shadow-[0_16px_44px_rgba(15,23,42,.07)]"
+      className={cn('lc-metric-card group relative overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/90 p-5 shadow-[0_16px_44px_rgba(15,23,42,.07)]', `lc-metric-${accent}`)}
     >
       <div className="absolute -right-7 -top-7 h-24 w-24 rounded-full bg-blue-50 transition-transform duration-500 group-hover:scale-125" />
       <div className="relative flex items-start justify-between gap-3">
@@ -205,6 +205,6 @@ export function InvitationLink({ link }: { link: string }) {
   return <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm font-bold text-emerald-900">Invitation ready</p><p className="mt-1 text-xs leading-5 text-emerald-800">Share this link with your invitee. It expires in seven days.</p><label className="mt-4 block"><span className="sr-only">Invitation link</span><input ref={inputRef} readOnly value={link} onFocus={(event) => event.target.select()} className={inputClass} /></label><button type="button" onClick={() => void copy()} className={`${secondaryButton} mt-3`}>{status === 'copied' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{status === 'copied' ? 'Copied!' : 'Copy invitation link'}</button><p role="status" className="mt-2 text-xs text-emerald-800">{status === 'manual' ? 'Copy is unavailable in this browser. Select and copy the link above.' : status === 'copied' ? 'Link copied. You can now share it.' : ''}</p></div>
 }
 
-export const inputClass = 'h-11 w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100'
-export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-[0_4px_12px_rgba(37,99,235,.18)] transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-wait disabled:opacity-60'
-export const secondaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-wait disabled:opacity-60'
+export const inputClass = 'h-11 w-full rounded-xl border border-slate-200 bg-white/90 px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100'
+export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-600 px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(185,28,28,.19)] transition hover:from-red-800 hover:to-red-700 hover:shadow-[0_14px_28px_rgba(185,28,28,.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-wait disabled:opacity-60'
+export const secondaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/85 px-4 text-sm font-semibold text-slate-700 shadow-[0_4px_16px_rgba(30,64,175,.04)] transition hover:border-red-200 hover:bg-white hover:text-red-700 disabled:cursor-wait disabled:opacity-60'

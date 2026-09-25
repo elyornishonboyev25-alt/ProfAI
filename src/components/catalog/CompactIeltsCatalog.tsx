@@ -22,7 +22,7 @@ export type CompactIeltsTestRow = {
   title: string
   subtitle: string
   badge: string
-  durationMinutes: number
+  durationMinutes?: number
   detail: string
   available: boolean
   completed?: boolean
@@ -37,6 +37,9 @@ type CompactIeltsCatalogProps = {
   onLaunch: (row: CompactIeltsTestRow) => void
   headerExtra?: ReactNode
   embedded?: boolean
+  filters?: readonly { value: string; label: string }[]
+  activeFilter?: string
+  onFilterChange?: (value: string) => void
 }
 
 const SECTION_META = {
@@ -75,6 +78,9 @@ export default function CompactIeltsCatalog({
   onLaunch,
   headerExtra,
   embedded = false,
+  filters,
+  activeFilter,
+  onFilterChange,
 }: CompactIeltsCatalogProps) {
   const meta = SECTION_META[section]
   const HeroIcon = meta.icon
@@ -154,6 +160,22 @@ export default function CompactIeltsCatalog({
           </div>
         </div>
 
+        {filters && activeFilter && onFilterChange ? (
+          <div className="relative mt-5 flex flex-wrap gap-2" role="group" aria-label={`${meta.label} test type`}>
+            {filters.map((filter) => (
+              <button
+                key={filter.value}
+                type="button"
+                aria-pressed={activeFilter === filter.value}
+                onClick={() => onFilterChange(filter.value)}
+                className={`rounded-full border px-5 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${activeFilter === filter.value ? 'border-red-200 bg-red-50 text-red-700 shadow-[0_6px_16px_rgba(185,28,28,.08)]' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-red-200 hover:bg-white hover:text-red-700'}`}
+              >
+                <UiText text={filter.label} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         {rows.length === 0 ? (
           <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500">
             No tests found.
@@ -190,7 +212,7 @@ export default function CompactIeltsCatalog({
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">
-                    <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes}  <UiText text={"min"} /> </span>
+                    {row.durationMinutes ? <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes}  <UiText text={"min"} /> </span> : null}
                     <span>{row.detail}</span>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>

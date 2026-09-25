@@ -28,8 +28,9 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
   const trial = useFeatureTrial(track)
   const [showTrialGate, setShowTrialGate] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const navigationState = location.state as { entry?: string; from?: string; catalogFilter?: string; catalogSkill?: string } | null
+  const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === track ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
-  const navigationState = location.state as { entry?: string; from?: string } | null
   const fromMock = navigationState?.entry === 'mock-ielts'
 
   const completedTestIds = useMemo(() => {
@@ -89,10 +90,21 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
   }, [completedTestIds, track])
 
   const visibleRows = useMemo(() => {
+    const partNumber = activeFilter === 'full' ? null : Number(activeFilter.slice(5))
+    const filteredByPart = partNumber
+      ? rows.map((row) => ({
+          ...row,
+          title: `${track === 'listening' ? 'Listening' : 'Reading'} Part ${partNumber} · Test ${row.number}`,
+          subtitle: row.available ? `Practice Part ${partNumber} from this test` : row.subtitle,
+          badge: `Part ${partNumber}`,
+          durationMinutes: track === 'reading' ? 20 : undefined,
+          detail: `Part ${partNumber} · focused practice`,
+        }))
+      : rows
     const query = deferredSearchTerm.trim().toLowerCase()
-    if (!query) return rows
-    return rows.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
-  }, [deferredSearchTerm, rows])
+    if (!query) return filteredByPart
+    return filteredByPart.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
+  }, [activeFilter, deferredSearchTerm, rows, track])
 
   if (!validSection) return <Navigate to="/ielts" replace />
 
@@ -103,10 +115,14 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
       return
     }
     trial.consume()
+    const partNumber = activeFilter === 'full' ? null : Number(activeFilter.slice(5))
+    const context = fromMock
+      ? { entry: 'mock-ielts', from: navigationState?.from ?? 'tests', catalogFilter: activeFilter, catalogSkill: track }
+      : { entry: 'ielts-catalog', catalogFilter: activeFilter, catalogSkill: track }
     navigate(`/test/${track}/${row.id}`, {
-      state: fromMock
-        ? { entry: 'mock-ielts', from: navigationState?.from ?? 'tests' }
-        : { entry: 'ielts-catalog' },
+      state: partNumber
+        ? { ...context, launchPreset: { mode: 'practice', partIndex: partNumber, ...(track === 'reading' ? { durationMinutes: 20 } : {}) } }
+        : context,
     })
   }
 
@@ -151,6 +167,9 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
         rows={visibleRows}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        filters={['full', 'part-1', 'part-2', 'part-3', ...(track === 'listening' ? ['part-4'] : [])].map((value) => ({ value, label: value === 'full' ? 'Full Test' : `Part ${value.slice(5)}` }))}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
         onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
         onLaunch={handleLaunch}
         headerExtra={!trial.isPremium && Number.isFinite(trial.remaining) ? (

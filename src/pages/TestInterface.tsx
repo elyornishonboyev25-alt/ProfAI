@@ -46,6 +46,8 @@ export default function TestInterface() {
     fromResults?: boolean
     entry?: string
     from?: string
+    catalogFilter?: string
+    catalogSkill?: string
     launchPreset?: TestLaunchPreset
     mock?: { id: string; section: MockSectionKey }
   } | null) ?? null
@@ -191,8 +193,8 @@ export default function TestInterface() {
     if (type === 'reading' || type === 'listening') {
       navigate(`/ielts/${type}/tests`, {
         state: fromMockFlow
-          ? { entry: 'mock-ielts', from: mockFrom }
-          : { entry: 'ielts-catalog' },
+          ? { entry: 'mock-ielts', from: mockFrom, catalogFilter: routeState?.catalogFilter, catalogSkill: routeState?.catalogSkill }
+          : { entry: 'ielts-catalog', catalogFilter: routeState?.catalogFilter, catalogSkill: routeState?.catalogSkill },
       })
       return
     }

@@ -148,6 +148,7 @@ export default function IELTSSpeakingTest() {
         mock={mode.mock}
         onExit={exitTest}
         onSaved={(analysis) => {
+          markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
             userId: user?.id ?? null,
             modeLabel: mode.mock.title,

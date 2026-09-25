@@ -44,8 +44,20 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
+import '@/styles/account-profile.css'
 
 const NICKNAME_RE = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
+const PROFILE_SECTIONS = [
+  { id: 'identity', label: 'Profile' },
+  { id: 'targets', label: 'Study targets' },
+  { id: 'privacy', label: 'Privacy' },
+  { id: 'achievements', label: 'Achievements' },
+  { id: 'danger', label: 'Account' },
+] as const
+
+function parseTargetCountries(value: string) {
+  return value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5)
+}
 
 function normalizeSatScore(score: number) {
   return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
@@ -103,7 +115,8 @@ function PrivacyToggle({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-start justify-between gap-3 rounded-xl border border-blue-200 bg-white/90 px-3 py-2.5 text-left"
+      className="account-profile-privacy-toggle flex w-full items-start justify-between gap-3 rounded-xl border border-blue-200 bg-white/90 px-3 py-2.5 text-left"
+      aria-pressed={enabled}
     >
       <div>
         <p className="text-sm font-semibold text-slate-900">{label}</p>
@@ -250,6 +263,8 @@ export default function AccountProfile() {
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
 
   const [form, setForm] = useState<AccountProfileFields>(EMPTY_PROFILE)
+  const [targetCountriesDraft, setTargetCountriesDraft] = useState('')
+  const [activeSection, setActiveSection] = useState<string>('identity')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [loadAttempt, setLoadAttempt] = useState(0)
@@ -300,7 +315,8 @@ export default function AccountProfile() {
 
   const savedNickname = user?.nickname ?? ''
   const [nicknameDraft, setNicknameDraft] = useState(savedNickname)
-  const [nickStatus, setNickStatus] = useState<'idle' | 'invalid' | 'checking' | 'available' | 'taken'>('idle')
+  const [nickStatus, setNickStatus] = useState<'idle' | 'invalid' | 'checking' | 'available' | 'taken' | 'error'>('idle')
+  const [nicknameCheckAttempt, setNicknameCheckAttempt] = useState(0)
   const [savingNickname, setSavingNickname] = useState(false)
   const nickDebounce = useRef<number | null>(null)
 
@@ -313,10 +329,14 @@ export default function AccountProfile() {
       .then((data) => {
         if (!active) return
         setForm({ ...EMPTY_PROFILE, ...data.profile })
+        setTargetCountriesDraft((data.profile.targetCountries ?? []).join(', '))
         setAvatarUrl(data.avatarUrl)
         setUserAvatar(data.avatarUrl)
         setUserFullName(data.fullName)
-        if (data.nickname) setNicknameDraft(data.nickname)
+        if (data.nickname) {
+          setUserNickname(data.nickname)
+          setNicknameDraft(data.nickname)
+        }
       })
       .catch(() => {
         if (!active) return
@@ -326,7 +346,7 @@ export default function AccountProfile() {
     return () => {
       active = false
     }
-  }, [loadAttempt, setUserAvatar, setUserFullName])
+  }, [loadAttempt, setUserAvatar, setUserFullName, setUserNickname])
 
   useEffect(() => {
     setNicknameDraft(savedNickname)
@@ -347,14 +367,37 @@ export default function AccountProfile() {
     }
     setNickStatus('checking')
     nickDebounce.current = window.setTimeout(async () => {
-      const ok = await checkNicknameAvailable(v)
-      if (!cancelled) setNickStatus(ok ? 'available' : 'taken')
+      try {
+        const ok = await checkNicknameAvailable(v)
+        if (!cancelled) setNickStatus(ok ? 'available' : 'taken')
+      } catch {
+        if (!cancelled) setNickStatus('error')
+      }
     }, 450)
     return () => {
       cancelled = true
       if (nickDebounce.current) window.clearTimeout(nickDebounce.current)
     }
-  }, [nicknameDraft, savedNickname])
+  }, [nicknameDraft, savedNickname, nicknameCheckAttempt])
+
+  useEffect(() => {
+    if (loading || loadError) return
+    const updateActiveSection = () => {
+      const visible = PROFILE_SECTIONS
+        .map(({ id }) => ({ id, top: document.getElementById(id)?.getBoundingClientRect().top ?? Infinity }))
+        .filter(({ top }) => top <= 145)
+      if (!visible.length) {
+        setActiveSection(PROFILE_SECTIONS[0].id)
+        return
+      }
+      const nearestTop = Math.max(...visible.map(({ top }) => top))
+      const nearest = visible.filter(({ top }) => Math.abs(top - nearestTop) < 2)
+      setActiveSection((current) => nearest.some(({ id }) => id === current) ? current : nearest[0].id)
+    }
+    updateActiveSection()
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    return () => window.removeEventListener('scroll', updateActiveSection)
+  }, [loading, loadError])
 
   const completion = useMemo(() => {
     const fields = [form.country, form.targetScore, form.examDate, form.fieldOfStudy, form.gpa, form.phone, avatarUrl, savedNickname]
@@ -498,13 +541,13 @@ export default function AccountProfile() {
   }
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <AmbientBackdrop variant="red" />
+    <div className="workspace-page account-profile-page relative min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+      <AmbientBackdrop variant="blue" grid={false} />
       <div className="relative mx-auto w-full max-w-7xl">
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
 
       <Reveal>
-        <section className="premium-hero p-6 sm:p-9">
+        <section className="premium-hero account-profile-hero p-6 sm:p-9">
           <div className="premium-top-controls">
             <span className="premium-top-chip">
               <Sparkles className="h-3.5 w-3.5" />
@@ -513,7 +556,7 @@ export default function AccountProfile() {
               type="button"
               onClick={() => void signOut()}
               disabled={signingOut}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white/80 px-4 text-xs font-black text-blue-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-blue-50 disabled:opacity-60"
+              className="account-profile-logout inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white/80 px-4 text-xs font-black text-blue-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-blue-50 disabled:opacity-60"
             >
               {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                <UiText text={"Log out"} /> </button>
@@ -523,7 +566,7 @@ export default function AccountProfile() {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]">
+                <div className="account-profile-avatar-frame relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]">
                   <ProfileAvatar src={avatarUrl} alt="Profile" className="profile-avatar-media--hero" />
                 </div>
                 <button
@@ -607,10 +650,11 @@ export default function AccountProfile() {
             </div>
 
             {/* Quick actions */}
-            <div className="flex flex-col gap-2">
+            <div className="account-profile-quick-actions flex flex-col gap-2">
               <button
                 onClick={() => navigate(savedNickname ? `/u/${savedNickname}` : '/account', { state: { from: '/account' } })}
                 disabled={!savedNickname}
+                title={!savedNickname ? 'Set a public nickname first' : undefined}
                 className="arena-primary-btn justify-center disabled:opacity-50"
               >
                 <UserRound className="mr-2 h-4 w-4" />  <UiText text={"View public profile"} /> </button>
@@ -633,35 +677,32 @@ export default function AccountProfile() {
         </section>
       ) : (
         <>
-          <nav className="sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
-            {[
-              ['#identity', 'Profile'],
-              ['#targets', 'Study targets'],
-              ['#privacy', 'Privacy'],
-              ['#achievements', 'Achievements'],
-              ['#danger', 'Account'],
-            ].map(([href, label]) => (
+          <nav aria-label="Profile sections" className="account-profile-tabs sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
+            {PROFILE_SECTIONS.map(({ id, label }) => (
               <a
-                key={href}
-                href={href}
-                className="min-h-10 shrink-0 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+                key={id}
+                href={`#${id}`}
+                aria-current={activeSection === id ? 'location' : undefined}
+                onClick={() => setActiveSection(id)}
+                className={`min-h-10 shrink-0 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 transition ${activeSection === id ? 'is-active' : ''}`}
               >
-                {label}
+                <UiText text={label} />
               </a>
             ))}
           </nav>
           {/* Nickname */}
-          <section id="identity" className="mt-6 scroll-mt-24 surface-card p-6">
+          <section id="identity" className="account-profile-card mt-6 scroll-mt-24 surface-card p-6">
             <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
               <AtSign className="h-5 w-5 text-blue-600" />
                <UiText text={"Public nickname"} /> </h2>
             <p className="mt-2 text-sm text-slate-600">
                <UiText text={"Other learners only ever see this handle — never your email. It is how people find you in the Community."} /> </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3">
+              <div className="account-profile-nickname-field flex flex-1 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3">
                 <span className="text-lg font-bold text-blue-500">@</span>
                 <input
                   value={nicknameDraft}
+                  aria-label="Public nickname"
                   onChange={(e) => setNicknameDraft(e.target.value.replace(/\s/g, ''))}
                   placeholder="your_handle"
                   maxLength={20}
@@ -681,11 +722,12 @@ export default function AccountProfile() {
             </div>
             {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"Already taken — try another."} /> </p> : null}
             {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"3–20 chars: letters, numbers or underscore, starting with a letter."} /> </p> : null}
+            {nickStatus === 'error' ? <p className="mt-1.5 text-xs font-medium text-error-600">Could not check this nickname. <button type="button" onClick={() => setNicknameCheckAttempt((attempt) => attempt + 1)} className="font-bold underline">Try again</button></p> : null}
           </section>
 
           {/* Personal + targets */}
           <section id="targets" className="mt-6 scroll-mt-24 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            <article className="surface-card p-6">
+            <article className="account-profile-card surface-card p-6">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <UserRound className="h-5 w-5 text-blue-600" />
                  <UiText text={"Personal & exam targets"} /> </h2>
@@ -737,8 +779,12 @@ export default function AccountProfile() {
                 </label>
                 <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                    <UiText text={"Target countries"} /> <input
-                    value={form.targetCountries.join(', ')}
-                    onChange={(e) => updateField('targetCountries', e.target.value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5))}
+                    value={targetCountriesDraft}
+                    onChange={(e) => {
+                      setTargetCountriesDraft(e.target.value)
+                      updateField('targetCountries', parseTargetCountries(e.target.value))
+                    }}
+                    onBlur={() => setTargetCountriesDraft(parseTargetCountries(targetCountriesDraft).join(', '))}
                     className="input mt-1"
                     placeholder="United States, United Kingdom, Canada"
                   />
@@ -773,7 +819,7 @@ export default function AccountProfile() {
 
             <div className="space-y-6">
               {/* Privacy */}
-              <article id="privacy" className="scroll-mt-24 surface-card p-6">
+              <article id="privacy" className="account-profile-card scroll-mt-24 surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                   <ShieldCheck className="h-5 w-5 text-blue-600" />
                    <UiText text={"Privacy & visibility"} /> </h2>
@@ -786,7 +832,7 @@ export default function AccountProfile() {
               </article>
 
               {/* Target university */}
-              <article className="surface-card p-6">
+              <article className="account-profile-card surface-card p-6">
                 <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                   <GraduationCap className="h-5 w-5 text-blue-600" />
                    <UiText text={"Target university"} /> </h2>
@@ -809,7 +855,7 @@ export default function AccountProfile() {
           </section>
 
           {/* Badges */}
-          <section id="achievements" className="mt-6 scroll-mt-24 surface-card p-6">
+          <section id="achievements" className="account-profile-card mt-6 scroll-mt-24 surface-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
                 <Sparkles className="h-5 w-5 text-blue-600" />
@@ -823,7 +869,7 @@ export default function AccountProfile() {
 
           <section
             id="danger"
-            className="relative mt-6 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-error-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,.94),rgba(254,242,242,.9))] p-5 shadow-[0_20px_48px_rgba(127,29,29,.08)] sm:p-6"
+            className="account-profile-danger relative mt-6 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-error-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,.94),rgba(254,242,242,.9))] p-5 shadow-[0_20px_48px_rgba(127,29,29,.08)] sm:p-6"
           >
             <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-blue-200/45 blur-3xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -847,13 +893,13 @@ export default function AccountProfile() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/60 via-white to-emerald-50/50 px-4 py-3">
+          <section className="account-profile-note mt-6 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/60 via-white to-emerald-50/50 px-4 py-3">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
               <Mail className="h-4 w-4" />
                <UiText text={"Your profile is saved to your account and stays on every device you sign in to."} /> </p>
           </section>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="account-profile-summary mt-4 grid gap-3 sm:grid-cols-3">
             <div className="surface-card p-4 text-center">
               <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Profile complete"} /> </p>
               <p className="mt-1 text-2xl font-black text-slate-900"><CountUp value={completion} suffix="%" /></p>

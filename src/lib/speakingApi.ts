@@ -65,15 +65,11 @@ export type SpeakingSessionInput = {
 }
 
 export async function checkNicknameAvailable(value: string): Promise<boolean> {
-  try {
-    const res = await apiClient.get<{ available: boolean }>(
-      `/profile/nickname/check?value=${encodeURIComponent(value)}`,
-      { auth: true },
-    )
-    return res.available
-  } catch {
-    return false
-  }
+  const res = await apiClient.get<{ available: boolean }>(
+    `/profile/nickname/check?value=${encodeURIComponent(value)}`,
+    { auth: true },
+  )
+  return res.available
 }
 
 export async function setNickname(nickname: string): Promise<void> {

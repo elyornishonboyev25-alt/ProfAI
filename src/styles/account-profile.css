@@ -1,0 +1,198 @@
+.account-profile-page {
+  overflow-x: clip;
+  color: #172339;
+}
+
+.app-shell .account-profile-page .account-profile-hero {
+  border: 1px solid rgba(255, 255, 255, .98);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 96% 8%, rgba(190, 217, 255, .39), transparent 35%),
+    radial-gradient(circle at 4% 95%, rgba(255, 231, 235, .5), transparent 39%),
+    linear-gradient(125deg, #fffdfd 12%, #f8faff 58%, #edf4ff 100%);
+  box-shadow: 0 22px 58px rgba(40, 62, 96, .11), inset 0 1px 0 #fff;
+}
+
+.account-profile-page .premium-top-chip {
+  border-color: #f1d6dc;
+  color: #ad2637;
+  background: rgba(255, 255, 255, .85);
+  box-shadow: inset 0 1px 0 #fff;
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+
+.account-profile-page .account-profile-logout {
+  border-color: #dae5f3;
+  color: #485b76;
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 7px 18px rgba(45, 64, 93, .07), inset 0 1px 0 #fff;
+}
+
+.account-profile-page .account-profile-logout:hover {
+  border-color: #eac4cc;
+  color: #ad2637;
+  background: #fff;
+}
+
+.account-profile-page .account-profile-avatar-frame {
+  background: linear-gradient(145deg, #f4f8ff, #dce8f7);
+  box-shadow: 0 0 0 4px #e2eafa, 0 18px 38px rgba(49, 75, 109, .16);
+}
+
+.account-profile-page .account-profile-hero h1 {
+  color: #101828;
+  letter-spacing: -.045em;
+}
+
+.account-profile-page .account-profile-hero :is(.rounded-full.border-blue-200, .rounded-full.border-slate-200) {
+  border-color: #dce6f3;
+  background: rgba(255, 255, 255, .9);
+}
+
+.account-profile-page .account-profile-quick-actions {
+  min-width: 214px;
+}
+
+.account-profile-page .arena-primary-btn {
+  border: 1px solid #c92f3e;
+  border-radius: 16px;
+  background: linear-gradient(115deg, #af2636, #d53646 70%, #e7505b);
+  box-shadow: 0 12px 26px rgba(180, 38, 55, .2), inset 0 1px 0 rgba(255, 255, 255, .35);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.account-profile-page .arena-secondary-btn {
+  border: 1px solid #d8e4f2;
+  border-radius: 16px;
+  color: #344760;
+  background: linear-gradient(145deg, #fff, #f4f8fd);
+  box-shadow: 0 8px 20px rgba(48, 70, 103, .07), inset 0 1px 0 #fff;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.account-profile-page .arena-secondary-btn:hover {
+  border-color: #c6d7ea;
+  color: #a82435;
+  background: #fff;
+}
+
+.account-profile-page .account-profile-tabs {
+  border-color: #e1e9f5;
+  background: rgba(249, 251, 255, .92);
+  box-shadow: 0 12px 32px rgba(44, 64, 95, .09), inset 0 1px 0 #fff;
+  scrollbar-width: thin;
+}
+
+.account-profile-page .account-profile-tabs a {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  color: #53647c;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.account-profile-page .account-profile-tabs a:hover {
+  color: #a82435;
+  background: #fff;
+}
+
+.account-profile-page .account-profile-tabs a.is-active {
+  border-color: #f2d6da;
+  color: #a82435;
+  background: linear-gradient(145deg, #fff, #fff4f5);
+  box-shadow: 0 4px 12px rgba(174, 45, 61, .08);
+}
+
+.app-shell .account-profile-page .account-profile-card {
+  border: 1px solid rgba(255, 255, 255, .96);
+  border-radius: 28px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, .98), rgba(247, 250, 255, .92));
+  box-shadow: 0 16px 42px rgba(46, 67, 99, .08), inset 0 1px 0 #fff;
+}
+
+.account-profile-page .account-profile-card h2 {
+  color: #19263a;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+
+.account-profile-page .account-profile-card h2 > svg {
+  color: #c02b3b;
+}
+
+.account-profile-page .input,
+.account-profile-page .account-profile-nickname-field {
+  border-color: #d7e3f1;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .96);
+}
+
+.account-profile-page .input:focus,
+.account-profile-page .account-profile-nickname-field:focus-within {
+  border-color: #d36572;
+  outline: 2px solid rgba(215, 72, 89, .13);
+  outline-offset: 1px;
+}
+
+.account-profile-page #identity p button {
+  min-height: 0;
+  padding: 0;
+  color: #a82435;
+}
+
+.account-profile-page .account-profile-privacy-toggle {
+  border-color: #dee8f4;
+  background: linear-gradient(145deg, #fff, #f8faff);
+  transition: border-color 180ms, box-shadow 180ms, transform 180ms;
+}
+
+.account-profile-page .account-profile-privacy-toggle:hover {
+  border-color: #c8d8eb;
+  box-shadow: 0 7px 20px rgba(48, 70, 103, .07);
+  transform: translateY(-1px);
+}
+
+.account-profile-page .account-profile-privacy-toggle[aria-pressed='true'] > span {
+  border-color: #e9aeb7;
+  background: #ffe4e8;
+}
+
+.account-profile-page .account-profile-privacy-toggle[aria-pressed='false'] > span {
+  border-color: #cbd5e1;
+  background: #e8edf4;
+}
+
+.account-profile-page .account-profile-danger {
+  border-color: #f0d7dc;
+  background: linear-gradient(130deg, #fff, #fff7f8);
+  box-shadow: 0 14px 36px rgba(93, 54, 68, .07);
+}
+
+.account-profile-page .account-profile-note {
+  border-color: #dce8e2;
+  background: linear-gradient(120deg, #f2fbf7, #fff);
+}
+
+.account-profile-page .account-profile-summary .surface-card {
+  border-color: #e4ebf5;
+  background: linear-gradient(145deg, #fff, #f6f9fe);
+}
+
+.account-profile-page .account-profile-summary .text-blue-700 {
+  color: #aa2b3b;
+}
+
+@media (max-width: 767px) {
+  .account-profile-page .account-profile-quick-actions { min-width: 0; }
+  .account-profile-page .account-profile-hero { border-radius: 26px; }
+  .account-profile-page .account-profile-tabs { top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-profile-page .account-profile-privacy-toggle { transition: none; }
+}

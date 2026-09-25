@@ -20,12 +20,10 @@
 .performance-studio .panel-surface { border-radius:24px; }.performance-studio .premium-section-title { max-width:720px; }
 @media(max-width:600px) { .language-trigger { gap:6px; padding:8px 6px; font-size:11px; }.practice-priorities { padding:22px; }.results-actions>* { flex:1; justify-content:center; }.liquid-mobile-nav a { padding-left:6px; padding-right:6px; } }
 
-/* Dashboard reference: ivory surfaces, crisp crimson accents and a compact target. */
-.app-shell-dashboard { background:radial-gradient(circle at 92% 5%,#ffe7e6 0,transparent 24%),radial-gradient(circle at 5% 22%,#f2fbfc 0,transparent 36%),#f9f9fb; }
-.app-shell-dashboard .workspace-background .ambient-mesh { background:radial-gradient(circle at 90% 4%,rgba(234,53,65,.13),transparent 25%),radial-gradient(circle at 9% 65%,rgba(242,88,96,.1),transparent 28%); }
-.app-shell-dashboard .ambient-sphere { opacity:.25; }
-.profai-dashboard .dashboard-main-shell { background:linear-gradient(130deg,rgba(255,255,255,.91),rgba(255,251,251,.85)); box-shadow:0 24px 65px #482b3610,inset 0 1px #fff; }
-.profai-dashboard .dashboard-main-shell::before { background:radial-gradient(circle at 92% 5%,#ffe3e42f,transparent 30%); }
+/* Share the IELTS and SAT backdrop, with glass surfaces above the cool silver gradient. */
+.app-shell-dashboard { background:#f7f9ff; }
+.profai-dashboard .dashboard-main-shell { border-color:transparent; background:transparent; box-shadow:none; }
+.profai-dashboard .dashboard-main-shell::before { content:none; }
 .profai-dashboard .dashboard-entrance-grid { align-items:stretch; }
 .profai-dashboard .dashboard-avatar-ring { background:linear-gradient(145deg,#f45061,#bf1930); box-shadow:0 10px 25px #bc203845; }
 .profai-dashboard .dashboard-streak { color:#c0273b; }
@@ -36,7 +34,7 @@
 .profai-dashboard .dashboard-target-card>div:nth-last-of-type(1) { margin-top:auto; }
 .profai-dashboard .dashboard-target-card .dashboard-target-cta { color:#8e2136; box-shadow:0 8px 18px #52152522; }
 .profai-dashboard .dashboard-target-card .dashboard-target-cta svg { color:#bd273a; }
-.profai-dashboard .dashboard-glass-card,.profai-dashboard .dashboard-stat-card,.profai-dashboard .dashboard-learning-card { background:linear-gradient(145deg,#fffffff5,#fffafbdc); border-color:#fff; box-shadow:0 12px 30px #4730440d,inset 0 1px #fff; }
+.profai-dashboard .dashboard-glass-card,.profai-dashboard .dashboard-stat-card,.profai-dashboard .dashboard-learning-card { background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(255,255,255,.82)); border-color:rgba(255,255,255,.95); box-shadow:var(--liquid-shadow); }
 .profai-dashboard .dashboard-stat-icon { border-color:#f4cdd1; color:#b8273c; background:#fff1f2; }
 .profai-dashboard .dashboard-icon-button:hover,.profai-dashboard button[aria-label='Notifications']:hover { color:#be263b; }
 .profai-dashboard .dashboard-leaderboard-preview:hover,.profai-dashboard .dashboard-leaderboard-preview:focus-visible { border-color:#f1b3bc; box-shadow:0 18px 38px #ad273c17; }

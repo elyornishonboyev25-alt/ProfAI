@@ -443,30 +443,6 @@
   color: #dc2626;
 }
 
-.app-shell-dashboard .workspace-background .ambient-mesh {
-  background:
-    radial-gradient(circle at 8% 16%, rgba(239, 68, 68, 0.08), transparent 34%),
-    radial-gradient(circle at 90% 18%, rgba(37, 99, 235, 0.16), transparent 35%),
-    radial-gradient(circle at 72% 88%, rgba(99, 102, 241, 0.11), transparent 38%);
-}
-
-.app-shell-dashboard .ambient-sphere {
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.98) 0 7%, rgba(255, 255, 255, 0.58) 13%, transparent 25%),
-    radial-gradient(circle at 70% 72%, rgba(239, 68, 68, 0.17), transparent 35%),
-    radial-gradient(circle at 28% 70%, rgba(79, 70, 229, 0.27), transparent 39%),
-    linear-gradient(142deg, rgba(255, 255, 255, 0.74), rgba(219, 234, 254, 0.3) 48%, rgba(254, 226, 226, 0.18));
-  box-shadow:
-    inset -18px -22px 32px rgba(37, 99, 235, 0.14),
-    inset 14px 12px 25px rgba(255, 255, 255, 0.74),
-    inset 5px -8px 22px rgba(239, 68, 68, 0.08),
-    0 22px 54px rgba(37, 99, 235, 0.14);
-}
-
-.app-shell-dashboard .ambient-sphere::after {
-  background: conic-gradient(from 205deg, rgba(37, 99, 235, 0.22), rgba(255, 255, 255, 0.05), rgba(239, 68, 68, 0.14), rgba(255, 255, 255, 0.35), rgba(37, 99, 235, 0.22));
-}
-
 .dashboard-stat-label {
   min-height: 2.5rem;
   margin-top: 1rem;

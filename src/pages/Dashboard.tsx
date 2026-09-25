@@ -168,7 +168,6 @@ export default function Dashboard() {
     () => overview.weeklyProgress.map((day) => ({ ...day, activity: day.studyTimeSec ?? 0 })),
     [overview.weeklyProgress],
   )
-  const chartUsesHours = chartData.some((day) => day.activity > 3600)
   const weeklyStudyTimeLabel = formatStudyTime(overview.metrics.weeklyStudySeconds)
   const leaderboard = overview.miniLeaderboard.slice(0, 3)
   const podium = [
@@ -300,7 +299,7 @@ export default function Dashboard() {
                   <Skeleton className="h-full w-full rounded-2xl" />
                 ) : (
                   <ResponsiveContainer>
-                    <BarChart data={chartData} margin={{ top: 8, right: 2, left: -24, bottom: 0 }}>
+                    <BarChart data={chartData} margin={{ top: 8, right: 2, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dashboardBars" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#9f2436" />
@@ -314,7 +313,7 @@ export default function Dashboard() {
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#94a3b8', fontSize: 10 }}
-                        tickFormatter={(value: number) => `${Number((value / (chartUsesHours ? 3600 : 60)).toFixed(2))}${chartUsesHours ? 'h' : 'm'}`}
+                        tickFormatter={(value: number) => `${Number((value / 3600).toFixed(2))}h`}
                       />
                       <Tooltip
                         formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}

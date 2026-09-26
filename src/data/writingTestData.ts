@@ -32,7 +32,7 @@ export type WritingTask = {
   maxWordCount: number
   durationMinutes: number
   chart?: WritingChartData
-  diagram?: 'further-education' | 'radio-tv-audiences'
+  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string
@@ -120,8 +120,7 @@ const FULL_TEST_1_TASKS: WritingTask[] = [
     suggestedWordCount: { min: 150, max: 180 },
     maxWordCount: 500,
     durationMinutes: 20,
-    imageUrl: '/images/ielts-writing/full-writing-test-1-smoked-fish-exact.png',
-    imageAlt: 'The process of making smoked fish, from catching fish to sale in a fish shop',
+    diagram: 'smoked-fish',
     available: true,
   },
   {
@@ -171,9 +170,7 @@ const FULL_TEST_2_TASKS: WritingTask[] = [
     suggestedWordCount: { min: 150, max: 180 },
     maxWordCount: 500,
     durationMinutes: 20,
-    imageUrl: '/images/ielts-writing/full-writing-test-2-renewable-energy.png',
-    imageAlt:
-      'Bar chart comparing the percentage of fuel from renewable energy used in transport in 2009 and 2010 across six countries and the EU average',
+    diagram: 'renewable-transport',
     available: true,
   },
   {

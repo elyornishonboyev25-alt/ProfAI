@@ -1,4 +1,5 @@
 import type { WritingTask } from '@/data/writingTestData'
+import { RenewableTransportChart, SmokedFishDiagram } from './LegacyWritingTaskDiagrams'
 
 type Diagram = NonNullable<WritingTask['diagram']>
 
@@ -123,5 +124,10 @@ function RadioTelevisionChart() {
 }
 
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
-  return diagram === 'further-education' ? <FurtherEducationChart /> : <RadioTelevisionChart />
+  switch (diagram) {
+    case 'smoked-fish': return <SmokedFishDiagram />
+    case 'renewable-transport': return <RenewableTransportChart />
+    case 'further-education': return <FurtherEducationChart />
+    case 'radio-tv-audiences': return <RadioTelevisionChart />
+  }
 }

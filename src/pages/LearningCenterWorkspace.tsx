@@ -37,8 +37,8 @@ export default function LearningCenterWorkspacePage() {
   const section = pathAfterSlug[0] || 'overview'
   const detailId = section === 'students' ? pathAfterSlug[1] : undefined
 
-  if (loading && !data) return <div className="learning-center grid min-h-screen place-items-center"><BrandPageLoader label="Opening Learning Center" /></div>
-  if (error) return <div className="learning-center mx-auto max-w-2xl px-5 py-12"><ErrorState message={error} onRetry={() => void refetch()} /><Link to="/learning-center" className={`${secondaryButton} mt-4`}>Back to workspaces</Link></div>
+  if (loading && !data) return <div className="learning-center grid min-h-screen place-items-center"><BrandPageLoader label="Opening Classes" /></div>
+  if (error) return <div className="learning-center mx-auto max-w-2xl px-5 py-12"><ErrorState message={error} onRetry={() => void refetch()} /><Link to="/learning-center" className={`${secondaryButton} mt-4`}>Back to Classes</Link></div>
   if (!workspace) return <Navigate to="/learning-center" replace />
 
   const manager = workspace.role === 'OWNER' || workspace.role === 'ADMIN'
@@ -51,17 +51,17 @@ export default function LearningCenterWorkspacePage() {
       <main className="lc-workspace-container mx-auto max-w-[100rem] px-4 pb-12 pt-6 sm:px-6 lg:px-8 lg:pt-8">
         <section className="lc-workspace-banner">
           <div className="relative z-10 min-w-0">
-            <p className="lc-eyebrow"><span className="lc-eyebrow-dot" /> LEARNING CENTER <span className="text-slate-300">/</span> {workspace.role} WORKSPACE</p>
+            <p className="lc-eyebrow"><span className="lc-eyebrow-dot" /> CLASSES <span className="text-slate-300">/</span> {workspace.role} WORKSPACE</p>
             <h1 className="mt-4 break-words text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">{workspace.name}</h1>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">Your people, assignments and progress in one connected workspace.</p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-2">
-            <Link to="/learning-center" className={secondaryButton}><Building2 className="h-4 w-4" /> All workspaces</Link>
+            <Link to="/learning-center" className={secondaryButton}><Building2 className="h-4 w-4" /> All classes</Link>
             <Link to="/dashboard" className={secondaryButton}>Dashboard <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         </section>
 
-        <nav aria-label="Learning center sections" className="lc-section-nav">
+        <nav aria-label="Class sections" className="lc-section-nav">
           {nav.map((item) => {
             const Icon = item.icon
             const active = section === item.key

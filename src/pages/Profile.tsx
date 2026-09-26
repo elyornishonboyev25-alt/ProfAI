@@ -40,6 +40,7 @@ import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
+import '@/styles/profile-recent-attempts.css'
 
 function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
@@ -733,53 +734,40 @@ export default function Profile() {
 
       {/* ── Recent attempts ─────────────────────────────────────── */}
       <Reveal className="mt-6">
-        <article className="surface-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        <article className="surface-card recent-attempts-panel relative overflow-hidden p-5 sm:p-7">
+          <header className="recent-attempts-heading">
+            <div className="flex min-w-0 items-center gap-3">
               <ArenaMetricMark icon={Activity} tone="blue" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Recent Attempts"} /> </h2>
+              <div>
+                <p className="recent-attempts-eyebrow">YOUR ACTIVITY</p>
+                <h2 className="mt-1 text-xl font-black tracking-[-.04em] text-slate-950 sm:text-2xl"><UiText text="Recent Attempts" /></h2>
+              </div>
             </div>
-          </div>
+            {data?.recentAttempts.length ? <span className="recent-attempts-count">Latest {Math.min(data.recentAttempts.length, 6)} results</span> : null}
+          </header>
 
           {loading ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-6 space-y-3">
               <Skeleton className="h-16 w-full" />
               <Skeleton className="h-16 w-full" />
             </div>
           ) : data?.recentAttempts.length ? (
-            <Stagger className="mt-4 grid gap-3 md:grid-cols-2">
+            <Stagger className="mt-6 grid gap-4 lg:grid-cols-2">
               {data.recentAttempts.slice(0, 6).map((attempt) => (
                 <StaggerItem key={attempt.id}>
-                  <div className="group rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-red-200 hover:shadow-[0_10px_22px_rgba(220,38,38,0.09)]">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-bold text-slate-900">{attempt.test.title}</p>
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                        <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />+{attempt.xpEarned}
-                      </span>
+                  <div className="recent-attempt-card">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className={`recent-attempt-icon ${attempt.test.category.toUpperCase().includes('SAT') ? 'is-sat' : 'is-ielts'}`}>{attempt.test.category.toUpperCase().includes('SAT') ? 'S' : 'I'}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="recent-attempt-category">{attempt.test.category} <span>·</span> {attempt.test.difficulty}</p>
+                        <h3 className="mt-1 truncate text-sm font-bold text-slate-950 sm:text-base" title={attempt.test.title}>{attempt.test.title}</h3>
+                      </div>
+                      <span className="recent-attempt-score">{safePercent(attempt.percentage).toFixed(1)}%</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-500">
-                        {attempt.test.category} · {attempt.test.difficulty}
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-700">
-                        {safePercent(attempt.percentage).toFixed(1)}%
-                      </span>
+                    <div className="recent-attempt-progress" role="progressbar" aria-label={`${attempt.test.title} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={safePercent(attempt.percentage)}>
+                      <span style={{ width: `${safePercent(attempt.percentage)}%` }} />
                     </div>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-blue-100/60">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                        style={{ width: `${Math.max(2, safePercent(attempt.percentage))}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-[10px] font-medium text-slate-400">
-                      {new Date(attempt.completedAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
+                    <div className="recent-attempt-footer"><time dateTime={attempt.completedAt}>{new Date(attempt.completedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time><span className="recent-attempt-xp"><Zap className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />+{attempt.xpEarned} XP</span></div>
                   </div>
                 </StaggerItem>
               ))}

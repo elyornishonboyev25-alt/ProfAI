@@ -2,7 +2,7 @@ import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
-import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
 import './admission-home.css'
@@ -11,6 +11,8 @@ import UniversityMatcher from '@/components/admission/UniversityMatcher'
 import LucideIcon from '@/components/admission/LucideIcon'
 import {
   getUniversities,
+  getLessons,
+  getLessonsByPhase,
   lessonPhases,
   LESSON_COUNT,
   QS_2027_RANKED_UNIVERSITY_COUNT,
@@ -26,6 +28,11 @@ export default function Admission() {
   const universities = getUniversities()
   const topFour = universities.slice(0, 4)
   const studyHours = Math.round(totalLessonMinutes / 60)
+  const orderedLessons = getLessons()
+  const completedLessonCount = orderedLessons.filter((lesson) => completed.has(lesson.slug)).length
+  const nextLesson = orderedLessons.find((lesson) => !completed.has(lesson.slug))
+  const resumeLesson = completedLessonCount > 0 && nextLesson
+  const lessonCardPath = resumeLesson ? `/admission/lessons/${nextLesson.slug}` : '/admission/lessons'
 
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
@@ -49,12 +56,13 @@ export default function Admission() {
               className="admission-home-hero-photo absolute inset-0 h-full w-full object-cover object-center"
             />
             <div className="admission-home-hero-wash absolute inset-0" />
-            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
+            <div className="admission-home-hero-grid relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
               <div>
                 <div className="premium-top-controls">
                   <span className="premium-top-chip">
-                    <Sparkles className="h-3.5 w-3.5" />
-                     <UiText text={"Applications · University Journey"} /> </span>
+                    <Compass className="h-3.5 w-3.5" />
+                    {completedLessonCount ? `${completedLessonCount} of ${LESSON_COUNT} lessons completed` : 'Your application roadmap'}
+                  </span>
                 </div>
                 <h2 className="premium-section-title mt-4">
                    <UiText text={"Plan your"} /> <span className="arena-title-accent-red"> <UiText text={"university application"} /> </span>  <UiText text={"journey"} /> </h2>
@@ -64,11 +72,17 @@ export default function Admission() {
                   institution’s official website. Catalog ranking context: {QS_EDITION}.
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="admission-home-phase-list mt-5 flex flex-wrap gap-2" aria-label="Open a lesson phase">
                   {lessonPhases.map((phase) => (
-                    <span
+                    <button
                       key={phase.id}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-blue-200/70 bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-slate-700"
+                      type="button"
+                      onClick={() => {
+                        const firstLesson = getLessonsByPhase(phase.id)[0]
+                        if (firstLesson) navigate(`/admission/lessons/${firstLesson.slug}`)
+                      }}
+                      className="admission-home-phase-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+                      aria-label={`Start ${phase.title} phase`}
                     >
                       <span
                         className="inline-flex h-5 w-5 items-center justify-center rounded-md text-white"
@@ -77,7 +91,7 @@ export default function Admission() {
                         <LucideIcon name={phase.icon} className="h-3 w-3" />
                       </span>
                       {phase.title}
-                    </span>
+                    </button>
                   ))}
                 </div>
                 <div className="admission-home-actions">
@@ -86,7 +100,7 @@ export default function Admission() {
                 </div>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="admission-home-metrics grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <div className="hero-metric-card admission-home-metric">
                   <p className="hero-metric-label"> <UiText text={"Lessons"} /> </p>
                   <p className="hero-metric-value-sm">
@@ -134,13 +148,12 @@ export default function Admission() {
         </Reveal>
 
         {/* ----------------------- Two destination cards ----------------------- */}
-        <Stagger className="grid gap-5 lg:grid-cols-2">
+        <Stagger className="admission-home-card-grid grid gap-5 lg:grid-cols-2">
           {/* Lessons */}
           <StaggerItem className="h-full">
-            <Tilt3D className="h-full rounded-[1.8rem]" max={6} lift={14}>
               <button
-                onClick={() => navigate('/admission/lessons')}
-                className="admission-home-destination admission-home-lessons group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] p-7 text-left transition"
+                onClick={() => navigate(lessonCardPath)}
+                className="admission-home-destination admission-home-lessons group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
                 type="button"
               >
                 <img src="/assets/admission/student-library.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
@@ -148,7 +161,7 @@ export default function Admission() {
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }}
                 />
-                <div className="relative flex items-center justify-between">
+                <div className="admission-home-card-top relative flex items-center justify-between">
                   <span
                     className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
                     style={{ background: 'linear-gradient(135deg,#312e81,#4f46e5)' }}
@@ -159,13 +172,13 @@ export default function Admission() {
                     {LESSON_COUNT} lessons · 5 phases
                   </span>
                 </div>
-                <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Lessons"} /> </h2>
-                <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
+                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Lessons"} /> </h2>
+                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
                   Guided study-abroad lessons covering country research, tests, application writing, scholarships and
                   visa preparation. Follow the sequence or open the topic you need now.
                 </p>
 
-                <div className="relative mt-5 grid grid-cols-2 gap-2">
+                <div className="admission-home-card-phases relative mt-5 grid grid-cols-2 gap-2">
                   {lessonPhases.slice(0, 4).map((phase) => (
                     <div
                       key={phase.id}
@@ -182,26 +195,24 @@ export default function Admission() {
                   ))}
                 </div>
 
-                <div className="relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
+                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Compass className="h-4 w-4" />
-                    {completed.size ? `${completed.size}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
+                    {completedLessonCount ? `${completedLessonCount}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 transition group-hover:gap-2">
-                    Open lessons
+                    {resumeLesson ? 'Continue lesson' : 'Open lessons'}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
               </button>
-            </Tilt3D>
           </StaggerItem>
 
           {/* Universities */}
           <StaggerItem className="h-full">
-            <Tilt3D className="h-full rounded-[1.8rem]" max={6} lift={14}>
               <button
                 onClick={() => navigate('/admission/universities')}
-                className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] p-7 text-left transition"
+                className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
                 type="button"
               >
                 <img src="/assets/admission/international-students.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
@@ -209,7 +220,7 @@ export default function Admission() {
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}
                 />
-                <div className="relative flex items-center justify-between">
+                <div className="admission-home-card-top relative flex items-center justify-between">
                   <span
                     className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
                     style={{ background: 'linear-gradient(135deg,#7f1d1d,#2563eb)' }}
@@ -220,13 +231,13 @@ export default function Admission() {
                     {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ranked · QS 2027
                   </span>
                 </div>
-                <h2 className="relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
-                <p className="relative mt-2 text-[14px] leading-6 text-slate-600">
+                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
+                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
                   Explore ProfAI’s complete QS 2027 catalog with ranking context, university profiles and official links
                   where available. Confirm current programme requirements directly with each institution.
                 </p>
 
-                <div className="relative mt-5 space-y-2">
+                <div className="admission-home-rankings relative mt-5 space-y-2">
                   {topFour.map((u) => (
                     <div
                       key={u.id}
@@ -242,7 +253,7 @@ export default function Admission() {
                   ))}
                 </div>
 
-                <div className="relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
+                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Globe2 className="h-4 w-4" />
                     {UNIVERSITY_COUNT} catalog profiles
@@ -253,7 +264,6 @@ export default function Admission() {
                   </span>
                 </div>
               </button>
-            </Tilt3D>
           </StaggerItem>
         </Stagger>
 

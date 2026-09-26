@@ -1,5 +1,5 @@
 .admission-home-heading {
-  padding: .65rem 0 1.5rem;
+  padding: .35rem 0 1.35rem;
   text-align: center;
 }
 
@@ -20,7 +20,7 @@
 }
 
 .admission-home-heading h1 {
-  margin-top: .75rem;
+  margin-top: .65rem;
   color: #141721;
   font-size: clamp(2.5rem, 5vw, 4.7rem);
   font-weight: 850;
@@ -29,19 +29,21 @@
 }
 
 .admission-home-heading h1 span { color: #cc2638; }
-.admission-home-heading p { margin: .65rem auto 0; color: #526074; font-size: clamp(.85rem, 1.5vw, 1.05rem); font-weight: 500; }
+.admission-home-heading p { margin: .55rem auto 0; color: #46566b; font-size: clamp(.9rem, 1.5vw, 1.05rem); font-weight: 550; }
 
 .app-shell .admission-home .admission-home-hero {
   border: 1px solid rgba(255,255,255,.96);
   border-radius: 2rem;
-  background: rgba(255,255,255,.42);
-  box-shadow: 0 24px 65px rgba(36,55,83,.13), inset 0 1px 0 white;
+  background: #fff;
+  box-shadow: 0 24px 65px rgba(36,55,83,.14), inset 0 1px 0 white;
 }
 
-.admission-home-hero-photo { opacity: .76; object-position: center 56%; }
+.admission-home-hero-photo { opacity: 1; object-position: center 58%; }
 .admission-home-hero-wash {
-  background: linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 32%,rgba(255,255,255,.73) 61%,rgba(255,255,255,.32) 100%);
+  background: linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.95) 35%,rgba(255,255,255,.75) 58%,rgba(255,255,255,.06) 100%);
 }
+.admission-home-hero-grid { min-height: 100%; }
+.admission-home-hero-grid > div:first-child { max-width: 42rem; }
 .admission-home-hero .premium-top-chip {
   min-height: 32px;
   padding: .45rem .85rem;
@@ -54,36 +56,41 @@
   box-shadow: 0 4px 18px rgba(50,50,80,.06);
   backdrop-filter: blur(12px);
 }
-.admission-home-hero .premium-section-title {
+.app-shell .admission-home .admission-home-hero .premium-section-title {
   max-width: 41rem;
-  font-size: clamp(2.3rem, 4vw, 3.8rem);
+  font-size: clamp(2.4rem, 3.5vw, 3.6rem);
   font-weight: 850;
   letter-spacing: -.06em;
   line-height: 1.05;
 }
-.admission-home-hero .premium-section-subtitle {
+.app-shell .admission-home .admission-home-hero .premium-section-subtitle {
   max-width: 42rem;
-  color: #465368;
-  font-size: .9rem;
-  font-weight: 500;
-  line-height: 1.75;
+  color: #334155;
+  font-size: .95rem;
+  font-weight: 520;
+  line-height: 1.65;
 }
-.admission-home-hero .mt-5.flex.flex-wrap.gap-2 > span {
+.admission-home-phase-chip {
   border-color: rgba(191,203,221,.65);
-  background: rgba(255,255,255,.72);
+  background: rgba(255,255,255,.84);
   color: #334155;
   backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(31,41,55,.05);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
 }
+.app-shell .admission-home .admission-home-phase-chip { min-height: 32px; }
+.admission-home-phase-chip:hover { transform: translateY(-2px); border-color: #e6a2aa; background: white; }
+.admission-home-phase-chip:focus-visible { outline: 3px solid rgba(204,38,56,.3); outline-offset: 2px; }
 .admission-home-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.6rem; }
 .admission-home-actions button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: .5rem;
-  min-height: 46px;
-  padding: .7rem 1.1rem;
+  min-height: 48px;
+  padding: .75rem 1.2rem;
   border-radius: .85rem;
-  font-size: .78rem;
+  font-size: .86rem;
   font-weight: 800;
   transition: transform .2s ease, box-shadow .2s ease;
 }
@@ -106,7 +113,7 @@
   min-height: 7rem;
   border: 1px solid rgba(255,255,255,.9);
   border-radius: 1.2rem;
-  background: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.87);
   box-shadow: 0 12px 30px rgba(27,39,57,.1), inset 0 1px 0 white;
   backdrop-filter: blur(16px) saturate(130%);
 }
@@ -127,45 +134,72 @@
 .admission-home-match > span:last-child { color: #aa293d; }
 
 .admission-home-destination {
-  min-height: 470px;
+  min-height: 555px;
   isolation: isolate;
   border: 1px solid rgba(255,255,255,.96);
-  background: rgba(255,255,255,.72);
+  background: linear-gradient(150deg,rgba(255,255,255,.98),rgba(250,252,255,.93));
   box-shadow: 0 19px 47px rgba(38,52,77,.1), inset 0 1px 0 white;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
 .admission-home-destination::after {
   content: '';
   position: absolute;
   z-index: 0;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 11rem;
   pointer-events: none;
-  background: linear-gradient(180deg,rgba(255,255,255,.94) 0%,rgba(255,255,255,.82) 49%,rgba(255,255,255,.55) 100%);
+  background: linear-gradient(180deg,rgba(10,22,38,.14) 0%,transparent 50%,rgba(255,255,255,.93) 100%);
 }
 .admission-home-destination .admission-home-card-photo {
-  opacity: .82;
-  object-position: center 38%;
+  height: 11rem;
+  opacity: 1;
+  object-position: center 50%;
 }
-.admission-home-lessons .admission-home-card-photo { object-position: center 45%; }
+.admission-home-lessons .admission-home-card-photo { object-position: center 20%; }
+.admission-home-universities .admission-home-card-photo { object-position: center 55%; }
 .admission-home-destination > :not(img) { z-index: 1; }
 .admission-home-destination > div:not(.relative) { z-index: 0; }
 .admission-home-destination:hover {
   border-color: rgba(220,80,95,.35);
   box-shadow: 0 26px 55px rgba(75,53,71,.16), inset 0 1px 0 white;
 }
-.admission-home-destination h2 { font-size: 1.7rem; font-weight: 850; letter-spacing: -.05em; }
-.admission-home-destination p { max-width: 34rem; color: #39485d; font-weight: 550; }
-.admission-home-destination .relative.mt-5.grid.grid-cols-2 > div,
-.admission-home-destination .relative.mt-5.space-y-2 > div {
-  border-color: rgba(255,255,255,.86);
-  background: rgba(255,255,255,.67);
-  box-shadow: 0 4px 14px rgba(45,55,70,.04);
-  backdrop-filter: blur(9px);
+.admission-home-card-top { padding: 1.2rem 1.3rem 0; }
+.admission-home-card-top > span:first-child { width: 3.35rem; height: 3.35rem; }
+.admission-home-card-top > span:last-child {
+  border-color: rgba(255,255,255,.9);
+  background: rgba(255,255,255,.91);
+  color: #802639;
+  box-shadow: 0 5px 18px rgba(15,23,42,.1);
+  backdrop-filter: blur(10px);
 }
-.admission-home-destination .relative.mt-5.grid.grid-cols-2 > div span:last-child { white-space: nowrap; }
-.admission-home-destination .relative.mt-auto { margin-top: auto; padding-top: 1rem; }
-.admission-home-destination .relative.mt-auto span { color: #526276; }
-.admission-home-destination .relative.mt-auto span:last-child { color: #b52439; }
+.admission-home-destination .admission-home-card-title {
+  margin-top: 6.6rem;
+  padding: 0 1.45rem;
+  font-size: 1.75rem;
+  font-weight: 850;
+  letter-spacing: -.05em;
+}
+.admission-home-destination .admission-home-card-description {
+  max-width: none;
+  padding: 0 1.45rem;
+  color: #46546a;
+  font-size: .9rem;
+  font-weight: 550;
+  line-height: 1.55;
+}
+.admission-home-card-phases, .admission-home-rankings { padding: 0 1.45rem; }
+.admission-home-card-phases > div,
+.admission-home-rankings > div {
+  border-color: #e4e9f0;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 4px 14px rgba(45,55,70,.045);
+}
+.admission-home-card-phases > div span:last-child { white-space: nowrap; }
+.admission-home-card-footer { margin: auto 1.45rem 0; padding: 1rem 0 1.2rem; gap: .65rem; }
+.admission-home-card-footer span { color: #617084; }
+.admission-home-card-footer span:last-child { color: #b52439; }
+.admission-home-card-footer span:last-child svg { transition: transform .18s ease; }
+.admission-home-destination:hover .admission-home-card-footer span:last-child svg { transform: translateX(3px); }
 
 .app-shell .admission-home .admission-home-steps {
   border: 1px solid rgba(255,255,255,.94);
@@ -173,30 +207,39 @@
   box-shadow: 0 17px 40px rgba(42,56,76,.075), inset 0 1px 0 white;
   backdrop-filter: blur(14px);
 }
+.admission-home-steps > div:first-child > svg { color: #c42b3e; }
 .admission-home-steps > div:last-child > div {
-  border-color: rgba(216,224,233,.7);
-  background: rgba(255,255,255,.53);
+  border-color: rgba(216,224,233,.9);
+  border-top: 2px solid rgba(204,38,56,.45);
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 7px 22px rgba(40,53,75,.05);
 }
-.admission-home-steps > div:last-child > div > span { color: #e9a5ae; }
+.admission-home-steps > div:last-child > div > span { color: #cb4052; }
 .admission-home-steps > div:last-child > div h4 { font-weight: 800; }
 
 @media (max-width: 1279px) {
-  .admission-home-hero-wash { background: linear-gradient(90deg,rgba(255,255,255,.97),rgba(255,255,255,.82)); }
-  .admission-home-hero .grid.gap-2.sm\:grid-cols-3 { margin-top: .5rem; }
+  .admission-home-hero-wash { background: linear-gradient(90deg,rgba(255,255,255,.98),rgba(255,255,255,.85) 55%,rgba(255,255,255,.2)); }
+}
+@media (max-width: 1023px) {
+  .admission-home-hero-wash { background: linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.78)); }
+  .admission-home-metrics { margin-top: .6rem; }
 }
 @media (max-width: 640px) {
   .admission-home-heading { padding-bottom: 1.25rem; }
   .admission-home-heading h1 { font-size: clamp(2.2rem, 10vw, 3rem); }
   .admission-home-hero { padding: 1.3rem; }
-  .admission-home-hero-wash { background: rgba(255,255,255,.86); }
-  .admission-home-hero .premium-section-title { font-size: 2.25rem; }
-  .admission-home-hero .premium-section-subtitle { font-size: .83rem; }
+  .admission-home-hero-wash { background: rgba(255,255,255,.87); }
+  .app-shell .admission-home .admission-home-hero .premium-section-title { font-size: 2.25rem; }
+  .app-shell .admission-home .admission-home-hero .premium-section-subtitle { font-size: .85rem; }
   .admission-home-actions button { flex: 1 1 10rem; }
   .admission-home-metric { min-height: 6.4rem !important; }
   .admission-home-match { flex-wrap: wrap; padding: 1.1rem; }
   .admission-home-match > span:last-child { margin-left: 4.25rem; }
-  .admission-home-destination { min-height: 440px; padding: 1.25rem; }
-  .admission-home-destination .relative.mt-5.grid.grid-cols-2 { grid-template-columns: 1fr; }
-  .admission-home-destination .relative.mt-auto { gap: .5rem; }
-  .admission-home-destination .relative.mt-auto span { font-size: .68rem; }
+  .admission-home-destination { min-height: 0; }
+  .admission-home-card-phases { grid-template-columns: 1fr; }
+  .admission-home-card-footer { flex-wrap: wrap; gap: .5rem; }
+  .admission-home-card-footer span { font-size: .72rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admission-home :is(.admission-home-phase-chip, .admission-home-destination, .admission-home-actions button, .admission-home-match) { transition: none; }
 }

@@ -20,6 +20,7 @@ const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; ch
 const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
 const DEFAULT_GPA = '3.5'
 const DEFAULT_YEARLY_BUDGET = '20000'
+const RESULTS_PAGE_SIZE = 12
 
 export default function UniversityMatcher({ open, onClose }: Props) {
   const navigate = useNavigate()
@@ -34,6 +35,8 @@ export default function UniversityMatcher({ open, onClose }: Props) {
   const [budget, setBudget] = useState(DEFAULT_YEARLY_BUDGET)
   const [preferredCountry, setPreferredCountry] = useState('')
   const [results, setResults] = useState<UniversityMatch[]>([])
+  const [visibleResultCount, setVisibleResultCount] = useState(RESULTS_PAGE_SIZE)
+  const [inputError, setInputError] = useState('')
   const [savingSlug, setSavingSlug] = useState<string | null>(null)
   const [savedSlug, setSavedSlug] = useState<string | null>(null)
 
@@ -42,6 +45,9 @@ export default function UniversityMatcher({ open, onClose }: Props) {
     if (!open) return
     setStep(1)
     setSavedSlug(null)
+    setResults([])
+    setVisibleResultCount(RESULTS_PAGE_SIZE)
+    setInputError('')
     setGpa(DEFAULT_GPA)
     setBudget(DEFAULT_YEARLY_BUDGET)
     fetchAccount()
@@ -58,6 +64,17 @@ export default function UniversityMatcher({ open, onClose }: Props) {
       .catch(() => {})
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [open, onClose])
+
+  useEffect(() => setInputError(''), [sat, ielts, gpa, budget])
+
   const input: MatchInput = useMemo(
     () => ({
       satTotal: sat ? Number(sat) : null,
@@ -71,8 +88,33 @@ export default function UniversityMatcher({ open, onClose }: Props) {
     [sat, ielts, gpa, fieldOfStudy, degreeLevel, budget, preferredCountry],
   )
 
+  const scoreError = () => {
+    if (sat && (!Number.isInteger(Number(sat)) || Number(sat) < 400 || Number(sat) > 1600)) {
+      return 'SAT score must be a whole number from 400 to 1600.'
+    }
+    if (ielts && (Number(ielts) < 0 || Number(ielts) > 9 || !Number.isInteger(Number(ielts) * 2))) {
+      return 'IELTS band must be from 0 to 9 in half-band steps.'
+    }
+    return ''
+  }
+
+  const continueStep = () => {
+    const error = step === 2 ? scoreError() : ''
+    if (error) { setInputError(error); return }
+    setInputError('')
+    setStep((current) => current + 1)
+  }
+
   const computeAndShow = () => {
+    const error = scoreError() || (gpa && (!Number.isFinite(Number(gpa)) || Number(gpa) < 0 || Number(gpa) > 4)
+      ? 'GPA must be between 0 and 4.'
+      : '') || (budget && (!Number.isFinite(Number(budget)) || Number(budget) < 0)
+      ? 'Yearly budget must be zero or greater.'
+      : '')
+    if (error) { setInputError(error); return }
+    setInputError('')
     setResults(matchUniversities(input))
+    setVisibleResultCount(RESULTS_PAGE_SIZE)
     setStep(4)
   }
 
@@ -97,6 +139,9 @@ export default function UniversityMatcher({ open, onClose }: Props) {
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="university-matcher-title"
         className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-[0_40px_90px_rgba(30,64,175,0.25)]"
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -105,7 +150,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
               <Target className="h-5 w-5" />
             </span>
             <div>
-              <h2 className="text-base font-black text-slate-900">Find my university</h2>
+              <h2 id="university-matcher-title" className="text-base font-black text-slate-900">Find my university</h2>
               <p className="text-[11px] font-medium text-slate-500">{step < 4 ? `Step ${step} of 3` : `${results.length} matches ranked for you`}</p>
             </div>
           </div>
@@ -179,7 +224,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
 
             {step === 4 ? (
               <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                {results.map((m) => {
+                {results.slice(0, visibleResultCount).map((m) => {
                   const cs = CLASS_STYLE[m.classification]
                   const isSaved = savedSlug === m.university.slug
                   return (
@@ -206,7 +251,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                       <div className="mt-3 flex gap-2">
                         <button
                           onClick={() => void setAsTarget(m.university.slug)}
-                          disabled={savingSlug === m.university.slug || isSaved}
+                          disabled={Boolean(savingSlug) || isSaved}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
                         >
                           {isSaved ? <Check className="h-3.5 w-3.5" /> : savingSlug === m.university.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Target className="h-3.5 w-3.5" />}
@@ -222,9 +267,19 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                     </div>
                   )
                 })}
+                {visibleResultCount < results.length ? (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleResultCount((count) => Math.min(count + RESULTS_PAGE_SIZE, results.length))}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-white"
+                  >
+                    Show more matches ({Math.min(results.length - visibleResultCount, RESULTS_PAGE_SIZE)} more)
+                  </button>
+                ) : null}
               </motion.div>
             ) : null}
           </AnimatePresence>
+          {inputError ? <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{inputError}</p> : null}
         </div>
 
         {/* Footer */}
@@ -238,7 +293,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
           )}
 
           {step < 3 ? (
-            <button onClick={() => setStep((s) => s + 1)} className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white">
+            <button onClick={continueStep} className="cta-sheen inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white">
               Continue <ArrowRight className="h-4 w-4" />
             </button>
           ) : step === 3 ? (

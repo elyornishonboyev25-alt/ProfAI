@@ -1,8 +1,11 @@
 import UiText from '@/components/common/UiText'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
-import { AmbientBackdrop, CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
+import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
+import './admission-home.css'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityMatcher from '@/components/admission/UniversityMatcher'
 import LucideIcon from '@/components/admission/LucideIcon'
@@ -19,34 +22,42 @@ import {
 export default function Admission() {
   const navigate = useNavigate()
   const [matcherOpen, setMatcherOpen] = useState(false)
+  const [completed, setCompleted] = useState(() => getCompletedLessons())
   const universities = getUniversities()
   const topFour = universities.slice(0, 4)
   const studyHours = Math.round(totalLessonMinutes / 60)
 
+  useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
+
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <AmbientBackdrop variant="red" />
+    <main className="workspace-page admission-home relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+      <ArenaBackdrop />
       <UniversityMatcher open={matcherOpen} onClose={() => setMatcherOpen(false)} />
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-7">
+      <div className="relative z-10 mx-auto w-full max-w-[78rem] space-y-6">
+        <header className="admission-home-heading">
+          <span className="admission-home-kicker"><Sparkles className="h-3.5 w-3.5" /> University journey</span>
+          <h1>University <span>Applications</span></h1>
+          <p>Plan your next steps, explore universities and move forward with confidence.</p>
+        </header>
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
-          <section className="premium-hero p-6 shadow-[0_28px_70px_rgba(30,64,175,.12)] sm:p-9">
+          <section className="premium-hero admission-home-hero min-h-[29rem] p-6 sm:p-9">
             <img
               src="/assets/admission/campus-hero.webp"
               alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center opacity-35"
+              className="admission-home-hero-photo absolute inset-0 h-full w-full object-cover object-center"
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.99)_0%,rgba(255,248,248,0.94)_52%,rgba(255,255,255,0.62)_100%)]" />
-            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+            <div className="admission-home-hero-wash absolute inset-0" />
+            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
               <div>
                 <div className="premium-top-controls">
                   <span className="premium-top-chip">
                     <Sparkles className="h-3.5 w-3.5" />
                      <UiText text={"Applications · University Journey"} /> </span>
                 </div>
-                <h1 className="premium-section-title mt-4">
-                   <UiText text={"Plan your"} /> <span className="arena-title-accent-red"> <UiText text={"university application"} /> </span>  <UiText text={"journey"} /> </h1>
+                <h2 className="premium-section-title mt-4">
+                   <UiText text={"Plan your"} /> <span className="arena-title-accent-red"> <UiText text={"university application"} /> </span>  <UiText text={"journey"} /> </h2>
                 <p className="premium-section-subtitle max-w-3xl">
                   Use guided lessons and ProfAI’s current university catalog to structure your research and next steps.
                   University details can change, so consequential requirements should always be confirmed on the
@@ -69,28 +80,28 @@ export default function Admission() {
                     </span>
                   ))}
                 </div>
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <button type="button" onClick={() => navigate('/admission/lessons')} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-red-700 px-5 py-3 text-sm font-black text-white shadow-[0_13px_30px_rgba(220,38,38,.2)] transition hover:-translate-y-0.5">Explore lessons <ArrowRight className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => navigate('/admission/universities')} className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-white/90 px-5 py-3 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50">Browse universities <Globe2 className="h-4 w-4" /></button>
+                <div className="admission-home-actions">
+                  <button type="button" onClick={() => navigate('/admission/lessons')} className="admission-home-primary">Explore lessons <ArrowRight className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => navigate('/admission/universities')} className="admission-home-secondary">Browse universities <Globe2 className="h-4 w-4" /></button>
                 </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="hero-metric-card interactive-lift">
+                <div className="hero-metric-card admission-home-metric">
                   <p className="hero-metric-label"> <UiText text={"Lessons"} /> </p>
                   <p className="hero-metric-value-sm">
                     <CountUp value={LESSON_COUNT} />
                   </p>
                   <p className="hero-metric-note">≈ {studyHours}h guided track</p>
                 </div>
-                <div className="hero-metric-card interactive-lift">
+                <div className="hero-metric-card admission-home-metric">
                   <p className="hero-metric-label"> <UiText text={"Universities"} /> </p>
                   <p className="hero-metric-value-sm">
                     <CountUp value={UNIVERSITY_COUNT} />
                   </p>
                   <p className="hero-metric-note">{QS_EDITION}</p>
                 </div>
-                <div className="hero-metric-card interactive-lift">
+                <div className="hero-metric-card admission-home-metric">
                   <p className="hero-metric-label"> <UiText text={"Ranked by"} /> </p>
                   <p className="hero-metric-value-sm hero-metric-value-compact">QS 2027</p>
                   <p className="hero-metric-note"> <UiText text={"Current catalog edition"} /> </p>
@@ -104,7 +115,8 @@ export default function Admission() {
         <Reveal delay={0.03}>
           <button
             onClick={() => setMatcherOpen(true)}
-            className="cta-sheen group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] border border-blue-300/60 bg-gradient-to-r from-[#7f1d1d] via-[#2563eb] to-[#1d4ed8] p-6 text-left shadow-[0_22px_55px_rgba(37,99,235,0.3)]"
+            className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
+            type="button"
           >
             <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
               <Target className="h-7 w-7" />
@@ -128,9 +140,10 @@ export default function Admission() {
             <Tilt3D className="h-full rounded-[1.8rem]" max={6} lift={14}>
               <button
                 onClick={() => navigate('/admission/lessons')}
-                className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-indigo-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(79,70,229,0.12)] transition hover:border-indigo-200 hover:shadow-[0_30px_70px_rgba(79,70,229,0.2)]"
+                className="admission-home-destination admission-home-lessons group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] p-7 text-left transition"
+                type="button"
               >
-                <img src="/assets/admission/student-library.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.08] transition duration-700 group-hover:scale-105 group-hover:opacity-[0.12]" />
+                <img src="/assets/admission/student-library.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }}
@@ -169,10 +182,10 @@ export default function Admission() {
                   ))}
                 </div>
 
-                <div className="relative mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                <div className="relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Compass className="h-4 w-4" />
-                    Start from Lesson 1
+                    {completed.size ? `${completed.size}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 transition group-hover:gap-2">
                     Open lessons
@@ -188,9 +201,10 @@ export default function Admission() {
             <Tilt3D className="h-full rounded-[1.8rem]" max={6} lift={14}>
               <button
                 onClick={() => navigate('/admission/universities')}
-                className="group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] border border-blue-100 bg-white p-7 text-left shadow-[0_22px_55px_rgba(37,99,235,0.12)] transition hover:border-blue-200 hover:shadow-[0_30px_70px_rgba(37,99,235,0.2)]"
+                className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] p-7 text-left transition"
+                type="button"
               >
-                <img src="/assets/admission/international-students.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.08] transition duration-700 group-hover:scale-105 group-hover:opacity-[0.13]" />
+                <img src="/assets/admission/international-students.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}
@@ -228,7 +242,7 @@ export default function Admission() {
                   ))}
                 </div>
 
-                <div className="relative mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                <div className="relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Globe2 className="h-4 w-4" />
                     {UNIVERSITY_COUNT} catalog profiles
@@ -245,7 +259,7 @@ export default function Admission() {
 
         {/* ----------------------- How it works strip ----------------------- */}
         <Reveal delay={0.05}>
-          <section className="rounded-[1.6rem] border border-blue-100 bg-white/90 p-6 shadow-[0_18px_44px_rgba(15,23,42,0.06)] sm:p-8">
+          <section className="admission-home-steps rounded-[1.6rem] p-6 sm:p-8">
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-blue-600" />
               <h3 className="text-lg font-black tracking-tight text-slate-900">How the journey works</h3>
@@ -278,6 +292,6 @@ export default function Admission() {
           </section>
         </Reveal>
       </div>
-    </div>
+    </main>
   )
 }

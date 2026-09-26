@@ -157,11 +157,11 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
         },
       })
 
-      const renderWidth = Math.max(230, Math.min(300, buttonContainer.clientWidth || 260))
+      const renderWidth = Math.max(230, Math.min(400, buttonContainer.clientWidth || 260))
       window.google.accounts.id.renderButton(buttonContainer, {
         locale: language === 'ru' ? 'ru' : 'en',
         theme: 'outline',
-        size: 'medium',
+        size: 'large',
         shape: 'pill',
         logo_alignment: 'left',
         text: mode === 'signup' ? 'signup_with' : 'continue_with',
@@ -207,17 +207,17 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
 
   return (
     <div className="space-y-2">
-      <div className="relative mx-auto flex w-fit items-center justify-center overflow-hidden rounded-full">
+      <div className="relative mx-auto flex w-full items-center justify-center overflow-hidden rounded-full">
         {googleClientId ? (
           <motion.div
             initial={minimalMotion ? false : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: minimalMotion ? 0.12 : 0.2, ease: [0.22, 1, 0.36, 1] }}
             ref={containerRef}
-            className="flex min-h-[36px] items-center justify-center"
+            className="flex min-h-[42px] w-full items-center justify-center"
           />
         ) : (
-          <div className="flex min-h-[36px] items-center justify-center rounded-full border border-dashed border-blue-200 bg-blue-50/45 px-4 py-2 text-center text-[11px] font-semibold text-blue-700">
+          <div className="flex min-h-[42px] w-full items-center justify-center rounded-full border border-dashed border-blue-200 bg-blue-50/45 px-4 py-2 text-center text-[11px] font-semibold text-blue-700">
             {c(isResolvingClientId ? 'Connecting to Google...' : 'Google sign-in is currently unavailable. Use your email instead.')}
           </div>
         )}

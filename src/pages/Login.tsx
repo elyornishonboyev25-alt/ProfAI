@@ -125,8 +125,8 @@ export default function Login() {
         <section className="auth-cinema-form-side" aria-label={createMode ? 'Create account' : 'Sign in'}>
           <div className="auth-cinema-form-inner">
             <div className="auth-cinema-lockup">
-              <BrandMark size={50} />
-              <strong>Prof<span>AI</span></strong>
+              <span className="auth-cinema-lockup-icon"><BrandMark size={43} /></span>
+              <div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div>
             </div>
 
             <nav className="auth-cinema-tabs" aria-label="Account access">
@@ -135,9 +135,9 @@ export default function Login() {
             </nav>
 
             <div className="auth-cinema-intro">
-              <span><Sparkles size={14} /> {c(createMode ? 'Your next chapter starts here' : 'Your progress is ready')}</span>
-              <h1>{c(createMode ? 'Create your account.' : 'Welcome back.')}</h1>
-              <p>{c(createMode ? 'Enter your Gmail and confirm the code to begin your journey.' : 'Pick up your IELTS, SAT, and university journey where you left off.')}</p>
+              <span><Sparkles size={14} /> {c(createMode ? 'Your journey begins here' : 'Pick up where you left off')}</span>
+              <h1>{c(createMode ? 'Make your next move.' : 'Welcome back.')}</h1>
+              <p>{c(createMode ? 'Create an account with your Gmail to keep every step of your journey together.' : 'Sign in to continue your IELTS, SAT, and university journey.')}</p>
             </div>
 
             {!createMode && notFound && (
@@ -188,7 +188,7 @@ export default function Login() {
 
             <div className="auth-cinema-divider"><span />{c('or continue with')}<span /></div>
             <div className="auth-cinema-google"><GoogleAuthButton mode={createMode ? 'signup' : 'signin'} onCredential={handleGoogleCredential} /></div>
-            <p className="auth-cinema-privacy"><ShieldCheck size={15} /> {c('Your Gmail is verified before an account is created.')}</p>
+            <p className="auth-cinema-privacy"><ShieldCheck size={16} /> {c(createMode ? 'Your Gmail is verified before your account is created.' : 'Your progress stays securely saved to your account.')}</p>
           </div>
         </section>
       </motion.main>

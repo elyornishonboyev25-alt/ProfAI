@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Loader2, Mail } from 'lucide-react'
+import { CheckCircle2, KeyRound, Loader2, Mail, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useCopy } from '@/i18n/interface'
@@ -83,37 +83,41 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
   }
 
   return (
-    <form onSubmit={submit} className="auth-email-form space-y-4" aria-label={intent === 'create-account' ? 'Create account with Gmail' : 'Email code sign in'}>
-      <label className="block text-sm font-semibold text-slate-700">
-        {c('Gmail address')}
-        <input type="email" autoComplete="email" required disabled={busy} value={email}
-          onChange={(event) => { setEmail(event.target.value); setSentTo(''); setCode(''); setError(''); setAccountRoute(null); setResendAt(0) }}
-          className="input mt-1.5 h-12 rounded-2xl border-blue-100" placeholder="name@gmail.com" />
-      </label>
-      <p className="text-xs leading-5 text-slate-500">{intent === 'create-account' ? c('Enter your Gmail, then confirm the six-digit code we send to create your account.') : c('Get a code by email to sign in. Your existing progress stays saved.')}</p>
+    <form onSubmit={submit} className="auth-email-form" aria-label={intent === 'create-account' ? 'Create account with Gmail' : 'Email code sign in'}>
+      <div className="auth-email-field">
+        <label htmlFor="auth-code-email">{c('Gmail address')}</label>
+        <div className="auth-cinema-input-wrap">
+          <Mail size={19} />
+          <input id="auth-code-email" type="email" autoComplete="email" required disabled={busy} value={email}
+            onChange={(event) => { setEmail(event.target.value); setSentTo(''); setCode(''); setError(''); setAccountRoute(null); setResendAt(0) }}
+            placeholder="name@gmail.com" />
+        </div>
+      </div>
+      <p className="auth-email-helper">{intent === 'create-account' ? c('We will send a one-time code to confirm your Gmail and create your account.') : c('Get a one-time code by email. Your existing progress stays saved.')}</p>
       {sentTo && (
-        <div className="space-y-3">
-          <p role="status" className="break-words text-sm text-blue-700">{c('Code sent to')} {sentTo}. {c('Check your inbox and spam folder.')}</p>
-          <label className="block text-sm font-semibold text-slate-700">
-            {c('Verification code')}
-            <input autoFocus required value={code} disabled={busy} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}
+        <div className="auth-email-verification">
+          <p role="status" className="auth-email-sent"><CheckCircle2 size={18} /><span>{c('Code sent to')} <strong>{sentTo}</strong>. {c('Check your inbox and spam folder.')}</span></p>
+          <label htmlFor="auth-verification-code">{c('Verification code')}</label>
+          <div className="auth-cinema-input-wrap auth-cinema-code-wrap">
+            <KeyRound size={19} />
+            <input id="auth-verification-code" autoFocus required value={code} disabled={busy} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="input mt-1.5 h-12 rounded-2xl border-blue-200 text-center text-xl tracking-[0.35em]" placeholder="000000" />
-          </label>
-          <p className="text-xs text-slate-500">{c('The code expires in 10 minutes and can be used once.')}</p>
-          <button type="button" disabled={busy || remaining > 0} onClick={() => void sendCode()} className="text-sm font-bold text-blue-600 disabled:opacity-50">
-            {c('Resend code')}{remaining > 0 ? ` (${remaining}s)` : ''}
-          </button>
+              placeholder="000000" />
+          </div>
+          <div className="auth-email-code-meta">
+            <span>{c('Code expires in 10 minutes.')}</span>
+            <button type="button" disabled={busy || remaining > 0} onClick={() => void sendCode()}><RefreshCw size={14} />{c('Resend')}{remaining > 0 ? ` ${remaining}s` : ''}</button>
+          </div>
         </div>
       )}
-      {error && <p role="alert" className="text-sm text-red-600">{c(error)}</p>}
+      {error && <p role="alert" className="auth-cinema-error">{c(error)}</p>}
       {accountRoute && <Link to={accountRoute} state={{ email: email.trim().toLowerCase() }} className="auth-cinema-account-link">{c(accountRoute === '/register' ? 'Create account with this Gmail' : 'Sign in with this Gmail')}</Link>}
-      <button type="submit" disabled={busy || (!sentTo && remaining > 0)} className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-red-500 to-red-700 text-sm font-black text-white disabled:opacity-60">
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-        {c(busy ? 'Please wait...' : sentTo ? intent === 'create-account' ? 'Verify & create account' : 'Verify & continue' : 'Send Gmail verification code')}
+      <button type="submit" disabled={busy || (!sentTo && remaining > 0)} className="auth-cinema-submit">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : sentTo ? <CheckCircle2 size={19} /> : <Mail size={19} />}
+        <span>{c(busy ? 'Please wait...' : sentTo ? intent === 'create-account' ? 'Verify & create account' : 'Verify & continue' : 'Send Gmail verification code')}</span>
         {!sentTo && remaining > 0 ? ` (${remaining}s)` : ''}
       </button>
-      {onRecover && <button type="button" disabled={busy} onClick={() => onRecover(email)} className="block w-full text-center text-xs font-bold text-blue-600">{c('Forgot password?')}</button>}
+      {onRecover && <button type="button" disabled={busy} onClick={() => onRecover(email)} className="auth-cinema-switch-method">{c('Forgot password?')}</button>}
     </form>
   )
 }

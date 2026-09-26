@@ -1886,6 +1886,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     position: relative;
     z-index: 1;
     display: flex;
+    flex-shrink: 0;
     min-width: 0;
     align-items: center;
     gap: 0.85rem;
@@ -1932,22 +1933,24 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     position: relative;
     z-index: 1;
     display: flex;
+    min-width: 0;
     align-items: center;
-    gap: clamp(0.25rem, 1vw, 0.8rem);
-    font-size: clamp(0.92rem, 1.5vw, 1.45rem);
+    gap: clamp(0.2rem, 0.6vw, 0.5rem);
+    font-size: clamp(0.86rem, 1vw, 1.15rem);
     color: #1e293b;
   }
 
   .admission-journey > svg {
-    width: clamp(1.1rem, 1.8vw, 1.75rem);
-    height: clamp(1.1rem, 1.8vw, 1.75rem);
+    flex-shrink: 0;
+    width: clamp(0.9rem, 1.2vw, 1.2rem);
+    height: clamp(0.9rem, 1.2vw, 1.2rem);
     stroke-width: 1.6;
     opacity: 0.75;
   }
 
   .admission-journey button {
     border-radius: 2rem;
-    padding: 0.8rem 0.95rem;
+    padding: 0.65rem 0.6rem;
     white-space: nowrap;
     transition: color 200ms ease, background 200ms ease, transform 200ms ease;
   }
@@ -3115,9 +3118,9 @@ html[data-motion='minimal'] .dashboard-loader-learning {
   .admission-hub-brand { gap: 0.75rem; }
   .admission-hub-wordmark { font-size: clamp(1.8rem, 2.2vw, 2.5rem); }
   .admission-hub-title { font-size: clamp(0.9rem, 1.25vw, 1.2rem); }
-  .admission-journey { gap: 0.25rem; font-size: clamp(0.82rem, 1.2vw, 1.08rem); }
-  .admission-journey button { padding: 0.72rem 0.68rem; }
-  .admission-journey > svg { width: 1.2rem; height: 1.2rem; }
+  .admission-journey { gap: 0.2rem; font-size: clamp(0.78rem, 0.95vw, 1rem); }
+  .admission-journey button { padding: 0.55rem 0.45rem; }
+  .admission-journey > svg { width: 1rem; height: 1rem; }
 }
 
 @media (min-width: 1280px) {

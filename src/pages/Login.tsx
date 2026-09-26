@@ -113,7 +113,7 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-cinema-page workspace-page">
+    <div className={`auth-cinema-page workspace-page ${!createMode && !codeMode && !notFound ? 'auth-cinema-page--password' : ''}`}>
       <motion.main
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}

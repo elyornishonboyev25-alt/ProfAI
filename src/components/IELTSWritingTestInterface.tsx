@@ -35,6 +35,7 @@ import { useBadgeStore } from '@/store/badgeStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import type { WritingTask, LineChartData, ChartSeries } from '@/data/writingTestData'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
+import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { useSearchParams } from 'react-router-dom'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -786,6 +787,12 @@ export default function IELTSWritingTestInterface({
               </div>
 
               {/* Strengths + Improvements */}
+              {task.diagram ? (
+                <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                  <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+                </details>
+              ) : null}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-3xl border border-emerald-200 bg-emerald-50/40 p-6">
                   <h3 className="flex items-center gap-2 text-base font-bold text-emerald-800 mb-3">
@@ -1157,6 +1164,11 @@ export default function IELTSWritingTestInterface({
               <LineChart chart={task.chart} />
             </div>
           )}
+          {task.diagram ? (
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <WritingTaskDiagram diagram={task.diagram} />
+            </div>
+          ) : null}
         </div>
 
         <div className="flex w-1/2 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white">

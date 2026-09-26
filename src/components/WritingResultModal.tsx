@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
 import type { WritingError } from '@/services/geminiAI'
+import { getWritingTaskById } from '@/data/writingTestData'
+import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -101,6 +103,7 @@ export default function WritingResultModal({
   onClose: () => void
 }) {
   const [showCorrected, setShowCorrected] = useState(false)
+  const task = getWritingTaskById(entry.testId)
   const bandColor = (b: number) =>
     b >= 7 ? 'from-emerald-500 to-green-600' : b >= 5.5 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-600'
 
@@ -158,6 +161,12 @@ export default function WritingResultModal({
             </div>
 
             {/* Criteria */}
+            {task?.diagram ? (
+              <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+              </details>
+            ) : null}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
                 <Target className="h-3.5 w-3.5 text-red-500" /> Band Breakdown

@@ -32,6 +32,7 @@ export type WritingTask = {
   maxWordCount: number
   durationMinutes: number
   chart?: WritingChartData
+  diagram?: 'further-education' | 'radio-tv-audiences'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string
@@ -204,6 +205,92 @@ const FULL_TEST_2: WritingFullTest = {
   available: true,
 }
 
+const FULL_TEST_3_TASKS: WritingTask[] = [
+  {
+    id: 'writing-full-3-task-1',
+    day: null,
+    fullTestIndex: 3,
+    taskType: 'task1',
+    title: 'Full Writing Test 3',
+    subtitle: 'Task 1 · Bar chart · Further education in Britain',
+    prompt: 'The chart below shows the number of men and women in further education in Britain in three periods and whether they were studying full-time or part-time.\n\nSummarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    promptLead: 'The chart below shows the number of men and women in further education in Britain in three periods and whether they were studying full-time or part-time.',
+    instructions: 'Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    suggestedWordCount: { min: 150, max: 180 },
+    maxWordCount: 500,
+    durationMinutes: 20,
+    diagram: 'further-education',
+    available: true,
+  },
+  {
+    id: 'writing-full-3-task-2',
+    day: null,
+    fullTestIndex: 3,
+    taskType: 'task2',
+    title: 'Full Writing Test 3',
+    subtitle: 'Task 2 · Essay · Family income and adult life',
+    prompt: 'Children who are brought up in families that do not have large amounts of money are better prepared to deal with the problems of adult life than children brought up by wealthy parents.\n\nTo what extent do you agree or disagree with this opinion?\n\nGive reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.',
+    promptLead: 'Children who are brought up in families that do not have large amounts of money are better prepared to deal with the problems of adult life than children brought up by wealthy parents.',
+    promptQuestion: 'To what extent do you agree or disagree with this opinion?',
+    instructions: 'Give reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.',
+    suggestedWordCount: { min: 250, max: 280 },
+    maxWordCount: 800,
+    durationMinutes: 40,
+    available: true,
+  },
+]
+
+const FULL_TEST_3: WritingFullTest = {
+  id: 'writing-full-3',
+  index: 3,
+  title: 'Full Writing Test 3',
+  tasks: FULL_TEST_3_TASKS,
+  available: true,
+}
+
+const FULL_TEST_4_TASKS: WritingTask[] = [
+  {
+    id: 'writing-full-4-task-1',
+    day: null,
+    fullTestIndex: 4,
+    taskType: 'task1',
+    title: 'Full Writing Test 4',
+    subtitle: 'Task 1 · Line graph · UK radio and television audiences',
+    prompt: 'The graph below shows radio and television audiences throughout the day in 1992.\n\nSummarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    promptLead: 'The graph below shows radio and television audiences throughout the day in 1992.',
+    instructions: 'Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.',
+    suggestedWordCount: { min: 150, max: 180 },
+    maxWordCount: 500,
+    durationMinutes: 20,
+    diagram: 'radio-tv-audiences',
+    available: true,
+  },
+  {
+    id: 'writing-full-4-task-2',
+    day: null,
+    fullTestIndex: 4,
+    taskType: 'task2',
+    title: 'Full Writing Test 4',
+    subtitle: 'Task 2 · Essay · International tourism',
+    prompt: 'International tourism has brought enormous benefit to many places. At the same time, there is concern about its impact on local inhabitants and the environment.\n\nDo the disadvantages of international tourism outweigh the advantages?\n\nGive reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.',
+    promptLead: 'International tourism has brought enormous benefit to many places. At the same time, there is concern about its impact on local inhabitants and the environment.',
+    promptQuestion: 'Do the disadvantages of international tourism outweigh the advantages?',
+    instructions: 'Give reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.',
+    suggestedWordCount: { min: 250, max: 280 },
+    maxWordCount: 800,
+    durationMinutes: 40,
+    available: true,
+  },
+]
+
+const FULL_TEST_4: WritingFullTest = {
+  id: 'writing-full-4',
+  index: 4,
+  title: 'Full Writing Test 4',
+  tasks: FULL_TEST_4_TASKS,
+  available: true,
+}
+
 export function getWritingDayCatalog(): WritingTask[] {
   const days: WritingTask[] = []
 
@@ -246,6 +333,16 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
       continue
     }
 
+    if (i === 3) {
+      tests.push(FULL_TEST_3)
+      continue
+    }
+
+    if (i === 4) {
+      tests.push(FULL_TEST_4)
+      continue
+    }
+
     tests.push({
       id: `writing-full-${i}`,
       index: i,
@@ -261,7 +358,7 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
 export function getWritingTaskById(id: string): WritingTask | null {
   if (id === 'writing-day-1') return DAY_1_TASK
 
-  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS].find(
+  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS, ...FULL_TEST_3_TASKS, ...FULL_TEST_4_TASKS].find(
     (task) => task.id === id,
   )
   if (fullTestTask) return fullTestTask

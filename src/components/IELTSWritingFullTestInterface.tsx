@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
+import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -426,6 +427,12 @@ export default function IELTSWritingFullTestInterface({
                     <Score label="Vocabulary" value={evaluation.lexicalResource} />
                     <Score label="Grammar" value={evaluation.grammaticalRange} />
                   </div>
+                  {task.diagram ? (
+                    <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                      <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+                    </details>
+                  ) : null}
                   <div className="mt-5 grid gap-4 lg:grid-cols-2">
                     <FeedbackList title="Strengths" items={evaluation.strengths} tone="emerald" />
                     <FeedbackList title="Improve next" items={evaluation.improvements} tone="amber" />
@@ -545,6 +552,11 @@ export default function IELTSWritingFullTestInterface({
                 className="h-auto w-full object-contain"
                 draggable={false}
               />
+            </div>
+          ) : null}
+          {activeTask.diagram ? (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+              <WritingTaskDiagram diagram={activeTask.diagram} />
             </div>
           ) : null}
         </section>

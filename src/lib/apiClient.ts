@@ -1,4 +1,4 @@
-﻿import { useAuthStore } from '@/store/authStore'
+import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
 
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
@@ -30,21 +30,34 @@ export class ApiError extends Error {
   }
 }
 
-type RefreshResult = 'refreshed' | 'rejected' | 'unavailable'
+type RefreshResult = 'refreshed' | 'rejected' | 'unavailable' | 'superseded'
 
-let refreshInFlight: Promise<RefreshResult> | null = null
+const refreshInFlight = new Map<string, Promise<RefreshResult>>()
 
 async function ensureRefreshed(refreshToken: string): Promise<RefreshResult> {
-  if (!refreshInFlight) {
-    refreshInFlight = refreshSession(refreshToken).finally(() => {
-      refreshInFlight = null
-    })
+  let pending = refreshInFlight.get(refreshToken)
+  if (!pending) {
+    const refresh = async (): Promise<RefreshResult> => {
+      syncStoredSession()
+      if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
+      return refreshSession(refreshToken)
+    }
+    // Serialize token rotation across tabs as well as within this tab. Read
+    // storage inside the lock, after any previous tab has saved its new tokens.
+    pending = (async (): Promise<RefreshResult> => {
+      if (typeof navigator !== 'undefined' && navigator.locks) {
+        return await navigator.locks.request('profai:auth-refresh', refresh)
+      }
+      return refresh()
+    })().finally(() => { refreshInFlight.delete(refreshToken) })
+    refreshInFlight.set(refreshToken, pending)
   }
-  return refreshInFlight
+  return pending
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { auth = true, retryOnUnauthorized = true, headers, body, ...rest } = options
+  if (auth) syncStoredSession()
   const authState = useAuthStore.getState()
 
   const requestHeaders = new Headers(headers)
@@ -66,26 +79,29 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (response.status === 401 && auth) {
-    if (retryOnUnauthorized && authState.refreshToken) {
-      const refreshResult = await ensureRefreshed(authState.refreshToken)
-
-      if (refreshResult === 'refreshed') {
-        return request<T>(path, {
-          ...options,
-          retryOnUnauthorized: false,
-        })
+    syncStoredSession()
+    const current = useAuthStore.getState()
+    const sameUser = current.user?.id === authState.user?.id
+    if (retryOnUnauthorized && sameUser && current.refreshToken) {
+      // A delayed 401 may refer to the token used before another request rotated
+      // it. Retry with the current token without rotating the old token again.
+      const result = current.accessToken !== authState.accessToken
+        ? 'superseded'
+        : await ensureRefreshed(current.refreshToken)
+      const latest = useAuthStore.getState()
+      if ((result === 'refreshed' || result === 'superseded') &&
+          latest.user?.id === authState.user?.id && latest.accessToken &&
+          latest.refreshToken !== authState.refreshToken) {
+        return request<T>(path, { ...options, retryOnUnauthorized: false })
       }
-
-      // A temporary network/backend failure must never destroy a valid local
-      // session. The next request can retry the refresh once connectivity is
-      // restored; only an explicit token rejection is a real logout signal.
-      if (refreshResult === 'unavailable') {
+      if (result === 'unavailable') {
         throw new Error('Backend is temporarily unavailable. Your session is saved and will retry automatically.')
       }
     }
 
-    useAuthStore.getState().clearSession()
-    throw new Error('Login required. Please sign in again.')
+    // Endpoint-specific 401s and stale responses are not proof that the current
+    // session is invalid. Only a rejected refresh may clear that exact session.
+    throw new ApiError('Login required. Please sign in again.', 401)
   }
 
   if (!response.ok) {
@@ -109,10 +125,15 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
       body: { refreshToken },
     })
 
+    syncStoredSession()
+    if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
     useAuthStore.getState().setSession(payload)
     return 'refreshed'
   } catch (error) {
-    if (error instanceof ApiError && [400, 401, 403].includes(error.status)) {
+    syncStoredSession()
+    if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
+    if (error instanceof ApiError && error.status === 401) {
+      useAuthStore.getState().clearSession()
       return 'rejected'
     }
     return 'unavailable'

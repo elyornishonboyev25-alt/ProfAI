@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand'
+import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AuthUser } from '@/types/platform'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
@@ -117,3 +117,30 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 )
+
+// Refresh tokens rotate after use. Other tabs must adopt the replacement before
+// sending requests, otherwise they will try to reuse an already revoked token.
+export function syncStoredSession() {
+  try {
+    const raw = resilientLocalStorage.getItem('smart-test-pro-auth-v2')
+    if (typeof raw !== 'string') return
+    const saved = JSON.parse(raw).state as Pick<AuthState, 'user' | 'accessToken' | 'refreshToken'>
+    if (!saved || !(saved.accessToken === null || typeof saved.accessToken === 'string') ||
+        !(saved.refreshToken === null || typeof saved.refreshToken === 'string')) return
+    const current = useAuthStore.getState()
+    if (saved.accessToken === current.accessToken && saved.refreshToken === current.refreshToken) return
+    useAuthStore.setState({
+      user: saved.user ? { ...saved.user, premium: hasPremiumAccess(saved.user) } : null,
+      accessToken: saved.accessToken,
+      refreshToken: saved.refreshToken,
+    })
+  } catch {
+    // Unavailable or damaged storage must not destroy the in-memory session.
+  }
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'smart-test-pro-auth-v2') syncStoredSession()
+  })
+}

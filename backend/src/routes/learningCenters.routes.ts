@@ -5,6 +5,7 @@ import {
   LearningCenterMemberStatus,
   LearningCenterRole,
   LearningSubmissionStatus,
+  NotificationType,
   Prisma,
   TestCategory,
 } from '@prisma/client'
@@ -84,8 +85,8 @@ const assignmentSchema = z.object({
   dueAt: z.string().datetime(),
   groupId: z.string().trim().min(1).max(191).optional(),
   studentId: z.string().trim().min(1).max(191).optional(),
-}).refine((input) => Boolean(input.groupId) !== Boolean(input.studentId), {
-  message: 'Choose exactly one assignment audience: a group or one student.',
+}).refine((input) => !(input.groupId && input.studentId), {
+  message: 'Choose all students, a group, or one student.',
 })
 
 const submissionSchema = z.object({
@@ -301,7 +302,7 @@ async function loadStudentSummaries(access: NonNullable<CenterAccess>, days = 90
     })
     ids = groupMembers.map((entry) => entry.member.userId)
   }
-  const since = new Date(Date.now() - days * 86_400_000)
+  const since = days === 0 ? new Date(0) : new Date(Date.now() - days * 86_400_000)
   const [students, results, assignmentStats] = await Promise.all([
     loadStudentIdentities(access.centerId, ids),
     loadResults(ids, since),
@@ -939,26 +940,41 @@ router.post(
       studentIds = group.members.map((entry) => entry.member.userId).filter((id) => allowedStudents.includes(id))
     } else if (payload.studentId && allowedStudents.includes(payload.studentId)) {
       studentIds = [payload.studentId]
+    } else if (!payload.studentId) {
+      studentIds = allowedStudents
     } else {
       return res.status(400).json({ message: 'Student is outside your teaching scope.' })
     }
+    studentIds = [...new Set(studentIds)]
     if (!studentIds.length) return res.status(400).json({ message: 'The selected audience has no active students.' })
-    const assignment = await prisma.learningCenterAssignment.create({
-      data: {
-        centerId: access.centerId,
-        groupId: payload.groupId || null,
-        studentId: payload.studentId || null,
-        createdById: req.user!.id,
-        title: payload.title,
-        description: payload.description || null,
-        kind: payload.kind,
-        examTrack: payload.examTrack,
-        routePath: payload.routePath,
-        targetScore: payload.targetScore || null,
-        dueAt: new Date(payload.dueAt),
-        submissions: { create: studentIds.map((studentId) => ({ studentId })) },
-      },
-      include: { group: { select: { id: true, name: true } }, submissions: true },
+    const assignment = await prisma.$transaction(async (tx) => {
+      const created = await tx.learningCenterAssignment.create({
+        data: {
+          centerId: access.centerId,
+          groupId: payload.groupId || null,
+          studentId: payload.studentId || null,
+          createdById: req.user!.id,
+          title: payload.title,
+          description: payload.description || null,
+          kind: payload.kind,
+          examTrack: payload.examTrack,
+          routePath: payload.routePath,
+          targetScore: payload.targetScore || null,
+          dueAt: new Date(payload.dueAt),
+          submissions: { create: studentIds.map((studentId) => ({ studentId })) },
+        },
+        include: { group: { select: { id: true, name: true } }, submissions: true },
+      })
+      await tx.notification.createMany({
+        data: studentIds.map((userId) => ({
+          userId,
+          type: NotificationType.SYSTEM,
+          title: `New class assignment: ${payload.title}`,
+          message: `${access.center.name} assigned you new ${payload.examTrack} work. Due ${new Date(payload.dueAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.`,
+          metadata: { kind: 'CLASS_ASSIGNMENT', assignmentId: created.id, centerSlug: access.center.slug },
+        })),
+      })
+      return created
     })
     return res.status(201).json({ assignment })
   }),
@@ -1003,7 +1019,7 @@ router.get(
   validateQuery(z.object({
     exam: z.enum(['SAT', 'IELTS']).default('SAT'),
     metric: z.enum(['SCORE', 'IMPROVEMENT']).default('SCORE'),
-    days: z.coerce.number().int().min(7).max(365).default(31),
+    days: z.coerce.number().int().min(0).max(365).default(0),
     groupId: z.string().trim().max(191).optional(),
   })),
   asyncHandler(async (req, res) => {
@@ -1011,9 +1027,9 @@ router.get(
     if (!access) return
     const exam = String(req.query.exam ?? 'SAT') as 'SAT' | 'IELTS'
     const metric = String(req.query.metric ?? 'SCORE') as 'SCORE' | 'IMPROVEMENT'
-    const days = Number(req.query.days ?? 31)
+    const days = Number(req.query.days ?? 0)
     const groupId = typeof req.query.groupId === 'string' ? req.query.groupId : undefined
-    const { summaries } = await loadStudentSummaries(access, days, groupId)
+    const { summaries, results } = await loadStudentSummaries(access, days, groupId)
     const rows = summaries
       .map((student) => ({
         id: student.id,
@@ -1022,12 +1038,15 @@ router.get(
         avatarUrl: student.avatarUrl,
         score: exam === 'SAT' ? student.currentSat : student.currentIelts,
         highest: exam === 'SAT' ? student.highestSat : student.highestIelts,
-        improvement: student.improvement,
-        attempts: student.attempts,
+        improvement: (() => {
+          const points = (results.get(student.id) ?? []).filter((result) => result.examType === exam).sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
+          return points.length > 1 ? round((points.at(-1)!.score / points.at(-1)!.maxScore - points[0].score / points[0].maxScore) * 100) : 0
+        })(),
+        attempts: (results.get(student.id) ?? []).filter((result) => result.examType === exam).length,
         currentStreak: student.currentStreak,
       }))
-      .filter((row) => row.score !== null)
-      .sort((a, b) => metric === 'IMPROVEMENT' ? b.improvement - a.improvement : (b.score ?? 0) - (a.score ?? 0))
+      .filter((row) => row.score !== null && row.attempts > 0)
+      .sort((a, b) => metric === 'IMPROVEMENT' ? b.improvement - a.improvement || (b.highest ?? 0) - (a.highest ?? 0) : (b.highest ?? 0) - (a.highest ?? 0) || b.attempts - a.attempts)
       .map((row, index) => ({ rank: index + 1, ...row }))
     return res.json({ exam, metric, rows })
   }),

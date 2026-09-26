@@ -360,6 +360,7 @@ function buildUserAggregates(params: {
   attempts: UserAttemptSnapshot[]
   period: PeriodInput
   useCanonicalXp: boolean
+  periodXpByUser: Map<string, number>
   usersById: Map<string, { fullName: string; nickname?: string | null; avatarUrl: string | null; xp: number; currentStreak: number }>
   focusStatsByUser: Map<string, { focusConsistency: number; dailyCompletionRate: number }>
 }) {
@@ -378,7 +379,8 @@ function buildUserAggregates(params: {
 
   for (const [userId, user] of params.usersById.entries()) {
     const userAttempts = attemptsByUser.get(userId) ?? []
-    if (!params.useCanonicalXp && userAttempts.length === 0) continue
+    const otherXp = params.periodXpByUser.get(userId) ?? 0
+    if (!params.useCanonicalXp && userAttempts.length === 0 && otherXp === 0) continue
 
     userAttempts.sort((left, right) => left.completedAt.getTime() - right.completedAt.getTime())
     const seenTests = new Set<string>()
@@ -395,7 +397,7 @@ function buildUserAggregates(params: {
       validatedAttempts.push(attempt)
     }
 
-    if (!params.useCanonicalXp && validatedAttempts.length === 0) continue
+    if (!params.useCanonicalXp && validatedAttempts.length === 0 && otherXp === 0) continue
 
     const lastAttemptAt =
       validatedAttempts[validatedAttempts.length - 1]?.completedAt
@@ -445,6 +447,7 @@ function buildUserAggregates(params: {
     }
 
     if (params.useCanonicalXp) xpTotal = Math.max(0, user.xp)
+    else xpTotal += otherXp
 
     const testsCompleted = validatedAttempts.length
     const integrityScore = clamp((testsCompleted / Math.max(1, userAttempts.length)) * 100, 0, 100)
@@ -540,6 +543,14 @@ export async function generateLeaderboard(params: {
   const useCanonicalXp = params.period === 'all' && !params.category
   const startDate = getPeriodStart(params.period)
   const categoryFilter = params.category
+  const xpEvents = !useCanonicalXp && !categoryFilter
+    ? await prisma.xpEvent.groupBy({
+      by: ['userId'],
+      where: startDate ? { earnedAt: { gte: startDate } } : {},
+      _sum: { amount: true },
+    })
+    : []
+  const periodXpByUser = new Map(xpEvents.map((event) => [event.userId, Math.max(0, event._sum.amount ?? 0)]))
 
   const where: Prisma.TestAttemptWhereInput = {
     ...(startDate ? { completedAt: { gte: startDate } } : {}),
@@ -597,7 +608,7 @@ export async function generateLeaderboard(params: {
     }
   }
 
-  if (!useCanonicalXp && attempts.length === 0) {
+  if (!useCanonicalXp && attempts.length === 0 && periodXpByUser.size === 0) {
     return {
       period: params.period,
       category: params.category ?? null,
@@ -609,7 +620,7 @@ export async function generateLeaderboard(params: {
     }
   }
 
-  const attemptUserIds = [...new Set(attempts.map((attempt) => attempt.userId))]
+  const attemptUserIds = [...new Set([...attempts.map((attempt) => attempt.userId), ...periodXpByUser.keys()])]
 
   const users = await prisma.user.findMany({
     where: useCanonicalXp ? {} : { id: { in: attemptUserIds } },
@@ -661,6 +672,7 @@ export async function generateLeaderboard(params: {
     attempts: attempts as UserAttemptSnapshot[],
     period: params.period,
     useCanonicalXp,
+    periodXpByUser,
     usersById: userMap,
     focusStatsByUser,
   })

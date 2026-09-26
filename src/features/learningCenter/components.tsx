@@ -26,7 +26,7 @@ export function CenterPageHeading({ eyebrow, title, description, action }: {
   return (
     <div className="lc-page-heading flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        {eyebrow ? <p className="text-[10px] font-bold uppercase tracking-[.22em] text-blue-600">{eyebrow}</p> : null}
+        {eyebrow ? <p className="text-[10px] font-bold uppercase tracking-[.22em] text-red-700">{eyebrow}</p> : null}
         <h1 className="mt-1 text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-[2.35rem]">{title}</h1>
         {description ? <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">{description}</p> : null}
       </div>
@@ -44,10 +44,10 @@ export function MetricCard({ label, value, note, icon: Icon, accent = 'blue', tr
   trend?: number
 }) {
   const styles = {
-    blue: 'from-blue-600 to-indigo-600 shadow-blue-500/20',
+    blue: 'from-slate-700 to-slate-900 shadow-slate-500/20',
     red: 'from-red-500 to-rose-600 shadow-red-500/20',
-    emerald: 'from-emerald-500 to-teal-600 shadow-emerald-500/20',
-    violet: 'from-violet-500 to-indigo-600 shadow-violet-500/20',
+    emerald: 'from-red-700 to-red-500 shadow-red-500/20',
+    violet: 'from-slate-500 to-slate-700 shadow-slate-500/20',
   }
   return (
     <motion.article
@@ -55,7 +55,7 @@ export function MetricCard({ label, value, note, icon: Icon, accent = 'blue', tr
       animate={{ opacity: 1, y: 0 }}
       className={cn('lc-metric-card group relative overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/90 p-5 shadow-[0_16px_44px_rgba(15,23,42,.07)]', `lc-metric-${accent}`)}
     >
-      <div className="absolute -right-7 -top-7 h-24 w-24 rounded-full bg-blue-50 transition-transform duration-500 group-hover:scale-125" />
+      <div className="absolute -right-7 -top-7 h-24 w-24 rounded-full bg-slate-100 transition-transform duration-500 group-hover:scale-125" />
       <div className="relative flex items-start justify-between gap-3">
         <span className={cn('grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br text-white shadow-lg', styles[accent])}>
           <Icon className="h-[18px] w-[18px]" />
@@ -94,7 +94,7 @@ export function StatusBadge({ status }: { status: StudentStatus }) {
 export function Avatar({ name, url, size = 'md' }: { name: string; url?: string | null; size?: 'sm' | 'md' | 'lg' }) {
   const sizeClass = size === 'lg' ? 'h-14 w-14 text-base' : size === 'sm' ? 'h-8 w-8 text-[10px]' : 'h-10 w-10 text-xs'
   return (
-    <span className={cn('grid shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 font-bold text-blue-700 ring-1 ring-blue-100', sizeClass)}>
+    <span className={cn('grid shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-red-50 font-bold text-red-700 ring-1 ring-slate-200', sizeClass)}>
       <ProfileAvatar src={url} alt={name} />
     </span>
   )
@@ -104,7 +104,7 @@ export function EmptyState({ title, description, action }: { title: string; desc
   return (
     <div className="grid min-h-56 place-items-center px-5 py-10 text-center">
       <div>
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-blue-600"><Sparkles className="h-6 w-6" /></span>
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-red-100 bg-red-50 text-red-600"><Sparkles className="h-6 w-6" /></span>
         <h3 className="mt-4 text-lg font-bold text-slate-900">{title}</h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
         {action ? <div className="mt-5">{action}</div> : null}
@@ -182,7 +182,7 @@ export function Modal({ open, title, description, onClose, children, busy = fals
         onMouseDown={(event) => event.stopPropagation()}
         className="my-auto w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-[0_35px_90px_rgba(15,23,42,.35)]"
       >
-        <div className="h-1 bg-blue-600" />
+        <div className="h-1 bg-red-600" />
         <div className="p-6 sm:p-7">
           <div className="flex items-start justify-between gap-4">
             <div><h2 id={titleId} className="text-2xl font-bold tracking-tight text-slate-950">{title}</h2>{description ? <p id={descriptionId} className="mt-2 text-sm leading-6 text-slate-500">{description}</p> : null}</div>
@@ -205,6 +205,6 @@ export function InvitationLink({ link }: { link: string }) {
   return <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm font-bold text-emerald-900">Invitation ready</p><p className="mt-1 text-xs leading-5 text-emerald-800">Share this link with your invitee. It expires in seven days.</p><label className="mt-4 block"><span className="sr-only">Invitation link</span><input ref={inputRef} readOnly value={link} onFocus={(event) => event.target.select()} className={inputClass} /></label><button type="button" onClick={() => void copy()} className={`${secondaryButton} mt-3`}>{status === 'copied' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{status === 'copied' ? 'Copied!' : 'Copy invitation link'}</button><p role="status" className="mt-2 text-xs text-emerald-800">{status === 'manual' ? 'Copy is unavailable in this browser. Select and copy the link above.' : status === 'copied' ? 'Link copied. You can now share it.' : ''}</p></div>
 }
 
-export const inputClass = 'h-11 w-full rounded-xl border border-slate-200 bg-white/90 px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100'
+export const inputClass = 'h-11 w-full rounded-xl border border-slate-200 bg-white/85 px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-400 focus:bg-white focus:ring-0 focus-visible:border-slate-500 focus-visible:ring-2 focus-visible:ring-slate-200'
 export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-600 px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(185,28,28,.19)] transition hover:from-red-800 hover:to-red-700 hover:shadow-[0_14px_28px_rgba(185,28,28,.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-wait disabled:opacity-60'
 export const secondaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/85 px-4 text-sm font-semibold text-slate-700 shadow-[0_4px_16px_rgba(30,64,175,.04)] transition hover:border-red-200 hover:bg-white hover:text-red-700 disabled:cursor-wait disabled:opacity-60'

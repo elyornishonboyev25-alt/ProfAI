@@ -5,6 +5,7 @@ import { afterEach, mock, test } from 'node:test'
 const unexpectedQuery = () => { throw new Error('Unexpected database query') }
 const prisma = {
   testAttempt: { findMany: unexpectedQuery },
+  xpEvent: { groupBy: unexpectedQuery },
   assessmentResult: { findMany: unexpectedQuery },
   user: { findMany: unexpectedQuery },
   focusDailyAnalytics: { findMany: unexpectedQuery },
@@ -21,8 +22,9 @@ const attempt = (userId, testId, xpEarned, percentage = 80) => ({
   completedAt: new Date(), test: { difficulty: 'MEDIUM', durationSec: 600 },
 })
 
-function mockDatabase(users, attempts = [], assessments = []) {
+function mockDatabase(users, attempts = [], assessments = [], xpEvents = []) {
   mock.method(prisma.testAttempt, 'findMany', async () => attempts)
+  mock.method(prisma.xpEvent, 'groupBy', async () => xpEvents.map(({ userId, amount }) => ({ userId, _sum: { amount } })))
   const assessmentQuery = mock.method(prisma.assessmentResult, 'findMany', async () => assessments)
   const userQuery = mock.method(prisma.user, 'findMany', async ({ where }) => (
     where.id ? users.filter((user) => where.id.in.includes(user.id)) : users
@@ -139,4 +141,15 @@ test('existing weekly and category consumers retain scoped test XP', async () =>
     assert.equal(board.rows[0].totalXp, 40)
   }
   assert.equal(assessmentQuery.mock.callCount(), 0)
+})
+
+test('weekly leaderboard includes learners who earned XP outside tests', async () => {
+  mockDatabase([learner('practice', 80), learner('tests', 40)], [attempt('tests', 'test-1', 40)], [], [
+    { userId: 'practice', amount: 80 },
+  ])
+  const board = await generateLeaderboard({ period: 'week', currentUserId: 'practice' })
+  assert.deepEqual(board.rows.map(({ userId, totalXp }) => [userId, totalXp]), [
+    ['practice', 80], ['tests', 40],
+  ])
+  assert.equal(board.currentUserRank, 1)
 })

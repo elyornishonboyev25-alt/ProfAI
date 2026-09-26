@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Award, Bell, CheckCheck, ChevronRight, Flame, Sparkles, X } from 'lucide-react'
+import { Award, Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fetchBadges, type SkillBadgeRecord } from '@/lib/profileApi'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -39,14 +39,11 @@ function relativeTime(value: string) {
   return `${Math.round(hours / 24)}d ago`
 }
 
-/**
- * Bell button + slide-in notifications panel (concept: 31-Notifications-Streak).
- * Pulls the streak week from the existing dashboard overview endpoint and the
- * learner's latest badges — no new backend. Fails silent on any fetch error.
- */
+/** Bell button and notification panel with class assignments and activity. */
 export default function NotificationsBell() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const userId = user?.id
   const { minimalMotion } = useMotionPreferences()
   const [open, setOpen] = useState(false)
   const [week, setWeek] = useState<DashboardOverview['weeklyProgress']>([])
@@ -75,16 +72,27 @@ export default function NotificationsBell() {
         setBadges(sorted.slice(0, 3))
       })
       .catch(() => {})
-    apiClient
-      .get<{ notifications: NotificationItem[] }>('/dashboard/notifications', { auth: true })
-      .then((payload) => {
-        if (!cancelled) setNotifications(payload.notifications ?? [])
-      })
+    apiClient.get<{ notifications: NotificationItem[] }>('/dashboard/notifications', { auth: true })
+      .then((payload) => { if (!cancelled) setNotifications(payload.notifications ?? []) })
       .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [open, user])
+
+  useEffect(() => {
+    if (!userId) return
+    let active = true
+    const refresh = () => {
+      void apiClient.get<{ notifications: NotificationItem[] }>('/dashboard/notifications', { auth: true })
+        .then((payload) => { if (active) setNotifications(payload.notifications ?? []) })
+        .catch(() => {})
+    }
+    refresh()
+    const timer = window.setInterval(refresh, 60_000)
+    window.addEventListener('focus', refresh)
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener('focus', refresh) }
+  }, [userId])
 
   // Close on outside click / Escape.
   useEffect(() => {
@@ -125,6 +133,15 @@ export default function NotificationsBell() {
       ),
     )
     await apiClient.patch(`/dashboard/notifications/${notificationId}/read`, {}, { auth: true }).catch(() => {})
+  }
+
+  const openNotification = (notification: NotificationItem) => {
+    void markRead(notification.id)
+    const slug = notification.metadata?.centerSlug
+    if (notification.metadata?.kind === 'CLASS_ASSIGNMENT' && typeof slug === 'string') {
+      setOpen(false)
+      navigate(`/learning-center/${encodeURIComponent(slug)}/assignments`)
+    }
   }
 
   return (
@@ -230,10 +247,10 @@ export default function NotificationsBell() {
                 <div>
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Latest updates</p>
                   <div className="space-y-2">
-                    {notifications.slice(0, 5).map((notification) => (
+                    {notifications.map((notification) => (
                       <button
                         key={notification.id}
-                        onClick={() => void markRead(notification.id)}
+                        onClick={() => void openNotification(notification)}
                         className={`profai-notification-row relative flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
                           notification.readAt
                             ? 'border-white/80 bg-white/50'
@@ -241,7 +258,7 @@ export default function NotificationsBell() {
                         }`}
                       >
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-red-50 text-red-600 shadow-[0_6px_14px_rgba(190,35,52,.12)]">
-                          <Bell className="h-4 w-4" />
+                          {notification.metadata?.kind === 'CLASS_ASSIGNMENT' ? <ClipboardCheck className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-black text-slate-900">{notification.title}</span>

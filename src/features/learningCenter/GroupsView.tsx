@@ -20,7 +20,7 @@ export default function GroupsView({ slug, canManage }: { slug: string; canManag
           {data.groups.map((group) => (
             <CenterPanel key={group.id} className="group p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(30,64,175,.13)] sm:p-6">
               <div className="flex items-start justify-between gap-3">
-                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${group.examTrack === 'SAT' ? 'bg-violet-100 text-violet-700' : group.examTrack === 'IELTS' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{group.examTrack === 'SAT' ? <GraduationCap className="h-6 w-6" /> : <BookOpenCheck className="h-6 w-6" />}</span>
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${group.examTrack === 'SAT' ? 'bg-slate-100 text-slate-700' : group.examTrack === 'IELTS' ? 'bg-red-100 text-red-700' : 'bg-red-100 text-red-700'}`}>{group.examTrack === 'SAT' ? <GraduationCap className="h-6 w-6" /> : <BookOpenCheck className="h-6 w-6" />}</span>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{group.examTrack}</span>
               </div>
               <h2 className="mt-5 text-xl font-bold tracking-[-.03em] text-slate-950">{group.name}</h2>
@@ -32,7 +32,7 @@ export default function GroupsView({ slug, canManage }: { slug: string; canManag
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
                 {group.teacher ? <div className="flex min-w-0 items-center gap-2"><Avatar name={group.teacher.fullName} url={group.teacher.avatarUrl} size="sm" /><div className="min-w-0"><p className="truncate text-xs font-bold text-slate-800">{group.teacher.fullName}</p><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lead teacher</p></div></div> : <span className="text-xs font-bold text-amber-600">Teacher not assigned</span>}
-                <button type="button" onClick={() => navigate(`/learning-center/${slug}/students?groupId=${group.id}`)} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700">View students <ArrowRight className="h-4 w-4" /></button>
+                <button type="button" onClick={() => navigate(`/learning-center/${slug}/students?groupId=${group.id}`)} className="inline-flex items-center gap-1 text-xs font-bold text-red-700">View students <ArrowRight className="h-4 w-4" /></button>
               </div>
               {group.students.some((student) => student.status === 'NEEDS_ATTENTION') ? <div className="mt-4 rounded-xl border border-red-100 bg-red-50/70 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-red-600">Intervention signal</p><div className="mt-2 flex flex-wrap gap-2">{group.students.filter((student) => student.status === 'NEEDS_ATTENTION').slice(0, 3).map((student) => <button key={student.id} type="button" onClick={() => navigate(`/learning-center/${slug}/students/${student.id}`)} className="flex items-center gap-1.5 rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-slate-700"><Avatar name={student.fullName} url={student.avatarUrl} size="sm" />{student.fullName.split(' ')[0]}</button>)}</div></div> : null}
             </CenterPanel>

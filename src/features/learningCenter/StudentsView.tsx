@@ -39,21 +39,21 @@ export default function StudentsView({ slug, canManage }: { slug: string; canMan
 
       {loading && !data ? <CenterSkeleton blocks={8} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : (
         <CenterPanel>
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-600" /><h2 className="font-bold text-slate-950">Student directory</h2></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">{data?.students.length ?? 0} learners</span></div>
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div className="flex items-center gap-2"><Users className="h-5 w-5 text-red-700" /><h2 className="font-bold text-slate-950">Student directory</h2></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">{data?.students.length ?? 0} learners</span></div>
           {data?.students.length ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[850px] text-left">
                 <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[.13em] text-slate-400"><th className="px-5 py-3">Student</th><th className="px-4 py-3">Current score</th><th className="px-4 py-3">Target</th><th className="px-4 py-3">Growth</th><th className="px-4 py-3">Assignments</th><th className="px-4 py-3">Signal</th><th className="px-5 py-3" /></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {data.students.map((student) => (
-                    <tr key={student.id} onClick={() => navigate(`/learning-center/${slug}/students/${student.id}`)} className="group cursor-pointer transition hover:bg-blue-50/40">
+                    <tr key={student.id} onClick={() => navigate(`/learning-center/${slug}/students/${student.id}`)} className="group cursor-pointer transition hover:bg-red-50/40">
                       <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar name={student.fullName} url={student.avatarUrl} /><div><p className="text-sm font-bold text-slate-900">{student.fullName}</p><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} tests · {student.currentStreak} day streak</p></div></div></td>
                       <td className="px-4 py-4"><Score student={student} /></td>
                       <td className="px-4 py-4 text-sm font-bold text-slate-700">{student.targetSat ? `SAT ${student.targetSat}` : student.targetIelts ? `IELTS ${student.targetIelts}` : student.targetScore ?? 'Not set'}</td>
                       <td className="px-4 py-4"><Trend value={student.improvement} /></td>
-                      <td className="px-4 py-4"><div className="w-28"><div className="flex justify-between text-[10px] font-bold text-slate-500"><span>Completion</span><span>{student.completionRate}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" style={{ width: `${student.completionRate}%` }} /></div></div></td>
+                      <td className="px-4 py-4"><div className="w-28"><div className="flex justify-between text-[10px] font-bold text-slate-500"><span>Completion</span><span>{student.completionRate}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${student.completionRate}%` }} /></div></div></td>
                       <td className="px-4 py-4"><StatusBadge status={student.status} /></td>
-                      <td className="px-5 py-4"><ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600" /></td>
+                      <td className="px-5 py-4"><ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-red-700" /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -69,7 +69,7 @@ export default function StudentsView({ slug, canManage }: { slug: string; canMan
 }
 
 function Score({ student }: { student: NonNullable<Awaited<ReturnType<typeof learningCenterApi.students>>>['students'][number] }) {
-  if (student.currentSat) return <div><p className="text-lg font-bold text-slate-950">{student.currentSat}</p><p className="text-[10px] font-bold uppercase tracking-wider text-violet-500">SAT</p></div>
+  if (student.currentSat) return <div><p className="text-lg font-bold text-slate-950">{student.currentSat}</p><p className="text-[10px] font-bold uppercase tracking-wider text-red-700">SAT</p></div>
   if (student.currentIelts) return <div><p className="text-lg font-bold text-slate-950">{student.currentIelts.toFixed(1)}</p><p className="text-[10px] font-bold uppercase tracking-wider text-red-500">IELTS</p></div>
   return <span className="text-xs font-bold text-slate-400">Baseline pending</span>
 }

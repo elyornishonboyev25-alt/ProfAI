@@ -1,0 +1,26 @@
+.sat-exam-viewport {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #aab4c4 transparent;
+}
+
+.sat-exam-canvas .sat-exam-visual,
+.sat-exam-canvas .sat-source-content img:not(.math-img) {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: clamp(11rem, 26dvh, 19rem);
+  object-fit: contain;
+}
+
+.sat-exam-canvas .sat-source-content img:not(.math-img) {
+  margin: .5em auto;
+}
+
+@media (max-height: 760px) {
+  .sat-exam-canvas .sat-exam-visual,
+  .sat-exam-canvas .sat-source-content img:not(.math-img) {
+    max-height: clamp(9rem, 23dvh, 12rem);
+  }
+}

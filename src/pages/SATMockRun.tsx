@@ -36,6 +36,7 @@ import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
 import SATRichText from '@/components/sat/SATRichText'
 import SATSourceContent from '@/components/sat/SATSourceContent'
+import '@/components/sat/sat-exam-layout.css'
 import {
   isSATAnswerCorrect,
   SAT_TEST_TIMER_KEY,
@@ -124,6 +125,7 @@ export default function SATMockRun() {
   const [violationDeadline, setViolationDeadline] = useState<number | null>(null)
   const violationFrozenRef = useRef(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
+  const questionViewportRef = useRef<HTMLDivElement>(null)
 
   const moduleIndex = attempt?.currentModuleIndex ?? 0
   const currentModule = modules[moduleIndex] ?? modules[0]
@@ -132,6 +134,10 @@ export default function SATMockRun() {
     currentModule.questions.length - 1,
   )
   const currentQuestion = currentModule.questions[questionIndex]
+
+  useEffect(() => {
+    if (questionViewportRef.current) questionViewportRef.current.scrollTop = 0
+  }, [currentQuestion.id])
   const currentAnswer = attempt?.answers[currentQuestion.id] ?? ''
   const currentStrokes = attempt?.highlights[currentQuestion.id] ?? []
   const isFlagged = attempt?.flagged.includes(currentQuestion.id) ?? false
@@ -267,7 +273,6 @@ export default function SATMockRun() {
     setModuleComplete(false)
     setZoom(1)
     setHighlightEnabled(false)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [attempt, modules, persistUpdate, submitAttempt])
 
   const endCurrentModule = useCallback(() => {
@@ -535,7 +540,6 @@ export default function SATMockRun() {
     persistUpdate((current) => ({ ...current, currentQuestionIndex: index }))
     setNavigatorOpen(false)
     setZoom(1)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const changeHighlights = (strokes: HighlightStroke[]) => {
@@ -553,8 +557,8 @@ export default function SATMockRun() {
   const learnerName = user?.fullName || 'ProfAI Student'
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f7f8fa] text-[#151515]">
-      <header className="sticky top-0 z-[80] border-b border-slate-200 bg-white">
+    <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
+      <header className="relative z-[80] shrink-0 border-b border-slate-200 bg-white">
         <div className="relative mx-auto grid max-w-[112rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
           <div className="min-w-0 font-serif">
             <h1 className="truncate font-serif text-base font-bold text-slate-800 sm:text-xl lg:text-2xl">
@@ -697,7 +701,7 @@ export default function SATMockRun() {
         </div>
       ) : null}
 
-      <div className={`overflow-auto pb-[5.4rem] transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[calc(min(44vw,46rem)+0.75rem)]' : ''}`}>
+      <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[calc(min(44vw,46rem)+0.75rem)]' : ''}`}>
         <div
           className="origin-top-left"
           style={{ zoom } as CSSProperties}
@@ -753,7 +757,7 @@ export default function SATMockRun() {
         </div>
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-[70] bg-[#e7edf8]">
+      <footer className="relative z-[70] shrink-0 bg-[#e7edf8]">
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
         <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
           <p className="hidden truncate font-serif text-lg font-bold text-slate-800 md:block">{learnerName}</p>

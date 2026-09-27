@@ -301,15 +301,25 @@
 .app-shell-community-people .arena-route { min-height: 0; }
 .app-shell-community-people .community-page { height: 100%; min-height: 0; overflow: hidden; }
 .app-shell-community-people .community-shell { height: 100%; min-height: 0; overflow: hidden; padding-block: 1.1rem 1.25rem; }
-.app-shell-community-people .community-layout { min-height: 0; flex: 1 1 auto; grid-template-columns: minmax(185px,215px) minmax(0,1fr); grid-template-rows: minmax(0,1fr); align-items: stretch; overflow: hidden; }
-.app-shell-community-people .community-left-column { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.app-shell-community-people .community-suggestions { grid-column: 1/-1; }
-.app-shell-community-people .community-suggestion-panel { padding: 1rem; }
-.app-shell-community-people .community-suggestion-list { grid-template-columns: 1fr; }
-.app-shell-community-people .community-suggested-card { grid-template-columns: 36px minmax(0,1fr); gap: .55rem; min-height: 72px; padding: .6rem; }
-.app-shell-community-people .community-suggested-avatar { width: 36px; height: 36px; }
-.app-shell-community-people .community-match-ring { display: none; }
-.app-shell-community-people .community-feed { min-height: 0; }
+.app-shell-community-people .community-layout { min-height: 0; flex: 1 1 auto; grid-template-columns: minmax(220px,255px) minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; align-items: stretch; gap: .9rem 1.5rem; overflow: hidden; }
+.app-shell-community-people .community-left-column { grid-column: 1; grid-row: 1; min-height: 0; overflow: visible; }
+.app-shell-community-people .community-layout.has-suggestions-open .community-left-column { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.app-shell-community-people .community-feed { grid-column: 2; grid-row: 1; min-height: 0; }
+.app-shell-community-people .community-suggestions { grid-column: 1/-1; grid-row: 2; }
+.app-shell-community-people .community-suggestion-panel { padding: 0; border-radius: 1.4rem; }
+.app-shell-community-people .community-suggestions-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1.2rem; text-align: left; }
+.app-shell-community-people .community-suggestions-toggle:focus-visible { outline: 2px solid var(--community-red); outline-offset: -4px; border-radius: inherit; }
+.app-shell-community-people .community-suggestions-copy { display: grid; gap: .15rem; min-width: 0; }
+.app-shell-community-people .community-suggestions-copy > span { display: inline-flex; align-items: center; gap: .35rem; color: #bc2832; font-size: .58rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.app-shell-community-people .community-suggestions-copy strong { color: #182033; font-size: 1rem; font-weight: 950; line-height: 1.15; }
+.app-shell-community-people .community-suggestions-copy small { color: #747f91; font-size: .65rem; line-height: 1.25; }
+.app-shell-community-people .community-suggestions-action { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .5rem; color: #b4232c; font-size: .8rem; font-weight: 900; }
+.app-shell-community-people .community-suggestions-action > svg:last-child { color: #8993a5; transition: transform 200ms ease; }
+.app-shell-community-people .community-suggestions-action > svg.is-open { transform: rotate(180deg); }
+.app-shell-community-people #community-suggestions-content { max-height: min(28dvh,270px); overflow-y: auto; padding: 0 1.2rem .8rem; }
+.app-shell-community-people .community-suggestion-list { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; margin-top: 0; }
+.app-shell-community-people .community-suggested-card { min-height: 86px; }
+.app-shell-community-people .community-suggestion-legend { display: flex; justify-content: center; gap: 2rem; margin-top: .6rem; padding-top: .55rem; }
 .app-shell-community-people .community-feed-heading { flex: 0 0 auto; padding-bottom: 1rem; }
 .app-shell-community-people .community-feed-meta { align-self: flex-end; padding: .6rem .8rem; border: 1px solid rgba(255,255,255,.84); border-radius: 999px; background: rgba(255,255,255,.58); box-shadow: 0 8px 20px rgba(58,78,112,.08); white-space: nowrap; }
 .app-shell-community-people .community-card-viewport { min-height: 0; flex: 1 1 auto; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 1.8rem 1rem 1.25rem; border: 1px solid rgba(255,255,255,.78); border-radius: 1.6rem; background: linear-gradient(145deg,rgba(255,255,255,.32),rgba(229,239,252,.3)); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 12px 35px rgba(61,82,114,.07); mask-image: none; }
@@ -326,7 +336,7 @@
   .app-shell-community-people .community-layout { height: auto; overflow: visible; }
   .app-shell-community-people .community-page { min-height: 100dvh; }
   .app-shell-community-people .community-layout { display: grid; grid-template-columns: minmax(205px,240px) minmax(0,1fr); grid-template-rows: auto; }
-  .app-shell-community-people .community-left-column { overflow: visible; }
+  .app-shell-community-people .community-layout.has-suggestions-open .community-left-column { overflow: visible; }
   .app-shell-community-people .community-suggestion-list { grid-template-columns: repeat(auto-fit,minmax(min(100%,230px),1fr)); }
   .app-shell-community-people .community-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .app-shell-community-people .community-card-viewport { max-height: min(70dvh, 720px); }
@@ -335,12 +345,21 @@
 
 @media (max-width: 850px) {
   .app-shell-community-people .community-layout { grid-template-columns: 1fr; }
+  .app-shell-community-people .community-left-column,
+  .app-shell-community-people .community-feed,
+  .app-shell-community-people .community-suggestions { grid-column: 1; grid-row: auto; }
 }
 
 @media (max-width: 580px) {
   .app-shell-community-people .community-shell { padding-block: 1rem 3rem; }
   .app-shell-community-people .community-card-viewport { max-height: 68dvh; padding: 1.7rem .7rem .8rem; }
   .app-shell-community-people .community-card-grid { grid-template-columns: 1fr; }
+  .app-shell-community-people .community-suggestions-copy small { display: none; }
+  .app-shell-community-people #community-suggestions-content { max-height: 42dvh; }
+}
+
+@media (min-width: 1121px) and (max-height: 950px) {
+  .app-shell-community-people .community-left-column { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 }
 
 /* Unified Community + Speaking workspace. The page now uses the single global

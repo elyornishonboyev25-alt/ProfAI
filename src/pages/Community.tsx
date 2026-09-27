@@ -95,6 +95,7 @@ export default function Community() {
   const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
   const [filtersOpen, setFiltersOpen] = useState(() => window.innerWidth > 760)
   const [roomsOpen, setRoomsOpen] = useState(() => window.innerWidth > 760)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [results, setResults] = useState<LearnerSearchResult[]>([])
   const [account, setAccount] = useState<AccountResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -232,7 +233,7 @@ export default function Community() {
           </div> : null}
         </header>
 
-        {mode === 'people' ? <section className="community-layout">
+        {mode === 'people' ? <section className={cn('community-layout', suggestionsOpen && 'has-suggestions-open')}>
           <aside className="community-left-column">
             <GlassPanel title="Quick filters" open={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)}>
               <nav className="community-side-list" aria-label="Learner filters">
@@ -262,24 +263,6 @@ export default function Community() {
                 })}
               </nav>
             </GlassPanel>
-            <div className="community-suggestions">
-              <div className="community-glass-panel community-suggestion-panel">
-                <div className="community-suggestion-heading">
-                  <div><span><Sparkles className="h-4 w-4" />  <UiText text={"Recommended"} /> </span><h2> <UiText text={"Suggested partners"} /> </h2></div>
-                  <BadgeCheck className="h-6 w-6 text-red-500" />
-                </div>
-                <p className="community-suggestion-copy"> <UiText text={"Best matches from your active filters and study goals."} /> </p>
-                <div className="community-suggestion-list">
-                  {suggested.map((learner) => (
-                    <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
-                  ))}
-                  {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
-                </div>
-                <div className="community-suggestion-legend">
-                  <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
-                </div>
-              </div>
-            </div>
           </aside>
 
           <div className="community-feed">
@@ -320,6 +303,40 @@ export default function Community() {
             </div>
           </div>
 
+          <aside className="community-suggestions">
+            <div className="community-glass-panel community-suggestion-panel">
+              <button
+                type="button"
+                className="community-suggestions-toggle"
+                onClick={() => setSuggestionsOpen((open) => !open)}
+                aria-expanded={suggestionsOpen}
+                aria-controls="community-suggestions-content"
+              >
+                <span className="community-suggestions-copy">
+                  <span><Sparkles className="h-4 w-4" /> <UiText text={"Recommended"} /></span>
+                  <strong><UiText text={"Suggested partners"} /></strong>
+                  <small><UiText text={"Best matches from your active filters and study goals."} /></small>
+                </span>
+                <span className="community-suggestions-action">
+                  <BadgeCheck className="h-5 w-5" />
+                  <span>{suggested.length}</span>
+                  <span>{suggestionsOpen ? 'Hide' : 'Show'}</span>
+                  <ChevronDown className={cn('h-5 w-5', suggestionsOpen && 'is-open')} />
+                </span>
+              </button>
+              <div id="community-suggestions-content" hidden={!suggestionsOpen}>
+                <div className="community-suggestion-list">
+                  {suggested.map((learner) => (
+                    <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
+                  ))}
+                  {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
+                </div>
+                <div className="community-suggestion-legend">
+                  <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
+                </div>
+              </div>
+            </div>
+          </aside>
         </section> : <SpeakingWorkspace mode={mode} onModeChange={selectMode} />}
       </div>
     </main>

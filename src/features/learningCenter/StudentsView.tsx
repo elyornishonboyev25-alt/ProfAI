@@ -29,7 +29,7 @@ export default function StudentsView({ slug, canManage }: { slug: string; canMan
 
       <CenterPanel className="p-3 sm:p-4">
         <div className="grid gap-2 md:grid-cols-[minmax(14rem,1fr)_repeat(3,minmax(9rem,.45fr))]">
-          <label className="relative"><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search students..." className={`${inputClass} pl-10`} /></label>
+          <label className="relative"><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search students..." className={`${inputClass} pl-10`} /></label>
           <select value={exam} onChange={(event) => setExam(event.target.value)} className={inputClass}><option value="">All exams</option><option value="SAT">SAT</option><option value="IELTS">IELTS</option><option value="BOTH">Both tracks</option></select>
           <select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">All groups</option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select>
           <select value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value="">All signals</option><option value="ON_TRACK">On track</option><option value="WATCH">Watch</option><option value="NEEDS_ATTENTION">Needs attention</option></select>

@@ -51,7 +51,7 @@ export default function LearningCenterPortal() {
 
           <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0">
-              {workspaces.length > 0 && <label className="lc-search relative mb-5 block"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input aria-label="Search classes" value={search} onChange={(event) => setSearch(event.target.value)} className={`${inputClass} pl-11`} placeholder="Search classes by name or city" /></label>}
+              {workspaces.length > 0 && <label className="lc-search relative mb-5 block"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input type="search" aria-label="Search classes" value={search} onChange={(event) => setSearch(event.target.value)} className={`${inputClass} pl-11`} placeholder="Search classes by name or city" /></label>}
               {loading && user ? <CenterSkeleton blocks={2} /> : error && user ? <ErrorState message={error} onRetry={() => void refetch()} /> : workspaces.length ? (
                 filtered.length ? <div className="grid gap-4 md:grid-cols-2">{filtered.map((workspace) => <Link key={workspace.id} to={`/learning-center/${workspace.slug}`} className="lc-workspace-card group" aria-label={`Open ${workspace.name} class`}>
                   <div className="lc-card-cover">{workspace.coverUrl ? <img src={workspace.coverUrl} alt="" /> : <GraduationCap className="h-12 w-12" />}<span className="lc-role-pill">{workspace.role.toLowerCase()}</span></div>

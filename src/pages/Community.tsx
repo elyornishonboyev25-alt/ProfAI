@@ -262,6 +262,24 @@ export default function Community() {
                 })}
               </nav>
             </GlassPanel>
+            <div className="community-suggestions">
+              <div className="community-glass-panel community-suggestion-panel">
+                <div className="community-suggestion-heading">
+                  <div><span><Sparkles className="h-4 w-4" />  <UiText text={"Recommended"} /> </span><h2> <UiText text={"Suggested partners"} /> </h2></div>
+                  <BadgeCheck className="h-6 w-6 text-red-500" />
+                </div>
+                <p className="community-suggestion-copy"> <UiText text={"Best matches from your active filters and study goals."} /> </p>
+                <div className="community-suggestion-list">
+                  {suggested.map((learner) => (
+                    <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
+                  ))}
+                  {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
+                </div>
+                <div className="community-suggestion-legend">
+                  <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
+                </div>
+              </div>
+            </div>
           </aside>
 
           <div className="community-feed">
@@ -302,24 +320,6 @@ export default function Community() {
             </div>
           </div>
 
-          <aside className="community-suggestions">
-            <div className="community-glass-panel community-suggestion-panel">
-              <div className="community-suggestion-heading">
-                <div><span><Sparkles className="h-4 w-4" />  <UiText text={"Recommended"} /> </span><h2> <UiText text={"Suggested partners"} /> </h2></div>
-                <BadgeCheck className="h-6 w-6 text-red-500" />
-              </div>
-              <p className="community-suggestion-copy"> <UiText text={"Best matches from your active filters and study goals."} /> </p>
-              <div className="community-suggestion-list">
-                {suggested.map((learner) => (
-                  <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
-                ))}
-                {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
-              </div>
-              <div className="community-suggestion-legend">
-                <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
-              </div>
-            </div>
-          </aside>
         </section> : <SpeakingWorkspace mode={mode} onModeChange={selectMode} />}
       </div>
     </main>

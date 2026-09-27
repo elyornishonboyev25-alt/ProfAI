@@ -6088,7 +6088,7 @@ export default function IELTSReadingInterface({
   return (
     <div
       ref={testShellRef}
-      className={`reading-shell reading-scale-120 ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-screen overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
+      className={`reading-shell ielts-exam-workspace reading-scale-120 ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
     >
       <AnimatePresence>
         {isLaunching ? (
@@ -6100,7 +6100,7 @@ export default function IELTSReadingInterface({
       </AnimatePresence>
       {!isTestActive ? renderStartScreen() : (
         <>
-          <header className="reading-toolbar bg-white/95 border-b border-red-100 h-16 flex items-center justify-between px-4 z-20 relative shadow-[0_10px_24px_rgba(220,38,38,0.09)] backdrop-blur-md">
+          <header className="reading-toolbar ielts-exam-header bg-white/95 border-b border-red-100 min-h-16 flex items-center justify-between px-4 z-20 relative shadow-[0_10px_24px_rgba(220,38,38,0.09)] backdrop-blur-md">
             <div className="flex items-center gap-3 shrink-0">
               <button type="button" onClick={handleExitTest} className="premium-back-btn-sm normal-case tracking-normal text-slate-700" title="Exit">
                 <ArrowLeftIcon className="h-4 w-4 text-red-600" />
@@ -6108,7 +6108,7 @@ export default function IELTSReadingInterface({
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-black text-red-600">IELTS</span>
-                <span className="text-xl font-semibold text-slate-500">{isListening ? 'Listening' : 'Reading'}</span>
+                <span className="ielts-exam-skill text-xl font-semibold text-slate-500">{isListening ? 'Listening' : 'Reading'}</span>
                 {isListening && isAudioPlaying ? (
                   <span className="ml-2 hidden items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-red-600 sm:inline-flex">
                     <SpeakerWaveIcon className="h-3.5 w-3.5" />
@@ -6119,7 +6119,7 @@ export default function IELTSReadingInterface({
             </div>
 
             {!isReviewMode && !isListening ? (
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 px-2 py-1 shadow-[0_14px_30px_rgba(220,38,38,0.16)]">
+              <div className="ielts-exam-timer absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 px-2 py-1 shadow-[0_14px_30px_rgba(220,38,38,0.16)]">
                 <span className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-100 bg-white px-3.5 text-slate-700">
                   <ClockIcon className="h-4 w-4 text-red-500" />
                   <Timer
@@ -6140,15 +6140,15 @@ export default function IELTSReadingInterface({
             ) : null}
 
             <div className="flex items-center gap-2 shrink-0">
-              <button type="button" onClick={toggleFullscreen} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Full screen">
+              <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Full screen">
                 {isFullscreen ? <ArrowsPointingInIcon className="h-5 w-5" /> : <ArrowsPointingOutIcon className="h-5 w-5" />}
               </button>
-              <button type="button" onClick={() => { setOptionsPage('menu'); setShowOptionsModal(true) }} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Menu">
+              <button type="button" onClick={() => { setOptionsPage('menu'); setShowOptionsModal(true) }} aria-label="Display settings" className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Menu">
                 <Bars3Icon className="h-5 w-5" />
               </button>
               {!isReviewMode ? (
                 <>
-                  <button type="button" onClick={() => setShowNotes(!showNotes)} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Notes">
+                  <button type="button" onClick={() => setShowNotes(!showNotes)} aria-label="Notes" aria-pressed={showNotes} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Notes">
                     <DocumentTextIcon className="h-5 w-5" />
                   </button>
                   <button type="button" onClick={() => setShowReviewModal(true)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100" title="Review">

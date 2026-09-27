@@ -62,6 +62,10 @@ export default function ResultsReview() {
     (fallbackEntry ? resolveIeltsTestById(fallbackEntry.testId) ?? undefined : undefined) ??
     (result ? resolveIeltsTestById(result.testId) ?? undefined : undefined)
   const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''
+  const skill = `${resolvedTestId} ${test?.title ?? ''} ${test?.module ?? ''}`.toLowerCase().includes('listening')
+    ? 'listening'
+    : 'reading'
+  const catalogPath = `/ielts/${skill}/tests`
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(Boolean(state.showCorrectAnswers))
   const [selectedPart, setSelectedPart] = useState<SelectedPart>(state.initialPart ?? 'all')
@@ -138,7 +142,7 @@ export default function ResultsReview() {
 
   const startRetake = () => {
     if (!resolvedTestId) return
-    navigate(`/test/reading/${resolvedTestId}`)
+    navigate(`/test/${skill}/${resolvedTestId}`)
   }
 
   if (!result || !test) {
@@ -149,17 +153,17 @@ export default function ResultsReview() {
           <p className="mt-2 text-sm text-slate-600">
              <UiText text={"This attempt is not available right now. Open it from Results or Analyze Mistakes."} /> </p>
           <button type="button"
-            onClick={() => navigate('/ielts/reading/tests')}
+            onClick={() => navigate(catalogPath)}
             className="route-back-button mt-5"
           >
-            <ArrowLeft className="h-4 w-4" />  <UiText text={"Back to Reading Tests"} /> </button>
+            <ArrowLeft className="h-4 w-4" /> Back to {skill === 'listening' ? 'Listening' : 'Reading'} Tests </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(155deg,#fff_0%,#fff8f8_56%,#fffdfb_100%)]">
+    <div className="ielts-review-page min-h-screen bg-[linear-gradient(155deg,#fff_0%,#fff8f8_56%,#fffdfb_100%)]">
       <header className="sticky top-0 z-30 border-b border-red-100 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -169,10 +173,10 @@ export default function ResultsReview() {
             >
                <UiText text={"Back to Results"} /> </button>
             <button type="button"
-              onClick={() => navigate('/ielts/reading/tests')}
+              onClick={() => navigate(catalogPath)}
               className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
             >
-               <UiText text={"Reading Catalog"} /> </button>
+               {skill === 'listening' ? 'Listening' : 'Reading'} Catalog </button>
             <span className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-black tracking-wide text-white">
                <UiText text={"FULL REVIEW"} /> </span>
           </div>
@@ -180,6 +184,7 @@ export default function ResultsReview() {
           <div className="flex flex-wrap items-center gap-2">
             <button type="button"
               onClick={() => setShowCorrectAnswers((current) => !current)}
+              aria-pressed={showCorrectAnswers}
               className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
                 showCorrectAnswers
                   ? 'border-red-300 bg-red-50 text-red-700'
@@ -289,6 +294,15 @@ export default function ResultsReview() {
                 <article
                   key={`review-question-${question.questionId}`}
                   onClick={() => setFocusedQuestionId(question.questionId)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setFocusedQuestionId(question.questionId)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={focusedQuestionId === question.questionId}
                   className={`cursor-pointer rounded-xl border p-3 ${questionCardTone(question.status)} ${
                     focusedQuestionId === question.questionId ? 'ring-2 ring-red-200' : ''
                   }`}

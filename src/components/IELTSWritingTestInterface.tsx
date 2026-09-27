@@ -687,7 +687,7 @@ export default function IELTSWritingTestInterface({
       b >= 7 ? 'from-emerald-500 to-green-600' : b >= 5.5 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-600'
 
     return (
-      <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] relative overflow-hidden">
+      <div className="ielts-writing-review min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-rose-200/30 blur-3xl" />
           <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-orange-200/20 blur-3xl" />
@@ -787,6 +787,16 @@ export default function IELTSWritingTestInterface({
               </div>
 
               {/* Strengths + Improvements */}
+              <details className="rounded-3xl border border-red-100 bg-white p-5 shadow-sm">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task prompt</summary>
+                <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{task.prompt}</p>
+              </details>
+              {task.chart?.type === 'line' ? (
+                <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                  <div className="mt-4"><LineChart chart={task.chart} /></div>
+                </details>
+              ) : null}
               {task.diagram ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
@@ -943,7 +953,7 @@ export default function IELTSWritingTestInterface({
         : 'text-slate-500'
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col bg-white">
       <AnimatePresence>
         {showExitConfirm && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -1101,8 +1111,8 @@ export default function IELTSWritingTestInterface({
         )}
       </AnimatePresence>
 
-      <header className="flex items-center justify-between border-b border-red-100 bg-gradient-to-r from-white via-red-50/30 to-white px-4 py-2.5 sm:px-6">
-        <div className="flex items-center gap-3">
+      <header className="ielts-writing-header flex items-center justify-between border-b border-red-100 bg-gradient-to-r from-white via-red-50/30 to-white px-4 py-2.5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={() => (answer.trim() ? setShowExitConfirm(true) : onExit())}
@@ -1110,15 +1120,15 @@ export default function IELTSWritingTestInterface({
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
-            <h1 className="text-sm font-bold text-slate-900">
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-bold text-slate-900">
               {task.title} · {task.taskType === 'task1' ? 'Task 1' : 'Task 2'}
             </h1>
-            <p className="text-[11px] text-slate-500">{task.subtitle}</p>
+            <p className="truncate text-[11px] text-slate-500">{task.subtitle}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {timerEnabled && (
             <div className="flex items-center gap-2">
               <div
@@ -1151,8 +1161,8 @@ export default function IELTSWritingTestInterface({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/2 overflow-y-auto border-r border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-5 sm:p-6 lg:p-8">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+        <div className="shrink-0 border-b border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-8">
           <div className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
             <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
               {task.prompt}
@@ -1171,15 +1181,15 @@ export default function IELTSWritingTestInterface({
           ) : null}
         </div>
 
-        <div className="flex w-1/2 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white">
-          <div className="flex-1 overflow-hidden p-5 sm:p-6 lg:p-8">
-            <div className="relative flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex min-h-[420px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
+          <div className="min-h-0 flex-1 p-4 sm:p-6 lg:p-8">
+            <div className="relative flex h-full min-h-[300px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden lg:min-h-0">
               <textarea
                 ref={textareaRef}
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Write your response here..."
-                className="flex-1 resize-none p-5 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none"
+                className="min-h-0 flex-1 resize-none p-5 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none"
               />
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
                 <span className="text-xs text-slate-500">
@@ -1192,7 +1202,7 @@ export default function IELTSWritingTestInterface({
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 sm:px-6">
             <div className="flex items-center gap-2">
               <PenLine className="h-4 w-4 text-slate-400" />
               <span className={`text-sm font-semibold ${wordCountColor}`}>

@@ -380,7 +380,7 @@ export default function IELTSWritingFullTestInterface({
 
     const overallBand = weightedBand(evaluations, tasks.map((task) => task.id))
     return (
-      <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] px-4 py-6 sm:px-6 lg:py-10">
+      <div className="ielts-writing-review min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] px-4 py-6 sm:px-6 lg:py-10">
         <div className="mx-auto max-w-5xl">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button type="button" onClick={onExit} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm">
@@ -433,16 +433,45 @@ export default function IELTSWritingFullTestInterface({
                       <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
                     </details>
                   ) : null}
+                  {task.imageUrl ? (
+                    <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task visual</summary>
+                      <img src={task.imageUrl} alt={task.imageAlt ?? `${task.title} task visual`} className="mx-auto mt-4 h-auto max-w-full object-contain" draggable={false} />
+                    </details>
+                  ) : null}
+                  <details className="mt-4 rounded-2xl border border-red-100 bg-red-50/30 p-4">
+                    <summary className="cursor-pointer text-sm font-bold text-slate-800">Task prompt</summary>
+                    <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{task.promptLead ?? task.prompt}</p>
+                    {task.promptQuestion ? <p className="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-slate-800">{task.promptQuestion}</p> : null}
+                  </details>
                   <div className="mt-5 grid gap-4 lg:grid-cols-2">
                     <FeedbackList title="Strengths" items={evaluation.strengths} tone="emerald" />
                     <FeedbackList title="Improve next" items={evaluation.improvements} tone="amber" />
                   </div>
+                  {evaluation.errors.length > 0 ? (
+                    <details className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Corrections ({evaluation.errors.length})</summary>
+                      <div className="mt-4 space-y-3">
+                        {evaluation.errors.map((error, errorIndex) => (
+                          <div key={`${task.id}-error-${errorIndex}`} className="rounded-xl border border-amber-100 bg-white p-3 text-sm">
+                            <p className="text-slate-500 line-through">{error.original}</p>
+                            <p className="mt-1 font-semibold text-emerald-700">{error.corrected}</p>
+                            <p className="mt-1 text-slate-600">{error.explanation}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
                   {evaluation.correctedVersion ? (
                     <details className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
                       <summary className="cursor-pointer text-sm font-bold text-blue-800">View corrected version</summary>
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{evaluation.correctedVersion}</p>
                     </details>
                   ) : null}
+                  <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <summary className="cursor-pointer text-sm font-bold text-slate-800">Your original response</summary>
+                    <p className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">{answers[task.id] || '(empty)'}</p>
+                  </details>
                 </section>
               )
             })}
@@ -458,7 +487,7 @@ export default function IELTSWritingFullTestInterface({
   const wordCountColor = activeWordCount >= minWords ? 'text-emerald-600' : 'text-slate-500'
 
   return (
-    <div className="flex h-dvh min-h-[640px] flex-col overflow-hidden bg-white">
+    <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <ConfirmModal
         open={showExitConfirm}
         icon={<AlertTriangle className="h-7 w-7" />}
@@ -497,7 +526,7 @@ export default function IELTSWritingFullTestInterface({
         ) : null}
       </AnimatePresence>
 
-      <header className="shrink-0 border-b border-red-100 bg-gradient-to-r from-white via-red-50/40 to-white px-3 py-2.5 sm:px-5">
+      <header className="ielts-writing-header shrink-0 border-b border-red-100 bg-gradient-to-r from-white via-red-50/40 to-white px-3 py-2.5 sm:px-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <button type="button" onClick={() => (hasDraft ? setShowExitConfirm(true) : onExit())} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:text-red-600">

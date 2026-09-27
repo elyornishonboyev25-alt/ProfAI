@@ -245,8 +245,9 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<AnswerState[]>(() => items.map(blankAnswer))
   const [recording, setRecording] = useState(false)
+  const [stoppingRecording, setStoppingRecording] = useState(false)
   const [typingMode, setTypingMode] = useState(!recognition.supported)
-  const [draft, setDraft] = useState('')
+  const [drafts, setDrafts] = useState<string[]>(() => items.map(() => ''))
   const [prepLeft, setPrepLeft] = useState(0)
   const [speakLeft, setSpeakLeft] = useState(0)
 
@@ -255,6 +256,8 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const audioStreamRef = useRef<MediaStream | null>(null)
   const recordStartRef = useRef(0)
   const latestTranscriptRef = useRef('')
+  const recordingQuestionRef = useRef(0)
+  const audioUrlsRef = useRef<string[]>([])
 
   useEffect(() => {
     latestTranscriptRef.current = `${recognition.finalTranscript} ${recognition.interimTranscript}`
@@ -282,11 +285,12 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
 
   const answer = answers[index]
   const question = items[index]
+  const draft = drafts[index] ?? ''
 
-  const updateAnswer = useCallback((patch: Partial<AnswerState>) => {
+  const updateAnswer = useCallback((patch: Partial<AnswerState>, questionIndex = index) => {
     setAnswers((prev) => {
       const next = [...prev]
-      next[index] = { ...next[index], ...patch }
+      next[questionIndex] = { ...next[questionIndex], ...patch }
       return next
     })
   }, [index])
@@ -302,11 +306,14 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       audioStreamRef.current = stream
       audioChunksRef.current = []
       const recorder = new MediaRecorder(stream)
+      const questionIndex = index
+      recordingQuestionRef.current = questionIndex
       recorder.ondataavailable = (e) => e.data.size > 0 && audioChunksRef.current.push(e.data)
       recorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         const url = URL.createObjectURL(blob)
-        updateAnswer({ audioUrl: url })
+        audioUrlsRef.current.push(url)
+        updateAnswer({ audioUrl: url }, questionIndex)
         stream.getTracks().forEach((t) => t.stop())
         audioStreamRef.current = null
       }
@@ -321,62 +328,89 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     } catch {
       setTypingMode(true)
     }
-  }, [recognition, updateAnswer])
+  }, [index, recognition, updateAnswer])
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async () => {
+    if (stoppingRecording) return
+    setStoppingRecording(true)
+    const questionIndex = recordingQuestionRef.current
     audioRecorderRef.current?.stop()
     audioRecorderRef.current = null
-    recognition.stop()
+    const transcript = await recognition.stop()
+    latestTranscriptRef.current = transcript
+    if (transcript) updateAnswer({ spoken: transcript, error: null }, questionIndex)
     setRecording(false)
-  }, [recognition])
+    setStoppingRecording(false)
+  }, [recognition, stoppingRecording, updateAnswer])
 
   const submitSpoken = useCallback(async () => {
-    const text = latestTranscriptRef.current.trim()
+    const questionIndex = index
+    const text = (answer.spoken || latestTranscriptRef.current).trim()
     if (!text) {
       updateAnswer({ error: 'No speech detected — try again or type your answer.' })
       return
     }
-    updateAnswer({ spoken: text, loading: true, error: null })
+    updateAnswer({ spoken: text, loading: true, error: null }, questionIndex)
     const result = await analyzeSpeakingResponse({ part: day.part, question: question.prompt, transcript: text })
-    updateAnswer({ analysis: result, loading: false })
-  }, [day.part, question.prompt, updateAnswer])
+    updateAnswer({ analysis: result, loading: false }, questionIndex)
+  }, [answer.spoken, day.part, index, question.prompt, updateAnswer])
 
   const submitTyped = useCallback(async () => {
+    const questionIndex = index
     const text = draft.trim()
     if (!text) return
-    setDraft('')
-    updateAnswer({ spoken: text, loading: true, error: null })
+    setDrafts((current) => current.map((value, position) => position === questionIndex ? '' : value))
+    updateAnswer({ spoken: text, loading: true, error: null }, questionIndex)
     const result = await analyzeSpeakingResponse({ part: day.part, question: question.prompt, transcript: text })
-    updateAnswer({ analysis: result, loading: false })
-  }, [draft, day.part, question.prompt, updateAnswer])
+    updateAnswer({ analysis: result, loading: false }, questionIndex)
+  }, [draft, day.part, index, question.prompt, updateAnswer])
 
   const reAnalyse = useCallback(async () => {
+    const questionIndex = index
     if (!answer.spoken) return
-    updateAnswer({ loading: true, analysis: null })
+    updateAnswer({ loading: true, analysis: null }, questionIndex)
     const result = await analyzeSpeakingResponse({ part: day.part, question: question.prompt, transcript: answer.spoken })
-    updateAnswer({ analysis: result, loading: false })
-  }, [answer.spoken, day.part, question.prompt, updateAnswer])
+    updateAnswer({ analysis: result, loading: false }, questionIndex)
+  }, [answer.spoken, day.part, index, question.prompt, updateAnswer])
 
   // Cleanup audio URL when leaving a card.
   useEffect(() => {
     return () => {
       audioStreamRef.current?.getTracks().forEach((t) => t.stop())
+      audioUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
 
-  const goNext = useCallback(() => setIndex((i) => Math.min(items.length - 1, i + 1)), [items.length])
-  const goPrev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [])
-  const canComplete = answers.every((item) => Boolean(item.analysis))
+  const selectQuestion = (nextIndex: number) => {
+    if (recording) return
+    latestTranscriptRef.current = ''
+    recognition.reset()
+    setIndex(Math.max(0, Math.min(items.length - 1, nextIndex)))
+  }
+  const goNext = () => selectQuestion(index + 1)
+  const goPrev = () => selectQuestion(index - 1)
+  const completedCount = answers.filter((item) => Boolean(item.analysis)).length
+  const canComplete = completedCount === answers.length
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <button onClick={onExit} className="premium-back-btn">
+        <button onClick={onExit} disabled={recording} className="premium-back-btn disabled:opacity-50">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to roadmap
         </button>
         <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
           {day.title} · {day.subtitle}
         </span>
+      </div>
+
+      <div className="mb-5 rounded-2xl border border-red-100 bg-white/90 p-3 shadow-sm" aria-label={`${completedCount} of ${items.length} questions reviewed`}>
+        <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-600">
+          <span>Speaking progress</span>
+          <span>{completedCount}/{items.length} feedback ready</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-red-100">
+          <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-all" style={{ width: `${items.length ? (completedCount / items.length) * 100 : 0}%` }} />
+        </div>
       </div>
 
       {/* Question pager */}
@@ -385,7 +419,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           {items.map((_, i) => (
             <button
               key={i}
-              onClick={() => setIndex(i)}
+              onClick={() => selectQuestion(i)}
+              disabled={recording}
+              aria-label={`Question ${i + 1}${answers[i].analysis ? ', feedback ready' : ''}`}
+              aria-current={i === index ? 'step' : undefined}
               className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition ${
                 i === index
                   ? 'bg-gradient-to-br from-rose-600 to-red-600 text-white'
@@ -399,10 +436,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={goPrev} disabled={index === 0} className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
+          <button onClick={goPrev} disabled={index === 0 || recording} aria-label="Previous question" className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={goNext} disabled={index === items.length - 1} className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
+          <button onClick={goNext} disabled={index === items.length - 1 || recording} aria-label="Next question" className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -463,7 +500,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
             <p className="mb-2 text-xs font-semibold text-slate-500">Type your answer:</p>
             <textarea
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={(e) => setDrafts((current) => current.map((value, position) => position === index ? e.target.value : value))}
               className="input min-h-[100px] w-full resize-y"
               placeholder="Type a full, developed answer here..."
             />
@@ -485,18 +522,18 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
                 <Mic className="mr-2 h-5 w-5" /> Record answer
               </button>
             ) : (
-              <button onClick={stopRecording} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3">
-                <Square className="mr-2 h-4 w-4 fill-white" /> Stop & save
+              <button onClick={() => void stopRecording()} disabled={stoppingRecording} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3 disabled:opacity-50">
+                <Square className="mr-2 h-4 w-4 fill-white" /> {stoppingRecording ? 'Saving...' : 'Stop & save'}
               </button>
             )}
 
-            {!recording && (recognition.finalTranscript || answer.spoken) ? (
+            {!recording && answer.spoken ? (
               <button onClick={submitSpoken} disabled={answer.loading} className="arena-secondary-btn text-sm disabled:opacity-50">
                 <Send className="mr-1.5 h-4 w-4" /> Send for AI analysis
               </button>
             ) : null}
 
-            <button onClick={() => setTypingMode(true)} className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600">
+            <button onClick={() => setTypingMode(true)} disabled={recording} className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 disabled:opacity-50">
               <Pencil className="h-3 w-3" /> Type instead
             </button>
             {recognition.error ? <p className="text-xs text-red-600">{recognition.error}</p> : null}
@@ -540,10 +577,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
 
       {/* Footer nav */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-        <button onClick={goPrev} disabled={index === 0} className="arena-secondary-btn disabled:opacity-50">
+        <button onClick={goPrev} disabled={index === 0 || recording} className="arena-secondary-btn disabled:opacity-50">
           <ChevronLeft className="mr-1 h-4 w-4" />  <UiText text={"Previous"} /> </button>
         {index < items.length - 1 ? (
-          <button onClick={goNext} className="arena-primary-btn">
+          <button onClick={goNext} disabled={recording} className="arena-primary-btn disabled:opacity-50">
             Next question <ChevronRight className="ml-1 h-4 w-4" />
           </button>
         ) : (
@@ -707,7 +744,7 @@ function FullMockRunner({
     part3: mock.parts.part3.questions.map((q) => q.q),
   }
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6">
+    <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
         modeLabel={mock.title}

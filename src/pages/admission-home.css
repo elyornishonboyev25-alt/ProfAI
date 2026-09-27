@@ -156,7 +156,7 @@
   object-position: center 50%;
 }
 .admission-home-lessons .admission-home-card-photo { object-position: center 20%; }
-.admission-home-universities .admission-home-card-photo { object-position: center 55%; }
+.admission-home-universities .admission-home-card-photo { object-position: center 10%; }
 .admission-home-destination > :not(img) { z-index: 1; }
 .admission-home-destination > div:not(.relative) { z-index: 0; }
 .admission-home-destination:hover {

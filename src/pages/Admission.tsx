@@ -56,7 +56,7 @@ export default function Admission() {
                 className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
                 type="button"
               >
-                <img src="/assets/admission/international-students.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <img src="/assets/admission/oxford-radcliffe-camera.jpg" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
                   style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}

@@ -94,7 +94,7 @@ const UniversityCard = memo(function UniversityCard({
         aria-hidden="true"
       />
       <div className="admission-card-topline">
-        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={82} rounded="1.15rem" priority={priority} />
+        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={68} rounded="1rem" priority={priority} />
         <div className="admission-card-rank-actions">
           <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
             <small> <UiText text={"QS rank"} /> </small>

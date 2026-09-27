@@ -2438,16 +2438,23 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     gap: 1.15rem;
   }
 
+  @media (min-width: 768px) {
+    .admission-university-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+  }
+
   .admission-university-card {
     position: relative;
     isolation: isolate;
     display: flex;
-    min-height: 25rem;
+    min-height: 22rem;
     flex-direction: column;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.78);
     border-radius: 1.9rem;
-    padding: 1.35rem;
+    padding: 1rem;
     background:
       linear-gradient(145deg, rgba(255,255,255,0.68), rgba(255,255,255,0.35)),
       radial-gradient(circle at 100% 100%, rgba(186,230,253,0.24), transparent 48%);
@@ -2456,7 +2463,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     transition: border-color 240ms ease, box-shadow 240ms ease;
     contain: layout style;
     content-visibility: auto;
-    contain-intrinsic-size: auto 25rem;
+    contain-intrinsic-size: auto 22rem;
   }
 
   .admission-university-card::after {
@@ -2529,7 +2536,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     background: radial-gradient(circle, var(--university-accent), transparent 70%);
   }
 
-  .admission-card-topline { display: flex; min-height: 5.8rem; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+  .admission-card-topline { display: flex; min-height: 4.8rem; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
 
   .admission-card-rank-actions {
     position: relative;
@@ -2539,7 +2546,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     flex-direction: column;
     align-items: center;
     gap: 0.65rem;
-    margin: -1.3rem -0.55rem 0 0;
+    margin: -1rem -0.4rem 0 0;
     pointer-events: auto;
   }
 
@@ -2551,8 +2558,8 @@ html[data-motion='minimal'] .dashboard-loader-learning {
 
   .admission-rank-badge {
     display: flex;
-    min-width: 4.15rem;
-    min-height: 4.9rem;
+    min-width: 3.7rem;
+    min-height: 4.2rem;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -2565,11 +2572,11 @@ html[data-motion='minimal'] .dashboard-loader-learning {
   }
 
   .admission-rank-badge small { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.9; }
-  .admission-rank-badge strong { margin-top: 0.12rem; font-size: 1.65rem; line-height: 1; }
+  .admission-rank-badge strong { margin-top: 0.12rem; font-size: 1.45rem; line-height: 1; }
 
   .admission-card-copy { margin-top: 0.65rem; }
   .admission-card-kicker { color: #dc2626; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
-  .admission-card-copy h2 { min-height: 3.4rem; margin-top: 0.25rem; color: #0f172a; font-size: clamp(1.05rem, 1.4vw, 1.32rem); font-weight: 900; line-height: 1.16; letter-spacing: -0.04em; }
+  .admission-card-copy h2 { min-height: 3.4rem; margin-top: 0.25rem; color: #0f172a; font-size: clamp(0.98rem, 1.2vw, 1.18rem); font-weight: 900; line-height: 1.16; letter-spacing: -0.04em; }
   .admission-card-location { display: flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem; color: #64748b; font-size: 0.7rem; font-weight: 600; }
 
   .admission-card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.95rem; }
@@ -2582,8 +2589,8 @@ html[data-motion='minimal'] .dashboard-loader-learning {
 
   .admission-match-ring {
     display: grid;
-    width: 4.3rem;
-    height: 4.3rem;
+    width: 3.7rem;
+    height: 3.7rem;
     flex-shrink: 0;
     place-items: center;
     border-radius: 50%;
@@ -2591,7 +2598,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     box-shadow: 0 12px 24px color-mix(in srgb, var(--university-accent) 24%, transparent);
   }
 
-  .admission-match-ring > span { display: flex; width: 3.35rem; height: 3.35rem; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.9); }
+  .admission-match-ring > span { display: flex; width: 2.9rem; height: 2.9rem; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.9); }
   .admission-match-ring small { color: #64748b; font-size: 0.56rem; font-weight: 700; }
   .admission-match-ring strong { color: #0f172a; font-size: 1rem; line-height: 1; }
 
@@ -3006,7 +3013,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
   .admission-globe-caption { margin-top: -0.25rem; font-size: 0.68rem; }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .admission-universities-page {
     height: 100vh;
     height: 100dvh;
@@ -3023,7 +3030,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
 
   .admission-discovery-layout {
     min-height: 0;
-    grid-template-columns: minmax(26rem, 1fr) minmax(0, 1.12fr);
+    grid-template-columns: minmax(18rem, 0.7fr) minmax(0, 1.3fr);
     align-items: stretch;
     margin-top: clamp(0.75rem, 1.5vh, 1.25rem);
     overflow: hidden;
@@ -3125,10 +3132,6 @@ html[data-motion='minimal'] .dashboard-loader-learning {
 
 @media (min-width: 1280px) {
   .admission-filter-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-@media (min-width: 1536px) {
-  .admission-discovery-layout { grid-template-columns: minmax(34rem, 1.08fr) minmax(0, 1.2fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

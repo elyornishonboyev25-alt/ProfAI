@@ -34,6 +34,7 @@ const AchievementCelebration = lazy(() => import('@/components/achievements/Achi
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
 const JourneyPlan = lazy(() => import('@/pages/JourneyPlan'))
@@ -471,6 +472,7 @@ function App() {
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/owner" element={<ProtectedRoute><AnimatedRoute><OwnerDashboard /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/journey-plan" element={<ProtectedRoute><AnimatedRoute><JourneyPlan /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route

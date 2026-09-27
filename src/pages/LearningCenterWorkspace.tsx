@@ -3,7 +3,7 @@ import { ErrorState, secondaryButton } from '@/features/learningCenter/component
 import { type ComponentType } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, Building2, ClipboardCheck, GraduationCap, LayoutDashboard, Trophy, UserRoundCheck, Users } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, ClipboardCheck, GraduationCap, LayoutDashboard, Settings2, Trophy, UserRoundCheck, Users } from 'lucide-react'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useAuthStore } from '@/store/authStore'
@@ -15,6 +15,7 @@ import GroupsView from '@/features/learningCenter/GroupsView'
 import AssignmentsView from '@/features/learningCenter/AssignmentsView'
 import LeaderboardView from '@/features/learningCenter/LeaderboardView'
 import TeamView from '@/features/learningCenter/TeamView'
+import SettingsView from '@/features/learningCenter/SettingsView'
 
 type NavItem = { key: string; label: string; icon: ComponentType<{ className?: string }>; managerOnly?: boolean; staffOnly?: boolean }
 
@@ -24,7 +25,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'groups', label: 'Groups', icon: GraduationCap },
   { key: 'assignments', label: 'Assignments', icon: ClipboardCheck },
   { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-  { key: 'team', label: 'Team & roles', icon: UserRoundCheck, staffOnly: true },
+  { key: 'team', label: 'Members', icon: UserRoundCheck },
+  { key: 'settings', label: 'Settings', icon: Settings2, managerOnly: true },
 ]
 
 export default function LearningCenterWorkspacePage() {
@@ -43,20 +45,21 @@ export default function LearningCenterWorkspacePage() {
 
   const manager = workspace.role === 'OWNER' || workspace.role === 'ADMIN'
   const staff = manager || workspace.role === 'TEACHER'
-  const nav = NAV_ITEMS.filter((item) => (!item.managerOnly || manager) && (!item.staffOnly || staff))
+  const nav = NAV_ITEMS.filter((item) => (!item.managerOnly || (item.key === 'settings' ? workspace.role === 'OWNER' : manager)) && (!item.staffOnly || staff))
   if (!nav.some((item) => item.key === section)) return <Navigate to={`/learning-center/${workspaceSlug}`} replace />
 
   return (
     <div className="learning-center lc-workspace-shell min-h-screen text-slate-900">
       <main className="lc-workspace-container mx-auto max-w-[100rem] px-4 pb-12 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-        <section className="lc-workspace-banner">
+        <section className={`lc-workspace-banner ${workspace.coverUrl ? 'has-cover' : ''}`}>
+          {workspace.coverUrl && <img className="lc-workspace-banner-image" src={workspace.coverUrl} alt="" />}
           <div className="relative z-10 min-w-0">
-            <p className="lc-eyebrow"><span className="lc-eyebrow-dot" /> CLASSES <span className="text-slate-300">/</span> {workspace.role} WORKSPACE</p>
+            <Link to="/learning-center" className="lc-banner-back"><ArrowLeft className="h-4 w-4" /> Back to Classes</Link>
+            <p className="lc-banner-eyebrow mt-7"><GraduationCap className="h-4 w-4" /> {workspace.role} CLASS</p>
             <h1 className="mt-4 break-words text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">{workspace.name}</h1>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">Your people, assignments and progress in one connected workspace.</p>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">{workspace.city || 'Your learning space'} · {workspace.memberCount} members · {workspace.groupCount} groups</p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-2">
-            <Link to="/learning-center" className={secondaryButton}><Building2 className="h-4 w-4" /> All classes</Link>
             <Link to="/dashboard" className={secondaryButton}>Dashboard <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         </section>
@@ -72,7 +75,7 @@ export default function LearningCenterWorkspacePage() {
         <div className="lc-section-content">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={`${workspaceSlug}-${section}-${detailId ?? ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: .18 }}>
-              {renderSection(section, detailId, workspaceSlug, manager, staff)}
+              {section === 'settings' && workspace.role === 'OWNER' ? <SettingsView workspace={workspace} onSaved={() => void refetch()} /> : renderSection(section, detailId, workspaceSlug, manager, staff, workspace.role === 'OWNER')}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -81,12 +84,12 @@ export default function LearningCenterWorkspacePage() {
   )
 }
 
-function renderSection(section: string, detailId: string | undefined, slug: string, manager: boolean, staff: boolean) {
+function renderSection(section: string, detailId: string | undefined, slug: string, manager: boolean, staff: boolean, owner: boolean) {
   if (section === 'students' && detailId) return <StudentDetailView slug={slug} studentId={detailId} canManage={staff} />
   if (section === 'students') return <StudentsView slug={slug} canManage={manager} />
   if (section === 'groups') return <GroupsView slug={slug} canManage={manager} />
   if (section === 'assignments') return <AssignmentsView slug={slug} canManage={staff} />
   if (section === 'leaderboard') return <LeaderboardView slug={slug} />
-  if (section === 'team' && staff) return <TeamView slug={slug} canManage={manager} />
+  if (section === 'team') return <TeamView slug={slug} canManage={owner} />
   return <OverviewView slug={slug} />
 }

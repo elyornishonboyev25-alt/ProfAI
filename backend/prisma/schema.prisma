@@ -191,6 +191,7 @@ model LearningCenter {
   name        String
   slug        String                      @unique
   logoUrl     String?
+  coverUrl    String?
   city        String?
   timezone    String                      @default("Asia/Tashkent")
   createdById String

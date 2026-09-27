@@ -41,7 +41,18 @@ const createWorkspaceSchema = z.object({
   name: z.string().trim().min(3).max(120),
   city: z.string().trim().max(100).optional(),
   timezone: z.string().trim().min(3).max(80).default('Asia/Tashkent'),
+  coverUrl: z.string().max(700_000).nullable().optional(),
 })
+
+const updateWorkspaceSchema = z.object({
+  name: z.string().trim().min(3).max(120),
+  city: z.string().trim().max(100).nullable(),
+  coverUrl: z.string().max(700_000).nullable(),
+})
+
+function validCover(value: string | null | undefined) {
+  return !value || /^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/.test(value)
+}
 
 const resultSyncSchema = z.object({
   sourceKey: z.string().trim().min(6).max(180),
@@ -68,12 +79,13 @@ const createGroupSchema = z.object({
 
 const invitationSchema = z.object({
   email: z.string().trim().email().max(220).optional(),
+  nickname: z.string().trim().min(2).max(80).optional(),
   role: z.nativeEnum(LearningCenterRole).refine((role) => role !== LearningCenterRole.OWNER, {
     message: 'Owner invitations are not supported.',
   }),
   groupId: z.string().trim().min(1).max(191).optional(),
   title: z.string().trim().max(100).optional(),
-})
+}).refine((input) => !(input.email && input.nickname), { message: 'Use an email or a nickname.' })
 
 const assignmentSchema = z.object({
   title: z.string().trim().min(3).max(180),
@@ -396,6 +408,7 @@ router.get(
         name: membership.center.name,
         slug: membership.center.slug,
         logoUrl: membership.center.logoUrl,
+        coverUrl: membership.center.coverUrl,
         city: membership.center.city,
         role: membership.role,
         memberCount: membership.center._count.members,
@@ -411,20 +424,59 @@ router.post(
   validateBody(createWorkspaceSchema),
   asyncHandler(async (req, res) => {
     const payload = req.body as z.infer<typeof createWorkspaceSchema>
-    const slug = await uniqueSlug(payload.name)
-    const center = await prisma.learningCenter.create({
-      data: {
-        name: payload.name,
-        slug,
-        city: payload.city || null,
-        timezone: payload.timezone,
-        createdById: req.user!.id,
-        members: {
-          create: { userId: req.user!.id, role: LearningCenterRole.OWNER, title: 'Center owner' },
+    if (!validCover(payload.coverUrl)) return res.status(400).json({ message: 'Choose a PNG, JPEG or WEBP class photo.' })
+    const center = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(776391)`
+      const duplicate = await tx.learningCenter.findFirst({ where: { name: { equals: payload.name, mode: 'insensitive' } }, select: { id: true } })
+      if (duplicate) return null
+      const slug = await uniqueSlug(payload.name)
+      return tx.learningCenter.create({
+        data: {
+          name: payload.name,
+          slug,
+          city: payload.city || null,
+          coverUrl: payload.coverUrl || null,
+          timezone: payload.timezone,
+          createdById: req.user!.id,
+          members: { create: { userId: req.user!.id, role: LearningCenterRole.OWNER, title: 'Class owner' } },
         },
-      },
+      })
     })
+    if (!center) return res.status(409).json({ message: 'A class with this name already exists. Choose another name.' })
     return res.status(201).json({ workspace: center })
+  }),
+)
+
+router.patch(
+  '/:slug/settings',
+  requireAuth,
+  validateBody(updateWorkspaceSchema),
+  asyncHandler(async (req, res) => {
+    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, [LearningCenterRole.OWNER])
+    if (!access) return
+    if (access.center.createdById !== req.user!.id) return res.status(403).json({ message: 'Only the class creator can change settings.' })
+    const payload = req.body as z.infer<typeof updateWorkspaceSchema>
+    if (!validCover(payload.coverUrl)) return res.status(400).json({ message: 'Choose a PNG, JPEG or WEBP class photo.' })
+    const center = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(776391)`
+      const duplicate = await tx.learningCenter.findFirst({ where: { id: { not: access.centerId }, name: { equals: payload.name, mode: 'insensitive' } }, select: { id: true } })
+      if (duplicate) return null
+      return tx.learningCenter.update({ where: { id: access.centerId }, data: { name: payload.name, city: payload.city || null, coverUrl: payload.coverUrl || null } })
+    })
+    if (!center) return res.status(409).json({ message: 'A class with this name already exists. Choose another name.' })
+    return res.json({ workspace: center })
+  }),
+)
+
+router.delete(
+  '/:slug/settings',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, [LearningCenterRole.OWNER])
+    if (!access) return
+    if (access.center.createdById !== req.user!.id) return res.status(403).json({ message: 'Only the class creator can delete this class.' })
+    await prisma.learningCenter.delete({ where: { id: access.centerId } })
+    return res.status(204).send()
   }),
 )
 
@@ -442,6 +494,16 @@ router.post(
     const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } })
     if (invitation.email && user?.email.toLowerCase() !== invitation.email.toLowerCase()) {
       return res.status(403).json({ message: 'This invitation was issued to a different email address.' })
+    }
+    if (invitation.role === LearningCenterRole.ADMIN) {
+      return res.status(403).json({ message: 'Only the class owner can assign administrators directly.' })
+    }
+    const currentMember = await prisma.learningCenterMember.findUnique({
+      where: { centerId_userId: { centerId: invitation.centerId, userId: req.user!.id } },
+      select: { role: true },
+    })
+    if (currentMember?.role === LearningCenterRole.OWNER || currentMember?.role === LearningCenterRole.ADMIN) {
+      return res.status(409).json({ message: 'You already have a higher role in this class.' })
     }
     const member = await prisma.$transaction(async (tx) => {
       const joined = await tx.learningCenterMember.upsert({
@@ -783,13 +845,13 @@ router.get(
   '/:slug/team',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, STAFF_ROLES)
+    const access = await requireCenterAccess(res, req.params.slug, req.user!.id)
     if (!access) return
     const members = await prisma.learningCenterMember.findMany({
-      where: { centerId: access.centerId, role: { in: STAFF_ROLES } },
+      where: { centerId: access.centerId, status: LearningCenterMemberStatus.ACTIVE },
       orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
       include: {
-        user: { select: { id: true, fullName: true, email: true, avatarUrl: true } },
+        user: { select: { id: true, fullName: true, nickname: true, email: true, avatarUrl: true } },
       },
     })
     const groupCounts = await prisma.learningCenterGroup.groupBy({
@@ -812,17 +874,32 @@ router.post(
   requireAuth,
   validateBody(invitationSchema),
   asyncHandler(async (req, res) => {
-    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, MANAGER_ROLES)
+    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, [LearningCenterRole.OWNER])
     if (!access) return
     const payload = req.body as z.infer<typeof invitationSchema>
+    if (!payload.email && !payload.nickname && payload.role !== LearningCenterRole.STUDENT) {
+      return res.status(400).json({ message: 'Only student invitations can use a shareable link.' })
+    }
+    if (payload.role === LearningCenterRole.ADMIN) {
+      if (!payload.email && !payload.nickname) return res.status(400).json({ message: 'Choose a registered user by email or nickname for an administrator.' })
+      const [admins, pending] = await Promise.all([
+        prisma.learningCenterMember.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, status: LearningCenterMemberStatus.ACTIVE } }),
+        prisma.learningCenterInvitation.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, acceptedAt: null, expiresAt: { gt: new Date() } } }),
+      ])
+      if (admins + pending >= 2) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
+    }
     if (payload.groupId) {
       const group = await prisma.learningCenterGroup.findFirst({ where: { id: payload.groupId, centerId: access.centerId } })
       if (!group) return res.status(400).json({ message: 'Selected group does not belong to this workspace.' })
     }
     const existingUser = payload.email
       ? await prisma.user.findUnique({ where: { email: payload.email.toLowerCase() }, select: { id: true } })
-      : null
+      : payload.nickname ? await prisma.user.findFirst({ where: { nickname: { equals: payload.nickname.replace(/^@/, ''), mode: 'insensitive' } }, select: { id: true } }) : null
+    if (payload.nickname && !existingUser) return res.status(404).json({ message: 'No user has this nickname.' })
+    if (payload.role === LearningCenterRole.ADMIN && !existingUser) return res.status(404).json({ message: 'Administrator must already have a ProfAI account.' })
     if (existingUser) {
+      const existingMember = await prisma.learningCenterMember.findUnique({ where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } } })
+      if (existingMember?.role === LearningCenterRole.OWNER) return res.status(409).json({ message: 'The class owner cannot be reassigned.' })
       const member = await prisma.learningCenterMember.upsert({
         where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } },
         update: { role: payload.role, status: LearningCenterMemberStatus.ACTIVE, title: payload.title || null },
@@ -856,6 +933,25 @@ router.post(
         joinPath: `/learning-center/join/${invitation.code}`,
       },
     })
+  }),
+)
+
+router.patch(
+  '/:slug/members/:memberId/role',
+  requireAuth,
+  validateBody(z.object({ role: z.enum(['ADMIN', 'TEACHER', 'STUDENT']) })),
+  asyncHandler(async (req, res) => {
+    const access = await requireCenterAccess(res, req.params.slug, req.user!.id, [LearningCenterRole.OWNER])
+    if (!access) return
+    const member = await prisma.learningCenterMember.findFirst({ where: { id: req.params.memberId, centerId: access.centerId, status: LearningCenterMemberStatus.ACTIVE } })
+    if (!member || member.role === LearningCenterRole.OWNER) return res.status(404).json({ message: 'Member not found.' })
+    const role = req.body.role as LearningCenterRole
+    if (role === LearningCenterRole.ADMIN && member.role !== LearningCenterRole.ADMIN) {
+      const admins = await prisma.learningCenterMember.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, status: LearningCenterMemberStatus.ACTIVE } })
+      if (admins >= 2) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
+    }
+    const updated = await prisma.learningCenterMember.update({ where: { id: member.id }, data: { role } })
+    return res.json({ member: updated })
   }),
 )
 

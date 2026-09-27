@@ -4,6 +4,7 @@ import { ArrowRight, Loader2, ShieldCheck } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { primaryButton, secondaryButton } from '@/features/learningCenter/components'
+import { useAuthStore } from '@/store/authStore'
 import '@/features/learningCenter/learning-center.css'
 
 export default function LearningCenterJoin() {
@@ -13,6 +14,7 @@ export default function LearningCenterJoin() {
 
 function JoinInvitation({ code }: { code: string }) {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
   const pending = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -27,5 +29,5 @@ function JoinInvitation({ code }: { code: string }) {
       setError(failure instanceof Error ? failure.message : 'This invitation could not be accepted.')
     } finally { pending.current = false; setBusy(false) }
   }
-  return <div className="learning-center lc-portal grid min-h-screen place-items-center p-4"><div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl shadow-blue-900/5"><BrandMark size={54} className="mx-auto" /><span className="mx-auto mt-7 grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-blue-600"><ShieldCheck className="h-7 w-7" /></span><h1 className="mt-5 text-2xl font-bold tracking-tight text-slate-950">Your team is one step away</h1><p className="mt-3 text-sm leading-6 text-slate-500">Accept this invitation to connect your ProfAI account to the class.</p>{error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}<button type="button" disabled={busy || !code} onClick={() => void accept()} className={primaryButton + ' mt-6 w-full'}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{busy ? 'Joining class...' : error ? 'Try again' : 'Accept invitation'}</button><Link to="/learning-center" className={secondaryButton + ' mt-3 w-full'}>Back to Classes</Link></div></div>
+  return <div className="learning-center lc-portal grid min-h-screen place-items-center p-4"><div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl shadow-blue-900/5"><BrandMark size={54} className="mx-auto" /><span className="mx-auto mt-7 grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-blue-600"><ShieldCheck className="h-7 w-7" /></span><h1 className="mt-5 text-2xl font-bold tracking-tight text-slate-950">Your team is one step away</h1><p className="mt-3 text-sm leading-6 text-slate-500">Accept this invitation to connect your ProfAI account to the class.</p>{error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}{user ? <button type="button" disabled={busy || !code} onClick={() => void accept()} className={primaryButton + ' mt-6 w-full'}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}{busy ? 'Joining class...' : error ? 'Try again' : 'Join this class'}</button> : <Link to="/login" state={{ from: { pathname: `/learning-center/join/${code}` } }} className={primaryButton + ' mt-6 w-full'}>Sign in to join <ArrowRight className="h-4 w-4" /></Link>}<Link to="/learning-center" className={secondaryButton + ' mt-3 w-full'}>Back to Classes</Link></div></div>
 }

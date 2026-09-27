@@ -94,3 +94,21 @@ export async function compressImageToDataUrl(file: File, options: CompressOption
   if (webp.startsWith('data:image/webp')) return webp
   return canvas.toDataURL('image/jpeg', quality)
 }
+
+/** Resize a class cover while preserving its landscape aspect ratio. */
+export async function compressCoverToDataUrl(file: File): Promise<string> {
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Choose a PNG, JPEG or WEBP image.')
+  const image = await loadImage(await readBlobAsDataUrl(file))
+  const canvas = document.createElement('canvas')
+  canvas.width = 1440
+  canvas.height = 560
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Could not process the class photo.')
+  const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight)
+  const width = image.naturalWidth * scale
+  const height = image.naturalHeight * scale
+  context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height)
+  const result = canvas.toDataURL('image/webp', 0.76)
+  if (result.length > 700_000) throw new Error('This photo is too large. Please choose a smaller image.')
+  return result
+}

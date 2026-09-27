@@ -82,3 +82,24 @@
 .lc-leader-row:hover { background: rgba(255,242,244,.7); }
 .lc-assignment-card::before { content: ''; position: absolute; inset: 0 22px auto; height: 2px; background: linear-gradient(90deg,#ad2233,#e36873,transparent); }
 @media (max-width: 639px) { .lc-podium { min-height: 156px; } .lc-podium-1 { min-height: 180px; } }
+
+/* Photo-led class cards and profile, echoing the university detail header. */
+.lc-classes-heading > div:first-child { flex-basis: 100%; }
+.lc-classes-title { width: 100%; text-align: center; }
+.lc-card-cover { position: relative; display: grid; place-items: center; height: 145px; margin: -24px -24px 22px; overflow: hidden; color: rgba(255,255,255,.75); background: linear-gradient(135deg,#a51e30,#d95460 52%,#663b4d); }
+.lc-card-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg,rgba(66,11,23,.42),transparent 70%); }
+.lc-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+.lc-card-cover .lc-role-pill { position: absolute; z-index: 1; top: 14px; right: 14px; background: rgba(255,255,255,.92); }
+.lc-workspace-card::before { display: none; }
+.lc-card-body { padding-top: 1px; }
+.lc-workspace-banner.has-cover { min-height: 340px; align-items: end; border-color: rgba(255,255,255,.35); background: #762536; }
+.lc-workspace-banner.has-cover::before { z-index: 1; inset: 0; width: auto; height: auto; border-radius: 0; background: linear-gradient(90deg,rgba(105,17,34,.88),rgba(95,26,43,.67) 55%,rgba(17,24,39,.48)); }
+.lc-workspace-banner.has-cover::after { display: none; }
+.lc-workspace-banner-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lc-workspace-banner.has-cover h1, .lc-workspace-banner.has-cover p { color: white; }
+.lc-banner-back { display: inline-flex; align-items: center; gap: 9px; border: 2px solid white; border-radius: 999px; padding: 10px 16px; color: #fff; background: rgba(255,255,255,.18); font-size: 13px; font-weight: 800; backdrop-filter: blur(10px); }
+.lc-workspace-banner:not(.has-cover) .lc-banner-back { border-color: #eed8dc; color: #a72234; background: white; }
+.lc-banner-eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 7px 12px; background: rgba(255,255,255,.2); font-size: 11px; font-weight: 900; letter-spacing: .12em; backdrop-filter: blur(10px); }
+.lc-workspace-banner:not(.has-cover) .lc-banner-eyebrow { color: #a72234; background: #fff1f2; }
+.lc-cover-picker { display: grid; place-items: center; gap: 8px; height: 150px; overflow: hidden; border: 2px dashed #e5aab3; border-radius: 18px; color: #a72234; background: #fff7f8; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lc-cover-picker img { width: 100%; height: 100%; object-fit: cover; }

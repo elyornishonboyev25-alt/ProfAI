@@ -7,6 +7,7 @@ export type CenterWorkspace = {
   name: string
   slug: string
   logoUrl: string | null
+  coverUrl: string | null
   city: string | null
   role: CenterRole
   memberCount: number
@@ -122,7 +123,7 @@ export type TeamMember = {
   title: string | null
   joinedAt: string
   groupCount: number
-  user: { id: string; fullName: string; email: string | null; avatarUrl: string | null }
+  user: { id: string; fullName: string; nickname: string | null; email: string | null; avatarUrl: string | null }
 }
 
 export type LearningResult = {

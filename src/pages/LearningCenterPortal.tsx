@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, Building2, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Building2, Camera, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from '@/features/learningCenter/components'
 import { useAuthStore } from '@/store/authStore'
+import { compressCoverToDataUrl } from '@/utils/imageCompress'
 import '@/features/learningCenter/learning-center.css'
 
 export default function LearningCenterPortal() {
@@ -28,11 +29,11 @@ export default function LearningCenterPortal() {
         <header className="lc-classes-heading">
           <div className="relative z-10">
             <span className="lc-classes-kicker"><GraduationCap className="h-4 w-4" /> YOUR LEARNING SPACE</span>
-            <h1 className="mt-4 text-4xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">Classes<span className="text-red-600">.</span></h1>
+            <h1 className="lc-classes-title mt-4 text-4xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">Classes<span className="text-red-600">.</span></h1>
             <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600 sm:text-base">Keep your classes, people, and progress together in one place.</p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-3">
-            <button type="button" onClick={() => setJoinOpen(true)} className={secondaryButton}><Link2 className="h-4 w-4" /> Join with an invitation</button>
+            <button type="button" onClick={() => setJoinOpen(true)} className={secondaryButton}><Link2 className="h-4 w-4" /> Join class</button>
             <button type="button" onClick={create} className={primaryButton}><Plus className="h-4 w-4" /> Create class</button>
           </div>
         </header>
@@ -52,10 +53,10 @@ export default function LearningCenterPortal() {
               {workspaces.length > 0 && <label className="lc-search relative mb-5 block"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input aria-label="Search classes" value={search} onChange={(event) => setSearch(event.target.value)} className={`${inputClass} pl-11`} placeholder="Search classes by name or city" /></label>}
               {loading && user ? <CenterSkeleton blocks={2} /> : error && user ? <ErrorState message={error} onRetry={() => void refetch()} /> : workspaces.length ? (
                 filtered.length ? <div className="grid gap-4 md:grid-cols-2">{filtered.map((workspace) => <Link key={workspace.id} to={`/learning-center/${workspace.slug}`} className="lc-workspace-card group" aria-label={`Open ${workspace.name} class`}>
-                  <div className="flex items-start justify-between gap-3"><span className="lc-workspace-avatar">{workspace.name.slice(0, 2).toUpperCase()}</span><span className="lc-role-pill">{workspace.role.toLowerCase()}</span></div>
-                  <h3 className="mt-6 break-words text-xl font-bold tracking-[-.03em] text-slate-950">{workspace.name}</h3>
+                  <div className="lc-card-cover">{workspace.coverUrl ? <img src={workspace.coverUrl} alt="" /> : <GraduationCap className="h-12 w-12" />}<span className="lc-role-pill">{workspace.role.toLowerCase()}</span></div>
+                  <div className="lc-card-body"><h3 className="break-words text-xl font-bold tracking-[-.03em] text-slate-950">{workspace.name}</h3>
                   <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500"><MapPin className="h-4 w-4 shrink-0" />{workspace.city || 'Location not set'}</p>
-                  <div className="mt-6 flex items-center gap-4 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500"><span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{workspace.memberCount} members</span><span>{workspace.groupCount} groups</span><span className="lc-card-arrow ml-auto"><ArrowUpRight className="h-4 w-4" /></span></div>
+                  <div className="mt-6 flex items-center gap-4 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500"><span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{workspace.memberCount} members</span><span>{workspace.groupCount} groups</span><span className="lc-card-arrow ml-auto"><ArrowUpRight className="h-4 w-4" /></span></div></div>
                 </Link>)}<button type="button" onClick={create} className="lc-create-card"><span className="lc-create-icon"><Plus className="h-6 w-6" /></span><span className="text-base font-bold text-slate-900">Create another class</span><span className="text-sm text-slate-500">A new space for your next goal</span></button></div> : <CenterPanel><EmptyState title="No matching classes" description="Try another name or city." action={<button type="button" onClick={() => setSearch('')} className={secondaryButton}>Clear search</button>} /></CenterPanel>
               ) : <CenterPanel className="lc-first-workspace"><div className="lc-empty-illustration" aria-hidden="true"><Building2 className="h-9 w-9 text-red-600" /></div><h3 className="mt-5 text-xl font-bold tracking-tight">{user ? 'Create your first class' : 'Your classes will appear here'}</h3><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">{user ? 'Bring your teachers and students together, then start sharing practice and tracking progress.' : 'Sign in to create a class or use an invitation from your teaching team.'}</p><button type="button" onClick={create} className={`${primaryButton} mt-6`}>{user ? <Plus className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}{user ? 'Create class' : 'Sign in to get started'}</button></CenterPanel>}
             </div>
@@ -72,6 +73,7 @@ export default function LearningCenterPortal() {
 function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onCreated: (slug: string) => void }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
+  const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   async function submit(event: React.FormEvent) {
@@ -80,12 +82,12 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
     if (name.trim().length < 3) { setError('Enter a class name with at least 3 characters.'); return }
     setBusy(true); setError('')
     try {
-      const response = await learningCenterApi.createWorkspace({ name: name.trim(), city: city.trim() || undefined, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tashkent' })
+      const response = await learningCenterApi.createWorkspace({ name: name.trim(), city: city.trim() || undefined, coverUrl, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tashkent' })
       onCreated(response.workspace.slug)
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : 'Could not create class.') }
     finally { setBusy(false) }
   }
-  return <Modal open onClose={onClose} busy={busy} title="Create a class" description="Start with a name. You can invite your team next."><form onSubmit={submit} className="space-y-5"><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class name</span><input required minLength={3} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Oxford Academy" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">City <span className="font-normal text-slate-400">(optional)</span></span><input maxLength={100} value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Tashkent" /></label>{error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={onClose} className={secondaryButton}>Cancel</button><button disabled={busy} className={primaryButton}>{busy ? 'Creating...' : 'Create class'}<ArrowRight className="h-4 w-4" /></button></div></form></Modal>
+  return <Modal open onClose={onClose} busy={busy} title="Create a class" description="Give your class a name and a cover photo."><form onSubmit={submit} className="space-y-5"><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class name</span><input required minLength={3} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Oxford Academy" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">City <span className="font-normal text-slate-400">(optional)</span></span><input maxLength={100} value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Tashkent" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class cover photo <span className="font-normal text-slate-400">(optional)</span></span><span className="lc-cover-picker">{coverUrl ? <img src={coverUrl} alt="Class cover preview" /> : <><Camera className="h-6 w-6" /> Choose a photo</>}</span><input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void compressCoverToDataUrl(file).then(setCoverUrl).catch((failure) => setError(failure.message)) }} /></label>{error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={onClose} className={secondaryButton}>Cancel</button><button disabled={busy} className={primaryButton}>{busy ? 'Creating...' : 'Create class'}<ArrowRight className="h-4 w-4" /></button></div></form></Modal>
 }
 
 function JoinWorkspaceModal({ onClose }: { onClose: () => void }) {

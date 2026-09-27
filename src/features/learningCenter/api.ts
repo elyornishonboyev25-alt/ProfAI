@@ -15,8 +15,11 @@ import type {
 
 export const learningCenterApi = {
   workspaces: () => apiClient.get<{ workspaces: CenterWorkspace[] }>('/learning-centers/workspaces'),
-  createWorkspace: (input: { name: string; city?: string; timezone: string }) =>
+  createWorkspace: (input: { name: string; city?: string; timezone: string; coverUrl?: string | null }) =>
     apiClient.post<{ workspace: CenterWorkspace }>('/learning-centers/workspaces', input),
+  updateWorkspace: (slug: string, input: { name: string; city: string | null; coverUrl: string | null }) =>
+    apiClient.patch<{ workspace: CenterWorkspace }>(`/learning-centers/${encodeURIComponent(slug)}/settings`, input),
+  deleteWorkspace: (slug: string) => apiClient.delete(`/learning-centers/${encodeURIComponent(slug)}/settings`),
   join: (code: string) => apiClient.post<{ workspace: CenterWorkspace }>(`/learning-centers/join/${encodeURIComponent(code)}`),
   overview: (slug: string, days = 90) =>
     apiClient.get<CenterOverview>(`/learning-centers/${encodeURIComponent(slug)}/overview?days=${days}`),
@@ -41,12 +44,14 @@ export const learningCenterApi = {
   createGroup: (slug: string, input: { name: string; examTrack: CenterExamTrack; teacherId?: string; targetScore?: string; schedule?: string }) =>
     apiClient.post(`/learning-centers/${encodeURIComponent(slug)}/groups`, input),
   team: (slug: string) => apiClient.get<{ team: TeamMember[] }>(`/learning-centers/${encodeURIComponent(slug)}/team`),
-  invite: (slug: string, input: { email?: string; role: Exclude<CenterRole, 'OWNER'>; groupId?: string; title?: string }) =>
+  invite: (slug: string, input: { email?: string; nickname?: string; role: Exclude<CenterRole, 'OWNER'>; groupId?: string; title?: string }) =>
     apiClient.post<{
       status: 'MEMBER_ADDED' | 'INVITATION_CREATED'
       memberId?: string
       invitation?: { code: string; expiresAt: string; joinPath: string }
     }>(`/learning-centers/${encodeURIComponent(slug)}/invitations`, input),
+  updateMemberRole: (slug: string, memberId: string, role: 'ADMIN' | 'TEACHER' | 'STUDENT') =>
+    apiClient.patch(`/learning-centers/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/role`, { role }),
   assignments: (slug: string) =>
     apiClient.get<{ assignments: CenterAssignment[] }>(`/learning-centers/${encodeURIComponent(slug)}/assignments`),
   createAssignment: (slug: string, input: {

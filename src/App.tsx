@@ -296,6 +296,7 @@ function App() {
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
   const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
+  const isCommunityPeopleMode = pathname === '/community' && (!communityMode || communityMode === 'people')
   const isLiveCommunityMode = communityMode === 'debate' || communityMode === 'partner'
 
   // Warm the next route while the learner is reading the current screen. This
@@ -437,7 +438,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''}`}>
+    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}

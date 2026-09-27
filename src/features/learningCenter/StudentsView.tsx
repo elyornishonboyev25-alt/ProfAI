@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Search, UserPlus, Users } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from './api'
 import { Avatar, CenterPageHeading, CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, InvitationLink, Modal, primaryButton, secondaryButton, StatusBadge, Trend } from './components'
 
 export default function StudentsView({ slug, canManage }: { slug: string; canManage: boolean }) {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [exam, setExam] = useState('')
@@ -37,31 +36,10 @@ export default function StudentsView({ slug, canManage }: { slug: string; canMan
         </div>
       </CenterPanel>
 
-      {loading && !data ? <CenterSkeleton blocks={8} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : (
-        <CenterPanel>
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div className="flex items-center gap-2"><Users className="h-5 w-5 text-red-700" /><h2 className="font-bold text-slate-950">Student directory</h2></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">{data?.students.length ?? 0} learners</span></div>
-          {data?.students.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-left">
-                <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[.13em] text-slate-400"><th className="px-5 py-3">Student</th><th className="px-4 py-3">Current score</th><th className="px-4 py-3">Target</th><th className="px-4 py-3">Growth</th><th className="px-4 py-3">Assignments</th><th className="px-4 py-3">Signal</th><th className="px-5 py-3" /></tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {data.students.map((student) => (
-                    <tr key={student.id} onClick={() => navigate(`/learning-center/${slug}/students/${student.id}`)} className="group cursor-pointer transition hover:bg-red-50/40">
-                      <td className="px-5 py-4"><div className="flex items-center gap-3"><Avatar name={student.fullName} url={student.avatarUrl} /><div><p className="text-sm font-bold text-slate-900">{student.fullName}</p><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} tests · {student.currentStreak} day streak</p></div></div></td>
-                      <td className="px-4 py-4"><Score student={student} /></td>
-                      <td className="px-4 py-4 text-sm font-bold text-slate-700">{student.targetSat ? `SAT ${student.targetSat}` : student.targetIelts ? `IELTS ${student.targetIelts}` : student.targetScore ?? 'Not set'}</td>
-                      <td className="px-4 py-4"><Trend value={student.improvement} /></td>
-                      <td className="px-4 py-4"><div className="w-28"><div className="flex justify-between text-[10px] font-bold text-slate-500"><span>Completion</span><span>{student.completionRate}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${student.completionRate}%` }} /></div></div></td>
-                      <td className="px-4 py-4"><StatusBadge status={student.status} /></td>
-                      <td className="px-5 py-4"><ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-red-700" /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : <EmptyState title="No students match these filters" description="Adjust filters or add a learner using their ProfAI account email or an invitation link." action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}>Add first student</button> : undefined} />}
-        </CenterPanel>
-      )}
+      {loading && !data ? <CenterSkeleton blocks={8} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : data?.students.length ? <>
+        <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Users className="h-5 w-5 text-red-700" /><h2 className="font-bold text-slate-950">Student directory</h2></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">{data.students.length} learners</span></div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{data.students.map((student) => <Link key={student.id} to={`/learning-center/${slug}/students/${student.id}`} className="group block rounded-[1.75rem] focus-visible:outline-red-600" aria-label={`Open ${student.fullName}'s progress`}><CenterPanel className="h-full p-5 transition hover:-translate-y-1 hover:border-red-200 hover:shadow-lg"><div className="flex items-start justify-between gap-3"><Avatar name={student.fullName} url={student.avatarUrl} size="lg" /><StatusBadge status={student.status} /></div><h3 className="mt-4 break-words text-lg font-bold text-slate-950">{student.fullName}</h3><p className="mt-1 text-xs font-semibold text-slate-500">{student.nickname ? `@${student.nickname}` : `${student.attempts} tests completed`}</p><div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 p-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current score</p><div className="mt-1"><Score student={student} /></div></div><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target</p><p className="mt-2 text-sm font-bold text-slate-700">{student.targetSat ? `SAT ${student.targetSat}` : student.targetIelts ? `IELTS ${student.targetIelts}` : student.targetScore ?? 'Not set'}</p></div></div><div className="mt-4 flex items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Growth</span><Trend value={student.improvement} /></div><div className="mt-4"><div className="flex justify-between text-[10px] font-bold text-slate-500"><span>Assignment completion</span><span>{student.completionRate}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${student.completionRate}%` }} /></div></div><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500"><span>{student.attempts} tests · {student.currentStreak} day streak</span><ArrowRight className="h-4 w-4 text-red-700 transition group-hover:translate-x-1" /></div></CenterPanel></Link>)}</div>
+      </> : <CenterPanel><EmptyState title="No students match these filters" description="Adjust filters or add a learner using their ProfAI account email or an invitation link." action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}>Add first student</button> : undefined} /></CenterPanel>}
 
       {inviteOpen && <InviteStudentModal open={inviteOpen} onClose={() => setInviteOpen(false)} slug={slug} groups={groups.data?.groups ?? []} onDone={() => { setInviteOpen(false); void refetch() }} />}
     </div>

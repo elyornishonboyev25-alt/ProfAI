@@ -21,11 +21,11 @@ type NavItem = { key: string; label: string; icon: ComponentType<{ className?: s
 
 const NAV_ITEMS: NavItem[] = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { key: 'students', label: 'Students', icon: Users },
+  { key: 'team', label: 'Members', icon: UserRoundCheck },
   { key: 'groups', label: 'Groups', icon: GraduationCap },
   { key: 'assignments', label: 'Assignments', icon: ClipboardCheck },
   { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-  { key: 'team', label: 'Members', icon: UserRoundCheck },
+  { key: 'students', label: 'Students', icon: Users },
   { key: 'settings', label: 'Settings', icon: Settings2, managerOnly: true },
 ]
 
@@ -86,7 +86,7 @@ export default function LearningCenterWorkspacePage() {
 
 function renderSection(section: string, detailId: string | undefined, slug: string, manager: boolean, staff: boolean, owner: boolean) {
   if (section === 'students' && detailId) return <StudentDetailView slug={slug} studentId={detailId} canManage={staff} />
-  if (section === 'students') return <StudentsView slug={slug} canManage={manager} />
+  if (section === 'students') return <StudentsView slug={slug} canManage={owner} />
   if (section === 'groups') return <GroupsView slug={slug} canManage={manager} />
   if (section === 'assignments') return <AssignmentsView slug={slug} canManage={staff} />
   if (section === 'leaderboard') return <LeaderboardView slug={slug} />

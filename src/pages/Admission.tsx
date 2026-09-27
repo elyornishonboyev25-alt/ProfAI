@@ -47,6 +47,148 @@ export default function Admission() {
           <h1>University <span>Applications</span></h1>
           <p>Plan your next steps, explore universities and move forward with confidence.</p>
         </header>
+        {/* ----------------------- Two destination cards ----------------------- */}
+        <Stagger className="admission-home-card-grid grid gap-5 lg:grid-cols-2">
+          {/* Universities */}
+          <StaggerItem className="h-full">
+              <button
+                onClick={() => navigate('/admission/universities')}
+                className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
+                type="button"
+              >
+                <img src="/assets/admission/international-students.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <div
+                  className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
+                  style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}
+                />
+                <div className="admission-home-card-top relative flex items-center justify-between">
+                  <span
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
+                    style={{ background: 'linear-gradient(135deg,#7f1d1d,#2563eb)' }}
+                  >
+                    <Trophy className="h-8 w-8" />
+                  </span>
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
+                    {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ranked · QS 2027
+                  </span>
+                </div>
+                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
+                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
+                  Explore ProfAI’s complete QS 2027 catalog with ranking context, university profiles and official links
+                  where available. Confirm current programme requirements directly with each institution.
+                </p>
+
+                <div className="admission-home-rankings relative mt-5 space-y-2">
+                  {topFour.map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
+                    >
+                      <span className="w-6 text-center text-sm font-black text-slate-400">{u.rank}</span>
+                      <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={34} rounded="0.55rem" />
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">
+                        {u.shortName}
+                      </span>
+                      <span className="text-[12px] font-black text-slate-900">{u.overallScore}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
+                    <Globe2 className="h-4 w-4" />
+                    {UNIVERSITY_COUNT} catalog profiles
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">
+                    Open rankings
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </button>
+          </StaggerItem>
+
+          {/* Lessons */}
+          <StaggerItem className="h-full">
+              <button
+                onClick={() => navigate(lessonCardPath)}
+                className="admission-home-destination admission-home-lessons group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
+                type="button"
+              >
+                <img src="/assets/admission/student-library.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <div
+                  className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
+                  style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }}
+                />
+                <div className="admission-home-card-top relative flex items-center justify-between">
+                  <span
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
+                    style={{ background: 'linear-gradient(135deg,#312e81,#4f46e5)' }}
+                  >
+                    <GraduationCap className="h-8 w-8" />
+                  </span>
+                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-700">
+                    {LESSON_COUNT} lessons · 5 phases
+                  </span>
+                </div>
+                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Lessons"} /> </h2>
+                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
+                  Guided study-abroad lessons covering country research, tests, application writing, scholarships and
+                  visa preparation. Follow the sequence or open the topic you need now.
+                </p>
+
+                <div className="admission-home-card-phases relative mt-5 grid grid-cols-2 gap-2">
+                  {lessonPhases.slice(0, 4).map((phase) => (
+                    <div
+                      key={phase.id}
+                      className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
+                    >
+                      <span
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white"
+                        style={{ background: phase.gradient }}
+                      >
+                        <LucideIcon name={phase.icon} className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="truncate text-[12px] font-semibold text-slate-700">{phase.title}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
+                    <Compass className="h-4 w-4" />
+                    {completedLessonCount ? `${completedLessonCount}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 transition group-hover:gap-2">
+                    {resumeLesson ? 'Continue lesson' : 'Open lessons'}
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </button>
+          </StaggerItem>
+        </Stagger>
+
+        {/* ----------------------- Find-my-university banner ----------------------- */}
+        <Reveal delay={0.03}>
+          <button
+            onClick={() => setMatcherOpen(true)}
+            className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
+            type="button"
+          >
+            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
+              <Target className="h-7 w-7" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-lg font-black text-white">Explore university matches</p>
+              <p className="mt-0.5 text-sm font-medium text-blue-50/90">
+                Compare the current catalog using your SAT, IELTS, GPA and study preferences as planning signals.
+              </p>
+            </div>
+            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
+               <UiText text={"Start"} /> <ArrowRight className="h-4 w-4" />
+            </span>
+          </button>
+        </Reveal>
+
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
           <section className="premium-hero admission-home-hero min-h-[29rem] p-6 sm:p-9">
@@ -124,148 +266,6 @@ export default function Admission() {
             </div>
           </section>
         </Reveal>
-
-        {/* ----------------------- Find-my-university banner ----------------------- */}
-        <Reveal delay={0.03}>
-          <button
-            onClick={() => setMatcherOpen(true)}
-            className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
-            type="button"
-          >
-            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
-              <Target className="h-7 w-7" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-black text-white">Explore university matches</p>
-              <p className="mt-0.5 text-sm font-medium text-blue-50/90">
-                Compare the current catalog using your SAT, IELTS, GPA and study preferences as planning signals.
-              </p>
-            </div>
-            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
-               <UiText text={"Start"} /> <ArrowRight className="h-4 w-4" />
-            </span>
-          </button>
-        </Reveal>
-
-        {/* ----------------------- Two destination cards ----------------------- */}
-        <Stagger className="admission-home-card-grid grid gap-5 lg:grid-cols-2">
-          {/* Lessons */}
-          <StaggerItem className="h-full">
-              <button
-                onClick={() => navigate(lessonCardPath)}
-                className="admission-home-destination admission-home-lessons group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
-                type="button"
-              >
-                <img src="/assets/admission/student-library.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                <div
-                  className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
-                  style={{ background: 'radial-gradient(circle,#6366f1,transparent 70%)' }}
-                />
-                <div className="admission-home-card-top relative flex items-center justify-between">
-                  <span
-                    className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
-                    style={{ background: 'linear-gradient(135deg,#312e81,#4f46e5)' }}
-                  >
-                    <GraduationCap className="h-8 w-8" />
-                  </span>
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-700">
-                    {LESSON_COUNT} lessons · 5 phases
-                  </span>
-                </div>
-                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Lessons"} /> </h2>
-                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Guided study-abroad lessons covering country research, tests, application writing, scholarships and
-                  visa preparation. Follow the sequence or open the topic you need now.
-                </p>
-
-                <div className="admission-home-card-phases relative mt-5 grid grid-cols-2 gap-2">
-                  {lessonPhases.slice(0, 4).map((phase) => (
-                    <div
-                      key={phase.id}
-                      className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
-                    >
-                      <span
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white"
-                        style={{ background: phase.gradient }}
-                      >
-                        <LucideIcon name={phase.icon} className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="truncate text-[12px] font-semibold text-slate-700">{phase.title}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
-                    <Compass className="h-4 w-4" />
-                    {completedLessonCount ? `${completedLessonCount}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 transition group-hover:gap-2">
-                    {resumeLesson ? 'Continue lesson' : 'Open lessons'}
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </button>
-          </StaggerItem>
-
-          {/* Universities */}
-          <StaggerItem className="h-full">
-              <button
-                onClick={() => navigate('/admission/universities')}
-                className="admission-home-destination admission-home-universities group relative flex h-full w-full flex-col overflow-hidden rounded-[1.8rem] text-left transition"
-                type="button"
-              >
-                <img src="/assets/admission/international-students.webp" alt="" className="admission-home-card-photo absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                <div
-                  className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40"
-                  style={{ background: 'radial-gradient(circle,#3b82f6,transparent 70%)' }}
-                />
-                <div className="admission-home-card-top relative flex items-center justify-between">
-                  <span
-                    className="inline-flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-lg"
-                    style={{ background: 'linear-gradient(135deg,#7f1d1d,#2563eb)' }}
-                  >
-                    <Trophy className="h-8 w-8" />
-                  </span>
-                  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
-                    {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ranked · QS 2027
-                  </span>
-                </div>
-                <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
-                <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore ProfAI’s complete QS 2027 catalog with ranking context, university profiles and official links
-                  where available. Confirm current programme requirements directly with each institution.
-                </p>
-
-                <div className="admission-home-rankings relative mt-5 space-y-2">
-                  {topFour.map((u) => (
-                    <div
-                      key={u.id}
-                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
-                    >
-                      <span className="w-6 text-center text-sm font-black text-slate-400">{u.rank}</span>
-                      <UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={34} rounded="0.55rem" />
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">
-                        {u.shortName}
-                      </span>
-                      <span className="text-[12px] font-black text-slate-900">{u.overallScore}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
-                    <Globe2 className="h-4 w-4" />
-                    {UNIVERSITY_COUNT} catalog profiles
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">
-                    Open rankings
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </button>
-          </StaggerItem>
-        </Stagger>
 
         {/* ----------------------- How it works strip ----------------------- */}
         <Reveal delay={0.05}>

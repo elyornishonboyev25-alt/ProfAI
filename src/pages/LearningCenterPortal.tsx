@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, Building2, Camera, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Building2, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from '@/features/learningCenter/components'
 import { useAuthStore } from '@/store/authStore'
-import { compressCoverToDataUrl } from '@/utils/imageCompress'
+import ClassCoverEditor from '@/features/learningCenter/ClassCoverEditor'
 import '@/features/learningCenter/learning-center.css'
 
 export default function LearningCenterPortal() {
@@ -27,6 +27,7 @@ export default function LearningCenterPortal() {
       {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span><span className="ml-3 hidden border-l border-slate-200 pl-3 text-xs font-semibold tracking-normal text-slate-500 sm:inline">Classes</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
       <main className="mx-auto max-w-[1500px] px-4 pb-16 pt-5 sm:px-6 lg:px-8 lg:pt-8">
         <header className="lc-classes-heading">
+          <img className="lc-classes-heading-image" src="/assets/learning-center-hero.webp" alt="" />
           <div className="relative z-10">
             <span className="lc-classes-kicker"><GraduationCap className="h-4 w-4" /> YOUR LEARNING SPACE</span>
             <h1 className="lc-classes-title mt-4 text-4xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">Classes<span className="text-red-600">.</span></h1>
@@ -74,11 +75,12 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
+  const [coverPending, setCoverPending] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    if (busy) return
+    if (busy || coverPending) return
     if (name.trim().length < 3) { setError('Enter a class name with at least 3 characters.'); return }
     setBusy(true); setError('')
     try {
@@ -87,7 +89,7 @@ function CreateWorkspaceModal({ onClose, onCreated }: { onClose: () => void; onC
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : 'Could not create class.') }
     finally { setBusy(false) }
   }
-  return <Modal open onClose={onClose} busy={busy} title="Create a class" description="Give your class a name and a cover photo."><form onSubmit={submit} className="space-y-5"><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class name</span><input required minLength={3} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Oxford Academy" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">City <span className="font-normal text-slate-400">(optional)</span></span><input maxLength={100} value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Tashkent" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class cover photo <span className="font-normal text-slate-400">(optional)</span></span><span className="lc-cover-picker">{coverUrl ? <img src={coverUrl} alt="Class cover preview" /> : <><Camera className="h-6 w-6" /> Choose a photo</>}</span><input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void compressCoverToDataUrl(file).then(setCoverUrl).catch((failure) => setError(failure.message)) }} /></label>{error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={onClose} className={secondaryButton}>Cancel</button><button disabled={busy} className={primaryButton}>{busy ? 'Creating...' : 'Create class'}<ArrowRight className="h-4 w-4" /></button></div></form></Modal>
+  return <Modal open onClose={onClose} busy={busy} title="Create a class" description="Give your class a name and a cover photo."><form onSubmit={submit} className="space-y-5"><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">Class name</span><input required minLength={3} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Oxford Academy" /></label><label className="block"><span className="mb-2 block text-xs font-bold text-slate-700">City <span className="font-normal text-slate-400">(optional)</span></span><input maxLength={100} value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Tashkent" /></label><div><span className="mb-2 block text-xs font-bold text-slate-700">Class cover photo <span className="font-normal text-slate-400">(optional)</span></span><ClassCoverEditor value={coverUrl} onChange={setCoverUrl} onPendingChange={setCoverPending} onError={setError} /></div>{error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={onClose} className={secondaryButton}>Cancel</button><button disabled={busy || coverPending} className={primaryButton}>{busy ? 'Creating...' : 'Create class'}<ArrowRight className="h-4 w-4" /></button></div></form></Modal>
 }
 
 function JoinWorkspaceModal({ onClose }: { onClose: () => void }) {

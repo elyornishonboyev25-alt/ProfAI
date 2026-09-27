@@ -95,20 +95,41 @@ export async function compressImageToDataUrl(file: File, options: CompressOption
   return canvas.toDataURL('image/jpeg', quality)
 }
 
-/** Resize a class cover while preserving its landscape aspect ratio. */
-export async function compressCoverToDataUrl(file: File): Promise<string> {
-  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Choose a PNG, JPEG or WEBP image.')
-  const image = await loadImage(await readBlobAsDataUrl(file))
-  const canvas = document.createElement('canvas')
-  canvas.width = 1440
-  canvas.height = 560
+export const COVER_RATIO = 18 / 7
+
+export function coverCrop(image: HTMLImageElement, centerX: number, centerY: number, zoom: number) {
+  const width = image.naturalWidth
+  const height = image.naturalHeight
+  const cropWidth = Math.min(width, height * COVER_RATIO) / zoom
+  const cropHeight = cropWidth / COVER_RATIO
+  const x = Math.max(0, Math.min(width - cropWidth, centerX * width - cropWidth / 2))
+  const y = Math.max(0, Math.min(height - cropHeight, centerY * height - cropHeight / 2))
+  return { x, y, width: cropWidth, height: cropHeight }
+}
+
+export function drawCoverCrop(canvas: HTMLCanvasElement, image: HTMLImageElement, centerX: number, centerY: number, zoom: number) {
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Could not process the class photo.')
-  const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight)
-  const width = image.naturalWidth * scale
-  const height = image.naturalHeight * scale
-  context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height)
-  const result = canvas.toDataURL('image/webp', 0.76)
-  if (result.length > 700_000) throw new Error('This photo is too large. Please choose a smaller image.')
-  return result
+  const crop = coverCrop(image, centerX, centerY, zoom)
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = 'high'
+  context.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height)
+}
+
+/** Export a banner crop under the API's 700 KB data URL limit. */
+export function exportCoverCrop(image: HTMLImageElement, centerX: number, centerY: number, zoom: number): string {
+  const canvas = document.createElement('canvas')
+  for (const width of [1440, 1200, 960, 720]) {
+    canvas.width = width
+    canvas.height = Math.round(width / COVER_RATIO)
+    drawCoverCrop(canvas, image, centerX, centerY, zoom)
+    for (const quality of [0.78, 0.64, 0.5]) {
+      const webp = canvas.toDataURL('image/webp', quality)
+      if (webp.startsWith('data:image/webp') && webp.length < 690_000) return webp
+      const jpeg = canvas.toDataURL('image/jpeg', quality)
+      if (jpeg.length < 690_000) return jpeg
+    }
+  }
+  throw new Error('Could not prepare this photo. Please choose another image.')
 }

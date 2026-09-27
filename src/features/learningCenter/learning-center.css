@@ -103,3 +103,17 @@
 .lc-workspace-banner:not(.has-cover) .lc-banner-eyebrow { color: #a72234; background: #fff1f2; }
 .lc-cover-picker { display: grid; place-items: center; gap: 8px; height: 150px; overflow: hidden; border: 2px dashed #e5aab3; border-radius: 18px; color: #a72234; background: #fff7f8; font-size: 13px; font-weight: 700; cursor: pointer; }
 .lc-cover-picker img { width: 100%; height: 100%; object-fit: cover; }
+
+.lc-classes-heading { min-height: 320px; align-content: center; border-color: rgba(255,255,255,.4); background: #743243; }
+.lc-classes-heading::before { display: none; }
+.lc-classes-heading::after { content: ''; position: absolute; z-index: 1; inset: 0; background: linear-gradient(110deg,rgba(145,24,44,.84),rgba(120,40,58,.68) 47%,rgba(31,36,50,.64)); }
+.lc-classes-heading-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(3px); transform: scale(1.025); }
+.lc-classes-heading > div:first-of-type { flex-basis: 100%; text-align: center; }
+.lc-classes-heading h1, .lc-classes-heading p { color: white; }
+.lc-classes-heading p { margin-inline: auto; }
+.lc-classes-kicker { border-color: rgba(255,255,255,.4); color: white; background: rgba(255,255,255,.17); backdrop-filter: blur(10px); }
+.lc-card-cover img { filter: blur(2px); transform: scale(1.04); }
+.lc-workspace-banner-image { filter: blur(3px); transform: scale(1.025); }
+.lc-cover-editor { width: 100%; }
+.lc-cover-canvas { display: block; width: 100%; height: auto; overflow: hidden; border: 1px solid #e7c6cd; border-radius: 16px; cursor: grab; touch-action: none; }
+.lc-cover-canvas:active { cursor: grabbing; }

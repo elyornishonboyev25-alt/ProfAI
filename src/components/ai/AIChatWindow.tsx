@@ -480,13 +480,13 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       <div
         ref={messagesViewportRef}
         className={`min-h-0 flex-1 overscroll-contain bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,.95),transparent_45%),linear-gradient(145deg,rgba(249,247,248,.92),rgba(235,233,236,.64),rgba(255,240,242,.55))] px-3 py-4 sm:px-5 ${
-          isPage ? 'overflow-y-auto' : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
+          isPage ? (showHero ? 'overflow-hidden' : 'overflow-y-auto') : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
         }`}
       >
         {showHero ? (
-          <div className="flex min-h-full flex-col items-center justify-center px-2 py-6 text-center">
+          <div className="ai-chat-hero flex min-h-full flex-col items-center justify-center px-2 py-6 text-center">
             <span className="mb-5 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-red-700 shadow-sm">Your study companion</span>
-            <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 112 : 80} />
+            <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 112 : 80} className="ai-chat-hero-orb" />
             <h3 className="mt-5 text-xl font-black text-slate-900 sm:text-2xl">
               {preferredName ? `${preferredName},` : ''} {preferredLocale === 'uz' ? 'qanday yordam beray?' : 'how can I help?'}
             </h3>
@@ -695,7 +695,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             onKeyDown={onKeyDown}
             onPaste={onPaste}
             placeholder={
-              preferredLocale === 'uz'
+              isPage
+                ? (preferredLocale === 'uz' ? 'ProfAIga yozing...' : 'Ask ProfAI...')
+                : preferredLocale === 'uz'
                 ? 'Yozing, rasm tashlang yoki mikrofonni bosing…'
                 : 'Type, paste an image, or tap the mic…'
             }

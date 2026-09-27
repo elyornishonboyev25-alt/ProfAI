@@ -180,9 +180,71 @@ html[data-motion='minimal'] .app-shell .liquid-sidebar,
 html[data-motion='minimal'] .app-shell .workspace-main,
 html[data-motion='minimal'] .liquid-sidebar :is(.liquid-sidebar-heading,.liquid-brand-link,.liquid-sidebar-toggle,.liquid-sidebar-toggle-icon svg,.liquid-nav-item,.liquid-nav-item span,.liquid-upgrade-link,.liquid-upgrade-link span,.liquid-account,.liquid-account>span:nth-child(2),.liquid-account>svg,.liquid-secondary-nav,.liquid-secondary-nav summary,.liquid-language,.language-trigger) { transition:none; }
 
-/* Match the loading geometry and palette to the real dashboard. */
-.dashboard-loader-shell { background:linear-gradient(135deg,#fffffff2,#fff9f9de); box-shadow:0 18px 45px #482b3610; }
-.dashboard-loader-avatar { border-color:#ec8e9c; }
-.dashboard-loader-target { background:linear-gradient(110deg,#853144 12%,#bd4455 40%,#f18892 58%,#bd4455 78%); background-size:240% 100%; }
-.dashboard-loader-avatar,.dashboard-loader-copy>*,.dashboard-loader-stats,.dashboard-loader-chart,.dashboard-loader-rail,.dashboard-loader-learning { background-image:linear-gradient(100deg,#f5e8eb 20%,#fff 43%,#f9dce1 64%); }
-@media(min-width:1280px) { .dashboard-loader-target { width:clamp(225px,25%,320px); }.dashboard-loader-rail { width:clamp(225px,25%,320px); } }
+/* The dashboard placeholder uses the same shell, columns, and card positions as its content. */
+.dashboard-route-loader .dashboard-loader-header { height:auto; min-height:5.4rem; }
+.dashboard-route-loader .dashboard-loader-avatar { width:4.6rem; height:4.6rem; border-color:#ec8e9c; }
+.dashboard-route-loader .dashboard-loader-copy { width:min(29rem,55vw); }
+.dashboard-route-loader .dashboard-loader-copy>* ,
+.dashboard-route-loader .dashboard-loader-avatar,
+.dashboard-route-loader .dashboard-loader-block { background:linear-gradient(100deg,#f5e8eb 20%,#fff 43%,#f9dce1 64%); background-size:220% 100%; animation:dashboardLoaderSweep 1.55s ease-in-out infinite; }
+.dashboard-route-loader .dashboard-loader-block { display:block; min-width:0; border-radius:1.55rem; }
+.dashboard-route-loader .dashboard-loader-action { width:3rem; height:3rem; border-radius:50%; }
+.dashboard-route-loader .dashboard-loader-streak { width:4.8rem; height:3rem; border-radius:1rem; }
+.dashboard-route-loader .dashboard-loader-grid { display:grid; min-height:0; }
+.dashboard-route-loader .dashboard-loader-target { width:auto; min-height:28rem; border-radius:1.7rem; background:linear-gradient(110deg,#853144 12%,#bd4455 40%,#f18892 58%,#bd4455 78%); background-size:240% 100%; }
+.dashboard-route-loader .dashboard-loader-center { display:block; min-width:0; }
+.dashboard-route-loader .dashboard-loader-stats { display:grid; height:auto; background:none; animation:none; }
+.dashboard-route-loader .dashboard-loader-stats>.dashboard-loader-block { min-height:10.15rem; }
+.dashboard-route-loader .dashboard-loader-chart { height:18.5rem; }
+.dashboard-route-loader .dashboard-loader-rail { width:auto; min-width:0; background:none; animation:none; }
+.dashboard-route-loader .dashboard-loader-leaderboard { height:24rem; }
+.dashboard-route-loader .dashboard-loader-achievement { height:8rem; }
+.dashboard-route-loader .dashboard-loader-learning { display:block; height:auto; background:none; animation:none; }
+.dashboard-route-loader .dashboard-loader-learning>.dashboard-loader-block:first-child { width:8rem; height:.6rem; border-radius:999px; }
+.dashboard-route-loader .dashboard-loader-learning>.dashboard-loader-block:nth-child(2) { width:min(20rem,80%); height:1.5rem; margin-top:.5rem; border-radius:.5rem; }
+.dashboard-route-loader .dashboard-loader-learning-cards { margin-top:1rem; }
+.dashboard-route-loader .dashboard-loader-learning-cards>.dashboard-loader-block { height:9rem; }
+@media(min-width:1280px) and (max-width:1599px) {
+  .dashboard-route-loader .dashboard-loader-stats>.dashboard-loader-block { min-height:7.4rem; }
+  .dashboard-route-loader .dashboard-loader-chart { height:16rem; }
+  .dashboard-route-loader .dashboard-loader-leaderboard { height:21rem; }
+  .dashboard-route-loader .dashboard-loader-achievement { height:7rem; }
+}
+@media(max-width:1279px) {
+  .dashboard-route-loader .dashboard-loader-target { min-height:20rem; }
+}
+@media(max-width:639px) {
+  .dashboard-route-loader .dashboard-loader-avatar { width:3.7rem; height:3.7rem; }
+  .dashboard-route-loader .dashboard-loader-target { min-height:19rem; }
+  .dashboard-route-loader .dashboard-loader-copy { width:min(17rem,45vw); }
+  .dashboard-route-loader .dashboard-loader-action { width:2.5rem; height:2.5rem; }
+}
+
+/* The toolbar and chat share one viewport; only chat messages may scroll. */
+html:has(.app-shell-ai-tutor) { overflow-y:hidden; scrollbar-gutter:auto; }
+.app-shell-ai-tutor { height:100dvh; overflow:hidden; }
+.app-shell-ai-tutor .workspace-toolbar { flex:0 0 auto; }
+.app-shell-ai-tutor .arena-route { height:100%; min-height:0; }
+@media(min-width:1024px) {
+  .app-shell-ai-tutor .ai-tutor-sidebar { overflow-y:hidden; }
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:first-child { padding: .85rem; }
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:first-child p.mt-3 { margin-top:.5rem; line-height:1.35rem; }
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:first-child .mt-4 { margin-top:.6rem; gap:.35rem; }
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:nth-child(2) { padding:.5rem; }
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:nth-child(2) button { min-height:3rem; padding:.4rem; }
+}
+@media(min-width:1024px) and (max-height:800px) {
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:first-child p.mt-3,
+  .app-shell-ai-tutor .ai-tutor-sidebar>section:first-child .mt-4 { display:none; }
+}
+@media(max-width:639px) {
+  .app-shell-ai-tutor .workspace-page { padding-bottom:.75rem; }
+  .app-shell-ai-tutor .ai-chat-hero { padding-top:.5rem; padding-bottom:.5rem; }
+  .app-shell-ai-tutor .ai-chat-hero>span:first-child { display:none; }
+  .app-shell-ai-tutor .ai-chat-hero-orb { width:72px !important; height:72px !important; }
+  .app-shell-ai-tutor .ai-chat-hero h3 { margin-top:.5rem; }
+  .app-shell-ai-tutor .ai-chat-hero p { display:none; }
+}
+@media(min-width:640px) and (max-width:767px) {
+  .app-shell-ai-tutor .workspace-page { padding-bottom:1rem; }
+}

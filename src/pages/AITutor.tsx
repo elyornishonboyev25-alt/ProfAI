@@ -50,14 +50,14 @@ export default function AITutor() {
   const firstName = user?.fullName?.split(' ')[0] ?? 'Learner'
 
   return (
-    <main className="workspace-page relative flex h-[calc(100dvh-5rem)] !min-h-0 overflow-hidden px-3 py-3 sm:px-4 sm:py-4 lg:h-dvh lg:px-5 lg:py-5">
+    <main className="workspace-page relative flex h-full !min-h-0 overflow-hidden px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5">
       <AmbientBackdrop variant="red" />
 
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.38, ease: EASE }}
-        className="relative mx-auto flex h-full min-h-0 w-full max-w-[1400px] flex-col"
+        className="relative mx-auto flex min-h-0 w-full max-w-[1400px] flex-col self-stretch"
       >
         <header className="mb-3 flex shrink-0 flex-row items-center gap-3 rounded-[1.6rem] border border-white/90 bg-[linear-gradient(125deg,rgba(255,255,255,.92),rgba(247,246,247,.78)_62%,rgba(255,238,241,.84))] p-3 shadow-[0_18px_50px_rgba(73,43,52,.09),inset_0_1px_0_white] backdrop-blur-2xl sm:p-3.5">
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -86,7 +86,7 @@ export default function AITutor() {
         </header>
 
         <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-3 lg:grid-cols-[292px_minmax(0,1fr)] lg:grid-rows-1">
-          <aside className="no-scrollbar min-h-0 min-w-0 space-y-3 overflow-x-hidden overflow-y-auto">
+          <aside className="ai-tutor-sidebar no-scrollbar min-h-0 min-w-0 space-y-3 overflow-x-hidden overflow-y-auto">
             <section className="hidden overflow-hidden rounded-3xl border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.86),rgba(248,245,246,.7))] p-4 shadow-[0_16px_42px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl lg:block">
               <div className="flex items-center gap-4">
                 <VoiceOrb state={voiceState} level={voiceLevel} size={64} />

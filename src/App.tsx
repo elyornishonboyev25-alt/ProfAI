@@ -112,25 +112,25 @@ function RouteLoader() {
 
   if (pathname === '/dashboard' || (pathname === '/' && user)) {
     return (
-      <div className="dashboard-route-loader workspace-page min-h-screen px-3 pb-8 pt-3 sm:px-5 sm:pt-5" role="status" aria-label="Opening dashboard">
-        <div className="dashboard-loader-shell mx-auto max-w-[98rem]">
-          <div className="dashboard-loader-header">
-            <span className="dashboard-loader-avatar" />
-            <span className="dashboard-loader-copy">
-              <i />
-              <b />
-              <em />
-            </span>
+      <div className="dashboard-route-loader workspace-page profai-dashboard min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5" role="status" aria-label="Opening dashboard">
+        <div className="dashboard-main-shell mx-auto max-w-[98rem]">
+          <div className="dashboard-entrance-header dashboard-loader-header flex items-center justify-between gap-4 px-1 pb-5">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="dashboard-loader-avatar" />
+              <span className="dashboard-loader-copy"><i /><b /><em /></span>
+              <span className="dashboard-loader-streak dashboard-loader-block hidden sm:block" />
+            </div>
+            <div className="flex gap-2.5"><span className="dashboard-loader-action dashboard-loader-block" /><span className="dashboard-loader-action dashboard-loader-block" /></div>
           </div>
-          <div className="dashboard-loader-grid">
-            <span className="dashboard-loader-target" />
-            <span className="dashboard-loader-center">
-              <i className="dashboard-loader-stats" />
-              <b className="dashboard-loader-chart" />
-            </span>
-            <span className="dashboard-loader-rail" />
+          <div className="dashboard-entrance-grid dashboard-loader-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
+            <span className="dashboard-loader-target dashboard-loader-block" />
+            <div className="dashboard-loader-center min-w-0 space-y-4">
+              <div className="dashboard-loader-stats grid grid-cols-2 gap-3"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /></div>
+              <span className="dashboard-loader-chart dashboard-loader-block" />
+            </div>
+            <div className="dashboard-loader-rail space-y-4"><span className="dashboard-loader-leaderboard dashboard-loader-block" /><span className="dashboard-loader-achievement dashboard-loader-block" /></div>
           </div>
-          <span className="dashboard-loader-learning" />
+          <div className="dashboard-entrance-learning dashboard-loader-learning mt-4"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><div className="dashboard-loader-learning-cards grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /></div></div>
         </div>
       </div>
     )
@@ -211,7 +211,7 @@ function AnimatedRoute({ children, dashboardEntrance = false }: { children: Reac
   )
 }
 
-function WorkspaceFrame({ showSidebar, children }: { showSidebar: boolean; children: ReactNode }) {
+function WorkspaceFrame({ showSidebar, isAiTutorMode, children }: { showSidebar: boolean; isAiTutorMode: boolean; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('profai-sidebar-collapsed') === 'true' } catch { return false }
   })
@@ -221,9 +221,9 @@ function WorkspaceFrame({ showSidebar, children }: { showSidebar: boolean; child
     return next
   })
 
-  return <div className="flex flex-1">
+  return <div className="flex min-h-0 flex-1">
     {showSidebar ? <Sidebar collapsed={collapsed} onToggle={toggleSidebar} /> : null}
-    <main className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${showSidebar ? (collapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'}`}>
+    <main className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${showSidebar ? (collapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'} ${isAiTutorMode ? 'flex min-h-0 flex-col' : ''}`}>
       {children}
     </main>
   </div>
@@ -436,7 +436,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' ? 'app-shell-sticky-content' : ''}`}>
+    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
@@ -452,16 +452,17 @@ function App() {
         </>
       ) : null}
 
-      <div className="relative z-10 flex min-h-screen flex-col">
-        <WorkspaceFrame showSidebar={showSidebar}>
+      <div className={`relative z-10 flex min-h-screen flex-col ${isAiTutorMode ? 'h-dvh overflow-hidden' : ''}`}>
+        <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
-              className={`flex min-h-full flex-col ${
-                isTestMode
+              className={`flex flex-col ${isAiTutorMode
+                ? 'min-h-0 flex-1 overflow-hidden'
+                : isTestMode
                   ? location.pathname.startsWith('/results/')
-                    ? 'min-h-screen overflow-y-auto'
-                    : 'min-h-[calc(100vh-80px)]'
-                  : 'min-h-screen'
+                    ? 'min-h-full min-h-screen overflow-y-auto'
+                    : 'min-h-full min-h-[calc(100vh-80px)]'
+                  : 'min-h-full min-h-screen'
               }`}
             >
               <ErrorBoundary key={location.key}>
@@ -868,7 +869,7 @@ function App() {
                   <Footer />
                 </div>
               )}
-              {showMobileNav ? <div className="h-20 lg:hidden" aria-hidden /> : null}
+              {showMobileNav ? <div className="h-20 shrink-0 lg:hidden" aria-hidden /> : null}
             </div>
         </WorkspaceFrame>
       </div>

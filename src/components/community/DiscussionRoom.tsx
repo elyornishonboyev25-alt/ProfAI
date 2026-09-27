@@ -3,6 +3,19 @@ import { Loader2, MessageCircleMore, RefreshCw, Send, Users, WifiOff } from 'luc
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
 
+function getGuestId() {
+  try {
+    let id = sessionStorage.getItem('profai-discussion-guest-id')
+    if (!id) {
+      id = `guest-${crypto.randomUUID()}`
+      sessionStorage.setItem('profai-discussion-guest-id', id)
+    }
+    return id
+  } catch {
+    return `guest-${crypto.randomUUID()}`
+  }
+}
+
 type DiscussionMessage = {
   id: string
   userId: string
@@ -28,7 +41,14 @@ export default function DiscussionRoom({ roomId, title, description }: Discussio
   const transportRef = useRef<WebSocket | null>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const name = user?.nickname ?? user?.fullName ?? 'Guest learner'
-  const userId = user?.id ?? `guest-${name.toLowerCase().replace(/\W+/g, '-').slice(0, 30)}`
+  const guestIdRef = useRef<string>(getGuestId())
+  const userId = user?.id ?? guestIdRef.current
+
+  useEffect(() => {
+    setMessages([])
+    setDraft('')
+    setOnline(0)
+  }, [roomId])
 
   useEffect(() => {
     let active = true
@@ -55,6 +75,7 @@ export default function DiscussionRoom({ roomId, title, description }: Discussio
       }
       transportRef.current = socket
       socket.onopen = () => {
+        if (!active) return
         attempts = 0
         socket.send(JSON.stringify({ type: 'hello', userId, name }))
         socket.send(JSON.stringify({ type: 'joinDiscussion', roomId }))
@@ -94,14 +115,13 @@ export default function DiscussionRoom({ roomId, title, description }: Discussio
     const text = draft.trim().slice(0, 500)
     if (!text || connection !== 'online') return
     const transport = transportRef.current
-    if (transport?.readyState === WebSocket.OPEN) {
-      transport.send(JSON.stringify({ type: 'discussionMessage', roomId, text }))
-    }
+    if (transport?.readyState !== WebSocket.OPEN) return
+    transport.send(JSON.stringify({ type: 'discussionMessage', roomId, text }))
     setDraft('')
   }
 
   return (
-    <section className="overflow-hidden rounded-[1.8rem] border border-white/90 bg-white/75 shadow-[0_24px_60px_rgba(30,64,175,.11)] backdrop-blur-md">
+    <section className="community-discussion overflow-hidden rounded-[1.8rem] border border-white/90 bg-white/75 shadow-[0_24px_60px_rgba(30,64,175,.11)] backdrop-blur-md">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-gradient-to-r from-red-50/70 via-white to-blue-50/70 px-5 py-4">
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-red-600 text-white shadow-[0_10px_24px_rgba(220,38,38,.24)]"><MessageCircleMore className="h-5 w-5" /></span>
@@ -116,7 +136,7 @@ export default function DiscussionRoom({ roomId, title, description }: Discussio
         </div>
       </header>
 
-      <div ref={viewportRef} className="h-[26rem] space-y-3 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
+      <div ref={viewportRef} className="community-discussion-messages h-[26rem] space-y-3 overflow-y-auto px-4 py-5 sm:px-6" role="log" aria-label={`${title} messages`} aria-live="polite">
         {messages.length === 0 ? (
           <div className="grid h-full place-items-center text-center"><div><MessageCircleMore className="mx-auto h-9 w-9 text-blue-400" /><h3 className="mt-3 font-black text-slate-900">Start the conversation</h3><p className="mt-1 max-w-sm text-sm leading-6 text-slate-500">Share a clear question or useful experience. Everyone currently in this room can reply.</p></div></div>
         ) : messages.map((message) => (

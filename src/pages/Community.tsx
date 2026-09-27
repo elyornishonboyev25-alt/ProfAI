@@ -18,6 +18,7 @@ import {
   MessageCircleMore,
   Mic,
   Radio,
+  RefreshCw,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -99,9 +100,11 @@ export default function Community() {
   const [account, setAccount] = useState<AccountResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
   const [roomStats, setRoomStats] = useState<CommunityRoomStats>(EMPTY_COMMUNITY_ROOM_STATS)
   const [roomStatsConnected, setRoomStatsConnected] = useState(false)
   const debounceRef = useRef<number | null>(null)
+  const requestRef = useRef(0)
 
   useEffect(
     () => subscribeToCommunityRoomStats(setRoomStats, setRoomStatsConnected),
@@ -151,33 +154,36 @@ export default function Community() {
   }, [])
 
   useEffect(() => {
+    const requestId = ++requestRef.current
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     setLoading(true)
     debounceRef.current = window.setTimeout(async () => {
       try {
-        const list = await searchLearners(query, {
+        const list = await searchLearners(query.trim(), {
           targetExam: exam === 'ALL' ? undefined : exam,
           country: sameCountryActive ? account?.profile.country ?? undefined : undefined,
           online: onlineActive || undefined,
         })
+        if (requestId !== requestRef.current) return
         setResults(list)
         setError('')
       } catch (requestError) {
-        setResults([])
+        if (requestId !== requestRef.current) return
         setError(requestError instanceof Error ? requestError.message : 'Learners could not be loaded.')
       } finally {
-        setLoading(false)
+        if (requestId === requestRef.current) setLoading(false)
       }
     }, 260)
     return () => {
+      requestRef.current += 1
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
     }
-  }, [account?.profile.country, exam, onlineActive, query, sameCountryActive])
+  }, [account?.profile.country, exam, onlineActive, query, retryKey, sameCountryActive])
 
   const visibleResults = useMemo(() => {
     const ownTarget = normalizeScore(account?.profile.targetScore)
     const filtered = sameBandActive && ownTarget !== null
-      ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
+      ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget && (!account?.profile.targetExam || learner.targetExam === account.profile.targetExam))
       : results
 
     // The weekly crown owns the first discovery slot for as long as the
@@ -185,7 +191,7 @@ export default function Community() {
     return [...filtered].sort(
       (left, right) => Number(right.weeklyChampion === true) - Number(left.weeklyChampion === true),
     )
-  }, [account?.profile.targetScore, results, sameBandActive])
+  }, [account?.profile.targetExam, account?.profile.targetScore, results, sameBandActive])
 
   const ranked = useMemo(
     () => [...visibleResults].sort((a, b) => matchScore(b, account) - matchScore(a, account) || b.xp - a.xp),
@@ -205,7 +211,7 @@ export default function Community() {
   }
 
   return (
-    <main className="community-page min-h-screen">
+    <main className="community-page">
       <div className="community-shell">
         <header className="community-header">
           <div className="community-brand-row">
@@ -218,7 +224,7 @@ export default function Community() {
               <input
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value.replace(/\s/g, ''))}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder="Find study partners..."
                 aria-label="Find study partners by nickname"
               />
@@ -275,7 +281,7 @@ export default function Community() {
             </div>
 
             <div className="community-card-viewport" role="region" aria-label="Study partner profiles" tabIndex={0}>
-              {error ? <div className="community-error">{error}</div> : null}
+              {error ? <div className="community-error" role="alert"><span>{error}</span><button type="button" onClick={() => setRetryKey((value) => value + 1)}><RefreshCw className="h-4 w-4" /> Try again</button></div> : null}
               {!loading && !error && visibleResults.length === 0 ? (
                 <div className="community-empty">
                   <span><Users className="h-8 w-8" /></span>

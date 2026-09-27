@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, GraduationCap, Loader2, Sparkles, Target, X } from 'lucide-react'
 import UniversityLogo from '@/components/admission/UniversityLogo'
@@ -9,21 +10,34 @@ import { matchUniversities, type DegreeLevel, type MatchInput, type UniversityMa
 import { fetchAccount, updateAccount } from '@/lib/profileApi'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 
-type Props = { open: boolean; onClose: () => void }
+type Props = {
+  open: boolean
+  onClose: () => void
+  resumeInput?: MatchInput | null
+  resumeVisibleCount?: number
+  resumeScrollTop?: number
+}
 
 const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; chip: string }> = {
-  safety: { label: 'Safety', chip: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  match: { label: 'Match', chip: 'bg-amber-100 text-amber-700 border-amber-200' },
-  reach: { label: 'Reach', chip: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  match: { label: 'Explore', chip: 'bg-amber-100 text-amber-700 border-amber-200' },
+  reach: { label: 'Dream', chip: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
 }
 
 const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
-const DEFAULT_GPA = '3.5'
-const DEFAULT_YEARLY_BUDGET = '20000'
+const MAJORS = [
+  'Computer Science', 'Business Management', 'Economics', 'Engineering', 'Medicine', 'Law',
+  'Psychology', 'Data Science', 'Artificial Intelligence', 'Finance', 'Accounting',
+  'Marketing', 'Architecture', 'International Relations', 'Political Science',
+  'Biology / Life Sciences', 'Chemistry', 'Physics', 'Mathematics', 'Education',
+  'Public Health', 'Nursing', 'Media & Communications', 'Art & Design',
+]
+const DEFAULT_GPA = ''
+const DEFAULT_YEARLY_BUDGET = ''
 const RESULTS_PAGE_SIZE = 12
 
-export default function UniversityMatcher({ open, onClose }: Props) {
+export default function UniversityMatcher({ open, onClose, resumeInput, resumeVisibleCount, resumeScrollTop }: Props) {
   const navigate = useNavigate()
+  const resultScrollRef = useRef<HTMLDivElement>(null)
   const pushToast = useToastStore((s: ToastState) => s.pushToast)
 
   const [step, setStep] = useState(1)
@@ -43,6 +57,19 @@ export default function UniversityMatcher({ open, onClose }: Props) {
   // Prefill from the saved account profile each time the matcher opens.
   useEffect(() => {
     if (!open) return
+    if (resumeInput) {
+      setDegreeLevel(resumeInput.degreeLevel ?? 'bachelor')
+      setFieldOfStudy(resumeInput.fieldOfStudy ?? '')
+      setSat(resumeInput.satTotal == null ? '' : String(resumeInput.satTotal))
+      setIelts(resumeInput.ieltsOverall == null ? '' : String(resumeInput.ieltsOverall))
+      setGpa(resumeInput.gpa == null ? '' : String(resumeInput.gpa))
+      setBudget(resumeInput.budgetUsdPerYear == null ? '' : String(resumeInput.budgetUsdPerYear))
+      setPreferredCountry(resumeInput.preferredCountry ?? '')
+      setResults(matchUniversities(resumeInput))
+      setVisibleResultCount(Math.max(RESULTS_PAGE_SIZE, resumeVisibleCount ?? RESULTS_PAGE_SIZE))
+      setStep(4)
+      return
+    }
     setStep(1)
     setSavedSlug(null)
     setResults([])
@@ -62,6 +89,18 @@ export default function UniversityMatcher({ open, onClose }: Props) {
         if (p.degreeLevel === 'bachelor' || p.degreeLevel === 'master' || p.degreeLevel === 'phd') setDegreeLevel(p.degreeLevel)
       })
       .catch(() => {})
+  }, [open, resumeInput, resumeVisibleCount])
+
+  useEffect(() => {
+    if (!open) return
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousHtmlOverflow
+    }
   }, [open])
 
   useEffect(() => {
@@ -133,7 +172,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-sm" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -151,7 +190,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
             </span>
             <div>
               <h2 id="university-matcher-title" className="text-base font-black text-slate-900">Find my university</h2>
-              <p className="text-[11px] font-medium text-slate-500">{step < 4 ? `Step ${step} of 3` : `${results.length} matches ranked for you`}</p>
+              <p className="text-[11px] font-medium text-slate-500">{step < 4 ? `Step ${step} of 3` : `${results.length} universities to explore`}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700" aria-label="Close">
@@ -159,7 +198,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div ref={resultScrollRef} className="flex-1 overflow-y-auto px-6 py-5">
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div key="s1" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="space-y-4">
@@ -177,7 +216,11 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                 </div>
                 <label className="block text-sm font-medium text-slate-700">
                   Field of study / major
-                  <input value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} className="input mt-1" placeholder="e.g. Computer Science, Economics" />
+                  <select value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} className="input mt-1">
+                    <option value="">Choose a major</option>
+                    {fieldOfStudy && !MAJORS.includes(fieldOfStudy) ? <option value={fieldOfStudy}>{fieldOfStudy}</option> : null}
+                    {MAJORS.map((major) => <option key={major} value={major}>{major}</option>)}
+                  </select>
                 </label>
                 <label className="block text-sm font-medium text-slate-700">
                   Preferred country (optional)
@@ -196,14 +239,14 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                 <p className="text-sm font-bold text-slate-700">Your test scores (leave blank if not taken)</p>
                 <label className="block text-sm font-medium text-slate-700">
                   SAT total (400–1600)
-                  <input type="number" min={400} max={1600} value={sat} onChange={(e) => setSat(e.target.value)} className="input mt-1" placeholder="e.g. 1450" />
+                  <input type="number" min={400} max={1600} step={10} value={sat} onChange={(e) => setSat(e.target.value)} className="input mt-1" placeholder="e.g. 1450" />
                 </label>
                 <label className="block text-sm font-medium text-slate-700">
                   IELTS overall (0–9)
                   <input type="number" min={0} max={9} step={0.5} value={ielts} onChange={(e) => setIelts(e.target.value)} className="input mt-1" placeholder="e.g. 7.0" />
                 </label>
                 <p className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-amber-700">
-                  Tip: the more you fill in, the more precise your fit score.
+                  SAT and IELTS alone do not determine admission. Grades, course rigor, essays, recommendations and activities also matter.
                 </p>
               </motion.div>
             ) : null}
@@ -223,7 +266,10 @@ export default function UniversityMatcher({ open, onClose }: Props) {
             ) : null}
 
             {step === 4 ? (
-              <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onAnimationComplete={() => {
+                if (resumeScrollTop) resultScrollRef.current?.scrollTo({ top: resumeScrollTop })
+              }} className="space-y-3">
+                <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-800">Planning fit is not an admission probability. Confirm your major and full entry requirements on each university’s official site.</p>
                 {results.slice(0, visibleResultCount).map((m) => {
                   const cs = CLASS_STYLE[m.classification]
                   const isSaved = savedSlug === m.university.slug
@@ -236,7 +282,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                           <p className="text-[11px] text-slate-500">{m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS ${formatUniversityRank(m.university, '#')}` : ''}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-black text-slate-900">{m.fitPercent}%</p>
+                          <p className="text-lg font-black text-slate-900" title="Planning fit, not admission probability">{m.fitPercent}%</p>
                           <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${cs.chip}`}>{cs.label}</span>
                         </div>
                       </div>
@@ -258,7 +304,10 @@ export default function UniversityMatcher({ open, onClose }: Props) {
                           {isSaved ? 'Saved as target' : 'Set as target'}
                         </button>
                         <button
-                          onClick={() => { onClose(); navigate(`/admission/universities/${m.university.slug}`) }}
+                          onClick={() => navigate(`/admission/universities/${m.university.slug}`, { state: {
+                            admissionReturnTo: '/admission', matcherInput: input,
+                            matcherVisibleCount: visibleResultCount, matcherScrollTop: resultScrollRef.current?.scrollTop ?? 0,
+                          } })}
                           className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
                         >
                           View profile <ArrowRight className="h-3.5 w-3.5" />
@@ -307,6 +356,7 @@ export default function UniversityMatcher({ open, onClose }: Props) {
           )}
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   )
 }

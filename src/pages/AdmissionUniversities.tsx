@@ -132,9 +132,9 @@ const UniversityCard = memo(function UniversityCard({
         <div
           className="admission-match-ring"
           style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
-          title={hasProfileScores ? 'Fit based on your saved scores' : 'Add your SAT or IELTS score for a more precise fit'}
+          title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Planning fit only; add your scores and check full admission requirements'}
         >
-          <span><small>{hasProfileScores ? 'Match' : 'Fit'}</small><strong>{fit.fitPercent}%</strong></span>
+          <span><small>Fit</small><strong>{fit.fitPercent}%</strong></span>
         </div>
       </div>
 

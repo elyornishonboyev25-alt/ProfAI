@@ -82,9 +82,15 @@ export default function AdmissionUniversity() {
   const campusImage = useUniversityCampusImage(university?.name ?? '')
   const { isShortlisted, toggleShortlist } = useUniversityShortlist()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
-  const admissionReturnTo = (location.state as { admissionReturnTo?: unknown } | null)?.admissionReturnTo === '/admission/shortlist'
+  const returnState = location.state as {
+    admissionReturnTo?: unknown
+    matcherInput?: unknown
+    matcherVisibleCount?: unknown
+    matcherScrollTop?: unknown
+  } | null
+  const admissionReturnTo = returnState?.admissionReturnTo === '/admission/shortlist'
     ? '/admission/shortlist'
-    : '/admission/universities'
+    : returnState?.admissionReturnTo === '/admission' ? '/admission' : '/admission/universities'
 
   if (!university) {
     return (
@@ -153,11 +159,17 @@ export default function AdmissionUniversity() {
             <div className="relative">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button
-                  onClick={() => navigate(admissionReturnTo)}
+                  onClick={() => navigate(admissionReturnTo, {
+                    state: admissionReturnTo === '/admission' ? {
+                      matcherInput: returnState?.matcherInput,
+                      matcherVisibleCount: returnState?.matcherVisibleCount,
+                      matcherScrollTop: returnState?.matcherScrollTop,
+                    } : null,
+                  })}
                   className="route-back-button"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {admissionReturnTo === '/admission/shortlist' ? 'Back to Shortlist' : 'Back to Universities'}
+                  {admissionReturnTo === '/admission/shortlist' ? 'Back to Shortlist' : admissionReturnTo === '/admission' ? 'Back to Matches' : 'Back to Universities'}
                 </button>
                 <button
                   type="button"

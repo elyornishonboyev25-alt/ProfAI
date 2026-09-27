@@ -1,6 +1,6 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
 import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
@@ -8,6 +8,7 @@ import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionP
 import './admission-home.css'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import UniversityMatcher from '@/components/admission/UniversityMatcher'
+import type { MatchInput } from '@/data/admission/match'
 import LucideIcon from '@/components/admission/LucideIcon'
 import {
   getUniversities,
@@ -23,7 +24,12 @@ import {
 
 export default function Admission() {
   const navigate = useNavigate()
-  const [matcherOpen, setMatcherOpen] = useState(false)
+  const location = useLocation()
+  const [resumeMatcherInput, setResumeMatcherInput] = useState<MatchInput | null>(
+    () => (location.state as { matcherInput?: MatchInput } | null)?.matcherInput ?? null,
+  )
+  const [resumeMatcherPosition, setResumeMatcherPosition] = useState(() => location.state as { matcherVisibleCount?: number; matcherScrollTop?: number } | null)
+  const [matcherOpen, setMatcherOpen] = useState(Boolean(resumeMatcherInput))
   const [completed, setCompleted] = useState(() => getCompletedLessons())
   const universities = getUniversities()
   const topFour = universities.slice(0, 4)
@@ -36,10 +42,20 @@ export default function Admission() {
 
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
+  const closeMatcher = () => {
+    setMatcherOpen(false)
+    setResumeMatcherInput(null)
+    setResumeMatcherPosition(null)
+    if ((location.state as { matcherInput?: MatchInput } | null)?.matcherInput) {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }
+
   return (
     <main className="workspace-page admission-home relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <ArenaBackdrop />
-      <UniversityMatcher open={matcherOpen} onClose={() => setMatcherOpen(false)} />
+      <UniversityMatcher open={matcherOpen} onClose={closeMatcher} resumeInput={resumeMatcherInput}
+        resumeVisibleCount={resumeMatcherPosition?.matcherVisibleCount} resumeScrollTop={resumeMatcherPosition?.matcherScrollTop} />
 
       <div className="relative z-10 mx-auto w-full max-w-[78rem] space-y-6">
         <header className="admission-home-heading">
@@ -170,7 +186,7 @@ export default function Admission() {
         {/* ----------------------- Find-my-university banner ----------------------- */}
         <Reveal delay={0.03}>
           <button
-            onClick={() => setMatcherOpen(true)}
+            onClick={() => { setResumeMatcherInput(null); setResumeMatcherPosition(null); setMatcherOpen(true) }}
             className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
             type="button"
           >

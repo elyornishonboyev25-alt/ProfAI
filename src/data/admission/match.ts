@@ -16,7 +16,7 @@ export type MatchInput = {
   preferredCountry?: string | null
 }
 
-export type MatchClassification = 'reach' | 'match' | 'safety'
+export type MatchClassification = 'reach' | 'match'
 
 export type EstimatedRequirements = { sat: number | null; ielts: number | null; gpa: number | null; satExplicit: boolean; ieltsExplicit: boolean }
 
@@ -59,37 +59,113 @@ function metricScore(user: number, req: number, spread: number) {
   return clamp(0.5 + (user - req) / (2 * spread), 0, 1)
 }
 
+// These terms only identify subjects explicitly mentioned in the catalog overview.
+// An overview match is a research lead, not proof that a particular degree is offered.
+const SUBJECT_TERMS: Record<string, string[]> = {
+  'Computer Science': ['computer science', 'computing', 'informatics'],
+  'Business Management': ['business', 'management'],
+  Economics: ['economics', 'economic'],
+  Engineering: ['engineering'],
+  Medicine: ['medicine', 'medical'],
+  Law: ['law', 'legal'],
+  Psychology: ['psychology'],
+  'Data Science': ['data science', 'data analytics'],
+  'Artificial Intelligence': ['artificial intelligence', 'machine learning'],
+  Finance: ['finance', 'financial'],
+  Accounting: ['accounting'],
+  Marketing: ['marketing'],
+  Architecture: ['architecture'],
+  'International Relations': ['international relations', 'political science'],
+  'Political Science': ['political science', 'politics'],
+  'Biology / Life Sciences': ['biology', 'life sciences'],
+  Chemistry: ['chemistry'],
+  Physics: ['physics'],
+  Mathematics: ['mathematics', 'maths'],
+  Education: ['education', 'teaching'],
+  'Public Health': ['public health'],
+  Nursing: ['nursing'],
+  'Media & Communications': ['media', 'communications', 'journalism'],
+  'Art & Design': ['art', 'design'],
+}
+
+// Confirmed on the official undergraduate subject lists:
+// https://majors.stanford.edu/opportunities/computer-science
+// https://economics.stanford.edu/undergraduate/major
+// https://college.harvard.edu/academics/liberal-arts-sciences/concentrations
+const VERIFIED_BACHELOR_SUBJECTS: Record<string, string[]> = {
+  'stanford-university': ['Computer Science', 'Economics', 'Engineering'],
+  'harvard-university': ['Computer Science', 'Economics', 'Engineering'],
+}
+
+function subjectEvidence(uni: University, field: string, bachelor: boolean): 'official listing' | 'overview' | null {
+  if (bachelor && VERIFIED_BACHELOR_SUBJECTS[uni.id]?.includes(field)) return 'official listing'
+  const terms = SUBJECT_TERMS[field] ?? [field.toLowerCase()]
+  const overview = `${uni.tagline} ${uni.about}`.toLowerCase()
+  return terms.some((term) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(overview)) ? 'overview' : null
+}
+
+function selectiveFitCap(uni: University): number {
+  // QS is a broad planning signal, not an acceptance rate. Conservative caps
+  // prevent a test threshold from presenting a prominent university as safe.
+  if (uni.groups?.includes('ivy-league')) return 38
+  if (typeof uni.rank !== 'number') return 100
+  if (uni.rank <= 10) return 32
+  if (uni.rank <= 25) return 38
+  if (uni.rank <= 50) return 45
+  if (uni.rank <= 100) return 52
+  return 100
+}
+
 export function scoreUniversity(uni: University, input: MatchInput): UniversityMatch {
   const req = estimateRequirements(uni)
   const reasons: string[] = []
   const scores: number[] = []
 
-  if (typeof input.satTotal === 'number' && input.satTotal > 0 && req.sat !== null) {
+  const hasBachelorRequirements = (input.degreeLevel ?? 'bachelor') === 'bachelor'
+  const satPolicy = uni.admission?.bachelor?.find((item) => item.comparison === 'satTotal')?.policy
+  if (hasBachelorRequirements && typeof input.satTotal === 'number' && input.satTotal > 0 && req.sat !== null && satPolicy !== 'conditional') {
     const s = metricScore(input.satTotal, req.sat, 160)
     scores.push(s)
     const verb = input.satTotal >= req.sat ? 'meets' : input.satTotal >= req.sat - 80 ? 'is near' : 'is below'
     reasons.push(`SAT ${input.satTotal} ${verb} the official ${req.sat} published benchmark`)
-  } else if (typeof input.satTotal === 'number' && input.satTotal > 0) {
-    reasons.push('No numeric SAT cutoff is published, so no SAT gap was invented')
+  } else if (hasBachelorRequirements && typeof input.satTotal === 'number' && input.satTotal > 0) {
+    reasons.push(satPolicy === 'conditional'
+      ? 'The published SAT figure applies only to specific qualification routes; check your route'
+      : 'No numeric SAT cutoff is published, so no SAT gap was invented')
   }
 
-  if (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0 && req.ielts !== null) {
+  if (hasBachelorRequirements && typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0 && req.ielts !== null) {
     const s = metricScore(input.ieltsOverall, req.ielts, 1)
     scores.push(s)
     const verb = input.ieltsOverall >= req.ielts ? 'meets' : input.ieltsOverall >= req.ielts - 0.5 ? 'is near' : 'is below'
-    reasons.push(`IELTS ${input.ieltsOverall.toFixed(1)} ${verb} the official ${req.ielts.toFixed(1)} published benchmark`)
-  } else if (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0) {
+    reasons.push(`IELTS ${input.ieltsOverall.toFixed(1)} ${verb} the published ${req.ielts.toFixed(1)} benchmark where applicable`)
+  } else if (hasBachelorRequirements && typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0) {
     reasons.push('No numeric IELTS cutoff is published, so no IELTS gap was invented')
   }
 
-  if (typeof input.gpa === 'number' && input.gpa > 0 && req.gpa !== null) {
-    const s = metricScore(input.gpa, req.gpa, 0.4)
-    scores.push(s)
-    const verb = input.gpa >= req.gpa ? 'meets' : input.gpa >= req.gpa - 0.2 ? 'is near' : 'is below'
-    reasons.push(`GPA ${input.gpa.toFixed(2)} ${verb} the ~${req.gpa.toFixed(2)} (est.) target`)
+  let avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0.5
+
+  if (typeof input.gpa === 'number' && input.gpa > 0) {
+    avg += clamp((input.gpa - 3) * 0.08, -0.08, 0.08)
+    reasons.push('GPA is a planning signal; course rigor and grading systems also matter')
   }
 
-  let avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : typeof uni.rank === 'number' ? clamp(0.5 + (50 - uni.rank) / 100, 0.2, 0.8) : 0.5
+  const field = input.fieldOfStudy?.trim()
+  if (field) {
+    const evidence = subjectEvidence(uni, field, hasBachelorRequirements)
+    if (evidence) {
+      avg += 0.08
+      reasons.unshift(evidence === 'official listing'
+        ? `${field} appears in the official undergraduate subject list; verify this year’s entry route`
+        : `${field} is mentioned in this university’s overview; verify the exact degree`)
+    } else {
+      reasons.push(`Check whether ${field} is offered for your degree level`)
+    }
+  }
+
+  if (!hasBachelorRequirements) {
+    reasons.unshift('Graduate admission is programme-specific; undergraduate test policies were not used')
+  }
 
   // Country preference
   if (input.preferredCountry) {
@@ -112,23 +188,25 @@ export function scoreUniversity(uni: University, input: MatchInput): UniversityM
     }
   }
 
-  avg = clamp(avg, 0, 1)
-  const classification: MatchClassification = avg >= 0.62 ? 'safety' : avg >= 0.42 ? 'match' : 'reach'
+  const cap = selectiveFitCap(uni)
+  const fitPercent = Math.min(Math.round(clamp(avg, 0, 1) * 100), cap)
+  if (cap < 100) reasons.unshift('Highly competitive option; meeting test benchmarks does not make admission likely')
+  const classification: MatchClassification = cap <= 45 || fitPercent < 42 ? 'reach' : 'match'
 
   if (scores.length === 0) {
     const hasUserTestScore = (typeof input.satTotal === 'number' && input.satTotal > 0) || (typeof input.ieltsOverall === 'number' && input.ieltsOverall > 0)
     reasons.unshift(
-      hasUserTestScore
+      !hasBachelorRequirements
+        ? 'Check the exact graduate programme’s academic and language requirements'
+        : hasUserTestScore
         ? 'This university publishes no comparable numeric cutoff for the scores you entered'
-        : typeof uni.rank === 'number'
-          ? 'Add your scores for a more precise fit — this fallback uses QS rank only'
-          : 'Add your scores for a more precise fit',
+        : 'Add your scores and check the programme requirements for a more useful fit',
     )
   }
 
   return {
     university: uni,
-    fitPercent: Math.round(avg * 100),
+    fitPercent,
     classification,
     reasons,
     requirements: req,
@@ -136,7 +214,24 @@ export function scoreUniversity(uni: University, input: MatchInput): UniversityM
 }
 
 export function matchUniversities(input: MatchInput): UniversityMatch[] {
-  return universities
+  const ranked = universities
     .map((uni) => scoreUniversity(uni, input))
     .sort((a, b) => b.fitPercent - a.fitPercent || (a.university.rank ?? Number.MAX_SAFE_INTEGER) - (b.university.rank ?? Number.MAX_SAFE_INTEGER))
+
+  const field = input.fieldOfStudy?.trim()
+  if (!field) return ranked
+
+  // Keep a few supported dream options visible in the initial results even
+  // though their intentionally conservative fit score is lower.
+  const dreams = ranked.filter((item) => item.classification === 'reach'
+    && typeof item.university.rank === 'number' && item.university.rank <= 50
+    && subjectEvidence(item.university, field, (input.degreeLevel ?? 'bachelor') === 'bachelor'))
+    .sort((a, b) => {
+      const aVerified = subjectEvidence(a.university, field, (input.degreeLevel ?? 'bachelor') === 'bachelor') === 'official listing'
+      const bVerified = subjectEvidence(b.university, field, (input.degreeLevel ?? 'bachelor') === 'bachelor') === 'official listing'
+      return Number(bVerified) - Number(aVerified) || b.fitPercent - a.fitPercent
+    }).slice(0, 3)
+  const dreamIds = new Set(dreams.map((item) => item.university.id))
+  const others = ranked.filter((item) => !dreamIds.has(item.university.id))
+  return [...others.slice(0, 9), ...dreams, ...others.slice(9)]
 }

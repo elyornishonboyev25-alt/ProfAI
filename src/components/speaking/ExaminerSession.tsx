@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, Headphones, Loader2, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
+import { ArrowLeft, AudioLines, CheckCircle2, Headphones, Loader2, MessageSquareText, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
 import {
   CUE_CARDS,
   INTERVIEW_PACKS,
@@ -516,30 +516,30 @@ export default function ExaminerSession({
   // ── Render: pre-start gate ───────────────────────────────────────────────
   if (!started) {
     return (
-      <div className="speaking-exam mx-auto max-w-4xl px-4 py-6 sm:px-6">
-        <header className="speaking-exam-header mb-5">
+      <div className="speaking-exam speaking-exam-v2 mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <header className="speaking-session-header mb-5">
           <button onClick={onExit} className="speaking-icon-button" aria-label="Back to Speaking tests"><ArrowLeft className="h-5 w-5" /></button>
-          <div><p className="speaking-eyebrow">IELTS Speaking</p><h1 className="text-lg font-black text-slate-900">{modeLabel}</h1></div>
+          <span className="speaking-session-mark"><Mic className="h-6 w-6" /></span>
+          <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p><h1 className="truncate text-lg font-black text-slate-900">{modeLabel}</h1></div>
+          <span className="speaking-part-pill">Ready to begin</span>
         </header>
-        <div className="speaking-answer-panel p-6 sm:p-8">
-        <span className="speaking-part-pill">AI examiner session</span>
-        <h2 className="mt-5 text-2xl font-black text-slate-900">Ready to speak?</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Your AI examiner will speak each question aloud. Tap the microphone, answer naturally, then tap stop. The
-          examiner asks adaptive follow-ups and grades you with an IELTS band score at the end.
-        </p>
-        <ul className="mt-4 space-y-2 text-sm text-slate-700">
-          <li className="flex items-center gap-2"><Volume2 className="h-4 w-4 text-red-600" /> Turn your sound on to hear the examiner.</li>
-          <li className="flex items-center gap-2"><Mic className="h-4 w-4 text-red-600" /> Allow microphone access when prompted.</li>
-        </ul>
-        {typingMode ? (
-          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            Microphone or speech recognition isn’t available here — you can type your answers instead and still get a full band score.
-          </p>
-        ) : null}
-        <button onClick={beginSession} className="arena-primary-btn cta-sheen mt-6 w-full justify-center py-3">
-          Start Session
-        </button>
+        <div className="speaking-start-layout">
+          <section className="speaking-start-hero">
+            <span className="speaking-start-orb"><Mic className="h-10 w-10" /></span>
+            <p className="speaking-start-kicker">LIVE SPEAKING PRACTICE</p>
+            <h2>Speak naturally.<br />Get sharper feedback.</h2>
+            <p>The examiner follows your answers, moves through the test and gives you a band estimate with clear next steps.</p>
+            <div className="speaking-start-features"><span><AudioLines className="h-4 w-4" /> Spoken questions</span><span><MessageSquareText className="h-4 w-4" /> Adaptive follow ups</span><span><CheckCircle2 className="h-4 w-4" /> Band feedback</span></div>
+          </section>
+          <section className="speaking-start-guide">
+            <p className="speaking-eyebrow">Before you begin</p>
+            <h3>Make your answer count.</h3>
+            <div className="speaking-start-tip"><span>01</span><div><strong>Listen to the question</strong><p>Turn on your sound so you can hear the examiner.</p></div><Volume2 className="h-4 w-4" /></div>
+            <div className="speaking-start-tip"><span>02</span><div><strong>Speak in full ideas</strong><p>Allow microphone access, then give a reason or example.</p></div><Mic className="h-4 w-4" /></div>
+            <div className="speaking-start-tip"><span>03</span><div><strong>Review your result</strong><p>See your estimated band and a focused improvement plan.</p></div><CheckCircle2 className="h-4 w-4" /></div>
+            {typingMode ? <p className="speaking-inline-error">Microphone access is unavailable. You can type your answers to continue.</p> : null}
+            <button onClick={beginSession} className="speaking-record-button mt-6">Start speaking session <ArrowLeft className="h-4 w-4 rotate-180" /></button>
+          </section>
         </div>
       </div>
     )
@@ -547,60 +547,60 @@ export default function ExaminerSession({
 
   const isExaminerBusy = phase === 'examiner_speaking' || phase === 'thinking'
   const canRecord = phase === 'awaiting_answer'
+  const isFullMock = config.mode === 'full_mock'
+  const answeredCount = chat.filter((turn) => turn.role === 'candidate').length
 
   return (
-    <div className="speaking-exam mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6">
-      <header className="speaking-exam-header">
+    <div className="speaking-exam speaking-exam-v2 mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6">
+      <header className="speaking-session-header">
         <button onClick={onExit} className="speaking-icon-button" aria-label="End session"><ArrowLeft className="h-5 w-5" /></button>
+        <span className="speaking-session-mark"><Mic className="h-6 w-6" /></span>
         <div className="min-w-0 flex-1">
-          <p className="speaking-eyebrow">IELTS Speaking</p>
-          <h1 className="truncate text-lg font-black text-slate-900 sm:text-xl">{modeLabel}</h1>
+          <p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p>
+          <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl">{modeLabel}</h1>
         </div>
-        <span className="speaking-part-pill">{activePart > 0 ? `Part ${activePart} of 3` : 'Interview'}</span>
+        <span className="speaking-header-status"><span /> Session in progress</span>
+        <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? `Part ${activePart} of 3` : `Part ${activePart}` : 'Interview'}</span>
       </header>
-      <div className="speaking-step-rail" aria-label="Speaking test parts">
-        {[1, 2, 3].map((part) => <span key={part} className={activePart === part ? 'is-active' : activePart > part ? 'is-complete' : ''}>{activePart > part ? <CheckCircle2 className="h-4 w-4" /> : part}<span className="hidden sm:inline">Part {part}</span></span>)}
-      </div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-        <span className="inline-flex items-center gap-1.5"><Headphones className="h-4 w-4 text-red-500" /> Listen to the examiner, then answer naturally.</span>
-        <span>Feedback and band score appear at the end</span>
-      </div>
 
-      {/* Transcript */}
-      <div
-        ref={scrollRef}
-        className="speaking-conversation space-y-4 overflow-y-auto p-4 sm:p-6"
-        aria-label="Speaking conversation"
-      >
+      {isFullMock ? <nav className="speaking-journey" aria-label="Speaking test parts">
+        {[1, 2, 3].map((part) => <div key={part} className={`speaking-journey-step ${activePart === part ? 'is-active' : activePart > part ? 'is-complete' : ''}`} aria-current={activePart === part ? 'step' : undefined}>
+          <span className="speaking-journey-number">{activePart > part ? <CheckCircle2 className="h-4 w-4" /> : String(part).padStart(2, '0')}</span>
+          <span className="speaking-journey-text"><strong>Part {part}</strong><small>{part === 1 ? 'Interview' : part === 2 ? 'Long turn' : 'Discussion'}</small></span>
+          {part < 3 ? <span className="speaking-journey-line" /> : null}
+        </div>)}
+      </nav> : null}
+
+      <main className="speaking-session-grid">
+      <section className="speaking-transcript-panel" aria-label="Speaking conversation">
+        <div className="speaking-panel-heading">
+          <span className="speaking-panel-icon"><MessageSquareText className="h-[18px] w-[18px]" /></span>
+          <div><h2>Conversation</h2><p>Your exchange with the examiner</p></div>
+          <span className="speaking-turn-count">{answeredCount} {answeredCount === 1 ? 'answer' : 'answers'}</span>
+        </div>
+        <div ref={scrollRef} className="speaking-conversation" role="log" aria-live="polite" aria-relevant="additions text">
         {chat.map((turn) => (
           <motion.div
             key={turn.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex ${turn.role === 'candidate' ? 'justify-end' : 'justify-start'}`}
+            className={`speaking-turn ${turn.role === 'candidate' ? 'speaking-turn--candidate' : 'speaking-turn--examiner'}`}
           >
-            <div
-              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm sm:max-w-[76%] ${
-                turn.role === 'examiner'
-                  ? 'rounded-tl-sm border border-red-100 bg-white text-slate-800'
-                  : 'rounded-tr-sm bg-gradient-to-br from-red-600 to-rose-600 text-white'
-              }`}
-            >
-              {turn.role === 'examiner' ? (
-                <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-red-500">
-                  {examinerLabel}
-                </span>
-              ) : <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-white/75">You</span>}
-              {turn.text}
+            <span className="speaking-turn-avatar" aria-hidden>{turn.role === 'candidate' ? <Mic className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span>
+            <div className="speaking-turn-bubble">
+              <span className="speaking-turn-name">{turn.role === 'candidate' ? 'You' : examinerLabel}</span>
+              <p>{turn.text}</p>
             </div>
           </motion.div>
         ))}
 
         {/* Live interim transcript while recording */}
         {recording && (recognition.interimTranscript || recognition.finalTranscript) ? (
-          <div className="flex justify-end">
-            <div className="max-w-[80%] rounded-2xl rounded-tr-sm border border-dashed border-red-300 bg-red-50/70 px-4 py-2.5 text-sm leading-6 text-slate-600">
-              {recognition.finalTranscript} <span className="text-slate-400">{recognition.interimTranscript}</span>
+          <div className="speaking-turn speaking-turn--candidate">
+            <span className="speaking-turn-avatar" aria-hidden><Mic className="h-4 w-4" /></span>
+            <div className="speaking-turn-bubble speaking-turn-bubble--draft">
+              <span className="speaking-turn-name">Live transcript</span>
+              <p>{recognition.finalTranscript} <span className="opacity-70">{recognition.interimTranscript}</span></p>
             </div>
           </div>
         ) : null}
@@ -620,100 +620,62 @@ export default function ExaminerSession({
             </div>
           </div>
         ) : null}
-      </div>
-
-      {/* Cue card (Part 2) */}
-      {cueCard && (phase === 'preparing' || (phase === 'awaiting_answer' && speakLeft > 0)) ? (
-        <div className="speaking-prompt-card mt-4 p-4 sm:p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-black text-slate-900">{cueCard.title}</p>
-            <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
-              {phase === 'preparing' ? `Prep ${prepLeft}s` : `Speak ${speakLeft}s`}
-            </span>
-          </div>
-          <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-red-600">You should say:</p>
-          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-slate-700">
-            {cueCard.bullets.map((b) => (
-              <li key={b}>{b}</li>
-            ))}
-          </ul>
-          {phase === 'preparing' ? (
-            <button onClick={() => { setPhase('awaiting_answer'); setPrepLeft(0); setSpeakLeft(120) }} className="arena-secondary-btn mt-3 text-sm">
-              I’m ready — start speaking
-            </button>
-          ) : null}
         </div>
-      ) : null}
+        <div className="speaking-transcript-footer"><span className="speaking-live-dot" /> Conversation in progress <span className="speaking-footer-end">Scroll to revisit earlier turns</span></div>
+      </section>
 
-      {/* Current question reminder */}
-      {canRecord && currentPrompt && !cueCard ? (
-        <div className="speaking-prompt-card mt-4 px-4 py-3 text-sm font-medium leading-6 text-slate-700">
-          <span className="mr-2 font-bold uppercase tracking-wide text-red-500">Current question</span><br />
-          {currentPrompt}
+      <section className="speaking-focus-panel" aria-label="Current question and response controls">
+        <div className="speaking-panel-heading speaking-panel-heading--focus">
+          <span className="speaking-panel-icon"><Headphones className="h-[18px] w-[18px]" /></span>
+          <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the prompt below' : 'Listen and get ready to respond'}</p></div>
+          <span className={`speaking-phase-chip ${recording ? 'is-recording' : ''}`}><span />{recording ? 'Recording' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
         </div>
-      ) : null}
-
-      {/* Controls */}
-      <div className="speaking-answer-panel mt-4 p-4 sm:p-5">
-        <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-red-600">Your response</p>
-        {isExaminerBusy ? (
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
-              </span>
-              {phase === 'thinking' ? 'Preparing the next question…' : 'Examiner is speaking…'}
-            </div>
-            {phase === 'examiner_speaking' ? (
-              <button onClick={skipAudio} className="arena-secondary-btn text-sm">
-                <SkipForward className="mr-1.5 h-4 w-4" /> Skip
-              </button>
-            ) : null}
-          </div>
-        ) : canRecord ? (
-          typingMode ? (
-            <div>
-              <p className="mb-2 text-xs font-semibold text-slate-500">Type your answer:</p>
-              <textarea
-                value={typedAnswer}
-                onChange={(e) => setTypedAnswer(e.target.value)}
-                className="input min-h-[90px] w-full resize-y"
-                placeholder="Type a full, developed answer here…"
-              />
-              <button onClick={submitTyped} disabled={!typedAnswer.trim()} className="arena-primary-btn mt-3 justify-center disabled:opacity-50">
-                <Send className="mr-2 h-4 w-4" /> Submit answer
-              </button>
+        <div className="speaking-focus-content">
+          {cueCard && (phase === 'preparing' || (canRecord && speakLeft > 0)) ? (
+            <div className="speaking-question-card speaking-question-card--cue">
+              <div className="speaking-question-meta"><span>PART 02 · LONG TURN</span><strong>{phase === 'preparing' ? `Prep ${prepLeft}s` : `Speak ${speakLeft}s`}</strong></div>
+              <h3>{cueCard.title}</h3>
+              <p className="speaking-question-hint">You should say:</p>
+              <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+              {phase === 'preparing' ? <button onClick={() => { setPhase('awaiting_answer'); setPrepLeft(0); setSpeakLeft(120) }} className="speaking-quiet-button mt-4">I’m ready — start speaking</button> : null}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-3">
-              <MicVisualizer stream={micStream} active={recording} />
-              {!recording ? (
-                <button onClick={startRecording} className="arena-primary-btn cta-sheen px-6 py-3">
-                  <Mic className="mr-2 h-5 w-5" /> Record answer
-                </button>
-              ) : (
-                <button onClick={() => void handleStopRecording()} disabled={stopping} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3 disabled:opacity-50">
-                  <Square className="mr-2 h-4 w-4 fill-white" /> {stopping ? 'Transcribing…' : 'Stop & submit'}
-                </button>
-              )}
-              <button
-                onClick={() => setTypingMode(true)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-600"
-              >
-                <Pencil className="h-3 w-3" /> Type instead
-              </button>
-              <p className="text-center text-xs text-slate-500">Speak clearly. If no words are detected, you can retry.</p>
-              {recognition.error ? <p className="text-xs text-red-600">{recognition.error}</p> : null}
+            <div className="speaking-question-card">
+              <div className="speaking-question-meta"><span>{canRecord ? 'CURRENT QUESTION' : 'EXAMINER PROMPT'}</span><span>{activePart > 0 ? `PART 0${activePart}` : 'INTERVIEW'}</span></div>
+              <h3>{currentPrompt || 'The examiner is preparing your next question.'}</h3>
+              <p className="speaking-question-hint">{canRecord ? 'Answer in your own words. Add a reason or example when you can.' : 'Your response controls will appear when the examiner finishes.'}</p>
             </div>
-          )
-        ) : (
-          <p className="text-center text-sm text-slate-500">Preparing…</p>
-        )}
-      </div>
+          )}
 
-      {answerError ? <p role="alert" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{answerError}</p> : null}
-      {evalError ? <p className="mt-3 text-center text-sm text-red-600">{evalError}</p> : null}
+          <div className="speaking-response-station">
+            <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3>Your response</h3><p>{typingMode ? 'Written answer' : 'Voice answer'}</p></div></div>
+            {isExaminerBusy ? (
+              <div className="speaking-wait-state"><div className="speaking-wait-orb"><AudioLines className="h-7 w-7" /></div><strong>{phase === 'thinking' ? 'Preparing the next question…' : 'Examiner is speaking…'}</strong><p>Take a moment to listen before you answer.</p>
+                {phase === 'examiner_speaking' ? <button onClick={skipAudio} className="speaking-quiet-button mt-3"><SkipForward className="h-4 w-4" /> Skip audio</button> : null}
+              </div>
+            ) : canRecord ? typingMode ? (
+              <div className="speaking-input-state">
+                <textarea value={typedAnswer} onChange={(event) => setTypedAnswer(event.target.value)} className="speaking-answer-input" placeholder="Type a full, developed answer here…" aria-label="Your answer" />
+                <button onClick={submitTyped} disabled={!typedAnswer.trim()} className="speaking-record-button disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" /> Submit answer</button>
+                {recognition.supported ? <button onClick={() => setTypingMode(false)} className="speaking-text-switch"><Mic className="h-4 w-4" /> Use microphone</button> : null}
+              </div>
+            ) : (
+              <div className="speaking-input-state">
+                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} /><span className="speaking-waveform-label">{recording ? 'Recording your answer' : 'Microphone ready'}</span></div>
+                {!recording ? <button onClick={startRecording} disabled={stopping} className="speaking-record-button disabled:opacity-50"><Mic className="h-5 w-5" /> Record answer</button> : <button onClick={() => void handleStopRecording()} disabled={stopping} className="speaking-record-button speaking-record-button--stop disabled:opacity-50"><Square className="h-4 w-4 fill-current" />{stopping ? 'Transcribing…' : 'Stop & submit'}</button>}
+                <button onClick={() => setTypingMode(true)} disabled={recording || stopping} className="speaking-text-switch disabled:opacity-40"><Pencil className="h-4 w-4" /> Type instead</button>
+                {recognition.error ? <p role="alert" className="speaking-inline-error">{recognition.error}</p> : null}
+              </div>
+            ) : (
+              <div className="speaking-wait-state"><div className="speaking-wait-orb"><Loader2 className="h-7 w-7 animate-spin" /></div><strong>{phase === 'evaluating' ? 'Preparing your feedback…' : 'Get ready to answer'}</strong><p>{phase === 'preparing' ? 'Use this time to plan your long turn.' : 'Your next prompt is coming up.'}</p></div>
+            )}
+          </div>
+          {answerError ? <p role="alert" className="speaking-inline-error">{answerError}</p> : null}
+          {evalError ? <p role="alert" className="speaking-inline-error">{evalError}</p> : null}
+        </div>
+        <div className="speaking-focus-footer"><CheckCircle2 className="h-4 w-4" /> Detailed feedback and an estimated band appear after the session.</div>
+      </section>
+      </main>
     </div>
   )
 }

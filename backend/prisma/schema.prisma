@@ -163,6 +163,7 @@ model User {
   learningCenterNotesAuthored         LearningCenterTeacherNote[]          @relation("LearningCenterNoteAuthor")
   learningCenterNotesReceived         LearningCenterTeacherNote[]          @relation("LearningCenterNoteStudent")
   issueReports                        IssueReport[]
+  studyPlan                           StudyPlan?
 
   @@index([xp, level])
   @@index([createdAt])
@@ -408,6 +409,33 @@ model GuestDiagnostic {
 
   @@index([expiresAt])
   @@index([claimedById, claimedAt])
+}
+
+// Account-owned university preparation plan. Each generated week is retained
+// so completion and the reasons for subsequent adjustments remain reviewable.
+model StudyPlan {
+  id        String          @id @default(cuid())
+  userId    String          @unique
+  answers   Json
+  roadmap   Json
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeks     StudyPlanWeek[]
+}
+
+model StudyPlanWeek {
+  id          String    @id @default(cuid())
+  planId      String
+  weekStart   String
+  days        Json
+  review      Json
+  generatedAt DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  plan        StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, weekStart])
+  @@index([planId, weekStart])
 }
 
 // Privacy-safe AI request ledger. Prompt text, student answers and image data

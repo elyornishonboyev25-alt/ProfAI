@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, Route, CircleHelp } from 'lucide-react'
+import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
-import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useCopy } from '@/i18n/interface'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import LanguageSelector from './LanguageSelector'
@@ -38,7 +37,6 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
         <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
         <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>
-        {isPublicFeatureEnabled('guestDiagnostic') && <NavLink to="/journey-plan"><Route size={18} />{c('Study Plan')}</NavLink>}
       </details>
     </nav>
     <div className="liquid-sidebar-footer">

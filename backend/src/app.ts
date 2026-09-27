@@ -17,6 +17,7 @@ import dashboardRoutes from './routes/dashboard.routes.js'
 import profileRoutes from './routes/profile.routes.js'
 import leaderboardRoutes from './routes/leaderboard.routes.js'
 import plannerRoutes from './routes/planner.routes.js'
+import studyPlanRoutes from './routes/studyPlan.routes.js'
 import shadowingRoutes from './routes/shadowing.routes.js'
 import podcastsRoutes from './routes/podcasts.routes.js'
 import reviewsRoutes from './routes/reviews.routes.js'
@@ -75,6 +76,7 @@ app.use('/api/v1/dashboard', dashboardRoutes)
 app.use('/api/v1/profile', profileRoutes)
 app.use('/api/v1/leaderboard', leaderboardRoutes)
 app.use('/api/v1/planner', plannerRoutes)
+app.use('/api/v1/study-plan', studyPlanRoutes)
 app.use('/api/v1/shadowing', shadowingRoutes)
 app.use('/api/v1/podcasts', podcastsRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)

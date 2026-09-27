@@ -1,84 +1,103 @@
 import { useId } from 'react'
 
-/** The supplied Brightwater map redrawn as SVG so it also works in saved Analyze views. */
+/** Native trace of the supplied monochrome Brightwater Adventure Park map. */
 export default function BrightwaterAdventureParkDiagram({ caption }: { caption?: string }) {
   const titleId = useId()
   const treeId = useId()
+  const smallTreeId = useId()
+
   return (
     <figure className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-      <svg data-brightwater-park viewBox="0 0 520 275" role="img" aria-labelledby={titleId} className="mx-auto h-auto w-full max-w-3xl bg-white" xmlns="http://www.w3.org/2000/svg">
+      <svg data-brightwater-park viewBox="0 0 800 480" role="img" aria-labelledby={titleId} className="mx-auto h-auto w-full max-w-[650px] bg-white" xmlns="http://www.w3.org/2000/svg">
         <title id={titleId}>Brightwater Adventure Park map with station, railway, pool, Young Fun, lake, Mega Adventure, Crazy Golf, entrance and locations A to I</title>
         <defs>
-          <g id={treeId} fill="none" stroke="#777" strokeWidth=".8">
-            <path d="M0 11 V21 M-7 12 Q-10 8 -7 5 Q-8 1 -3 1 Q0 -3 3 1 Q8 0 8 5 Q11 9 6 12 Q3 15 0 12 Q-4 16 -7 12 Z" />
+          <g id={treeId} fill="white" stroke="#888" strokeWidth="1.1" strokeLinejoin="round">
+            <path d="M0 19 V31 M-8 18 Q-14 17 -11 10 Q-13 4 -7 3 Q-5 -3 1 1 Q7 -3 10 4 Q16 5 12 12 Q15 18 8 19 Q4 24 0 20 Q-4 23 -8 18 Z" />
+          </g>
+          <g id={smallTreeId} fill="none" stroke="#aaa" strokeWidth=".8">
+            <path d="M0 15 V25 M-6 16 Q-9 12 -7 9 Q-9 5 -4 4 Q-2 0 1 4 Q6 1 7 7 Q10 10 6 14 Q4 18 0 15 Q-3 18 -6 16 Z" />
           </g>
         </defs>
-        <rect width="520" height="275" fill="#fff" />
-        {/* Irregular perimeter and the winding internal boundary follow the original scan. */}
-        <g fill="none" stroke="#161616" strokeLinejoin="round" strokeLinecap="round">
-          <path strokeWidth="3.5" d="M39 222 Q27 203 25 180 Q18 153 31 124 Q45 99 62 78 Q80 53 111 40 Q137 31 161 30 L227 20 Q280 16 323 18 L394 16 Q446 15 469 20 L493 31 Q508 46 507 63 Q513 83 501 112 Q501 139 486 169 Q481 195 453 221 Q438 237 406 242 Q367 252 330 247 L83 251 Q57 247 39 222 Z" />
-          <path strokeWidth="3" d="M81 226 Q104 221 124 221 L153 214 Q173 207 184 185 L194 163 Q200 145 206 127 Q206 105 216 90 Q232 65 261 57 L370 55 Q410 54 442 62 Q455 69 454 85 Q449 110 439 134 L433 147 L431 179 Q429 201 416 222 Q404 240 367 244" />
-          <path strokeWidth="2.7" d="M179 216 Q195 203 201 185 Q207 168 211 154 Q218 147 231 151 L315 161 Q326 170 326 187 L325 244" />
-          <path strokeWidth="2.7" d="M205 142 Q211 113 227 89 Q243 68 272 63 L326 63 L326 158 Q318 166 304 169" />
-          <path strokeWidth="2.7" d="M331 62 L331 150 L433 150 M331 159 L426 159" />
-          <path strokeWidth="2.7" d="M66 213 L94 176 L176 173 Q183 173 183 178 L157 215 Z" />
-          <path strokeWidth="2.7" d="M326 244 Q337 226 342 212 L349 182 Q360 167 377 166 L419 168" />
-          <path strokeWidth="2.2" d="M385 226 Q398 215 399 198 Q397 182 404 176 Q411 169 416 177 L414 193 Q410 216 398 230" />
+        <rect width="800" height="480" fill="#fff" />
+
+        {/* Uneven outside edge and the original network of parallel path edges. */}
+        <g fill="none" stroke="#1b1b1b" strokeLinecap="round" strokeLinejoin="round">
+          <path strokeWidth="2.7" d="M93 429 Q65 414 49 383 Q35 356 34 317 L30 269 Q27 234 43 187 Q59 143 97 102 Q124 75 162 57 Q204 37 257 34 Q313 24 367 22 L565 20 Q656 15 703 24 Q736 37 759 69 Q778 91 774 119 Q780 145 770 177 Q760 210 752 239 Q746 277 728 318 Q707 362 674 399 Q641 430 588 443 Q540 454 476 450 L151 452 Q110 449 93 429 Z" />
+          <path strokeWidth="2.2" d="M136 407 Q174 399 215 400 Q253 399 269 378 Q287 357 292 321 Q296 288 305 256 Q307 220 317 173 Q329 121 367 100 Q383 90 415 89 L659 86 Q683 89 693 107 Q704 122 699 146 Q686 207 663 254 Q659 263 659 286 Q658 332 633 377 Q612 412 584 435" />
+          <path strokeWidth="2.2" d="M136 418 Q178 408 215 411 Q263 410 280 387 Q304 355 307 327 Q313 286 322 263 Q324 214 335 178 Q347 135 375 116 Q393 102 416 101 L655 98 Q674 100 683 113 Q694 126 686 149 Q677 197 653 247 Q647 260 647 284 Q648 328 622 369 Q602 406 571 432" />
+          <path strokeWidth="2.2" d="M273 379 Q316 367 334 331 Q344 308 359 296 L449 295 Q469 292 476 276 L476 440" />
+          <path strokeWidth="2.2" d="M286 388 Q327 372 344 339 Q356 318 367 309 L450 307 Q472 305 487 286 L487 440" />
+          <path strokeWidth="2.2" d="M475 101 L475 262 L653 262 M487 101 L487 250 L650 250" />
+          <path strokeWidth="2.2" d="M476 279 Q492 293 503 297 L654 297 M487 274 Q494 284 510 285 L656 285" />
+          <path strokeWidth="2.2" d="M476 440 Q519 444 564 434 Q606 422 625 398" />
         </g>
-        {/* Railway runs above the station and follows the park's northern rim. */}
-        <g fill="none" stroke="#111" strokeLinecap="round">
-          <path strokeWidth="1.8" d="M151 46 Q271 27 409 29 L470 31" />
-          <path strokeWidth="1.8" d="M151 52 Q271 33 409 35 L470 37" />
-          {Array.from({ length: 44 }, (_, i) => <path key={i} strokeWidth="1" d={`M${160 + i * 7} ${45 - Math.sin(i / 9) * 7} l2 7`} />)}
+
+        {/* Railway above the station, around B and diagonally over the lake. */}
+        <g fill="none" stroke="#333" strokeLinecap="round" strokeLinejoin="round">
+          <path strokeWidth="1.45" strokeDasharray="5 4" d="M132 233 Q121 200 130 156 Q139 111 182 89 Q253 53 376 52 L653 50 Q702 53 721 68 Q732 85 719 102 Q707 119 669 133 Q588 166 473 192 Q378 201 305 204 Q220 210 178 238 Q155 245 132 233 Z" />
+          <path strokeWidth=".85" strokeDasharray="3 5" d="M137 237 Q128 198 138 159 Q148 119 187 97 Q257 62 378 60 L652 58 Q697 60 713 73 Q723 88 710 102 Q696 116 664 126 Q584 158 471 183 Q370 194 300 196 Q217 203 175 231 Q156 238 137 237 Z" />
+          {Array.from({ length: 37 }, (_, i) => {
+            const x = 184 + i * 13
+            const y = 90 - 38 * Math.sin((i / 36) * Math.PI / 2)
+            return <path key={`north-${i}`} strokeWidth=".75" d={`M${x} ${y - 3} l1 9`} />
+          })}
+          {Array.from({ length: 27 }, (_, i) => {
+            const x = 190 + i * 19
+            const y = 230 - i * 3.8
+            return <path key={`cross-${i}`} strokeWidth=".75" d={`M${x} ${y - 4} l2 9`} />
+          })}
         </g>
-        <g fill="none" stroke="#222" strokeWidth="2.2" strokeDasharray="5 5" strokeLinecap="round">
-          <path d="M168 51 Q111 50 90 89 Q75 119 90 135 Q105 154 157 145 L206 138" />
-          <path d="M208 135 Q260 125 324 117 Q379 108 446 70 L479 60" />
-          <path d="M326 237 Q370 235 404 221" />
+
+        {/* Main lake, smaller golf lake and the angular Young Fun area. */}
+        <g fill="white" stroke="#222" strokeWidth="2.2" strokeLinejoin="round">
+          <path d="M308 232 Q320 213 341 213 Q354 205 371 212 Q389 209 401 216 Q419 209 438 218 Q452 218 461 232 Q470 241 464 253 Q469 270 455 277 Q445 290 425 286 Q413 295 398 288 Q385 295 368 286 Q347 291 331 280 Q309 278 305 263 Q293 250 308 232 Z" />
+          <path d="M563 316 Q571 307 581 310 L589 322 Q584 337 579 344 L571 362 Q565 375 551 382 Q544 376 550 364 L554 347 Q557 328 563 316 Z" />
+          <path d="M84 365 L125 302 Q129 296 138 296 L240 293 Q251 293 248 302 L207 365 Q203 372 194 372 Z" />
         </g>
-        {/* Lake, pool, golf water hazard and the two small attractions. */}
-        <g fill="#fff" stroke="#1d1d1d" strokeWidth="2.6" strokeLinejoin="round">
-          <path d="M239 112 Q254 104 270 112 Q278 115 291 113 Q307 109 319 115 L319 129 Q331 142 315 149 Q303 159 287 156 Q274 154 264 159 Q245 160 234 150 Q219 148 223 135 Q216 121 239 112 Z" />
-          <path d="M373 185 Q377 178 384 181 L390 189 Q384 197 379 202 L371 220 L359 222 Q354 215 360 206 Z" />
-          <path d="M430 177 l13 5 -4 10 -13 -4 Z M425 197 l12 3 -3 11 -13 -3 Z M416 214 l14 3 -4 13 -13 -4 Z" />
-        </g>
-        <g fill="none" stroke="#858585" strokeWidth=".8">
-          {Array.from({ length: 12 }, (_, i) => <path key={i} d={`M${352 + (i % 6) * 13} ${43 + Math.floor(i / 6) * 39} q5 -7 10 0 m-5 -5 v12`} />)}
-        </g>
+
         <g opacity=".72">
           {([
-            [45, 115], [53, 149], [48, 178], [80, 141], [86, 84],
-            [149, 49], [165, 42], [180, 41], [197, 41],
-            [353, 46], [367, 43], [382, 45], [399, 43],
-            [482, 77], [489, 109], [483, 143], [473, 174], [459, 208],
-            [187, 234], [210, 231], [238, 229], [270, 232], [404, 236],
-            [235, 161], [249, 166], [269, 169], [284, 169], [299, 165],
-          ] as const).map(([x, y], i) => <use key={i} href={`#${treeId}`} transform={`translate(${x} ${y}) scale(${i % 4 === 0 ? .85 : .65})`} />)}
-        </g>
-        {/* Station, pool, entrance booths and compass. */}
-        <g fill="#fff" stroke="#111" strokeWidth="1.8">
-          <rect x="268" y="28" width="59" height="13" /><rect x="100" y="93" width="47" height="17" />
-          <rect x="66" y="232" width="13" height="14" /><rect x="82" y="232" width="13" height="14" />
-        </g>
-        <g fontFamily="Arial, Helvetica, sans-serif" fill="#111" fontSize="11" textAnchor="middle">
-          <text x="297" y="38">Station</text><text x="124" y="105">pool</text><text x="423" y="27">Railway</text>
-          <text x="277" y="90"><tspan x="277">Mega</tspan><tspan x="277" dy="12">Adventure</tspan></text>
-          <text x="272" y="143">Lake</text><text x="111" y="198"><tspan x="111">Young</tspan><tspan x="111" dy="12">Fun</tspan></text>
-          <text x="358" y="191"><tspan x="358">Crazy</tspan><tspan x="358" dy="12">Golf</tspan></text>
-          <text x="370" y="210" transform="rotate(-66 370 210)">Lake</text>
-          <text x="326" y="264">Entrance</text>
-          <text x="48" y="19">N</text><text x="48" y="72">S</text><text x="19" y="46">W</text><text x="78" y="46">E</text>
-        </g>
-        <g stroke="#111" fill="#111" strokeWidth="1.2">
-          <path d="M48 23 L48 64 M26 44 L70 44 M48 23 l-4 7 8 0 Z M70 44 l-7 -4 0 8 Z M48 64 l-4 -7 8 0 Z M26 44 l7 -4 0 8 Z" />
-        </g>
-        <g fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="12" textAnchor="middle" fill="#111">
+            [78, 206], [78, 251], [91, 290], [98, 347], [114, 151],
+            [204, 81], [228, 68], [251, 60], [275, 52], [295, 49],
+            [499, 59], [524, 57], [549, 58], [572, 60], [595, 62],
+            [714, 129], [728, 166], [720, 222], [712, 279], [693, 338],
+            [263, 415], [287, 416], [318, 417], [342, 419], [614, 428],
+          ] as const).map(([x, y], i) => <use key={`tree-${i}`} href={`#${treeId}`} transform={`translate(${x} ${y}) scale(${i % 5 === 0 ? .93 : .72})`} />)}
           {([
-            ['A', 438, 207], ['B', 440, 64], ['C', 351, 128],
-            ['D', 324, 106], ['E', 326, 62], ['F', 152, 80],
-            ['G', 149, 124], ['H', 97, 240], ['I', 68, 240],
+            [374, 303], [393, 307], [410, 304], [430, 301], [450, 295],
+            [515, 122], [536, 124], [555, 126], [575, 130],
+            [608, 144], [626, 145], [645, 146],
+          ] as const).map(([x, y], i) => <use key={`small-${i}`} href={`#${smallTreeId}`} transform={`translate(${x} ${y})`} />)}
+        </g>
+
+        {/* Station, pool, dead-end shops and three eastern stalls. */}
+        <g fill="white" stroke="#222" strokeWidth="1.8">
+          <rect x="365" y="49" width="96" height="25" />
+          <rect x="159" y="151" width="65" height="31" />
+          <rect x="91" y="406" width="22" height="22" /><rect x="115" y="406" width="22" height="22" /><rect x="139" y="406" width="22" height="22" />
+          <path d="M679 302 l18 9 -7 15 -18 -8 Z M669 324 l18 8 -8 17 -17 -8 Z M657 348 l18 7 -8 17 -17 -7 Z" />
+        </g>
+
+        <g fontFamily="Arial, Helvetica, sans-serif" fontSize="13" fill="#111" textAnchor="middle">
+          <text x="414" y="66">Station</text><text x="644" y="42">Railway</text>
+          <text x="191" y="170">pool</text><text x="383" y="262">Lake</text>
+          <text x="362" y="149"><tspan x="362">Mega</tspan><tspan x="362" dy="15">Adventure</tspan></text>
+          <text x="156" y="336"><tspan x="156">Young</tspan><tspan x="156" dy="15">Fun</tspan></text>
+          <text x="537" y="341"><tspan x="537">Crazy</tspan><tspan x="537" dy="15">Golf</tspan></text>
+          <text x="569" y="354" transform="rotate(-64 569 354)">Lake</text>
+          <text x="478" y="469">Entrance</text>
+          <text x="68" y="26">N</text><text x="68" y="104">S</text><text x="31" y="65">W</text><text x="105" y="65">E</text>
+        </g>
+        <g stroke="#111" fill="#111" strokeWidth="1.3">
+          <path d="M68 34 V96 M39 64 H97 M68 34 l-5 10 h10 Z M97 64 l-9 -5 v10 Z M68 96 l-5 -10 h10 Z M39 64 l9 -5 v10 Z" />
+        </g>
+        <g fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="13" textAnchor="middle" fill="#111">
+          {([
+            ['A', 683, 348], ['B', 673, 121], ['C', 511, 226],
+            ['D', 467, 184], ['E', 467, 116], ['F', 190, 129],
+            ['G', 190, 210], ['H', 164, 417], ['I', 140, 417],
           ] as const).map(([letter, x, y]) => <g key={letter} transform={`translate(${x} ${y})`}>
-            <rect x="-8" y="-9" width="16" height="17" fill="#fff" stroke="#111" strokeWidth="1.4" />
+            <rect x="-10" y="-10" width="20" height="20" fill="white" stroke="#111" strokeWidth="1.4" />
             <text y="5">{letter}</text>
           </g>)}
         </g>

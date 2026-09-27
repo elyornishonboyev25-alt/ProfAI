@@ -128,9 +128,9 @@ function slugify(value: string) {
     .slice(0, 70) || 'learning-center'
 }
 
-async function uniqueSlug(name: string) {
+async function uniqueSlug(name: string, db: Prisma.TransactionClient) {
   const base = slugify(name)
-  const existing = await prisma.learningCenter.findUnique({ where: { slug: base }, select: { id: true } })
+  const existing = await db.learningCenter.findUnique({ where: { slug: base }, select: { id: true } })
   if (!existing) return base
   return `${base}-${crypto.randomBytes(3).toString('hex')}`
 }
@@ -426,10 +426,10 @@ router.post(
     const payload = req.body as z.infer<typeof createWorkspaceSchema>
     if (!validCover(payload.coverUrl)) return res.status(400).json({ message: 'Choose a PNG, JPEG or WEBP class photo.' })
     const center = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(776391)`
+      await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(776391)`
       const duplicate = await tx.learningCenter.findFirst({ where: { name: { equals: payload.name, mode: 'insensitive' } }, select: { id: true } })
       if (duplicate) return null
-      const slug = await uniqueSlug(payload.name)
+      const slug = await uniqueSlug(payload.name, tx)
       return tx.learningCenter.create({
         data: {
           name: payload.name,
@@ -458,8 +458,11 @@ router.patch(
     const payload = req.body as z.infer<typeof updateWorkspaceSchema>
     if (!validCover(payload.coverUrl)) return res.status(400).json({ message: 'Choose a PNG, JPEG or WEBP class photo.' })
     const center = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(776391)`
-      const duplicate = await tx.learningCenter.findFirst({ where: { id: { not: access.centerId }, name: { equals: payload.name, mode: 'insensitive' } }, select: { id: true } })
+      await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(776391)`
+      const nameChanged = payload.name.toLocaleLowerCase() !== access.center.name.toLocaleLowerCase()
+      const duplicate = nameChanged
+        ? await tx.learningCenter.findFirst({ where: { id: { not: access.centerId }, name: { equals: payload.name, mode: 'insensitive' } }, select: { id: true } })
+        : null
       if (duplicate) return null
       return tx.learningCenter.update({ where: { id: access.centerId }, data: { name: payload.name, city: payload.city || null, coverUrl: payload.coverUrl || null } })
     })

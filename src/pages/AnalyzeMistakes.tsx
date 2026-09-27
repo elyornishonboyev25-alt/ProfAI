@@ -35,13 +35,15 @@ import {
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { saveReviewState } from '@/utils/resultsReviewState'
 import WritingResultModal from '@/components/WritingResultModal'
+import SpeakingResult from '@/components/speaking/SpeakingResult'
+import { useSpeakingStore, type SpeakingSessionRecord } from '@/store/speakingStore'
 
 type UnifiedAttempt = {
   id: string
   title: string
   category: string
   savedAt: string
-  source: 'reading-local' | 'writing-local' | 'backend'
+  source: 'reading-local' | 'writing-local' | 'speaking-local' | 'backend'
   score: string
   accuracy: string
   mistakes: string
@@ -49,6 +51,7 @@ type UnifiedAttempt = {
   backendAttemptId?: string
   readingEntry?: ReadingAnalysisHistoryEntry
   writingEntry?: WritingAnalysisEntry
+  speakingEntry?: SpeakingSessionRecord
 }
 
 type ConfirmState =
@@ -93,6 +96,21 @@ function buildWritingAttempt(entry: WritingAnalysisEntry): UnifiedAttempt {
   }
 }
 
+function buildSpeakingAttempt(entry: SpeakingSessionRecord): UnifiedAttempt {
+  return {
+    id: `speaking-${entry.id}`,
+    title: entry.modeLabel,
+    category: 'IELTS Speaking',
+    savedAt: entry.date,
+    source: 'speaking-local',
+    score: `Band ${entry.overallBand.toFixed(1)}`,
+    accuracy: `${entry.wordCount} words`,
+    mistakes: entry.evaluation ? `${entry.evaluation.improvementPriorities.length} priorities` : 'Summary saved',
+    reviewable: Boolean(entry.evaluation),
+    speakingEntry: entry,
+  }
+}
+
 function buildBackendAttempt(entry: ProfileOverview['recentAttempts'][number]): UnifiedAttempt {
   return {
     id: `backend-${entry.id}`,
@@ -120,6 +138,10 @@ export default function AnalyzeMistakes() {
   const [isClearingAll, setIsClearingAll] = useState(false)
   const [confirmState, setConfirmState] = useState<ConfirmState>(null)
   const [writingModalEntry, setWritingModalEntry] = useState<WritingAnalysisEntry | null>(null)
+  const [speakingModalEntry, setSpeakingModalEntry] = useState<SpeakingSessionRecord | null>(null)
+  const speakingSessions = useSpeakingStore((state) => state.sessions)
+  const removeSpeakingSession = useSpeakingStore((state) => state.removeSession)
+  const userSpeakingSessions = useMemo(() => speakingSessions.filter((entry) => entry.userId === (user?.id ?? null) && entry.kind === 'examiner'), [speakingSessions, user?.id])
 
   useEffect(() => {
     setReadingHistory(getReadingAnalysisHistory(user?.id))
@@ -181,15 +203,16 @@ export default function AnalyzeMistakes() {
   const attempts = useMemo(() => {
     const localReading = readingHistory.map(buildReadingAttempt)
     const localWriting = writingHistory.map(buildWritingAttempt)
+    const localSpeaking = userSpeakingSessions.map(buildSpeakingAttempt)
     const backendAttempts = (overview?.recentAttempts ?? [])
       .filter((entry) => entry.test.category !== 'SAT')
       .map(buildBackendAttempt)
 
-    return [...localReading, ...localWriting, ...backendAttempts]
+    return [...localReading, ...localWriting, ...localSpeaking, ...backendAttempts]
       .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
-  }, [overview?.recentAttempts, readingHistory, writingHistory])
+  }, [overview?.recentAttempts, readingHistory, writingHistory, userSpeakingSessions])
 
-  const localAttemptCount = readingHistory.length + writingHistory.length
+  const localAttemptCount = readingHistory.length + writingHistory.length + userSpeakingSessions.length
   const backendAttemptCount = (overview?.recentAttempts ?? []).filter((entry) => entry.test.category !== 'SAT').length
   const clearableAttemptCount = localAttemptCount + backendAttemptCount
 
@@ -226,6 +249,10 @@ export default function AnalyzeMistakes() {
   }, [readingHistory])
 
   const openReview = (attempt: UnifiedAttempt) => {
+    if (attempt.source === 'speaking-local' && attempt.speakingEntry?.evaluation) {
+      setSpeakingModalEntry(attempt.speakingEntry)
+      return
+    }
     if (attempt.source === 'writing-local' && attempt.writingEntry) {
       setWritingModalEntry(attempt.writingEntry)
       return
@@ -279,6 +306,11 @@ export default function AnalyzeMistakes() {
         return
       }
 
+      if (attempt.source === 'speaking-local' && attempt.speakingEntry) {
+        removeSpeakingSession(attempt.speakingEntry.id)
+        return
+      }
+
       if (attempt.source === 'backend' && attempt.backendAttemptId) {
         await apiClient.delete(`/profile/attempts/${attempt.backendAttemptId}`)
         removeBackendAttemptFromState(attempt.backendAttemptId)
@@ -300,6 +332,7 @@ export default function AnalyzeMistakes() {
       if (localAttemptCount > 0) {
         clearReadingAnalysisHistory(user?.id)
         clearWritingAnalysisHistory(user?.id)
+        userSpeakingSessions.forEach((entry) => removeSpeakingSession(entry.id))
         setReadingHistory([])
         setWritingHistory([])
       }
@@ -409,7 +442,7 @@ export default function AnalyzeMistakes() {
                  <UiText text={"Analyze your"} /> <span className="text-red-600"> <UiText text={"mistakes."} /> </span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                 <UiText text={"Reading and Writing attempts only. See recurring weak points, open the exact review and turn errors into a focused practice plan."} /> </p>
+                 <UiText text={"Review saved Reading, Writing and Speaking attempts, then turn feedback into a focused practice plan."} /> </p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-right">
@@ -611,6 +644,13 @@ export default function AnalyzeMistakes() {
       {writingModalEntry ? (
         <WritingResultModal entry={writingModalEntry} onClose={() => setWritingModalEntry(null)} />
       ) : null}
+
+      {speakingModalEntry?.evaluation ? createPortal(
+        <div className="fixed inset-0 z-[250] overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label="Speaking review">
+          <div className="mx-auto max-w-5xl rounded-3xl bg-gradient-to-br from-white via-red-50 to-white py-6 shadow-2xl">
+            <SpeakingResult evaluation={speakingModalEntry.evaluation} transcript={speakingModalEntry.transcript} modeLabel={speakingModalEntry.modeLabel} reviewMode onRetry={() => {}} onExit={() => setSpeakingModalEntry(null)} />
+          </div>
+        </div>, document.body) : null}
     </>
   )
 }

@@ -355,6 +355,21 @@ export async function evaluateWriting(
   studentResponse: string,
   wordCount: number,
 ): Promise<WritingEvaluation> {
+  if (!studentResponse.trim()) {
+    return {
+      overallBand: 0,
+      taskAchievement: 0,
+      coherenceCohesion: 0,
+      lexicalResource: 0,
+      grammaticalRange: 0,
+      summary: 'No response was submitted for this task, so there is no writing to assess.',
+      strengths: [],
+      improvements: [`Write a ${taskType === 'task1' ? '150' : '250'}-word response that addresses every part of the task prompt.`, 'Review the task instructions and plan your main ideas before writing.'],
+      errors: [],
+      correctedVersion: '',
+      xpAwarded: 0,
+    }
+  }
   const userMessage = `TASK TYPE: IELTS Writing ${taskType === 'task1' ? 'Task 1' : 'Task 2'}
 
 QUESTION/PROMPT:
@@ -370,12 +385,19 @@ Evaluate this response now. Return ONLY valid JSON.`
 
   try {
     const parsed = JSON.parse(jsonStr) as WritingEvaluation
+    if (![parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].every((band) => Number.isFinite(band)) ||
+      !parsed.summary?.trim() || !Array.isArray(parsed.strengths) || !parsed.strengths.length ||
+      !Array.isArray(parsed.improvements) || !parsed.improvements.length || !parsed.correctedVersion?.trim()) {
+      throw new Error('Incomplete AI evaluation')
+    }
+    const criteria = [parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].map(clampBand)
+    const overallBand = clampBand(criteria.reduce((sum, band) => sum + band, 0) / criteria.length)
     return {
-      overallBand: clampBand(parsed.overallBand),
-      taskAchievement: clampBand(parsed.taskAchievement),
-      coherenceCohesion: clampBand(parsed.coherenceCohesion),
-      lexicalResource: clampBand(parsed.lexicalResource),
-      grammaticalRange: clampBand(parsed.grammaticalRange),
+      overallBand,
+      taskAchievement: criteria[0],
+      coherenceCohesion: criteria[1],
+      lexicalResource: criteria[2],
+      grammaticalRange: criteria[3],
       summary: parsed.summary || 'Evaluation completed.',
       strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 5) : [],
       improvements: Array.isArray(parsed.improvements) ? parsed.improvements.slice(0, 5) : [],
@@ -393,15 +415,16 @@ Evaluate this response now. Return ONLY valid JSON.`
               if (!e.original || !e.corrected) return false
               const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[.,;:!?]+$/g, '').trim()
               if (norm(e.original) === norm(e.corrected)) return false
+              if (!studentResponse.toLowerCase().includes(e.original.toLowerCase())) return false
               if (/\b(is|are|looks?|seems?)\s+(accurate|correct|fine|good|appropriate)\b/i.test(e.explanation)) return false
               return true
             })
         : [],
       correctedVersion: parsed.correctedVersion || '',
-      xpAwarded: calculateXP(parsed.overallBand),
+      xpAwarded: calculateXP(overallBand),
     }
   } catch {
-    throw new Error('Failed to parse AI evaluation response. Please try again.')
+    throw new Error('AI feedback was incomplete. Please retry the evaluation.')
   }
 }
 

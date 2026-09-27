@@ -388,11 +388,11 @@ export default function IELTSWritingTestInterface({
     setShowSubmitConfirm(false)
     setEvaluating(true)
     setEvalError(null)
-    writingTrial.consume()
 
     try {
       const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount)
       setAiEvaluation(result)
+      if (answer.trim()) writingTrial.consume()
 
       // Timed (exam) writing → award an IELTS Writing band badge with celebration.
       // Untimed practice passes mode 'practice', which never awards a badge.
@@ -1121,9 +1121,8 @@ export default function IELTSWritingTestInterface({
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-bold text-slate-900">
-              {task.title} · {task.taskType === 'task1' ? 'Task 1' : 'Task 2'}
-            </h1>
+            <p className="writing-exam-label">IELTS Writing · {task.taskType === 'task1' ? 'Task 1' : 'Task 2'}</p>
+            <h1 className="truncate text-sm font-bold text-slate-900">{task.title}</h1>
             <p className="truncate text-[11px] text-slate-500">{task.subtitle}</p>
           </div>
         </div>
@@ -1163,7 +1162,8 @@ export default function IELTSWritingTestInterface({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <div className="shrink-0 border-b border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-8">
-          <div className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
+          <div className="writing-exam-card p-5">
+            <p className="writing-exam-label mb-3">Task instructions</p>
             <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
               {task.prompt}
             </p>
@@ -1183,13 +1183,14 @@ export default function IELTSWritingTestInterface({
 
         <div className="flex min-h-[420px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
           <div className="min-h-0 flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="relative flex h-full min-h-[300px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden lg:min-h-0">
+            <div className="writing-exam-card relative flex h-full min-h-[300px] flex-col overflow-hidden lg:min-h-0">
+              <div className="writing-editor-label"><span>Your response</span><span>Task {task.taskType === 'task1' ? '1' : '2'}</span></div>
               <textarea
                 ref={textareaRef}
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Write your response here..."
-                className="min-h-0 flex-1 resize-none p-5 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none"
+                className="min-h-0 flex-1 resize-none bg-transparent p-5 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none"
               />
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
                 <span className="text-xs text-slate-500">

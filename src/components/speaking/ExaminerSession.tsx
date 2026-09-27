@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Loader2, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Headphones, Loader2, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
 import {
   CUE_CARDS,
   INTERVIEW_PACKS,
@@ -190,7 +190,7 @@ export default function ExaminerSession({
   config: SessionConfig
   modeLabel: string
   onExit: () => void
-  onSaved: (evaluation: SpeakingEvaluation) => void
+  onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
   const recognition = useSpeechRecognition('en-US')
 
@@ -208,6 +208,8 @@ export default function ExaminerSession({
   const [micStream, setMicStream] = useState<MediaStream | null>(null)
   const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(null)
   const [evalError, setEvalError] = useState<string | null>(null)
+  const [answerError, setAnswerError] = useState<string | null>(null)
+  const [stopping, setStopping] = useState(false)
   const [examinerLabel, setExaminerLabel] = useState('Examiner')
 
   const stagesRef = useRef<Stage[]>([])
@@ -216,16 +218,9 @@ export default function ExaminerSession({
   const answersRef = useRef<SpeechStats[]>([])
   const historyRef = useRef<ExaminerTurn[]>([])
   const recordStartRef = useRef(0)
-  const latestTranscriptRef = useRef('')
   const onSpeechEndRef = useRef<(() => void) | null>(null)
+  const stopPendingRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-
-  // Mirror the live transcript into a ref so we read the freshest value on stop.
-  useEffect(() => {
-    latestTranscriptRef.current = `${recognition.finalTranscript} ${recognition.interimTranscript}`
-      .replace(/\s+/g, ' ')
-      .trim()
-  }, [recognition.finalTranscript, recognition.interimTranscript])
 
   // Acquire a mic stream once for the live visualizer (recognition manages its own).
   useEffect(() => {
@@ -290,8 +285,10 @@ export default function ExaminerSession({
         onStart: reveal,
         onEnd: () => {
           reveal()
-          if (onSpeechEndRef.current === next) onSpeechEndRef.current = null
-          next()
+          if (onSpeechEndRef.current === next) {
+            onSpeechEndRef.current = null
+            next()
+          }
         },
       })
       window.setTimeout(reveal, 350)
@@ -301,13 +298,14 @@ export default function ExaminerSession({
 
   const runEvaluation = useCallback(async () => {
     setPhase('evaluating')
+    setEvalError(null)
     cancelSpeech()
     const stats = mergeStats(answersRef.current.length ? answersRef.current : [analyseTranscript('', 0)])
     try {
       const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats })
       setEvaluation(result)
       setPhase('result')
-      onSaved(result)
+      onSaved(result, [...historyRef.current])
     } catch {
       setEvalError('Could not complete the evaluation. Please try again.')
       setPhase('result')
@@ -420,26 +418,39 @@ export default function ExaminerSession({
 
   const startRecording = useCallback(() => {
     setEvalError(null)
+    setAnswerError(null)
+    if (!recognition.supported) {
+      setTypingMode(true)
+      setAnswerError('Speech recognition is unavailable. Type your answer to continue.')
+      return
+    }
     recognition.reset()
-    latestTranscriptRef.current = ''
     recordStartRef.current = Date.now()
     setRecording(true)
     recognition.start()
   }, [recognition])
 
-  const handleStopRecording = useCallback(() => {
-    recognition.stop()
+  const handleStopRecording = useCallback(async () => {
+    if (stopPendingRef.current) return
+    stopPendingRef.current = true
+    setStopping(true)
+    const text = (await recognition.stop()).trim()
     setRecording(false)
     const duration = Math.max(2, (Date.now() - recordStartRef.current) / 1000)
-    window.setTimeout(() => {
-      const text = latestTranscriptRef.current.trim()
-      submitAnswer(text || '(no clear speech detected)', duration)
-    }, 380)
+    stopPendingRef.current = false
+    setStopping(false)
+    if (!text) {
+      setAnswerError('No clear speech was detected. Record again or type your answer.')
+      if (cueCard) setSpeakLeft(120)
+      return
+    }
+    submitAnswer(text, duration)
   }, [recognition])
 
   const submitTyped = useCallback(() => {
     const text = typedAnswer.trim()
     if (!text) return
+    setAnswerError(null)
     const words = text.split(/\s+/).length
     const duration = Math.max(20, Math.round(words / 2.3))
     setTypedAnswer('')
@@ -468,13 +479,35 @@ export default function ExaminerSession({
     pending?.()
   }, [])
 
+  const retrySession = useCallback(() => {
+    cancelSpeech()
+    setPhase('idle')
+    setStarted(false)
+    setChat([])
+    setCurrentPrompt('')
+    setCueCard(null)
+    setPrepLeft(0)
+    setSpeakLeft(0)
+    setTypedAnswer('')
+    setEvaluation(null)
+    setEvalError(null)
+    setAnswerError(null)
+    stagesRef.current = []
+    stageIdxRef.current = 0
+    moveIdxRef.current = 0
+    answersRef.current = []
+    historyRef.current = []
+    recognition.reset()
+  }, [recognition])
+
   // ── Render: result screen ────────────────────────────────────────────────
   if (phase === 'result' && evaluation) {
     return (
       <SpeakingResult
         evaluation={evaluation}
         modeLabel={modeLabel}
-        onRetry={onExit}
+        transcript={historyRef.current}
+        onRetry={retrySession}
         onExit={onExit}
       />
     )
@@ -483,11 +516,14 @@ export default function ExaminerSession({
   // ── Render: pre-start gate ───────────────────────────────────────────────
   if (!started) {
     return (
-      <div className="surface-card mx-auto max-w-2xl p-6 sm:p-8">
-        <button onClick={onExit} className="premium-back-btn mb-4">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
-        </button>
-        <h2 className="text-2xl font-black text-slate-900">{modeLabel}</h2>
+      <div className="speaking-exam mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        <header className="speaking-exam-header mb-5">
+          <button onClick={onExit} className="speaking-icon-button" aria-label="Back to Speaking tests"><ArrowLeft className="h-5 w-5" /></button>
+          <div><p className="speaking-eyebrow">IELTS Speaking</p><h1 className="text-lg font-black text-slate-900">{modeLabel}</h1></div>
+        </header>
+        <div className="speaking-answer-panel p-6 sm:p-8">
+        <span className="speaking-part-pill">AI examiner session</span>
+        <h2 className="mt-5 text-2xl font-black text-slate-900">Ready to speak?</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Your AI examiner will speak each question aloud. Tap the microphone, answer naturally, then tap stop. The
           examiner asks adaptive follow-ups and grades you with an IELTS band score at the end.
@@ -504,6 +540,7 @@ export default function ExaminerSession({
         <button onClick={beginSession} className="arena-primary-btn cta-sheen mt-6 w-full justify-center py-3">
           Start Session
         </button>
+        </div>
       </div>
     )
   }
@@ -512,26 +549,28 @@ export default function ExaminerSession({
   const canRecord = phase === 'awaiting_answer'
 
   return (
-    <div className="mx-auto max-w-3xl">
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <button onClick={onExit} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> End session
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="soft-chip">{modeLabel}</span>
-          {activePart > 0 ? (
-            <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
-              Part {activePart}
-            </span>
-          ) : null}
+    <div className="speaking-exam mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6">
+      <header className="speaking-exam-header">
+        <button onClick={onExit} className="speaking-icon-button" aria-label="End session"><ArrowLeft className="h-5 w-5" /></button>
+        <div className="min-w-0 flex-1">
+          <p className="speaking-eyebrow">IELTS Speaking</p>
+          <h1 className="truncate text-lg font-black text-slate-900 sm:text-xl">{modeLabel}</h1>
         </div>
+        <span className="speaking-part-pill">{activePart > 0 ? `Part ${activePart} of 3` : 'Interview'}</span>
+      </header>
+      <div className="speaking-step-rail" aria-label="Speaking test parts">
+        {[1, 2, 3].map((part) => <span key={part} className={activePart === part ? 'is-active' : activePart > part ? 'is-complete' : ''}>{activePart > part ? <CheckCircle2 className="h-4 w-4" /> : part}<span className="hidden sm:inline">Part {part}</span></span>)}
+      </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <span className="inline-flex items-center gap-1.5"><Headphones className="h-4 w-4 text-red-500" /> Listen to the examiner, then answer naturally.</span>
+        <span>Feedback and band score appear at the end</span>
       </div>
 
       {/* Transcript */}
       <div
         ref={scrollRef}
-        className="surface-card h-[46vh] min-h-[320px] space-y-3 overflow-y-auto p-4 sm:p-5"
+        className="speaking-conversation space-y-4 overflow-y-auto p-4 sm:p-6"
+        aria-label="Speaking conversation"
       >
         {chat.map((turn) => (
           <motion.div
@@ -541,7 +580,7 @@ export default function ExaminerSession({
             className={`flex ${turn.role === 'candidate' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-6 shadow-sm ${
+              className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-7 shadow-sm sm:max-w-[76%] ${
                 turn.role === 'examiner'
                   ? 'rounded-tl-sm border border-red-100 bg-white text-slate-800'
                   : 'rounded-tr-sm bg-gradient-to-br from-red-600 to-rose-600 text-white'
@@ -551,7 +590,7 @@ export default function ExaminerSession({
                 <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-red-500">
                   {examinerLabel}
                 </span>
-              ) : null}
+              ) : <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-[0.12em] text-white/75">You</span>}
               {turn.text}
             </div>
           </motion.div>
@@ -585,7 +624,7 @@ export default function ExaminerSession({
 
       {/* Cue card (Part 2) */}
       {cueCard && (phase === 'preparing' || (phase === 'awaiting_answer' && speakLeft > 0)) ? (
-        <div className="surface-card mt-4 border-red-200 p-4">
+        <div className="speaking-prompt-card mt-4 p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-slate-900">{cueCard.title}</p>
             <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
@@ -608,14 +647,15 @@ export default function ExaminerSession({
 
       {/* Current question reminder */}
       {canRecord && currentPrompt && !cueCard ? (
-        <div className="mt-4 rounded-2xl border border-red-100 bg-white/80 px-4 py-3 text-center text-sm font-medium text-slate-700">
-          <span className="mr-1 font-bold text-red-500">Q:</span>
+        <div className="speaking-prompt-card mt-4 px-4 py-3 text-sm font-medium leading-6 text-slate-700">
+          <span className="mr-2 font-bold uppercase tracking-wide text-red-500">Current question</span><br />
           {currentPrompt}
         </div>
       ) : null}
 
       {/* Controls */}
-      <div className="surface-card mt-4 p-4 sm:p-5">
+      <div className="speaking-answer-panel mt-4 p-4 sm:p-5">
+        <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-red-600">Your response</p>
         {isExaminerBusy ? (
           <div className="flex items-center justify-between">
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
@@ -653,8 +693,8 @@ export default function ExaminerSession({
                   <Mic className="mr-2 h-5 w-5" /> Record answer
                 </button>
               ) : (
-                <button onClick={handleStopRecording} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3">
-                  <Square className="mr-2 h-4 w-4 fill-white" /> Stop & submit
+                <button onClick={() => void handleStopRecording()} disabled={stopping} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3 disabled:opacity-50">
+                  <Square className="mr-2 h-4 w-4 fill-white" /> {stopping ? 'Transcribing…' : 'Stop & submit'}
                 </button>
               )}
               <button
@@ -663,6 +703,7 @@ export default function ExaminerSession({
               >
                 <Pencil className="h-3 w-3" /> Type instead
               </button>
+              <p className="text-center text-xs text-slate-500">Speak clearly. If no words are detected, you can retry.</p>
               {recognition.error ? <p className="text-xs text-red-600">{recognition.error}</p> : null}
             </div>
           )
@@ -671,6 +712,7 @@ export default function ExaminerSession({
         )}
       </div>
 
+      {answerError ? <p role="alert" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{answerError}</p> : null}
       {evalError ? <p className="mt-3 text-center text-sm text-red-600">{evalError}</p> : null}
     </div>
   )

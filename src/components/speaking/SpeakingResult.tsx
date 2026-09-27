@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
+  BookOpen,
   Gauge,
   Lightbulb,
   RotateCcw,
@@ -8,7 +9,7 @@ import {
   TrendingUp,
   TriangleAlert,
 } from 'lucide-react'
-import type { SpeakingEvaluation } from '@/services/speakingAI'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { Burst } from '@/components/fx'
 import BandGauge from './BandGauge'
 
@@ -42,20 +43,24 @@ function bandWord(band: number): string {
 export default function SpeakingResult({
   evaluation,
   modeLabel,
+  transcript,
+  reviewMode = false,
   onRetry,
   onExit,
 }: {
   evaluation: SpeakingEvaluation
   modeLabel: string
+  transcript?: ExaminerTurn[]
+  reviewMode?: boolean
   onRetry: () => void
   onExit: () => void
 }) {
   const stats = evaluation.stats
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-5xl px-4 pb-10 sm:px-6">
       <button onClick={onExit} className="premium-back-btn mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Speaking Hub
+        <ArrowLeft className="h-3.5 w-3.5" /> {reviewMode ? 'Close review' : 'Back to Speaking Hub'}
       </button>
 
       {/* Overall band hero */}
@@ -70,7 +75,7 @@ export default function SpeakingResult({
         <div className="mt-2 flex items-center justify-center">
           <BandGauge band={evaluation.overallBand} size={150} />
         </div>
-        <p className="mt-1 text-lg font-black text-slate-900">{bandWord(evaluation.overallBand)} user</p>
+        <p className="mt-1 text-lg font-black text-slate-900">{bandWord(evaluation.overallBand)} performance</p>
         {evaluation.source === 'offline' ? (
           <span className="mt-2 inline-block rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
             Offline estimate — try again for full AI grading
@@ -81,6 +86,8 @@ export default function SpeakingResult({
           </span>
         )}
       </motion.div>
+
+      <p className="mt-3 text-center text-xs leading-5 text-slate-500">Estimated practice band based on the transcript. Pronunciation is approximate because audio is not analyzed.</p>
 
       {/* Criteria gauges */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -152,6 +159,22 @@ export default function SpeakingResult({
         </div>
       ) : null}
 
+      {transcript?.length ? (
+        <details className="surface-card mt-5 p-5">
+          <summary className="flex cursor-pointer items-center gap-2 text-base font-black text-slate-900"><BookOpen className="h-4 w-4 text-red-600" /> Review your answers</summary>
+          <div className="mt-4 space-y-3">
+            {transcript.filter((turn) => turn.role === 'candidate').map((turn, index) => {
+              const question = transcript.slice(0, transcript.indexOf(turn)).reverse().find((item) => item.role === 'examiner')
+              return <div key={`${index}-${turn.text.slice(0, 12)}`} className="rounded-2xl border border-red-100 bg-white/80 p-4 text-sm">
+                <p className="text-xs font-black uppercase tracking-wide text-red-600">Question {index + 1}</p>
+                <p className="mt-1 font-semibold leading-6 text-slate-800">{question?.text || 'Examiner question'}</p>
+                <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text}</p>
+              </div>
+            })}
+          </div>
+        </details>
+      ) : null}
+
       {/* Speech stats */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Words spoken" value={String(stats.wordCount)} />
@@ -172,11 +195,11 @@ export default function SpeakingResult({
 
       {/* Actions */}
       <div className="mt-6 flex flex-wrap gap-3">
-        <button onClick={onRetry} className="arena-primary-btn cta-sheen px-6 py-3">
+        {!reviewMode ? <button onClick={onRetry} className="arena-primary-btn cta-sheen px-6 py-3">
           <RotateCcw className="mr-2 h-4 w-4" /> Practice again
-        </button>
+        </button> : null}
         <button onClick={onExit} className="arena-secondary-btn px-6 py-3">
-          Back to Speaking Hub
+          {reviewMode ? 'Close review' : 'Back to Speaking Hub'}
         </button>
       </div>
     </div>

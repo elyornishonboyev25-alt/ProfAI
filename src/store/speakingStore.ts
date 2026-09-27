@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 
 // Persistent speaking history. Powers the hub stats, the speaking profile charts,
 // the streak/retention features and (later) the social leaderboard. Stored locally
@@ -21,6 +22,9 @@ export type SpeakingSessionRecord = {
   wordCount: number
   fillerCount: number
   summary: string
+  /** Stored for the detailed review after a full mock. Older records omit these. */
+  evaluation?: SpeakingEvaluation
+  transcript?: ExaminerTurn[]
 }
 
 type SpeakingState = {

@@ -62,12 +62,73 @@
     linear-gradient(155deg, #fff, #fff8f6 65%, #fff);
 }
 
+/* Speaking uses the same focused exam language as Reading and Listening. */
+.speaking-exam-header,
+.writing-exam-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgb(255 255 255 / 88%);
+  border-radius: 22px;
+  background: linear-gradient(115deg, rgb(255 255 255 / 94%), rgb(255 245 245 / 80%));
+  box-shadow: 0 18px 45px rgb(127 29 29 / 8%);
+  padding: 14px 18px;
+  backdrop-filter: blur(18px);
+}
+
+.speaking-icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 42px;
+  width: 42px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  background: #fff;
+  color: #991b1b;
+}
+
+.speaking-icon-button:hover { background: #fff1f2; }
+.speaking-eyebrow { color: #dc2626; font-size: 10px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+.speaking-part-pill { flex: none; border: 1px solid #fecaca; border-radius: 999px; background: #fff; padding: 7px 12px; color: #b91c1c; font-size: 12px; font-weight: 800; }
+
+.speaking-step-rail { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+.speaking-step-rail > span { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; border: 1px solid #fee2e2; border-radius: 12px; background: rgb(255 255 255 / 65%); color: #94a3b8; font-size: 12px; font-weight: 800; }
+.speaking-step-rail > .is-active { border-color: #ef4444; background: linear-gradient(115deg, #dc2626, #e11d48); color: #fff; box-shadow: 0 9px 20px rgb(220 38 38 / 18%); }
+.speaking-step-rail > .is-complete { border-color: #a7f3d0; background: #ecfdf5; color: #047857; }
+
+.speaking-conversation,
+.speaking-answer-panel,
+.speaking-prompt-card,
+.writing-exam-card {
+  border: 1px solid rgb(254 202 202 / 75%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 20px 52px rgb(127 29 29 / 7%);
+  backdrop-filter: blur(18px);
+}
+
+.speaking-conversation { height: clamp(260px, 38vh, 390px); background: radial-gradient(circle at 100% 0%, rgb(255 241 242 / 82%), transparent 36%), rgb(255 255 255 / 82%); }
+.speaking-answer-panel { background: linear-gradient(130deg, rgb(255 255 255 / 93%), rgb(255 248 248 / 90%)); }
+.speaking-prompt-card { border-left: 4px solid #ef4444; }
+
+.ielts-writing-workspace { background: linear-gradient(145deg, #fff9f9, #fff 50%, #f8fafc); }
+.ielts-writing-workspace .ielts-writing-header { background: rgb(255 255 255 / 84%); backdrop-filter: blur(18px); }
+.ielts-writing-workspace .writing-exam-card { background: rgb(255 255 255 / 91%); }
+.writing-exam-label { color: #dc2626; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.writing-editor-label { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #fee2e2; padding: 12px 18px; color: #991b1b; font-size: 12px; font-weight: 800; }
+
 .ielts-speaking-workspace .surface-card,
 .ielts-review-page .surface-card {
   border: 1px solid var(--ielts-line);
   border-radius: 24px;
   background: #fff;
   box-shadow: 0 18px 45px rgb(127 29 29 / 7%);
+}
+
+.ielts-speaking-workspace .surface-card {
+  background: rgb(255 255 255 / 84%);
+  backdrop-filter: blur(18px);
 }
 
 .ielts-writing-review section,

@@ -155,7 +155,7 @@ export type SpeakingEvaluation = {
   source: 'ai' | 'offline'
 }
 
-const EVALUATION_PROMPT = `You are a senior, certified IELTS Speaking examiner with 15+ years of experience. You apply the official IELTS Speaking band descriptors with real-exam rigour and fairness. Pronunciation must be judged ONLY from the transcript's evidence (rhythm, sentence flow, fillers) since you cannot hear audio — estimate conservatively and say so if uncertain.
+const EVALUATION_PROMPT = `You are an IELTS Speaking practice assessor. Apply the public IELTS Speaking band descriptors fairly. You receive a browser transcript, not audio. You cannot observe pronunciation, intonation, stress or real hesitation. Mark pronunciationBand as an explicitly uncertain proxy near the other criteria and never claim you heard the candidate.
 
 TASK: Evaluate the candidate's spoken responses. Return a SINGLE valid JSON object and NOTHING else.
 
@@ -170,10 +170,10 @@ SCORING DISCIPLINE:
 - overallBand = average of the 4 criteria, rounded to the nearest 0.5.
 
 FEEDBACK:
-- summary: 2–3 honest sentences naming the single biggest lever to raise the band.
-- strengths: 3 specific things they did well (reference what they actually said).
-- weaknesses: 3 specific, concrete problems (not generic).
-- improvementPriorities: 3 items, each { "area": <criterion>, "target": <achievable next band as number>, "action": <one concrete practice step> }.
+- summary: 2–3 honest sentences naming the single biggest lever to raise the band and the limits of transcript-only scoring.
+- strengths: 3 specific things they did well. Refer to the candidate's actual ideas or words.
+- weaknesses: 3 specific, concrete problems. Quote a short fragment or identify the answer where possible. Never invent a pronunciation error.
+- improvementPriorities: 3 items, each { "area": <criterion>, "target": <achievable next band as number>, "action": <one concrete practice step with an example based on the transcript> }.
 
 RESPONSE FORMAT (strict JSON, no markdown):
 {
@@ -203,6 +203,9 @@ export type EvaluateParams = {
 }
 
 export async function evaluateSpeaking(params: EvaluateParams): Promise<SpeakingEvaluation> {
+  if (!params.history.some((turn) => turn.role === 'candidate' && turn.text.trim())) {
+    return offlineEvaluation(params)
+  }
   const transcript = params.history
     .map((t) => `${t.role === 'examiner' ? 'Examiner' : 'Candidate'}: ${t.text}`)
     .join('\n')
@@ -223,13 +226,17 @@ Grade the CANDIDATE's spoken English now. Return ONLY valid JSON.`
   try {
     const raw = await callGeminiAPI(EVALUATION_PROMPT, userMessage, 2048, [], 'speaking_evaluation')
     const parsed = JSON.parse(extractJSON(raw)) as Partial<SpeakingEvaluation>
+    if (![parsed.fluencyBand, parsed.lexicalBand, parsed.grammarBand, parsed.pronunciationBand].every((band) => band !== null && band !== undefined && Number.isFinite(Number(band))) ||
+      !parsed.summary?.trim() || !Array.isArray(parsed.strengths) || !parsed.strengths.length ||
+      !Array.isArray(parsed.weaknesses) || !parsed.weaknesses.length ||
+      !Array.isArray(parsed.improvementPriorities) || !parsed.improvementPriorities.length) {
+      throw new Error('Incomplete Speaking evaluation')
+    }
     const fluencyBand = clampBand(parsed.fluencyBand)
     const lexicalBand = clampBand(parsed.lexicalBand)
     const grammarBand = clampBand(parsed.grammarBand)
     const pronunciationBand = clampBand(parsed.pronunciationBand)
-    const overallBand = parsed.overallBand
-      ? clampBand(parsed.overallBand)
-      : clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / 4)
+    const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / 4)
 
     return {
       fluencyBand,
@@ -238,8 +245,8 @@ Grade the CANDIDATE's spoken English now. Return ONLY valid JSON.`
       pronunciationBand,
       overallBand,
       summary: parsed.summary?.trim() || 'Evaluation complete.',
-      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 4) : [],
-      weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.slice(0, 4) : [],
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.filter((item): item is string => typeof item === 'string' && !!item.trim()).slice(0, 4) : [],
+      weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.filter((item): item is string => typeof item === 'string' && !!item.trim()).slice(0, 4) : [],
       improvementPriorities: Array.isArray(parsed.improvementPriorities)
         ? parsed.improvementPriorities
             .filter((p) => p && p.area && p.action)
@@ -282,11 +289,12 @@ const RESPONSE_ANALYSIS_PROMPT = `You are an experienced British IELTS Speaking 
 
 TASK — return ONE JSON object with these fields:
 
-1. "correctedVersion" — Take the candidate's exact response and fix ONLY clear grammar, word-choice and pronunciation-spelling mistakes. Keep their meaning, ideas, examples and voice exactly the same. This is them, cleaned up. Do NOT rewrite or improve the content — just correct errors. If the response is already clean, return it as-is.
+1. "correctedVersion" — Take the candidate's exact response and fix ONLY clear grammar and word-choice mistakes. Keep their meaning, ideas, examples and voice exactly the same. Do NOT rewrite or improve the content. If the response is already clean, return it as-is. Browser transcription errors are not evidence of pronunciation mistakes.
 
 2. "band8Template" — Now write a NEW model answer to the same question, at IELTS Band 8+ level, using the candidate's ideas as inspiration where possible but improving structure, vocabulary range, idiomatic phrases and complex sentences. Length: appropriate for the part (Part 1 ~50–80 words; Part 2 ~180–230 words; Part 3 ~80–130 words). Natural spoken English, not academic prose.
 
 3. "issues" — Up to 6 specific mistakes from the candidate's response. For each item: "original" (exact erroneous fragment from their response), "corrected" (the fix — must be different from original), "explanation" (one sentence: WHY it's wrong + the rule, in plain language), "category" (one of: grammar, vocabulary, pronunciation, cohesion, fluency). If there are no real errors, return an empty array.
+   Do not list pronunciation issues, because you cannot hear the audio.
 
 4. "strengths" — 2–3 specific things they did well (reference what they actually said).
 
@@ -346,6 +354,11 @@ Analyse and return ONLY valid JSON.`
   try {
     const raw = await callGeminiAPI(RESPONSE_ANALYSIS_PROMPT, userMessage, 2048, [], 'speaking_response_analysis')
     const parsed = JSON.parse(extractJSON(raw)) as Partial<SpeakingResponseAnalysis>
+    if (parsed.estimatedBand === null || parsed.estimatedBand === undefined || !Number.isFinite(Number(parsed.estimatedBand)) ||
+      !parsed.correctedVersion?.trim() || !parsed.band8Template?.trim() ||
+      !Array.isArray(parsed.suggestions) || !parsed.suggestions.length) {
+      throw new Error('Incomplete answer feedback')
+    }
     const issues = Array.isArray(parsed.issues)
       ? parsed.issues
           .map((issue) => ({
@@ -357,6 +370,7 @@ Analyse and return ONLY valid JSON.`
           .filter((i) => {
             if (!i.original || !i.corrected) return false
             if (normalise(i.original) === normalise(i.corrected)) return false
+            if (!normalise(text).includes(normalise(i.original))) return false
             if (/\b(is|are|seems?|looks?)\s+(fine|correct|accurate|good)\b/i.test(i.explanation)) return false
             return true
           })

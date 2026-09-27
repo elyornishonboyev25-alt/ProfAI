@@ -147,7 +147,7 @@ export default function IELTSSpeakingTest() {
       <FullMockRunner
         mock={mode.mock}
         onExit={exitTest}
-        onSaved={(analysis) => {
+        onSaved={(analysis, transcript) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
             userId: user?.id ?? null,
@@ -162,6 +162,8 @@ export default function IELTSSpeakingTest() {
             wordCount: analysis.stats.wordCount,
             fillerCount: analysis.stats.fillerCount,
             summary: analysis.summary,
+            evaluation: analysis,
+            transcript,
           })
           if (user) {
             void learningCenterApi.syncResult({
@@ -250,6 +252,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const [drafts, setDrafts] = useState<string[]>(() => items.map(() => ''))
   const [prepLeft, setPrepLeft] = useState(0)
   const [speakLeft, setSpeakLeft] = useState(0)
+  const [finished, setFinished] = useState(false)
 
   const audioRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -389,19 +392,44 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   }
   const goNext = () => selectQuestion(index + 1)
   const goPrev = () => selectQuestion(index - 1)
-  const completedCount = answers.filter((item) => Boolean(item.analysis)).length
+  const completedCount = answers.filter((item) => item.analysis?.source === 'ai').length
   const canComplete = completedCount === answers.length
+  const practiceBand = canComplete
+    ? Math.round(answers.reduce((sum, item) => sum + (item.analysis?.estimatedBand ?? 0), 0) / answers.length * 2) / 2
+    : 0
+
+  if (finished) {
+    return (
+      <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="speaking-exam-header justify-between">
+          <div><p className="speaking-eyebrow">IELTS Speaking · Practice complete</p><h1 className="mt-1 text-2xl font-black text-slate-900">{day.title}</h1></div>
+          <span className="speaking-part-pill">Part {day.part}</span>
+        </div>
+        <div className="speaking-answer-panel mt-5 p-6 text-center sm:p-8">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
+          <p className="mt-3 text-xs font-black uppercase tracking-[0.15em] text-red-600">Average practice band</p>
+          <p className="mt-1 text-6xl font-black text-slate-900">{practiceBand.toFixed(1)}</p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">Estimated from {answers.length} transcribed responses. Pronunciation needs a human or audio based review for an accurate band.</p>
+        </div>
+        <div className="mt-5 space-y-4">
+          {answers.map((item, questionIndex) => <div key={questionIndex} className="speaking-answer-panel p-5">
+            <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="speaking-eyebrow">Question {questionIndex + 1}</p><h2 className="mt-1 font-bold text-slate-900">{item.question.prompt}</h2></div><span className="speaking-part-pill">Band ~{item.analysis?.estimatedBand.toFixed(1)}</span></div>
+            <p className="mt-3 border-l-2 border-red-200 pl-3 text-sm leading-6 text-slate-600">{item.spoken}</p>
+            {item.analysis?.suggestions.length ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900"><strong>Next step:</strong> {item.analysis.suggestions[0]}</p> : null}
+          </div>)}
+        </div>
+        <button onClick={onExit} className="arena-primary-btn mt-6 px-6 py-3"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Speaking tests</button>
+      </div>
+    )
+  }
 
   return (
     <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <button onClick={onExit} disabled={recording} className="premium-back-btn disabled:opacity-50">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to roadmap
-        </button>
-        <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
-          {day.title} · {day.subtitle}
-        </span>
-      </div>
+      <header className="speaking-exam-header mb-4">
+        <button onClick={onExit} disabled={recording} className="speaking-icon-button disabled:opacity-50" aria-label="Back to roadmap"><ArrowLeft className="h-5 w-5" /></button>
+        <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking · Part {day.part}</p><h1 className="truncate text-lg font-black text-slate-900">{day.title}</h1><p className="text-xs text-slate-500">{day.subtitle}</p></div>
+        <span className="speaking-part-pill">{index + 1} / {items.length}</span>
+      </header>
 
       <div className="mb-5 rounded-2xl border border-red-100 bg-white/90 p-3 shadow-sm" aria-label={`${completedCount} of ${items.length} questions reviewed`}>
         <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-600">
@@ -586,7 +614,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         ) : (
           <button
             disabled={!canComplete}
-            onClick={() => { onComplete(); onExit() }}
+            onClick={() => { onComplete(); setFinished(true) }}
             className="arena-primary-btn disabled:cursor-not-allowed disabled:opacity-50"
             title={canComplete ? 'Finish test' : 'Complete every question first'}
           >
@@ -731,7 +759,7 @@ function FullMockRunner({
 }: {
   mock: SpeakingFullMockEntry
   onExit: () => void
-  onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation) => void
+  onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[]) => void
 }) {
   // Each numbered mock has its own fixed question set (distinct across mocks).
   const seed = {
@@ -744,7 +772,7 @@ function FullMockRunner({
     part3: mock.parts.part3.questions.map((q) => q.q),
   }
   return (
-    <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
+    <div className="ielts-speaking-workspace min-h-screen py-4">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
         modeLabel={mock.title}

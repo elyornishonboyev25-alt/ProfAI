@@ -185,7 +185,6 @@ export default function IELTSWritingFullTestInterface({
     setPhase('submitted')
     setEvaluating(true)
     setEvalError(null)
-    writingTrial.consume()
 
     try {
       const results = await Promise.all(
@@ -195,6 +194,7 @@ export default function IELTSWritingFullTestInterface({
       )
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
+      if (totalWordCount > 0) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
       awardBadge({
@@ -533,8 +533,8 @@ export default function IELTSWritingFullTestInterface({
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0">
+              <p className="writing-exam-label">IELTS Writing · Full test</p>
               <h1 className="truncate text-sm font-black text-slate-900">{fullTest.title}</h1>
-              <p className="truncate text-[11px] text-slate-500">Task 1 + Task 2 · Full exam simulation</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -564,7 +564,8 @@ export default function IELTSWritingFullTestInterface({
 
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <section className="shrink-0 border-b border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-4 sm:p-5 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-7">
-          <div className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
+          <div className="writing-exam-card p-5">
+            <p className="writing-exam-label mb-3">Task {activeTaskIndex + 1} · Instructions</p>
             <p className="text-[15px] font-medium leading-7 text-slate-900">{activeTask.promptLead ?? activeTask.prompt}</p>
             {activeTask.promptQuestion ? (
               <div className="mt-4 whitespace-pre-line rounded-xl bg-slate-100 px-4 py-4 text-[15px] font-medium leading-7 text-slate-900">{activeTask.promptQuestion}</div>
@@ -592,8 +593,9 @@ export default function IELTSWritingFullTestInterface({
 
         <section className="flex min-h-[460px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
           <div className="min-h-0 flex-1 p-4 sm:p-5 lg:p-7">
-            <div className="relative flex h-full min-h-[360px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0">
-              <textarea ref={textareaRef} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeTask.id]: event.target.value }))} placeholder={`Write your Task ${activeTaskIndex + 1} response here...`} className="min-h-0 flex-1 resize-none p-5 text-[15px] leading-7 text-slate-800 outline-none placeholder:text-slate-400" />
+            <div className="writing-exam-card relative flex h-full min-h-[360px] flex-col overflow-hidden lg:min-h-0">
+              <div className="writing-editor-label"><span>Your response</span><span>Task {activeTaskIndex + 1}</span></div>
+              <textarea ref={textareaRef} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeTask.id]: event.target.value }))} placeholder={`Write your Task ${activeTaskIndex + 1} response here...`} className="min-h-0 flex-1 resize-none bg-transparent p-5 text-[15px] leading-7 text-slate-800 outline-none placeholder:text-slate-400" />
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
                 <span className="text-xs text-slate-500">Suggested: {minWords}–{maxWords} words</span>
                 <span className={`text-xs font-black ${wordCountColor}`}>{activeWordCount}/{activeTask.maxWordCount}</span>

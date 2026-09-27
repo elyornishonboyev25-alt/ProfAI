@@ -164,8 +164,6 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
             }
           } else if (state === 'failed') {
             setError('Connection failed. Your network may be blocking peer-to-peer audio.')
-            cleanup()
-            setPhase('setup')
           }
         },
       })
@@ -200,7 +198,6 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
     if (event.type === 'peer_left') {
       if (phaseRef.current === 'connected' || phaseRef.current === 'connecting') {
         setError('Your partner left the session.')
-        cleanup()
         setPhase('rating')
       }
       return
@@ -209,7 +206,7 @@ export default function LivePartnerSession({ onExit }: { onExit: () => void }) {
     if (event.type === 'error') {
       setError(event.message)
     }
-  }, [cleanup])
+  }, [])
 
   const startSearch = useCallback(async () => {
     setError(null)
@@ -463,7 +460,7 @@ function RatingScreen({
         <p className="mt-2 text-sm text-slate-600">Your feedback for {peerName} was saved. Keep practising to climb the leaderboard.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {peerUserId ? <button onClick={onViewProfile} className="arena-secondary-btn">View {peerName}’s profile</button> : null}
-          <button onClick={onExit} className="arena-primary-btn">Back to Community</button>
+          <button onClick={onExit} className="arena-primary-btn">Back to Speaking Hub</button>
         </div>
       </div>
     )

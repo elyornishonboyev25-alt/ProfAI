@@ -6,7 +6,6 @@ import {
   ArrowRight,
   BookOpenCheck,
   CalendarDays,
-  CheckCircle2,
   Compass,
   GraduationCap,
   Loader2,
@@ -71,13 +70,13 @@ export default function JourneyPlan() {
   }
 
   if (status === 'error') {
-    return <div className="grid min-h-[70vh] place-items-center px-4"><section role="alert" className="w-full max-w-lg rounded-[2rem] border border-white bg-white/75 p-8 text-center shadow-2xl backdrop-blur-2xl"><RefreshCw className="mx-auto h-7 w-7 text-red-500" /><h1 className="mt-5 text-2xl font-black text-slate-950">We couldn’t load your plan</h1><p className="mt-3 text-sm leading-6 text-slate-600">{error}</p><button type="button" onClick={() => void loadPlan()} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"><RefreshCw className="h-4 w-4" />  <UiText text={"Try again"} /> </button></section></div>
+    return <div className="grid min-h-[70vh] place-items-center px-4"><section role="alert" className="w-full max-w-lg rounded-[2rem] border border-white bg-white/75 p-8 text-center shadow-2xl backdrop-blur-2xl"><RefreshCw className="mx-auto h-7 w-7 text-red-500" /><h1 className="mt-5 text-2xl font-black text-slate-950">We couldn’t load your plan</h1><p className="mt-3 text-sm leading-6 text-slate-600">{error}</p><button type="button" onClick={() => void loadPlan()} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-700 to-red-500 px-5 py-3 text-sm font-black text-white"><RefreshCw className="h-4 w-4" />  <UiText text={"Try again"} /> </button></section></div>
   }
 
   if (!plan?.result) {
     return (
       <div className="workspace-page relative min-h-screen px-4 pb-24 pt-5 sm:px-6 lg:pb-8">
-        <section className="mx-auto grid min-h-[72vh] max-w-5xl place-items-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-[radial-gradient(circle_at_10%_10%,#eaf2ff,transparent_40%),radial-gradient(circle_at_95%_85%,#fff0f0,transparent_45%),white] p-6 text-center shadow-[0_32px_100px_rgba(30,64,175,.14)] backdrop-blur-2xl sm:p-12">
+        <section className="mx-auto grid min-h-[72vh] max-w-5xl place-items-center overflow-hidden rounded-[2.5rem] border border-white/90 bg-[radial-gradient(circle_at_10%_10%,#f0ecee,transparent_40%),radial-gradient(circle_at_95%_85%,#fff0f0,transparent_45%),white] p-6 text-center shadow-[0_32px_100px_rgba(73,43,52,.12)] backdrop-blur-2xl sm:p-12">
           <div className="max-w-xl"><div className="mx-auto grid h-20 w-20 place-items-center rounded-[1.7rem] bg-gradient-to-br from-red-500 to-red-700 text-white shadow-[0_20px_45px_rgba(239,68,68,.25)]"><Target className="h-8 w-8" /></div><span className="mt-6 inline-flex rounded-full border border-red-100 bg-red-50 px-3 py-2 text-[10px] font-black uppercase tracking-[.17em] text-red-700">Study Plan</span><h1 className="mt-4 text-3xl font-black tracking-[-.04em] text-slate-950 sm:text-5xl">Build your first study plan.</h1><p className="mx-auto mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">Complete the private five-step diagnostic. ProfAI will turn your answers into readiness signals and concrete priorities, then keep the plan here.</p>{diagnosticEnabled ? <button type="button" onClick={() => navigate('/diagnostic')} className="group mt-8 inline-flex items-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_40px_rgba(239,68,68,.25)] hover:bg-red-600">Start my diagnostic <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button> : null}</div>
         </section>
       </div>
@@ -97,11 +96,11 @@ export default function JourneyPlan() {
           <div className="flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/85 px-3.5 py-2 text-[10px] font-black uppercase tracking-[.13em] text-emerald-800"><ShieldCheck className="h-3.5 w-3.5" /> Account-private</div>
         </header>
 
-        <motion.section initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : .55, ease: EASE }} className="relative overflow-hidden rounded-[2.4rem] border border-white/90 bg-[radial-gradient(circle_at_88%_10%,#dceafe,transparent_38%),radial-gradient(circle_at_12%_95%,#ffe5e5,transparent_38%),white] p-6 text-slate-950 shadow-[0_34px_90px_rgba(30,64,175,.13)] sm:p-9 lg:p-11">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_14%,rgba(37,99,235,.08),transparent_31%),radial-gradient(circle_at_8%_95%,rgba(239,68,68,.08),transparent_32%)]" />
+        <motion.section initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : .55, ease: EASE }} className="relative overflow-hidden rounded-[2.4rem] border border-white/90 bg-[radial-gradient(circle_at_88%_10%,#ece9ec,transparent_38%),radial-gradient(circle_at_12%_95%,#ffe5e5,transparent_38%),white] p-6 text-slate-950 shadow-[0_34px_90px_rgba(73,43,52,.12)] sm:p-9 lg:p-11">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_14%,rgba(170,164,172,.09),transparent_31%),radial-gradient(circle_at_8%_95%,rgba(239,68,68,.08),transparent_32%)]" />
           <motion.div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full border border-white/10" animate={reduceMotion ? undefined : { scale: [1, 1.08, 1], rotate: [0, 12, 0] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} />
           <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div><span className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/80 px-3.5 py-2 text-[10px] font-black uppercase tracking-[.17em] text-red-700"><Sparkles className="h-3.5 w-3.5" /> Readiness roadmap</span><h2 className="mt-5 max-w-3xl text-3xl font-black leading-[1.03] tracking-[-.045em] sm:text-5xl">{result.readinessLabel}. <span className="arena-title-accent-red">Your next moves are clear.</span></h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">{result.summary}</p><div className="mt-7 flex flex-wrap gap-2.5 text-xs font-bold text-slate-700"><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><GraduationCap className="h-4 w-4 text-red-600" /> {answers.intendedMajor || 'Major not set'}</span><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><MapPin className="h-4 w-4 text-blue-600" /> {destinationLabel}</span><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><CalendarDays className="h-4 w-4 text-emerald-600" /> {answers.intakeYear || 'Intake not set'}</span></div></div>
+            <div><span className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/80 px-3.5 py-2 text-[10px] font-black uppercase tracking-[.17em] text-red-700"><Sparkles className="h-3.5 w-3.5" /> Readiness roadmap</span><h2 className="mt-5 max-w-3xl text-3xl font-black leading-[1.03] tracking-[-.045em] sm:text-5xl">{result.readinessLabel}. <span className="arena-title-accent-red">Your next moves are clear.</span></h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">{result.summary}</p><div className="mt-7 flex flex-wrap gap-2.5 text-xs font-bold text-slate-700"><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><GraduationCap className="h-4 w-4 text-red-600" /> {answers.intendedMajor || 'Major not set'}</span><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><MapPin className="h-4 w-4 text-red-600" /> {destinationLabel}</span><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-2"><CalendarDays className="h-4 w-4 text-red-600" /> {answers.intakeYear || 'Intake not set'}</span></div></div>
             <div className="relative mx-auto grid h-48 w-48 shrink-0 place-items-center rounded-full shadow-[0_20px_50px_rgba(220,38,38,.15)]" style={{ background: `conic-gradient(#dc2626 ${result.overallScore}%, #fee2e2 0)` }}><div className="grid h-[154px] w-[154px] place-items-center rounded-full border border-white bg-white/95 text-center shadow-inner backdrop-blur-xl"><div><b className="block text-5xl font-black tracking-[-.06em]">{result.overallScore}</b><span className="mt-1 block text-[9px] font-black uppercase tracking-[.18em] text-red-700">Overall readiness</span></div></div></div>
           </div>
           <div className="relative mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-400"><span>Plan saved {planDate}</span><span className="inline-flex items-center gap-2"><TimerReset className="h-4 w-4" /> Built for {answers.weeklyHours ?? 0} focused hours per week</span></div>
@@ -110,19 +109,45 @@ export default function JourneyPlan() {
         <section className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {result.categories.map((category, index) => {
             const Icon = categoryIcons[category.key]
-            return <motion.article key={category.key} initial={reduceMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : .08 + index * .06, duration: .4, ease: EASE }} className="rounded-[1.75rem] border border-white/90 bg-white/65 p-5 shadow-[0_18px_55px_rgba(15,23,42,.07)] backdrop-blur-2xl"><div className="flex items-start justify-between gap-4"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-50 text-blue-700"><Icon className="h-5 w-5" /></span><span className="text-3xl font-black tracking-[-.04em] text-slate-950">{category.score}</span></div><h3 className="mt-5 text-sm font-black text-slate-950">{category.label}</h3><p className="mt-1 text-[10px] font-black uppercase tracking-[.14em] text-blue-700">{category.status}</p><p className="mt-3 text-xs leading-5 text-slate-500">{category.summary}</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200/70"><motion.div initial={{ width: 0 }} animate={{ width: `${category.score}%` }} transition={{ duration: reduceMotion ? 0 : .75, delay: .2 + index * .06, ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-900 via-blue-600 to-blue-400" /></div></motion.article>
+            return (
+              <motion.article
+                key={category.key}
+                initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: reduceMotion ? 0 : .08 + index * .06, duration: .4, ease: EASE }}
+                className="relative overflow-hidden rounded-[1.75rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.94),rgba(248,246,248,.81)_62%,rgba(255,240,242,.73))] p-5 shadow-[0_18px_55px_rgba(73,43,52,.09),inset_0_1px_0_white] backdrop-blur-2xl"
+              >
+                <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-red-300 to-transparent" />
+                <div className="flex items-start justify-between gap-4">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl border border-red-100 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_16px_rgba(185,28,47,.08)]"><Icon className="h-5 w-5" /></span>
+                  <span className="text-right text-3xl font-black tracking-[-.04em] text-slate-950">{category.score}<small className="ml-0.5 text-[10px] font-bold text-slate-400">/100</small></span>
+                </div>
+                <h3 className="mt-5 text-sm font-black text-slate-950">{category.label}</h3>
+                <p className="mt-1 text-[10px] font-black uppercase tracking-[.14em] text-red-700">{category.status}</p>
+                <p className="mt-3 min-h-10 text-xs leading-5 text-slate-500">{category.summary}</p>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200/80 shadow-inner"><motion.div initial={{ width: 0 }} animate={{ width: `${category.score}%` }} transition={{ duration: reduceMotion ? 0 : .75, delay: .2 + index * .06, ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-600 to-rose-400" /></div>
+              </motion.article>
+            )
           })}
         </section>
 
-        <section className="mt-5 rounded-[2.2rem] border border-white/90 bg-white/65 p-5 shadow-[0_24px_75px_rgba(30,64,175,.1)] backdrop-blur-2xl sm:p-8">
+        <section className="mt-5 rounded-[2.2rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.89),rgba(244,242,245,.73)_62%,rgba(255,246,247,.81))] p-5 shadow-[0_24px_75px_rgba(73,43,52,.1),inset_0_1px_0_white] backdrop-blur-2xl sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-red-500">Priority roadmap</p><h2 className="mt-1 text-2xl font-black tracking-[-.035em] text-slate-950">Your next three actions</h2><p className="mt-2 text-sm text-slate-500">Work from top to bottom. Each action opens the right ProfAI workspace.</p></div>{diagnosticEnabled ? <button type="button" onClick={() => navigate('/diagnostic')} className="inline-flex items-center gap-2 rounded-2xl border border-white bg-white/75 px-4 py-3 text-xs font-black text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-950"><RefreshCw className="h-4 w-4" /> Update my answers</button> : null}</div>
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             {result.priorities.map((priority, index) => {
               const destination = priority.actionPath === '/register' ? '/admission' : priority.actionPath
-              return <article key={priority.key} className="group flex min-h-[15rem] flex-col rounded-[1.65rem] border border-slate-200/75 bg-white/75 p-5 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_20px_50px_rgba(37,99,235,.1)]"><div className="flex items-center justify-between"><span className="text-[10px] font-black uppercase tracking-[.18em] text-red-500">Action 0{index + 1}</span><CheckCircle2 className="h-5 w-5 text-emerald-500" /></div><h3 className="mt-5 text-lg font-black tracking-tight text-slate-950">{priority.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{priority.body}</p><button type="button" onClick={() => navigate(destination)} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-blue-700 transition group-hover:text-blue-800">{priority.actionLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button></article>
+              return (
+                <article key={priority.key} className="group relative flex min-h-[15rem] flex-col overflow-hidden rounded-[1.65rem] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.97),rgba(250,248,249,.84))] p-5 shadow-[0_12px_32px_rgba(73,43,52,.05),inset_0_1px_0_white] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_20px_50px_rgba(185,28,47,.12)]">
+                  <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-red-700 via-red-400 to-transparent" />
+                  <div className="flex items-center justify-between"><span className="rounded-full border border-red-100 bg-red-50/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-[.18em] text-red-700">Action 0{index + 1}</span><Target className="h-5 w-5 text-red-600" /></div>
+                  <h3 className="mt-5 text-lg font-black tracking-tight text-slate-950">{priority.title}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{priority.body}</p>
+                  <button type="button" onClick={() => navigate(destination)} className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-red-100 bg-white/80 px-3.5 py-2 text-sm font-black text-red-700 transition hover:border-red-200 hover:bg-red-50 group-hover:shadow-[0_6px_16px_rgba(185,28,47,.09)]">{priority.actionLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+                </article>
+              )
             })}
           </div>
-          <div className="mt-6 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/65 p-4 text-xs leading-5 text-blue-950"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" /><p>Your plan is private to your account. It is planning guidance, not an admission prediction; verify requirements and deadlines on official university sources.</p></div>
+          <div className="mt-6 flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white/70 p-4 text-xs leading-5 text-slate-600"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-red-700" /><p>Your plan is private to your account. It is planning guidance, not an admission prediction; verify requirements and deadlines on official university sources.</p></div>
         </section>
       </div>
     </div>

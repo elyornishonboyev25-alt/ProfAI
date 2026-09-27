@@ -311,7 +311,7 @@ export default function NotificationsBell() {
               <button
                 onClick={() => {
                   setOpen(false)
-                  navigate('/mock/ielts')
+                  navigate('/ielts/tests#mocks')
                 }}
                 className="profai-notification-row flex w-full items-center gap-3 rounded-2xl border border-white bg-white/65 px-3 py-3 text-left transition hover:border-red-200 hover:bg-white"
               >

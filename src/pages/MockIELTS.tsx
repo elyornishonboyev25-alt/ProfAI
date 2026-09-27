@@ -1,21 +1,17 @@
-import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowLeft,
+  ArrowRight,
   BookOpen,
   CheckCircle2,
-  ChevronRight,
   Clock3,
   Headphones,
   Mic2,
   PenSquare,
-  ShieldCheck,
+  Search,
   Sparkles,
-  Target,
   type LucideIcon,
 } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import {
   formatMockDuration,
@@ -40,236 +36,182 @@ const SECTION_SHORT: Record<MockSectionKey, string> = {
   speaking: 'S',
 }
 
-export default function MockIELTS() {
+const FILTERS = [
+  { id: 'all', label: 'All mocks' },
+  { id: 'available', label: 'Available' },
+  { id: 'progress', label: 'In progress' },
+  { id: 'completed', label: 'Completed' },
+] as const
+
+type MockFilter = (typeof FILTERS)[number]['id']
+
+function IELTSMockCatalog() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
   const mockTrial = useFeatureTrial('mock')
-
   const mocks = useMemo(() => getFullMockCatalog(), [])
-  const liveMocks = useMemo(() => mocks.filter((mock) => mock.readyCount > 0).length, [mocks])
-  const fullyReadyMocks = useMemo(() => mocks.filter((mock) => mock.fullyReady).length, [mocks])
-
-  // Per-mock user completion (localStorage-backed, updated live by the runners).
+  const availableCount = useMemo(() => mocks.filter((mock) => mock.readyCount > 0).length, [mocks])
+  const fullyReadyCount = useMemo(() => mocks.filter((mock) => mock.fullyReady).length, [mocks])
+  const [filter, setFilter] = useState<MockFilter>('all')
+  const [search, setSearch] = useState('')
   const [progressVersion, setProgressVersion] = useState(0)
-  const [filter, setFilter] = useState<'all' | 'available' | 'progress' | 'completed'>('all')
+
   useEffect(() => {
-    const bump = () => setProgressVersion((version) => version + 1)
-    window.addEventListener(FULL_MOCK_PROGRESS_EVENT, bump)
-    return () => window.removeEventListener(FULL_MOCK_PROGRESS_EVENT, bump)
+    const refresh = () => setProgressVersion((version) => version + 1)
+    window.addEventListener(FULL_MOCK_PROGRESS_EVENT, refresh)
+    window.addEventListener('storage', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.removeEventListener(FULL_MOCK_PROGRESS_EVENT, refresh)
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('focus', refresh)
+    }
   }, [])
+
   const completedByMock = useMemo(() => {
     void progressVersion
     return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
   }, [mocks, progressVersion])
-  const visibleMocks = useMemo(
-    () =>
-      mocks.filter((mock) => {
-        const done = completedByMock.get(mock.id)?.size ?? 0
-        if (filter === 'available') return mock.readyCount > 0
-        if (filter === 'progress') return done > 0 && done < mock.readyCount
-        if (filter === 'completed') return mock.readyCount > 0 && done >= mock.readyCount
-        return true
-      }),
-    [completedByMock, filter, mocks],
-  )
+
+  const visibleMocks = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return mocks.filter((mock) => {
+      const done = completedByMock.get(mock.id)?.size ?? 0
+      const finished = done === MOCK_SECTION_COUNT
+      if (filter === 'available' && mock.readyCount === 0) return false
+      if (filter === 'progress' && (done === 0 || finished)) return false
+      if (filter === 'completed' && !finished) return false
+      return !query || `mock ${mock.index} full mock ${mock.index} ielts`.includes(query)
+    })
+  }, [completedByMock, filter, mocks, search])
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <section id="mocks" className="relative isolate scroll-mt-24 overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,48,70,.09),inset_0_1px_0_white] sm:p-5 lg:p-6">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_92%_0%,rgba(190,35,53,.07),transparent_30%),radial-gradient(circle_at_5%_100%,rgba(185,183,190,.12),transparent_35%)]" />
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <Reveal>
-          <section className="premium-hero p-6 sm:p-10">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="premium-top-controls">
-                  <button
-                    onClick={() => navigate(from === 'ielts' ? '/ielts' : '/dashboard')}
-                    className="premium-back-btn"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    {from === 'ielts' ? 'Back to IELTS Arena' : 'Back to Dashboard'}
-                  </button>
-                  <span className="premium-top-chip">IELTS Mock Suite</span>
-                  {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {Math.max(0, mockTrial.remaining)}/{mockTrial.limit} free mocks left
-                    </span>
-                  ) : null}
-                </div>
-                <h1 className="premium-section-title mt-4">
-                  30 Full <span className="arena-title-accent-red">IELTS Mocks</span>
-                </h1>
-                <p className="premium-section-subtitle max-w-3xl">
-                  Every Full Mock bundles all four sections — Listening, Reading, Writing and Speaking — in official
-                  exam order. Open a mock to run its sections one by one under real test timing.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Full-length timing
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
-                    <Target className="h-3.5 w-3.5" />
-                    4 sections per mock
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Official exam order
-                  </span>
-                </div>
-              </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
+          <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">Full mock tests</h1>
+          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">Listening, Reading, Writing and Speaking in official exam order. Your progress stays with each mock.</p>
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+          <label className="relative block w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search mock..."
+              className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,48,70,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
+            />
+          </label>
+          {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white/75 px-3 py-1 text-[11px] font-bold text-red-700">
+              <Sparkles className="h-3.5 w-3.5" /> {Math.max(0, mockTrial.remaining)} free mocks left
+            </span>
+          ) : null}
+        </div>
+      </div>
 
-              <div className="grid gap-2 sm:grid-cols-3 xl:w-[31rem]">
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Full Mocks</p>
-                  <p className="hero-metric-value-sm">
-                    <CountUp value={mocks.length} />
-                  </p>
-                  <p className="hero-metric-note">Mock 1 → 30</p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Playable now</p>
-                  <p className="hero-metric-value-sm">
-                    <CountUp value={liveMocks} />
-                  </p>
-                  <p className="hero-metric-note">At least one live section</p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label">Complete</p>
-                  <p className="hero-metric-value-sm">
-                    <CountUp value={fullyReadyMocks} />
-                  </p>
-                  <p className="hero-metric-note">All 4 sections live</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-white/80 bg-white/75 p-3 shadow-[0_18px_38px_rgba(30,64,175,0.1)] backdrop-blur-xl">
-            <div className="flex flex-wrap gap-2">
-              {([
-                ['all', 'All 30'],
-                ['available', 'Available'],
-                ['progress', 'In progress'],
-                ['completed', 'Completed'],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setFilter(value)}
-                  className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                    filter === value
-                      ? 'cta-sheen bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_9px_20px_rgba(37,99,235,0.28)]'
-                      : 'border border-blue-100 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs font-bold text-slate-500">{visibleMocks.length} mock shown</p>
+      <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-[36rem] sm:gap-3" aria-label="Full mock availability">
+        {[
+          { value: mocks.length, label: 'Full mocks' },
+          { value: availableCount, label: 'Available now' },
+          { value: fullyReadyCount, label: 'All 4 ready' },
+        ].map((metric) => (
+          <div key={metric.label} className="rounded-2xl border border-white/90 bg-white/70 px-3 py-2.5 shadow-[0_7px_20px_rgba(30,48,70,.05)] sm:px-4">
+            <strong className="block text-xl font-black leading-none tracking-tight text-slate-950">{metric.value}</strong>
+            <span className="mt-1 block text-[10px] font-bold text-slate-500 sm:text-[11px]">{metric.label}</span>
           </div>
-        </Reveal>
+        ))}
+      </div>
 
-        <Stagger key={filter} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter full mocks">
+          {FILTERS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={filter === id}
+              onClick={() => setFilter(id)}
+              className={`rounded-full border px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${filter === id ? 'border-red-200 bg-red-50 text-red-700 shadow-[0_6px_16px_rgba(185,28,28,.08)]' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-red-200 hover:bg-white hover:text-red-700'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs font-bold text-slate-500">{visibleMocks.length} shown</span>
+      </div>
+
+      {visibleMocks.length ? (
+        <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleMocks.map((mock) => {
-            const isLive = mock.readyCount > 0
             const doneSections = completedByMock.get(mock.id) ?? new Set<MockSectionKey>()
             const doneCount = doneSections.size
-            const inProgress = doneCount > 0 && doneCount < mock.readyCount
-            const finished = mock.readyCount > 0 && doneCount >= mock.readyCount
+            const finished = doneCount === MOCK_SECTION_COUNT
+            const inProgress = doneCount > 0 && !finished
+
             return (
-              <StaggerItem key={mock.id} className="h-full">
-                <Tilt3D className="h-full rounded-[1.6rem]" max={5}>
-                  <button
-                    onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'mock' } })}
-                    className="interactive-lift group flex h-full w-full flex-col rounded-[1.6rem] border border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/60 p-5 text-left shadow-[0_16px_32px_rgba(37,99,235,0.13)]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
-                          Full Mock {mock.index}
-                        </p>
-                        <h2 className="mt-1 text-2xl font-black text-slate-900">Mock {mock.index}</h2>
-                      </div>
+              <button
+                key={mock.id}
+                type="button"
+                onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}
+                className="ielts-catalog-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(241,240,243,.67))] p-6 text-left shadow-[0_12px_34px_rgba(70,50,56,.07),inset_0_1px_0_white] transition-[border-color,box-shadow] duration-150 hover:border-red-200 hover:shadow-[0_18px_42px_rgba(185,28,28,.1),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">IELTS FULL MOCK {String(mock.index).padStart(2, '0')}</p>
+                  <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${mock.fullyReady ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : mock.readyCount > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-500'}`}>
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {mock.readyCount}/{MOCK_SECTION_COUNT} ready
+                  </span>
+                </div>
+                <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">Full Mock {mock.index}</h2>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">Four skills in one exam flow</p>
+
+                <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Section availability">
+                  {mock.sections.map((section) => {
+                    const Icon = SECTION_ICONS[section.key]
+                    const done = doneSections.has(section.key)
+                    return (
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
-                          mock.fullyReady
-                            ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
-                            : isLive
-                              ? 'border-amber-200 bg-amber-50 text-amber-700'
-                              : 'border-slate-200 bg-slate-100 text-slate-500'
-                        }`}
+                        key={section.key}
+                        title={`${section.title} — ${done ? 'Completed by you' : section.available ? 'Ready' : 'Coming soon'}`}
+                        className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold ${done ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : section.available ? 'border-red-100 bg-white/90 text-red-700' : 'border-slate-200 bg-white/60 text-slate-400'}`}
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {mock.readyCount}/{MOCK_SECTION_COUNT} ready
+                        {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                        {SECTION_SHORT[section.key]}
                       </span>
-                    </div>
+                    )
+                  })}
+                </div>
 
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {mock.sections.map((section) => {
-                        const Icon = SECTION_ICONS[section.key]
-                        const done = doneSections.has(section.key)
-                        return (
-                          <span
-                            key={section.key}
-                            title={`${section.title} — ${done ? 'Completed by you' : section.available ? 'Ready' : 'Coming soon'}`}
-                            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold transition-colors ${
-                              done
-                                ? 'border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_10px_rgba(16,185,129,0.3)]'
-                                : section.available
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                  : 'border-slate-200 bg-white text-slate-400'
-                            }`}
-                          >
-                            {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                            {SECTION_SHORT[section.key]}
-                          </span>
-                        )
-                      })}
-                    </div>
+                {inProgress ? (
+                  <div className="mt-3" aria-label={`${doneCount} of ${MOCK_SECTION_COUNT} sections completed`}>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-red-700"><span>{doneCount}/{MOCK_SECTION_COUNT} completed</span><span>{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span></div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }} /></div>
+                  </div>
+                ) : finished ? (
+                  <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span>
+                ) : null}
 
-                    {/* Resume progress bar (concept: 15-Mock-Catalog) */}
-                    {inProgress ? (
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-blue-700">Resume · {doneCount}/{MOCK_SECTION_COUNT} done</span>
-                          <span className="text-slate-400">{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span>
-                        </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-blue-100">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#2563EB] to-[#4F46E5] transition-[width] duration-700"
-                            style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ) : finished ? (
-                      <div className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                         <UiText text={"Completed"} /> </div>
-                    ) : null}
-
-                    <div className="mt-auto flex items-center justify-between pt-4">
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
-                        <Clock3 className="h-3.5 w-3.5" />
-                        {formatMockDuration(mock.totalMinutes)} session
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-700 transition group-hover:translate-x-0.5">
-                        {inProgress ? 'Resume' : finished ? 'Review' : 'Open'}
-                        <ChevronRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </button>
-                </Tilt3D>
-              </StaggerItem>
+                <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {formatMockDuration(mock.totalMinutes)} session</span>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-black text-red-700">{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                </div>
+              </button>
             )
           })}
-        </Stagger>
-      </div>
-    </div>
+        </div>
+      ) : (
+        <div className="mt-5 rounded-[1.75rem] border border-dashed border-red-200 bg-white/65 px-4 py-12 text-center text-sm font-semibold text-slate-500">No mocks found for this filter.</div>
+      )}
+    </section>
   )
+}
+
+export default function MockIELTS({ embedded = false }: { embedded?: boolean }) {
+  const location = useLocation()
+  if (!embedded) return <Navigate to="/ielts/tests#mocks" replace state={location.state} />
+  return <IELTSMockCatalog />
 }

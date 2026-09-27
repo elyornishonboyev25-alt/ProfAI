@@ -10,24 +10,24 @@ type VoiceOrbProps = {
 
 const PALETTES: Record<AiVoiceState, { core: string; glow: string; ring: string }> = {
   idle: {
-    core: 'radial-gradient(circle at 32% 28%, #dbeafe 0%, #60a5fa 38%, #2563eb 72%, #1e3a8a 100%)',
-    glow: 'rgba(37,99,235,0.34)',
-    ring: 'rgba(96,165,250,0.58)',
+    core: 'radial-gradient(circle at 30% 25%, #ffffff 0%, #f5e9eb 26%, #d3495a 62%, #921c31 100%)',
+    glow: 'rgba(196,39,59,0.28)',
+    ring: 'rgba(211,73,90,0.48)',
   },
   listening: {
-    core: 'radial-gradient(circle at 32% 28%, #bfdbfe 0%, #38bdf8 38%, #0284c7 72%, #075985 100%)',
-    glow: 'rgba(2,132,199,0.42)',
-    ring: 'rgba(56,189,248,0.66)',
+    core: 'radial-gradient(circle at 30% 25%, #fff 0%, #f8cbd0 28%, #e33c51 64%, #a51c32 100%)',
+    glow: 'rgba(225,55,77,0.4)',
+    ring: 'rgba(230,83,101,0.72)',
   },
   thinking: {
-    core: 'radial-gradient(circle at 32% 28%, #e0e7ff 0%, #a5b4fc 36%, #6366f1 70%, #3730a3 100%)',
-    glow: 'rgba(99,102,241,0.4)',
-    ring: 'rgba(129,140,248,0.62)',
+    core: 'radial-gradient(circle at 30% 25%, #fff 0%, #e7e3e6 26%, #ba8d98 62%, #a5293d 100%)',
+    glow: 'rgba(159,64,84,0.34)',
+    ring: 'rgba(190,108,124,0.62)',
   },
   speaking: {
-    core: 'radial-gradient(circle at 32% 28%, #e0e7ff 0%, #818cf8 34%, #4f46e5 66%, #312e81 100%)',
-    glow: 'rgba(79,70,229,0.48)',
-    ring: 'rgba(129,140,248,0.68)',
+    core: 'radial-gradient(circle at 30% 25%, #fff 0%, #f8bfc7 25%, #df354c 61%, #8f152b 100%)',
+    glow: 'rgba(211,42,65,0.46)',
+    ring: 'rgba(232,80,101,0.74)',
   },
 }
 
@@ -63,6 +63,10 @@ export function VoiceOrb({ state = 'idle', level = 0, size = 120, className }: V
       <span
         className="transition-transform duration-150"
         style={{
+          position: 'absolute',
+          inset: '10%',
+          display: 'block',
+          borderRadius: '9999px',
           background: palette.core,
           boxShadow: `inset 0 ${size * 0.04}px ${size * 0.09}px rgba(255,255,255,0.55), inset 0 -${size * 0.05}px ${size * 0.12}px rgba(15,23,42,0.24), 0 ${size * 0.08}px ${size * 0.18}px ${palette.glow}`,
           transform: `scale(${coreScale})`,

@@ -170,7 +170,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
         filters={['full', 'part-1', 'part-2', 'part-3', ...(track === 'listening' ? ['part-4'] : [])].map((value) => ({ value, label: value === 'full' ? 'Full Test' : `Part ${value.slice(5)}` }))}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
+        onBack={() => navigate(fromMock ? '/ielts/tests#mocks' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
         onLaunch={handleLaunch}
         headerExtra={!trial.isPremium && Number.isFinite(trial.remaining) ? (
           <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-700">

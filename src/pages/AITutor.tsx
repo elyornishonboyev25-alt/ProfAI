@@ -59,10 +59,10 @@ export default function AITutor() {
         transition={{ duration: 0.38, ease: EASE }}
         className="relative mx-auto flex h-full min-h-0 w-full max-w-[1400px] flex-col"
       >
-        <header className="mb-3 flex shrink-0 flex-row items-center gap-3 rounded-[1.6rem] border border-white/90 bg-white/[0.72] p-3 shadow-[0_18px_50px_rgba(15,23,42,.07)] backdrop-blur-2xl sm:p-3.5">
+        <header className="mb-3 flex shrink-0 flex-row items-center gap-3 rounded-[1.6rem] border border-white/90 bg-[linear-gradient(125deg,rgba(255,255,255,.92),rgba(247,246,247,.78)_62%,rgba(255,238,241,.84))] p-3 shadow-[0_18px_50px_rgba(73,43,52,.09),inset_0_1px_0_white] backdrop-blur-2xl sm:p-3.5">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <span className="relative inline-flex">
-              <span className="absolute inset-0 rounded-full bg-blue-500/40 blur-lg" />
+              <span className="absolute inset-0 rounded-full bg-red-400/35 blur-lg" />
               <BrandMark size={44} className="relative" />
             </span>
             <div className="min-w-0">
@@ -77,7 +77,7 @@ export default function AITutor() {
           </div>
           <button
             onClick={openTalk}
-            className="ml-auto inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 sm:px-4 sm:text-sm"
+            className="ml-auto inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-red-400/45 bg-gradient-to-r from-red-700 to-red-500 px-3 text-xs font-bold text-white shadow-[0_10px_24px_rgba(185,28,47,.2)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(185,28,47,.28)] sm:px-4 sm:text-sm"
           >
             <Mic2 className="h-4 w-4" />
             <span className="hidden sm:inline"> <UiText text={"Start voice session"} /> </span>
@@ -87,11 +87,11 @@ export default function AITutor() {
 
         <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-3 lg:grid-cols-[292px_minmax(0,1fr)] lg:grid-rows-1">
           <aside className="no-scrollbar min-h-0 min-w-0 space-y-3 overflow-x-hidden overflow-y-auto">
-            <section className="hidden overflow-hidden rounded-3xl border border-white/90 bg-white/[0.68] p-4 shadow-[0_16px_42px_rgba(15,23,42,.06)] backdrop-blur-2xl lg:block">
+            <section className="hidden overflow-hidden rounded-3xl border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.86),rgba(248,245,246,.7))] p-4 shadow-[0_16px_42px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl lg:block">
               <div className="flex items-center gap-4">
                 <VoiceOrb state={voiceState} level={voiceLevel} size={64} />
                 <div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-emerald-700">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-red-100 bg-white/80 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-red-700">
                     <Sparkles className="h-3 w-3" />
                      <UiText text={"Context connected"} /> </span>
                   <h2 className="mt-2 text-lg font-black text-slate-950"> <UiText text={"Hello,"} /> {firstName}</h2>
@@ -101,17 +101,17 @@ export default function AITutor() {
                  <UiText text={"Pick a focus for this conversation. Your chat stays in place while the coaching style adapts."} /> </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {CAPABILITIES.map(({ icon: Icon, label }) => (
-                  <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-600">
-                    <Icon className="h-3 w-3 text-blue-500" />
+                  <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/75 px-2.5 py-1.5 text-[10px] font-bold text-slate-600">
+                    <Icon className="h-3 w-3 text-red-600" />
                     {label}
                   </span>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-white/90 bg-white/[0.68] p-2.5 shadow-[0_16px_42px_rgba(15,23,42,.06)] backdrop-blur-2xl">
+            <section className="rounded-3xl border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.86),rgba(247,245,246,.75))] p-2.5 shadow-[0_16px_42px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl">
               <div className="flex items-center gap-2 px-2 pb-3 pt-1">
-                <BrainCircuit className="h-4 w-4 text-blue-600" />
+                <BrainCircuit className="h-4 w-4 text-red-600" />
                 <div>
                   <h2 className="text-sm font-black text-slate-950"> <UiText text={"Conversation mode"} /> </h2>
                   <p className="text-[10px] font-medium text-slate-500"> <UiText text={"Sets ProfAI’s focus — no page change"} /> </p>
@@ -129,18 +129,18 @@ export default function AITutor() {
                     aria-pressed={selected}
                     className={`group flex min-h-14 w-[176px] shrink-0 items-center gap-2.5 rounded-2xl border p-2.5 text-left transition lg:w-full ${
                       selected
-                        ? 'border-blue-200/90 bg-gradient-to-r from-blue-50/95 to-white/80 shadow-[0_10px_24px_rgba(37,99,235,.08)]'
-                        : 'border-white/70 bg-white/70 hover:border-slate-200 hover:bg-white'
+                        ? 'border-red-200/90 bg-gradient-to-r from-red-50/90 to-white/85 shadow-[0_10px_24px_rgba(185,28,47,.1)]'
+                        : 'border-white/70 bg-white/70 hover:border-red-100 hover:bg-white'
                     }`}
                   >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-gradient-to-br from-red-700 to-red-500 text-white shadow-[0_6px_14px_rgba(185,28,47,.2)]' : 'border border-zinc-200 bg-white/75 text-slate-600'}`}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <b className="block truncate text-xs text-slate-950">{workspace.title}</b>
                       <small className="mt-0.5 block truncate text-[10px] font-semibold text-slate-500 lg:block">{workspace.detail}</small>
                     </span>
-                    {selected ? <Check className="h-4 w-4 shrink-0 text-blue-600" /> : null}
+                    {selected ? <Check className="h-4 w-4 shrink-0 text-red-600" /> : null}
                   </button>
                   )
                 })}
@@ -148,7 +148,7 @@ export default function AITutor() {
             </section>
           </aside>
 
-          <section className="min-h-0 min-w-0 overflow-hidden rounded-3xl border border-white/90 bg-white/[0.45] p-1.5 shadow-[0_22px_60px_rgba(15,23,42,.09)] backdrop-blur-2xl sm:p-2">
+          <section className="min-h-0 min-w-0 overflow-hidden rounded-3xl border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,.74),rgba(240,238,241,.58))] p-1.5 shadow-[0_22px_60px_rgba(73,43,52,.11),inset_0_1px_0_white] backdrop-blur-2xl sm:p-2">
             <AIChatWindow variant="page" />
           </section>
         </div>

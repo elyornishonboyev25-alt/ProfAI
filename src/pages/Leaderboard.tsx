@@ -26,6 +26,7 @@ import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
 import { syncSavedSATAttemptResults } from '@/features/sat/resultSync'
+import LeaderboardAvatar from '@/components/leaderboard/LeaderboardAvatar'
 
 function getMovement(row: LeaderboardRow) {
   if (row.rankTrend === 'same') {
@@ -305,15 +306,7 @@ export default function Leaderboard() {
                     {/* Avatar + crown */}
                     <div className="mt-4 flex flex-col items-center text-center">
                       <div className="relative">
-                        <div
-                          className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white text-xl font-black text-slate-700 shadow-lg"
-                          style={{
-                            background: `linear-gradient(135deg, ${theme.ringFrom}, ${theme.ringTo})`,
-                            color: 'white',
-                          }}
-                        >
-                          {row.avatarUrl ? <img src={row.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" /> : row.fullName.slice(0, 1).toUpperCase()}
-                        </div>
+                        <LeaderboardAvatar row={row} size="lg" />
                         {isFirst ? (
                           <Crown
                             className={`absolute -top-5 left-1/2 h-7 w-7 -translate-x-1/2 ${theme.crown} drop-shadow-md`}
@@ -397,26 +390,16 @@ export default function Leaderboard() {
                 {topTen.map((row) => {
                   const movement = getMovement(row)
                   const MovementIcon = movement.icon
-                  const isTopThree = row.rank <= 3
-                  const medalColor =
-                    row.rank === 1
-                      ? 'text-amber-500'
-                      : row.rank === 2
-                      ? 'text-slate-400'
-                      : 'text-orange-600'
-
                   return (
                     <StaggerItem key={row.userId}>
                       <div
-                        className={`group grid grid-cols-[40px_minmax(0,1.5fr)_0.6fr_0.6fr_0.5fr] items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
+                        className={`group grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 transition sm:grid-cols-[40px_minmax(0,1.5fr)_0.6fr_0.6fr_0.5fr] ${
                           row.isCurrentUser
-                            ? 'border-red-300 bg-gradient-to-r from-red-50/70 to-slate-50/60 shadow-[0_8px_18px_rgba(37,99,235,0.1)]'
+                            ? 'border-red-300 bg-gradient-to-r from-red-50/70 to-slate-50/60 shadow-[0_8px_18px_rgba(185,28,47,0.1)]'
                             : 'border-slate-100 bg-white hover:border-red-200 hover:bg-red-50/30'
                         }`}
                       >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-xs font-black text-slate-600">
-                          {isTopThree ? <Crown className={`h-4 w-4 ${medalColor}`} /> : `#${row.rank}`}
-                        </span>
+                        <LeaderboardAvatar row={row} showRank />
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-slate-900">
@@ -432,7 +415,7 @@ export default function Leaderboard() {
                           <Zap className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                           <CountUp value={row.totalXp} />
                         </p>
-                        <p className="text-xs font-semibold text-slate-700">
+                        <p className="hidden text-xs font-semibold text-slate-700 sm:block">
                           {row.streak > 0 ? (
                             <span className="inline-flex items-center gap-0.5">
                               <Flame className="h-3 w-3 text-amber-500" />
@@ -443,7 +426,7 @@ export default function Leaderboard() {
                           )}
                         </p>
                         <span
-                          className={`inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${movement.className}`}
+                          className={`hidden w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold sm:inline-flex ${movement.className}`}
                         >
                           <MovementIcon className="h-3 w-3" />
                           {movement.label}

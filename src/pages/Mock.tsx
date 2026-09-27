@@ -13,7 +13,7 @@ const tracks = [
     subtitle: 'Full 4-section simulation',
     description:
       'Reading, Listening, Writing, and Speaking in exam-sequence order with strict timing behavior.',
-    path: '/mock/ielts',
+    path: '/ielts/tests#mocks',
     tone: 'red',
     chips: ['2h 45m flow', '4 sections', 'exam pressure mode'],
   },

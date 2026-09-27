@@ -44,7 +44,7 @@ function CopyButton({ text }: { text: string }) {
           window.setTimeout(() => setCopied(false), 1400)
         })
       }}
-      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-500 opacity-60 shadow-sm backdrop-blur transition hover:border-blue-200 hover:text-blue-700 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border border-zinc-200/80 bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-500 opacity-60 shadow-sm backdrop-blur transition hover:border-red-200 hover:text-red-700 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
       aria-label="Copy message"
     >
       {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
@@ -241,7 +241,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       onDrop={onDrop}
       className={`relative flex min-w-0 max-w-full flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
-          ? 'h-full rounded-[1.4rem] border-slate-200/80 bg-white/92 shadow-sm backdrop-blur-2xl'
+          ? 'h-full rounded-[1.4rem] border-white/90 bg-white/85 shadow-[0_18px_46px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl'
           : 'rounded-[1.4rem] border-slate-200 shadow-xl'
       }`}
     >
@@ -278,7 +278,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 left-0 z-40 flex w-[min(88%,20rem)] flex-col border-r border-slate-200 bg-white shadow-2xl"
+              className="absolute inset-y-0 left-0 z-40 flex w-[min(88%,20rem)] flex-col border-r border-zinc-200 bg-[linear-gradient(145deg,#fff,#f7f4f5)] shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <div>
@@ -304,7 +304,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     <button
                       type="button"
                       onClick={() => { void createNewChat(); setPanel(null) }}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-3 py-2.5 text-xs font-bold text-white shadow-[0_8px_18px_rgba(185,28,47,.17)] hover:brightness-105"
                     >
                       <Plus className="h-4 w-4" />
                       {voiceLang === 'uz' ? 'Yangi chat' : voiceLang === 'ru' ? 'Новый чат' : 'New chat'}
@@ -356,7 +356,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 </>
               ) : (
                 <div className="flex-1 overflow-y-auto p-3">
-                  <div className="mb-3 rounded-xl border border-violet-100 bg-violet-50 p-3 text-[11px] leading-5 text-violet-900">
+                  <div className="mb-3 rounded-xl border border-red-100 bg-red-50/70 p-3 text-[11px] leading-5 text-red-900">
                     {voiceLang === 'uz'
                       ? '“Eslab qol…” deb ayting. ProfAI muhim maqsad va afzalliklaringizni keyingi chatlarda ham eslaydi.'
                       : voiceLang === 'ru'
@@ -373,7 +373,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                         <div key={memory.id} className="group rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                           <div className="flex items-start gap-2">
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-[9px] font-black uppercase tracking-wide text-violet-600">{memory.key.replace(/_/g, ' ')}</p>
+                              <p className="truncate text-[9px] font-black uppercase tracking-wide text-red-700">{memory.key.replace(/_/g, ' ')}</p>
                               <p className="mt-1 text-xs leading-5 text-slate-700">{memory.value}</p>
                             </div>
                             <button type="button" onClick={() => confirmForgetMemory(memory.id)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100" aria-label="Forget memory">
@@ -392,7 +392,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </AnimatePresence>
 
       {/* Header with the live orb */}
-      <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-white/80 bg-white/80 px-3 py-2.5 backdrop-blur-2xl sm:px-4">
+      <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(249,246,247,.89))] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
         <div className="flex items-center gap-2.5">
           <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 48 : 40} />
           <div>
@@ -417,7 +417,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <button
             type="button"
             onClick={() => void createNewChat()}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-slate-950 px-3 text-[11px] font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-3 text-[11px] font-bold text-white shadow-[0_7px_17px_rgba(185,28,47,.18)] transition hover:-translate-y-0.5 hover:brightness-105"
             aria-label="New chat"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -428,7 +428,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <button
             type="button"
             onClick={() => setPanel(panel === 'chats' ? null : 'chats')}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-bold transition ${panel === 'chats' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white/80 text-slate-600 hover:border-blue-200 hover:text-blue-700'}`}
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-bold transition ${panel === 'chats' ? 'border-red-200 bg-red-50 text-red-700' : 'border-zinc-200 bg-white/80 text-slate-600 hover:border-red-200 hover:text-red-700'}`}
             aria-label="Chat history"
           >
             <History className="h-3.5 w-3.5" />
@@ -437,17 +437,17 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <button
             type="button"
             onClick={() => setPanel(panel === 'memory' ? null : 'memory')}
-            className={`relative inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-bold transition ${panel === 'memory' ? 'border-violet-200 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white/80 text-slate-600 hover:border-violet-200 hover:text-violet-700'}`}
+            className={`relative inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11px] font-bold transition ${panel === 'memory' ? 'border-red-200 bg-red-50 text-red-700' : 'border-zinc-200 bg-white/80 text-slate-600 hover:border-red-200 hover:text-red-700'}`}
             aria-label="Memory"
           >
             <BrainCircuit className="h-3.5 w-3.5" />
             <span className="hidden xl:inline">Memory</span>
-            {memories.length > 0 ? <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-violet-600 px-1 text-center text-[8px] font-black leading-3.5 text-white">{Math.min(memories.length, 99)}</span> : null}
+            {memories.length > 0 ? <span className="absolute -right-1 -top-1 min-w-3.5 rounded-full bg-red-600 px-1 text-center text-[8px] font-black leading-3.5 text-white">{Math.min(memories.length, 99)}</span> : null}
           </button>
           <button
             type="button"
             onClick={openTalk}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-2.5 text-[11px] font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/80 px-2.5 text-[11px] font-bold text-slate-700 transition hover:border-red-200 hover:text-red-700"
             aria-label="Talk to ProfAI"
           >
             <AudioLines className="h-3.5 w-3.5" />
@@ -479,13 +479,14 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       {/* Messages */}
       <div
         ref={messagesViewportRef}
-        className={`min-h-0 flex-1 overscroll-contain bg-[linear-gradient(145deg,rgba(248,250,252,.76),rgba(239,246,255,.42),rgba(255,241,242,.34))] px-3 py-4 sm:px-5 ${
+        className={`min-h-0 flex-1 overscroll-contain bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,.95),transparent_45%),linear-gradient(145deg,rgba(249,247,248,.92),rgba(235,233,236,.64),rgba(255,240,242,.55))] px-3 py-4 sm:px-5 ${
           isPage ? 'overflow-y-auto' : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
         }`}
       >
         {showHero ? (
-          <div className="flex flex-col items-center px-2 py-6 text-center">
-            <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 128 : 96} />
+          <div className="flex min-h-full flex-col items-center justify-center px-2 py-6 text-center">
+            <span className="mb-5 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-red-700 shadow-sm">Your study companion</span>
+            <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 112 : 80} />
             <h3 className="mt-5 text-xl font-black text-slate-900 sm:text-2xl">
               {preferredName ? `${preferredName},` : ''} {preferredLocale === 'uz' ? 'qanday yordam beray?' : 'how can I help?'}
             </h3>
@@ -502,7 +503,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 className={`group relative max-w-[94%] rounded-2xl border text-sm ${
                   message.role === 'assistant'
                     ? 'border-white/90 bg-white/[0.82] px-4 py-3.5 pr-12 text-slate-800 shadow-[0_16px_42px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:px-5 sm:py-4 sm:pr-14'
-                    : 'ml-auto border-slate-900 bg-slate-950 px-4 py-2.5 leading-6 text-white shadow-sm'
+                    : 'ml-auto border-red-400/45 bg-gradient-to-br from-red-700 to-red-500 px-4 py-2.5 leading-6 text-white shadow-[0_9px_24px_rgba(185,28,47,.17)]'
                 }`}
               >
                 {message.images && message.images.length > 0 ? (
@@ -558,7 +559,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                         <button
                           type="button"
                           onClick={() => approveAction(pending.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-800"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-700 to-red-500 px-3 py-1.5 text-[11px] font-bold text-white hover:brightness-105"
                         >
                           {preferredLocale === 'uz' ? 'Ruxsat berish' : 'Allow'}
                           <ArrowRight className="h-3 w-3" />
@@ -582,7 +583,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 border-t border-white/80 bg-white/[0.82] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
+      <div className="shrink-0 border-t border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(250,246,247,.91))] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
         {/* Quick chips */}
         <div className="no-scrollbar mb-2 flex max-w-full flex-nowrap gap-1.5 overflow-x-auto pb-0.5">
           {quickChips.map((chip) => (
@@ -591,7 +592,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               type="button"
               onClick={() => doSend(chip)}
               disabled={isSending}
-              className="shrink-0 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700 disabled:opacity-50"
+              className="shrink-0 rounded-full border border-zinc-200 bg-white/80 px-3 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-red-200 hover:text-red-700 disabled:opacity-50"
             >
               {chip}
             </button>
@@ -607,7 +608,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white bg-slate-900 text-white"
+                  className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white bg-red-700 text-white"
                   aria-label="Remove image"
                 >
                   <X className="h-3 w-3" />
@@ -661,7 +662,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 onClick={() => setVoiceLang(lang.id)}
                 className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${
                   voiceLang === lang.id
-                    ? 'bg-slate-900 text-white'
+                    ? 'bg-red-700 text-white'
                     : 'border border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                 }`}
               >
@@ -677,7 +678,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-blue-200 hover:text-blue-700 disabled:opacity-50"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white/90 text-slate-600 transition hover:border-red-200 hover:text-red-700 disabled:opacity-50"
             aria-label="Attach image"
           >
             <ImagePlus className="h-4 w-4" />
@@ -698,7 +699,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ? 'Yozing, rasm tashlang yoki mikrofonni bosing…'
                 : 'Type, paste an image, or tap the mic…'
             }
-            className="max-h-[120px] min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+            className="max-h-[120px] min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-white/90 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-300 focus:ring-4 focus:ring-red-50"
             disabled={isSending}
           />
 
@@ -709,7 +710,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               className={`relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
                 isListening
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
-                  : 'bg-gradient-to-r from-slate-700 to-slate-900 hover:brightness-110'
+                  : 'bg-gradient-to-r from-zinc-500 to-red-700 hover:brightness-110'
               }`}
               aria-label={isListening ? 'Stop voice' : 'Start voice'}
             >
@@ -728,7 +729,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             type="button"
             onClick={() => doSend()}
             disabled={isSending || (!draft.trim() && images.length === 0)}
-            className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,28,47,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
             aria-label="Send"
           >
             <Send className="h-4 w-4" />

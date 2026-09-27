@@ -68,7 +68,7 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
       filters={[{ value: 'full', label: 'Full Test' }, { value: 'task1', label: 'Task 1' }, { value: 'task2', label: 'Task 2' }]}
       activeFilter={activeFilter}
       onFilterChange={setActiveFilter}
-      onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
+      onBack={() => navigate(fromMock ? '/ielts/tests#mocks' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
       onLaunch={(row) => row.available && navigate(`/ielts/writing/test/${row.id}`, { state: { ...navigationState, catalogFilter: activeFilter, catalogSkill: 'writing' } })}
     />
   )

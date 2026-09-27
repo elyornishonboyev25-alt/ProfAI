@@ -114,7 +114,7 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
         filters={[{ value: 'full', label: 'Full Test' }, { value: 'part-1', label: 'Part 1' }, { value: 'part-2', label: 'Part 2' }, { value: 'part-3', label: 'Part 3' }]}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
-        onBack={() => navigate(fromMock ? '/mock/ielts' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
+        onBack={() => navigate(fromMock ? '/ielts/tests#mocks' : '/ielts', fromMock ? { state: { from: navigationState?.from } } : undefined)}
         onLaunch={handleLaunch}
         headerExtra={activeFilter !== 'full' && !speakingTrial.isPremium && Number.isFinite(speakingTrial.remaining) ? (
           <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-700">

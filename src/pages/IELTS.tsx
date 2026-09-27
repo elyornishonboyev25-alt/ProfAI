@@ -197,7 +197,7 @@ export default function IELTS() {
       <ArenaBackdrop />
       <div className="relative z-10 mx-auto max-w-[112rem]">
         {fromMock ? (
-          <button type="button" onClick={() => navigate('/mock/ielts', { state: { from: entry?.from } })} className="route-back-button">
+          <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: entry?.from } })} className="route-back-button">
             <ArrowLeft className="h-4 w-4" /> Mock IELTS
           </button>
         ) : null}
@@ -239,7 +239,7 @@ export default function IELTS() {
         <section className="mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
           <article className={`${GLASS} flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-7`}>
             <div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-red-600"> <UiText text={"Full IELTS mock"} /> </p><h2 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-900"> <UiText text={"Practice all four skills in one flow"} /> </h2><p className="mt-1 text-sm font-medium text-slate-500"> <UiText text={"Use verified results to update your overview."} /> </p></div>
-            <button type="button" onClick={() => navigate('/mock/ielts', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6">Start full mock <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6">Start full mock <ArrowRight className="h-4 w-4" /></button>
           </article>
           <div className="grid grid-cols-3 gap-3">
             {[{ label: 'Target band', value: `${target}+`, icon: Flag }, { label: 'Completed', value: `${completed.length}/4`, icon: Check }, { label: 'Study time', value: studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`, icon: Clock3 }].map(({ label, value, icon: Icon }) => <article key={label} className={`${GLASS} flex min-h-[9rem] flex-col justify-center p-4`}><Icon className="mb-3 h-5 w-5 text-red-500" /><p className="text-[11px] font-semibold text-slate-500"><UiText text={label} /></p><strong className="mt-1 text-2xl font-black tracking-[-.05em] text-slate-900">{value}</strong></article>)}

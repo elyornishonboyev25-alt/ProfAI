@@ -128,7 +128,7 @@ export default function MockIELTSRun() {
               <div>
                 <div className="premium-top-controls">
                   <button
-                    onClick={() => navigate('/mock/ielts', { state: { from: from ?? 'mock' } })}
+                    onClick={() => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })}
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />

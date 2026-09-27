@@ -62,7 +62,7 @@ const EMPTY_OVERVIEW: DashboardOverview = {
 const dashboardOverviewCache = new Map<string, DashboardOverview>()
 
 const learningCards = [
-  { key: 'ielts', title: 'IELTS Mock', path: '/mock/ielts', icon: BookOpen },
+  { key: 'ielts', title: 'IELTS Mock', path: '/ielts/tests#mocks', icon: BookOpen },
   { key: 'sat', title: 'SAT Mock', path: '/sat', icon: CheckCircle2 },
   { key: 'admission', title: 'Admission Hub', path: '/admission/lessons', icon: GraduationCap },
   { key: 'speaking', title: 'Speaking Practice', path: '/community?mode=ai', icon: Mic2 },
@@ -265,7 +265,7 @@ export default function Dashboard() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/mock/ielts')}
+              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/ielts/tests#mocks')}
               className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
             >
                <UiText text={"Continue preparing"} /> <ArrowRight className="h-3.5 w-3.5" />

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
 import { useAuthStore } from '@/store/authStore'
 import { useCopy } from '@/i18n/interface'
@@ -46,7 +47,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
       </NavLink>
       <LanguageSelector />
       <NavLink to="/account" className="liquid-account">
-        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <span className="liquid-avatar">{(user?.fullName || 'P').slice(0, 1)}</span>}
+        <ProfileAvatar src={user?.avatarUrl} name={user?.fullName} className="liquid-avatar" />
         <span><strong>{user?.fullName || 'ProfAI'}</strong><small>{c('Account settings')}</small></span><Settings size={17} />
       </NavLink>
     </div>

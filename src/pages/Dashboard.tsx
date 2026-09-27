@@ -193,7 +193,7 @@ export default function Dashboard() {
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-black text-red-700">
-                <ProfileAvatar src={user?.avatarUrl} />
+                <ProfileAvatar src={user?.avatarUrl} name={user?.fullName} />
               </div>
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-emerald-500" />
             </div>
@@ -363,7 +363,7 @@ export default function Dashboard() {
                 {podium.map(({ row, place }) => {
                   return (
                     <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
-                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} className="rounded-full" /></div>
+                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} name={row.fullName} className="rounded-full" /></div>
                       <p className="mt-2 text-[11px] font-black text-slate-800">{place}{place === 1 ? 'st' : place === 2 ? 'nd' : 'rd'}</p>
                     </div>
                   )
@@ -375,7 +375,7 @@ export default function Dashboard() {
                   {leaderboard.map((row) => (
                     <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
                       <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-slate-200"><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} /></span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-slate-200"><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} name={row.fullName} /></span>
                       <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
                       <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')} XP</span>
                     </button>

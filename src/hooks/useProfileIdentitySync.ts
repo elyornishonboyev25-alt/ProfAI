@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
+import { removeAvatar } from '@/lib/profileApi'
+import { isLegacyGeneratedAvatar } from '@/utils/legacyGeneratedAvatar'
 
 // A persisted browser session can contain an old photo from onboarding or a
 // different device. Refresh identity without replacing tokens or live progress.
@@ -19,6 +21,11 @@ export function useProfileIdentitySync() {
       try {
         const { user } = await apiClient.get<{ user: AuthUser }>('/auth/me')
         if (!active || user.id !== userId) return
+        if (user.avatarUrl && await isLegacyGeneratedAvatar(user.avatarUrl)) {
+          if (!active || useAuthStore.getState().user?.avatarUrl !== before.avatarUrl) return
+          if (!await removeAvatar(user.avatarUrl)) return
+          user.avatarUrl = null
+        }
         useAuthStore.setState((state) => {
           if (state.user?.id !== userId) return {}
           return { user: {

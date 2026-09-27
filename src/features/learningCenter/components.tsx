@@ -95,7 +95,7 @@ export function Avatar({ name, url, size = 'md' }: { name: string; url?: string 
   const sizeClass = size === 'lg' ? 'h-14 w-14 text-base' : size === 'sm' ? 'h-8 w-8 text-[10px]' : 'h-10 w-10 text-xs'
   return (
     <span className={cn('grid shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-red-50 font-bold text-red-700 ring-1 ring-slate-200', sizeClass)}>
-      <ProfileAvatar src={url} alt={name} />
+      <ProfileAvatar src={url} name={name} alt={name} />
     </span>
   )
 }

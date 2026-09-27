@@ -1878,6 +1878,15 @@ router.delete(
   '/avatar',
   requireAuth,
   asyncHandler(async (req, res) => {
+    const expectedAvatarUrl = z.string().max(700_000).optional().parse(req.body?.expectedAvatarUrl)
+    if (expectedAvatarUrl) {
+      const result = await prisma.user.updateMany({
+        where: { id: req.user!.id, avatarUrl: expectedAvatarUrl },
+        data: { avatarUrl: null },
+      })
+      if (result.count) invalidateLeaderboardCache()
+      return res.json({ removed: result.count > 0 })
+    }
     await prisma.user.update({ where: { id: req.user!.id }, data: { avatarUrl: null } })
     invalidateLeaderboardCache()
     return res.status(204).send()

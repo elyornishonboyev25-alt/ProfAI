@@ -422,7 +422,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
         </span>
       ) : null}
       <div className="community-avatar-ring">
-        <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} alt="" /></div>
+        <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} />
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
@@ -444,7 +444,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
 function SuggestedPartner({ learner, score, onOpen }: { learner: LearnerSearchResult; score: number; onOpen: () => void }) {
   return (
     <button type="button" disabled={!learner.nickname} onClick={onOpen} className="community-suggested-card">
-      <span className="community-suggested-avatar"><ProfileAvatar src={learner.avatarUrl} alt="" /></span>
+      <span className="community-suggested-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></span>
       <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em> <UiText text={"View match"} /> </em></span>
       <span className="community-match-ring" style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties}><b>{score}%</b></span>
     </button>

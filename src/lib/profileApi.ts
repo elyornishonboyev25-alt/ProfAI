@@ -161,8 +161,16 @@ export async function uploadAvatar(dataUrl: string): Promise<{ avatarUrl: string
   return apiClient.post<{ avatarUrl: string | null }>('/profile/avatar', { dataUrl }, { auth: true })
 }
 
-export async function removeAvatar(): Promise<void> {
+export async function removeAvatar(expectedAvatarUrl?: string): Promise<boolean> {
+  if (expectedAvatarUrl) {
+    const result = await apiClient.delete<{ removed: boolean }>('/profile/avatar', {
+      auth: true,
+      body: { expectedAvatarUrl },
+    })
+    return result.removed
+  }
   await apiClient.delete('/profile/avatar', { auth: true })
+  return true
 }
 
 export async function fetchBadges(): Promise<SkillBadgeRecord[]> {

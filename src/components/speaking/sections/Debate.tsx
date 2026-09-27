@@ -244,7 +244,7 @@ function SpeakerTile({
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="community-speaker-tile">
       <div className="relative">
         <div className={you ? 'community-speaker-avatar is-you' : 'community-speaker-avatar'}>
-          <ProfileAvatar src={avatarUrl} className="rounded-full" />
+          <ProfileAvatar src={avatarUrl} name={name} className="rounded-full" />
         </div>
         {muted ? (
           <span className="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-white">

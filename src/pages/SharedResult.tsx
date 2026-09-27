@@ -112,7 +112,7 @@ export default function SharedResult() {
                 <GraduationCap className="h-4 w-4" /> Verified learning result
               </span>
               <div className="mt-5 flex items-center gap-3">
-                <ProfileAvatar src={result.user.avatarUrl} alt="" className="h-12 w-12 rounded-2xl border border-white shadow-md" />
+                <ProfileAvatar src={result.user.avatarUrl} name={learnerName} alt="" className="h-12 w-12 rounded-2xl border border-white shadow-md" />
                 <div>
                   <p className="font-black text-slate-950">{learnerName}</p>
                   <p className="text-xs font-semibold text-slate-500">Shared from ProfAI</p>

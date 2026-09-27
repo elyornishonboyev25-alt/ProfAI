@@ -1738,6 +1738,18 @@ html[data-motion='minimal'] .dashboard-loader-learning {
     min-height: 100%;
   }
 
+  .profile-avatar-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #f3f7ff, #dce7fb);
+    color: #33446d;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    user-select: none;
+  }
+
   .premium-page-stage {
     isolation: isolate;
     background:

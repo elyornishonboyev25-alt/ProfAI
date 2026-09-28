@@ -64,7 +64,7 @@ export type UseSpeechRecognitionResult = {
   /** Everything finalised so far in the current capture. */
   finalTranscript: string
   error: string | null
-  start: () => void
+  start: () => boolean
   /** Stops capture and resolves after the browser delivers its final words. */
   stop: () => Promise<string>
   reset: () => void
@@ -73,9 +73,12 @@ export type UseSpeechRecognitionResult = {
 export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult {
   const supported = isSpeechRecognitionSupported()
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  const committedRef = useRef('')
+  const currentResultsRef = useRef(new Map<number, { text: string; final: boolean }>())
   const finalRef = useRef('')
   const interimRef = useRef('')
   const pendingStopRef = useRef<((transcript: string) => void) | null>(null)
+  const restartTimerRef = useRef<number | null>(null)
   // Set when the user asks to stop so the auto-restart loop knows to halt.
   const stoppingRef = useRef(false)
 
@@ -102,23 +105,22 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
     recognition.maxAlternatives = 1
 
     recognition.onresult = (event) => {
-      let interim = ''
+      const results = currentResultsRef.current
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i]
-        const transcript = result[0]?.transcript ?? ''
-        if (result.isFinal) {
-          finalRef.current = `${finalRef.current} ${transcript}`.replace(/\s+/g, ' ').trim()
-        } else {
-          interim += transcript
-        }
+        results.set(i, { text: result[0]?.transcript ?? '', final: result.isFinal })
       }
+      for (const index of results.keys()) if (index >= event.results.length) results.delete(index)
+      const ordered = [...results.entries()].sort(([a], [b]) => a - b).map(([, value]) => value)
+      finalRef.current = [committedRef.current, ...ordered.filter((value) => value.final).map((value) => value.text)].join(' ').replace(/\s+/g, ' ').trim()
+      const interim = ordered.filter((value) => !value.final).map((value) => value.text).join(' ').replace(/\s+/g, ' ').trim()
       setFinalTranscript(finalRef.current)
       interimRef.current = interim
       setInterimTranscript(interim)
     }
 
     recognition.onerror = (event) => {
-      // "no-speech" / "aborted" are routine; surface only real problems.
+      // "no-speech" and a cancelled recognition are routine during a long answer.
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         setError('Microphone permission was blocked. Allow audio access and try again.')
         stoppingRef.current = true
@@ -127,9 +129,10 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
         setError('No microphone was found. Connect one and try again.')
         stoppingRef.current = true
         setListening(false)
+      } else if (event.error === 'network') {
+        setError('Speech recognition lost its connection. You can retry or edit the transcript.')
+        stoppingRef.current = true
       }
-      pendingStopRef.current?.(`${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim())
-      pendingStopRef.current = null
     }
 
     recognition.onend = () => {
@@ -140,12 +143,23 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
       }
       // Chrome ends recognition every ~minute; restart unless the user stopped.
       if (!stoppingRef.current) {
-        try {
-          recognition.start()
-          return
-        } catch {
-          // fall through to stopped state
-        }
+        committedRef.current = finalRef.current
+        currentResultsRef.current.clear()
+        interimRef.current = ''
+        setInterimTranscript('')
+        restartTimerRef.current = window.setTimeout(() => {
+          restartTimerRef.current = null
+          if (stoppingRef.current) return
+          try {
+            recognition.start()
+            setListening(true)
+          } catch {
+            stoppingRef.current = true
+            setError('Speech recognition stopped unexpectedly. Review the captured words or record again.')
+            setListening(false)
+          }
+        }, 150)
+        return
       }
       setListening(false)
       interimRef.current = ''
@@ -157,13 +171,19 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
   }, [lang, supported])
 
   const start = useCallback(() => {
+    if (restartTimerRef.current !== null) {
+      window.clearTimeout(restartTimerRef.current)
+      restartTimerRef.current = null
+    }
     const recognition = ensureRecognition()
     if (!recognition) {
       setError('Speech recognition is not supported in this browser. You can type your answer instead.')
-      return
+      return false
     }
     setError(null)
     stoppingRef.current = false
+    committedRef.current = ''
+    currentResultsRef.current.clear()
     finalRef.current = ''
     interimRef.current = ''
     setFinalTranscript('')
@@ -171,14 +191,25 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
     try {
       recognition.start()
       setListening(true)
-    } catch {
-      // start() throws if already running — treat as already listening.
-      setListening(true)
+      return true
+    } catch (reason) {
+      if (reason instanceof DOMException && reason.name === 'InvalidStateError') {
+        setListening(true)
+        return true
+      }
+      stoppingRef.current = true
+      setListening(false)
+      setError('Could not start the microphone. Check browser permissions and try again.')
+      return false
     }
   }, [ensureRecognition])
 
   const stop = useCallback((): Promise<string> => {
     stoppingRef.current = true
+    if (restartTimerRef.current !== null) {
+      window.clearTimeout(restartTimerRef.current)
+      restartTimerRef.current = null
+    }
     const recognition = recognitionRef.current
     const currentTranscript = () => `${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim()
     if (!recognition) {
@@ -206,11 +237,13 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
       window.setTimeout(() => {
         if (pendingStopRef.current === finish) pendingStopRef.current = null
         finish(currentTranscript())
-      }, 1200)
+      }, 2500)
     })
   }, [])
 
   const reset = useCallback(() => {
+    committedRef.current = ''
+    currentResultsRef.current.clear()
     finalRef.current = ''
     interimRef.current = ''
     setFinalTranscript('')
@@ -221,6 +254,7 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
   useEffect(() => {
     return () => {
       stoppingRef.current = true
+      if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current)
       const recognition = recognitionRef.current
       if (recognition) {
         try {

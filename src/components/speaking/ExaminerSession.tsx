@@ -60,6 +60,11 @@ type Stage = {
 }
 
 type Phase = 'idle' | 'examiner_speaking' | 'awaiting_answer' | 'preparing' | 'thinking' | 'evaluating' | 'result'
+type AnswerDraft = { durationSec: number; audioUrl: string | null }
+
+function formatClock(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
 
 function uniqueQuestionMoves(questions: readonly string[]): Move[] {
   const seen = new Set<string>()
@@ -211,6 +216,8 @@ export default function ExaminerSession({
   const [prepNotes, setPrepNotes] = useState('')
   const [speakLeft, setSpeakLeft] = useState(0)
   const [recording, setRecording] = useState(false)
+  const [answerDraft, setAnswerDraft] = useState<AnswerDraft | null>(null)
+  const [draftTranscript, setDraftTranscript] = useState('')
   const [typedAnswer, setTypedAnswer] = useState('')
   const [typingMode, setTypingMode] = useState(false)
   const [micStream, setMicStream] = useState<MediaStream | null>(null)
@@ -226,6 +233,13 @@ export default function ExaminerSession({
   const answersRef = useRef<SpeechStats[]>([])
   const historyRef = useRef<ExaminerTurn[]>([])
   const recordStartRef = useRef(0)
+  const prepDeadlineRef = useRef(0)
+  const longTurnDeadlineRef = useRef(0)
+  const longTurnStartedRef = useRef(false)
+  const longTurnFinishedRef = useRef(false)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const audioUrlRef = useRef<string | null>(null)
   const onSpeechEndRef = useRef<(() => void) | null>(null)
   const stopPendingRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -265,6 +279,10 @@ export default function ExaminerSession({
 
   // Cleanup speech on unmount.
   useEffect(() => () => cancelSpeech(), [])
+  useEffect(() => () => {
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+  }, [])
 
   const pushTurn = useCallback((role: 'examiner' | 'candidate', text: string) => {
     setChat((prev) => [...prev, { id: `${role}-${Date.now()}-${prev.length}`, role, text }])
@@ -373,42 +391,37 @@ export default function ExaminerSession({
     } else if (move.type === 'cuecard') {
       setCueCard(move.card)
       setPrepNotes('')
+      longTurnStartedRef.current = false
+      longTurnFinishedRef.current = false
       setActivePart(2)
       const cardText = `${move.card.title}. You should say: ${move.card.bullets.join('; ')}. You have one minute to prepare.`
       speakExaminer(cardText, () => {
+        prepDeadlineRef.current = Date.now() + 60_000
         setPhase('preparing')
         setPrepLeft(60)
       })
     }
   }, [runEvaluation, speakExaminer])
 
-  // Part 2 preparation countdown → then start the 2-minute long turn.
+  // Use wall-clock deadlines so a background tab cannot stretch either exam period.
   useEffect(() => {
     if (phase !== 'preparing') return
-    if (prepLeft <= 0) {
-      speakExaminer('Your preparation time is over. Please begin speaking now.', () => {
-        setSpeakLeft(120)
-        setPhase('awaiting_answer')
-      })
-      return
+    const tick = () => {
+      const seconds = Math.max(0, Math.ceil((prepDeadlineRef.current - Date.now()) / 1000))
+      setPrepLeft(seconds)
+      if (seconds === 0) {
+        window.clearInterval(id)
+        speakExaminer('Your preparation time is over. Please begin speaking now.', () => {
+          longTurnDeadlineRef.current = Date.now() + 120_000
+          setSpeakLeft(120)
+          setPhase('awaiting_answer')
+        })
+      }
     }
-    const id = window.setInterval(() => setPrepLeft((v) => v - 1), 1000)
+    const id = window.setInterval(tick, 250)
+    tick()
     return () => window.clearInterval(id)
-  }, [phase, prepLeft, speakExaminer])
-
-  // Long-turn speaking countdown (auto-submits at 0 while recording).
-  useEffect(() => {
-    if (phase !== 'awaiting_answer' || cueCard === null || speakLeft <= 0) return
-    if (!recording) return
-    const id = window.setInterval(() => setSpeakLeft((v) => v - 1), 1000)
-    return () => window.clearInterval(id)
-  }, [phase, cueCard, speakLeft, recording])
-
-  useEffect(() => {
-    if (cueCard && recording && speakLeft === 0) {
-      handleStopRecording()
-    }
-  }, [speakLeft, recording, cueCard])
+  }, [phase, speakExaminer])
 
   const beginSession = useCallback(() => {
     setStarted(true)
@@ -428,61 +441,157 @@ export default function ExaminerSession({
     })
   }, [config, advance, speakExaminer])
 
+  const submitAnswer = useCallback(
+    (text: string, durationSec: number, skipPart2FollowUp = false) => {
+      pushTurn('candidate', text.trim())
+      answersRef.current = [...answersRef.current, analyseTranscript(text, durationSec)]
+      moveIdxRef.current += 1
+      const stage = stagesRef.current[stageIdxRef.current]
+      const prevMove = stage?.moves[moveIdxRef.current - 1]
+      if (prevMove?.type === 'cuecard') {
+        setCueCard(null)
+        if (skipPart2FollowUp) moveIdxRef.current = stage.moves.length
+      }
+      longTurnDeadlineRef.current = 0
+      longTurnFinishedRef.current = true
+      setAnswerDraft(null)
+      setDraftTranscript('')
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current)
+        audioUrlRef.current = null
+      }
+      setSpeakLeft(0)
+      advance()
+    },
+    [advance, pushTurn],
+  )
+
+  const stopAudioCapture = useCallback((): Promise<string | null> => new Promise((resolve) => {
+    const recorder = recorderRef.current
+    if (!recorder || recorder.state === 'inactive') { resolve(null); return }
+    const chunks = audioChunksRef.current
+    let settled = false
+    const finish = (url: string | null) => {
+      if (settled) {
+        if (url) URL.revokeObjectURL(url)
+        return
+      }
+      settled = true
+      resolve(url)
+    }
+    recorder.onstop = () => {
+      recorderRef.current = null
+      const blob = new Blob(chunks, { type: recorder.mimeType || chunks[0]?.type || 'audio/webm' })
+      if (blob.size === 0) { finish(null); return }
+      const url = URL.createObjectURL(blob)
+      if (!settled) audioUrlRef.current = url
+      finish(url)
+    }
+    try { recorder.stop() } catch { finish(null) }
+    window.setTimeout(() => finish(null), 2000)
+  }), [])
+
   const startRecording = useCallback(() => {
     setEvalError(null)
     setAnswerError(null)
     if (!recognition.supported) {
       setTypingMode(true)
-      setAnswerError('Speech recognition is unavailable. Type your answer to continue.')
+      setAnswerError('Speech recognition is unavailable here. Type your answer to continue.')
       return
     }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    setAnswerDraft(null)
+    setDraftTranscript('')
     recognition.reset()
+    if (!recognition.start()) {
+      setTypingMode(true)
+      setAnswerError('Could not start voice capture. Check microphone access or type your answer.')
+      return
+    }
+    audioChunksRef.current = []
+    if (micStream && typeof MediaRecorder !== 'undefined') {
+      try {
+        const recorder = new MediaRecorder(micStream)
+        recorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data) }
+        recorder.start(250)
+        recorderRef.current = recorder
+      } catch {
+        recorderRef.current = null
+      }
+    }
     recordStartRef.current = Date.now()
     setRecording(true)
-    recognition.start()
-  }, [recognition])
+  }, [micStream, recognition])
 
-  const handleStopRecording = useCallback(async () => {
+  const handleStopRecording = useCallback(async (autoFinish = false) => {
     if (stopPendingRef.current) return
     stopPendingRef.current = true
     setStopping(true)
-    const text = (await recognition.stop()).trim()
+    const [text, audioUrl] = await Promise.all([recognition.stop(), stopAudioCapture()])
+    const durationSec = Math.max(2, (Date.now() - recordStartRef.current) / 1000)
     setRecording(false)
-    const duration = Math.max(2, (Date.now() - recordStartRef.current) / 1000)
     stopPendingRef.current = false
     setStopping(false)
-    if (!text) {
-      setAnswerError('No clear speech was detected. Record again or type your answer.')
-      if (cueCard) setSpeakLeft(120)
+    if (autoFinish || (cueCard && longTurnDeadlineRef.current > 0 && Date.now() >= longTurnDeadlineRef.current)) {
+      submitAnswer(text, durationSec, true)
       return
     }
-    submitAnswer(text, duration)
-  }, [recognition])
+    setDraftTranscript(text.trim())
+    setAnswerDraft({ durationSec, audioUrl })
+    if (!text.trim()) setAnswerError('No clear words were detected. Replay the recording, type a correction, or record again.')
+  }, [cueCard, recognition, stopAudioCapture, submitAnswer])
+
+  const submitDraft = useCallback(() => {
+    const text = draftTranscript.trim()
+    if (!answerDraft || !text) return
+    setAnswerError(null)
+    submitAnswer(text, answerDraft.durationSec)
+  }, [answerDraft, draftTranscript, submitAnswer])
 
   const submitTyped = useCallback(() => {
     const text = typedAnswer.trim()
     if (!text) return
     setAnswerError(null)
     const words = text.split(/\s+/).length
-    const duration = Math.max(20, Math.round(words / 2.3))
     setTypedAnswer('')
-    submitAnswer(text, duration)
-  }, [typedAnswer])
+    submitAnswer(text, Math.max(20, Math.round(words / 2.3)))
+  }, [submitAnswer, typedAnswer])
 
-  const submitAnswer = useCallback(
-    (text: string, durationSec: number) => {
-      pushTurn('candidate', text)
-      answersRef.current = [...answersRef.current, analyseTranscript(text, durationSec)]
-      moveIdxRef.current += 1
-      // Clear the cue card once its long-turn answer is in.
-      const stage = stagesRef.current[stageIdxRef.current]
-      const prevMove = stage?.moves[moveIdxRef.current - 1]
-      if (prevMove?.type === 'cuecard') setCueCard(null)
-      setSpeakLeft(0)
-      advance()
-    },
-    [advance, pushTurn],
-  )
+  useEffect(() => {
+    if (recording && recognition.error && !recognition.listening && !stopPendingRef.current) {
+      void handleStopRecording()
+    }
+  }, [handleStopRecording, recognition.error, recognition.listening, recording])
+
+  useEffect(() => {
+    if (phase !== 'awaiting_answer' || !cueCard || longTurnStartedRef.current) return
+    longTurnStartedRef.current = true
+    if (!typingMode) startRecording()
+  }, [cueCard, phase, startRecording, typingMode])
+
+  useEffect(() => {
+    if (phase !== 'awaiting_answer' || !cueCard || !longTurnDeadlineRef.current) return
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((longTurnDeadlineRef.current - Date.now()) / 1000))
+      setSpeakLeft(left)
+      if (left > 0 || longTurnFinishedRef.current || stopPendingRef.current) return
+      if (recording) {
+        void handleStopRecording(true)
+      } else if (answerDraft) {
+        submitAnswer(draftTranscript.trim(), answerDraft.durationSec, true)
+      } else if (typedAnswer.trim()) {
+        submitAnswer(typedAnswer.trim(), 120, true)
+      } else {
+        submitAnswer('', 120, true)
+      }
+    }
+    const id = window.setInterval(tick, 250)
+    tick()
+    return () => window.clearInterval(id)
+  }, [answerDraft, cueCard, draftTranscript, handleStopRecording, phase, recording, submitAnswer, typedAnswer])
 
   const skipAudio = useCallback(() => {
     cancelSpeech()
@@ -493,6 +602,17 @@ export default function ExaminerSession({
 
   const retrySession = useCallback(() => {
     cancelSpeech()
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    audioUrlRef.current = null
+    prepDeadlineRef.current = 0
+    longTurnDeadlineRef.current = 0
+    longTurnStartedRef.current = false
+    longTurnFinishedRef.current = false
+    setRecording(false)
+    setStopping(false)
+    setAnswerDraft(null)
+    setDraftTranscript('')
     setPhase('idle')
     setStarted(false)
     setChat([])
@@ -525,6 +645,9 @@ export default function ExaminerSession({
       />
     )
   }
+  if (phase === 'result' && evalError) {
+    return <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12"><div className="speaking-start-guide text-center"><p className="speaking-eyebrow">Speaking session complete</p><h2 className="mt-3 text-2xl font-black text-slate-900">Your feedback is still processing</h2><p className="mt-3 text-sm text-slate-600">{evalError}</p><button onClick={() => void runEvaluation()} className="speaking-record-button mt-6">Try feedback again</button><button onClick={onExit} className="speaking-text-switch mt-3">Return to Speaking tests</button></div></div>
+  }
 
   // ── Render: pre-start gate ───────────────────────────────────────────────
   if (!started) {
@@ -547,7 +670,7 @@ export default function ExaminerSession({
           <section className="speaking-start-guide">
             <p className="speaking-eyebrow">Before you begin</p>
             <h3>{config.mode === 'full_mock' ? 'Three parts. One conversation.' : 'Get ready to speak.'}</h3>
-            {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label="Speaking test structure"><div><span>01</span><strong>Interview</strong><small>Familiar topics · 4–5 min</small></div><div><span>02</span><strong>Long turn</strong><small>1 min prep · up to 2 min speaking</small></div><div><span>03</span><strong>Discussion</strong><small>Related ideas · 4–5 min</small></div></div> : null}
+            {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label="Speaking test structure"><div><span>01</span><strong>Interview</strong><small>Familiar topics · 4–5 min</small></div><div><span>02</span><strong>Long turn</strong><small>1 min prep · 2 min maximum</small></div><div><span>03</span><strong>Discussion</strong><small>Related ideas · 4–5 min</small></div></div> : null}
             <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong>Sound on</strong><p>Listen to one examiner question at a time.</p></div></div>
             <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong>Microphone ready</strong><p>Allow access when prompted and speak naturally.</p></div></div>
             {typingMode ? <p className="speaking-inline-error">Microphone access is unavailable. You can type your answers to continue.</p> : null}
@@ -603,7 +726,7 @@ export default function ExaminerSession({
             <span className="speaking-turn-avatar" aria-hidden>{turn.role === 'candidate' ? <Mic className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span>
             <div className="speaking-turn-bubble">
               <span className="speaking-turn-name">{turn.role === 'candidate' ? 'You' : examinerLabel}</span>
-              <p>{turn.text}</p>
+              <p>{turn.text || 'No speech was captured for this question.'}</p>
             </div>
           </motion.div>
         ))}
@@ -647,12 +770,14 @@ export default function ExaminerSession({
         <div className="speaking-focus-content">
           {cueCard && (phase === 'preparing' || isExaminerBusy || canRecord) ? (
             <div className="speaking-question-card speaking-question-card--cue">
-              <div className="speaking-question-meta"><span>PART 02 · TASK CARD</span><strong>{phase === 'preparing' ? `Prep ${prepLeft}s` : canRecord ? `Speak ${speakLeft}s` : 'Listen'}</strong></div>
+              <div className="speaking-question-meta"><span>PART 02 · TASK CARD</span><strong className={canRecord && speakLeft <= 30 ? 'is-urgent' : ''}>{phase === 'preparing' ? `PREP ${formatClock(prepLeft)}` : canRecord ? `SPEAK ${formatClock(speakLeft)}` : 'LISTEN'}</strong></div>
+              {(phase === 'preparing' || canRecord) ? <div className="speaking-timer-track" role="progressbar" aria-label={phase === 'preparing' ? 'Preparation time remaining' : 'Speaking time remaining'} aria-valuenow={phase === 'preparing' ? prepLeft : speakLeft} aria-valuemin={0} aria-valuemax={phase === 'preparing' ? 60 : 120}><span style={{ width: `${phase === 'preparing' ? (prepLeft / 60) * 100 : (speakLeft / 120) * 100}%` }} /></div> : null}
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
               <label className="speaking-notes-label" htmlFor="speaking-prep-notes">Your notes <span>{phase === 'preparing' ? 'Write keywords during preparation' : 'Available while you speak'}</span></label>
               <textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} disabled={phase !== 'preparing'} placeholder="A few keywords to guide your talk…" />
+              {canRecord ? <p className="speaking-timer-help">The examiner ends this turn at 0:00 {isFullMock ? 'and moves to Part 3.' : 'and finishes this practice.'}</p> : null}
             </div>
           ) : (
             <div className="speaking-question-card">
@@ -666,9 +791,18 @@ export default function ExaminerSession({
             <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3>Your response</h3><p>{typingMode ? 'Written answer' : 'Voice answer'}</p></div></div>
             {isExaminerBusy ? (
               <div className="speaking-wait-state"><div className="speaking-wait-orb"><AudioLines className="h-7 w-7" /></div><strong>{phase === 'thinking' ? 'Preparing the next question…' : 'Examiner is speaking…'}</strong><p>Take a moment to listen before you answer.</p>
-                {phase === 'examiner_speaking' ? <button onClick={skipAudio} className="speaking-quiet-button mt-3"><SkipForward className="h-4 w-4" /> Skip audio</button> : null}
+                {phase === 'examiner_speaking' && !isFullMock ? <button onClick={skipAudio} className="speaking-quiet-button mt-3"><SkipForward className="h-4 w-4" /> Skip audio</button> : null}
               </div>
-            ) : canRecord ? typingMode ? (
+            ) : canRecord ? answerDraft ? (
+              <div className="speaking-input-state speaking-review-state">
+                <div className="speaking-review-heading"><CheckCircle2 className="h-4 w-4" /><strong>Check your transcript</strong></div>
+                <p>Speech recognition can mishear words. Listen, correct the text, then continue.</p>
+                {answerDraft.audioUrl ? <audio controls preload="metadata" src={answerDraft.audioUrl} aria-label="Replay your recorded answer" className="speaking-audio-preview" /> : null}
+                <textarea value={draftTranscript} onChange={(event) => setDraftTranscript(event.target.value)} className="speaking-answer-input" placeholder="Correct or type what you said…" aria-label="Correct your transcript" />
+                <button onClick={submitDraft} disabled={!draftTranscript.trim()} className="speaking-record-button disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 className="h-4 w-4" /> Confirm answer</button>
+                <button onClick={startRecording} disabled={stopping || (Boolean(cueCard) && speakLeft === 0)} className="speaking-text-switch disabled:opacity-40"><Mic className="h-4 w-4" /> Record again</button>
+              </div>
+            ) : typingMode ? (
               <div className="speaking-input-state">
                 <textarea value={typedAnswer} onChange={(event) => setTypedAnswer(event.target.value)} className="speaking-answer-input" placeholder="Type a full, developed answer here…" aria-label="Your answer" />
                 <button onClick={submitTyped} disabled={!typedAnswer.trim()} className="speaking-record-button disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" /> Submit answer</button>
@@ -676,8 +810,9 @@ export default function ExaminerSession({
               </div>
             ) : (
               <div className="speaking-input-state">
-                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} /><span className="speaking-waveform-label">{recording ? 'Recording your answer' : 'Microphone ready'}</span></div>
-                {!recording ? <button onClick={startRecording} disabled={stopping} className="speaking-record-button disabled:opacity-50"><Mic className="h-5 w-5" /> Record answer</button> : <button onClick={() => void handleStopRecording()} disabled={stopping} className="speaking-record-button speaking-record-button--stop disabled:opacity-50"><Square className="h-4 w-4 fill-current" />{stopping ? 'Transcribing…' : 'Stop & submit'}</button>}
+                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} /><span className="speaking-waveform-label">{recording ? 'Recording your answer' : micStream ? 'Microphone ready' : 'Waiting for microphone'}</span></div>
+                {!recording ? <button onClick={startRecording} disabled={stopping} className="speaking-record-button disabled:opacity-50"><Mic className="h-5 w-5" /> Record answer</button> : <button onClick={() => void handleStopRecording()} disabled={stopping} className="speaking-record-button speaking-record-button--stop disabled:opacity-50"><Square className="h-4 w-4 fill-current" />{stopping ? 'Finishing recording…' : cueCard ? 'Finish early' : 'Stop recording'}</button>}
+                <p className="speaking-record-hint">{cueCard ? 'Recording starts automatically. The 2-minute timer continues even if you finish early.' : 'You can review and correct the transcript before it is submitted.'}</p>
                 <button onClick={() => setTypingMode(true)} disabled={recording || stopping} className="speaking-text-switch disabled:opacity-40"><Pencil className="h-4 w-4" /> Type instead</button>
                 {recognition.error ? <p role="alert" className="speaking-inline-error">{recognition.error}</p> : null}
               </div>

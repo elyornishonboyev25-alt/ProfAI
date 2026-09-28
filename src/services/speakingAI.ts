@@ -95,7 +95,11 @@ export async function getExaminerReply(params: ExaminerReplyParams): Promise<str
     params.style === 'friend' ? 'Casual conversation' : params.part === 0 ? 'Interview' : `IELTS Speaking Part ${params.part}`
   const directiveLine =
     params.directive === 'follow_up'
-      ? 'Ask a natural follow-up question about the candidate’s last answer.'
+      ? params.part === 1
+        ? 'Ask one short, direct follow-up about the candidate’s own experience on this familiar topic. Do not ask an abstract social question.'
+        : params.part === 3
+          ? 'Ask one relevant follow-up that explores a broader reason, comparison or possible change in society. Keep it connected to the Part 2 topic and the candidate’s last answer.'
+          : 'Ask a natural follow-up question about the candidate’s last answer.'
       : params.directive === 'transition'
         ? `Move to a new topic.${params.seedQuestion ? ` Base it on this idea: "${params.seedQuestion}"` : ''}`
         : 'Politely close this part in one short sentence.'
@@ -122,13 +126,21 @@ Respond with JSON only: { "reply": "<what you say next>" }`
 function fallbackExaminerLine(params: ExaminerReplyParams): string {
   if (params.directive === 'closing') return 'Thank you. That brings us to the end of this part.'
   if (params.directive === 'transition' && params.seedQuestion) return params.seedQuestion
-  const generic = [
-    'That’s interesting — could you tell me a little more about that?',
+  const generic = params.part === 3 ? [
+    'Why do you think this has changed in recent years?',
+    'What effect could this have on society in the future?',
+    'Do you think the same is true for younger and older people?',
+    'How might this be different in other countries?',
+  ] : params.part === 0 ? [
+    'Could you tell me a little more about that?',
     'Why do you think that is?',
     'Can you give me an example?',
-    'How did that make you feel?',
     'What led you to that view?',
-    'Has your opinion about that changed over time?',
+  ] : [
+    'That’s interesting — could you tell me a little more about that?',
+    'Is that something you do often?',
+    'What do you like about it?',
+    'Has that changed for you over time?',
   ]
   const asked = new Set(
     params.history

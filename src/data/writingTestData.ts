@@ -1,3 +1,5 @@
+import { WRITING_TESTS_5_TO_30 } from './writingFullTests5to30'
+
 export type WritingTaskType = 'task1' | 'task2'
 
 export type ChartDataPoint = {
@@ -20,6 +22,17 @@ export type LineChartData = {
 
 export type WritingChartData = LineChartData
 
+export type WritingDataVisual = {
+  kind: 'line' | 'bar' | 'table'
+  title: string
+  unit: string
+  years: Array<number | string>
+  series: { label: string; values: number[] }[]
+  sourceLabel: string
+  sourceUrl: string
+  note?: string
+}
+
 export type WritingTask = {
   id: string
   day: number | null
@@ -32,7 +45,9 @@ export type WritingTask = {
   maxWordCount: number
   durationMinutes: number
   chart?: WritingChartData
-  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences'
+  visual?: WritingDataVisual
+  visualContext?: string
+  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string
@@ -121,6 +136,7 @@ const FULL_TEST_1_TASKS: WritingTask[] = [
     maxWordCount: 500,
     durationMinutes: 20,
     diagram: 'smoked-fish',
+    visualContext: 'Process: fish are caught at sea, taken by boat to port and frozen, thawed in fresh water, cut open, put in salt water with yellow colouring, smoked, packed, frozen at 0°C, stored cold, distributed and sold in a fish shop.',
     available: true,
   },
   {
@@ -171,6 +187,7 @@ const FULL_TEST_2_TASKS: WritingTask[] = [
     maxWordCount: 500,
     durationMinutes: 20,
     diagram: 'renewable-transport',
+    visualContext: 'Renewable transport fuel percentages in 2009 and 2010 respectively: Slovakia 9.4 and 7.8; Austria 6.45 and 5.15; France 6.1 and 6.1; Poland 5.0 and 6.0; Spain 3.5 and 4.8; Greece 1.2 and 2.0; EU average 4.2 and 4.8.',
     available: true,
   },
   {
@@ -217,6 +234,7 @@ const FULL_TEST_3_TASKS: WritingTask[] = [
     maxWordCount: 500,
     durationMinutes: 20,
     diagram: 'further-education',
+    visualContext: 'Further education in Britain, thousands. Men: 1970/71 part-time 1000, full-time 100; 1980/81 860 and 140; 1990/91 900 and 250. Women: 1970/71 740 and 60; 1980/81 830 and 200; 1990/91 1100 and 260.',
     available: true,
   },
   {
@@ -260,6 +278,7 @@ const FULL_TEST_4_TASKS: WritingTask[] = [
     maxWordCount: 500,
     durationMinutes: 20,
     diagram: 'radio-tv-audiences',
+    visualContext: 'UK audiences as percentage of population aged over four, 6 a.m. to 6 a.m. Radio peaks around 8:30 a.m. at about 27% and then declines. Television is low in the morning, rises sharply after 4 p.m., peaks around 9 p.m. at about 47%, then falls overnight.',
     available: true,
   },
   {
@@ -340,13 +359,7 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
       continue
     }
 
-    tests.push({
-      id: `writing-full-${i}`,
-      index: i,
-      title: `Full Writing Test ${i}`,
-      tasks: [],
-      available: false,
-    })
+    tests.push(WRITING_TESTS_5_TO_30[i - 5])
   }
 
   return tests
@@ -355,7 +368,7 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
 export function getWritingTaskById(id: string): WritingTask | null {
   if (id === 'writing-day-1') return DAY_1_TASK
 
-  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS, ...FULL_TEST_3_TASKS, ...FULL_TEST_4_TASKS].find(
+  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS, ...FULL_TEST_3_TASKS, ...FULL_TEST_4_TASKS, ...WRITING_TESTS_5_TO_30.flatMap((test) => test.tasks)].find(
     (task) => task.id === id,
   )
   if (fullTestTask) return fullTestTask

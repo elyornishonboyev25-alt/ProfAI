@@ -123,11 +123,48 @@ function RadioTelevisionChart() {
   )
 }
 
+function BrickMakingDiagram() {
+  const boxes = [
+    { x: 24, y: 82, label: 'Clay', detail: 'digger' },
+    { x: 166, y: 82, label: 'Metal grid', detail: 'and roller' },
+    { x: 308, y: 82, label: 'Sand + water', detail: 'mixed with clay' },
+    { x: 450, y: 82, label: 'Wire cutter', detail: 'or mould' },
+    { x: 450, y: 235, label: 'Drying oven', detail: '24–48 hours' },
+    { x: 308, y: 235, label: 'Kiln', detail: '200–980°C' },
+    { x: 166, y: 235, label: 'Kiln', detail: '870–1300°C' },
+    { x: 24, y: 235, label: 'Cooling', detail: '48–72 hours' },
+  ]
+  return (
+    <svg viewBox="0 0 610 455" className="h-auto w-full" role="img" aria-label="Brick manufacturing process: dig clay, filter it through a metal grid and roller, add sand and water, shape with a wire cutter or mould, dry for 24 to 48 hours, heat in two kilns at 200 to 980 and 870 to 1300 degrees Celsius, cool for 48 to 72 hours, package and deliver.">
+      <rect width="610" height="455" fill="#fff" />
+      <text x="305" y="34" textAnchor="middle" fontSize="20" fontWeight="700" fill="#172033">Brick Manufacturing</text>
+      <g fill="none" stroke="#64748b" strokeWidth="2" markerEnd="url(#brick-arrow)">
+        <path d="M140 125H161" /><path d="M282 125H303" /><path d="M424 125H445" />
+        <path d="M510 162V230" /><path d="M450 278H430" /><path d="M308 278H288" /><path d="M166 278H146" />
+        <path d="M84 312V375H165" /><path d="M283 397H332" />
+      </g>
+      <defs><marker id="brick-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b" /></marker></defs>
+      {boxes.map((box) => (
+        <g key={box.label + box.x + box.y}>
+          <rect x={box.x} y={box.y} width="116" height="80" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
+          <text x={box.x + 58} y={box.y + 32} textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">{box.label}</text>
+          <text x={box.x + 58} y={box.y + 55} textAnchor="middle" fontSize="12" fill="#475467">{box.detail}</text>
+        </g>
+      ))}
+      <rect x="166" y="365" width="116" height="65" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
+      <text x="224" y="404" textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">Packaging</text>
+      <rect x="334" y="365" width="116" height="65" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
+      <text x="392" y="404" textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">Delivery</text>
+    </svg>
+  )
+}
+
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
   switch (diagram) {
     case 'smoked-fish': return <SmokedFishDiagram />
     case 'renewable-transport': return <RenewableTransportChart />
     case 'further-education': return <FurtherEducationChart />
     case 'radio-tv-audiences': return <RadioTelevisionChart />
+    case 'brick-making': return <BrickMakingDiagram />
   }
 }

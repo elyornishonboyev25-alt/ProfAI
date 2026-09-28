@@ -23,6 +23,7 @@ import {
 
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
+import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -93,6 +94,9 @@ export default function IELTSWritingFullTestInterface({
   const [evalError, setEvalError] = useState<string | null>(null)
   const [evaluations, setEvaluations] = useState<Record<string, WritingEvaluation>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const submittingRef = useRef(false)
+  const autoSubmittedRef = useRef(false)
+  const deadlineRef = useRef<number | null>(null)
   const launchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoStartHandled = useRef(false)
 
@@ -106,6 +110,8 @@ export default function IELTSWritingFullTestInterface({
   const totalWordCount = tasks.reduce((total, task) => total + wordCounts[task.id], 0)
   const hasDraft = Object.values(answers).some((answer) => answer.trim().length > 0)
   const user = useAuthStore((state: AuthState) => state.user)
+  const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}`
+  const sessionKey = `${draftKey}:session`
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
@@ -119,16 +125,42 @@ export default function IELTSWritingFullTestInterface({
   }, [phase, setExamModeActive])
 
   useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(draftKey)
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<string, unknown>
+        setAnswers(Object.fromEntries(tasks.map((task) => [task.id, typeof parsed[task.id] === 'string' ? parsed[task.id] : ''])) as Record<string, string>)
+      }
+    } catch { /* Storage can be unavailable in private browsing. */ }
+    try {
+      const session = window.localStorage.getItem(sessionKey)
+      if (session) {
+        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
+        autoStartHandled.current = true
+        const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
+        deadlineRef.current = timed ? parsed.deadline! : null
+        setTimerEnabled(timed)
+        setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
+        setIsTimerRunning(timed && parsed.deadline! > Date.now())
+        setPhase('writing')
+      }
+    } catch { /* Start from the launch screen. */ }
+  }, [draftKey, effectiveDuration, sessionKey, tasks])
+
+  useEffect(() => {
+    if (phase !== 'writing') return
+    try { window.localStorage.setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
+  }, [answers, draftKey, phase])
+
+  useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
-    const interval = window.setInterval(() => {
-      setTimeRemaining((remaining) => {
-        if (remaining <= 1) {
-          setIsTimerRunning(false)
-          return 0
-        }
-        return remaining - 1
-      })
-    }, 1000)
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000))
+      setTimeRemaining(remaining)
+      if (remaining === 0) setIsTimerRunning(false)
+    }
+    tick()
+    const interval = window.setInterval(tick, 1000)
     return () => window.clearInterval(interval)
   }, [isTimerRunning, timerEnabled])
 
@@ -146,6 +178,9 @@ export default function IELTSWritingFullTestInterface({
       launchTimerRef.current = setTimeout(() => {
         setTimerEnabled(withTimer)
         setTimeRemaining(effectiveDuration * 60)
+        deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
+        try { window.localStorage.setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        autoSubmittedRef.current = false
         setIsTimerRunning(withTimer)
         setPhase('writing')
         setIsLaunching(false)
@@ -153,7 +188,7 @@ export default function IELTSWritingFullTestInterface({
         setTimeout(() => textareaRef.current?.focus(), 100)
       }, 1200)
     },
-    [effectiveDuration],
+    [effectiveDuration, sessionKey],
   )
 
   useEffect(() => {
@@ -171,15 +206,20 @@ export default function IELTSWritingFullTestInterface({
     setTimeRemaining(effectiveDuration * 60)
     setIsTimerRunning(false)
     setPhase('landing')
-  }, [effectiveDuration, tasks])
+    autoSubmittedRef.current = false
+    try { window.localStorage.removeItem(draftKey) } catch { /* No persisted draft. */ }
+    try { window.localStorage.removeItem(sessionKey) } catch { /* No persisted session. */ }
+  }, [draftKey, effectiveDuration, sessionKey, tasks])
 
   const handleSubmit = useCallback(async () => {
+    if (submittingRef.current) return
     if (writingTrial.locked) {
       setShowSubmitConfirm(false)
       setShowWritingGate(true)
       return
     }
 
+    submittingRef.current = true
     setShowSubmitConfirm(false)
     setIsTimerRunning(false)
     setPhase('submitted')
@@ -187,13 +227,14 @@ export default function IELTSWritingFullTestInterface({
     setEvalError(null)
 
     try {
-      const results = await Promise.all(
-        tasks.map((task) =>
-          evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id]),
-        ),
-      )
+      const results: WritingEvaluation[] = []
+      for (const task of tasks) {
+        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], task.visualContext))
+      }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
+      try { window.localStorage.removeItem(draftKey) } catch { /* Submission still succeeds. */ }
+      try { window.localStorage.removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
       if (totalWordCount > 0) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
@@ -217,6 +258,7 @@ export default function IELTSWritingFullTestInterface({
           timerEnabled,
           answers[task.id] ?? '',
           results[index],
+          { id: fullTest.id, overallBand },
         ),
       )
 
@@ -265,11 +307,14 @@ export default function IELTSWritingFullTestInterface({
     } catch (error) {
       setEvalError(error instanceof Error ? error.message : 'AI evaluation failed. Please try again.')
     } finally {
+      submittingRef.current = false
       setEvaluating(false)
     }
   }, [
     answers,
     awardBadge,
+    draftKey,
+    sessionKey,
     effectiveDuration,
     fullTest.id,
     fullTest.title,
@@ -283,6 +328,13 @@ export default function IELTSWritingFullTestInterface({
     wordCounts,
     writingTrial,
   ])
+
+  useEffect(() => {
+    if (phase === 'writing' && timerEnabled && timeRemaining === 0 && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true
+      void handleSubmit()
+    }
+  }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
   if (phase === 'landing') {
     return (
@@ -398,7 +450,7 @@ export default function IELTSWritingFullTestInterface({
                   <CheckCircle2 className="h-3.5 w-3.5" /> Full test completed
                 </span>
                 <h1 className="mt-3 text-3xl font-black text-slate-900">Estimated Overall Band {overallBand.toFixed(1)}</h1>
-                <p className="mt-1 text-sm text-slate-500">Task 2 carries twice the weight of Task 1.</p>
+                <p className="mt-1 text-sm text-slate-500">Task 2 carries twice the weight of Task 1. This AI estimate is not an official IELTS result.</p>
               </div>
               <div className="rounded-2xl bg-gradient-to-br from-red-600 to-rose-500 px-6 py-4 text-center text-white shadow-lg shadow-red-500/20">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-red-100">Total words</p>
@@ -431,6 +483,12 @@ export default function IELTSWritingFullTestInterface({
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
                       <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
                       <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+                    </details>
+                  ) : null}
+                  {task.visual ? (
+                    <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                      <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
                     </details>
                   ) : null}
                   {task.imageUrl ? (
@@ -492,7 +550,7 @@ export default function IELTSWritingFullTestInterface({
         open={showExitConfirm}
         icon={<AlertTriangle className="h-7 w-7" />}
         title="Leave this full test?"
-        description="Both Task 1 and Task 2 responses will be lost."
+        description="Your draft is saved on this device. The exam timer continues while you are away."
         cancelLabel="Continue writing"
         confirmLabel="Exit test"
         onCancel={() => setShowExitConfirm(false)}
@@ -589,6 +647,11 @@ export default function IELTSWritingFullTestInterface({
               <WritingTaskDiagram diagram={activeTask.diagram} />
             </div>
           ) : null}
+          {activeTask.visual ? (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+              <WritingDataVisual visual={activeTask.visual} />
+            </div>
+          ) : null}
         </section>
 
         <section className="flex min-h-[460px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
@@ -597,8 +660,8 @@ export default function IELTSWritingFullTestInterface({
               <div className="writing-editor-label"><span>Your response</span><span>Task {activeTaskIndex + 1}</span></div>
               <textarea ref={textareaRef} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeTask.id]: event.target.value }))} placeholder={`Write your Task ${activeTaskIndex + 1} response here...`} className="min-h-0 flex-1 resize-none bg-transparent p-5 text-[15px] leading-7 text-slate-800 outline-none placeholder:text-slate-400" />
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-                <span className="text-xs text-slate-500">Suggested: {minWords}–{maxWords} words</span>
-                <span className={`text-xs font-black ${wordCountColor}`}>{activeWordCount}/{activeTask.maxWordCount}</span>
+                <span className="text-xs text-slate-500">Minimum {minWords} words · suggested {minWords}–{maxWords}</span>
+                <span className={`text-xs font-black ${wordCountColor}`}>{activeWordCount} words</span>
               </div>
             </div>
           </div>

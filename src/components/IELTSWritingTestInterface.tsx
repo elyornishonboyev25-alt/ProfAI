@@ -36,6 +36,7 @@ import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import type { WritingTask, LineChartData, ChartSeries } from '@/data/writingTestData'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
+import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { useSearchParams } from 'react-router-dom'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -312,8 +313,13 @@ export default function IELTSWritingTestInterface({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isLaunching, setIsLaunching] = useState(false)
   const launchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const submittingRef = useRef(false)
+  const autoSubmittedRef = useRef(false)
+  const deadlineRef = useRef<number | null>(null)
 
   const user = useAuthStore((state: AuthState) => state.user)
+  const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${task.id}`
+  const sessionKey = `${draftKey}:session`
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
@@ -323,22 +329,41 @@ export default function IELTSWritingTestInterface({
   const effectiveDuration = autoDurationMinutes && autoDurationMinutes > 0 ? autoDurationMinutes : task.durationMinutes
 
   useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(draftKey)
+      if (saved !== null) setAnswer(saved)
+    } catch { /* Storage can be unavailable. */ }
+    try {
+      const session = window.localStorage.getItem(sessionKey)
+      if (session) {
+        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
+        autoStartHandled.current = true
+        const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
+        deadlineRef.current = timed ? parsed.deadline! : null
+        setTimerEnabled(timed)
+        setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
+        setIsTimerRunning(timed && parsed.deadline! > Date.now())
+        setPhase('writing')
+      }
+    } catch { /* Start from launch screen. */ }
+  }, [draftKey, effectiveDuration, sessionKey])
+
+  useEffect(() => {
+    if (phase !== 'writing') return
+    try { window.localStorage.setItem(draftKey, answer) } catch { /* Keep in-memory answer. */ }
+  }, [answer, draftKey, phase])
+
+  useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
-    if (timeRemaining <= 0) {
-      setIsTimerRunning(false)
-      return
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000))
+      setTimeRemaining(remaining)
+      if (remaining === 0) setIsTimerRunning(false)
     }
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          setIsTimerRunning(false)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [isTimerRunning, timerEnabled, timeRemaining])
+    tick()
+    const interval = window.setInterval(tick, 1000)
+    return () => window.clearInterval(interval)
+  }, [isTimerRunning, timerEnabled])
 
   const handleStart = useCallback(
     (withTimer: boolean) => {
@@ -348,6 +373,9 @@ export default function IELTSWritingTestInterface({
       launchTimerRef.current = setTimeout(() => {
         setTimerEnabled(withTimer)
         setTimeRemaining(effectiveDuration * 60)
+        deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
+        try { window.localStorage.setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        autoSubmittedRef.current = false
         setIsTimerRunning(withTimer)
         setPhase('writing')
         setIsLaunching(false)
@@ -355,7 +383,7 @@ export default function IELTSWritingTestInterface({
         setTimeout(() => textareaRef.current?.focus(), 100)
       }, 2000)
     },
-    [effectiveDuration],
+    [effectiveDuration, sessionKey],
   )
 
   useEffect(() => () => {
@@ -369,12 +397,8 @@ export default function IELTSWritingTestInterface({
     handleStart(autoTimerEnabled ?? true)
   }, [autoStart, autoTimerEnabled, handleStart])
 
-  const handleReset = useCallback(() => {
-    setTimeRemaining(effectiveDuration * 60)
-    setIsTimerRunning(timerEnabled)
-  }, [effectiveDuration, timerEnabled])
-
   const handleSubmit = useCallback(async () => {
+    if (submittingRef.current) return
     // Non-premium learners get a limited number of free AI checks. Once spent,
     // show the premium gate instead of running another evaluation.
     if (writingTrial.locked) {
@@ -383,6 +407,7 @@ export default function IELTSWritingTestInterface({
       return
     }
 
+    submittingRef.current = true
     setIsTimerRunning(false)
     setPhase('submitted')
     setShowSubmitConfirm(false)
@@ -390,8 +415,10 @@ export default function IELTSWritingTestInterface({
     setEvalError(null)
 
     try {
-      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount)
+      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, task.visualContext)
       setAiEvaluation(result)
+      try { window.localStorage.removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
+      try { window.localStorage.removeItem(sessionKey) } catch { /* Evaluation still succeeds. */ }
       if (answer.trim()) writingTrial.consume()
 
       // Timed (exam) writing → award an IELTS Writing band badge with celebration.
@@ -456,9 +483,17 @@ export default function IELTSWritingTestInterface({
     } catch (err) {
       setEvalError(err instanceof Error ? err.message : 'AI evaluation failed. Please try again.')
     } finally {
+      submittingRef.current = false
       setEvaluating(false)
     }
-  }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, searchParams, writingTrial.locked, writingTrial.consume])
+  }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, searchParams, writingTrial.locked, writingTrial.consume, draftKey, sessionKey])
+
+  useEffect(() => {
+    if (phase === 'writing' && timerEnabled && timeRemaining === 0 && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true
+      void handleSubmit()
+    }
+  }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
   const handleExitConfirm = useCallback(() => {
     setShowExitConfirm(false)
@@ -733,7 +768,7 @@ export default function IELTSWritingTestInterface({
                 <div className="relative overflow-hidden rounded-3xl border border-red-100 bg-white p-6 shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)]">
                   <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${bandColor(ev.overallBand)}`} />
                   <div className="flex items-center gap-6">
-                    <BandScoreRing score={ev.overallBand} label="Overall Band" size="lg" />
+                    <BandScoreRing score={ev.overallBand} label="Estimated task band" size="lg" />
                     <div className="flex-1">
                       <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-red-700">
                         <Sparkles className="h-3 w-3" />
@@ -801,6 +836,12 @@ export default function IELTSWritingTestInterface({
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
                   <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+                </details>
+              ) : null}
+              {task.visual ? (
+                <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                  <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
                 </details>
               ) : null}
               <div className="grid gap-4 md:grid-cols-2">
@@ -976,7 +1017,7 @@ export default function IELTSWritingTestInterface({
               </div>
               <h3 className="mt-4 text-xl font-black text-slate-900">Leave this test?</h3>
               <p className="mt-2 text-sm text-slate-600">
-                Your response will be lost. Are you sure you want to exit?
+                Your draft is saved on this device. The timer continues while you are away.
               </p>
               <div className="mt-5 flex items-center justify-center gap-2">
                 <button
@@ -1136,14 +1177,6 @@ export default function IELTSWritingTestInterface({
                 <Clock className="h-4 w-4" />
                 {formatTime(timeRemaining)}
               </div>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-red-200 bg-white px-2.5 text-xs font-semibold text-red-600 shadow-sm hover:bg-red-50 transition"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Reset
-              </button>
             </div>
           )}
           <button
@@ -1179,6 +1212,11 @@ export default function IELTSWritingTestInterface({
               <WritingTaskDiagram diagram={task.diagram} />
             </div>
           ) : null}
+          {task.visual ? (
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <WritingDataVisual visual={task.visual} />
+            </div>
+          ) : null}
         </div>
 
         <div className="flex min-h-[420px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
@@ -1197,7 +1235,7 @@ export default function IELTSWritingTestInterface({
                   Suggested word count: {minWords}–{maxWords}
                 </span>
                 <span className={`text-xs font-bold ${wordCountColor}`}>
-                  {wordCount}/{task.maxWordCount}
+                  {wordCount} words
                 </span>
               </div>
             </div>

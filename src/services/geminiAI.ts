@@ -144,15 +144,15 @@ export interface WordExplanation {
   language: string
 }
 
-const WRITING_EVALUATION_PROMPT = `You are a senior IELTS Writing examiner and certified IELTS trainer with 20+ years of experience marking official exams. You apply the public IELTS band descriptors with the same rigour as a real examiner. Your feedback is precise, fair, and genuinely useful — never generic.
+const WRITING_EVALUATION_PROMPT = `You are an IELTS Writing practice evaluator. Apply the public IELTS band descriptors carefully to provide an estimated band and specific feedback.
 
 TASK: Evaluate the student's IELTS writing response. Return a SINGLE valid JSON object and NOTHING else — no markdown fences, no text outside the JSON.
 
 SCORE EACH OF THE 4 CRITERIA (0.0–9.0, in 0.5 steps), then the overall band.
 
 1) Task Achievement / Task Response (taskAchievement):
-   - Task 1: Does it have a clear overview of main trends? Are key features + accurate data selected? (Min 150 words — penalise heavily if under 120.)
-   - Task 2: Does it fully address all parts of the prompt with a clear position, developed ideas, and relevant examples? (Min 250 words — penalise heavily if under 200.)
+   - Task 1: Does it have a clear overview of main trends? Are key features and accurate data selected? The minimum is 150 words; a shorter answer may provide less evidence for the descriptors.
+   - Task 2: Does it fully address all parts of the prompt with a clear position, developed ideas, and relevant examples? The minimum is 250 words; a shorter answer may provide less evidence for the descriptors.
 
 2) Coherence & Cohesion (coherenceCohesion):
    - Logical paragraphing, clear progression, accurate linking devices (not over/under-used), referencing.
@@ -164,7 +164,7 @@ SCORE EACH OF THE 4 CRITERIA (0.0–9.0, in 0.5 steps), then the overall band.
    - Range of structures (simple vs complex), accuracy, punctuation, error density and how much errors impede communication.
 
 SCORING DISCIPLINE:
-- Be realistic and consistent with real exams: most genuine attempts land 5.0–6.5. Award 7.0+ only for clearly strong writing, 8.0+ only for near-native control.
+- Base every criterion on evidence in this response. Award high bands only where the public descriptors are clearly met.
 - overallBand = average of the 4 criteria, rounded to the nearest 0.5 (IELTS rounding).
 - Score each criterion INDEPENDENTLY based on evidence in the text.
 
@@ -179,10 +179,10 @@ ERROR ANALYSIS — THE MOST IMPORTANT PART (read carefully):
 - Order errors by importance (most impactful first). Include every real error, up to ~15. If the writing is genuinely error-free, return an empty errors array.
 
 CORRECTED VERSION RULES:
-- Rewrite the FULL response at a clean Band 7–7.5 level: fix every error, upgrade weak/repetitive vocabulary, and improve cohesion — while keeping the student's original ideas, structure, and meaning.
+- If there is enough content, rewrite the FULL response at a clean Band 7–7.5 level: fix errors while keeping the student's ideas and meaning. If there is too little content to rewrite, return an empty string.
 
 STRENGTHS / IMPROVEMENTS:
-- "strengths": 3 specific things the student did well (reference the actual text, not generic praise).
+- "strengths": up to 3 specific things the student did well. Use an empty array if there is too little evidence.
 - "improvements": 3 concrete, prioritised, actionable steps that would raise the band (e.g. "Add a one-sentence overview before details", not "improve grammar").
 
 SUMMARY: 2–3 sentences — honest overall assessment naming the biggest lever for improvement.
@@ -354,6 +354,7 @@ export async function evaluateWriting(
   prompt: string,
   studentResponse: string,
   wordCount: number,
+  visualContext?: string,
 ): Promise<WritingEvaluation> {
   if (!studentResponse.trim()) {
     return {
@@ -375,6 +376,8 @@ export async function evaluateWriting(
 QUESTION/PROMPT:
 ${prompt}
 
+${visualContext ? `VISUAL DATA FOR TASK 1 (use this to check factual accuracy):\n${visualContext}\n` : ''}
+
 STUDENT'S RESPONSE (${wordCount} words):
 ${studentResponse}
 
@@ -386,8 +389,8 @@ Evaluate this response now. Return ONLY valid JSON.`
   try {
     const parsed = JSON.parse(jsonStr) as WritingEvaluation
     if (![parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].every((band) => Number.isFinite(band)) ||
-      !parsed.summary?.trim() || !Array.isArray(parsed.strengths) || !parsed.strengths.length ||
-      !Array.isArray(parsed.improvements) || !parsed.improvements.length || !parsed.correctedVersion?.trim()) {
+      !parsed.summary?.trim() || !Array.isArray(parsed.strengths) ||
+      !Array.isArray(parsed.improvements)) {
       throw new Error('Incomplete AI evaluation')
     }
     const criteria = [parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].map(clampBand)

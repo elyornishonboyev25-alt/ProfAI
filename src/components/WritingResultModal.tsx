@@ -18,6 +18,7 @@ import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
 import type { WritingError } from '@/services/geminiAI'
 import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
+import WritingDataVisual from '@/components/writing/WritingDataVisual'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -123,9 +124,10 @@ export default function WritingResultModal({
               <div>
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-red-700">
                   <Sparkles className="h-3 w-3" />
-                  {entry.taskType === 'task1' ? 'Task 1' : 'Task 2'} · AI Review
+                  {entry.taskType === 'task1' ? 'Task 1' : 'Task 2'} · Writing review
                 </div>
                 <h3 className="mt-1.5 text-xl font-black text-slate-900">{entry.testTitle}</h3>
+                {entry.fullTest ? <p className="mt-1 text-xs font-semibold text-red-700">Full test estimated band {entry.fullTest.overallBand.toFixed(1)} · Task 2 weighted twice</p> : null}
                 <p className="text-xs text-slate-500">
                   {new Date(entry.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   {' · '}{entry.wordCount} words
@@ -150,7 +152,7 @@ export default function WritingResultModal({
                     {entry.overallBand.toFixed(1)}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Overall Band</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Estimated task band</span>
               </div>
               <p className="flex-1 min-w-[200px] text-sm leading-relaxed text-slate-600">{entry.summary}</p>
               <div className="flex flex-col items-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-2">
@@ -165,6 +167,33 @@ export default function WritingResultModal({
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
                 <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
                 <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
+              </details>
+            ) : null}
+            {task?.visual ? (
+              <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
+              </details>
+            ) : null}
+            {task?.chart ? (
+              <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                <div className="mx-auto mt-4 max-w-[750px]">
+                  <WritingDataVisual visual={{
+                    kind: 'line',
+                    title: task.chart.title,
+                    unit: task.chart.yAxisLabel || 'number of shops',
+                    years: task.chart.series[0].data.map((point) => point.year),
+                    series: task.chart.series.map((series) => ({ label: series.label, values: series.data.map((point) => point.value) })),
+                    sourceLabel: '', sourceUrl: '',
+                  }} />
+                </div>
+              </details>
+            ) : null}
+            {task?.imageUrl ? (
+              <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
+                <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto mt-4 max-w-full" />
               </details>
             ) : null}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">

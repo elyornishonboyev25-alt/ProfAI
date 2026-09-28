@@ -25,6 +25,7 @@ export interface WritingAnalysisEntry {
   errors: WritingError[]
   correctedVersion: string
   xpAwarded: number
+  fullTest?: { id: string; overallBand: number }
 }
 
 function getStorageKey(userId?: string): string {
@@ -50,7 +51,8 @@ function safeParseHistory(value: string | null): WritingAnalysisEntry[] {
 
 export function getWritingAnalysisHistory(userId?: string): WritingAnalysisEntry[] {
   if (typeof window === 'undefined') return []
-  return safeParseHistory(window.localStorage.getItem(getStorageKey(userId)))
+  try { return safeParseHistory(window.localStorage.getItem(getStorageKey(userId))) }
+  catch { return [] }
 }
 
 export function saveWritingAnalysis(
@@ -63,6 +65,7 @@ export function saveWritingAnalysis(
   timerEnabled: boolean,
   studentResponse: string,
   evaluation: WritingEvaluation,
+  fullTest?: { id: string; overallBand: number },
 ): WritingAnalysisEntry {
   const entry: WritingAnalysisEntry = {
     attemptKey: `writing-${testId}-${Date.now()}`,
@@ -85,24 +88,28 @@ export function saveWritingAnalysis(
     errors: evaluation.errors,
     correctedVersion: evaluation.correctedVersion,
     xpAwarded: evaluation.xpAwarded,
+    fullTest,
   }
 
   if (typeof window === 'undefined') return entry
 
-  const storageKey = getStorageKey(userId)
-  const current = safeParseHistory(window.localStorage.getItem(storageKey))
-  const merged = [entry, ...current].slice(0, ENTRY_LIMIT)
-  window.localStorage.setItem(storageKey, JSON.stringify(merged))
-
-  addWritingXP(userId, evaluation.xpAwarded)
+  try {
+    const storageKey = getStorageKey(userId)
+    const current = safeParseHistory(window.localStorage.getItem(storageKey))
+    const merged = [entry, ...current].slice(0, ENTRY_LIMIT)
+    window.localStorage.setItem(storageKey, JSON.stringify(merged))
+    addWritingXP(userId, evaluation.xpAwarded)
+  } catch { /* An unavailable or full local store must not hide the evaluation. */ }
 
   return entry
 }
 
 export function getWritingXP(userId?: string): number {
   if (typeof window === 'undefined') return 0
-  const val = window.localStorage.getItem(getXPKey(userId))
-  return val ? parseInt(val, 10) || 0 : 0
+  try {
+    const val = window.localStorage.getItem(getXPKey(userId))
+    return val ? parseInt(val, 10) || 0 : 0
+  } catch { return 0 }
 }
 
 function addWritingXP(userId: string | undefined, xp: number): void {

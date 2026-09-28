@@ -147,6 +147,86 @@
   color: var(--ielts-accent);
 }
 
+/* Writing exam: quiet paper surfaces, clear task navigation and a focused editor. */
+.ielts-writing-workspace {
+  color: #172033;
+  background: #f7f8fb;
+  height: calc(100dvh - 58px);
+  min-height: 560px;
+}
+
+.ielts-writing-workspace .ielts-writing-header {
+  background: #fff;
+  border-bottom: 1px solid #e6e9ef;
+  box-shadow: 0 8px 24px rgb(16 24 40 / 5%);
+  z-index: 1;
+}
+
+.ielts-writing-workspace main > section:first-child,
+.ielts-writing-workspace > div.flex.min-h-0.flex-1 > div:first-child {
+  background: #fafbfc;
+  border-color: #e6e9ef;
+}
+
+.ielts-writing-workspace main > section:nth-child(2),
+.ielts-writing-workspace > div.flex.min-h-0.flex-1 > div:nth-child(2) {
+  background: #fff;
+}
+
+.ielts-writing-workspace .writing-exam-card {
+  border: 1px solid #e7eaf0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 32px rgb(16 24 40 / 5%);
+  backdrop-filter: none;
+}
+
+.ielts-writing-workspace .writing-editor-label {
+  border-bottom: 2px solid #df4259;
+  padding: 15px 20px;
+  background: #fff;
+  color: #941e30;
+  font-size: 13px;
+}
+
+.ielts-writing-workspace textarea {
+  padding: 24px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #172033;
+}
+
+.ielts-writing-workspace textarea:focus {
+  box-shadow: inset 0 0 0 2px rgb(223 66 89 / 15%);
+}
+
+.ielts-writing-workspace .writing-exam-label {
+  color: #bb2038;
+  font-size: 11px;
+  letter-spacing: .13em;
+}
+
+.ielts-writing-review {
+  background: #f7f8fb;
+}
+
+.ielts-writing-review > div > div,
+.ielts-writing-review section,
+.ielts-writing-review details {
+  box-shadow: 0 10px 32px rgb(16 24 40 / 5%);
+}
+
+.ielts-writing-review section {
+  border-color: #e6e9ef;
+}
+
+.writing-data-visual {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fff;
+}
+
 .ielts-speaking-workspace > .surface-card p,
 .ielts-review-page article p {
   overflow-wrap: anywhere;

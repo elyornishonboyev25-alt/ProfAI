@@ -2,6 +2,7 @@ const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'elyornishonboyev000@gmail.com',
   'nishonboyv7@gmail.com',
   'erkiinov09@gmail.com',
+  'assasinhnur2000@gmail.com',
 ])
 
 const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7', 'erkinov'])

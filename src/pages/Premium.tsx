@@ -23,6 +23,11 @@ const dateFormat = new Intl.DateTimeFormat('uz-UZ', { dateStyle: 'medium' })
 
 export default function Premium() {
   const navigate = useNavigate()
+  const goBack = () => {
+    const historyIndex = window.history.state?.idx
+    if (typeof historyIndex === 'number' && historyIndex > 0) navigate(-1)
+    else navigate('/dashboard')
+  }
   const user = useAuthStore(state => state.user)
   const [plans, setPlans] = useState<Record<PlanCode, Plan> | null>(null)
   const [billing, setBilling] = useState<BillingOverview | null>(null)
@@ -32,21 +37,30 @@ export default function Premium() {
   const [copied, setCopied] = useState(false)
 
   async function refresh() {
+    const accountId = user?.id
     try {
       if (user) {
         const data = await apiClient.get<BillingOverview>('/billing')
+        if (useAuthStore.getState().user?.id !== accountId) return
         setBilling(data)
         setPlans(data.plans)
       } else {
         const data = await apiClient.get<{ plans: Record<PlanCode, Plan> }>('/billing/plans', { auth: false })
+        if (useAuthStore.getState().user?.id !== accountId) return
         setPlans(data.plans)
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Tariflarni yuklab bo‘lmadi.')
-    } finally { setLoading(false) }
+      if (useAuthStore.getState().user?.id === accountId) setError(cause instanceof Error ? cause.message : 'Tariflarni yuklab bo‘lmadi.')
+    } finally { if (useAuthStore.getState().user?.id === accountId) setLoading(false) }
   }
 
-  useEffect(() => { void refresh() }, [user?.id])
+  useEffect(() => {
+    setBilling(null)
+    setPlans(null)
+    setError('')
+    setLoading(true)
+    void refresh()
+  }, [user?.id])
 
   const activeRequest = billing?.requests.find(request => request.status === 'PENDING' || request.status === 'SUBMITTED')
   const premiumActive = isPremiumUser(user)
@@ -97,7 +111,7 @@ export default function Premium() {
 
   return <main className="workspace-page min-h-screen px-4 py-9 sm:px-6 lg:px-10">
     <div className="mx-auto max-w-6xl">
-      <button type="button" onClick={() => navigate(-1)} className="route-back-button mb-6"><ArrowLeft size={17} /> Orqaga</button>
+      <button type="button" onClick={goBack} className="route-back-button mb-6"><ArrowLeft size={17} /> Orqaga</button>
       <header className="rounded-[2rem] bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-7 text-white shadow-xl sm:p-10">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider"><Crown size={15} className="text-amber-300" /> ProfAI Premium</span>
         <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-5xl">Tayyorgarligingizga to‘liq kirish</h1>

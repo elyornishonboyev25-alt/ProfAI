@@ -234,7 +234,6 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="mb-5"><TodayPlan compact /></div>
         <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
           <article className="dashboard-target-card dashboard-card-sheen">
             <span className="dashboard-target-ribbon" aria-hidden="true" />
@@ -422,6 +421,7 @@ export default function Dashboard() {
                 {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
               </p>
             </article>
+            <TodayPlan compact />
           </div>
         </section>
 

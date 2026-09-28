@@ -30,6 +30,8 @@ export default function TodayPlan({ initial, onChange, compact = false }: Props)
   const tasks = today?.tasks ?? []
   const done = tasks.filter(task => task.status === 'DONE').length
   const minutes = tasks.reduce((sum, task) => sum + task.minutes, 0)
+  const progress = tasks.length ? Math.round(done / tasks.length * 100) : 0
+  const nextTask = tasks.find(task => task.status !== 'DONE')
   const mark = async (task: StudyTask) => {
     setBusy(task.id); setError('')
     try { update(await studyPlanApi.complete(task.id, task.status !== 'DONE')) }
@@ -37,11 +39,29 @@ export default function TodayPlan({ initial, onChange, compact = false }: Props)
     finally { setBusy(null) }
   }
   if (!userId) return null
-  return <section className={`today-plan ${compact ? 'today-plan-compact' : ''}`} aria-label="Today’s study plan">
+
+  if (compact) return <section className="today-plan today-plan-compact" aria-label="Today's study plan">
+    <div className="today-plan-compact-header">
+      <span className="today-plan-compact-icon"><Route size={22} /></span>
+      <div><span className="today-plan-compact-kicker">YOUR STUDY PLAN</span><h2>Today's route<span>.</span></h2></div>
+      <button type="button" className="today-plan-compact-refresh" onClick={() => void refresh()} aria-label="Refresh study plan" title="Refresh study plan" disabled={loading}><RefreshCw size={16} /></button>
+    </div>
+    {loading && !data ? <p className="today-plan-compact-state">Preparing your plan…</p> : error && !data ? <div className="today-plan-compact-empty"><p>Could not load your plan.</p><button type="button" onClick={() => void refresh()}>Try again <RefreshCw size={14} /></button></div> : !data?.plan ? <div className="today-plan-compact-empty"><p>Set your goal and build a realistic IELTS or SAT plan.</p><button type="button" onClick={() => navigate('/journey-plan')}>Create my plan <ArrowRight size={15} /></button></div> : <>
+      <div className="today-plan-compact-overview"><strong>{done}<span> / {tasks.length}</span></strong><span>tasks finished today</span><small>{data.plan.answers.examTrack === 'BOTH' ? 'IELTS + SAT' : data.plan.answers.examTrack}</small></div>
+      <div className="today-plan-compact-progress" role="progressbar" aria-label="Today's task progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /></div>
+      {nextTask ? <button type="button" className="today-plan-compact-next" onClick={() => navigate(nextTask.route)}><span>NEXT UP <small>{nextTask.minutes} MIN</small></span><strong>{nextTask.title}</strong><span className="today-plan-compact-next-action">Open practice <ArrowRight size={14} /></span></button>
+        : <div className="today-plan-compact-complete"><BookOpenCheck size={20} /><span><strong>{tasks.length ? 'All done for today' : 'Rest day'}</strong><small>{tasks.length ? 'Your next steps are ready in the full plan.' : 'Your next study day is already prepared.'}</small></span></div>}
+      <p className="today-plan-compact-time"><Clock3 size={14} /> {minutes} min planned today</p>
+    </>}
+    <button type="button" className="today-plan-compact-link" onClick={() => navigate('/journey-plan')}>View full study plan <ArrowRight size={16} /></button>
+    {error && data && <p className="today-plan-error" role="alert">{error}</p>}
+  </section>
+
+  return <section className="today-plan" aria-label="Today’s study plan">
     <header className="today-plan-header"><div><span className="today-plan-kicker"><Sparkles size={14} /> YOUR DAILY STUDY PLAN</span><h2>Today’s focus<span>.</span></h2><p>{data?.today ? new Date(`${data.today}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }) : 'Your exam preparation, one clear day at a time'}</p></div><div className="today-plan-header-actions"><button type="button" onClick={() => void refresh()} title="Refresh plan" aria-label="Refresh plan" disabled={loading}><RefreshCw size={17} /></button><button type="button" onClick={() => navigate('/journey-plan')} className="today-plan-details">Study Plan <ArrowRight size={16} /></button></div></header>
     {loading && !data ? <p className="today-plan-state">Loading your plan…</p> : !data?.plan ? <div className="today-plan-empty"><Route size={25} /><div><strong>Build your IELTS or SAT plan</strong><p>Set your goal and available time. Your first week will be ready immediately.</p></div><button type="button" onClick={() => navigate('/journey-plan')}>Create plan <ArrowRight size={16} /></button></div> : <>
       <div className="today-plan-summary"><span><Check size={15} /> {done} of {tasks.length} finished</span><span><Clock3 size={15} /> {minutes} min planned</span><span>{data.plan.answers.examTrack === 'BOTH' ? 'IELTS + SAT' : data.plan.answers.examTrack}</span></div>
-      <div className="today-plan-progress"><span style={{ width: `${tasks.length ? done / tasks.length * 100 : 0}%` }} /></div>
+      <div className="today-plan-progress" role="progressbar" aria-label="Today's task progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /></div>
       {tasks.length ? <div className="today-plan-list">{tasks.map(task => {
         const reviewLocked = Boolean(task.reviewOf && tasks.some(practice => practice.contentKey === task.reviewOf && practice.status !== 'DONE'))
         return <article className={`today-plan-task ${task.status === 'DONE' ? 'is-done' : ''}`} key={task.id}>

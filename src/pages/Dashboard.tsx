@@ -1,5 +1,5 @@
 import UiText from '@/components/common/UiText'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -34,6 +34,7 @@ import {
 } from '@/utils/dashboardMetrics'
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
+import { loadSiteTime, recentSiteTimeSeconds, SITE_TIME_UPDATED_EVENT, siteTimeStorageKey } from '@/utils/siteTime'
 
 const emptyWeek = Array.from({ length: 7 }, (_, index) => {
   const date = new Date()
@@ -112,6 +113,20 @@ function StatCard({
 export default function Dashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const [siteTimeRevision, setSiteTimeRevision] = useState(0)
+  useEffect(() => {
+    const refreshSiteTime = () => setSiteTimeRevision((revision) => revision + 1)
+    const onStorage = (event: StorageEvent) => {
+      if (user?.id && event.key === siteTimeStorageKey(user.id)) refreshSiteTime()
+    }
+    window.addEventListener(SITE_TIME_UPDATED_EVENT, refreshSiteTime)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener(SITE_TIME_UPDATED_EVENT, refreshSiteTime)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [user?.id])
+  const siteTimeLog = useMemo(() => user?.id ? loadSiteTime(user.id) : {}, [user?.id, siteTimeRevision])
   const profile = loadOnboardingProfile(user?.id)
   const firstName = (user?.fullName?.trim() || profile?.firstName || 'Learner').split(/\s+/)[0]
 
@@ -166,10 +181,10 @@ export default function Dashboard() {
   const hasCurrentScore = examTargets.some((exam) => exam.current > 0)
 
   const chartData = useMemo(
-    () => overview.weeklyProgress.map((day) => ({ ...day, activity: day.studyTimeSec ?? 0 })),
-    [overview.weeklyProgress],
+    () => overview.weeklyProgress.map((day) => ({ ...day, activity: Math.round(siteTimeLog[day.date.slice(0, 10)] ?? 0) })),
+    [overview.weeklyProgress, siteTimeLog],
   )
-  const weeklyStudyTimeLabel = formatStudyTime(overview.metrics.weeklyStudySeconds)
+  const weeklyStudyTimeLabel = formatStudyTime(recentSiteTimeSeconds(siteTimeLog))
   const leaderboard = overview.miniLeaderboard.slice(0, 3)
   const podium = [
     { row: leaderboard[1], place: 2 },

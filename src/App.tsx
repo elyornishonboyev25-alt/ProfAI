@@ -23,6 +23,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useCelebrationStore } from '@/store/celebrationStore'
 import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
+import { startSiteTimeTracking } from '@/utils/siteTime'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
@@ -362,6 +363,11 @@ function App() {
     pathname !== '/onboarding' && pathname !== '/focus' &&
     !isLiveCommunityMode
   const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic && !isLearningCenterMode
+
+  useEffect(() => {
+    if (!user?.id) return
+    return startSiteTimeTracking(user.id)
+  }, [user?.id])
 
   useEffect(() => {
     const activityKey = routeToActivityKey(pathname)

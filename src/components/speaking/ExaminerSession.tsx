@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, AudioLines, CheckCircle2, Clock3, Headphones, Loader2, MessageSquareText, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
+import { ArrowLeft, AudioLines, CheckCircle2, Clock3, Headphones, Loader2, MessageSquareText, Mic, Volume2 } from 'lucide-react'
 import {
   CUE_CARDS,
   INTERVIEW_PACKS,
@@ -20,6 +20,7 @@ import {
 } from '@/services/speakingAI'
 import { analyseTranscript, mergeStats, type SpeechStats } from '@/lib/speakingScoring'
 import { cancelSpeech, getExaminerVoice, speak, useSpeechRecognition } from '@/lib/speech'
+import { examinerAudio, transcribeAnswer } from '@/lib/speakingAudio'
 import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
 import MicVisualizer from './MicVisualizer'
 import SpeakingResult from './SpeakingResult'
@@ -60,7 +61,6 @@ type Stage = {
 }
 
 type Phase = 'idle' | 'examiner_speaking' | 'awaiting_answer' | 'preparing' | 'thinking' | 'evaluating' | 'result'
-type AnswerDraft = { durationSec: number; audioUrl: string | null }
 
 function formatClock(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
@@ -208,18 +208,14 @@ export default function ExaminerSession({
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [started, setStarted] = useState(false)
+  const [starting, setStarting] = useState(false)
   const [chat, setChat] = useState<ChatTurn[]>([])
   const [currentPrompt, setCurrentPrompt] = useState('')
   const [activePart, setActivePart] = useState<0 | 1 | 2 | 3>(1)
   const [cueCard, setCueCard] = useState<CueCard | null>(null)
   const [prepLeft, setPrepLeft] = useState(0)
-  const [prepNotes, setPrepNotes] = useState('')
   const [speakLeft, setSpeakLeft] = useState(0)
   const [recording, setRecording] = useState(false)
-  const [answerDraft, setAnswerDraft] = useState<AnswerDraft | null>(null)
-  const [draftTranscript, setDraftTranscript] = useState('')
-  const [typedAnswer, setTypedAnswer] = useState('')
-  const [typingMode, setTypingMode] = useState(false)
   const [micStream, setMicStream] = useState<MediaStream | null>(null)
   const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(null)
   const [evalError, setEvalError] = useState<string | null>(null)
@@ -235,42 +231,24 @@ export default function ExaminerSession({
   const recordStartRef = useRef(0)
   const prepDeadlineRef = useRef(0)
   const longTurnDeadlineRef = useRef(0)
-  const longTurnStartedRef = useRef(false)
   const longTurnFinishedRef = useRef(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
-  const audioUrlRef = useRef<string | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const examinerPlayerRef = useRef<HTMLAudioElement | null>(null)
+  const examinerAudioUrlRef = useRef<string | null>(null)
+  const voiceRequestRef = useRef(0)
+  const captureStartedRef = useRef(false)
+  const silenceTimerRef = useRef<number | null>(null)
+  const captureLimitTimerRef = useRef<number | null>(null)
+  const voiceContextRef = useRef<AudioContext | null>(null)
+  const voiceSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const stopForSilenceRef = useRef<() => void>(() => {})
   const onSpeechEndRef = useRef<(() => void) | null>(null)
   const stopPendingRef = useRef(false)
+  const beginPendingRef = useRef(false)
+  const disposedRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-
-  // Ask for microphone access only after the candidate starts the test.
-  useEffect(() => {
-    if (!started) return
-    let cancelled = false
-    let localStream: MediaStream | null = null
-    if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ audio: true, video: false })
-        .then((stream) => {
-          if (cancelled) {
-            stream.getTracks().forEach((t) => t.stop())
-            return
-          }
-          localStream = stream
-          setMicStream(stream)
-        })
-        .catch(() => {
-          if (!cancelled) setTypingMode(true)
-        })
-    } else {
-      setTypingMode(true)
-    }
-    return () => {
-      cancelled = true
-      localStream?.getTracks().forEach((t) => t.stop())
-    }
-  }, [started])
 
   // Auto-scroll the transcript on new turns.
   useEffect(() => {
@@ -278,9 +256,21 @@ export default function ExaminerSession({
   }, [chat, phase])
 
   // Cleanup speech on unmount.
-  useEffect(() => () => cancelSpeech(), [])
+  useEffect(() => {
+    disposedRef.current = false
+    return () => {
+      disposedRef.current = true
+      cancelSpeech()
+      voiceRequestRef.current += 1
+      examinerPlayerRef.current?.pause()
+      if (examinerAudioUrlRef.current) URL.revokeObjectURL(examinerAudioUrlRef.current)
+      micStreamRef.current?.getTracks().forEach((track) => track.stop())
+      if (silenceTimerRef.current) window.clearInterval(silenceTimerRef.current)
+      if (captureLimitTimerRef.current) window.clearTimeout(captureLimitTimerRef.current)
+      void voiceContextRef.current?.close()
+    }
+  }, [])
   useEffect(() => () => {
-    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
   }, [])
 
@@ -294,6 +284,11 @@ export default function ExaminerSession({
   // reveals it anyway if onStart is slow or TTS is unavailable.
   const speakExaminer = useCallback(
     (text: string, next: () => void) => {
+      const requestId = ++voiceRequestRef.current
+      examinerPlayerRef.current?.pause()
+      if (examinerAudioUrlRef.current) URL.revokeObjectURL(examinerAudioUrlRef.current)
+      examinerAudioUrlRef.current = null
+      cancelSpeech()
       setPhase('examiner_speaking')
       setCurrentPrompt(text)
       onSpeechEndRef.current = next
@@ -303,22 +298,29 @@ export default function ExaminerSession({
         shown = true
         pushTurn('examiner', text)
       }
-      speak(text, {
-        // Examiner prompts are always English. Do not auto-detect here: words such
-        // as "test" also occur in Uzbek and could select a non-English TTS voice.
-        lang: 'en',
-        voice: getExaminerVoice(),
-        rate: 0.98,
-        onStart: reveal,
-        onEnd: () => {
-          reveal()
-          if (onSpeechEndRef.current === next) {
-            onSpeechEndRef.current = null
-            next()
-          }
-        },
+      const finish = () => {
+        if (voiceRequestRef.current !== requestId) return
+        reveal()
+        if (onSpeechEndRef.current === next) {
+          onSpeechEndRef.current = null
+          next()
+        }
+      }
+      const browserVoice = () => speak(text, {
+        lang: 'en', voice: getExaminerVoice(), rate: 0.98,
+        onStart: reveal, onEnd: finish,
       })
-      window.setTimeout(reveal, 350)
+      void examinerAudio(text).then((url) => {
+        if (voiceRequestRef.current !== requestId) { URL.revokeObjectURL(url); return }
+        examinerAudioUrlRef.current = url
+        const player = new Audio(url)
+        examinerPlayerRef.current = player
+        player.onplay = reveal
+        player.onended = finish
+        player.onerror = () => { if (voiceRequestRef.current === requestId) browserVoice() }
+        void player.play().catch(() => { if (voiceRequestRef.current === requestId) browserVoice() })
+      }).catch(() => { if (voiceRequestRef.current === requestId) browserVoice() })
+      window.setTimeout(() => { if (voiceRequestRef.current === requestId) reveal() }, 350)
     },
     [pushTurn],
   )
@@ -327,6 +329,11 @@ export default function ExaminerSession({
     setPhase('evaluating')
     setEvalError(null)
     cancelSpeech()
+    micStreamRef.current?.getTracks().forEach((track) => track.stop())
+    micStreamRef.current = null
+    setMicStream(null)
+    if (voiceContextRef.current) void voiceContextRef.current.close()
+    voiceContextRef.current = null
     const stats = mergeStats(answersRef.current.length ? answersRef.current : [analyseTranscript('', 0)])
     try {
       const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats })
@@ -341,6 +348,7 @@ export default function ExaminerSession({
 
   // Core engine: process the next move, advancing across stages.
   const advance = useCallback(() => {
+    captureStartedRef.current = false
     const stages = stagesRef.current
     let stageIdx = stageIdxRef.current
     let moveIdx = moveIdxRef.current
@@ -390,8 +398,6 @@ export default function ExaminerSession({
       })
     } else if (move.type === 'cuecard') {
       setCueCard(move.card)
-      setPrepNotes('')
-      longTurnStartedRef.current = false
       longTurnFinishedRef.current = false
       setActivePart(2)
       const cardText = `${move.card.title}. You should say: ${move.card.bullets.join('; ')}. You have one minute to prepare.`
@@ -423,7 +429,35 @@ export default function ExaminerSession({
     return () => window.clearInterval(id)
   }, [phase, speakExaminer])
 
-  const beginSession = useCallback(() => {
+  const beginSession = useCallback(async () => {
+    if (beginPendingRef.current) return
+    beginPendingRef.current = true
+    setStarting(true)
+    setAnswerError(null)
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setAnswerError('This browser cannot record audio. Use a browser with microphone recording support.')
+      beginPendingRef.current = false
+      setStarting(false)
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
+      })
+      if (disposedRef.current) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
+      micStreamRef.current = stream
+      setMicStream(stream)
+    } catch {
+      setAnswerError('Microphone access is required. Allow microphone access and try again.')
+      beginPendingRef.current = false
+      setStarting(false)
+      return
+    }
+    beginPendingRef.current = false
+    setStarting(false)
     setStarted(true)
     stagesRef.current = buildStages(config)
     stageIdxRef.current = 0
@@ -454,123 +488,131 @@ export default function ExaminerSession({
       }
       longTurnDeadlineRef.current = 0
       longTurnFinishedRef.current = true
-      setAnswerDraft(null)
-      setDraftTranscript('')
-      if (audioUrlRef.current) {
-        URL.revokeObjectURL(audioUrlRef.current)
-        audioUrlRef.current = null
-      }
       setSpeakLeft(0)
       advance()
     },
     [advance, pushTurn],
   )
 
-  const stopAudioCapture = useCallback((): Promise<string | null> => new Promise((resolve) => {
+  const stopAudioCapture = useCallback((): Promise<Blob | null> => new Promise((resolve) => {
     const recorder = recorderRef.current
     if (!recorder || recorder.state === 'inactive') { resolve(null); return }
     const chunks = audioChunksRef.current
     let settled = false
-    const finish = (url: string | null) => {
-      if (settled) {
-        if (url) URL.revokeObjectURL(url)
-        return
-      }
+    const finish = (blob: Blob | null) => {
+      if (settled) return
       settled = true
-      resolve(url)
+      resolve(blob)
     }
     recorder.onstop = () => {
-      recorderRef.current = null
+      if (recorderRef.current === recorder) recorderRef.current = null
       const blob = new Blob(chunks, { type: recorder.mimeType || chunks[0]?.type || 'audio/webm' })
-      if (blob.size === 0) { finish(null); return }
-      const url = URL.createObjectURL(blob)
-      if (!settled) audioUrlRef.current = url
-      finish(url)
+      finish(blob.size > 0 ? blob : null)
     }
     try { recorder.stop() } catch { finish(null) }
-    window.setTimeout(() => finish(null), 2000)
+    window.setTimeout(() => finish(null), 5000)
   }), [])
 
+  const stopVoiceDetection = useCallback(() => {
+    if (silenceTimerRef.current !== null) window.clearInterval(silenceTimerRef.current)
+    silenceTimerRef.current = null
+    if (captureLimitTimerRef.current !== null) window.clearTimeout(captureLimitTimerRef.current)
+    captureLimitTimerRef.current = null
+    voiceSourceRef.current?.disconnect()
+    voiceSourceRef.current = null
+  }, [])
+
   const startRecording = useCallback(() => {
+    if (captureStartedRef.current || stopPendingRef.current) return
+    captureStartedRef.current = true
     setEvalError(null)
     setAnswerError(null)
-    if (!recognition.supported) {
-      setTypingMode(true)
-      setAnswerError('Speech recognition is unavailable here. Type your answer to continue.')
-      return
-    }
-    if (audioUrlRef.current) {
-      URL.revokeObjectURL(audioUrlRef.current)
-      audioUrlRef.current = null
-    }
-    setAnswerDraft(null)
-    setDraftTranscript('')
-    recognition.reset()
-    if (!recognition.start()) {
-      setTypingMode(true)
-      setAnswerError('Could not start voice capture. Check microphone access or type your answer.')
+    const stream = micStreamRef.current
+    if (!stream?.active) {
+      setAnswerError('Microphone disconnected. Reconnect it, then retry this question.')
       return
     }
     audioChunksRef.current = []
-    if (micStream && typeof MediaRecorder !== 'undefined') {
-      try {
-        const recorder = new MediaRecorder(micStream)
-        recorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data) }
-        recorder.start(250)
-        recorderRef.current = recorder
-      } catch {
-        recorderRef.current = null
-      }
+    try {
+      const preferred = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']
+        .find((type) => MediaRecorder.isTypeSupported(type))
+      const recorder = new MediaRecorder(stream, preferred ? { mimeType: preferred, audioBitsPerSecond: 64000 } : undefined)
+      recorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data) }
+      recorder.start(1000)
+      recorderRef.current = recorder
+    } catch {
+      setAnswerError('Could not start audio capture. Check your microphone and retry.')
+      return
     }
+    recognition.reset()
+    if (recognition.supported) recognition.start()
     recordStartRef.current = Date.now()
     setRecording(true)
-  }, [micStream, recognition])
+    captureLimitTimerRef.current = window.setTimeout(() => stopForSilenceRef.current(), cueCard ? 120_000 : 90_000)
+    try {
+      const context = voiceContextRef.current ?? new AudioContext()
+      voiceContextRef.current = context
+      void context.resume()
+      const analyser = context.createAnalyser()
+      analyser.fftSize = 2048
+      voiceSourceRef.current = context.createMediaStreamSource(stream)
+      voiceSourceRef.current.connect(analyser)
+      const samples = new Float32Array(analyser.fftSize)
+      let noiseFloor = 0.008
+      let heardSpeech = false
+      let speechFrames = 0
+      let lastSpeech = Date.now()
+      silenceTimerRef.current = window.setInterval(() => {
+        analyser.getFloatTimeDomainData(samples)
+        let power = 0
+        for (const sample of samples) power += sample * sample
+        const rms = Math.sqrt(power / samples.length)
+        if (!heardSpeech && Date.now() - recordStartRef.current < 1200 && rms < 0.025) {
+          noiseFloor = noiseFloor * 0.85 + rms * 0.15
+        }
+        const voiced = rms > Math.max(0.018, noiseFloor * 2.8)
+        speechFrames = voiced ? Math.min(4, speechFrames + 1) : Math.max(0, speechFrames - 1)
+        if (speechFrames >= 2) { heardSpeech = true; lastSpeech = Date.now() }
+        if (heardSpeech && Date.now() - lastSpeech > (cueCard ? 8500 : 6500)) stopForSilenceRef.current()
+        if (!heardSpeech && Date.now() - recordStartRef.current > 20000) stopForSilenceRef.current()
+      }, 100)
+    } catch {
+      // The two-minute Part 2 limit remains active even if audio metering is unavailable.
+    }
+  }, [cueCard, recognition])
 
   const handleStopRecording = useCallback(async (autoFinish = false) => {
     if (stopPendingRef.current) return
     stopPendingRef.current = true
+    stopVoiceDetection()
     setStopping(true)
-    const [text, audioUrl] = await Promise.all([recognition.stop(), stopAudioCapture()])
+    const [browserText, audioBlob] = await Promise.all([recognition.stop(), stopAudioCapture()])
     const durationSec = Math.max(2, (Date.now() - recordStartRef.current) / 1000)
     setRecording(false)
+    let text = browserText.trim()
+    if (audioBlob) {
+      try { text = (await transcribeAnswer(audioBlob)) || text } catch { /* Browser transcript remains the fallback. */ }
+    }
     stopPendingRef.current = false
     setStopping(false)
-    if (autoFinish || (cueCard && longTurnDeadlineRef.current > 0 && Date.now() >= longTurnDeadlineRef.current)) {
-      submitAnswer(text, durationSec, true)
+    if (!text) {
+      if (autoFinish) {
+        submitAnswer('', durationSec, true)
+        return
+      }
+      setAnswerError('No clear answer was captured. Check your microphone and retry this question.')
       return
     }
-    setDraftTranscript(text.trim())
-    setAnswerDraft({ durationSec, audioUrl })
-    if (!text.trim()) setAnswerError('No clear words were detected. Replay the recording, type a correction, or record again.')
-  }, [cueCard, recognition, stopAudioCapture, submitAnswer])
-
-  const submitDraft = useCallback(() => {
-    const text = draftTranscript.trim()
-    if (!answerDraft || !text) return
     setAnswerError(null)
-    submitAnswer(text, answerDraft.durationSec)
-  }, [answerDraft, draftTranscript, submitAnswer])
+    submitAnswer(text, durationSec, autoFinish || Boolean(cueCard))
+  }, [cueCard, recognition, stopAudioCapture, stopVoiceDetection, submitAnswer])
 
-  const submitTyped = useCallback(() => {
-    const text = typedAnswer.trim()
-    if (!text) return
-    setAnswerError(null)
-    const words = text.split(/\s+/).length
-    setTypedAnswer('')
-    submitAnswer(text, Math.max(20, Math.round(words / 2.3)))
-  }, [submitAnswer, typedAnswer])
+  stopForSilenceRef.current = () => { void handleStopRecording() }
 
   useEffect(() => {
-    if (recording && recognition.error && !recognition.listening && !stopPendingRef.current) {
-      void handleStopRecording()
-    }
-  }, [handleStopRecording, recognition.error, recognition.listening, recording])
-
-  useEffect(() => {
-    if (phase !== 'awaiting_answer' || !cueCard || longTurnStartedRef.current) return
-    longTurnStartedRef.current = true
-    if (!typingMode) startRecording()
-  }, [cueCard, phase, startRecording, typingMode])
+    if (phase !== 'awaiting_answer' || captureStartedRef.current) return
+    startRecording()
+  }, [phase, startRecording])
 
   useEffect(() => {
     if (phase !== 'awaiting_answer' || !cueCard || !longTurnDeadlineRef.current) return
@@ -578,50 +620,40 @@ export default function ExaminerSession({
       const left = Math.max(0, Math.ceil((longTurnDeadlineRef.current - Date.now()) / 1000))
       setSpeakLeft(left)
       if (left > 0 || longTurnFinishedRef.current || stopPendingRef.current) return
-      if (recording) {
-        void handleStopRecording(true)
-      } else if (answerDraft) {
-        submitAnswer(draftTranscript.trim(), answerDraft.durationSec, true)
-      } else if (typedAnswer.trim()) {
-        submitAnswer(typedAnswer.trim(), 120, true)
-      } else {
-        submitAnswer('', 120, true)
-      }
+      if (recording) void handleStopRecording(true)
     }
     const id = window.setInterval(tick, 250)
     tick()
     return () => window.clearInterval(id)
-  }, [answerDraft, cueCard, draftTranscript, handleStopRecording, phase, recording, submitAnswer, typedAnswer])
-
-  const skipAudio = useCallback(() => {
-    cancelSpeech()
-    const pending = onSpeechEndRef.current
-    onSpeechEndRef.current = null
-    pending?.()
-  }, [])
+  }, [cueCard, handleStopRecording, phase, recording])
 
   const retrySession = useCallback(() => {
     cancelSpeech()
+    voiceRequestRef.current += 1
+    examinerPlayerRef.current?.pause()
+    if (examinerAudioUrlRef.current) URL.revokeObjectURL(examinerAudioUrlRef.current)
+    examinerAudioUrlRef.current = null
+    micStreamRef.current?.getTracks().forEach((track) => track.stop())
+    micStreamRef.current = null
+    setMicStream(null)
+    stopVoiceDetection()
+    if (voiceContextRef.current) void voiceContextRef.current.close()
+    voiceContextRef.current = null
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
-    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
-    audioUrlRef.current = null
     prepDeadlineRef.current = 0
     longTurnDeadlineRef.current = 0
-    longTurnStartedRef.current = false
     longTurnFinishedRef.current = false
+    captureStartedRef.current = false
+    stopPendingRef.current = false
     setRecording(false)
     setStopping(false)
-    setAnswerDraft(null)
-    setDraftTranscript('')
     setPhase('idle')
     setStarted(false)
     setChat([])
     setCurrentPrompt('')
     setCueCard(null)
     setPrepLeft(0)
-    setPrepNotes('')
     setSpeakLeft(0)
-    setTypedAnswer('')
     setEvaluation(null)
     setEvalError(null)
     setAnswerError(null)
@@ -631,7 +663,7 @@ export default function ExaminerSession({
     answersRef.current = []
     historyRef.current = []
     recognition.reset()
-  }, [recognition])
+  }, [recognition, stopVoiceDetection])
 
   // ── Render: result screen ────────────────────────────────────────────────
   if (phase === 'result' && evaluation) {
@@ -673,9 +705,9 @@ export default function ExaminerSession({
             {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label="Speaking test structure"><div><span>01</span><strong>Interview</strong><small>Familiar topics · 4–5 min</small></div><div><span>02</span><strong>Long turn</strong><small>1 min prep · 2 min maximum</small></div><div><span>03</span><strong>Discussion</strong><small>Related ideas · 4–5 min</small></div></div> : null}
             <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong>Sound on</strong><p>Listen to one examiner question at a time.</p></div></div>
             <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong>Microphone ready</strong><p>Allow access when prompted and speak naturally.</p></div></div>
-            {typingMode ? <p className="speaking-inline-error">Microphone access is unavailable. You can type your answers to continue.</p> : null}
-            <button onClick={beginSession} className="speaking-record-button mt-6">Begin speaking test <ArrowLeft className="h-4 w-4 rotate-180" /></button>
-            <p className="speaking-start-note">AI practice simulation · estimated score, not an official IELTS result</p>
+            {answerError ? <p role="alert" className="speaking-inline-error">{answerError}</p> : null}
+            <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : 'Begin speaking test'} {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}</button>
+            <p className="speaking-start-note">AI-generated examiner voice · practice simulation · estimated score, not an official IELTS result</p>
           </section>
         </div>
       </div>
@@ -731,16 +763,6 @@ export default function ExaminerSession({
           </motion.div>
         ))}
 
-        {/* Live interim transcript while recording */}
-        {recording && (recognition.interimTranscript || recognition.finalTranscript) ? (
-          <div className="speaking-turn speaking-turn--candidate">
-            <span className="speaking-turn-avatar" aria-hidden><Mic className="h-4 w-4" /></span>
-            <div className="speaking-turn-bubble speaking-turn-bubble--draft">
-              <span className="speaking-turn-name">Live transcript</span>
-              <p>{recognition.finalTranscript} <span className="opacity-70">{recognition.interimTranscript}</span></p>
-            </div>
-          </div>
-        ) : null}
 
         {phase === 'thinking' ? (
           <div className="flex justify-start">
@@ -775,46 +797,26 @@ export default function ExaminerSession({
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-              <label className="speaking-notes-label" htmlFor="speaking-prep-notes">Your notes <span>{phase === 'preparing' ? 'Write keywords during preparation' : 'Available while you speak'}</span></label>
-              <textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} disabled={phase !== 'preparing'} placeholder="A few keywords to guide your talk…" />
-              {canRecord ? <p className="speaking-timer-help">The examiner ends this turn at 0:00 {isFullMock ? 'and moves to Part 3.' : 'and finishes this practice.'}</p> : null}
+              {canRecord ? <p className="speaking-timer-help">The examiner moves on when you finish speaking or the two-minute limit is reached.</p> : null}
             </div>
           ) : (
             <div className="speaking-question-card">
               <div className="speaking-question-meta"><span>{canRecord ? 'CURRENT QUESTION' : 'EXAMINER PROMPT'}</span><span>{activePart > 0 ? `PART 0${activePart}` : 'INTERVIEW'}</span></div>
               <h3>{currentPrompt || 'The examiner is preparing your next question.'}</h3>
-              <p className="speaking-question-hint">{canRecord ? activePart === 3 ? 'Develop your opinion and explain why.' : 'Answer naturally in your own words.' : 'Your response controls will appear when the examiner finishes.'}</p>
+              <p className="speaking-question-hint">{canRecord ? activePart === 3 ? 'Develop your opinion and explain why.' : 'Answer naturally in your own words.' : 'Recording starts when the examiner finishes speaking.'}</p>
             </div>
           )}
 
           <div className="speaking-response-station">
-            <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3>Your response</h3><p>{typingMode ? 'Written answer' : 'Voice answer'}</p></div></div>
+            <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3>Your response</h3><p>Voice answer</p></div></div>
             {isExaminerBusy ? (
               <div className="speaking-wait-state"><div className="speaking-wait-orb"><AudioLines className="h-7 w-7" /></div><strong>{phase === 'thinking' ? 'Preparing the next question…' : 'Examiner is speaking…'}</strong><p>Take a moment to listen before you answer.</p>
-                {phase === 'examiner_speaking' && !isFullMock ? <button onClick={skipAudio} className="speaking-quiet-button mt-3"><SkipForward className="h-4 w-4" /> Skip audio</button> : null}
               </div>
-            ) : canRecord ? answerDraft ? (
-              <div className="speaking-input-state speaking-review-state">
-                <div className="speaking-review-heading"><CheckCircle2 className="h-4 w-4" /><strong>Check your transcript</strong></div>
-                <p>Speech recognition can mishear words. Listen, correct the text, then continue.</p>
-                {answerDraft.audioUrl ? <audio controls preload="metadata" src={answerDraft.audioUrl} aria-label="Replay your recorded answer" className="speaking-audio-preview" /> : null}
-                <textarea value={draftTranscript} onChange={(event) => setDraftTranscript(event.target.value)} className="speaking-answer-input" placeholder="Correct or type what you said…" aria-label="Correct your transcript" />
-                <button onClick={submitDraft} disabled={!draftTranscript.trim()} className="speaking-record-button disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 className="h-4 w-4" /> Confirm answer</button>
-                <button onClick={startRecording} disabled={stopping || (Boolean(cueCard) && speakLeft === 0)} className="speaking-text-switch disabled:opacity-40"><Mic className="h-4 w-4" /> Record again</button>
-              </div>
-            ) : typingMode ? (
+            ) : canRecord ? (
               <div className="speaking-input-state">
-                <textarea value={typedAnswer} onChange={(event) => setTypedAnswer(event.target.value)} className="speaking-answer-input" placeholder="Type a full, developed answer here…" aria-label="Your answer" />
-                <button onClick={submitTyped} disabled={!typedAnswer.trim()} className="speaking-record-button disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" /> Submit answer</button>
-                {recognition.supported ? <button onClick={() => setTypingMode(false)} className="speaking-text-switch"><Mic className="h-4 w-4" /> Use microphone</button> : null}
-              </div>
-            ) : (
-              <div className="speaking-input-state">
-                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} /><span className="speaking-waveform-label">{recording ? 'Recording your answer' : micStream ? 'Microphone ready' : 'Waiting for microphone'}</span></div>
-                {!recording ? <button onClick={startRecording} disabled={stopping} className="speaking-record-button disabled:opacity-50"><Mic className="h-5 w-5" /> Record answer</button> : <button onClick={() => void handleStopRecording()} disabled={stopping} className="speaking-record-button speaking-record-button--stop disabled:opacity-50"><Square className="h-4 w-4 fill-current" />{stopping ? 'Finishing recording…' : cueCard ? 'Finish early' : 'Stop recording'}</button>}
-                <p className="speaking-record-hint">{cueCard ? 'Recording starts automatically. The 2-minute timer continues even if you finish early.' : 'You can review and correct the transcript before it is submitted.'}</p>
-                <button onClick={() => setTypingMode(true)} disabled={recording || stopping} className="speaking-text-switch disabled:opacity-40"><Pencil className="h-4 w-4" /> Type instead</button>
-                {recognition.error ? <p role="alert" className="speaking-inline-error">{recognition.error}</p> : null}
+                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} /><span className="speaking-waveform-label">{stopping ? 'Processing your answer…' : recording ? 'Recording automatically' : 'Microphone ready'}</span></div>
+                <p className="speaking-record-hint">{stopping ? 'The examiner will continue shortly.' : 'Speak after the examiner. A short silence ends your turn automatically.'}</p>
+                {answerError ? <button onClick={() => { captureStartedRef.current = false; startRecording() }} className="speaking-record-button">Retry microphone</button> : null}
               </div>
             ) : (
               <div className="speaking-wait-state"><div className="speaking-wait-orb"><Loader2 className="h-7 w-7 animate-spin" /></div><strong>{phase === 'evaluating' ? 'Preparing your feedback…' : 'Get ready to answer'}</strong><p>{phase === 'preparing' ? 'Use this time to plan your long turn.' : 'Your next prompt is coming up.'}</p></div>

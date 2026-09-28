@@ -167,7 +167,7 @@ export type SpeakingEvaluation = {
   source: 'ai' | 'offline'
 }
 
-const EVALUATION_PROMPT = `You are an IELTS Speaking practice assessor. Apply the public IELTS Speaking band descriptors fairly. You receive a browser transcript, not audio. You cannot observe pronunciation, intonation, stress or real hesitation. Mark pronunciationBand as an explicitly uncertain proxy near the other criteria and never claim you heard the candidate.
+const EVALUATION_PROMPT = `You are an IELTS Speaking practice assessor. Apply the public IELTS Speaking band descriptors fairly. You receive a speech transcript, not audio. You cannot observe pronunciation, intonation, stress or real hesitation. Mark pronunciationBand as an explicitly uncertain proxy near the other criteria and never claim you heard the candidate.
 
 TASK: Evaluate the candidate's spoken responses. Return a SINGLE valid JSON object and NOTHING else.
 

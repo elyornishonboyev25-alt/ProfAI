@@ -24,6 +24,7 @@ import reviewsRoutes from './routes/reviews.routes.js'
 import sharedResultsRoutes from './routes/sharedResults.routes.js'
 import aiWorkspaceRoutes from './routes/aiWorkspace.routes.js'
 import aiGenerationRoutes from './routes/aiGeneration.routes.js'
+import speakingAudioRoutes from './routes/speakingAudio.routes.js'
 import guestDiagnosticRoutes from './routes/guestDiagnostic.routes.js'
 import learningCentersRoutes from './routes/learningCenters.routes.js'
 import supportRoutes from './routes/support.routes.js'
@@ -65,6 +66,7 @@ app.use(
   express.json({ limit: '6mb' }),
   aiGenerationRoutes,
 )
+app.use('/api/v1/ai/speaking-audio', requireAuth, aiRateLimit, express.json({ limit: '8mb' }), speakingAudioRoutes)
 
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false }))

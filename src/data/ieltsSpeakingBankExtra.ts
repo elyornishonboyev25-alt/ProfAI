@@ -16,7 +16,7 @@ export const EXTRA_PART1_TOPICS: Part1Topic[] = [
       { q: 'Do you have a large or a small family?', sample: 'I’d say it’s medium-sized — my parents, a younger sister and me, plus a big network of cousins we see at weekends.' },
       { q: 'Who are you closest to in your family?', sample: 'Probably my sister. We’re only two years apart, so we grew up sharing everything and we still tell each other almost anything.' },
       { q: 'Do you spend a lot of time with your family?', sample: 'As much as I can. We always have dinner together in the evenings, and that hour of catching up is something I really value.' },
-      { q: 'How has family life changed in your country?', sample: 'Families have become smaller and more spread out, mainly because people move to cities for work, though we still stay close through video calls.' },
+      { q: 'What do you usually do when you spend time with your family?', sample: 'We often have dinner together and talk about our day. At weekends, we sometimes visit relatives or go for a walk.' },
     ],
   },
   {

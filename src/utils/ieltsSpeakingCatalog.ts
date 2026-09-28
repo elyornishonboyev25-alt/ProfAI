@@ -17,6 +17,13 @@ import {
 // 30 of each part: first 10 feed the Days, the remaining 20 feed the mocks.
 const DAY_BANK_SIZE = 10
 
+// Pair each full mock's long-turn card with a discussion theme on the same subject.
+// These are indices in the canonical bank; each theme is used once across mocks.
+const MOCK_DISCUSSION_THEME_INDEX = [
+  14, 26, 22, 19, 23, 24, 10, 21, 25, 29,
+  15, 11, 16, 20, 12, 18, 17, 28, 13, 27,
+] as const
+
 export type SpeakingPart = 1 | 2 | 3
 
 export type SpeakingDayPart1 = {
@@ -149,7 +156,7 @@ export function getIeltsSpeakingFullMockCatalog(): SpeakingFullMockEntry[] {
       parts: {
         part1: PART1_TOPICS[DAY_BANK_SIZE + (i - 1)],
         part2: CUE_CARDS[DAY_BANK_SIZE + (i - 1)],
-        part3: PART3_THEMES[DAY_BANK_SIZE + (i - 1)],
+        part3: PART3_THEMES[MOCK_DISCUSSION_THEME_INDEX[i - 1]],
       },
     }
   })

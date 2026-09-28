@@ -314,6 +314,11 @@
 .speaking-question-card--cue .speaking-question-hint { color: #a52b3c; font-weight: 800; }
 .speaking-cue-list { margin-top: 7px; padding-left: 17px; color: #526074; font-size: 12px; line-height: 1.6; list-style: disc; }
 .speaking-cue-list li + li { margin-top: 3px; }
+.speaking-notes-label { display: flex; justify-content: space-between; gap: 8px; margin-top: 15px; color: #314057; font-size: 11px; font-weight: 800; }
+.speaking-notes-label span { color: #8795a6; font-weight: 600; }
+.speaking-prep-notes { width: 100%; min-height: 68px; margin-top: 7px; resize: vertical; border: 1px solid #eadfe2; border-radius: 11px; background: #fff; padding: 9px 11px; color: #35445a; font-size: 12px; line-height: 1.5; outline: none; }
+.speaking-prep-notes:focus { border-color: #c83c50; box-shadow: 0 0 0 3px rgb(200 60 80 / 10%); }
+.speaking-prep-notes:disabled { background: #faf8f9; opacity: 1; }
 
 .speaking-response-station { margin-top: 13px; border: 1px solid #ede4e8; border-radius: 18px; background: linear-gradient(145deg, #fff, #fcfafb); padding: 14px 16px 16px; box-shadow: 0 8px 18px rgb(69 49 61 / 4%); }
 .speaking-response-title { display: flex; align-items: center; gap: 9px; }
@@ -360,6 +365,51 @@
 .speaking-start-tip strong { color: #2c3b50; font-size: 12px; font-weight: 850; }
 .speaking-start-tip p { margin-top: 3px; color: #8190a2; font-size: 11px; line-height: 1.45; }
 .speaking-start-tip > svg { flex: none; color: #c1384b; }
+
+/* Speaking mock: quiet exam desk with a strong first action and visible test structure. */
+.speaking-exam-v2 { color: #213047; }
+.speaking-exam-v2 .speaking-session-header { border-color: #ede7e8; background: #fff; box-shadow: 0 12px 32px rgb(31 40 57 / 6%); }
+.speaking-exam-v2 .speaking-session-header::before { width: 5px; background: #c52b43; }
+.speaking-start-layout { grid-template-columns: minmax(0, 1fr) minmax(380px, .92fr); gap: 20px; }
+.speaking-start-hero { min-height: 500px; padding: clamp(28px, 3.2vw, 46px); background: radial-gradient(circle at 97% 95%, rgb(255 255 255 / 13%), transparent 35%), linear-gradient(145deg, #822136 0%, #b6243f 58%, #d74053 100%); }
+.speaking-start-hero::after { right: -132px; bottom: -160px; width: 390px; height: 390px; box-shadow: 0 0 0 42px rgb(255 255 255 / 5%), 0 0 0 95px rgb(255 255 255 / 4%); }
+.speaking-start-topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.speaking-start-orb { width: 64px; height: 64px; border-radius: 18px; }
+.speaking-start-duration { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgb(255 255 255 / 26%); border-radius: 999px; background: rgb(255 255 255 / 10%); padding: 8px 12px; color: #fff; font-size: 12px; font-weight: 750; }
+.speaking-start-kicker { margin-top: 39px; color: #ffd8de; font-size: 11px; letter-spacing: .17em; }
+.speaking-start-hero h2 { max-width: 540px; margin-top: 12px; font-size: clamp(34px, 3.3vw, 49px); line-height: 1.08; }
+.speaking-start-hero > p:not(.speaking-start-kicker) { max-width: 480px; margin-top: 18px; color: #fff0f2; font-size: 14px; line-height: 1.7; }
+.speaking-start-features { gap: 8px; }
+.speaking-start-features span { border-radius: 999px; padding: 8px 11px; font-size: 11px; }
+.speaking-start-guide { padding: clamp(25px, 2.6vw, 37px); border-color: #efe8e9; background: #fff; box-shadow: 0 14px 38px rgb(31 40 57 / 6%); }
+.speaking-start-guide h3 { margin: 8px 0 19px; font-size: clamp(22px, 2.1vw, 28px); }
+.speaking-start-parts { display: grid; gap: 8px; margin-bottom: 16px; }
+.speaking-start-parts > div { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; column-gap: 11px; border: 1px solid #f0e7e8; border-radius: 13px; background: #fdfbfb; padding: 10px 12px; }
+.speaking-start-parts span { grid-row: span 2; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #f9ebee; color: #ad2740; font-size: 10px; font-weight: 900; }
+.speaking-start-parts strong { color: #273449; font-size: 12px; font-weight: 850; }
+.speaking-start-parts small { color: #738197; font-size: 11px; }
+.speaking-start-tip { gap: 10px; padding: 11px 0; }
+.speaking-start-tip > span { width: 30px; height: 30px; }
+.speaking-start-tip strong { font-size: 12px; }
+.speaking-start-tip p { font-size: 11px; }
+.speaking-start-note { margin-top: 12px; color: #8190a2; font-size: 10px; line-height: 1.5; text-align: center; }
+.speaking-exam-v2 .speaking-record-button { min-height: 50px; border-radius: 13px; background: linear-gradient(105deg, #aa243e, #d4364b); font-size: 13px; }
+.speaking-session-grid { grid-template-columns: minmax(0, 1fr) minmax(390px, .88fr); height: clamp(540px, calc(100dvh - 242px), 740px); gap: 20px; }
+.speaking-transcript-panel, .speaking-focus-panel { border-color: #ede7e9; background: #fff; box-shadow: 0 14px 38px rgb(31 40 57 / 6%); }
+.speaking-panel-heading { min-height: 72px; padding: 14px 19px; }
+.speaking-exam-v2 .speaking-conversation { padding: 24px 22px 32px; background: linear-gradient(180deg, #fff 0%, #fcfafb 100%); }
+.speaking-turn-bubble { max-width: min(87%, 530px); }
+.speaking-focus-content { padding: 20px; }
+.speaking-question-card { border-color: #e9d9dd; background: #fff; padding: 20px 22px; }
+.speaking-question-card h3 { font-size: clamp(18px, 1.55vw, 24px); line-height: 1.35; }
+.speaking-question-hint { font-size: 12px; }
+.speaking-response-station { margin-top: 15px; padding: 18px; background: #fcfbfb; }
+.speaking-waveform { min-height: 88px; }
+.speaking-waveform-label { font-size: 11px; }
+.speaking-journey { margin: 18px 4px; }
+.speaking-journey-number { width: 37px; height: 37px; }
+.speaking-journey-text strong { font-size: 12px; }
+.speaking-journey-text small { font-size: 11px; }
 
 @keyframes speaking-pulse { 50% { box-shadow: 0 0 0 7px rgb(227 62 82 / 12%); } }
 

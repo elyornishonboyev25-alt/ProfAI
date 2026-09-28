@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, AudioLines, CheckCircle2, Headphones, Loader2, MessageSquareText, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
+import { ArrowLeft, AudioLines, CheckCircle2, Clock3, Headphones, Loader2, MessageSquareText, Mic, Pencil, Send, SkipForward, Square, Volume2 } from 'lucide-react'
 import {
   CUE_CARDS,
   INTERVIEW_PACKS,
@@ -20,6 +20,7 @@ import {
 } from '@/services/speakingAI'
 import { analyseTranscript, mergeStats, type SpeechStats } from '@/lib/speakingScoring'
 import { cancelSpeech, getExaminerVoice, speak, useSpeechRecognition } from '@/lib/speech'
+import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
 import MicVisualizer from './MicVisualizer'
 import SpeakingResult from './SpeakingResult'
 
@@ -69,33 +70,35 @@ function uniqueQuestionMoves(questions: readonly string[]): Move[] {
     return true
   })
 
-  const moves: Move[] = []
-  if (unique[0]) moves.push({ type: 'seed', text: unique[0] }, { type: 'followup' })
-  if (unique[1]) moves.push({ type: 'seed', text: unique[1] })
-  if (unique[2]) moves.push({ type: 'seed', text: unique[2] }, { type: 'followup' })
-  return moves
+  return unique.flatMap((text, index): Move[] => [
+    { type: 'seed', text },
+    ...((index === 0 || index === 2) ? [{ type: 'followup' } as Move] : []),
+  ])
 }
 
 function buildStages(config: SessionConfig): Stage[] {
-  const part1StageFrom = (questions: string[]): Stage => ({
+  const part1StageFrom = (questions: string[], includeIntroduction = false): Stage => ({
     part: 1,
     label: PART_LABELS[1],
-    intro: 'Let’s begin with some questions about you.',
-    moves: uniqueQuestionMoves(questions),
+    intro: 'Now, in this first part, I’d like to ask you some questions about yourself.',
+    moves: [
+      ...(includeIntroduction ? [{ type: 'seed', text: 'Could you tell me your full name, please?' } as Move] : []),
+      ...uniqueQuestionMoves(questions),
+    ],
   })
   const part2StageFrom = (card: CueCard): Stage => ({
     part: 2,
     label: PART_LABELS[2],
-    intro: 'Now I’m going to give you a topic, and I’d like you to talk about it for one to two minutes.',
+    intro: 'Now I’m going to give you a topic. You’ll have one minute to prepare, then please speak for one to two minutes.',
     moves: [
       { type: 'cuecard', card },
       { type: 'seed', text: card.followUp },
     ],
   })
-  const part3StageFrom = (questions: string[]): Stage => ({
+  const part3StageFrom = (questions: string[], topic?: string): Stage => ({
     part: 3,
     label: PART_LABELS[3],
-    intro: `We’ve been talking about ${pickRandom(PART2_THEME_WORDS)}. I’d like to discuss some broader questions.`,
+    intro: topic ? `We’ve been talking about ${topic}. Now I’d like to discuss some more general questions related to that topic.` : 'Now I’d like to discuss some more general questions.',
     moves: uniqueQuestionMoves(questions),
   })
 
@@ -116,12 +119,18 @@ function buildStages(config: SessionConfig): Stage[] {
       if (config.mockSeed) {
         const seed = config.mockSeed
         return [
-          part1StageFrom(seed.part1),
+          part1StageFrom(seed.part1, true),
           part2StageFrom({ id: 'mock-cue', theme: 'mock', ...seed.part2 }),
-          part3StageFrom(seed.part3),
+          part3StageFrom(seed.part3, seed.part2.title.replace(/^Describe /i, '')),
         ]
       }
-      return [part1Stage(), part2Stage(), part3Stage()]
+      const mock = pickRandom(getIeltsSpeakingFullMockCatalog())
+      const card = mock.parts.part2
+      return [
+        part1StageFrom(mock.parts.part1.questions.map((question) => question.q), true),
+        part2StageFrom(card),
+        part3StageFrom(mock.parts.part3.questions.map((question) => question.q), card.title.replace(/^Describe /i, '')),
+      ]
     }
     case 'interview': {
       const pack = INTERVIEW_PACKS.find((p) => p.id === config.interviewKind) ?? INTERVIEW_PACKS[0]
@@ -169,11 +178,9 @@ function buildStages(config: SessionConfig): Stage[] {
   }
 }
 
-const PART2_THEME_WORDS = ['that experience', 'that topic', 'the subject you described']
-
 const GREETINGS = [
-  'Hello, and welcome. My name is Alex, and I’ll be your speaking examiner today. Are you ready to begin?',
-  'Good to see you. I’m Alex, your examiner for today’s speaking practice. Let’s get started.',
+  'Good morning. My name is Alex, and I’m your examiner for this speaking practice.',
+  'Good afternoon. My name is Alex, and I’m your examiner for this speaking practice.',
 ]
 
 const FRIENDLY_GREETINGS = [
@@ -201,6 +208,7 @@ export default function ExaminerSession({
   const [activePart, setActivePart] = useState<0 | 1 | 2 | 3>(1)
   const [cueCard, setCueCard] = useState<CueCard | null>(null)
   const [prepLeft, setPrepLeft] = useState(0)
+  const [prepNotes, setPrepNotes] = useState('')
   const [speakLeft, setSpeakLeft] = useState(0)
   const [recording, setRecording] = useState(false)
   const [typedAnswer, setTypedAnswer] = useState('')
@@ -222,8 +230,9 @@ export default function ExaminerSession({
   const stopPendingRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
-  // Acquire a mic stream once for the live visualizer (recognition manages its own).
+  // Ask for microphone access only after the candidate starts the test.
   useEffect(() => {
+    if (!started) return
     let cancelled = false
     let localStream: MediaStream | null = null
     if (navigator.mediaDevices?.getUserMedia) {
@@ -247,7 +256,7 @@ export default function ExaminerSession({
       cancelled = true
       localStream?.getTracks().forEach((t) => t.stop())
     }
-  }, [])
+  }, [started])
 
   // Auto-scroll the transcript on new turns.
   useEffect(() => {
@@ -363,6 +372,7 @@ export default function ExaminerSession({
       })
     } else if (move.type === 'cuecard') {
       setCueCard(move.card)
+      setPrepNotes('')
       setActivePart(2)
       const cardText = `${move.card.title}. You should say: ${move.card.bullets.join('; ')}. You have one minute to prepare.`
       speakExaminer(cardText, () => {
@@ -376,13 +386,15 @@ export default function ExaminerSession({
   useEffect(() => {
     if (phase !== 'preparing') return
     if (prepLeft <= 0) {
-      setPhase('awaiting_answer')
-      setSpeakLeft(120)
+      speakExaminer('Your preparation time is over. Please begin speaking now.', () => {
+        setSpeakLeft(120)
+        setPhase('awaiting_answer')
+      })
       return
     }
     const id = window.setInterval(() => setPrepLeft((v) => v - 1), 1000)
     return () => window.clearInterval(id)
-  }, [phase, prepLeft])
+  }, [phase, prepLeft, speakExaminer])
 
   // Long-turn speaking countdown (auto-submits at 0 while recording).
   useEffect(() => {
@@ -487,6 +499,7 @@ export default function ExaminerSession({
     setCurrentPrompt('')
     setCueCard(null)
     setPrepLeft(0)
+    setPrepNotes('')
     setSpeakLeft(0)
     setTypedAnswer('')
     setEvaluation(null)
@@ -525,20 +538,21 @@ export default function ExaminerSession({
         </header>
         <div className="speaking-start-layout">
           <section className="speaking-start-hero">
-            <span className="speaking-start-orb"><Mic className="h-10 w-10" /></span>
-            <p className="speaking-start-kicker">LIVE SPEAKING PRACTICE</p>
-            <h2>Speak naturally.<br />Get sharper feedback.</h2>
-            <p>The examiner follows your answers, moves through the test and gives you a band estimate with clear next steps.</p>
-            <div className="speaking-start-features"><span><AudioLines className="h-4 w-4" /> Spoken questions</span><span><MessageSquareText className="h-4 w-4" /> Adaptive follow ups</span><span><CheckCircle2 className="h-4 w-4" /> Band feedback</span></div>
+            <div className="speaking-start-topline"><span className="speaking-start-orb"><Mic className="h-8 w-8" /></span><span className="speaking-start-duration"><Clock3 className="h-4 w-4" /> {config.mode === 'full_mock' ? '11–14 min' : 'Speaking practice'}</span></div>
+            <p className="speaking-start-kicker">IELTS SPEAKING · AI EXAMINER</p>
+            <h2>A real conversation.<br />A clearer next step.</h2>
+            <p>Answer aloud as the examiner moves through each part. Your estimated band and feedback appear when the session ends.</p>
+            <div className="speaking-start-features"><span><AudioLines className="h-4 w-4" /> Spoken examiner</span><span><MessageSquareText className="h-4 w-4" /> Follow-up questions</span><span><CheckCircle2 className="h-4 w-4" /> Band estimate</span></div>
           </section>
           <section className="speaking-start-guide">
             <p className="speaking-eyebrow">Before you begin</p>
-            <h3>Make your answer count.</h3>
-            <div className="speaking-start-tip"><span>01</span><div><strong>Listen to the question</strong><p>Turn on your sound so you can hear the examiner.</p></div><Volume2 className="h-4 w-4" /></div>
-            <div className="speaking-start-tip"><span>02</span><div><strong>Speak in full ideas</strong><p>Allow microphone access, then give a reason or example.</p></div><Mic className="h-4 w-4" /></div>
-            <div className="speaking-start-tip"><span>03</span><div><strong>Review your result</strong><p>See your estimated band and a focused improvement plan.</p></div><CheckCircle2 className="h-4 w-4" /></div>
+            <h3>{config.mode === 'full_mock' ? 'Three parts. One conversation.' : 'Get ready to speak.'}</h3>
+            {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label="Speaking test structure"><div><span>01</span><strong>Interview</strong><small>Familiar topics · 4–5 min</small></div><div><span>02</span><strong>Long turn</strong><small>1 min prep · up to 2 min speaking</small></div><div><span>03</span><strong>Discussion</strong><small>Related ideas · 4–5 min</small></div></div> : null}
+            <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong>Sound on</strong><p>Listen to one examiner question at a time.</p></div></div>
+            <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong>Microphone ready</strong><p>Allow access when prompted and speak naturally.</p></div></div>
             {typingMode ? <p className="speaking-inline-error">Microphone access is unavailable. You can type your answers to continue.</p> : null}
-            <button onClick={beginSession} className="speaking-record-button mt-6">Start speaking session <ArrowLeft className="h-4 w-4 rotate-180" /></button>
+            <button onClick={beginSession} className="speaking-record-button mt-6">Begin speaking test <ArrowLeft className="h-4 w-4 rotate-180" /></button>
+            <p className="speaking-start-note">AI practice simulation · estimated score, not an official IELTS result</p>
           </section>
         </div>
       </div>
@@ -621,29 +635,30 @@ export default function ExaminerSession({
           </div>
         ) : null}
         </div>
-        <div className="speaking-transcript-footer"><span className="speaking-live-dot" /> Conversation in progress <span className="speaking-footer-end">Scroll to revisit earlier turns</span></div>
+        <div className="speaking-transcript-footer"><span className="speaking-live-dot" /> Live transcript <span className="speaking-footer-end">Scroll to revisit earlier turns</span></div>
       </section>
 
       <section className="speaking-focus-panel" aria-label="Current question and response controls">
         <div className="speaking-panel-heading speaking-panel-heading--focus">
           <span className="speaking-panel-icon"><Headphones className="h-[18px] w-[18px]" /></span>
-          <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the prompt below' : 'Listen and get ready to respond'}</p></div>
+          <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the question below' : 'Listen and get ready to respond'}</p></div>
           <span className={`speaking-phase-chip ${recording ? 'is-recording' : ''}`}><span />{recording ? 'Recording' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
         </div>
         <div className="speaking-focus-content">
-          {cueCard && (phase === 'preparing' || (canRecord && speakLeft > 0)) ? (
+          {cueCard && (phase === 'preparing' || isExaminerBusy || canRecord) ? (
             <div className="speaking-question-card speaking-question-card--cue">
-              <div className="speaking-question-meta"><span>PART 02 · LONG TURN</span><strong>{phase === 'preparing' ? `Prep ${prepLeft}s` : `Speak ${speakLeft}s`}</strong></div>
+              <div className="speaking-question-meta"><span>PART 02 · TASK CARD</span><strong>{phase === 'preparing' ? `Prep ${prepLeft}s` : canRecord ? `Speak ${speakLeft}s` : 'Listen'}</strong></div>
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-              {phase === 'preparing' ? <button onClick={() => { setPhase('awaiting_answer'); setPrepLeft(0); setSpeakLeft(120) }} className="speaking-quiet-button mt-4">I’m ready — start speaking</button> : null}
+              <label className="speaking-notes-label" htmlFor="speaking-prep-notes">Your notes <span>{phase === 'preparing' ? 'Write keywords during preparation' : 'Available while you speak'}</span></label>
+              <textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} disabled={phase !== 'preparing'} placeholder="A few keywords to guide your talk…" />
             </div>
           ) : (
             <div className="speaking-question-card">
               <div className="speaking-question-meta"><span>{canRecord ? 'CURRENT QUESTION' : 'EXAMINER PROMPT'}</span><span>{activePart > 0 ? `PART 0${activePart}` : 'INTERVIEW'}</span></div>
               <h3>{currentPrompt || 'The examiner is preparing your next question.'}</h3>
-              <p className="speaking-question-hint">{canRecord ? 'Answer in your own words. Add a reason or example when you can.' : 'Your response controls will appear when the examiner finishes.'}</p>
+              <p className="speaking-question-hint">{canRecord ? activePart === 3 ? 'Develop your opinion and explain why.' : 'Answer naturally in your own words.' : 'Your response controls will appear when the examiner finishes.'}</p>
             </div>
           )}
 

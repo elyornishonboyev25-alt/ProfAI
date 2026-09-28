@@ -805,3 +805,11 @@
   .auth-arena-card-body { min-height: 102px; }
   .auth-arena-note { padding: 12px; }
 }
+
+.auth-arena-features { display: grid; gap: 11px; margin-top: 29px; }
+.auth-arena-feature { display: flex; align-items: flex-start; gap: 14px; padding: 15px 17px; border: 1px solid #fff; border-radius: 18px; background: rgba(255,255,255,.84); box-shadow: 0 10px 27px rgba(45,74,116,.08); }
+.auth-arena-feature-icon { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 12px; color: #ce3543; background: #fff0f1; }
+.auth-arena-feature strong { display: block; color: #1b2b43; font-size: 14px; font-weight: 850; }
+.auth-arena-feature small { display: block; margin-top: 3px; color: #71819a; font-size: 11px; line-height: 1.5; }
+@media (max-width: 900px) { .auth-arena-features { display: none; } }
+@media (max-width: 500px) { .auth-arena-main > p { display: block; font-size: 11px; line-height: 1.45; } }

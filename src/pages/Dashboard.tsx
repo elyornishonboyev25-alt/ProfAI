@@ -15,6 +15,7 @@ import {
   Settings,
   RefreshCw,
   Sparkles,
+  Target,
   Trophy,
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -76,6 +77,14 @@ function bestAvailableScore(...scores: Array<number | null | undefined>) {
   return available.length ? Math.max(...available) : 0
 }
 
+function scoreRecommendation(exam: 'IELTS' | 'SAT', current: number, target: number) {
+  if (!current) return 'Start with a full mock to find your current level.'
+  if (current >= target) return 'Keep your score strong with regular practice.'
+  if (exam === 'IELTS' && target - current >= 1.5) return 'Build your foundation across all four IELTS skills.'
+  if (exam === 'SAT' && target - current >= 200) return 'Strengthen Math and Reading & Writing before your next mock.'
+  return 'Review mistakes and practice the areas that need a final push.'
+}
+
 function formatStudyTime(seconds: number) {
   if (seconds >= 3600) return `${Number((seconds / 3600).toFixed(2))}h`
   if (seconds > 0 && seconds < 60) return '<1 min'
@@ -128,7 +137,7 @@ export default function Dashboard() {
   }, [user?.id])
   const siteTimeLog = useMemo(() => user?.id ? loadSiteTime(user.id) : {}, [user?.id, siteTimeRevision])
   const profile = loadOnboardingProfile(user?.id)
-  const firstName = (user?.fullName?.trim() || profile?.firstName || 'Learner').split(/\s+/)[0]
+  const firstName = user?.nickname || (user?.fullName?.trim() || profile?.firstName || 'Learner').split(/\s+/)[0]
 
   const dashboardCacheKey = user?.id ?? 'guest'
   const cachedOverview = dashboardOverviewCache.get(dashboardCacheKey) ?? null
@@ -156,7 +165,6 @@ export default function Dashboard() {
     [overview, user],
   )
   const nextAchievement = useMemo(() => getNextDashboardAchievement(overview), [overview])
-  const targetExam = overview.targets?.targetExam ?? profile?.targetExam ?? 'IELTS'
   const ieltsCurrent = bestAvailableScore(
     measuredScores.ielts,
     overview.targets?.currentIeltsScore,
@@ -167,13 +175,11 @@ export default function Dashboard() {
     overview.targets?.currentSatScore,
     profile?.currentSatScore,
   )
+  const ieltsTarget = overview.targets?.targetIeltsScore ?? profile?.targetIeltsScore
+  const satTarget = overview.targets?.targetSatScore ?? profile?.targetSatScore
   const examTargets = [
-    ...(targetExam !== 'SAT'
-      ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: overview.targets?.targetIeltsScore ?? profile?.targetIeltsScore ?? 7.5 }]
-      : []),
-    ...(targetExam !== 'IELTS'
-      ? [{ label: 'SAT' as const, current: satCurrent, target: overview.targets?.targetSatScore ?? profile?.targetSatScore ?? 1450 }]
-      : []),
+    ...(ieltsTarget != null ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: ieltsTarget, path: '/ielts/tests#mocks' }] : []),
+    ...(satTarget != null ? [{ label: 'SAT' as const, current: satCurrent, target: satTarget, path: '/sat' }] : []),
   ]
   const targetProgress = Math.max(0, Math.min(100, Math.round(
     examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
@@ -241,11 +247,11 @@ export default function Dashboard() {
             <div className="relative z-10">
               <p className="dashboard-target-heading text-base font-bold"> <UiText text={"Your target"} /> </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {examTargets.map((exam) => (
+                {examTargets.length ? examTargets.map((exam) => (
                   <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
                     {exam.label} <span className="text-white/75">{exam.target}</span>
                   </span>
-                ))}
+                )) : <span className="text-sm text-white/80"><UiText text="Set your score goals to get started." /></span>}
               </div>
             </div>
 
@@ -280,14 +286,23 @@ export default function Dashboard() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(targetExam === 'SAT' ? '/sat' : '/ielts/tests#mocks')}
+              onClick={() => navigate(examTargets[0]?.path ?? '/focus')}
               className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
             >
-               <UiText text={"Continue preparing"} /> <ArrowRight className="h-3.5 w-3.5" />
+               <UiText text={examTargets.length ? 'Continue preparing' : 'Set my goals'} /> <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </article>
 
           <div className="min-w-0 space-y-4">
+            {examTargets.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
+              {examTargets.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><Target className="h-5 w-5" /></span>
+                <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}: {exam.current ? `${exam.current} → ${exam.target}` : <><UiText text="Target" /> {exam.target}</>}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600"><UiText text={scoreRecommendation(exam.label, exam.current, exam.target)} /></span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-red-700"><UiText text={exam.label === 'IELTS' ? 'Open IELTS practice' : 'Open SAT practice'} /> <ArrowRight className="h-3.5 w-3.5" /></span>
+                </span>
+              </button>)}
+            </div>}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard

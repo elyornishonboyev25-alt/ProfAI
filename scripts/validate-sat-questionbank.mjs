@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { build } from 'esbuild'
 
 const read = (name) => JSON.parse(readFileSync(`src/data/sat/${name}.json`, 'utf8'))
-const data = read('questionBankMocks'), inventory = read('questionBankInventory')
+const data = read('questionBankMocks'), inventory = read('questionBankInventory'), legacyAllocation = read('questionBankLegacyAllocation')
 const skills = ['Words in Context', 'Text Structure and Purpose', 'Cross-Text Connections', 'Central Ideas and Details', 'Command of Evidence', 'Inferences', 'Boundaries', 'Form, Structure, and Sense', 'Transitions', 'Rhetorical Synthesis']
 const levels = ['Foundation', 'Medium', 'Advanced']
 const all = [...data.test9Math2, ...data.tests.flatMap((test) => test.questions)]
@@ -45,14 +45,23 @@ for (const q of all) {
 }
 assert.equal(data.tests.length, 31)
 assert.deepEqual(data.tests.map((t) => t.mockId), Array.from({ length: 31 }, (_, i) => i + 10))
+assert.deepEqual(Object.keys(legacyAllocation).map(Number), data.tests.map((test) => test.mockId))
+const allBySourceId = new Map(all.map((question) => [question.sourceQuestionId, question]))
 for (const test of data.tests) {
   assert.equal(test.questions.length, 98)
+  const targetLevel = test.mockId < 20 ? 'Foundation' : test.mockId < 31 ? 'Medium' : 'Advanced'
+  assert.ok(test.questions.filter((q) => q.difficulty === targetLevel).length >= 89)
+  assert.deepEqual(
+    Object.fromEntries(['Algebra', 'Advanced Math', 'Problem-Solving and Data Analysis', 'Geometry and Trigonometry'].map((domain) =>
+      [domain, test.questions.filter((q) => q.section === 'math' && q.domain === domain).length])),
+    { Algebra: 15, 'Advanced Math': 15, 'Problem-Solving and Data Analysis': 7, 'Geometry and Trigonometry': 7 },
+  )
   for (const id of ['rw1', 'rw2', 'math1', 'math2']) {
     const qs = test.questions.filter((q) => q.moduleId === id), math = id.startsWith('math')
     assert.equal(qs.length, math ? 22 : 27)
     assert.deepEqual(qs.map((q) => q.id), qs.map((_, i) => `${id}-${i + 1}`))
     assert.ok(qs.every((q) => assigned.get(q.sourceQuestionId).mockId === test.mockId))
-    for (const level of levels) assert.ok(qs.filter((q) => q.difficulty === level).length >= (math ? 6 : 7))
+    assert.ok(qs.filter((q) => q.difficulty === targetLevel).length >= (math ? 19 : 25))
     if (math) {
       assert.equal(qs.filter((q) => q.kind === 'student-response').length, 5)
       assert.equal(new Set(qs.map((q) => q.domain)).size, 4)
@@ -67,7 +76,14 @@ for (const test of data.tests) {
       if (math || a.skill === b.skill) assert.ok(levels.indexOf(a.difficulty) <= levels.indexOf(b.difficulty))
     }
   }
+  for (const id of ['rw1', 'rw2', 'math1', 'math2']) {
+    const sourceIds = legacyAllocation[test.mockId][id]
+    assert.equal(sourceIds.length, id.startsWith('math') ? 22 : 27)
+    assert.equal(new Set(sourceIds).size, sourceIds.length)
+    assert.ok(sourceIds.every((sourceId) => allBySourceId.get(sourceId)?.moduleId === id))
+  }
 }
+assert.equal(new Set(Object.values(legacyAllocation).flatMap((modules) => Object.values(modules).flat())).size, 3038)
 const corrected = all.find((q) => q.sourceQuestionId === 'e3bbf2bf')
 assert.ok(corrected)
 assert.match(corrected.choices[3].text, /The Choctaw Code Talkers, not the Navajo Code Talkers, served in World War I/)
@@ -95,5 +111,13 @@ for (let id = 9; id <= 40; id++) {
   }
   assert.equal(catalog.getSATSectionTest(id, 'math').questionCount, 44)
   assert.equal(catalog.getSATSectionTest(id, 'reading-writing').questionCount, 54)
+  if (id >= 10) {
+    assert.equal(test.difficulty, id < 20 ? 'Easy' : id < 31 ? 'Medium' : 'Hard')
+    const old = catalog.getSATReviewTests().find((review) => review.id === `question-bank-2026-09-20-${id}`)
+    assert.ok(old)
+    for (const module of old.modules) assert.deepEqual(
+      module.questions.map((question) => question.sourceQuestionId), legacyAllocation[id][module.id],
+    )
+  }
 }
-console.log(`Question Bank valid: 31 new mocks + Test 9 Math 2, ${all.length} unique assigned questions, ${assets.size} assets, source accounting, SAT order, difficulty mix, accepted answers and scoring.`)
+console.log(`Question Bank valid: 31 difficulty-ordered mocks + Test 9 Math 2, ${all.length} unique assigned questions, ${assets.size} assets, source accounting, SAT order, legacy review, accepted answers and scoring.`)

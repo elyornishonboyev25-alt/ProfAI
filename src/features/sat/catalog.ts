@@ -14,7 +14,7 @@ import { SAT_MAY_2026_INTL, SAT_MAY_2026_INTL_MODULES } from './may2026Intl'
 import { SAT_JUNE_2026_INTL, SAT_JUNE_2026_INTL_MODULES } from './june2026Intl'
 import { SAT_JUNE_2026_US } from './june2026Us'
 import { SAT_MAY_2026_US, SAT_MAY_2026_US_LEGACY } from './may2026Us'
-import { SAT_QUESTION_BANK_TESTS } from './questionBank'
+import { SAT_QUESTION_BANK_LEGACY_TESTS, SAT_QUESTION_BANK_TESTS } from './questionBank'
 import {
   SAT_NOVEMBER_2025_INTL,
   SAT_NOVEMBER_2025_INTL_MODULES,
@@ -156,7 +156,7 @@ export function getSATReviewTests(): SATTestDefinition[] {
     mockId: 9, ...SAT_MAY_2026_US_LEGACY,
     badge: 'May 2026 US · Original 76-question version', difficulty: 'Easy',
   }
-  return [...Object.values(SAT_TEST_CATALOG), legacy].flatMap((test) => [
+  return [...Object.values(SAT_TEST_CATALOG), legacy, ...SAT_QUESTION_BANK_LEGACY_TESTS].flatMap((test) => [
     test, selectSATSection(test, 'math'), selectSATSection(test, 'reading-writing'),
   ])
 }

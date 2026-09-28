@@ -1,4 +1,5 @@
 import data from '@/data/sat/questionBankMocks.json'
+import legacyAllocation from '@/data/sat/questionBankLegacyAllocation.json'
 import type { SATModule, SATModuleId, SATQuestion } from './practiceTest4'
 import type { SATTestDefinition } from './catalog'
 
@@ -15,17 +16,46 @@ function moduleFrom(id: SATModuleId, questions: SATQuestion[]): SATModule {
 
 export const SAT_TEST_9_MATH_2 = moduleFrom('math2', data.test9Math2 as SATQuestion[])
 
-export const SAT_QUESTION_BANK_TESTS: Record<number, SATTestDefinition> = Object.fromEntries(
-  data.tests.map((test) => [test.mockId, {
-    mockId: test.mockId,
-    id: `question-bank-2026-09-20-${test.mockId}`,
-    title: `Digital SAT Practice Test ${test.mockId}`,
-    subtitle: 'SAT Question Bank · Mixed difficulty',
-    badge: 'Question Bank Practice · Fixed modules',
-    difficulty: 'Medium',
+const questionBySourceId = new Map(
+  data.tests.flatMap((test) => test.questions as SATQuestion[])
+    .map((question) => [question.sourceQuestionId, question] as const),
+)
+
+const difficultyForMock = (mockId: number): SATTestDefinition['difficulty'] =>
+  mockId < 20 ? 'Easy' : mockId < 31 ? 'Medium' : 'Hard'
+
+function definition(mockId: number, questions: SATQuestion[], legacy = false): SATTestDefinition {
+  const difficulty = difficultyForMock(mockId)
+  return {
+    mockId,
+    id: `question-bank-${legacy ? '2026-09-20' : '2026-09-28'}-${mockId}`,
+    title: `Digital SAT Practice Test ${mockId}`,
+    subtitle: `SAT Question Bank · ${difficulty} difficulty`,
+    badge: legacy ? 'Question Bank Practice · Original version' : 'Question Bank Practice · Fixed modules',
+    difficulty,
     questionCount: 98,
     totalDurationSeconds: 134 * 60,
     modules: metadata.map((module) => moduleFrom(module.id,
-      (test.questions as SATQuestion[]).filter((question) => question.moduleId === module.id))),
-  }]),
+      questions.filter((question) => question.moduleId === module.id))),
+  }
+}
+
+export const SAT_QUESTION_BANK_TESTS: Record<number, SATTestDefinition> = Object.fromEntries(
+  data.tests.map((test) => [test.mockId, definition(test.mockId, test.questions as SATQuestion[])]),
 )
+
+/** Preserve the question order of attempts saved before the difficulty regrouping. */
+export const SAT_QUESTION_BANK_LEGACY_TESTS: SATTestDefinition[] = Object.entries(legacyAllocation)
+  .map(([id, modules]) => {
+    const sourceIds = modules as Record<SATModuleId, string[]>
+    const questions = metadata.flatMap((module) =>
+      sourceIds[module.id].map((sourceId, index) => ({
+        ...questionBySourceId.get(sourceId)!,
+        id: `${module.id}-${index + 1}`,
+        number: index + 1,
+        moduleId: module.id,
+      })),
+    )
+    const test = definition(Number(id), questions, true)
+    return { ...test, subtitle: 'SAT Question Bank · Original mixed difficulty', difficulty: 'Medium' as const }
+  })

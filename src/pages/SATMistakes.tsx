@@ -16,6 +16,7 @@ import {
   deleteSATAttemptHistoryEntry,
   loadSATAttempt,
   loadSATAttemptHistory,
+  saveSATAttemptToHistory,
   type SATAttemptHistoryEntry,
 } from '@/features/sat/attemptStorage'
 import {
@@ -29,8 +30,14 @@ const SAT_TESTS = getSATReviewTests()
 const SAT_TESTS_BY_ID = new Map(SAT_TESTS.map((test) => [test.id, test]))
 
 function loadHistoryWithLegacyResults() {
-  // Loading the current slots migrates completed pre-history attempts once.
-  SAT_TESTS.forEach((test) => loadSATAttempt(test.id))
+  // Loading the slots migrates completed attempts. Keep unfinished attempts
+  // from the original Question Bank allocation available for accurate review.
+  SAT_TESTS.forEach((test) => {
+    const attempt = loadSATAttempt(test.id)
+    if (test.id.startsWith('question-bank-2026-09-20-') && attempt?.status === 'active') {
+      saveSATAttemptToHistory(attempt, 'exit')
+    }
+  })
   return loadSATAttemptHistory()
 }
 

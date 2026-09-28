@@ -9,6 +9,12 @@
 
 These are fixed practice forms assembled from the College Board Question Bank, not official released/adaptive SAT forms. Difficulty labels are source Question Bank labels; the site's existing score ranges remain estimates, not College Board equating.
 
+## Difficulty order (September 28 revision)
+
+Mock **10–19** is Easy, **20–30** is Medium, and **31–40** is Hard. Questions were regrouped using their original Question Bank labels: Foundation, Medium and Advanced. Each mock has at least 89 of 98 questions at its assigned level; the small remainder keeps the SAT module blueprint intact. The original question text, answers, explanations and source IDs were not edited. `questionBankInventory.json` records the new mock/module/position of each source ID.
+
+`questionBankLegacyAllocation.json` records the September 20 question order so earlier saved attempts still open with their original questions and scoring. Current mocks use a new test ID version. Vocabulary references in `questionBankVocabulary.json` follow the revised question positions.
+
 ## Inventory and duplicates
 
 The supplied files were inventoried by printed Question ID and original PDF page. The English PDF contains **1,845 unique questions**, rather than the 1,875 stated in the request. The Math PDF contains **1,925**. No missing 30 English questions have been fabricated.
@@ -48,7 +54,7 @@ The blueprint follows these College Board descriptions:
 
 English modules start with Words in Context, Text Structure/Purpose, Cross-Text Connections, Central Ideas/Details, Command of Evidence and Inferences, followed by Conventions, Transitions and Rhetorical Synthesis. Reading occupies the first 14 or 15 positions. Each skill block progresses from easier to harder. Every module includes at least nine of the ten English skills; the finite Cross-Text stock cannot cover every module.
 
-Math modules progress from easier to harder, contain all four domains, and include five student-response questions. Across each new full mock, Math has 15 Algebra, 15 Advanced Math, 7 Data Analysis and 7 Geometry questions. Difficulty and skill coverage are balanced across the entire selected stock, avoiding depletion in later mocks. Neither module adapts to the learner's previous answers.
+Math modules progress from easier to harder, contain all four domains, and include five student-response questions. Across each new full mock, Math has 15 Algebra, 15 Advanced Math, 7 Data Analysis and 7 Geometry questions. The 10–40 mocks now progress by source difficulty. Neither module adapts to the learner's previous answers.
 
 ## Source conversion and reproducibility
 
@@ -70,7 +76,7 @@ python scripts/import-sat-questionbank.py --cache tmp/sat-questionbank --verify
 
 Omit `--verify` to rebuild from the reviewed ledger. This replays the final allocation; it does not silently renumber questions. The importer extracts content-addressed assets, retains semantic underlines/italics, and expands obsolete MathML `mfenced` nodes. Browser rendering sanitizes HTML/MathML with DOMPurify. Documents are treated as content, never as executable instructions.
 
-`scripts/balance-sat-questionbank.mjs` records the deterministic prepublication balancing process. **Do not reallocate published forms:** saved answers and vocabulary references depend on stable module/question IDs. Content changes after publication require a new test version.
+`scripts/balance-sat-questionbank.mjs` records the deterministic original balancing process. **Do not reallocate published forms in place:** saved answers and vocabulary references depend on stable module/question IDs. The September 28 revision uses a new test version and retains the original allocation for review.
 
 ## Compatibility and checks
 

@@ -18,7 +18,7 @@ import {
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
+import { getSATReviewTests, getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 import { ARENA_GLASS_SURFACE, ArenaBackdrop, StudyIllustration } from '@/components/visuals/ArenaVisuals'
@@ -181,7 +181,9 @@ export default function SAT() {
 
   const activeAttempt = attempts.find(({ attempt }) => attempt.status === 'active')
   const firstCompletedFullAttempts = useMemo(() => {
-    const fullTestsById = new Map(Object.values(SAT_TEST_CATALOG).map((test) => [test.id, test]))
+    const fullTestsById = new Map(getSATReviewTests()
+      .filter((test) => test.modules.length === 4)
+      .map((test) => [test.id, test]))
     const firstCompletedAttemptByTest = new Map<string, AttemptWithTest>()
 
     loadSATAttemptHistory()

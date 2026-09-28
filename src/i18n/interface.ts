@@ -87,6 +87,7 @@ export const russianInterface: Record<string, string> = {
   'You can leave either exam blank and update your scores later.': 'Любой экзамен можно оставить пустым и добавить баллы позже.',
   'Set scores later': 'Добавить баллы позже',
   'A target score must be at least your current score.': 'Целевой балл не может быть ниже текущего.',
+  'Enter IELTS scores in 0.5 steps (current 0–9, target 4–9) and SAT scores from 400 to 1600.': 'Укажите балл IELTS с шагом 0,5 (текущий 0–9, цель 4–9) и балл SAT от 400 до 1600.',
   'Set my goals': 'Указать цели',
   'Set your score goals to get started.': 'Укажите целевые баллы, чтобы начать.',
   'Open IELTS practice': 'Открыть практику IELTS',

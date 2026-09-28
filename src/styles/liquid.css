@@ -331,6 +331,16 @@ body { color: var(--liquid-ink); background: #f4f6f8; }
 .liquid-score-card-heading small { color: #768397; font-size: 11px; }
 .liquid-score-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .liquid-score-fields .liquid-form-field { margin: 14px 0 0; }
+.liquid-score-input { display: flex; min-height: 50px; overflow: hidden; border: 1px solid #d7dfe7; border-radius: 12px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.liquid-score-input:focus-within { border-color: #b73345; box-shadow: 0 0 0 3px #c530431a; }
+.liquid-score-input.is-invalid { border-color: #d44a59; }
+.liquid-score-input input { width: 100%; min-width: 0; min-height: 48px; flex: 1; border: 0; border-radius: 0; padding: 0 13px; background: transparent; color: #1e293b; font-size: 16px; font-weight: 700; outline: none; box-shadow: none; }
+.liquid-score-input input::placeholder { color: #8b98aa; font-size: 12px; font-weight: 500; }
+.liquid-score-controls { display: flex; flex: none; border-left: 1px solid #e1e7ef; }
+.liquid-score-controls button { display: grid; width: 37px; place-items: center; background: #f6f8fb; color: #a52a3c; }
+.liquid-score-controls button + button { border-left: 1px solid #e1e7ef; }
+.liquid-score-controls button:hover:not(:disabled) { background: #fff0f2; }
+.liquid-score-controls button:disabled { color: #adb7c5; cursor: default; }
 .liquid-score-note { color: #718096; font-size: 12px; }
 .liquid-onboarding-actions { display: flex; align-items: center; gap: 18px; }
 @media (max-width: 520px) { .liquid-score-fields { grid-template-columns: 1fr; gap: 0; }.liquid-onboarding-panel footer { align-items: flex-start; }.liquid-onboarding-actions { align-items: flex-end; flex-direction: column-reverse; gap: 9px; } }

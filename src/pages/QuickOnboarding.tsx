@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Camera, ChevronLeft, Target } from 'lucide-react'
+import { ArrowRight, Camera, ChevronLeft, Minus, Plus, Target } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import { fetchAccount, updateAccount, uploadAvatar } from '@/lib/profileApi'
@@ -14,10 +14,56 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import LanguageSelector from '@/components/layout/LanguageSelector'
 
 const nicknamePattern = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
-const ieltsScores = Array.from({ length: 19 }, (_, index) => index / 2)
-const satScores = Array.from({ length: 121 }, (_, index) => 400 + index * 10)
-
 type Exam = 'IELTS' | 'SAT'
+
+function scoreLimits(exam: Exam, target: boolean) {
+  return exam === 'IELTS' ? { min: target ? 4 : 0, max: 9, step: 0.5 } : { min: 400, max: 1600, step: 10 }
+}
+
+function parseScore(draft: string, exam: Exam, target: boolean): number | null {
+  const text = draft.trim().replace(',', '.')
+  if (!text) return null
+  const score = Number(text)
+  const { min, max } = scoreLimits(exam, target)
+  if (!Number.isFinite(score) || score < min || score > max) return NaN
+  if (exam === 'IELTS' ? !Number.isInteger(score * 2) : !Number.isInteger(score)) return NaN
+  return score
+}
+
+function ScoreInput({ exam, target, label, placeholder, value, onChange }: {
+  exam: Exam
+  target: boolean
+  label: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  const { min, max, step } = scoreLimits(exam, target)
+  const id = `${exam.toLowerCase()}-${target ? 'target' : 'current'}-score`
+  const parsed = parseScore(value, exam, target)
+  const nudge = (direction: -1 | 1) => {
+    const base = parsed !== null && !Number.isNaN(parsed) ? parsed : min - (direction === 1 ? step : 0)
+    const next = Math.min(max, Math.max(min, Math.round((base + direction * step) * 10) / 10))
+    onChange(String(next))
+  }
+
+  return <div className="liquid-form-field">
+    <label htmlFor={id}>{label}</label>
+    <div className={`liquid-score-input ${parsed !== null && Number.isNaN(parsed) ? 'is-invalid' : ''}`}>
+      <input id={id} type="text" inputMode={exam === 'IELTS' ? 'decimal' : 'numeric'} autoComplete="off" placeholder={placeholder} value={value} aria-invalid={parsed !== null && Number.isNaN(parsed)} onKeyDown={event => {
+        if (event.key === 'ArrowUp' && parsed !== max) { event.preventDefault(); nudge(1) }
+        if (event.key === 'ArrowDown' && parsed !== null && parsed !== min) { event.preventDefault(); nudge(-1) }
+      }} onChange={event => {
+        const next = event.target.value.replace(',', '.')
+        if (exam === 'IELTS' ? /^\d{0,2}(?:\.\d{0,1})?$/.test(next) : /^\d{0,4}$/.test(next)) onChange(next)
+      }} />
+      <div className="liquid-score-controls">
+        <button type="button" aria-label={`Decrease ${exam} ${target ? 'target' : 'current'} score`} disabled={parsed === null || parsed === min} onClick={() => nudge(-1)}><Minus size={16} /></button>
+        <button type="button" aria-label={`Increase ${exam} ${target ? 'target' : 'current'} score`} disabled={parsed === max} onClick={() => nudge(1)}><Plus size={16} /></button>
+      </div>
+    </div>
+  </div>
+}
 
 export default function QuickOnboarding() {
   const { c } = useCopy()
@@ -30,10 +76,10 @@ export default function QuickOnboarding() {
   const [step, setStep] = useState(1)
   const [nickname, setNickname] = useState(user?.nickname ?? '')
   const [avatar, setAvatar] = useState(user?.avatarUrl ?? null)
-  const [currentIelts, setCurrentIelts] = useState<number | null>(previous?.currentIeltsScore ?? null)
-  const [targetIelts, setTargetIelts] = useState<number | null>(previous?.targetIeltsScore ?? null)
-  const [currentSat, setCurrentSat] = useState<number | null>(previous?.currentSatScore ?? null)
-  const [targetSat, setTargetSat] = useState<number | null>(previous?.targetSatScore ?? null)
+  const [currentIelts, setCurrentIelts] = useState(previous?.currentIeltsScore?.toString() ?? '')
+  const [targetIelts, setTargetIelts] = useState(previous?.targetIeltsScore?.toString() ?? '')
+  const [currentSat, setCurrentSat] = useState(previous?.currentSatScore?.toString() ?? '')
+  const [targetSat, setTargetSat] = useState(previous?.targetSatScore?.toString() ?? '')
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -51,10 +97,10 @@ export default function QuickOnboarding() {
       if (cancelled) return
       setNickname(savedNickname ?? '')
       setAvatar(avatarUrl)
-      setCurrentIelts(profile.currentIeltsScore)
-      setTargetIelts(profile.targetIeltsScore)
-      setCurrentSat(profile.currentSatScore)
-      setTargetSat(profile.targetSatScore)
+      setCurrentIelts(profile.currentIeltsScore?.toString() ?? '')
+      setTargetIelts(profile.targetIeltsScore?.toString() ?? '')
+      setCurrentSat(profile.currentSatScore?.toString() ?? '')
+      setTargetSat(profile.targetSatScore?.toString() ?? '')
     }).catch(() => { if (!cancelled) { setLoadFailed(true); setError('Unable to load your profile. Please try again.') } })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -88,15 +134,23 @@ export default function QuickOnboarding() {
 
   async function finish(skipScores = false) {
     if (saving || loading || uploading) return
-    if (!skipScores && ((currentIelts !== null && targetIelts !== null && currentIelts > targetIelts)
-      || (currentSat !== null && targetSat !== null && currentSat > targetSat))) {
+    const currentIeltsScore = skipScores ? null : parseScore(currentIelts, 'IELTS', false)
+    const targetIeltsScore = skipScores ? null : parseScore(targetIelts, 'IELTS', true)
+    const currentSatScore = skipScores ? null : parseScore(currentSat, 'SAT', false)
+    const targetSatScore = skipScores ? null : parseScore(targetSat, 'SAT', true)
+    if ([currentIeltsScore, targetIeltsScore, currentSatScore, targetSatScore].some(score => score !== null && Number.isNaN(score))) {
+      setError(c('Enter IELTS scores in 0.5 steps (current 0–9, target 4–9) and SAT scores from 400 to 1600.'))
+      return
+    }
+    if ((currentIeltsScore !== null && targetIeltsScore !== null && currentIeltsScore > targetIeltsScore)
+      || (currentSatScore !== null && targetSatScore !== null && currentSatScore > targetSatScore)) {
       setError(c('A target score must be at least your current score.'))
       return
     }
     setSaving(true)
     setError('')
-    const ieltsGoal = skipScores ? null : targetIelts
-    const satGoal = skipScores ? null : targetSat
+    const ieltsGoal = targetIeltsScore
+    const satGoal = targetSatScore
     const targetExam = ieltsGoal !== null && satGoal !== null ? 'BOTH' : ieltsGoal !== null ? 'IELTS' : satGoal !== null ? 'SAT' : null
     try {
       const savedNickname = nickname.trim()
@@ -108,9 +162,9 @@ export default function QuickOnboarding() {
         onboardingCompletedAt: new Date().toISOString(),
         targetExam,
         targetScore: targetExam === 'IELTS' ? `IELTS ${ieltsGoal}` : targetExam === 'SAT' ? `SAT ${satGoal}` : null,
-        currentIeltsScore: skipScores ? null : currentIelts,
+        currentIeltsScore,
         targetIeltsScore: ieltsGoal,
-        currentSatScore: skipScores ? null : currentSat,
+        currentSatScore,
         targetSatScore: satGoal,
       })
       const names = (user?.fullName || 'Learner').trim().split(/\s+/)
@@ -121,9 +175,9 @@ export default function QuickOnboarding() {
         targetExam: targetExam ?? 'IELTS',
         daysToExam: previous?.daysToExam || 90,
         dailyHours: previous?.dailyHours || 1,
-        currentIeltsScore: skipScores ? undefined : currentIelts ?? undefined,
+        currentIeltsScore: currentIeltsScore ?? undefined,
         targetIeltsScore: ieltsGoal ?? undefined,
-        currentSatScore: skipScores ? undefined : currentSat ?? undefined,
+        currentSatScore: currentSatScore ?? undefined,
         targetSatScore: satGoal ?? undefined,
         createdAt: previous?.createdAt || new Date().toISOString(),
       }, user?.id)
@@ -137,13 +191,12 @@ export default function QuickOnboarding() {
     }
   }
 
-  const scoreCard = (exam: Exam, current: number | null, target: number | null, setCurrent: (value: number | null) => void, setTarget: (value: number | null) => void) => {
-    const values = exam === 'IELTS' ? ieltsScores : satScores
+  const scoreCard = (exam: Exam, current: string, target: string, setCurrent: (value: string) => void, setTarget: (value: string) => void) => {
     return <section className="liquid-score-card" aria-label={`${exam} scores`} key={exam}>
       <div className="liquid-score-card-heading"><span><Target size={19} /></span><div><strong>{exam}</strong><small>{c(exam === 'IELTS' ? 'Band score' : 'Total score')}</small></div></div>
       <div className="liquid-score-fields">
-        <label className="liquid-form-field">{c('Current score')}<select value={current ?? ''} onChange={event => setCurrent(event.target.value === '' ? null : Number(event.target.value))}><option value="">{c('Not sure yet')}</option>{values.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="liquid-form-field">{c('Target score')}<select value={target ?? ''} onChange={event => setTarget(event.target.value === '' ? null : Number(event.target.value))}><option value="">{c('Set later')}</option>{values.filter(value => exam === 'SAT' || value >= 4).map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+        <ScoreInput exam={exam} target={false} label={c('Current score')} placeholder={c('Not sure yet')} value={current} onChange={value => { setCurrent(value); setError('') }} />
+        <ScoreInput exam={exam} target label={c('Target score')} placeholder={c('Set later')} value={target} onChange={value => { setTarget(value); setError('') }} />
       </div>
     </section>
   }

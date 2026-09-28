@@ -248,6 +248,7 @@
   "You can leave either exam blank and update your scores later.": "Istalgan imtihonni bo‘sh qoldirib, ballarni keyin yangilashingiz mumkin.",
   "Set scores later": "Ballarni keyin kiritish",
   "A target score must be at least your current score.": "Maqsad balli hozirgi balldan kam bo‘lmasligi kerak.",
+  "Enter IELTS scores in 0.5 steps (current 0–9, target 4–9) and SAT scores from 400 to 1600.": "IELTS ballini 0,5 qadamda (hozirgi 0–9, maqsad 4–9), SAT ballini 400 dan 1600 gacha kiriting.",
   "Set my goals": "Maqsadlarni belgilash",
   "Set your score goals to get started.": "Boshlash uchun maqsad ballaringizni belgilang.",
   "Open IELTS practice": "IELTS mashqlarini ochish",

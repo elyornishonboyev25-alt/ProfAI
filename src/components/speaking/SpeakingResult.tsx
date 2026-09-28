@@ -58,7 +58,7 @@ export default function SpeakingResult({
   const stats = evaluation.stats
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-10 sm:px-6">
+    <div className="speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6">
       <button onClick={onExit} className="premium-back-btn mb-4">
         <ArrowLeft className="h-3.5 w-3.5" /> {reviewMode ? 'Close review' : 'Back to Speaking Hub'}
       </button>
@@ -75,10 +75,10 @@ export default function SpeakingResult({
         <div className="mt-2 flex items-center justify-center">
           <BandGauge band={evaluation.overallBand} size={150} />
         </div>
-        <p className="mt-1 text-lg font-black text-slate-900">{bandWord(evaluation.overallBand)} performance</p>
+        <p className="mt-1 text-lg font-black text-slate-900">{evaluation.overallBand === 0 ? 'No assessable speech captured' : `${bandWord(evaluation.overallBand)} performance`}</p>
         {evaluation.source === 'offline' ? (
           <span className="mt-2 inline-block rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
-            Offline estimate — try again for full AI grading
+            {stats.wordCount === 0 ? 'Check your microphone and try again' : 'Offline estimate — try again for full AI grading'}
           </span>
         ) : (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
@@ -87,7 +87,7 @@ export default function SpeakingResult({
         )}
       </motion.div>
 
-      <p className="mt-3 text-center text-xs leading-5 text-slate-500">Estimated practice band based on the transcript. Pronunciation is approximate because audio is not analyzed.</p>
+      <p className="mt-3 text-center text-xs leading-5 text-slate-500">IELTS-style practice estimate from your transcribed answers. Pronunciation needs audio or examiner review; this is not an official IELTS score.</p>
 
       {/* Criteria gauges */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -160,7 +160,7 @@ export default function SpeakingResult({
       ) : null}
 
       {transcript?.length ? (
-        <details className="surface-card mt-5 p-5">
+        <details className="surface-card mt-5 p-5" open={reviewMode}>
           <summary className="flex cursor-pointer items-center gap-2 text-base font-black text-slate-900"><BookOpen className="h-4 w-4 text-red-600" /> Review your answers</summary>
           <div className="mt-4 space-y-3">
             {transcript.filter((turn) => turn.role === 'candidate').map((turn, index) => {
@@ -168,7 +168,7 @@ export default function SpeakingResult({
               return <div key={`${index}-${turn.text.slice(0, 12)}`} className="rounded-2xl border border-red-100 bg-white/80 p-4 text-sm">
                 <p className="text-xs font-black uppercase tracking-wide text-red-600">Question {index + 1}</p>
                 <p className="mt-1 font-semibold leading-6 text-slate-800">{question?.text || 'Examiner question'}</p>
-                <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text}</p>
+                <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text || 'No clear speech captured for this question.'}</p>
               </div>
             })}
           </div>

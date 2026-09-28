@@ -205,7 +205,7 @@ RESPONSE FORMAT (strict JSON, no markdown):
 function clampBand(value: unknown): number {
   const num = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(num)) return 5
-  return Math.round(Math.max(2, Math.min(9, num)) * 2) / 2
+  return Math.round(Math.max(0, Math.min(9, num)) * 2) / 2
 }
 
 export type EvaluateParams = {
@@ -244,10 +244,13 @@ Grade the CANDIDATE's spoken English now. Return ONLY valid JSON.`
       !Array.isArray(parsed.improvementPriorities) || !parsed.improvementPriorities.length) {
       throw new Error('Incomplete Speaking evaluation')
     }
-    const fluencyBand = clampBand(parsed.fluencyBand)
-    const lexicalBand = clampBand(parsed.lexicalBand)
-    const grammarBand = clampBand(parsed.grammarBand)
-    const pronunciationBand = clampBand(parsed.pronunciationBand)
+    const answerCount = params.history.filter((turn) => turn.role === 'candidate').length
+    const wordsPerAnswer = params.stats.wordCount / Math.max(1, answerCount)
+    const ceiling = params.stats.wordCount < 5 ? 2 : params.stats.wordCount < 20 || (answerCount >= 3 && wordsPerAnswer < 5) ? 4.5 : 9
+    const fluencyBand = Math.min(ceiling, clampBand(parsed.fluencyBand))
+    const lexicalBand = Math.min(ceiling, clampBand(parsed.lexicalBand))
+    const grammarBand = Math.min(ceiling, clampBand(parsed.grammarBand))
+    const pronunciationBand = Math.min(ceiling, clampBand(parsed.pronunciationBand))
     const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / 4)
 
     return {
@@ -414,6 +417,15 @@ Analyse and return ONLY valid JSON.`
 function offlineEvaluation(params: EvaluateParams): SpeakingEvaluation {
   const bands = estimateBandsFromStats(params.stats)
   const { wordCount, fillerCount, wordsPerMinute } = params.stats
+  if (wordCount === 0) return {
+    ...bands,
+    summary: 'No clear spoken answer was captured, so there is not enough evidence to assess this attempt. Check your microphone and try again.',
+    strengths: [],
+    weaknesses: ['No assessable speech was captured.'],
+    improvementPriorities: [{ area: 'Fluency & Coherence', target: 2, action: 'Check the microphone, then give a complete answer to each question.' }],
+    stats: params.stats,
+    source: 'offline',
+  }
   const weaknesses: string[] = []
   if (fillerCount > 4) weaknesses.push(`Reduce filler words — you used ${fillerCount}. Pause silently instead.`)
   if (wordCount < 60) weaknesses.push('Develop answers further — extend each idea with a reason and an example.')

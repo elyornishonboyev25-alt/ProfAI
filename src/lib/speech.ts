@@ -322,7 +322,7 @@ export function pickVoiceForLang(lang: SpeechLang): SpeechSynthesisVoice | null 
 }
 
 /** Prefer a natural English (UK first) voice for the examiner. */
-export function getExaminerVoice(): SpeechSynthesisVoice | null {
+export function getExaminerVoice(profile: 'male' | 'female' = 'female'): SpeechSynthesisVoice | null {
   const voices = cachedVoices.length ? cachedVoices : loadVoices()
   if (voices.length === 0) return null
   const english = voices.filter((voice) => voice.lang?.toLowerCase().startsWith('en'))
@@ -332,7 +332,10 @@ export function getExaminerVoice(): SpeechSynthesisVoice | null {
     const locale = voice.lang.toLowerCase()
     let rating = locale.startsWith('en-gb') ? 30 : locale.startsWith('en-us') ? 10 : 0
     if (name.includes('natural') || name.includes('neural') || name.includes('online')) rating += 50
-    if (['sonia', 'ryan', 'libby', 'hazel'].some((candidate) => name.includes(candidate))) rating += 25
+    const preferredNames = profile === 'male'
+      ? ['ryan', 'george', 'oliver', 'daniel', 'james', 'david', 'guy']
+      : ['sonia', 'libby', 'hazel', 'susan', 'aria', 'jenny', 'zira']
+    if (preferredNames.some((candidate) => name.includes(candidate))) rating += 100
     if (name.includes('google uk english')) rating += 15
     if (voice.localService === false) rating += 8
     return rating

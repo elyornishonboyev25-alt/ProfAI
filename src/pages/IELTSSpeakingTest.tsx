@@ -772,7 +772,7 @@ function FullMockRunner({
     part3: mock.parts.part3.questions.map((q) => q.q),
   }
   return (
-    <div className="ielts-speaking-workspace min-h-screen py-4">
+    <div className="ielts-speaking-workspace ielts-speaking-live-workspace py-4">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
         modeLabel={mock.title}

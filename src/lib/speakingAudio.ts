@@ -7,10 +7,12 @@ function unavailable(error: unknown): boolean {
   return error instanceof ApiError && [401, 403, 503].includes(error.status)
 }
 
-export async function examinerAudio(text: string, signal?: AbortSignal): Promise<string> {
+export type ExaminerVoice = 'marin' | 'cedar'
+
+export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal): Promise<string> {
   if (Date.now() < voiceRetryAfter) throw new Error('Natural examiner voice is temporarily unavailable.')
   try {
-    const response = await apiClient.post<{ audioBase64: string }>('/ai/speaking-audio/voice', { text }, { signal })
+    const response = await apiClient.post<{ audioBase64: string }>('/ai/speaking-audio/voice', { text, voice }, { signal })
     const bytes = Uint8Array.from(atob(response.audioBase64), (character) => character.charCodeAt(0))
     return URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }))
   } catch (error) {

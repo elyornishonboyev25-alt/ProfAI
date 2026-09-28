@@ -7,14 +7,17 @@ const router = Router()
 const origin = env.OPENAI_API_BASE.replace(/\/$/, '')
 
 router.post('/voice', asyncHandler(async (req, res) => {
-  const { text } = z.object({ text: z.string().trim().min(1).max(1500) }).strict().parse(req.body)
+  const { text, voice } = z.object({
+    text: z.string().trim().min(1).max(1500),
+    voice: z.enum(['marin', 'cedar']).default('marin'),
+  }).strict().parse(req.body)
   if (!env.OPENAI_API_KEY) return res.status(503).json({ message: 'Examiner voice is unavailable.' })
   const response = await fetch(`${origin}/audio/speech`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o-mini-tts', voice: 'marin', response_format: 'mp3', input: text,
-      instructions: 'Use a clear, natural British English accent. Sound like a calm, experienced IELTS Speaking examiner in a quiet room: professional, attentive, and conversational, with measured pacing and realistic pauses. Ask questions with natural intonation. No theatrical emphasis, no preamble, and no added words.',
+      model: 'gpt-4o-mini-tts', voice, response_format: 'mp3', input: text,
+      instructions: `Use a clear, natural British English accent and a ${voice === 'cedar' ? 'masculine' : 'feminine'} voice. Sound like a calm, experienced IELTS Speaking examiner in a quiet room: professional, attentive, and conversational, with measured pacing and realistic pauses. Ask questions with natural intonation. No theatrical emphasis, no preamble, and no added words.`,
     }),
     signal: AbortSignal.timeout(Math.min(25_000, 8_000 + text.length * 45)),
   })

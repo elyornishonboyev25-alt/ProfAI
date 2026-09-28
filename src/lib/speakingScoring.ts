@@ -93,7 +93,7 @@ export function mergeStats(parts: SpeechStats[]): SpeechStats {
 }
 
 function clampBand(value: number): number {
-  return Math.round(Math.max(2, Math.min(9, value)) * 2) / 2
+  return Math.round(Math.max(0, Math.min(9, value)) * 2) / 2
 }
 
 export type FallbackBands = {
@@ -109,6 +109,7 @@ export type FallbackBands = {
 // penalising heavy filler use. Real grading still comes from the AI when available.
 export function estimateBandsFromStats(stats: SpeechStats): FallbackBands {
   const { wordCount, typeTokenRatio, fillerCount, wordsPerMinute } = stats
+  if (wordCount === 0) return { fluencyBand: 0, lexicalBand: 0, grammarBand: 0, pronunciationBand: 0, overallBand: 0 }
 
   // Fluency: enough words at a natural pace, not too many fillers.
   const fillerRate = wordCount ? fillerCount / wordCount : 1
@@ -141,6 +142,16 @@ export function estimateBandsFromStats(stats: SpeechStats): FallbackBands {
   const grammarBand = clampBand(grammar)
   const pronunciationBand = pronunciation
   const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / 4)
+
+  if (wordCount < 20) {
+    const ceiling = wordCount < 5 ? 2 : 4.5
+    const limited = (band: number) => Math.min(ceiling, band)
+    return {
+      fluencyBand: limited(fluencyBand), lexicalBand: limited(lexicalBand),
+      grammarBand: limited(grammarBand), pronunciationBand: limited(pronunciationBand),
+      overallBand: limited(overallBand),
+    }
+  }
 
   return { fluencyBand, lexicalBand, grammarBand, pronunciationBand, overallBand }
 }

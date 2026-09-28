@@ -236,10 +236,11 @@ function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill
 export default function Profile() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const userId = user?.id
   const isGuestPreview = !user
   const { data: fetchedData, loading, error, refetch } = useAsyncData<ProfileOverview | null>(
-    () => (user ? apiClient.get('/profile/overview') : Promise.resolve(null)),
-    [user],
+    () => (userId ? apiClient.get('/profile/overview') : Promise.resolve(null)),
+    [userId],
   )
   // Always resolve to a usable overview so the page never goes blank.
   const fallbackData = fetchedData ?? buildProfileFallback(user)

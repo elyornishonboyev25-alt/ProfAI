@@ -90,6 +90,7 @@ function podiumTheme(rank: number) {
 export default function Leaderboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const userId = user?.id
   const { minimalMotion } = useMotionPreferences()
 
   const [loading, setLoading] = useState(true)
@@ -102,7 +103,7 @@ export default function Leaderboard() {
     let active = true
 
     const fetchData = async () => {
-      if (!user) {
+      if (!userId) {
         setLoading(false)
         setData(null)
         setError('Sign in required to view the leaderboard.')
@@ -116,8 +117,8 @@ export default function Leaderboard() {
         const payload = await apiClient.get<LeaderboardResponse>(`/leaderboard?period=${period}`, { auth: true })
         if (!active) return
         setData(payload)
-        void syncSavedSATAttemptResults(user.id).then((sync) => {
-          if (!active || sync.failed || useAuthStore.getState().user?.id !== user.id) return
+        void syncSavedSATAttemptResults(userId).then((sync) => {
+          if (!active || sync.failed || useAuthStore.getState().user?.id !== userId) return
           void apiClient.get<LeaderboardResponse>(`/leaderboard?period=${period}`, { auth: true })
             .then((latest) => { if (active) setData(latest) })
             .catch(() => {})
@@ -134,7 +135,7 @@ export default function Leaderboard() {
     return () => {
       active = false
     }
-  }, [user, reloadKey, period])
+  }, [userId, reloadKey, period])
 
   const rows = useMemo(() => data?.rows ?? [], [data])
   const currentUserRow = useMemo(() => rows.find((row) => row.isCurrentUser) ?? null, [rows])

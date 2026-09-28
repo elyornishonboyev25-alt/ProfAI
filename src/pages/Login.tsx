@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { useCopy } from '@/i18n/interface'
 import { apiClient, ApiError } from '@/lib/apiClient'
@@ -120,10 +120,11 @@ export default function Login() {
         transition={{ duration: minimalMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="auth-cinema-shell"
       >
-        <AuthShowcasePanel />
+        <AuthShowcasePanel mode={createMode ? 'register' : 'login'} />
 
         <section className="auth-cinema-form-side" aria-label={createMode ? 'Create account' : 'Sign in'}>
           <div className="auth-cinema-form-inner">
+            <Link to="/" className="auth-arena-back"><ArrowLeft size={15} /> {c('Back to home')}</Link>
             <div className="auth-cinema-lockup">
               <span className="auth-cinema-lockup-icon"><BrandMark size={43} /></span>
               <div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div>

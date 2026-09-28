@@ -1,428 +1,148 @@
-import { useEffect, useState, type ComponentType, type PointerEvent, type ReactNode } from 'react'
+import { useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
 import {
-  ArrowRight,
-  BadgeCheck,
-  BookOpenCheck,
-  Bot,
-  CalendarCheck2,
-  Check,
-  ChevronDown,
-  ClipboardCheck,
-  Globe2,
-  GraduationCap,
-  Headphones,
-  Languages,
-  Mail,
-  Menu,
-  Route,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  X,
+  ArrowRight, ArrowUpRight, BookOpen, Calculator, Check, ChevronDown,
+  CirclePlay, GraduationCap, Headphones, Menu, Mic2, PenLine, ShieldCheck,
+  Sparkles, Target, X,
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import LanguageSelector from '@/components/layout/LanguageSelector'
+import { StudyIllustration } from '@/components/visuals/ArenaVisuals'
 import { isPublicFeatureEnabled } from '@/config/featureFlags'
+import '@/styles/landing-arena.css'
 
-const EASE = [0.22, 1, 0.36, 1] as const
-const SUPPORT_EMAIL = 'support@profai.uz'
 const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
-
-const NAV_LINKS = [
-  { label: 'Platform', target: 'platform' },
-  { label: 'Journey', target: 'journey' },
-  { label: 'Pricing', target: 'pricing' },
-  { label: 'FAQ', target: 'faq' },
+const SUPPORT_EMAIL = 'support@profai.uz'
+const navItems = [
+  { label: 'IELTS & SAT', id: 'exams' },
+  { label: 'How it works', id: 'how-it-works' },
+  { label: 'Plans', id: 'plans' },
+  { label: 'FAQ', id: 'faq' },
 ] as const
 
-const UNIVERSITY_SIGNALS = [
-  { name: 'MIT', meta: 'Cambridge · US', className: 'landing-university-mit', delay: 0 },
-  { name: 'Oxford', meta: 'Oxford · UK', className: 'landing-university-oxford', delay: 0.18 },
-  { name: 'Harvard', meta: 'Cambridge · US', className: 'landing-university-harvard', delay: 0.34 },
-  { name: 'Stanford', meta: 'California · US', className: 'landing-university-stanford', delay: 0.12 },
-  { name: 'Columbia', meta: 'New York · US', className: 'landing-university-columbia', delay: 0.27 },
-  { name: 'Cambridge', meta: 'Cambridge · UK', className: 'landing-university-cambridge', delay: 0.42 },
-] as const
-
-type IconType = ComponentType<{ className?: string }>
-type Tone = 'red' | 'blue' | 'ink'
-
-type Pillar = {
-  eyebrow: string
-  title: string
-  body: string
-  icon: IconType
-  route: string
-  cta: string
-  tone: Tone
-  items: string[]
-}
-
-const PILLARS: Pillar[] = [
-  {
-    eyebrow: 'Test preparation',
-    title: 'Build the scores your plan requires.',
-    body: 'Prepare for IELTS Academic or General Training and the Digital SAT through focused practice, full simulations and review.',
-    icon: Target,
-    route: '/test-preparation',
-    cta: 'Explore test preparation',
-    tone: 'red',
-    items: ['IELTS across all four skills', 'Digital SAT Math and Reading & Writing', 'Practice, mocks and progress review'],
-  },
-  {
-    eyebrow: 'Academic skills',
-    title: 'Study in English with confidence.',
-    body: 'Strengthen the reading, listening, vocabulary, writing and speaking habits that support both exams and university study.',
-    icon: Languages,
-    route: '/academic-skills',
-    cta: 'Explore academic skills',
-    tone: 'blue',
-    items: ['Vocabulary and reading studios', 'Listening and shadowing practice', 'Writing and speaking labs'],
-  },
-  {
-    eyebrow: 'University journey',
-    title: 'Turn preparation into an application plan.',
-    body: 'Research universities, organize next steps and keep preparation connected to the applications you want to build.',
-    icon: GraduationCap,
-    route: '/admission',
-    cta: 'Explore university planning',
-    tone: 'ink',
-    items: ['University research', 'Application guidance', 'A roadmap centered on your goals'],
-  },
+const ieltsSkills = [
+  { label: 'Listening', icon: Headphones, variant: 'ielts-listening' as const },
+  { label: 'Reading', icon: BookOpen, variant: 'ielts-reading' as const },
+  { label: 'Writing', icon: PenLine, variant: 'ielts-writing' as const },
+  { label: 'Speaking', icon: Mic2, variant: 'ielts-speaking' as const },
 ]
 
-const JOURNEY_STEPS = [
-  { number: '01', title: 'Set your direction', body: 'Capture your target degree, destinations, timeline, budget and current academic profile.', icon: Route },
-  { number: '02', title: 'Build your readiness', body: 'Prepare for required exams while strengthening the English skills behind university study.', icon: BookOpenCheck },
-  { number: '03', title: 'Research your options', body: 'Compare universities and keep promising choices together as your plans become clearer.', icon: Search },
-  { number: '04', title: 'Plan every next step', body: 'Move from today’s study task toward future application work inside one journey view.', icon: CalendarCheck2 },
-] as const
+const faqs = [
+  { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
+  { question: 'Is there a free plan?', answer: 'Yes. You can create a free account and begin practicing. The plans page shows current Pro access and terms.' },
+  { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
+  { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
+]
 
-const PROOF_POINTS = [
-  {
-    title: 'Complete learning workflows',
-    body: 'Practice, timed tests, results and review live in connected exam arenas instead of isolated question pages.',
-    icon: ClipboardCheck,
-    action: 'Open test preparation',
-    route: '/test-preparation',
-  },
-  {
-    title: 'Guidance grounded in your account',
-    body: 'ProfAI Coach can use your learning context to explain priorities and turn a goal into clear study actions.',
-    icon: Bot,
-    action: 'Meet the AI Coach',
-    route: '/register',
-  },
-  {
-    title: 'Privacy choices built in',
-    body: 'Your AI conversation stays account-private, and optional analytics only starts after your permission.',
-    icon: ShieldCheck,
-    action: 'Start with a private account',
-    route: '/register',
-  },
-] as const
-
-const FREE_FEATURES = [
-  'IELTS and Digital SAT practice',
-  'Results and answer review',
-  'University research and a shortlist',
-  'A starting point for your application plan',
-] as const
-
-const PRO_FEATURES = [
-  'More room for focused practice',
-  'Expanded feedback and planning tools',
-  'More ways to organize university choices',
-  'Final features and terms shown before purchase',
-] as const
-
-const FAQS = [
-  {
-    question: 'Is ProfAI only for IELTS preparation?',
-    answer: 'No. IELTS and the Digital SAT are important parts of ProfAI, but the platform also connects academic English, university research and application planning in one student journey.',
-  },
-  {
-    question: 'Who is the first version designed for?',
-    answer: 'ProfAI is designed for students preparing for undergraduate study. The interface starts in English, and you can also select Russian or Uzbek. Exam materials may remain in their source language.',
-  },
-  {
-    question: 'Does ProfAI submit applications for students?',
-    answer: 'No. ProfAI helps you prepare, research and organize your work. You remain responsible for reviewing requirements and submitting every application through the university’s official process.',
-  },
-  {
-    question: 'Does IELTS General Training remain available?',
-    answer: 'Yes. ProfAI supports both IELTS Academic and IELTS General Training preparation alongside the Digital SAT.',
-  },
-  {
-    question: 'Can I rely on university requirements without checking?',
-    answer: 'No database should replace an official university page. Requirements and deadlines can change, so always confirm final details with the university.',
-  },
-  {
-    question: 'Is Pro checkout available now?',
-    answer: 'Check the plans page for current availability and terms. You can start with a free account.',
-  },
-] as const
-
-function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+function SectionIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+  return <div className="landing-arena-section-intro">
+    <span className="landing-arena-eyebrow"><Sparkles size={14} /> {eyebrow}</span>
+    <h2>{title}</h2>
+    <p>{description}</p>
+  </div>
 }
 
-function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  const reduceMotion = useReducedMotion()
-  return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-8% 0px' }}
-      transition={{ duration: reduceMotion ? 0 : 0.62, delay, ease: EASE }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
+function ArenaPreview() {
+  const [track, setTrack] = useState<'ielts' | 'sat'>('ielts')
+  const reducedMotion = useReducedMotion()
+  const isIelts = track === 'ielts'
 
-function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
-  return (
-    <div className="mx-auto max-w-3xl text-center">
-      <span className="landing-kicker">{eyebrow}</span>
-      <h2 className="mt-5 text-3xl font-black leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[3.5rem]">{title}</h2>
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">{body}</p>
+  return <div className="landing-arena-preview" aria-label="IELTS and SAT workspace preview">
+    <div className="landing-arena-preview-top">
+      <div className="landing-arena-preview-brand"><span className="landing-arena-preview-brand-icon"><BrandMark size={28} /></span><span>ProfAI <b>workspace</b></span></div>
+      <span className="landing-arena-preview-live"><i /> YOUR PREPARATION SPACE</span>
     </div>
-  )
-}
-
-function AnimatedHeroTitle() {
-  const reduceMotion = useReducedMotion()
-  const lines = [
-    { text: 'Your path to', className: '' },
-    { text: 'university,', className: '' },
-    { text: 'connected.', className: 'landing-hero-accent text-red-500' },
-  ]
-
-  return (
-    <h1 className="mx-auto mt-7 max-w-3xl text-[2.75rem] font-black leading-[0.94] tracking-[-0.06em] sm:text-[4.6rem] lg:mx-0 lg:text-[5.25rem]">
-      {lines.map((line, index) => (
-        <span key={line.text} className="block overflow-hidden pb-[0.08em]">
-          <motion.span
-            className={`block w-fit mx-auto lg:mx-0 ${line.className}`}
-            initial={reduceMotion ? false : { y: '112%', rotate: 1.5 }}
-            animate={{ y: '0%', rotate: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.78, delay: 0.05 + index * 0.09, ease: EASE }}
-          >
-            {line.text}
-          </motion.span>
-        </span>
-      ))}
-    </h1>
-  )
-}
-
-function JourneyPreview() {
-  const reduceMotion = useReducedMotion()
-  const pointerX = useMotionValue(0)
-  const pointerY = useMotionValue(0)
-  const springX = useSpring(pointerX, { stiffness: 130, damping: 22, mass: 0.65 })
-  const springY = useSpring(pointerY, { stiffness: 130, damping: 22, mass: 0.65 })
-  const rotateY = useTransform(springX, [-0.5, 0.5], [-3.5, 3.5])
-  const rotateX = useTransform(springY, [-0.5, 0.5], [3, -3])
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (reduceMotion || event.pointerType === 'touch') return
-    const bounds = event.currentTarget.getBoundingClientRect()
-    pointerX.set((event.clientX - bounds.left) / bounds.width - 0.5)
-    pointerY.set((event.clientY - bounds.top) / bounds.height - 0.5)
-  }
-
-  const resetPointer = () => {
-    pointerX.set(0)
-    pointerY.set(0)
-  }
-
-  return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 24 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.78, delay: 0.16, ease: EASE }}
-      className="landing-preview-stage relative mx-auto w-full max-w-[620px]"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={resetPointer}
-    >
-      <motion.div className="landing-preview-tilt" style={{ rotateX, rotateY, transformPerspective: 1200 }}>
-        <div className="relative overflow-hidden rounded-[2.2rem] border border-white bg-white/90 p-4 shadow-[0_38px_90px_rgba(31,48,87,.17)] sm:p-6">
-          <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-blue-200/50 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-rose-200/50 blur-3xl" />
-          <div className="relative flex items-center justify-between border-b border-slate-100 pb-4"><div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white"><GraduationCap size={21} /></span><div><strong className="block text-sm font-black text-slate-950">Your journey workspace</strong><small className="text-[11px] font-semibold text-slate-500">A preview of what connects here</small></div></div><span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> START HERE</span></div>
-          <div className="relative mt-5 rounded-[1.5rem] bg-[linear-gradient(130deg,#132046,#234ca5)] p-6 text-white sm:p-8"><div className="absolute right-0 top-0 h-36 w-36 rounded-full border border-white/15 translate-x-8 -translate-y-8" /><p className="text-[10px] font-black uppercase tracking-[.2em] text-blue-200">One connected plan</p><h3 className="relative mt-3 max-w-xs text-3xl font-black leading-[1.1] tracking-[-.05em] sm:text-4xl">From your first practice to your next application.</h3><div className="relative mt-7 flex items-center gap-2">{['Prepare', 'Improve', 'Explore', 'Apply'].map((step, index) => <div key={step} className="min-w-0 flex-1"><div className={`h-1.5 rounded-full ${index === 0 ? 'bg-rose-400' : 'bg-white/25'}`} /><span className="mt-2 block text-[9px] font-black uppercase tracking-[.1em] text-white/75">{step}</span></div>)}</div></div>
-          <div className="relative mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-[1.3rem] border border-rose-100 bg-rose-50/75 p-4"><Headphones className="h-6 w-6 text-rose-600" /><p className="mt-5 text-xs font-black uppercase tracking-[.14em] text-rose-600">Test preparation</p><strong className="mt-1 block text-lg font-black text-slate-950">IELTS + Digital SAT</strong><p className="mt-1 text-xs text-slate-600">Practice, results and review.</p></div><div className="rounded-[1.3rem] border border-blue-100 bg-blue-50/75 p-4"><GraduationCap className="h-6 w-6 text-blue-600" /><p className="mt-5 text-xs font-black uppercase tracking-[.14em] text-blue-600">University research</p><strong className="mt-1 block text-lg font-black text-slate-950">Find your direction</strong><p className="mt-1 text-xs text-slate-600">Explore options with a clear plan.</p></div></div>
-          <div className="relative mt-4 flex items-center justify-between rounded-[1.15rem] border border-slate-100 bg-white p-4"><div><p className="text-[10px] font-black uppercase tracking-[.15em] text-slate-400">Explore your options</p><div className="mt-2 flex items-center gap-2">{UNIVERSITY_SIGNALS.slice(0, 3).map((university) => <span key={university.name} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-700">{university.name}</span>)}</div></div><ArrowRight className="h-5 w-5 text-blue-600" /></div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-function EditorialVisual({ icon: Icon, index, tone }: { icon: IconType; index: number; tone: Tone }) {
-  const reduceMotion = useReducedMotion()
-  return (
-    <motion.div className={`landing-editorial-visual landing-editorial-${tone}`} initial={reduceMotion ? false : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: reduceMotion ? 0 : 0.55, delay: index * 0.07, ease: EASE }}>
-      <span className="landing-editorial-number">0{index + 1}</span>
-      <div className="landing-editorial-orbit"><Icon /></div>
-      <div className="landing-editorial-lines"><i /><i /><i /></div>
-      <motion.span className="landing-editorial-pulse" animate={reduceMotion ? undefined : { x: [0, 52, 0], opacity: [.35, 1, .35] }} transition={{ duration: 4.2 + index, repeat: Infinity, ease: 'easeInOut' }} />
-    </motion.div>
-  )
-}
-
-function PillarCard({ pillar, index, onOpen }: { pillar: Pillar; index: number; onOpen: () => void }) {
-  const Icon = pillar.icon
-  const tones = {
-    red: { eyebrow: 'text-red-600', button: 'bg-red-500 hover:bg-red-600', wash: 'from-red-100/70' },
-    blue: { eyebrow: 'text-blue-700', button: 'bg-blue-600 hover:bg-blue-700', wash: 'from-blue-100/75' },
-    ink: { eyebrow: 'text-slate-700', button: 'bg-slate-950 hover:bg-slate-800', wash: 'from-slate-200/75' },
-  }
-  const tone = tones[pillar.tone]
-  return (
-    <Reveal delay={index * 0.07} className="h-full">
-      <article className="landing-glass landing-premium-card group relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-7">
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tone.wash} via-white/25 to-transparent`} />
-        <EditorialVisual icon={Icon} index={index} tone={pillar.tone} />
-        <p className={`relative mt-6 text-[11px] font-black uppercase tracking-[0.22em] ${tone.eyebrow}`}>{pillar.eyebrow}</p>
-        <h3 className="relative mt-3 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-950">{pillar.title}</h3>
-        <p className="relative mt-3 text-sm leading-6 text-slate-600">{pillar.body}</p>
-        <ul className="relative mt-6 space-y-3">
-          {pillar.items.map((item) => <li key={item} className="flex items-start gap-2.5 text-sm font-semibold leading-5 text-slate-700"><CheckBadge />{item}</li>)}
-        </ul>
-        <button type="button" onClick={onOpen} className={`relative mt-7 inline-flex w-fit items-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white transition-colors ${tone.button}`}>{pillar.cta} <ArrowRight className="h-4 w-4" /></button>
-      </article>
-    </Reveal>
-  )
-}
-
-function CheckBadge({ dark = false }: { dark?: boolean }) {
-  return <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${dark ? 'bg-blue-500 text-white' : 'border border-white bg-white/75 text-slate-900 shadow-sm'}`}><Check className="h-3 w-3" strokeWidth={3} /></span>
-}
-
-function PricingCard({ name, description, price, cadence, features, featured = false, action, actionLabel }: { name: string; description: string; price: string; cadence: string; features: readonly string[]; featured?: boolean; action: () => void; actionLabel: string }) {
-  return (
-    <article className={`relative flex h-full flex-col overflow-hidden rounded-[2rem] p-6 sm:p-8 ${featured ? 'border border-slate-800 bg-slate-950 text-white shadow-[0_30px_80px_rgba(15,23,42,0.22)]' : 'landing-glass text-slate-950'}`}>
-      {featured ? <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(37,99,235,0.42),transparent_36%),radial-gradient(circle_at_10%_90%,rgba(239,68,68,0.2),transparent_38%)]" /> : null}
-      <div className="relative flex items-start justify-between gap-4">
-        <div><p className={`text-sm font-black uppercase tracking-[0.18em] ${featured ? 'text-blue-300' : 'text-red-600'}`}>{name}</p><p className={`mt-2 text-sm leading-6 ${featured ? 'text-slate-300' : 'text-slate-600'}`}>{description}</p></div>
-        {featured ? <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.14em]">After beta</span> : null}
-      </div>
-      <div className="relative mt-7 flex flex-wrap items-end gap-2"><span className="text-5xl font-black tracking-[-0.05em]">{price}</span><span className={`pb-1.5 text-sm font-semibold ${featured ? 'text-slate-400' : 'text-slate-500'}`}>{cadence}</span></div>
-      <ul className="relative mt-7 flex-1 space-y-3">
-        {features.map((feature) => <li key={feature} className={`flex items-start gap-3 text-sm leading-6 ${featured ? 'text-slate-200' : 'text-slate-700'}`}><CheckBadge dark={featured} />{feature}</li>)}
-      </ul>
-      <button type="button" onClick={action} className={`relative mt-8 inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-black transition-colors ${featured ? 'bg-white text-slate-950 hover:bg-blue-50' : 'bg-red-500 text-white hover:bg-red-600'}`}>{actionLabel} <ArrowRight className="h-4 w-4" /></button>
-    </article>
-  )
-}
-
-function FaqItem({ question, answer, open, onToggle }: { question: string; answer: string; open: boolean; onToggle: () => void }) {
-  return (
-    <div className="landing-glass overflow-hidden rounded-2xl">
-      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left sm:px-6"><span className="text-sm font-black text-slate-950 sm:text-base">{question}</span><ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} /></button>
-      <AnimatePresence initial={false}>{open ? <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} className="overflow-hidden"><p className="border-t border-white/70 px-5 py-5 text-sm leading-7 text-slate-600 sm:px-6">{answer}</p></motion.div> : null}</AnimatePresence>
+    <div className="landing-arena-preview-tabs" role="tablist" aria-label="Exam preview">
+      <button type="button" role="tab" aria-selected={isIelts} className={isIelts ? 'is-active' : ''} onClick={() => setTrack('ielts')}>IELTS Arena</button>
+      <button type="button" role="tab" aria-selected={!isIelts} className={!isIelts ? 'is-active' : ''} onClick={() => setTrack('sat')}>Digital SAT</button>
     </div>
-  )
+    <div className="landing-arena-preview-content" role="tabpanel">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={track} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: reducedMotion ? 0 : 0.2 }}>
+          <div className="landing-arena-preview-feature">
+            <div>
+              <span className="landing-arena-preview-kicker">{isIelts ? 'FOUR SKILLS. ONE PLACE.' : 'TWO SECTIONS. ONE GOAL.'}</span>
+              <h3>{isIelts ? 'Your IELTS journey, clearly mapped.' : 'Build confidence for test day.'}</h3>
+              <p>{isIelts ? 'Practice every skill, take full mocks and learn from each answer.' : 'Work through Math and Reading & Writing with focused review.'}</p>
+            </div>
+            <div className="landing-arena-preview-emblem" aria-hidden="true">{isIelts ? <Headphones size={38} /> : <Calculator size={38} />}</div>
+          </div>
+          <div className="landing-arena-preview-tiles">
+            {(isIelts ? ieltsSkills : [
+              { label: 'Math', icon: Calculator, variant: 'sat-math' as const },
+              { label: 'Reading & Writing', icon: BookOpen, variant: 'sat-reading' as const },
+            ]).map(({ label, icon: Icon, variant }) => <div className="landing-arena-preview-tile" key={label}>
+              <div className="landing-arena-preview-tile-visual"><StudyIllustration variant={variant} compact /></div>
+              <span><Icon size={15} /> {label}</span>
+            </div>)}
+          </div>
+          <div className="landing-arena-preview-foot"><span><Check size={14} /> Focused practice</span><span><Check size={14} /> Full tests</span><span><Check size={14} /> Answer review</span></div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  </div>
 }
 
 export default function Landing() {
   const navigate = useNavigate()
-  const reduceMotion = useReducedMotion()
-  const [scrolled, setScrolled] = useState(false)
-  const [activeSection, setActiveSection] = useState('')
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [openFaq, setOpenFaq] = useState(0)
-
-  useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 16)
-      const visibleSection = [...NAV_LINKS].reverse().find(({ target }) => {
-        const section = document.getElementById(target)
-        return section ? section.getBoundingClientRect().top <= 190 : false
-      })
-      setActiveSection(visibleSection?.target ?? '')
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  const goTo = (target: string) => {
-    setMobileNavOpen(false)
-    setActiveSection(target)
-    scrollToSection(target)
+  const reducedMotion = useReducedMotion()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const start = () => navigate(guestDiagnosticEnabled ? '/diagnostic' : '/register')
+  const scrollTo = (id: string) => {
+    setMobileMenuOpen(false)
+    document.getElementById(id)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })
   }
-  const startJourney = () => navigate(guestDiagnosticEnabled ? '/diagnostic' : '/register')
 
-  return (
-    <div className="landing-page relative min-h-screen overflow-x-clip text-slate-950">
-      <div className="landing-backdrop" aria-hidden="true"><div className="landing-ambient landing-ambient-red" /><div className="landing-ambient landing-ambient-blue" /><div className="landing-ambient landing-ambient-center" /></div>
+  return <div className="landing-arena-page">
+    <div className="landing-arena-backdrop" aria-hidden="true" />
+    <header className="landing-arena-header">
+      <div className="landing-arena-nav">
+        <button type="button" className="landing-arena-logo" aria-label="ProfAI home" onClick={() => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })}><BrandMark size={39} /><span>Prof<span>AI</span></span></button>
+        <nav className="landing-arena-nav-links" aria-label="Main navigation">{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav>
+        <div className="landing-arena-nav-actions"><div className="landing-arena-language"><LanguageSelector /></div><button type="button" className="landing-arena-signin" onClick={() => navigate('/login')}>Sign in</button><button type="button" className="landing-arena-button landing-arena-button-small" onClick={start}>Start free <ArrowRight size={16} /></button><button type="button" className="landing-arena-menu-toggle" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>{mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}</button></div>
+      </div>
+      {mobileMenuOpen && <nav className="landing-arena-mobile-menu" aria-label="Mobile navigation">{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}<button type="button" onClick={() => { setMobileMenuOpen(false); navigate('/login') }}>Sign in</button><button type="button" onClick={start}>Start free <ArrowRight size={16} /></button></nav>}
+    </header>
 
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-5">
-        <div className={`landing-nav landing-nav-fixed mx-auto flex max-w-7xl items-center justify-between rounded-[1.6rem] px-3.5 py-3 sm:px-5 ${scrolled ? 'is-scrolled' : ''}`}>
-          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })} className="relative flex items-center gap-2.5 rounded-2xl px-1.5 py-1" aria-label="ProfAI home"><BrandMark size={42} /><span className="text-xl font-black tracking-[-0.04em] sm:text-2xl">Prof<span className="text-red-500">AI</span></span></button>
-          <nav className="relative hidden items-center gap-1 lg:flex" aria-label="Landing navigation">
-            {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} aria-current={activeSection === item.target ? 'page' : undefined} className={`landing-nav-link rounded-full px-4 py-2.5 text-sm font-bold ${activeSection === item.target ? 'is-active' : ''}`}>{item.label}</button>)}
-            <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-950">Support</a>
-          </nav>
-          <div className="relative flex items-center gap-2">
-            <div className="hidden sm:block"><LanguageSelector /></div>
-            <button type="button" onClick={() => navigate('/login')} className="hidden rounded-full px-4 py-2.5 text-sm font-black text-slate-700 hover:bg-white/70 sm:inline-flex">Sign in</button>
-            <button type="button" onClick={startJourney} className="hidden items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)] hover:bg-slate-800 sm:inline-flex">Start free <ArrowRight className="h-4 w-4" /></button>
-            <button type="button" onClick={() => setMobileNavOpen((value) => !value)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-800 lg:hidden" aria-label="Toggle navigation" aria-expanded={mobileNavOpen}>{mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
-          </div>
+    <main>
+      <section className="landing-arena-hero">
+        <div className="landing-arena-hero-copy">
+          <motion.span initial={reducedMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="landing-arena-eyebrow"><span className="landing-arena-pulse" /> YOUR NEXT SCORE STARTS HERE</motion.span>
+          <motion.h1 initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>Prepare with purpose.<br /><span>Move forward</span> with confidence.</motion.h1>
+          <motion.p initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="landing-arena-hero-description">Your IELTS and Digital SAT preparation, built into one clear workspace. Practice, take full tests, review your answers, and know what to do next.</motion.p>
+          <motion.div initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="landing-arena-hero-actions"><button type="button" className="landing-arena-button" onClick={start}>Start preparing for free <ArrowRight size={19} /></button><button type="button" className="landing-arena-button-outline" onClick={() => scrollTo('exams')}><CirclePlay size={19} /> Explore the platform</button></motion.div>
+          <div className="landing-arena-hero-trust"><span><Check size={15} /> IELTS Academic & General</span><span><Check size={15} /> Digital SAT</span><span><Check size={15} /> Your progress in one place</span></div>
         </div>
-        <AnimatePresence initial={false}>{mobileNavOpen ? <motion.nav initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.2, ease: EASE }} className="landing-nav mx-auto mt-2 max-w-7xl rounded-3xl p-3 lg:hidden" aria-label="Mobile landing navigation">
-          {NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="block w-full rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-700 hover:bg-white/70">{item.label}</button>)}
-          <a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-white/70">Support</a>
-          <div className="border-t border-white/70 px-3 py-2 sm:hidden"><LanguageSelector /></div>
-          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/70 pt-3"><button type="button" onClick={() => navigate('/login')} className="rounded-2xl border border-white bg-white/65 px-4 py-3 text-sm font-black">Sign in</button><button type="button" onClick={startJourney} className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">Start free</button></div>
-        </motion.nav> : null}</AnimatePresence>
-      </header>
+        <ArenaPreview />
+      </section>
 
-      <main className="relative z-10">
-        <section className="px-4 pb-16 pt-32 sm:px-6 sm:pb-24 sm:pt-40 lg:pt-44">
-          <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
-            <div className="text-center lg:text-left">
-              <motion.div initial={reduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.58, ease: EASE }} className="inline-flex max-w-full items-center gap-2 overflow-hidden rounded-full border border-white/90 bg-white/55 px-4 py-2 text-[9px] font-black uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:text-[10px] sm:tracking-[0.2em]"><Globe2 className="h-3.5 w-3.5 shrink-0 text-blue-600" /><span className="sm:hidden">Global undergraduate journeys</span><span className="hidden sm:inline">Built for undergraduate applicants worldwide</span></motion.div>
-              <AnimatedHeroTitle />
-              <motion.p initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.14, ease: EASE }} className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg lg:mx-0 lg:max-w-xl">ProfAI brings test preparation, academic English, university research and application planning into one personal journey—so you always know what to work on next.</motion.p>
-              <motion.div initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.68, delay: 0.22, ease: EASE }} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
-                <button type="button" onClick={startJourney} className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(239,68,68,0.28)] transition-all hover:-translate-y-0.5 hover:bg-red-600">Build my journey <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
-                <button type="button" onClick={() => goTo('journey')} className="inline-flex items-center justify-center rounded-2xl border border-white bg-white/60 px-6 py-4 text-sm font-black text-slate-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl hover:bg-white/85">See how it works</button>
-              </motion.div>
-              <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : 0.6, delay: 0.34 }} className="mt-7 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold text-slate-600 lg:justify-start">{['English, Russian & Uzbek UI', 'IELTS + Digital SAT', 'Start free'].map((item) => <span key={item} className="inline-flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-blue-600" /> {item}</span>)}</motion.div>
-            </div>
-            <JourneyPreview />
-          </div>
-        </section>
+      <section id="exams" className="landing-arena-section landing-arena-exams">
+        <SectionIntro eyebrow="CHOOSE YOUR ARENA" title="Serious preparation, built around your exam." description="Focused spaces for the two exams that shape your next step. Each one brings practice, tests and review into a clear flow." />
+        <div className="landing-arena-exam-grid">
+          <article className="landing-arena-exam-card landing-arena-exam-card-red"><div className="landing-arena-exam-head"><span>01 / ENGLISH PROFICIENCY</span><span className="landing-arena-exam-icon"><Headphones size={24} /></span></div><h3>IELTS <em>Arena</em></h3><p>One place for all four skills. Prepare with focused practice and full mock tests for Academic or General Training.</p><div className="landing-arena-exam-chips"><span>Listening</span><span>Reading</span><span>Writing</span><span>Speaking</span></div><div className="landing-arena-exam-visual"><StudyIllustration variant="ielts-listening" /><div><strong>Four skills</strong><small>Practice → test → review</small></div></div><button type="button" onClick={() => navigate('/ielts')} className="landing-arena-exam-link">Explore IELTS <ArrowUpRight size={19} /></button></article>
+          <article className="landing-arena-exam-card landing-arena-exam-card-blue"><div className="landing-arena-exam-head"><span>02 / UNIVERSITY ADMISSIONS</span><span className="landing-arena-exam-icon"><Calculator size={24} /></span></div><h3>Digital SAT <em>Arena</em></h3><p>Sharpen Math and Reading & Writing, work through digital practice tests, and review where you can improve.</p><div className="landing-arena-exam-chips"><span>Math</span><span>Reading & Writing</span><span>Full tests</span></div><div className="landing-arena-exam-visual"><StudyIllustration variant="sat-math" /><div><strong>Two sections</strong><small>Practice → test → review</small></div></div><button type="button" onClick={() => navigate('/sat')} className="landing-arena-exam-link">Explore SAT <ArrowUpRight size={19} /></button></article>
+        </div>
+      </section>
 
-        <section id="platform" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="One connected platform" title="Prepare for the whole journey—not one isolated score." body="Every part of ProfAI has a clear role: build readiness, strengthen academic skills and organize the path toward your applications." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PILLARS.map((pillar, index) => <PillarCard key={pillar.title} pillar={pillar} index={index} onOpen={() => navigate(pillar.route)} />)}</div></div></section>
+      <section id="how-it-works" className="landing-arena-section landing-arena-workflow">
+        <SectionIntro eyebrow="A BETTER WAY TO PREPARE" title="From practice to progress, without losing your way." description="A simple rhythm that helps you turn each study session into a clear next step." />
+        <div className="landing-arena-steps">{[
+          { number: '01', icon: Target, title: 'Find your focus', body: 'Choose an exam, skill or section that matters for your goal.' },
+          { number: '02', icon: PenLine, title: 'Put in the work', body: 'Practice specific topics or sit a complete test when you are ready.' },
+          { number: '03', icon: Sparkles, title: 'Review and improve', body: 'See your results, revisit answers and decide what to study next.' },
+        ].map(({ number, icon: Icon, title, body }) => <article className="landing-arena-step" key={number}><div className="landing-arena-step-top"><span>{number}</span><Icon size={26} /></div><h3>{title}</h3><p>{body}</p></article>)}</div>
+        <div className="landing-arena-beyond"><div className="landing-arena-beyond-icon"><GraduationCap size={29} /></div><div><span>BEYOND TEST DAY</span><h3>Keep your university plan connected.</h3><p>Bring preparation, academic skills and university research together in one account.</p></div><button type="button" onClick={start}>Build your journey <ArrowRight size={18} /></button></div>
+      </section>
 
-        <section id="journey" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Your journey" title="From today’s priorities to tomorrow’s applications." body="ProfAI organizes preparation around a simple sequence, so progress in one area supports the decisions that follow." /></Reveal><div className="relative mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4"><div className="pointer-events-none absolute left-[12%] right-[12%] top-[3.2rem] hidden h-px bg-gradient-to-r from-red-200 via-slate-300 to-blue-200 lg:block" />{JOURNEY_STEPS.map((step, index) => { const Icon = step.icon; return <Reveal key={step.number} delay={index * 0.08} className="relative h-full"><article className="landing-glass landing-premium-card h-full rounded-[1.75rem] p-6"><div className="landing-step-heading"><div className="landing-step-symbol"><Icon /><motion.i animate={reduceMotion ? undefined : { rotate: 360 }} transition={{ duration: 18 + index * 2, repeat: Infinity, ease: 'linear' }} /></div><span>{step.number}</span></div><h3 className="mt-6 text-lg font-black tracking-tight">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{step.body}</p></article></Reveal>})}</div></div></section>
+      <section id="plans" className="landing-arena-section landing-arena-plans"><div className="landing-arena-plans-panel"><div><span className="landing-arena-eyebrow"><Sparkles size={14} /> SIMPLE START</span><h2>Start free. Grow at your pace.</h2><p>Create an account, explore IELTS and SAT preparation, and choose more tools when you need them. Current Pro details are on the plans page.</p><div className="landing-arena-plans-actions"><button type="button" onClick={start} className="landing-arena-button">Create free account <ArrowRight size={18} /></button><button type="button" onClick={() => navigate('/premium')} className="landing-arena-button-outline">View plans</button></div></div><div className="landing-arena-plans-list"><span>INCLUDED IN YOUR JOURNEY</span>{['IELTS and Digital SAT practice', 'Results and answer review', 'A place for your university plan'].map((item) => <p key={item}><Check size={17} /> {item}</p>)}</div></div></section>
 
-        <section className="px-4 py-16 sm:px-6 sm:py-24"><Reveal className="mx-auto max-w-7xl"><div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 px-6 py-12 text-white shadow-[0_34px_90px_rgba(15,23,42,0.24)] sm:px-10 lg:px-14 lg:py-16"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_20%,rgba(37,99,235,0.45),transparent_34%),radial-gradient(circle_at_12%_90%,rgba(239,68,68,0.24),transparent_38%)]" /><div className="relative grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-          <div><span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-200"><Sparkles className="h-3.5 w-3.5" /> ProfAI Coach</span><h2 className="mt-6 text-3xl font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl">Guidance that turns a big goal into the next clear action.</h2><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Choose a focused coaching mode, ask with text, voice or a screenshot, and receive structured guidance without leaving your journey workspace.</p><button type="button" onClick={() => navigate('/register')} className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950 hover:bg-blue-50">Start a private journey <ArrowRight className="h-4 w-4" /></button></div>
-          <div className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-2xl sm:p-5"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-3"><span className="landing-coach-signal"><Bot /><i /><b /></span><div><p className="text-sm font-black">ProfAI Coach</p><p className="text-[11px] text-emerald-300">Account-private guidance</p></div></div><span className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 sm:block">Journey context</span></div><div className="mt-4 space-y-3"><div className="ml-auto max-w-[84%] rounded-2xl rounded-tr-md bg-blue-500 px-4 py-3 text-sm leading-6">Help me decide what to focus on this week for my university plan.</div><div className="max-w-[92%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-4 text-sm leading-6 text-slate-200"><p className="font-black text-white">Your next three priorities</p><ol className="mt-3 space-y-2"><li><b className="mr-2 text-red-300">1.</b>Protect your closest deadline.</li><li><b className="mr-2 text-blue-300">2.</b>Complete one focused test-prep session.</li><li><b className="mr-2 text-emerald-300">3.</b>Record the university questions you still need to verify.</li></ol></div></div></div>
-        </div></div></Reveal></section>
+      <section id="faq" className="landing-arena-section landing-arena-faq"><div><span className="landing-arena-eyebrow"><ShieldCheck size={14} /> GOOD TO KNOW</span><h2>Questions before you begin?</h2><p>Get a clear picture of what ProfAI offers, then take your first step.</p><a href={`mailto:${SUPPORT_EMAIL}`} className="landing-arena-support">Contact support <ArrowUpRight size={16} /></a></div><div className="landing-arena-faq-list">{faqs.map(({ question, answer }, index) => <div className="landing-arena-faq-item" key={question}><button type="button" aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? null : index)}>{question}<ChevronDown size={19} className={openFaq === index ? 'is-open' : ''} /></button>{openFaq === index && <p>{answer}</p>}</div>)}</div></section>
 
-        <section className="px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><Reveal><SectionHeading eyebrow="Product proof" title="Useful evidence, without inflated promises." body="ProfAI does not guarantee admission or publish invented success stories. Inspect the workflows that are available and decide whether they help your journey." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-3">{PROOF_POINTS.map((point, index) => { const Icon = point.icon; return <Reveal key={point.title} delay={index * 0.07} className="h-full"><article className="landing-glass landing-premium-card flex h-full flex-col rounded-[1.75rem] p-6"><div className="landing-proof-symbol"><Icon /><span>0{index + 1}</span><i /></div><h3 className="mt-6 text-xl font-black tracking-tight">{point.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{point.body}</p><button type="button" onClick={() => navigate(point.route)} className="mt-6 inline-flex items-center gap-2 text-sm font-black hover:text-blue-700">{point.action} <ArrowRight className="h-4 w-4" /></button></article></Reveal>})}</div></div></section>
+      <section className="landing-arena-bottom-cta"><div><span className="landing-arena-eyebrow">READY WHEN YOU ARE</span><h2>Your next chapter starts with one step.</h2><p>Build momentum in IELTS, SAT and everything that comes after.</p></div><button type="button" onClick={start} className="landing-arena-button">Get started free <ArrowRight size={19} /></button></section>
+    </main>
 
-        <section id="pricing" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-5xl"><Reveal><SectionHeading eyebrow="Simple pricing" title="Start free. Explore more when you need it." body="Begin with a free account and check the plans page for current Pro availability and terms." /></Reveal><div className="mt-12 grid gap-5 lg:grid-cols-2"><Reveal className="h-full"><PricingCard name="Free" description="A practical starting point for building readiness and exploring your university journey." price="$0" cadence="to start" features={FREE_FEATURES} action={() => navigate('/register')} actionLabel="Start free" /></Reveal><Reveal className="h-full" delay={0.08}><PricingCard name="Pro" description="More room for feedback and planning as your application journey develops." price="Explore Pro" cadence="see current plans" features={PRO_FEATURES} featured action={() => navigate('/premium')} actionLabel="View plans" /></Reveal></div></div></section>
-
-        <section id="faq" className="scroll-mt-28 px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.75fr_1.25fr]"><Reveal><span className="landing-kicker">Clear answers</span><h2 className="mt-5 text-3xl font-black leading-[1.05] tracking-[-0.04em] sm:text-5xl">Know what ProfAI does—and what it does not do.</h2><p className="mt-5 max-w-lg text-base leading-7 text-slate-600">Still unsure? Contact support and tell us where you are in your journey.</p><a href={`mailto:${SUPPORT_EMAIL}?subject=Question%20about%20ProfAI`} className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-black text-white hover:bg-slate-800"><Mail className="h-4 w-4" /> Email support</a></Reveal><Reveal className="space-y-3" delay={0.06}>{FAQS.map((item, index) => <FaqItem key={item.question} question={item.question} answer={item.answer} open={openFaq === index} onToggle={() => setOpenFaq((current) => current === index ? -1 : index)} />)}</Reveal></div></section>
-
-        <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20"><Reveal className="mx-auto max-w-7xl"><div className="landing-glass relative overflow-hidden rounded-[2.5rem] px-6 py-14 text-center sm:px-10 sm:py-20"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(248,113,113,0.2),transparent_32%),radial-gradient(circle_at_88%_74%,rgba(59,130,246,0.22),transparent_36%)]" /><div className="relative mx-auto max-w-3xl"><span className="landing-kicker"><Sparkles className="h-3.5 w-3.5" /> Your next step</span><h2 className="mt-6 text-3xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">Build a university journey you can actually follow.</h2><p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600">Get a personalized readiness preview, then save it to a free account when you are ready.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><button type="button" onClick={startJourney} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 text-sm font-black text-white shadow-[0_18px_38px_rgba(239,68,68,0.28)] hover:bg-red-600">Start free <ArrowRight className="h-4 w-4" /></button><button type="button" onClick={() => navigate('/login')} className="inline-flex items-center justify-center rounded-2xl border border-white bg-white/65 px-6 py-4 text-sm font-black text-slate-800 hover:bg-white/90">I already have an account</button></div></div></div></Reveal></section>
-      </main>
-
-      <footer className="relative z-10 border-t border-white/70 bg-white/35 px-4 py-10 backdrop-blur-xl sm:px-6"><div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr]"><div><div className="flex items-center gap-2.5"><BrandMark size={38} /><span className="text-xl font-black tracking-[-0.04em]">Prof<span className="text-red-500">AI</span></span></div><p className="mt-4 max-w-md text-sm leading-6 text-slate-600">A connected preparation and planning platform for undergraduate applicants worldwide.</p><p className="mt-4 text-xs font-semibold text-slate-500">Independent platform · Not affiliated with IELTS, College Board or any university.</p></div><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Explore</p><div className="mt-4 space-y-3">{NAV_LINKS.map((item) => <button key={item.target} type="button" onClick={() => goTo(item.target)} className="block text-sm font-bold text-slate-700 hover:text-blue-700">{item.label}</button>)}</div></div><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Account & support</p><div className="mt-4 space-y-3"><button type="button" onClick={() => navigate('/register')} className="block text-sm font-bold text-slate-700 hover:text-blue-700">Create account</button><button type="button" onClick={() => navigate('/login')} className="block text-sm font-bold text-slate-700 hover:text-blue-700">Sign in</button><a href={`mailto:${SUPPORT_EMAIL}?subject=ProfAI%20support`} className="block break-all text-sm font-bold text-slate-700 hover:text-blue-700">{SUPPORT_EMAIL}</a></div></div></div><div className="mx-auto mt-9 flex max-w-7xl flex-col gap-2 border-t border-white/70 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} ProfAI. All rights reserved.</p><p>English default · Russian and Uzbek available</p></div></footer>
-    </div>
-  )
+    <footer className="landing-arena-footer"><div className="landing-arena-footer-main"><div><div className="landing-arena-footer-logo"><BrandMark size={35} /><strong>Prof<span>AI</span></strong></div><p>Preparation and planning for the journey ahead.</p></div><nav aria-label="Footer navigation">{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}<button type="button" onClick={() => navigate('/login')}>Sign in</button></nav></div><div className="landing-arena-footer-bottom"><span>© {new Date().getFullYear()} ProfAI. All rights reserved.</span><span>Independent platform · Not affiliated with IELTS, College Board or any university.</span></div></footer>
+  </div>
 }

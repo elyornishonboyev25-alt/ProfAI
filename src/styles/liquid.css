@@ -212,6 +212,9 @@ body { color: var(--liquid-ink); background: #f4f6f8; }
 .liquid-resource-row h3 { font-size: 16px; font-weight: 650; }
 .liquid-resource-row p { font-size: 13px; color: var(--liquid-muted); margin-top: 7px; }
 .liquid-resource-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; margin-top: 28px; }
+.liquid-resource-grid.academic-skills-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+@media (max-width: 1200px) { .liquid-resource-grid.academic-skills-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 560px) { .liquid-resource-grid.academic-skills-grid { grid-template-columns: 1fr; } }
 .liquid-resource-card { padding: 25px; display: flex; align-items: flex-start; flex-direction: column; }
 .liquid-resource-card .study-object { width: 120px; margin: -6px 0 14px; }
 .liquid-resource-card h2 { font-size: 21px; font-weight: 700; letter-spacing: -.025em; }

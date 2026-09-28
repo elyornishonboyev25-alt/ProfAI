@@ -4,7 +4,7 @@ export const WORKSPACE_NAVIGATION = [
   { label: 'Dashboard', mobile: 'Dashboard', path: '/dashboard', icon: LayoutDashboard,
     matches: (p: string) => p === '/' || p === '/dashboard' },
   { label: 'IELTS', mobile: 'IELTS', path: '/ielts', icon: BookOpen,
-    matches: (p: string) => /^\/(ielts|mock\/ielts|academic-skills|writing-lab|speaking-lab|shadowing-lab|podcast|articles)(\/|$)/.test(p) },
+    matches: (p: string) => /^\/(ielts|mock\/ielts|writing-lab|speaking-lab|shadowing-lab|podcast|articles)(\/|$)/.test(p) },
   { label: 'SAT', mobile: 'SAT', path: '/sat', icon: NotebookPen,
     matches: (p: string) => /^\/(sat|mock\/sat|vocabulary\/sat)(\/|$)/.test(p) },
   { label: 'Classes', mobile: 'Classes', path: '/learning-center', icon: GraduationCap,

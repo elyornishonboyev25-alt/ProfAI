@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp, Route } from 'lucide-react'
+import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp, Route, Languages } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
@@ -36,6 +36,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
       <details className="liquid-secondary-nav">
         <summary>{c('Study tools')}<ChevronDown size={15} /></summary>
         <NavLink to="/journey-plan"><Route size={18} />{c('Study Plan')}</NavLink>
+        <NavLink to="/academic-skills"><Languages size={18} />{c('Academic Skills')}</NavLink>
         <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
         <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
         <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>

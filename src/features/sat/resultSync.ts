@@ -31,11 +31,15 @@ export async function syncSATAttemptResult(
   const complete = isSATTestComplete(test)
   const range = section === 'math' ? report.mathRange : report.readingWritingRange
   const topicStats = new Map<string, { correct: number; total: number }>()
+  const skillStats = new Map<string, { correct: number; total: number }>()
   for (const question of test.modules.flatMap((module) => module.questions)) {
     const stats = topicStats.get(question.domain) ?? { correct: 0, total: 0 }
+    const skill = skillStats.get(question.skill) ?? { correct: 0, total: 0 }
     stats.total++
-    if (isSATAnswerCorrect(question, attempt.answers[question.id])) stats.correct++
+    skill.total++
+    if (isSATAnswerCorrect(question, attempt.answers[question.id])) { stats.correct++; skill.correct++ }
     topicStats.set(question.domain, stats)
+    skillStats.set(question.skill, skill)
   }
   const request = learningCenterApi.syncResult({
     sourceKey,
@@ -58,6 +62,7 @@ export async function syncSATAttemptResult(
       topics: [...topicStats].map(([topic, stats]) => ({
         topic, ...stats, accuracy: Math.round(stats.correct / Math.max(1, stats.total) * 100),
       })),
+      skills: [...skillStats].map(([skill, stats]) => ({ skill, ...stats })),
     },
   }).then(() => {
     try { window.localStorage.setItem(syncKey, 'ok') } catch { /* Already persisted on the server. */ }

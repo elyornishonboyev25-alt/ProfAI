@@ -1,6 +1,6 @@
 import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   AudioLines,
@@ -46,6 +46,8 @@ function levelBadge(level: string) {
 
 export default function ShadowingLab() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const plannedVideo = searchParams.get('video')
   const user = useAuthStore((state: AuthState) => state.user)
   const canSubmitVideo = canSubmitCommunityVideo(user)
 
@@ -130,6 +132,8 @@ export default function ShadowingLab() {
       setOpeningId(null)
     }
   }, [])
+
+  useEffect(() => { if (plannedVideo) void openVideo(plannedVideo) }, [plannedVideo, openVideo])
 
   const stats = useMemo(() => {
     const lines = videos.reduce((sum, v) => sum + (v.segmentCount || 0), 0)

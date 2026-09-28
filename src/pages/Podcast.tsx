@@ -1,7 +1,7 @@
 import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Atom,
@@ -267,6 +267,8 @@ const SHORTCUTS: { keys: string; action: string }[] = [
 
 /* ── Component ───────────────────────────────────────────────────── */
 export default function Podcast() {
+  const [studySearchParams] = useSearchParams()
+  const plannedPodcast = studySearchParams.get('video')
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -428,6 +430,12 @@ export default function Podcast() {
       setOpeningPodcastId(null)
     }
   }, [])
+
+  useEffect(() => {
+    if (!plannedPodcast) return
+    const video = communityVideos.find(item => item.youtubeId === plannedPodcast)
+    if (video) void openEpisode(communityPodcast(video))
+  }, [plannedPodcast, communityVideos, openEpisode])
 
   useEffect(() => {
     if (!toast) return

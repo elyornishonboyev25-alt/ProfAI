@@ -13,6 +13,7 @@ import {
   type Part2Card,
   type Part3Theme,
 } from '@/data/ieltsSpeakingQuestionBank'
+import { apiClient } from '@/lib/apiClient'
 
 // 30 of each part: first 10 feed the Days, the remaining 20 feed the mocks.
 const DAY_BANK_SIZE = 10
@@ -189,4 +190,21 @@ export function markSpeakingTestCompleted(testId: string, userId?: string) {
   const completed = getCompletedSpeakingTestIds(userId)
   completed.add(testId)
   window.localStorage.setItem(speakingCompletionKey(userId), JSON.stringify([...completed]))
+  const evidenceKey = `${speakingCompletionKey(userId)}:dates`
+  try {
+    const dates = JSON.parse(window.localStorage.getItem(evidenceKey) ?? '{}') as Record<string, string>
+    dates[testId] ??= new Date().toISOString()
+    window.localStorage.setItem(evidenceKey, JSON.stringify(dates))
+    if (userId && testId.startsWith('speaking-day-')) {
+      void apiClient.post('/study-plan/evidence', { entries: [{ sourceKey: `speaking:${testId}`, contentKey: `ielts:speaking:${testId}`, skill: 'IELTS_SPEAKING', title: `Speaking ${testId}`, accuracy: 100, completedAt: dates[testId] }] }).catch(() => {})
+    }
+  } catch { /* The speaking completion remains saved even if date storage is unavailable. */ }
+}
+
+export function getSpeakingCompletionDates(userId?: string): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const dates = JSON.parse(window.localStorage.getItem(`${speakingCompletionKey(userId)}:dates`) ?? '{}')
+    return dates && typeof dates === 'object' && !Array.isArray(dates) ? dates as Record<string, string> : {}
+  } catch { return {} }
 }

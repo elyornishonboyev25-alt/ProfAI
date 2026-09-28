@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
+import TodayPlan from '@/components/study/TodayPlan'
 import { Skeleton } from '@/components/common/Skeleton'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -218,6 +219,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        <div className="mb-5"><TodayPlan compact /></div>
         <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
           <article className="dashboard-target-card dashboard-card-sheen">
             <span className="dashboard-target-ribbon" aria-hidden="true" />

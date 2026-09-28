@@ -15,7 +15,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import type { ProfileOverview } from '@/types/platform'
@@ -128,6 +128,8 @@ function buildBackendAttempt(entry: ProfileOverview['recentAttempts'][number]): 
 
 export default function AnalyzeMistakes() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const writingTest = searchParams.get('writingTest')
   const user = useAuthStore((state: AuthState) => state.user)
   const [readingHistory, setReadingHistory] = useState<ReadingAnalysisHistoryEntry[]>([])
   const [writingHistory, setWritingHistory] = useState<WritingAnalysisEntry[]>([])
@@ -147,6 +149,12 @@ export default function AnalyzeMistakes() {
     setReadingHistory(getReadingAnalysisHistory(user?.id))
     setWritingHistory(getWritingAnalysisHistory(user?.id))
   }, [user?.id])
+
+  useEffect(() => {
+    if (!writingTest) return
+    const match = writingHistory.find(entry => entry.testId === writingTest)
+    if (match) setWritingModalEntry(match)
+  }, [writingHistory, writingTest])
 
   useEffect(() => {
     let active = true

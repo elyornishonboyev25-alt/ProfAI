@@ -272,6 +272,7 @@ export default function SAT() {
           </p>
         </motion.header>
 
+        <button type="button" onClick={() => navigate('/sat/question-bank')} className="mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-white/90 bg-white/75 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] backdrop-blur-xl transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">SAT Question Bank</strong><small className="mt-1 block text-xs font-semibold text-slate-500">Practice by Math or Reading & Writing, topic, skill and difficulty.</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.54fr)]">
           <SubjectCard
             title="SAT Math"

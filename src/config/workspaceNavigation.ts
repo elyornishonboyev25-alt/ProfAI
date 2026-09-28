@@ -1,10 +1,8 @@
-import { BookOpen, Building2, ChartNoAxesCombined, GraduationCap, LayoutDashboard, NotebookPen, Route } from 'lucide-react'
+import { BookOpen, Building2, ChartNoAxesCombined, GraduationCap, LayoutDashboard, NotebookPen } from 'lucide-react'
 
 export const WORKSPACE_NAVIGATION = [
   { label: 'Dashboard', mobile: 'Dashboard', path: '/dashboard', icon: LayoutDashboard,
     matches: (p: string) => p === '/' || p === '/dashboard' },
-  { label: 'Study Plan', mobile: 'Plan', path: '/journey-plan', icon: Route,
-    matches: (p: string) => p === '/journey-plan' },
   { label: 'IELTS', mobile: 'IELTS', path: '/ielts', icon: BookOpen,
     matches: (p: string) => /^\/(ielts|mock\/ielts|academic-skills|writing-lab|speaking-lab|shadowing-lab|podcast|articles)(\/|$)/.test(p) },
   { label: 'SAT', mobile: 'SAT', path: '/sat', icon: NotebookPen,

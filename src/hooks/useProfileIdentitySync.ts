@@ -34,6 +34,7 @@ export function useProfileIdentitySync() {
             ...(state.user.avatarUrl === before.avatarUrl ? { avatarUrl: user.avatarUrl ?? null } : {}),
             ...(state.user.fullName === before.fullName ? { fullName: user.fullName } : {}),
             ...(state.user.nickname === before.nickname ? { nickname: user.nickname ?? null } : {}),
+            premium: user.premium,
           } }
         })
       } catch {
@@ -44,6 +45,7 @@ export function useProfileIdentitySync() {
     }
     void sync()
     window.addEventListener('online', sync)
-    return () => { active = false; window.removeEventListener('online', sync) }
+    window.addEventListener('focus', sync)
+    return () => { active = false; window.removeEventListener('online', sync); window.removeEventListener('focus', sync) }
   }, [userId])
 }

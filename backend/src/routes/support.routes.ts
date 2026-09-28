@@ -1,20 +1,12 @@
 import { Router } from 'express'
-import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { requireOwner } from '../middleware/owner.js'
 
 const router = Router()
-const OWNER_EMAIL = 'elyornishonboyev000@gmail.com'
 const PAGE_SIZE = 20
-
-async function isOwner(req: Request, res: Response) {
-  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } })
-  if (user?.email.trim().toLowerCase() === OWNER_EMAIL) return true
-  res.status(403).json({ message: 'You do not have permission to access this resource.' })
-  return false
-}
 const reportSchema = z.object({
   category: z.enum(['BUG', 'BILLING', 'FEATURE', 'OTHER']),
   description: z.string().trim().min(20).max(5000),
@@ -30,8 +22,7 @@ router.post('/reports', requireAuth, asyncHandler(async (req, res) => {
   return res.status(201).json({ id: report.id, message: 'Your report has been submitted.' })
 }))
 
-router.get('/owner/overview', requireAuth, asyncHandler(async (req, res) => {
-  if (!await isOwner(req, res)) return
+router.get('/owner/overview', requireAuth, requireOwner, asyncHandler(async (req, res) => {
   const query = z.object({
     userPage: z.coerce.number().int().min(1).max(10000).default(1),
     reportPage: z.coerce.number().int().min(1).max(10000).default(1),
@@ -75,8 +66,7 @@ router.get('/owner/overview', requireAuth, asyncHandler(async (req, res) => {
   })
 }))
 
-router.patch('/owner/reports/:id', requireAuth, asyncHandler(async (req, res) => {
-  if (!await isOwner(req, res)) return
+router.patch('/owner/reports/:id', requireAuth, requireOwner, asyncHandler(async (req, res) => {
   const parsed = z.object({ status: z.enum(['OPEN', 'RESOLVED']) }).safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid report status.' })
   const existing = await prisma.issueReport.findUnique({ where: { id: req.params.id }, select: { id: true } })

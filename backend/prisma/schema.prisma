@@ -164,9 +164,43 @@ model User {
   learningCenterNotesReceived         LearningCenterTeacherNote[]          @relation("LearningCenterNoteStudent")
   issueReports                        IssueReport[]
   studyPlan                           StudyPlan?
+  premiumGrant                        PremiumGrant?
+  paymentRequests                     PaymentRequest[]
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+model PremiumGrant {
+  userId      String   @id
+  plan        String
+  source      String
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime?
+  grantedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model PaymentRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  plan          String
+  amountUzs     Int
+  status        String   @default("PENDING")
+  method        String   @default("CARD_TRANSFER")
+  reference     String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model IssueReport {

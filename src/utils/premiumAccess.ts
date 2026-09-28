@@ -23,9 +23,8 @@ export const FREE_ATTEMPT_LIMIT = 4
 
 export type PremiumTier = 'FREE' | 'BASIC' | 'STANDARD' | 'PRO' | 'UNLIMITED'
 
-// Accounts treated as genuine premium owners. The owner activates a paying
-// learner by adding their Gmail here, OR by setting their DB role to ADMIN
-// (no redeploy needed).
+// Legacy fixed premium accounts. New grants are stored in the database and
+// returned by the API as `premium`.
 const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'elyornishonboyev000@gmail.com',
   'nishonboyv7@gmail.com',
@@ -43,13 +42,14 @@ type PremiumInput = {
 } | null | undefined
 
 /**
- * Whether the account is a genuine premium owner (allowlist or admin).
+ * Whether the account currently has premium access.
  * Used for the Crown badge — independent of the global feature gate, so it
  * does NOT light up for every user just because features are currently open.
  */
 export function isPremiumUser(input?: PremiumInput) {
   if (!input) return false
   if (input.role === 'ADMIN') return true
+  if (input.premium === true) return true
   if (input.email && PREMIUM_EMAIL_ALLOWLIST.has(input.email.trim().toLowerCase())) return true
   if (input.nickname && PREMIUM_NICKNAME_ALLOWLIST.has(input.nickname.trim().toLowerCase())) return true
   return false

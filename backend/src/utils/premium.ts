@@ -16,3 +16,14 @@ export function isPremiumUser(input: { role: 'USER' | 'ADMIN'; email: string; ni
     Boolean(normalizedNickname && PREMIUM_NICKNAME_ALLOWLIST.has(normalizedNickname))
   )
 }
+import { prisma } from '../lib/prisma.js'
+
+
+export async function hasPremiumAccess(input: { id: string; role: 'USER' | 'ADMIN'; email: string; nickname?: string | null }) {
+  if (isPremiumUser(input)) return true
+  const grant = await prisma.premiumGrant.findUnique({
+    where: { userId: input.id },
+    select: { expiresAt: true },
+  })
+  return Boolean(grant && (grant.expiresAt === null || grant.expiresAt > new Date()))
+}

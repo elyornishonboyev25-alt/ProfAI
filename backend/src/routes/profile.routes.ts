@@ -9,7 +9,7 @@ import { generateLeaderboard, invalidateLeaderboardCache } from '../services/lea
 import { generateSkillAnalytics } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
 import { generateAiChatResponse } from '../services/aiChat.service.js'
-import { isPremiumUser } from '../utils/premium.js'
+import { hasPremiumAccess } from '../utils/premium.js'
 import { env } from '../config/env.js'
 import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
 import {
@@ -464,7 +464,7 @@ router.get(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
+    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Analysis is available for Premium users only.',
       })
@@ -613,7 +613,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
+    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Analysis is available for Premium users only.',
       })
@@ -654,7 +654,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
+    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'AI Copilot is available for Premium users only.',
       })
@@ -1171,7 +1171,7 @@ router.post(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!isPremiumUser({ role: user.role, email: user.email, nickname: user.nickname })) {
+    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
       return res.status(403).json({
         message: 'Realtime speaking is available for Premium users only.',
       })

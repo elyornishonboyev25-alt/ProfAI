@@ -17,7 +17,7 @@ import {
 } from '../utils/jwt.js'
 import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
-import { isPremiumUser } from '../utils/premium.js'
+import { hasPremiumAccess } from '../utils/premium.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 
 const router = Router()
@@ -129,7 +129,7 @@ async function validateVerificationCode(email: string, purpose: AuthCodePurpose,
   return { ok: true as const }
 }
 
-function sanitizeUser(user: {
+async function sanitizeUser(user: {
   id: string
   email: string
   fullName: string
@@ -141,7 +141,8 @@ function sanitizeUser(user: {
   avatarUrl?: string | null
   profile?: { onboardingCompletedAt: Date | null } | null
 }) {
-  const premium = isPremiumUser({
+  const premium = await hasPremiumAccess({
+    id: user.id,
     role: user.role,
     email: user.email,
     nickname: user.nickname,
@@ -366,7 +367,7 @@ router.post(
     })
 
     return res.status(201).json({
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       ...tokens,
     })
   }),
@@ -420,7 +421,7 @@ router.post(
     })
 
     return res.json({
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       ...tokens,
     })
   }),
@@ -472,7 +473,7 @@ router.post(
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     })
-    return res.status(201).json({ user: sanitizeUser(user), ...tokens })
+    return res.status(201).json({ user: await sanitizeUser(user), ...tokens })
   }),
 )
 
@@ -505,7 +506,7 @@ router.post(
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     })
-    return res.json({ user: sanitizeUser(user), ...tokens })
+    return res.json({ user: await sanitizeUser(user), ...tokens })
   }),
 )
 
@@ -615,7 +616,7 @@ router.post(
     })
 
     return res.status(existingUser ? 200 : 201).json({
-      user: sanitizeUser(user),
+      user: await sanitizeUser(user),
       ...tokens,
     })
   }),
@@ -685,7 +686,7 @@ router.post(
     })
 
     return res.json({
-      user: sanitizeUser(stored.user),
+      user: await sanitizeUser(stored.user),
       ...tokens,
     })
   }),
@@ -769,7 +770,7 @@ router.get(
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    return res.json({ user: sanitizeUser(user) })
+    return res.json({ user: await sanitizeUser(user) })
   }),
 )
 

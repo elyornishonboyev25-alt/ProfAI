@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AuthUser } from '@/types/platform'
-import { hasPremiumAccess } from '@/utils/premiumAccess'
+import { isPremiumUser } from '@/utils/premiumAccess'
 
 // Safari can expose localStorage while temporarily throwing on access (private
 // browsing, storage pressure, or a damaged value). Zustand otherwise skips its
@@ -62,7 +62,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: {
             ...user,
-            premium: hasPremiumAccess(user),
+            premium: isPremiumUser(user),
           },
           accessToken,
           refreshToken,
@@ -109,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
         if (state?.user) {
           state.user = {
             ...state.user,
-            premium: hasPremiumAccess(state.user),
+            premium: isPremiumUser(state.user),
           }
         }
         state?.setHydrated(true)
@@ -130,7 +130,7 @@ export function syncStoredSession() {
     const current = useAuthStore.getState()
     if (saved.accessToken === current.accessToken && saved.refreshToken === current.refreshToken) return
     useAuthStore.setState({
-      user: saved.user ? { ...saved.user, premium: hasPremiumAccess(saved.user) } : null,
+      user: saved.user ? { ...saved.user, premium: isPremiumUser(saved.user) } : null,
       accessToken: saved.accessToken,
       refreshToken: saved.refreshToken,
     })

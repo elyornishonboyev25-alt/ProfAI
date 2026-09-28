@@ -325,15 +325,19 @@ export function pickVoiceForLang(lang: SpeechLang): SpeechSynthesisVoice | null 
 export function getExaminerVoice(): SpeechSynthesisVoice | null {
   const voices = cachedVoices.length ? cachedVoices : loadVoices()
   if (voices.length === 0) return null
-  const byName = (needles: string[]) =>
-    voices.find((v) => needles.some((n) => v.name.toLowerCase().includes(n)))
-  return (
-    byName(['google uk english female', 'libby', 'sonia', 'hazel']) ??
-    voices.find((v) => v.lang?.toLowerCase() === 'en-gb') ??
-    byName(['google us english', 'samantha', 'jenny', 'aria']) ??
-    voices.find((v) => v.lang?.toLowerCase().startsWith('en')) ??
-    null
-  )
+  const english = voices.filter((voice) => voice.lang?.toLowerCase().startsWith('en'))
+  if (english.length === 0) return null
+  const score = (voice: SpeechSynthesisVoice) => {
+    const name = voice.name.toLowerCase()
+    const locale = voice.lang.toLowerCase()
+    let rating = locale.startsWith('en-gb') ? 30 : locale.startsWith('en-us') ? 10 : 0
+    if (name.includes('natural') || name.includes('neural') || name.includes('online')) rating += 50
+    if (['sonia', 'ryan', 'libby', 'hazel'].some((candidate) => name.includes(candidate))) rating += 25
+    if (name.includes('google uk english')) rating += 15
+    if (voice.localService === false) rating += 8
+    return rating
+  }
+  return english.sort((left, right) => score(right) - score(left))[0]
 }
 
 export type SpeakOptions = {
@@ -385,10 +389,20 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
   utterance.onend = finish
   utterance.onerror = finish
 
-  // Watchdog: some environments (headless, missing audio device) never fire
-  // onend. Estimate the spoken duration and finish anyway so the flow never stalls.
-  const estimateMs = Math.min(22000, Math.max(3500, (text.length / 12) * 1000 + 1500))
-  watchdog = window.setTimeout(finish, estimateMs)
+  // Browser voices can speak long IELTS cue cards for more than 22 seconds.
+  // Wait while speech is actually playing so recording never overlaps a prompt.
+  const estimateMs = Math.min(90000, Math.max(5000, (text.length / 11) * 1000 + 5000))
+  const watchdogStarted = Date.now()
+  const checkSpeech = () => {
+    if (finished) return
+    if (synth.speaking && Date.now() - watchdogStarted < 120000) {
+      watchdog = window.setTimeout(checkSpeech, 3000)
+      return
+    }
+    if (synth.speaking) synth.cancel()
+    finish()
+  }
+  watchdog = window.setTimeout(checkSpeech, estimateMs)
 
   // Chrome needs a brief tick after cancel() before speak() takes — keep it minimal
   // so speech starts almost immediately (the long pause was perceived latency).

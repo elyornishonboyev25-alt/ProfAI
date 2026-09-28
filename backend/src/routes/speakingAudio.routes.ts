@@ -14,9 +14,9 @@ router.post('/voice', asyncHandler(async (req, res) => {
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o-mini-tts', voice: 'marin', response_format: 'mp3', input: text,
-      instructions: 'Speak in a natural, calm British English IELTS examiner voice. Be clear, neutral and professional. Use natural pacing and short pauses at sentence boundaries. Do not add any words.',
+      instructions: 'Use a clear, natural British English accent. Sound like a calm, experienced IELTS Speaking examiner in a quiet room: professional, attentive, and conversational, with measured pacing and realistic pauses. Ask questions with natural intonation. No theatrical emphasis, no preamble, and no added words.',
     }),
-    signal: AbortSignal.timeout(8_000),
+    signal: AbortSignal.timeout(Math.min(25_000, 8_000 + text.length * 45)),
   })
   if (!response.ok) return res.status(503).json({ message: 'Examiner voice is temporarily unavailable.' })
   const bytes = Buffer.from(await response.arrayBuffer())
@@ -32,16 +32,20 @@ router.post('/transcribe', asyncHandler(async (req, res) => {
   const bytes = Buffer.from(audioBase64, 'base64')
   if (bytes.length > 5_500_000) return res.status(413).json({ message: 'Recording is too large.' })
   const extension = mimeType.split('/')[1]
-  const form = new FormData()
-  form.append('file', new Blob([bytes], { type: mimeType }), `answer.${extension}`)
-  form.append('model', 'gpt-4o-mini-transcribe')
-  form.append('language', 'en')
-  form.append('response_format', 'json')
-  form.append('prompt', 'IELTS Speaking answer in English. Preserve the speaker’s exact words, including natural errors; do not rewrite the answer.')
-  const response = await fetch(`${origin}/audio/transcriptions`, {
-    method: 'POST', headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` }, body: form,
-    signal: AbortSignal.timeout(35_000),
-  })
+  const transcribe = (model: string) => {
+    const form = new FormData()
+    form.append('file', new Blob([bytes], { type: mimeType }), `answer.${extension}`)
+    form.append('model', model)
+    form.append('language', 'en')
+    form.append('response_format', 'json')
+    form.append('prompt', 'IELTS Speaking answer in English. Preserve the speaker’s exact words, including fillers, repetitions, and natural errors. Do not rewrite or invent any answer.')
+    return fetch(`${origin}/audio/transcriptions`, {
+      method: 'POST', headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` }, body: form,
+      signal: AbortSignal.timeout(35_000),
+    })
+  }
+  let response = await transcribe('gpt-transcribe')
+  if (response.status === 400 || response.status === 404) response = await transcribe('gpt-4o-transcribe')
   if (!response.ok) return res.status(503).json({ message: 'Speech transcription is temporarily unavailable.' })
   const payload = await response.json() as { text?: string }
   return res.json({ text: String(payload.text ?? '').trim() })

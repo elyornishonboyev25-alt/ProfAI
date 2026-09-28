@@ -34,6 +34,7 @@ export default function MicVisualizer({
     if (!AudioCtx) return
 
     const context = new AudioCtx()
+    void context.resume().catch(() => {})
     const analyser = context.createAnalyser()
     analyser.fftSize = 64
     analyser.smoothingTimeConstant = 0.8

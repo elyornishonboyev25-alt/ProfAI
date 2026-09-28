@@ -4,12 +4,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Bookmark,
   BookmarkCheck,
+  Building2,
   Check,
   ChevronDown,
   Compass,
-  Globe2,
+  GraduationCap,
   Heart,
   MapPin,
   RotateCcw,
@@ -18,7 +20,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
-import UniversityGlobe from '@/components/admission/UniversityGlobe'
+import './admission-universities.css'
 import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
@@ -214,9 +216,17 @@ function FilterSelect({
 
 export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
   const navigate = useNavigate()
+  const resultsSectionRef = useRef<HTMLElement>(null)
   const all = useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
-  const { scores, country: profileCountry, loading: profileLoading } = useAdmissionScores()
+  const { scores, country: profileCountry } = useAdmissionScores()
+  const popularCountries = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const university of all) counts.set(university.country, (counts.get(university.country) ?? 0) + 1)
+    return Array.from(counts, ([name, count]) => ({ name, count }))
+      .sort((first, second) => second.count - first.count || first.name.localeCompare(second.name))
+      .slice(0, 4)
+  }, [all])
   const { shortlistedSet, shortlistCount, toggleShortlist } = useUniversityShortlist()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [query, setQuery] = useState('')
@@ -287,6 +297,14 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
     setRank('all')
   }
 
+  const selectDestination = (destination: string) => {
+    setCountry(destination)
+    if (window.matchMedia('(max-width: 1199px)').matches) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      requestAnimationFrame(() => resultsSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }))
+    }
+  }
+
   return (
     <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
       <div className="admission-universities-blur-field" aria-hidden="true">
@@ -320,11 +338,11 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
         </header>
 
         <main className="admission-discovery-layout">
-          <aside className="admission-universities-globe-column">
+          <aside className="admission-universities-intro-column">
             <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
               <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? 'Back to Universities' : 'Applications'}</span>
             </Link>
-            <div className="admission-globe-sticky">
+            <div className="admission-university-intro-sticky">
               {shortlistOnly ? (
                 <div className="admission-shortlist-summary">
                   <span className="admission-shortlist-summary-icon"><BookmarkCheck /></span>
@@ -336,19 +354,40 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   </button>
                 </div>
               ) : (
-                <>
-                  <UniversityGlobe country={profileCountry} profileLoading={profileLoading} />
-                  <div className="admission-globe-caption">
-                    <Globe2 className="h-4 w-4" />
-                    <span>{UNIVERSITY_COUNT} universities in the catalog</span>
+                <div className="admission-university-intro">
+                  <div className="admission-university-intro-main">
+                    <span className="admission-university-intro-kicker"><GraduationCap size={17} /> UNIVERSITY DISCOVERY</span>
+                    <h1>Find your next <em>chapter.</em></h1>
+                    <p>Explore universities, compare real details and save the places that belong on your shortlist.</p>
+                    <div className="admission-university-intro-stats" aria-label="University catalog at a glance">
+                      <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>Universities</span></div>
+                      <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>QS ranked</span></div>
+                      <div><strong>{countries.length}</strong><span>Countries</span></div>
+                    </div>
                   </div>
-                </>
+                  <div className="admission-university-destinations">
+                    <div className="admission-university-destinations-heading"><span>EXPLORE BY DESTINATION</span><MapPin size={17} /></div>
+                    <div className="admission-university-destination-list">
+                      {popularCountries.map((destination, index) => (
+                        <button key={destination.name} type="button" className={country === destination.name ? 'is-active' : ''} aria-pressed={country === destination.name} onClick={() => selectDestination(destination.name)}>
+                          <span className="admission-university-destination-index">0{index + 1}</span>
+                          <span className="admission-university-destination-name">{destination.name}<small>{destination.count.toLocaleString('en-US')} universities</small></span>
+                          <ArrowUpRight size={17} />
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="admission-university-intro-shortlist" onClick={() => navigate('/admission/shortlist')}>
+                      <span><BookmarkCheck size={19} /> My shortlist <small>{shortlistCount} saved</small></span><ArrowRight size={18} />
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </aside>
 
-          <section className="admission-universities-results-column min-w-0">
+          <section ref={resultsSectionRef} className="admission-universities-results-column min-w-0">
             <div className="admission-search-panel">
+              <div className="admission-catalog-heading"><div><span><Building2 size={15} /> {shortlistOnly ? 'YOUR SAVED UNIVERSITIES' : 'THE UNIVERSITY CATALOG'}</span><h2>{shortlistOnly ? 'Your shortlist' : 'Explore universities'}</h2></div><p>{shortlistOnly ? 'Keep your chosen options close while you plan your next step.' : 'Discover institutions that match your goals, location and budget.'}</p></div>
               <div className="admission-search-box">
                 <Search aria-hidden="true" />
                 <input

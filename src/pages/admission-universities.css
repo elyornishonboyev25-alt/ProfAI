@@ -1,0 +1,233 @@
+.admission-universities-page .admission-universities-intro-column {
+  gap: 12px;
+}
+
+.admission-universities-page .admission-university-intro-sticky {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.admission-university-intro {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, .94);
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 26px 65px rgba(39, 49, 72, .14);
+  scrollbar-width: thin;
+  scrollbar-color: #e8c8cd transparent;
+}
+
+.admission-university-intro-main {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(26px, 3vw, 42px);
+  background: radial-gradient(circle at 105% 5%, #ed6265 0, transparent 43%), linear-gradient(138deg, #841c2f, #b72438 65%, #ca3544);
+  color: #fff;
+}
+
+.admission-university-intro-main::after {
+  position: absolute;
+  right: -115px;
+  bottom: -154px;
+  width: 320px;
+  height: 320px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 46px rgba(255,255,255,.045), 0 0 0 94px rgba(255,255,255,.035);
+  content: '';
+  pointer-events: none;
+}
+
+.admission-university-intro-kicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 99px;
+  padding: 9px 13px;
+  background: rgba(255,255,255,.11);
+  color: rgba(255,255,255,.94);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.admission-university-intro-main h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 450px;
+  margin: 23px 0 11px;
+  font-size: clamp(34px, 3.3vw, 53px);
+  font-weight: 950;
+  letter-spacing: -.06em;
+  line-height: 1.04;
+}
+
+.admission-university-intro-main h1 em {
+  color: #ffd7d9;
+  font-style: normal;
+}
+
+.admission-university-intro-main > p {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  margin: 0;
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.admission-university-intro-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 26px;
+}
+
+.admission-university-intro-stats > div {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.19);
+  border-radius: 13px;
+  padding: 11px 8px;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(6px);
+}
+
+.admission-university-intro-stats strong,
+.admission-university-intro-stats span { display: block; }
+.admission-university-intro-stats strong { font-size: clamp(18px, 2vw, 25px); font-weight: 900; letter-spacing: -.045em; line-height: 1; }
+.admission-university-intro-stats span { margin-top: 5px; color: rgba(255,255,255,.76); font-size: 10px; font-weight: 700; }
+
+.admission-university-destinations {
+  padding: 23px clamp(22px, 2.6vw, 34px) 25px;
+  background: linear-gradient(135deg, #fff, #fffafb);
+}
+
+.admission-university-destinations-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #a62b3a;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .17em;
+}
+
+.admission-university-destination-list { display: grid; }
+.admission-university-destination-list > button {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #edf0f4;
+  color: #263348;
+  text-align: left;
+  transition: color .18s ease, background .18s ease;
+}
+.admission-university-destination-list > button:hover,
+.admission-university-destination-list > button.is-active { color: #b72438; background: #fff5f6; }
+.admission-university-destination-list > button > svg { margin-left: auto; color: #b8c1ce; }
+.admission-university-destination-list > button:hover > svg,
+.admission-university-destination-list > button.is-active > svg { color: #c43242; }
+.admission-university-destination-index { color: #c1cbd6; font-size: 11px; font-weight: 850; }
+.admission-university-destination-name { display: flex; min-width: 0; flex: 1; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 850; }
+.admission-university-destination-name small { color: #8b98aa; font-size: 10px; font-weight: 650; white-space: nowrap; }
+
+.admission-university-intro-shortlist {
+  display: flex;
+  width: 100%;
+  min-height: 53px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  margin-top: 17px;
+  border: 1px solid #eec6cb;
+  border-radius: 13px;
+  padding: 0 14px;
+  background: #fff1f2;
+  color: #a72033;
+  font-size: 13px;
+  font-weight: 850;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.admission-university-intro-shortlist:hover { border-color: #d36b77; background: #ffe5e8; transform: translateY(-2px); }
+.admission-university-intro-shortlist > span { display: flex; align-items: center; gap: 9px; }
+.admission-university-intro-shortlist small { margin-left: 1px; color: #8f6470; font-size: 10px; font-weight: 700; }
+
+.admission-catalog-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 2px 3px 17px;
+}
+.admission-catalog-heading > div > span { display: inline-flex; align-items: center; gap: 7px; color: #b92739; font-size: 10px; font-weight: 900; letter-spacing: .16em; }
+.admission-catalog-heading h2 { margin: 5px 0 0; color: #101929; font-size: clamp(27px, 2.8vw, 38px); font-weight: 950; letter-spacing: -.055em; line-height: 1.1; }
+.admission-catalog-heading > p { max-width: 230px; margin: 0 0 2px; color: #66758b; font-size: 11px; line-height: 1.5; text-align: right; }
+
+.admission-universities-page .admission-search-panel { margin-bottom: 17px; }
+.admission-universities-page .admission-search-box {
+  height: 66px;
+  border-color: #e0e6ee;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 38px rgba(39,49,72,.09);
+}
+.admission-universities-page .admission-search-box input { font-size: clamp(15px, 1.5vw, 19px); font-weight: 650; }
+.admission-universities-page .admission-filter-row { gap: 8px; margin-top: 10px; padding: 0; }
+.admission-universities-page .admission-filter-control { height: 45px; border-color: #e0e6ee; border-radius: 12px; background: rgba(255,255,255,.9); box-shadow: 0 6px 18px rgba(39,49,72,.04); }
+.admission-universities-page .admission-filter-dot { width: 7px; height: 7px; box-shadow: none; }
+.admission-universities-page .admission-results-meta { padding: 11px 4px 0; }
+.admission-universities-page .admission-university-card { border-color: #e1e7ee; border-radius: 20px; background: #fff; box-shadow: 0 10px 30px rgba(39,49,72,.08); }
+.admission-universities-page .admission-university-card:hover { border-color: #e9b5bc; background: #fff; box-shadow: 0 19px 45px rgba(128,38,53,.13); }
+.admission-universities-page .admission-card-tags span { border-color: #e8edf2; background: #f8fafc; }
+
+@media (min-width: 1200px) {
+  .admission-universities-page .admission-university-intro-sticky { justify-content: center; }
+  .admission-universities-page .admission-university-intro { max-height: calc(100dvh - 14rem); }
+}
+
+@media (min-width: 768px) and (max-width: 1600px) {
+  .admission-universities-page .admission-university-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1199px) {
+  .admission-universities-page .admission-universities-intro-column { margin-bottom: 24px; }
+  .admission-universities-page .admission-university-intro { display: grid; grid-template-columns: 1fr 1fr; }
+  .admission-universities-page .admission-university-intro-main { display: flex; flex-direction: column; justify-content: center; }
+  .admission-universities-page .admission-university-destinations { display: flex; flex-direction: column; justify-content: center; }
+}
+
+@media (max-width: 700px) {
+  .admission-universities-page .admission-journey { justify-content: flex-start; padding-left: 8px; }
+  .admission-universities-page .admission-university-intro { display: block; border-radius: 22px; }
+  .admission-universities-page .admission-university-intro-main { padding: 27px 23px; }
+  .admission-universities-page .admission-university-intro-main h1 { font-size: 38px; }
+  .admission-universities-page .admission-university-intro-stats { margin-top: 20px; }
+  .admission-universities-page .admission-university-destinations { padding: 20px 22px 22px; }
+  .admission-universities-page .admission-university-destination-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+  .admission-universities-page .admission-university-destination-list > button { gap: 6px; }
+  .admission-universities-page .admission-university-destination-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .admission-universities-page .admission-university-destination-name small { display: block; margin-top: 1px; font-size: 9px; }
+  .admission-universities-page .admission-university-destination-list > button > svg { width: 14px; flex: none; }
+  .admission-catalog-heading { display: block; }
+  .admission-catalog-heading > p { max-width: none; margin-top: 6px; text-align: left; }
+  .admission-universities-page .admission-search-box { height: 58px; border-radius: 15px; }
+  .admission-universities-page .admission-search-box input { font-size: 15px; }
+}
+
+@media (max-width: 390px) {
+  .admission-universities-page .admission-university-destination-list { grid-template-columns: 1fr; }
+  .admission-universities-page .admission-university-intro-stats strong { font-size: 18px; }
+  .admission-universities-page .admission-university-intro-stats span { font-size: 9px; }
+}

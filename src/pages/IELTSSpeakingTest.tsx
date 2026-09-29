@@ -35,7 +35,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
-import { markFullMockSectionComplete } from '@/utils/ieltsMockCatalog'
+import { saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import { saveSpeakingSession } from '@/lib/speakingApi'
 import { learningCenterApi } from '@/features/learningCenter/api'
 
@@ -212,7 +212,17 @@ export default function IELTSSpeakingTest() {
           // When launched from a Full Mock, mark the Speaking section done only
           // now — i.e. once the examiner grade is in.
           if (mockContext?.id) {
-            markFullMockSectionComplete(mockContext.id, 'speaking')
+            saveFullMockSectionResult(mockContext.id, 'speaking', {
+              band: analysis.overallBand,
+              summary: analysis.summary,
+              review: transcript.map((turn) => ({
+                label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
+                response: turn.text,
+              })),
+              testId: mode.mock.id,
+              completedAt: new Date().toISOString(),
+            })
+            navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
           }
         }}
       />

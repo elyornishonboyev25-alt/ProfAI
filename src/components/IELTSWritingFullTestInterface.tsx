@@ -39,9 +39,11 @@ import { learningCenterApi } from '@/features/learningCenter/api'
 type Props = {
   fullTest: WritingFullTest
   onExit: () => void
+  onComplete?: (band: number, summary: string, review: { label: string; response: string; feedback?: string }[]) => void
   autoStart?: boolean
   autoTimerEnabled?: boolean
   autoDurationMinutes?: number
+  inFullMock?: boolean
 }
 
 type Phase = 'landing' | 'writing' | 'submitted'
@@ -67,9 +69,11 @@ function weightedBand(evaluations: Record<string, WritingEvaluation>, taskIds: s
 export default function IELTSWritingFullTestInterface({
   fullTest,
   onExit,
+  onComplete,
   autoStart,
   autoTimerEnabled,
   autoDurationMinutes,
+  inFullMock = false,
 }: Props) {
   const [searchParams] = useSearchParams()
   const tasks = fullTest.tasks
@@ -223,7 +227,7 @@ export default function IELTSWritingFullTestInterface({
 
   const handleSubmit = useCallback(async () => {
     if (submittingRef.current) return
-    if (writingTrial.locked) {
+    if (writingTrial.locked && !inFullMock) {
       setShowSubmitConfirm(false)
       setShowWritingGate(true)
       return
@@ -245,7 +249,7 @@ export default function IELTSWritingFullTestInterface({
       setEvaluations(resultMap)
       try { window.localStorage.removeItem(draftKey) } catch { /* Submission still succeeds. */ }
       try { window.localStorage.removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
-      if (totalWordCount > 0) writingTrial.consume()
+      if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
       awardBadge({
@@ -314,6 +318,15 @@ export default function IELTSWritingFullTestInterface({
           })
           .catch(() => {})
       }
+      onComplete?.(
+        overallBand,
+        `Task 1: ${results[0]?.summary ?? ''} Task 2: ${results[1]?.summary ?? ''}`,
+        tasks.map((task, index) => ({
+          label: `Task ${index + 1}`,
+          response: answers[task.id] ?? '',
+          feedback: results[index]?.summary,
+        })),
+      )
     } catch (error) {
       setEvalError(error instanceof Error ? error.message : 'AI evaluation failed. Please try again.')
     } finally {
@@ -326,6 +339,8 @@ export default function IELTSWritingFullTestInterface({
     draftKey,
     sessionKey,
     effectiveDuration,
+    inFullMock,
+    onComplete,
     fullTest.id,
     fullTest.title,
     searchParams,

@@ -21,7 +21,7 @@ import {
   isIeltsTrackCatalogTest,
 } from '@/utils/ieltsTrackCatalog'
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
-import { markFullMockSectionComplete, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { getNextFullMockSection, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
   mode: 'practice' | 'simulation' | 'full-test'
@@ -159,8 +159,22 @@ export default function TestInterface() {
   const handleComplete = (results: unknown) => {
     // Inside a Full Mock, a section counts as done only when its test is actually
     // submitted — which is exactly here, in the completion handler.
-    if (mockContext?.id && mockContext.section) {
-      markFullMockSectionComplete(mockContext.id, mockContext.section)
+    const result = results as TestResult
+    if (mockContext?.id && mockContext.section && !result.isPartial) {
+      saveFullMockSectionResult(mockContext.id, mockContext.section, {
+        band: result.score, completedAt: result.date, testId: result.testId, result,
+      })
+      const next = getNextFullMockSection(mockContext.id, mockContext.section)
+      if (next?.launchPath) {
+        navigate(next.launchPath, { replace: true, state: {
+          entry: 'mock-ielts', from: mockFrom,
+          mock: { id: mockContext.id, section: next.key },
+          launchPreset: { mode: 'simulation' }, autoStart: true, timerEnabled: true,
+        } })
+      } else {
+        navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
+      }
+      return
     }
     navigate(`/results/${(results as { testId?: string })?.testId || 'unknown'}`, {
       state: {

@@ -10,7 +10,6 @@ import {
   Mic2,
   PenSquare,
   PlayCircle,
-  RotateCcw,
   Sparkles,
   Trophy,
   type LucideIcon,
@@ -22,6 +21,8 @@ import {
   FULL_MOCK_PROGRESS_EVENT,
   getFullMockById,
   getFullMockCompletedSections,
+  getFullMockOverallBand,
+  getFullMockResults,
   MOCK_SECTION_COUNT,
   type FullMockEntry,
   type MockSection,
@@ -91,6 +92,11 @@ export default function MockIELTSRun() {
   }, [refreshProgress])
 
   const completedSet = useMemo(() => new Set(completedKeys), [completedKeys])
+  const sectionResults = useMemo(() => {
+    void completedKeys
+    return mockId ? getFullMockResults(mockId) : {}
+  }, [completedKeys, mockId])
+  const overallBand = mockId ? getFullMockOverallBand(mockId) : null
 
   const launchSection = useCallback(
     (section: MockSection) => {
@@ -118,12 +124,22 @@ export default function MockIELTSRun() {
     (section, index) => resolveStatus(mock.sections, index, completedSet) === 'current',
   )
 
+  const reviewSection = (section: MockSection) => {
+    const saved = sectionResults[section.key]
+    if (!saved?.result || !section.launchPath) return
+    navigate(section.launchPath, { state: {
+      entry: 'mock-ielts', from: from ?? 'mock',
+      mock: { id: mock.id, section: section.key },
+      reviewPayload: { result: saved.result, showCorrectAnswers: true },
+    } })
+  }
+
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
       <div className="relative mx-auto w-full max-w-5xl space-y-6">
         <Reveal>
-          <section className="premium-hero p-6 sm:p-9">
+          <section className="premium-hero overflow-hidden border border-red-100 bg-[radial-gradient(circle_at_95%_0%,rgba(239,68,68,.14),transparent_40%),linear-gradient(145deg,#fff,#fff7f7)] p-6 shadow-[0_24px_50px_rgba(95,40,40,.08)] sm:p-9">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="premium-top-controls">
@@ -140,8 +156,7 @@ export default function MockIELTSRun() {
                   IELTS <span className="arena-title-accent-red">Full Mock {mock.index}</span>
                 </h1>
                 <p className="premium-section-subtitle max-w-3xl">
-                  Sit the four sections in official exam order. Each section opens straight into exam mode and is marked
-                  done automatically once you finish it — the next section unlocks only then.
+                  One continuous exam: Listening, Reading, Writing, then Speaking. Your overall band and review appear only after all four sections finish.
                 </p>
               </div>
 
@@ -149,7 +164,7 @@ export default function MockIELTSRun() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Total Session</p>
                 <p className="mt-1 text-4xl font-black text-slate-900">{formatMockDuration(mock.totalMinutes)}</p>
                 <p className="mt-2 text-xs font-semibold text-red-700">
-                  {mock.readyCount}/{MOCK_SECTION_COUNT} sections live · {liveDone} done
+                  {liveDone}/{MOCK_SECTION_COUNT} sections complete
                 </p>
               </div>
             </div>
@@ -226,14 +241,9 @@ export default function MockIELTSRun() {
 
                   <div className="flex items-center gap-2">
                     {isDone ? (
-                      <button
-                        type="button"
-                        onClick={() => launchSection(section)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                        Retake
-                      </button>
+                      allSectionsDone && sectionResults[section.key]?.result ? (
+                        <button type="button" onClick={() => reviewSection(section)} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-50">Review</button>
+                      ) : <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" /> Complete</span>
                     ) : isCurrent ? (
                       <button
                         type="button"
@@ -273,7 +283,7 @@ export default function MockIELTSRun() {
                 {mock.readyCount === 0
                   ? 'No sections are live for this mock yet.'
                   : nextSection
-                    ? `Up next: ${nextSection.title}. Finish it to unlock the next section.`
+                    ? `Up next: ${nextSection.title}. Your score stays hidden until the exam ends.`
                     : 'You have finished every live section of this mock.'}
               </p>
             </article>
@@ -283,20 +293,37 @@ export default function MockIELTSRun() {
                 <Sparkles className="h-4 w-4" />
                 Combined band
               </p>
-              {allSectionsDone ? (
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  All four sections are complete. Your combined IELTS band report will appear here.
-                </p>
+              {allSectionsDone && overallBand !== null ? (
+                <div className="mt-4">
+                  <p className="text-5xl font-black tracking-tight text-slate-950">{overallBand.toFixed(1)}<span className="ml-2 text-sm font-semibold text-slate-500">overall band</span></p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Practice estimate. Listening and Reading are auto scored; Writing and Speaking use AI evaluation.</p>
+                  <div className="mt-5 space-y-2 border-t border-slate-100 pt-4">
+                    {mock.sections.map((section) => {
+                      const saved = sectionResults[section.key]
+                      return <div key={section.key} className="rounded-xl bg-slate-50 px-3 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-bold text-slate-700">{section.title}</span>
+                          <strong className="text-lg text-slate-950">{saved?.band.toFixed(1)}</strong>
+                        </div>
+                        {saved?.summary ? <p className="mt-1 text-xs leading-5 text-slate-600">{saved.summary}</p> : null}
+                        {saved?.result ? <button type="button" onClick={() => reviewSection(section)} className="mt-2 text-xs font-bold text-red-700 hover:underline">Review answers →</button> : null}
+                        {saved?.review?.length ? <details className="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-700">
+                          <summary className="cursor-pointer font-bold text-red-700">Review {section.title.toLowerCase()} responses</summary>
+                          <div className="mt-3 max-h-80 space-y-3 overflow-y-auto">
+                            {saved.review.map((item, index) => <div key={index} className="rounded-lg bg-white p-3">
+                              <p className="font-bold text-slate-900">{item.label}</p>
+                              <p className="mt-1 whitespace-pre-wrap leading-5">{item.response || 'No response recorded.'}</p>
+                              {item.feedback ? <p className="mt-2 border-t border-slate-100 pt-2 leading-5 text-slate-500">{item.feedback}</p> : null}
+                            </div>)}
+                          </div>
+                        </details> : null}
+                      </div>
+                    })}
+                  </div>
+                </div>
               ) : (
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Finish all four live sections in order to unlock a combined IELTS band (Reading &amp; Listening
-                  auto-scored, Writing &amp; Speaking graded by the AI examiner).
-                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Your overall band and review unlock when all four sections finish. Section scores stay hidden during the exam.</p>
               )}
-              <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-500">
-                <Lock className="h-3.5 w-3.5 text-red-600" />
-                Unlocks when 4/4 sections are live and done.
-              </p>
             </article>
           </Reveal>
         </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, Clock3 } from 'lucide-react'
 import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
 import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
+import { getNextFullMockSection, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 
 type WritingTestNavState = {
   autoStart?: boolean
@@ -36,6 +37,20 @@ export default function IELTSWritingTest() {
       <IELTSWritingFullTestInterface
         fullTest={fullTest}
         onExit={handleExit}
+        inFullMock={Boolean(navState?.mock?.id)}
+        onComplete={(band, summary, review) => {
+          const mockId = navState?.mock?.id
+          if (!mockId) return
+          saveFullMockSectionResult(mockId, 'writing', {
+            band, summary, review, testId: fullTest.id, completedAt: new Date().toISOString(),
+          })
+          const next = getNextFullMockSection(mockId, 'writing')
+          if (next?.launchPath) navigate(next.launchPath, { replace: true, state: {
+            entry: 'mock-ielts', from: navState?.from,
+            mock: { id: mockId, section: next.key },
+          } })
+          else navigate(`/mock/ielts/${mockId}`, { replace: true, state: { from: navState?.from } })
+        }}
         autoStart={navState?.autoStart}
         autoTimerEnabled={navState?.timerEnabled}
         autoDurationMinutes={navState?.durationMinutes}

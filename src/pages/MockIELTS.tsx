@@ -8,11 +8,9 @@ import {
   Mic2,
   PenSquare,
   Search,
-  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import {
   formatMockDuration,
   getFullMockCatalog,
@@ -49,9 +47,7 @@ function IELTSMockCatalog() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
-  const mockTrial = useFeatureTrial('mock')
   const mocks = useMemo(() => getFullMockCatalog(), [])
-  const availableCount = useMemo(() => mocks.filter((mock) => mock.readyCount > 0).length, [mocks])
   const fullyReadyCount = useMemo(() => mocks.filter((mock) => mock.fullyReady).length, [mocks])
   const [filter, setFilter] = useState<MockFilter>('all')
   const [search, setSearch] = useState('')
@@ -73,6 +69,8 @@ function IELTSMockCatalog() {
     void progressVersion
     return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
   }, [mocks, progressVersion])
+  const inProgressCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size > 0 && done.size < MOCK_SECTION_COUNT).length, [completedByMock])
+  const completedCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size === MOCK_SECTION_COUNT).length, [completedByMock])
 
   const visibleMocks = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -87,14 +85,14 @@ function IELTSMockCatalog() {
   }, [completedByMock, filter, mocks, search])
 
   return (
-    <section id="mocks" className="relative isolate scroll-mt-24 overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,48,70,.09),inset_0_1px_0_white] sm:p-5 lg:p-6">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_92%_0%,rgba(190,35,53,.07),transparent_30%),radial-gradient(circle_at_5%_100%,rgba(185,183,190,.12),transparent_35%)]" />
+    <section id="mocks" className="relative isolate scroll-mt-24 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-[#f8f8f7] p-4 shadow-[0_24px_64px_rgba(30,48,70,.08)] sm:p-6 lg:p-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_85%_0%,rgba(239,68,68,.11),transparent_45%),linear-gradient(180deg,#fff,transparent)]" />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
-          <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">Full mock tests</h1>
-          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">Listening, Reading, Writing and Speaking in official exam order. Your progress stays with each mock.</p>
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Full mock exams</h1>
+          <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600">Four skills. One uninterrupted exam. Your overall band and review open after Speaking.</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           <label className="relative block w-full sm:w-72">
@@ -107,19 +105,14 @@ function IELTSMockCatalog() {
               className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,48,70,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
             />
           </label>
-          {!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white/75 px-3 py-1 text-[11px] font-bold text-red-700">
-              <Sparkles className="h-3.5 w-3.5" /> {Math.max(0, mockTrial.remaining)} free mocks left
-            </span>
-          ) : null}
         </div>
       </div>
 
       <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-[36rem] sm:gap-3" aria-label="Full mock availability">
         {[
-          { value: mocks.length, label: 'Full mocks' },
-          { value: availableCount, label: 'Available now' },
-          { value: fullyReadyCount, label: 'All 4 ready' },
+          { value: fullyReadyCount, label: 'Ready to take' },
+          { value: inProgressCount, label: 'In progress' },
+          { value: completedCount, label: 'Completed' },
         ].map((metric) => (
           <div key={metric.label} className="rounded-2xl border border-white/90 bg-white/70 px-3 py-2.5 shadow-[0_7px_20px_rgba(30,48,70,.05)] sm:px-4">
             <strong className="block text-xl font-black leading-none tracking-tight text-slate-950">{metric.value}</strong>
@@ -158,7 +151,7 @@ function IELTSMockCatalog() {
                 key={mock.id}
                 type="button"
                 onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}
-                className="ielts-catalog-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(241,240,243,.67))] p-6 text-left shadow-[0_12px_34px_rgba(70,50,56,.07),inset_0_1px_0_white] transition-[border-color,box-shadow] duration-150 hover:border-red-200 hover:shadow-[0_18px_42px_rgba(185,28,28,.1),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+                className="ielts-catalog-card group relative flex min-h-[15rem] w-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-6 text-left shadow-[0_8px_24px_rgba(30,48,70,.04)] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_20px_36px_rgba(91,34,34,.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
               >
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">IELTS FULL MOCK {String(mock.index).padStart(2, '0')}</p>
@@ -167,7 +160,7 @@ function IELTSMockCatalog() {
                   </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">Full Mock {mock.index}</h2>
-                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">Four skills in one exam flow</p>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">Listening → Reading → Writing → Speaking</p>
 
                 <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Section availability">
                   {mock.sections.map((section) => {

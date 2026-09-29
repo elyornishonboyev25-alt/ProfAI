@@ -23,7 +23,7 @@ export type LineChartData = {
 export type WritingChartData = LineChartData
 
 export type WritingDataVisual = {
-  kind: 'line' | 'bar' | 'table'
+  kind: 'line' | 'bar' | 'table' | 'pie'
   title: string
   unit: string
   years: Array<number | string>
@@ -47,7 +47,7 @@ export type WritingTask = {
   chart?: WritingChartData
   visual?: WritingDataVisual
   visualContext?: string
-  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making'
+  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making' | 'riverside-park'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string

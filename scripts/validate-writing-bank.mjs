@@ -14,6 +14,7 @@ const tests = exports.WRITING_TESTS_5_TO_30
 assert.equal(tests.length, 26)
 const ids = new Set()
 const prompts = new Set()
+const visualKinds = new Set()
 for (let offset = 0; offset < tests.length; offset++) {
   const test = tests[offset]
   const index = offset + 5
@@ -34,6 +35,7 @@ for (let offset = 0; offset < tests.length; offset++) {
   const visualTask = test.tasks[0]
   assert.ok(visualTask.visual || visualTask.diagram, `Missing Task 1 visual: ${test.id}`)
   assert.ok(visualTask.visualContext, `Missing evaluation context: ${test.id}`)
+  visualKinds.add(visualTask.visual?.kind ?? visualTask.diagram)
   if (visualTask.visual) {
     const visual = visualTask.visual
     assert.equal(visual.years.length, 5)
@@ -41,7 +43,11 @@ for (let offset = 0; offset < tests.length; offset++) {
     for (const series of visual.series) {
       assert.equal(series.values.length, visual.years.length)
       assert.ok(series.values.every(Number.isFinite))
+      if (visual.kind === 'pie') assert.ok(series.values.every((value) => value >= 0 && value <= 100))
     }
   }
+}
+for (const kind of ['bar', 'line', 'pie', 'table', 'brick-making', 'riverside-park']) {
+  assert.ok(visualKinds.has(kind), `Missing Task 1 diagram variety: ${kind}`)
 }
 console.log('Writing bank valid: 26 full tests, 52 unique tasks, 26 Task 1 visuals.')

@@ -39,7 +39,7 @@ const CURATED_VISUALS: WritingDataVisual[] = [
     note: 'A 2023 value is shown where 2024 data was unavailable.',
   },
   {
-    kind: 'table',
+    kind: 'pie',
     title: 'Population using safely managed sanitation, 2024 or latest available',
     unit: 'percent',
     years: ['USA', 'UK', 'Japan', 'China', 'India'],
@@ -66,7 +66,7 @@ const CURATED_VISUALS: WritingDataVisual[] = [
     note: 'Annual mean population-weighted PM2.5 exposure.',
   },
   {
-    kind: 'table', title: 'Arable land as a share of land area, 2023', unit: 'percent',
+    kind: 'pie', title: 'Arable land as a share of land area, 2023', unit: 'percent',
     years: ['Bangladesh', 'Denmark', 'Ukraine', 'India', 'Brazil'],
     series: [{ label: 'Arable land', values: [60.63, 59.13, 56.82, 51.75, 6.66] }],
     sourceLabel: 'Our World in Data / FAO', sourceUrl: 'https://ourworldindata.org/grapher/share-of-land-area-used-for-arable-agriculture',
@@ -79,7 +79,7 @@ const CURATED_VISUALS: WritingDataVisual[] = [
     note: 'International arrivals as displayed in the source chart.',
   },
   {
-    kind: 'table', title: 'Agricultural land as a share of land area by region, 2023', unit: 'percent',
+    kind: 'pie', title: 'Agricultural land as a share of land area by region, 2023', unit: 'percent',
     years: ['South Asia', 'East Asia/Pacific', 'Sub-Saharan Africa', 'Europe/Central Asia', 'North America'],
     series: [{ label: 'Agricultural land', values: [58.34, 46.82, 44.7, 29.09, 26.67] }],
     sourceLabel: 'Our World in Data / FAO', sourceUrl: 'https://ourworldindata.org/grapher/share-of-land-area-used-for-agriculture',
@@ -125,7 +125,7 @@ const CURATED_VISUALS: WritingDataVisual[] = [
     note: 'Greenhouse gas emissions, including land-use change.',
   },
   {
-    kind: 'table', title: 'Adult literacy, 2024 or latest available', unit: 'percent',
+    kind: 'pie', title: 'Adult literacy, 2024 or latest available', unit: 'percent',
     years: ['China', 'Brazil', 'India', 'Bangladesh', 'Nigeria'],
     series: [{ label: 'Adults', values: [96.7, 94.7, 78.2, 79, 70.4] }],
     sourceLabel: 'Our World in Data / UNESCO', sourceUrl: 'https://ourworldindata.org/grapher/literacy',
@@ -177,10 +177,10 @@ const TASK_1_INSTRUCTIONS = 'Summarise the information by selecting and reportin
 const TASK_2_INSTRUCTIONS = 'Give reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.'
 
 type DataRow = typeof DATA[number]
-function comparison(first: DataRow, second: DataRow, index: number): WritingDataVisual {
+function comparison(first: DataRow, second: DataRow): WritingDataVisual {
   const metric = METRIC[first.id]
   return {
-    kind: (['line', 'bar', 'table'] as const)[index % 3],
+    kind: 'line',
     title: `${metric.topic[0].toUpperCase() + metric.topic.slice(1)}: ${COUNTRY[first.country]} and ${COUNTRY[second.country]}`,
     unit: metric.unit,
     years: YEARS,
@@ -197,20 +197,20 @@ function task(index: number, taskType: 'task1' | 'task2', lead: string, visual?:
   return {
     id: `writing-full-${index}-task-${number}`, day: null, fullTestIndex: index, taskType,
     title: `Full Writing Test ${index}`,
-    subtitle: taskType === 'task1' ? `Task 1 · ${visual?.kind === 'line' ? 'Line graph' : visual?.kind === 'bar' ? 'Bar chart' : visual?.kind === 'table' ? 'Table' : 'Process diagram'} · ${visual?.title ?? 'Brick manufacturing'}` : `Task 2 · Essay · ${ESSAYS[index - 5][0]}`,
+    subtitle: taskType === 'task1' ? `Task 1 · ${visual?.kind === 'line' ? 'Line graph' : visual?.kind === 'bar' ? 'Bar chart' : visual?.kind === 'table' ? 'Table' : visual?.kind === 'pie' ? 'Pie charts' : diagram === 'riverside-park' ? 'Maps' : 'Process diagram'} · ${visual?.title ?? (diagram === 'riverside-park' ? 'Riverside Park' : 'Brick manufacturing')}` : `Task 2 · Essay · ${ESSAYS[index - 5][0]}`,
     prompt, promptLead: lead, promptQuestion: question, instructions,
     suggestedWordCount: taskType === 'task1' ? { min: 150, max: 180 } : { min: 250, max: 280 },
     maxWordCount: taskType === 'task1' ? 500 : 800,
     durationMinutes: taskType === 'task1' ? 20 : 40,
     visual, diagram,
-    visualContext: visual ? `${visual.title}; unit: ${visual.unit}. ${visual.years.map((year, yearIndex) => `${year}: ${visual.series.map((series) => `${series.label} ${series.values[yearIndex]}`).join(', ')}`).join('; ')}. ${visual.note ?? ''}` : diagram === 'brick-making' ? 'Brick manufacturing: clay is dug out, passes through a metal grid and roller, mixed with sand and water, shaped by wire cutter or mould, dried for 24–48 hours, heated in kilns at 200–980°C and 870–1300°C, cooled for 48–72 hours, then packaged and delivered.' : undefined,
+    visualContext: visual ? `${visual.title}; unit: ${visual.unit}. ${visual.years.map((year, yearIndex) => `${year}: ${visual.series.map((series) => `${series.label} ${series.values[yearIndex]}`).join(', ')}`).join('; ')}. ${visual.note ?? ''}` : diagram === 'brick-making' ? 'Brick manufacturing: clay is dug out, passes through a metal grid and roller, mixed with sand and water, shaped by wire cutter or mould, dried for 24–48 hours, heated in kilns at 200–980°C and 870–1300°C, cooled for 48–72 hours, then packaged and delivered.' : diagram === 'riverside-park' ? 'Riverside Park in 2000 and 2025. The river and north entrance remain. In 2000 the west side has a woodland and a small footpath; the centre has an open lawn; the east side has a pond and a picnic area. By 2025 a cycle path runs along the north edge, the woodland becomes a sports court, the lawn becomes a playground, the pond remains, a cafe replaces the picnic area, and a bridge crosses the river from the south entrance.' : undefined,
     available: true,
   }
 }
 
 export const WRITING_TESTS_5_TO_30: WritingFullTest[] = Array.from({ length: 26 }, (_, offset) => {
   const index = offset + 5
-  const visual = index === 5 ? undefined : index <= 24
+  const visual = index === 5 || index === 23 ? undefined : index <= 24
     ? CURATED_VISUALS[offset - 1]
     : (() => {
       const pairs = [
@@ -222,18 +222,22 @@ export const WRITING_TESTS_5_TO_30: WritingFullTest[] = Array.from({ length: 26 
         ['SP.URB.TOTL.IN.ZS', 'IND', 'CHN'],
       ] as const
       const [indicator, first, second] = pairs[index - 25]
-      return comparison(DATA.find((row) => row.id === indicator && row.country === first)!, DATA.find((row) => row.id === indicator && row.country === second)!, index)
+      return comparison(DATA.find((row) => row.id === indicator && row.country === first)!, DATA.find((row) => row.id === indicator && row.country === second)!)
     })()
   const task1Lead = index === 5
     ? 'The diagram shows the process by which bricks are manufactured for the building industry.'
+    : index === 23
+      ? 'The maps show how Riverside Park changed between 2000 and 2025.'
     : index <= 24
-      ? CURATED_LEADS[offset - 1]
+      ? visual?.kind === 'pie'
+        ? CURATED_LEADS[offset - 1].replace(/^The table compares/, 'The pie charts compare').replace(/^The table shows/, 'The pie charts show')
+        : CURATED_LEADS[offset - 1]
     : `The ${visual!.kind === 'table' ? 'table' : visual!.kind === 'bar' ? 'bar chart' : 'line graph'} shows ${visual!.title.toLowerCase()}.`
   const essayQuestion = ESSAYS[offset][1]
   return {
     id: `writing-full-${index}`, index, title: `Full Writing Test ${index}`, available: true,
     tasks: [
-      task(index, 'task1', task1Lead, visual, undefined, index === 5 ? 'brick-making' : undefined),
+      task(index, 'task1', task1Lead, visual, undefined, index === 5 ? 'brick-making' : index === 23 ? 'riverside-park' : undefined),
       task(index, 'task2', essayQuestion, undefined),
     ],
   }

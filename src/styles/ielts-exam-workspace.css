@@ -151,8 +151,61 @@
 .ielts-writing-workspace {
   color: #172033;
   background: #f7f8fb;
-  height: calc(100dvh - 58px);
-  min-height: 560px;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* The toolbar and writing desk share the viewport; only the prompt and editor scroll. */
+.app-shell:has(.ielts-writing-workspace) {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell:has(.ielts-writing-workspace) > .relative.z-10,
+.app-shell:has(.ielts-writing-workspace) .workspace-main,
+.app-shell:has(.ielts-writing-workspace) .workspace-main > .flex {
+  min-height: 0;
+}
+
+.app-shell:has(.ielts-writing-workspace) > .relative.z-10 {
+  height: 100%;
+}
+
+.app-shell:has(.ielts-writing-workspace) .workspace-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell:has(.ielts-writing-workspace) .workspace-main > .flex {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.ielts-writing-workspace > main,
+.ielts-writing-workspace > div.flex.min-h-0.flex-1 {
+  overflow: hidden;
+}
+
+.ielts-writing-workspace > main > section:first-child,
+.ielts-writing-workspace > div.flex.min-h-0.flex-1 > div:first-child {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ielts-writing-workspace > main > section:nth-child(2),
+.ielts-writing-workspace > div.flex.min-h-0.flex-1 > div:nth-child(2),
+.ielts-writing-workspace .writing-exam-card:has(> textarea) {
+  min-height: 0;
+}
+
+@media (max-width: 1023px) {
+  .ielts-writing-workspace > main > section:first-child,
+  .ielts-writing-workspace > div.flex.min-h-0.flex-1 > div:first-child {
+    flex: 0 0 38%;
+    max-height: 38%;
+  }
 }
 
 .ielts-writing-workspace .ielts-writing-header {

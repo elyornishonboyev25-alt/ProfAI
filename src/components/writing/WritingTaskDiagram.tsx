@@ -124,6 +124,15 @@ function RadioTelevisionChart() {
 }
 
 function BrickMakingDiagram() {
+  const drawings: Record<string, string> = {
+    Clay: 'M5 38Q20 19 35 35Q45 21 62 38ZM47 31L54 4M50 8L60 11M54 4L59 0',
+    'Metal grid': 'M10 7H55V42H10ZM20 7V42M31 7V42M43 7V42M10 18H55M10 30H55',
+    'Sand + water': 'M5 39L23 15L43 39ZM51 4Q62 19 51 27Q40 19 51 4ZM40 39H62',
+    'Wire cutter': 'M8 8H57V40H8ZM8 8L57 40M8 40L57 8M32 4V44',
+    'Drying oven': 'M7 10H58V40H7ZM16 18H49M16 28H49M17 2Q12 7 18 12M32 2Q27 7 33 12M47 2Q42 7 48 12',
+    Kiln: 'M8 40V16H43V40ZM19 16V4H28V16M44 40V9H58V40M16 31Q24 19 30 32Q36 20 39 33',
+    Cooling: 'M33 21A6 6 0 1 0 34 21M32 14Q17 2 13 13Q12 21 27 22M40 22Q55 11 53 7Q46 4 36 17M34 29Q38 47 49 43Q52 37 39 25',
+  }
   const boxes = [
     { x: 24, y: 82, label: 'Clay', detail: 'digger' },
     { x: 166, y: 82, label: 'Metal grid', detail: 'and roller' },
@@ -146,17 +155,74 @@ function BrickMakingDiagram() {
       <defs><marker id="brick-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b" /></marker></defs>
       {boxes.map((box) => (
         <g key={box.label + box.x + box.y}>
-          <rect x={box.x} y={box.y} width="116" height="80" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
-          <text x={box.x + 58} y={box.y + 32} textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">{box.label}</text>
-          <text x={box.x + 58} y={box.y + 55} textAnchor="middle" fontSize="12" fill="#475467">{box.detail}</text>
+          <rect x={box.x} y={box.y} width="116" height="80" rx="4" fill="#fff" stroke="#777" strokeWidth="1.5" />
+          <path d={drawings[box.label]} transform={`translate(${box.x + 35} ${box.y + 4}) scale(.72)`} fill="none" stroke="#555" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          <text x={box.x + 58} y={box.y + 59} textAnchor="middle" fontSize="14" fontWeight="700" fill="#222">{box.label}</text>
+          <text x={box.x + 58} y={box.y + 75} textAnchor="middle" fontSize="11" fill="#555">{box.detail}</text>
         </g>
       ))}
-      <rect x="166" y="365" width="116" height="65" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
-      <text x="224" y="404" textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">Packaging</text>
-      <rect x="334" y="365" width="116" height="65" rx="11" fill="#fff8f6" stroke="#dc9a8e" strokeWidth="1.5" />
-      <text x="392" y="404" textAnchor="middle" fontSize="15" fontWeight="700" fill="#7d2930">Delivery</text>
+      <rect x="166" y="365" width="116" height="65" rx="4" fill="#fff" stroke="#777" strokeWidth="1.5" />
+      <path d="M197 381L224 372L251 381V402L224 412L197 402ZM224 372V412M197 381L224 390L251 381" fill="none" stroke="#555" strokeWidth="2" />
+      <text x="224" y="425" textAnchor="middle" fontSize="13" fontWeight="700" fill="#222">Packaging</text>
+      <rect x="334" y="365" width="116" height="65" rx="4" fill="#fff" stroke="#777" strokeWidth="1.5" />
+      <path d="M344 393V377H409V399H344ZM409 385H426L441 399H409M359 399A7 7 0 1 0 373 399A7 7 0 1 0 359 399M416 399A7 7 0 1 0 430 399A7 7 0 1 0 416 399" fill="none" stroke="#555" strokeWidth="2" />
+      <text x="392" y="425" textAnchor="middle" fontSize="13" fontWeight="700" fill="#222">Delivery</text>
     </svg>
   )
+}
+
+function RiversideParkDiagram() {
+  const label = { fontFamily: "Georgia, 'Times New Roman', serif", fill: '#171717' }
+  const drawMap = (year: 2000 | 2025, origin: number) => <g transform={`translate(${origin} 62)`} key={year}>
+    <text x="213" y="0" textAnchor="middle" fontSize="26" fontWeight="700" style={label}>{year}</text>
+    <rect x="8" y="24" width="410" height="355" fill="#fafafa" stroke="#222" strokeWidth="2" />
+    <path d="M9 290 C84 272 131 295 199 280 S325 274 417 294 L417 347 C320 331 292 347 216 332 S85 337 9 350Z" fill="#d9d9d9" stroke="#555" strokeWidth="2" />
+    <path d="M9 293 C84 275 131 298 199 283 S325 277 417 297 M9 349 C85 336 144 341 216 334 S320 334 417 349" fill="none" stroke="#777" />
+    <text x="211" y="320" textAnchor="middle" fontSize="20" fontStyle="italic" style={label}>River</text>
+    <path d="M205 24V82" stroke="#222" strokeWidth="3" />
+    <path d="M194 56L205 79L216 56" fill="none" stroke="#222" strokeWidth="3" />
+    <text x="213" y="108" textAnchor="middle" fontSize="15" style={label}>North entrance</text>
+    {year === 2000 ? <g>
+      <path d="M72 120 Q47 190 68 263 M80 255 Q113 214 167 232" fill="none" stroke="#777" strokeWidth="7" strokeDasharray="6 5" />
+      {[72, 96, 128, 152].map((x, i) => <g key={x} transform={`translate(${x} ${145 + (i % 2) * 53})`}>
+        <path d="M0 42V3 M-17 26L0 0L17 26Z M-14 37L0 13L14 37Z" fill="#b7b7b7" stroke="#333" strokeWidth="2" />
+      </g>)}
+      <text x="118" y="261" textAnchor="middle" fontSize="16" style={label}>Woodland</text>
+      <ellipse cx="248" cy="195" rx="53" ry="65" fill="#f3f3f3" stroke="#555" strokeWidth="2" />
+      <text x="249" y="198" textAnchor="middle" fontSize="17" style={label}>Open lawn</text>
+      <path d="M330 125 Q390 118 390 171 Q389 210 346 209 Q312 201 316 166Z" fill="#c9c9c9" stroke="#444" strokeWidth="2" />
+      <text x="350" y="170" textAnchor="middle" fontSize="16" style={label}>Pond</text>
+      <path d="M322 238H389 M332 222V254 M379 222V254" fill="none" stroke="#333" strokeWidth="3" />
+      <text x="353" y="274" textAnchor="middle" fontSize="16" style={label}>Picnic area</text>
+      <text x="84" y="284" textAnchor="middle" fontSize="13" style={label}>Footpath</text>
+    </g> : <g>
+      <path d="M38 92H385" stroke="#666" strokeWidth="10" strokeDasharray="18 6" />
+      <text x="350" y="83" textAnchor="middle" fontSize="13" style={label}>Cycle path</text>
+      <rect x="53" y="133" width="122" height="110" fill="#ededed" stroke="#222" strokeWidth="3" />
+      <path d="M114 133V243 M53 188H175 M53 133L175 243 M175 133L53 243" stroke="#777" strokeWidth="1.5" />
+      <text x="114" y="265" textAnchor="middle" fontSize="16" style={label}>Sports court</text>
+      <rect x="201" y="143" width="95" height="100" rx="11" fill="#eee" stroke="#333" strokeWidth="2" />
+      <path d="M217 225L248 164L278 226 M229 202H267" fill="none" stroke="#555" strokeWidth="5" />
+      <text x="249" y="264" textAnchor="middle" fontSize="16" style={label}>Playground</text>
+      <path d="M330 125 Q390 118 390 171 Q389 210 346 209 Q312 201 316 166Z" fill="#c9c9c9" stroke="#444" strokeWidth="2" />
+      <text x="350" y="170" textAnchor="middle" fontSize="16" style={label}>Pond</text>
+      <rect x="319" y="224" width="69" height="40" fill="#eee" stroke="#333" strokeWidth="2" />
+      <path d="M317 224L353 204L391 224" fill="none" stroke="#333" strokeWidth="3" />
+      <text x="353" y="282" textAnchor="middle" fontSize="16" style={label}>Café</text>
+      <path d="M205 269V353 M216 269V351 M199 275H222 M199 343H222" fill="none" stroke="#222" strokeWidth="3" />
+      <text x="254" y="366" textAnchor="middle" fontSize="14" style={label}>Bridge</text>
+    </g>}
+    <path d="M205 379V400" stroke="#222" strokeWidth="2" />
+    <text x="213" y="421" textAnchor="middle" fontSize="14" style={label}>South entrance</text>
+  </g>
+  return <svg viewBox="0 0 920 510" className="h-auto w-full" role="img" aria-label="Riverside Park maps in 2000 and 2025. The river and north entrance remain. Woodland becomes a sports court, the lawn becomes a playground, the picnic area becomes a café, a cycle path and bridge are added, and the pond remains.">
+    <rect width="920" height="510" fill="white" />
+    <text x="460" y="33" textAnchor="middle" fontSize="26" fontWeight="700" style={label}>Changes to Riverside Park</text>
+    {drawMap(2000, 18)}
+    {drawMap(2025, 480)}
+    <path d="M879 83V45 M879 45L871 57 M879 45L887 57" fill="none" stroke="#222" strokeWidth="2" />
+    <text x="879" y="38" textAnchor="middle" fontSize="15" style={label}>N</text>
+  </svg>
 }
 
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
@@ -166,5 +232,6 @@ export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
     case 'further-education': return <FurtherEducationChart />
     case 'radio-tv-audiences': return <RadioTelevisionChart />
     case 'brick-making': return <BrickMakingDiagram />
+    case 'riverside-park': return <RiversideParkDiagram />
   }
 }

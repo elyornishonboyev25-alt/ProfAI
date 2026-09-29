@@ -88,6 +88,7 @@ export default function IELTSWritingFullTestInterface({
   const [bookmarks, setBookmarks] = useState<Record<string, boolean>>({})
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+  const [showImagePreview, setShowImagePreview] = useState(false)
   const [showWritingGate, setShowWritingGate] = useState(false)
   const [isLaunching, setIsLaunching] = useState(false)
   const [evaluating, setEvaluating] = useState(false)
@@ -123,6 +124,15 @@ export default function IELTSWritingFullTestInterface({
     setExamModeActive(active)
     return () => setExamModeActive(false)
   }, [phase, setExamModeActive])
+
+  useEffect(() => {
+    if (!showImagePreview) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowImagePreview(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [showImagePreview])
 
   useEffect(() => {
     try {
@@ -633,7 +643,10 @@ export default function IELTSWritingFullTestInterface({
             ) : null}
           </div>
           {activeTask.imageUrl ? (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+              <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="absolute right-4 top-4 z-10 rounded-lg border border-slate-200 bg-white/95 p-2 text-slate-700 shadow-sm hover:bg-slate-50">
+                <Maximize2 className="h-4 w-4" />
+              </button>
               <img
                 src={activeTask.imageUrl}
                 alt={activeTask.imageAlt ?? `${activeTask.title} Task 1 visual`}
@@ -688,6 +701,15 @@ export default function IELTSWritingFullTestInterface({
           </footer>
         </section>
       </main>
+      {showImagePreview && activeTask.imageUrl ? (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Enlarged Task 1 image">
+          <button type="button" onClick={() => setShowImagePreview(false)} aria-label="Close enlarged image" className="absolute inset-0" />
+          <div className="relative max-h-full max-w-[1200px] overflow-auto rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
+            <button type="button" onClick={() => setShowImagePreview(false)} className="absolute right-3 top-3 z-10 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow">Close</button>
+            <img src={activeTask.imageUrl} alt={activeTask.imageAlt ?? 'Writing Task 1 visual'} className="h-auto max-h-[88vh] max-w-full object-contain" />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

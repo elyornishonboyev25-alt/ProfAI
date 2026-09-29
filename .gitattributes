@@ -1,3 +1,4 @@
 # Preserve source SVG path formatting in imported SAT diagrams.
 public/sat/question-bank/*.svg -whitespace
-public/images/ielts-writing/full-writing-test-*-original.svg -text -whitespace
+# Keep authored Writing Task 1 images identical on every checkout.
+public/images/ielts-writing/full-writing-test-*-practice.svg -text -whitespace

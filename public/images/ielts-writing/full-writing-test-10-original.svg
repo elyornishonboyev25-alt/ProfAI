@@ -1,84 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675">
-
-<path d="M0,0 h1200 v675 h-1200 z" fill="#f8f8f8"/>
-<path d="M250,25 h900 v550 h-900 z" stroke="#888888" stroke-width="1" fill="#fcfcff"/>
-
-      <g font-size="40px" text-anchor="middle" fill="black" font-family="sans-serif">
-
-   <switch>
-
-<text x="800" y="210" id="trsvg35-sv" systemLanguage="sv">
-<tspan id="trsvg1-sv">Sammanlagda CO2 utsläpp</tspan>
-</text>
-
-<text x="800" y="210" id="trsvg35">
-<tspan id="trsvg1">Cumulative CO2 emissions</tspan>
-</text>
-
-   </switch>
-
-<text x="800" y="270">(1850-2021)</text>
-
-   <switch>
-
-<text x="700" y="655" id="trsvg37-sv" systemLanguage="sv">
-<tspan id="trsvg5-sv">Miljader ton CO2</tspan>
-</text>
-
-<text x="700" y="655" id="trsvg37">
-<tspan id="trsvg5">Billion tonnes of CO2</tspan>
-</text>
-
-   </switch>
-
-      </g>
-
-<g transform="translate(0,615)" font-size="30px" font-family="sans-serif" text-anchor="middle" fill="black"><text x="325">0</text><text x="475">100</text><text x="625">200</text><text x="775">300</text><text x="925">400</text><text x="1075">500</text></g><path stroke="black" stroke-width="0.25" d=" 
-M250,25 v560 
-M325,25 v560 
-M400,25 v560 
-M475,25 v560 
-M550,25 v560 
-M625,25 v560 
-M700,25 v560 
-M775,25 v560 
-M850,25 v560 
-M925,25 v560 
-M1000,25 v560 
-M1075,25 v560 
-M1150,25 v560  
-"/>
-
-<!-- Vertical Axis Tick mark text labels  -->
-
-<switch><text font-size="25" font-family="sans-serif" text-anchor="middle" fill="black" id="trsvg39-sv" systemLanguage="sv"><tspan x="125" y="72.5" id="trsvg13-sv">USA</tspan><tspan x="125" y="97.5" id="trsvg14-sv">Kina</tspan><tspan x="125" y="122.5" id="trsvg15-sv">Ryssland</tspan><tspan x="125" y="147.5" id="trsvg16-sv">Brasilien</tspan><tspan x="125" y="172.5" id="trsvg17-sv">Indonesien</tspan><tspan x="125" y="197.5" id="trsvg18-sv">Tyskland</tspan><tspan x="125" y="222.5" id="trsvg19-sv">Indien</tspan><tspan x="125" y="247.5" id="trsvg20-sv">Storbritannien</tspan><tspan x="125" y="272.5" id="trsvg21-sv">Japan</tspan><tspan x="125" y="297.5" id="trsvg22-sv">Kanada</tspan><tspan x="125" y="322.5" id="trsvg23-sv">Ukraina</tspan><tspan x="125" y="347.5" id="trsvg24-sv">Frankrike</tspan><tspan x="125" y="372.5" id="trsvg25-sv">Australien</tspan><tspan x="125" y="397.5" id="trsvg26-sv">Argentina</tspan><tspan x="125" y="422.5" id="trsvg27-sv">Mexiko</tspan><tspan x="125" y="447.5" id="trsvg28-sv">Sydafrika</tspan><tspan x="125" y="472.5" id="trsvg29-sv">Polen</tspan><tspan x="125" y="497.5" id="trsvg30-sv">Thailand</tspan><tspan x="125" y="522.5" id="trsvg31-sv">Italien</tspan> 
-<tspan x="125" y="547.5" id="trsvg32-sv">Iran</tspan> 
-
-</text><text font-size="25" font-family="sans-serif" text-anchor="middle" fill="black" id="trsvg39"><tspan x="125" y="72.5" id="trsvg13">USA</tspan><tspan x="125" y="97.5" id="trsvg14">China</tspan><tspan x="125" y="122.5" id="trsvg15">Russia</tspan><tspan x="125" y="147.5" id="trsvg16">Brazil</tspan><tspan x="125" y="172.5" id="trsvg17">Indonesia</tspan><tspan x="125" y="197.5" id="trsvg18">Germany</tspan><tspan x="125" y="222.5" id="trsvg19">India</tspan><tspan x="125" y="247.5" id="trsvg20">UK</tspan><tspan x="125" y="272.5" id="trsvg21">Japan</tspan><tspan x="125" y="297.5" id="trsvg22">Canada</tspan><tspan x="125" y="322.5" id="trsvg23">Ukraine</tspan><tspan x="125" y="347.5" id="trsvg24">France</tspan><tspan x="125" y="372.5" id="trsvg25">Australia</tspan><tspan x="125" y="397.5" id="trsvg26">Argentina</tspan><tspan x="125" y="422.5" id="trsvg27">Mexico</tspan><tspan x="125" y="447.5" id="trsvg28">S. Africa</tspan><tspan x="125" y="472.5" id="trsvg29">Poland</tspan><tspan x="125" y="497.5" id="trsvg30">Thailand</tspan><tspan x="125" y="522.5" id="trsvg31">Italy</tspan> 
-<tspan x="125" y="547.5" id="trsvg32">Iran</tspan> 
-</text></switch>
-
-<!-- FOSSIL FUELS etc -->
-<g fill="darkgray" stroke="black" stroke-width="0.5"> <path d=" M325,52.5 h630 v20.2 h-630 z M325,77.5 h362.7 v20.2 h-362.7 z M325,102.5 h175.95 v20.2 h-175.95 z M325,127.5 h24 v20.2 h-24 z M325,152.5 h21.9 v20.2 h-21.9 z M325,177.5 h139.65 v20.2 h-139.65 z M325,202.5 h85.65 v20.2 h-85.65 z M325,227.5 h112.35 v20.2 h-112.35 z M325,252.5 h100.05 v20.2 h-100.05 z  M325,277.5 h51.3 v20.2 h-51.3 z M325,302.5 h45 v20.2 h-45 z M325,327.5 h57.75 v20.2 h-57.75 z M325,352.5 h28.35 v20.2 h-28.35 z M325,377.5 h12.9 v20.2 h-12.9 z M325,402.5 h30.9 v20.2 h-30.9 z M325,427.5 h32.4 v20.2 h-32.4 z M325,452.5 h42.15 v20.2 h-42.15 z M325,477.5 h11.55 v20.2 h-11.55 z M325,502.5 h37.5 v20.2 h-37.5 z  M325,527.5 h29.55 v20.2 h-29.55 z "/> </g>
-
-<!-- LAND USE etc (four entries are negative) -->
-<g fill="lightgreen" stroke="black" stroke-width="0.5"> <path d=" M955,52.5 h133.65 v20.2 h-133.65 z M687.7,77.5 h63.9 v20.2 h-63.9 z M500.95,102.5 h82.8 v20.2 h-82.8 z M349,127.5 h145.35 v20.2 h-145.35 z M346.9,152.5 h131.85 v20.2 h-131.85 z   M325,177.5 h-6.9 v20.2 h6.9 z M410.65,202.5 h42.9 v20.2 h-42.9 z M437.35,227.5 h0 v20.2 h0 z M425.05,252.5 h1.95 v20.2 h-1.95 z  M376.3,277.5 h46.95 v20.2 h-46.95 z M370,302.5 h15.9 v20.2 h-15.9 z   M325,327.5 h-4.5 v20.2 h4.5 z M353.35,352.5 h24.15 v20.2 h-24.15 z M337.9,377.5 h35.55 v20.2 h-35.55 z M355.9,402.5 h16.8 v20.2 h-16.8 z M357.4,427.5 h9.75 v20.2 h-9.75 z   M325,452.5 h-3.75 v20.2 h3.75 z M336.55,477.5 h24.6 v20.2 h-24.6 z   M325,502.5 h-2.4 v20.2 h2.4 z M354.55,527.5 h2.85 v20.2 h-2.85 z   "/>
-</g>
-
-<!-- LEGEND -->
-<g transform="translate(-150,-59)" stroke="black" stroke-width="0.5">
-<path d="M790,500 h30 v30 h-30 z" fill="darkgray"/>
-<path d="M790,537 h30 v30 h-30 z" fill="lightgreen"/>
-
-<switch><text font-family="sans-serif" text-anchor="start" font-size="30" fill="black" id="trsvg40-sv" systemLanguage="sv"><tspan x="835" y="527" id="trsvg33-sv">Fossilbränslen, cement</tspan>
-<tspan x="835" y="564" id="trsvg34-sv">Landanvändning, skogsbruk</tspan>
-</text><text font-family="sans-serif" text-anchor="start" font-size="30" fill="black" id="trsvg40"><tspan x="835" y="527" id="trsvg33">Fossil fuels, cement</tspan>
-<tspan x="835" y="564" id="trsvg34">Land use, forestry</tspan>
-</text></switch>  
-</g>
-
-<!-- Hollow rectangle surrounds plot area, and covers edges' grid lines  -->
-<path d="M250,25 h900 v550 h-900 z" stroke="#888888" stroke-width="1" fill="none"/>
-
-</svg>

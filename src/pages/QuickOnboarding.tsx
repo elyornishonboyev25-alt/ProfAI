@@ -70,6 +70,7 @@ export default function QuickOnboarding() {
   const navigate = useNavigate()
   const user = useAuthStore(state => state.user)
   const complete = useAuthStore(state => state.setOnboardingCompleted)
+  const clearSession = useAuthStore(state => state.clearSession)
   const setUserNickname = useAuthStore(state => state.setUserNickname)
   const setUserAvatar = useAuthStore(state => state.setUserAvatar)
   const previous = loadOnboardingProfile(user?.id, user?.fullName)
@@ -130,6 +131,19 @@ export default function QuickOnboarding() {
     }
     setError('')
     setStep(2)
+  }
+
+  function goBack() {
+    if (saving || uploading) return
+    if (step === 2) {
+      setError('')
+      setStep(1)
+    } else if (user?.onboardingCompleted) {
+      navigate('/dashboard')
+    } else {
+      clearSession()
+      navigate('/', { replace: true })
+    }
   }
 
   async function finish(skipScores = false) {
@@ -222,14 +236,14 @@ export default function QuickOnboarding() {
           {scoreCard('SAT', currentSat, targetSat, setCurrentSat, setTargetSat)}
           <p className="liquid-score-note">{c('You can leave either exam blank and update your scores later.')}</p>
         </div>}
-        <footer>
-          {step === 2 ? <button type="button" className="liquid-text-link" onClick={() => { setError(''); setStep(1) }}><ChevronLeft size={16} /> {c('Back')}</button> : user?.onboardingCompleted ? <Link className="liquid-text-link" to="/dashboard">{c('Cancel')}</Link> : <span />}
-          <div className="liquid-onboarding-actions">
-            {step === 2 && !user?.onboardingCompleted && <button type="button" className="liquid-text-link" onClick={() => void finish(true)}>{c('Set scores later')}</button>}
-            <button type="button" className="liquid-button primary" onClick={() => step === 1 ? continueToScores() : void finish()}>{c(saving ? 'Saving…' : step === 1 ? 'Continue' : 'Open my workspace')}<ArrowRight size={17} /></button>
-          </div>
-        </footer>
       </fieldset>
+      <footer>
+        <button type="button" className="liquid-text-link" disabled={saving || uploading} onClick={goBack}><ChevronLeft size={16} /> {c('Back')}</button>
+        <div className="liquid-onboarding-actions">
+          {step === 2 && !user?.onboardingCompleted && <button type="button" className="liquid-text-link" disabled={loading || loadFailed || saving || uploading} onClick={() => void finish(true)}>{c('Set scores later')}</button>}
+          <button type="button" className="liquid-button primary" disabled={loading || loadFailed || saving || uploading} onClick={() => step === 1 ? continueToScores() : void finish()}>{c(saving ? 'Saving…' : step === 1 ? 'Continue' : 'Open my workspace')}<ArrowRight size={17} /></button>
+        </div>
+      </footer>
     </main>
   </div>
 }

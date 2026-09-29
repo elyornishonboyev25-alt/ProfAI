@@ -1,38 +1,36 @@
-# Writing Full Tests 5–30: content sources
+# Writing Full Tests 5–30: original Task 1 images
 
-Tests 5–30 contain original IELTS-style practice prompts. They are not official IELTS exam papers. The visual data is reproduced from the linked source observations and drawn as inline SVG so the chart remains visible in exam and review.
+These are IELTS-style practice questions, not official IELTS exam papers. Each Task 1 displays one original, unmodified chart, map or diagram file stored in `public/images/ielts-writing/`. The question and evaluation context describe that specific image. The source's own title, labels and credit remain part of the image.
 
-IELTS format and scoring: https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-writing
+Our World in Data (OWID) chart exports are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and retain their built-in credit. See [OWID's reuse policy](https://ourworldindata.org/faqs#can-i-use-or-reproduce-your-charts). For Commons files, the author and license are stated below; files were copied unchanged. Public domain and CC0 files are still attributed for provenance.
 
-| Test | Task 1 material | Source |
+| Test | Original image / creator | License |
 | --- | --- | --- |
-| 5 | Brick manufacturing process | https://ielts.org/cdn/Sample-tests/ielts-academic-writing-sample-tasks-2023.pdf (page 5) |
-| 6 | Life expectancy by region, 2023 | https://ourworldindata.org/grapher/life-expectancy |
-| 7 | Deaths of children under five by country, 2023 | https://ourworldindata.org/grapher/number-of-child-deaths-unwpp |
-| 8 | Renewable share of final energy use, 2024 or latest available | https://ourworldindata.org/grapher/share-of-final-energy-consumption-from-renewable-sources |
-| 9 | Safely managed sanitation, 2024 or latest available | https://ourworldindata.org/grapher/share-using-safely-managed-sanitation |
-| 10 | Carbon dioxide emissions per person, 2024 | https://ourworldindata.org/grapher/co-emissions-per-capita |
-| 11 | PM2.5 exposure, 2023 | https://ourworldindata.org/grapher/average-exposure-pm25-pollution |
-| 12 | Arable land share, 2023 | https://ourworldindata.org/grapher/share-of-land-area-used-for-arable-agriculture |
-| 13 | International tourist arrivals, 2024 | https://ourworldindata.org/grapher/international-tourist-trips |
-| 14 | Agricultural land share by region, 2023 | https://ourworldindata.org/grapher/share-of-land-area-used-for-agriculture |
-| 15 | Electricity access, 1990 and 2024 | https://ourworldindata.org/grapher/share-of-the-population-with-access-to-electricity |
-| 16 | Number of undernourished people, 2023 | https://ourworldindata.org/grapher/number-undernourished |
-| 17 | Adult obesity, 1980 and 2024 | https://ourworldindata.org/grapher/share-of-adults-defined-as-obese |
-| 18 | Air passengers carried, 2023 or latest available | https://ourworldindata.org/grapher/air-passengers-carried |
-| 19 | Annual working hours, 2023 | https://ourworldindata.org/grapher/annual-working-hours-per-worker |
-| 20 | Share of global greenhouse gas emissions, 2024 | https://ourworldindata.org/grapher/share-global-ghg-emissions |
-| 21 | Adult literacy, 2024 or latest available | https://ourworldindata.org/grapher/literacy |
-| 22 | Medical doctors per 1,000 people, 2023 or latest available | https://ourworldindata.org/grapher/physicians-per-1000-people |
-| 23 | Scientific and technical journal articles, 2023 | https://ourworldindata.org/grapher/scientific-and-technical-journal-articles |
-| 24 | Hospital beds per 1,000 people, 2023 or latest available | https://ourworldindata.org/grapher/hospital-beds-per-1000-people |
-| 25 | Population, USA and Japan | https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL?format=json and https://api.worldbank.org/v2/country/JPN/indicator/SP.POP.TOTL?format=json |
-| 26 | Population, India and China | https://api.worldbank.org/v2/country/IND/indicator/SP.POP.TOTL?format=json and https://api.worldbank.org/v2/country/CHN/indicator/SP.POP.TOTL?format=json |
-| 27 | GDP per capita, USA and UK | https://api.worldbank.org/v2/country/USA/indicator/NY.GDP.PCAP.CD?format=json and https://api.worldbank.org/v2/country/GBR/indicator/NY.GDP.PCAP.CD?format=json |
-| 28 | GDP per capita, UK and Japan | https://api.worldbank.org/v2/country/GBR/indicator/NY.GDP.PCAP.CD?format=json and https://api.worldbank.org/v2/country/JPN/indicator/NY.GDP.PCAP.CD?format=json |
-| 29 | GDP growth, USA and UK | https://api.worldbank.org/v2/country/USA/indicator/NY.GDP.MKTP.KD.ZG?format=json and https://api.worldbank.org/v2/country/GBR/indicator/NY.GDP.MKTP.KD.ZG?format=json |
-| 30 | Urban population, India and China | https://api.worldbank.org/v2/country/IND/indicator/SP.URB.TOTL.IN.ZS?format=json and https://api.worldbank.org/v2/country/CHN/indicator/SP.URB.TOTL.IN.ZS?format=json |
+| 5 | [Typical drinking water treatment process](https://commons.wikimedia.org/wiki/File:Figure_2_Typical_Drinking_Water_Treatment_Process_(5680506931).jpg), US Government Accountability Office | Public domain, US government |
+| 6 | [Life expectancy, 2000–2023](https://ourworldindata.org/grapher/life-expectancy), OWID | CC BY 4.0 |
+| 7 | [Electricity sources among major fossil fuel users](https://commons.wikimedia.org/wiki/File:20211104_Percentage_of_electricity_from_fossil_fuels,_nuclear,_renewables_-_biggest_fossil_fuel_emitters.svg), RCraig09 | CC BY-SA 4.0 |
+| 8 | [Renewable share of final energy use](https://ourworldindata.org/grapher/share-of-final-energy-consumption-from-renewable-sources), OWID | CC BY 4.0 |
+| 9 | [World electricity generation, 2012](https://commons.wikimedia.org/wiki/File:World_Electricity_Generation_Pie_Chart.png), Delphi234 | CC0 |
+| 10 | [Cumulative CO2 emissions, 1850–2021](https://commons.wikimedia.org/wiki/File:20211026_Cumulative_carbon_dioxide_CO2_emissions_by_country_-_bar_chart.svg), RCraig09 | CC BY-SA 4.0 |
+| 11 | [PM2.5 exposure](https://ourworldindata.org/grapher/average-exposure-pm25-pollution), OWID | CC BY 4.0 |
+| 12 | [US energy consumption by sector, 2011](https://commons.wikimedia.org/wiki/File:US_Energy_Consumption_by_Sector.png), Delphi234 | CC0 |
+| 13 | [International tourist arrivals](https://ourworldindata.org/grapher/international-tourist-trips), OWID | CC BY 4.0 |
+| 14 | [Agricultural land share](https://ourworldindata.org/grapher/share-of-land-area-used-for-agriculture), OWID | CC BY 4.0 |
+| 15 | [Electricity access world map, 2023](https://ourworldindata.org/grapher/share-of-the-population-with-access-to-electricity), OWID | CC BY 4.0 |
+| 16 | [Number of undernourished people](https://ourworldindata.org/grapher/number-undernourished), OWID | CC BY 4.0 |
+| 17 | [Adult obesity](https://ourworldindata.org/grapher/share-of-adults-defined-as-obese), OWID | CC BY 4.0 |
+| 18 | [Activated sludge process](https://commons.wikimedia.org/wiki/File:Activated_Sludge_diagram.svg), Eawag / designport / Paolo Monaco | CC BY 3.0 |
+| 19 | [Annual working hours](https://ourworldindata.org/grapher/annual-working-hours-per-worker), OWID | CC BY 4.0 |
+| 20 | [Food system greenhouse gas emissions, 2020](https://commons.wikimedia.org/wiki/File:Global_food_systems_GHG_emissions_in_2020.png), Costa et al. | CC BY 4.0 |
+| 21 | [Adult literacy](https://ourworldindata.org/grapher/literacy), OWID | CC BY 4.0 |
+| 22 | [US adult telemedicine use, 2021](https://commons.wikimedia.org/wiki/File:Percentage_of_adults_aged_18_and_over_who_used_telemedicine_in_the_past_12_months,_by_family_income_and_education_level,_United_States,_2021.png), US Centers for Disease Control and Prevention | Public domain, US government |
+| 23 | [Life expectancy world map, 2023](https://ourworldindata.org/grapher/life-expectancy), OWID | CC BY 4.0 |
+| 24 | [Hospital beds per 1,000 people](https://ourworldindata.org/grapher/hospital-beds-per-1000-people), OWID | CC BY 4.0 |
+| 25 | [Population, US and Japan](https://ourworldindata.org/grapher/population), OWID | CC BY 4.0 |
+| 26 | [Race and ethnicity in South Dakota, 2015](https://commons.wikimedia.org/wiki/File:Bar_Chart_of_Race_%26_Ethnicity_in_South_Dakota_(2015).svg), Datawheel / Data USA | CC0 |
+| 27 | [GDP per capita, US and UK](https://ourworldindata.org/grapher/gdp-per-capita-worldbank-constant-usd), OWID | CC BY 4.0 |
+| 28 | [GDP per capita, UK and Japan](https://ourworldindata.org/grapher/gdp-per-capita-worldbank-constant-usd), OWID | CC BY 4.0 |
+| 29 | [Annual GDP growth, US and UK](https://ourworldindata.org/grapher/annual-gdp-growth), OWID | CC BY 4.0 |
+| 30 | [Urban population, India and China](https://ourworldindata.org/grapher/long-term-urban-population-region), OWID | CC BY 4.0 |
 
-Tests 6–24 use the categories and published values shown in the linked Our World in Data charts. Their source notes identify years where latest available observations replace the chart year. World Bank time-series values in tests 25–30 are selected at 2005, 2010, 2015, 2020 and 2023 and rounded only for the stated chart unit. Values were checked on 29 September 2026.
-
-Task 2 essay questions were written for this practice bank; they are not copied from the listed data sources. AI band scores are estimates based on the public IELTS criteria, not official IELTS results.
+The source exports were downloaded on 29 September 2026 with the country and date selections encoded in the SVG files. Task 2 essay prompts were written for this practice bank. AI band scores are estimates based on the public [IELTS Academic Writing format](https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-writing), not official IELTS results.

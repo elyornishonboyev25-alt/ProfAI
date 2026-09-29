@@ -1,2 +1,3 @@
 # Preserve source SVG path formatting in imported SAT diagrams.
 public/sat/question-bank/*.svg -whitespace
+public/images/ielts-writing/full-writing-test-*-original.svg -text -whitespace

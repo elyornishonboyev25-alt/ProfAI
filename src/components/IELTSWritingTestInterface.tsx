@@ -844,6 +844,12 @@ export default function IELTSWritingTestInterface({
                   <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
                 </details>
               ) : null}
+              {task.imageUrl ? (
+                <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
+                  <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto mt-4 h-auto max-w-full" />
+                </details>
+              ) : null}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-3xl border border-emerald-200 bg-emerald-50/40 p-6">
                   <h3 className="flex items-center gap-2 text-base font-bold text-emerald-800 mb-3">
@@ -1215,6 +1221,11 @@ export default function IELTSWritingTestInterface({
           {task.visual ? (
             <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
               <WritingDataVisual visual={task.visual} />
+            </div>
+          ) : null}
+          {task.imageUrl ? (
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto h-auto max-w-full" draggable={false} />
             </div>
           ) : null}
         </div>

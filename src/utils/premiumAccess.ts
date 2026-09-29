@@ -32,7 +32,7 @@ const PREMIUM_EMAIL_ALLOWLIST = new Set<string>([
   'assasinhnur2000@gmail.com',
 ])
 
-const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7', 'erkinov'])
+const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7', 'erkinov', 'ali'])
 
 type PremiumInput = {
   email?: string | null

@@ -2489,6 +2489,81 @@ export default function IELTSReadingInterface({
     )
   }
 
+  const renderReading30HeadphonesSummary = (questions: Question[]) => {
+    const questionByNumber = new Map(questions.map((question) => [question.number, question]))
+    const summaryParts = questions[0].text.split(/(\b(?:37|38|39|40)\s*(?:_{3,}|\[\.\.\.\]))/g)
+
+    return (
+      <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
+        <h4 className="text-xl font-black text-slate-900">{questions[0].groupTitle}</h4>
+        <p className="mt-1 text-sm text-slate-700">{questions[0].instruction}</p>
+        <div className="mt-2 rounded-xl border border-red-100 bg-red-50/40 p-3">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-red-700">Options</p>
+          <ul className="mt-2 space-y-1 text-sm font-semibold text-slate-700">
+            {questions[0].options?.map((option) => <li key={option}>{option}</li>)}
+          </ul>
+        </div>
+        <div className="mt-2 rounded-xl border border-red-100 bg-white px-3 py-3 text-[15px] leading-loose text-slate-900">
+          {summaryParts.map((part, index) => {
+            const number = Number(part.match(/^(37|38|39|40)\s*(?:_{3,}|\[\.\.\.\])$/)?.[1])
+            const question = questionByNumber.get(number)
+            if (!question) return <span key={index}>{part.replace(/ \./g, '.')}</span>
+
+            const meta = getQuestionReviewMeta(question)
+            const isCorrect = meta?.status === 'correct'
+            const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
+            return (
+              <span key={question.id} id={`question-card-${question.id}`} className="inline-flex items-center gap-1 align-middle">
+                <span className="font-bold text-red-700">{number}</span>
+                <input
+                  type="text"
+                  aria-label={`Answer for question ${number}; enter a letter from A to I`}
+                  value={(answers[question.id] as string) || ''}
+                  onChange={(event) => handleAnswerChange(question.id, event.target.value.toUpperCase().replace(/[^A-I]/g, '').slice(0, 1))}
+                  disabled={isReviewMode}
+                  maxLength={1}
+                  className={`h-9 w-12 rounded-lg border px-2 text-center text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
+                    isReviewMode && reviewShowCorrectAnswers
+                      ? isWrong
+                        ? 'border-red-300 bg-red-50/70 text-red-700'
+                        : isCorrect
+                          ? 'border-emerald-300 bg-emerald-50/80 text-emerald-700'
+                          : 'border-red-200 bg-white'
+                      : 'border-red-200 bg-white'
+                  }`}
+                  placeholder="_"
+                />
+              </span>
+            )
+          })}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {questions.map((question) => {
+            const globalIdx = getCurrentSectionGlobalIndex(question.id)
+            const isFlagged = flaggedQuestions.includes(globalIdx)
+            return (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() => handleFlagQuestion(globalIdx)}
+                aria-label={`${isFlagged ? 'Unflag' : 'Flag'} question ${question.number}`}
+                className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition ${isFlagged ? 'border-red-300 bg-red-100 text-red-700' : 'border-red-100 text-slate-500 hover:bg-red-50 hover:text-red-600'}`}
+              >
+                <BookmarkIcon className={`h-3.5 w-3.5 ${isFlagged ? 'fill-current' : ''}`} />
+                {question.number}
+              </button>
+            )
+          })}
+        </div>
+        {isReviewMode ? (
+          <div className="mt-2 space-y-1">
+            {questions.map((question) => <div key={`summary-hint-${question.id}`}>{reviewHint(question)}</div>)}
+          </div>
+        ) : null}
+      </section>
+    )
+  }
+
   const renderDragDropSummaryGroup = (question: Question) => {
     const slotCount = Array.isArray(question.correctAnswer) ? Math.max(1, question.correctAnswer.length) : 1
     const blankPattern = /_{3,}/
@@ -3792,6 +3867,13 @@ export default function IELTSReadingInterface({
               (groupTypes.has('matching-headings') || groupTypes.has('matching-information'))
             ) {
               if (idx !== groupStartIndex) return null
+              if (currentSection.id === 'rd30-passage3' && groupFirst.number === 37) {
+                return (
+                  <div key={`${currentSection.id}-headphones-summary`}>
+                    {renderReading30HeadphonesSummary(groupQuestions)}
+                  </div>
+                )
+              }
               return (
                 <div key={`${currentSection.id}-${groupFirst.groupTitle}-matching`}>
                   {renderMatchingSelectGroup(

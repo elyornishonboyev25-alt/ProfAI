@@ -34,6 +34,7 @@ const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
+const Landing = lazy(() => import('@/pages/Landing'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
 const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
@@ -252,11 +253,11 @@ function App() {
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
-  const isGuestHome = pathname === '/' && hydrated && !user
-  const isAuthPage = pathname === '/login' || pathname === '/register' || isGuestHome
+  const isGuestLanding = pathname === '/' && hydrated && !user
+  const isAuthPage = pathname === '/login' || pathname === '/register'
   const isLearningCenterMode = pathname === '/learning-center' || pathname.startsWith('/learning-center/')
   const isGuestDiagnostic = pathname === '/diagnostic'
-  const isGuestExperience = isGuestDiagnostic
+  const isGuestExperience = isGuestLanding || isGuestDiagnostic
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isLeaderboardMode = pathname === '/leaderboard'
   const isProfileStandalone = pathname === '/profile'
@@ -472,7 +473,7 @@ function App() {
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
-                      <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Login />}</AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/journey-plan" element={<Navigate to="/dashboard" replace />} />

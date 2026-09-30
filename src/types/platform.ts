@@ -6,6 +6,7 @@ export type AuthUser = {
   email: string
   role: UserRole
   premium: boolean
+  premiumExpiresAt?: string | null
   xp: number
   level: number
   currentStreak: number

@@ -18,9 +18,15 @@ import {
 import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { hasPremiumAccess } from '../utils/premium.js'
+import { extendPremiumExpiry } from '../utils/premiumPlans.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 
 const router = Router()
+
+function welcomePremiumGrant() {
+  const startsAt = new Date()
+  return { create: { plan: 'MONTHLY', source: 'WELCOME', startsAt, expiresAt: extendPremiumExpiry('MONTHLY', null, startsAt) } }
+}
 
 const registerSchema = z.object({
   email: z.string().email().refine((value) => value.toLowerCase().endsWith('@gmail.com'), {
@@ -147,6 +153,7 @@ async function sanitizeUser(user: {
     email: user.email,
     nickname: user.nickname,
   })
+  const grant = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true } })
 
   return {
     id: user.id,
@@ -154,6 +161,7 @@ async function sanitizeUser(user: {
     fullName: user.fullName,
     role: user.role,
     premium,
+    premiumExpiresAt: grant?.expiresAt?.toISOString() ?? null,
     xp: user.xp,
     level: user.level,
     currentStreak: user.currentStreak,
@@ -344,6 +352,7 @@ router.post(
         fullName,
         email: normalizedEmail,
         passwordHash,
+        premiumGrant: welcomePremiumGrant(),
       },
       select: {
         id: true,
@@ -458,6 +467,7 @@ router.post(
           email,
           fullName: deriveFullNameFromEmail(email),
           passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
+          premiumGrant: welcomePremiumGrant(),
         },
         include: { profile: { select: { onboardingCompletedAt: true } } },
       })
@@ -593,6 +603,7 @@ router.post(
           email: identity.email,
           // Keep password auth path consistent while creating OAuth-first accounts.
           passwordHash: await hashPassword(`google-oauth-${crypto.randomUUID()}`),
+          premiumGrant: welcomePremiumGrant(),
         },
         select: {
           id: true,

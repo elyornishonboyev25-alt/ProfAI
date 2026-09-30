@@ -38,6 +38,7 @@ type PremiumInput = {
   email?: string | null
   nickname?: string | null
   premium?: boolean | null
+  premiumExpiresAt?: string | null
   role?: string | null
 } | null | undefined
 
@@ -49,9 +50,10 @@ type PremiumInput = {
 export function isPremiumUser(input?: PremiumInput) {
   if (!input) return false
   if (input.role === 'ADMIN') return true
-  if (input.premium === true) return true
   if (input.email && PREMIUM_EMAIL_ALLOWLIST.has(input.email.trim().toLowerCase())) return true
   if (input.nickname && PREMIUM_NICKNAME_ALLOWLIST.has(input.nickname.trim().toLowerCase())) return true
+  if (input.premiumExpiresAt && new Date(input.premiumExpiresAt).getTime() <= Date.now()) return false
+  if (input.premium === true) return true
   return false
 }
 

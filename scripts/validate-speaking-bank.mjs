@@ -35,13 +35,14 @@ function assertUniqueIds(label, items) {
 
 const base = loadDataModule('src/data/ieltsSpeakingBank.ts')
 const extra = loadDataModule('src/data/ieltsSpeakingBankExtra.ts')
+const mock21to30 = loadDataModule('src/data/ieltsSpeakingBankMocks21to30.ts')
 
-const part1 = [...base.PART1_TOPICS, ...extra.EXTRA_PART1_TOPICS]
-const part2 = [...base.CUE_CARDS, ...extra.EXTRA_CUE_CARDS]
-const part3 = [...base.PART3_THEMES, ...extra.EXTRA_PART3_THEMES]
+const part1 = [...base.PART1_TOPICS, ...extra.EXTRA_PART1_TOPICS, ...mock21to30.MOCK_21_TO_30_PART1]
+const part2 = [...base.CUE_CARDS, ...extra.EXTRA_CUE_CARDS, ...mock21to30.MOCK_21_TO_30_PART2]
+const part3 = [...base.PART3_THEMES, ...extra.EXTRA_PART3_THEMES, ...mock21to30.MOCK_21_TO_30_PART3]
 
-if (part1.length < 30 || part2.length < 30 || part3.length < 30) {
-  throw new Error('IELTS Speaking requires at least 30 complete sets for every part.')
+if (part1.length < 40 || part2.length < 40 || part3.length < 40) {
+  throw new Error('IELTS Speaking requires at least 40 complete sets for every part.')
 }
 
 assertUniqueIds('Part 1', part1)

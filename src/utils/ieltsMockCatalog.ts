@@ -38,8 +38,8 @@ export type FullMockEntry = {
   fullyReady: boolean
 }
 
-// A mock needs four distinct, runnable tests. The Speaking bank currently limits
-// the number of complete packages to 20; Reading uses its unified 22-test bank.
+// A mock needs four distinct, runnable tests. The Reading catalog currently has
+// 22 complete tests, so later Speaking/Writing content does not create empty mocks.
 export const TOTAL_FULL_MOCKS = Math.min(
   getIeltsFullTestCatalog('listening').filter((entry) => isAvailableIeltsTrackTest('listening', entry.testId)).length,
   getIeltsReadingUnifiedCatalog().filter((entry) => isAvailableIeltsTrackTest('reading', entry.testId)).length,

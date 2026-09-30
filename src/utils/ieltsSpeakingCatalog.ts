@@ -1,9 +1,9 @@
-// Speaking practice catalog (1–30) + Full Mock catalog (1–20). Practice tests
+// Speaking practice catalog (1–30) + Full Mock catalog (1–30). Practice tests
 // cycle through Part 1 → Part 2 (cue card) → Part 3, then repeat from Part 1.
 //
-// The bank now holds 30 of each part. To guarantee NO question is ever reused, the
-// 10 Days of each part use indices 0–9, and the 20 mocks use indices 10–29 — so the
-// The practice catalog and every full mock have completely distinct questions.
+// The bank now holds 40 of each part. To guarantee NO question is ever reused, the
+// 10 Days of each part use indices 0–9, and the 30 mocks use indices 10–39 — so the
+// practice catalog and every full mock have completely distinct questions.
 
 import {
   CUE_CARDS,
@@ -15,7 +15,7 @@ import {
 } from '@/data/ieltsSpeakingQuestionBank'
 import { apiClient } from '@/lib/apiClient'
 
-// 30 of each part: first 10 feed the Days, the remaining 20 feed the mocks.
+// 40 of each part: first 10 feed the Days, the remaining 30 feed the mocks.
 const DAY_BANK_SIZE = 10
 
 // Pair each full mock's long-turn card with a discussion theme on the same subject.
@@ -23,6 +23,7 @@ const DAY_BANK_SIZE = 10
 const MOCK_DISCUSSION_THEME_INDEX = [
   14, 26, 22, 19, 23, 24, 10, 21, 25, 29,
   15, 11, 16, 20, 12, 18, 17, 28, 13, 27,
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
 ] as const
 
 export type SpeakingPart = 1 | 2 | 3
@@ -74,7 +75,7 @@ export type SpeakingFullMockEntry = {
 }
 
 const TOTAL_DAYS = 30
-const TOTAL_FULL_MOCKS = 20
+const TOTAL_FULL_MOCKS = 30
 
 /** Cycle position: 1 (Part 1), 2 (Part 2), or 3 (Part 3). */
 export function partForDay(day: number): SpeakingPart {
@@ -152,7 +153,7 @@ export function getIeltsSpeakingFullMockCatalog(): SpeakingFullMockEntry[] {
       durationMinutes: 14,
       available: true,
       premiumOnly: false,
-      // Mocks use indices 10–29 of each part — completely separate from the Days
+      // Mocks use indices 10–39 of each part — completely separate from the Days
       // (0–9) and distinct from one another, so no question is ever reused.
       parts: {
         part1: PART1_TOPICS[DAY_BANK_SIZE + (i - 1)],

@@ -13,6 +13,11 @@ import {
   EXTRA_PART1_TOPICS,
   EXTRA_PART3_THEMES,
 } from '@/data/ieltsSpeakingBankExtra'
+import {
+  MOCK_21_TO_30_PART1,
+  MOCK_21_TO_30_PART2,
+  MOCK_21_TO_30_PART3,
+} from '@/data/ieltsSpeakingBankMocks21to30'
 
 /**
  * The single source of truth for IELTS Speaking content used across the app.
@@ -23,16 +28,19 @@ import {
 export const PART1_TOPICS: readonly Part1Topic[] = [
   ...BASE_PART1_TOPICS,
   ...EXTRA_PART1_TOPICS,
+  ...MOCK_21_TO_30_PART1,
 ]
 
 export const CUE_CARDS: readonly Part2Card[] = [
   ...BASE_CUE_CARDS,
   ...EXTRA_CUE_CARDS,
+  ...MOCK_21_TO_30_PART2,
 ]
 
 export const PART3_THEMES: readonly Part3Theme[] = [
   ...BASE_PART3_THEMES,
   ...EXTRA_PART3_THEMES,
+  ...MOCK_21_TO_30_PART3,
 ]
 
 export { PART_LABELS, pickRandom }
@@ -46,7 +54,7 @@ export type IeltsSpeakingBankStats = {
   part3Questions: number
 }
 
-const MINIMUM_SETS_PER_PART = 30
+const MINIMUM_SETS_PER_PART = 40
 
 function normalizePrompt(value: string): string {
   return value

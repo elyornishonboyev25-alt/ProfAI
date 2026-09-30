@@ -252,16 +252,16 @@ export default function GuestDiagnostic() {
     captureAnalyticsEvent('diagnostic_signup_started', { source: user ? 'authenticated_result' : 'result' })
 
     if (!user) {
-      navigate('/register', { state: { from: { pathname: '/journey-plan' } } })
+      navigate('/register', { state: { from: { pathname: '/dashboard' } } })
       return
     }
 
     setOpeningPlan(true)
     try {
       await claimGuestDiagnostic(token)
-      navigate('/journey-plan', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Your plan could not be linked to this account. Please retry.')
+      setError(cause instanceof Error ? cause.message : 'Your results could not be linked to this account. Please retry.')
       setOpeningPlan(false)
     }
   }
@@ -380,7 +380,7 @@ function ResultView({ result, onEdit, onSave, saving, error }: { result: GuestDi
         <div className="flex flex-col gap-2">
           <button type="button" disabled={saving} onClick={onSave} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 text-sm font-black text-white shadow-[0_16px_38px_rgba(239,68,68,.25)] transition hover:-translate-y-0.5 hover:bg-red-600 disabled:cursor-wait disabled:opacity-70">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {saving ? 'Saving your plan…' : 'Save & see my plan'}
+            {saving ? 'Saving your results…' : 'Save & see my dashboard'}
             {!saving ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
           </button>
           <button type="button" disabled={saving} onClick={onEdit} className="min-h-11 rounded-2xl px-4 text-xs font-black text-slate-600 hover:bg-white/70 disabled:opacity-50">Edit answers</button>

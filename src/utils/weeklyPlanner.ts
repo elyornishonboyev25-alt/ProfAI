@@ -378,7 +378,7 @@ export function ensureRollingWeek(profile: OnboardingProfile, plan: WeeklyPlan |
 export function loadOnboardingProfile(userId?: string, fullName?: string): OnboardingProfile | null {
   if (typeof window === 'undefined') return null
   const profile = safeParse<OnboardingProfile>(window.localStorage.getItem(withOwner(ONBOARDING_KEY_PREFIX, userId)))
-  // The account owns identity; old study-plan snapshots only own study settings.
+  // The account owns identity; saved profile snapshots only own study settings.
   if (!profile || !fullName?.trim()) return profile
   const [firstName, ...lastName] = fullName.trim().split(/\s+/)
   return { ...profile, firstName, lastName: lastName.join(' ') }

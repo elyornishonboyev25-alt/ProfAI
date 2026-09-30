@@ -37,7 +37,6 @@ const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
 const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
-const JourneyPlan = lazy(() => import('@/pages/JourneyPlan'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
@@ -267,7 +266,6 @@ function App() {
     isStandaloneMode ||
     isVocabularyMode ||
     pathname === '/dashboard' ||
-    pathname === '/journey-plan' ||
     (pathname === '/' && Boolean(user)) ||
     pathname.startsWith('/mock') ||
     pathname === '/test-preparation' ||
@@ -477,8 +475,8 @@ function App() {
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Login />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
+                      <Route path="/journey-plan" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/owner" element={<ProtectedRoute><AnimatedRoute><OwnerDashboard /></AnimatedRoute></ProtectedRoute>} />
-                      <Route path="/journey-plan" element={<ProtectedRoute><AnimatedRoute><JourneyPlan /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route
                         path="/test-preparation"

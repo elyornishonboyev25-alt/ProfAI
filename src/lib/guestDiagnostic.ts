@@ -89,21 +89,21 @@ export function dismissGuestDiagnosticInvitation() {
 }
 
 export function rememberGuestDiagnosticDestination() {
-  try { window.sessionStorage.setItem(DESTINATION_KEY, '/journey-plan') } catch { /* no-op */ }
+  try { window.sessionStorage.setItem(DESTINATION_KEY, '/dashboard') } catch { /* no-op */ }
 }
 
 export function takeGuestDiagnosticDestination(fallback = '/dashboard') {
   try {
     const destination = window.sessionStorage.getItem(DESTINATION_KEY)
     window.sessionStorage.removeItem(DESTINATION_KEY)
-    return destination === '/journey-plan' ? destination : fallback
+    return destination === '/dashboard' ? destination : fallback
   } catch {
     return fallback
   }
 }
 
 export function peekGuestDiagnosticDestination() {
-  try { return window.sessionStorage.getItem(DESTINATION_KEY) === '/journey-plan' ? '/journey-plan' : null } catch { return null }
+  try { return window.sessionStorage.getItem(DESTINATION_KEY) === '/dashboard' ? '/dashboard' : null } catch { return null }
 }
 
 function saveToken(token: string) {
@@ -168,9 +168,4 @@ export async function claimStoredGuestDiagnostic() {
   } catch {
     return false
   }
-}
-
-export async function getMyJourneyPlan() {
-  const response = await apiClient.get<{ diagnostic: DiagnosticRecord | null }>('/guest-diagnostic/mine')
-  return response.diagnostic
 }

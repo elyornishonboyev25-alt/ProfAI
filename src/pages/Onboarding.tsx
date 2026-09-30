@@ -35,11 +35,9 @@ import { universities } from '@/data/admission'
 import {
   loadOnboardingProfile,
   saveOnboardingProfile,
-  saveWeeklyPlan,
   type ExamTarget,
   type OnboardingProfile,
 } from '@/utils/weeklyPlanner'
-import { generateAdaptiveWeeklyPlan } from '@/services/aiWeeklyPlanner'
 import { saveLearningFocus } from '@/utils/learningFocus'
 import { clearGuestDiagnosticHandoff, loadGuestDiagnosticHandoff, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 
@@ -117,17 +115,17 @@ const SAT_TEST_DATES = [
 const STEP_META: { id: StepId; label: string; eyebrow: string; title: string; hint: string }[] = [
   { id: 1, label: 'Identity', eyebrow: 'About you', title: 'Create your learner identity', hint: 'Your name and avatar personalize your dashboard and certificates.' },
   { id: 2, label: 'Background', eyebrow: 'Your context', title: 'Where are you starting from?', hint: 'Your country and grade help us make the plan realistic.' },
-  { id: 3, label: 'Goal', eyebrow: 'Your target', title: 'What are you preparing for?', hint: 'Pick the exam you want a tailored roadmap for.' },
-  { id: 4, label: 'Timeline', eyebrow: 'Your schedule', title: 'Set your scores and study pace', hint: 'We balance daily workload around your deadline and free time.' },
+  { id: 3, label: 'Goal', eyebrow: 'Your target', title: 'What are you preparing for?', hint: 'Pick the exam you want to focus on.' },
+  { id: 4, label: 'Timeline', eyebrow: 'Your schedule', title: 'Set your scores and study pace', hint: 'Set your deadline and how much time you can study.' },
   { id: 5, label: 'Destination', eyebrow: 'Study abroad', title: 'Where do you want to study?', hint: 'Choose target countries and the subject you want to pursue.' },
-  { id: 6, label: 'Review', eyebrow: 'Almost there', title: 'Review your study plan', hint: 'Confirm the details and we will generate your rolling 7-day plan.' },
+  { id: 6, label: 'Review', eyebrow: 'Almost there', title: 'Review your goals', hint: 'Confirm your details and save your learning profile.' },
 ]
 
 const PLAN_GENERATION_STEPS = [
-  'Analysing your exam target',
-  'Balancing daily workload',
-  'Arranging module practice',
-  'Polishing your 7-day plan',
+  'Checking your exam goals',
+  'Saving your account details',
+  'Updating your learning preferences',
+  'Opening your dashboard',
 ]
 
 function saveToAccountProfile(firstName: string, lastName: string, targetExam: ExamTarget) {
@@ -350,7 +348,7 @@ export default function Onboarding() {
     navigate(takeGuestDiagnosticDestination('/dashboard'), { replace: true })
   }
 
-  const generatePlan = async () => {
+  const saveProfile = async () => {
     if (!nameReady || stage !== 'idle') return
     setSaveError('')
     setStage('generating')
@@ -376,7 +374,6 @@ export default function Onboarding() {
         createdAt: new Date().toISOString(),
       }
 
-      const plan = await generateAdaptiveWeeklyPlan(profile, undefined, new Date())
         await updateAccount({
           fullName: `${profile.firstName} ${profile.lastName}`.trim(),
           gender,
@@ -400,20 +397,19 @@ export default function Onboarding() {
           onboardingCompletedAt: new Date().toISOString(),
         })
         saveOnboardingProfile(profile, user?.id)
-        saveWeeklyPlan(plan, user?.id)
         saveToAccountProfile(profile.firstName, profile.lastName, targetExam)
         saveLearningFocus(targetExam === 'SAT' ? 'SAT' : 'IELTS', user?.id)
         setUserFullName(`${profile.firstName} ${profile.lastName}`.trim())
         setOnboardingCompleted(true)
         clearGuestDiagnosticHandoff()
         captureAnalyticsEvent('onboarding_completed', {
-          completion_method: 'generated_plan',
+          completion_method: 'saved_profile',
           target_exam: targetExam,
         })
       setStage('success')
         setFlashToast({
           type: 'success',
-          title: 'Your study plan is ready',
+          title: 'Your profile is ready',
           message: 'Your study goals are saved.',
         })
         navigate(takeGuestDiagnosticDestination('/dashboard'))
@@ -980,7 +976,7 @@ export default function Onboarding() {
                             <p className="mt-1 text-base font-black text-slate-900">{resolvedDays} days</p>
                             {selectedExamDate ? <p className="text-[11px] font-semibold text-slate-500">{new Date(`${selectedExamDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p> : null}
                             <span className={`mt-1 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${planIntensity.color}`}>
-                              {planIntensity.label} plan
+                              {planIntensity.label} pace
                             </span>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -991,7 +987,7 @@ export default function Onboarding() {
                       </div>
                       <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500">
                         <Clock3 className="h-4 w-4 text-blue-400" />
-                        Your rolling 7-day plan auto-updates every Monday and completes tasks as you study.
+                        You can update your goals and exam dates from your account.
                       </p>
                     </div>
                   ) : null}
@@ -1033,14 +1029,14 @@ export default function Onboarding() {
                   <div className="flex flex-col items-end">
                     <motion.button
                       type="button"
-                      onClick={generatePlan}
+                      onClick={saveProfile}
                       disabled={stage !== 'idle'}
                       whileHover={stage === 'idle' && !minimalMotion ? { scale: 1.02 } : undefined}
                       whileTap={stage === 'idle' && !minimalMotion ? { scale: 0.98 } : undefined}
                       className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.36)] transition hover:shadow-[0_16px_34px_rgba(37,99,235,0.46)] disabled:cursor-wait disabled:opacity-75"
                     >
                       <Sparkles className="h-4 w-4" />
-                      {stage === 'idle' ? 'Generate my plan' : 'Generating...'}
+                      {stage === 'idle' ? 'Save my profile' : 'Saving...'}
                     </motion.button>
                     {saveError ? (
                       <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-700">
@@ -1092,7 +1088,7 @@ export default function Onboarding() {
                     )}
                   </div>
                   <p className="mt-4 text-2xl font-black text-slate-900">
-                    {stage === 'generating' ? 'Creating your study plan...' : 'Plan created'}
+                    {stage === 'generating' ? 'Saving your profile...' : 'Profile saved'}
                   </p>
                   <AnimatePresence mode="wait">
                     <motion.p

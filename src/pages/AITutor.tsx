@@ -4,7 +4,6 @@ import {
   AudioLines,
   BookOpen,
   BrainCircuit,
-  CalendarDays,
   Check,
   GraduationCap,
   ImagePlus,
@@ -30,7 +29,6 @@ const WORKSPACE_ICONS: Record<AiWorkspaceId, typeof BrainCircuit> = {
   ielts: PenLine,
   sat: Sigma,
   english: BookOpen,
-  plan: CalendarDays,
   admission: GraduationCap,
 }
 

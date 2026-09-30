@@ -53,7 +53,7 @@ export const russianInterface: Record<string, string> = {
   'My Results': 'Мои результаты', 'Results': 'Результаты',
   'Your next chapter': 'Ваша новая глава', 'Study tools': 'Инструменты',
   'AI Coach': 'ИИ-помощник', 'Community': 'Сообщество', 'Leaderboard': 'Рейтинг',
-  'Learning Center': 'Учебный центр', 'My journey plan': 'Мой план',
+  'Learning Center': 'Учебный центр',
   'Account settings': 'Настройки аккаунта', 'Language': 'Язык',
   'More': 'Ещё', 'Close': 'Закрыть', 'Open navigation': 'Открыть меню',
   'Your path to studying abroad': 'Ваш путь к учёбе за рубежом',

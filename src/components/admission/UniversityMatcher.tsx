@@ -25,7 +25,7 @@ const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; ch
 }
 
 const STEPS = [
-  { label: 'Study plans', hint: 'Your direction' },
+  { label: 'Study goals', hint: 'Your direction' },
   { label: 'Test scores', hint: 'Your results' },
   { label: 'Budget & GPA', hint: 'Your priorities' },
 ]
@@ -268,7 +268,7 @@ export default function UniversityMatcher({ open, onClose, resumeInput, resumeVi
               <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onAnimationComplete={() => {
                 if (resumeScrollTop) resultScrollRef.current?.scrollTo({ top: resumeScrollTop })
               }} className="um-results">
-                <div className="um-results-hero"><div><span className="um-results-kicker">YOUR SHORTLIST STARTS HERE</span><h3>Universities worth exploring.</h3><p>Built around your study plans, scores and priorities.</p></div><span className="um-results-count">{results.length}<small>results</small></span></div>
+                <div className="um-results-hero"><div><span className="um-results-kicker">YOUR SHORTLIST STARTS HERE</span><h3>Universities worth exploring.</h3><p>Built around your goals, scores and priorities.</p></div><span className="um-results-count">{results.length}<small>results</small></span></div>
                 <p className="um-note um-results-note"><ShieldCheck size={18} /> <span>Planning fit is not an admission probability. Confirm your major and full entry requirements on each university’s official site.</span></p>
                 {results.slice(0, visibleResultCount).map((m) => {
                   const cs = CLASS_STYLE[m.classification]

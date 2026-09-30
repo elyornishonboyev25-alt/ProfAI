@@ -13,7 +13,6 @@ import {
   type Part2Card,
   type Part3Theme,
 } from '@/data/ieltsSpeakingQuestionBank'
-import { apiClient } from '@/lib/apiClient'
 
 // 40 of each part: first 10 feed the Days, the remaining 30 feed the mocks.
 const DAY_BANK_SIZE = 10
@@ -196,9 +195,6 @@ export function markSpeakingTestCompleted(testId: string, userId?: string) {
     const dates = JSON.parse(window.localStorage.getItem(evidenceKey) ?? '{}') as Record<string, string>
     dates[testId] ??= new Date().toISOString()
     window.localStorage.setItem(evidenceKey, JSON.stringify(dates))
-    if (userId && testId.startsWith('speaking-day-')) {
-      void apiClient.post('/study-plan/evidence', { entries: [{ sourceKey: `speaking:${testId}`, contentKey: `ielts:speaking:${testId}`, skill: 'IELTS_SPEAKING', title: `Speaking ${testId}`, accuracy: 100, completedAt: dates[testId] }] }).catch(() => {})
-    }
   } catch { /* The speaking completion remains saved even if date storage is unavailable. */ }
 }
 

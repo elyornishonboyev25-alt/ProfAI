@@ -226,8 +226,8 @@ function buildAdaptiveFallbackReply(params: {
         : `${namePrefix}you are in training mode. I can explain vocabulary with translation and usage examples, but I cannot provide direct answers.`
     }
     return locale === 'uz'
-      ? `${namePrefix}${weakTrack ? `${weakTrack}ga urg'u berib` : 'study plan asosida'} ishlashni boshlaymiz. Xohlasangiz testni ochib beraman yoki speaking mockni ishga tushiraman.`
-      : `${namePrefix}let us continue with ${weakTrack ? `extra focus on ${weakTrack}` : 'a structured study plan'}. I can open a test now or start a speaking mock immediately.`
+      ? `${namePrefix}${weakTrack ? `${weakTrack}ga urg'u berib` : 'muntazam'} ishlashni boshlaymiz. Xohlasangiz testni ochib beraman yoki speaking mockni ishga tushiraman.`
+      : `${namePrefix}let us continue with ${weakTrack ? `extra focus on ${weakTrack}` : 'consistent practice'}. I can open a test now or start a speaking mock immediately.`
   }
 
   if (message.trim().endsWith('?') || containsAny(normalized, ['qanday', 'nima uchun', 'how', 'why', 'what'])) {

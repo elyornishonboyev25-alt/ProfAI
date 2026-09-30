@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
-import TodayPlan from '@/components/study/TodayPlan'
 import { Skeleton } from '@/components/common/Skeleton'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -436,7 +435,6 @@ export default function Dashboard() {
                 {achievementProgressLabel(nextAchievement.current, nextAchievement.target, nextAchievement.unit)}
               </p>
             </article>
-            <TodayPlan compact />
           </div>
         </section>
 

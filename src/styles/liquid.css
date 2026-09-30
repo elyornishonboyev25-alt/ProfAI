@@ -38,7 +38,7 @@ body { color: var(--liquid-ink); background: #f4f6f8; }
 .liquid-icon-button { width: 42px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #fff; background: #ffffffa6; color: #536074; }
 .liquid-language { display: inline-flex; align-items: center; gap: 7px; color: #455268; font-size: 12px; }
 .liquid-language select { background: transparent; color: inherit; max-width: 116px; min-height: 40px; padding: 4px 3px; cursor: pointer; }
-.app-shell .liquid-sidebar { position: fixed; display: flex; flex-direction: column; width: 260px; inset: 18px auto 18px 18px; z-index: 40; border-radius: 28px; padding: 26px 16px 16px; overflow: auto; transition: transform 240ms var(--liquid-ease), opacity 240ms; }
+.app-shell .liquid-sidebar { position: fixed; display: flex; flex-direction: column; width: 260px; inset: 18px auto 18px 18px; z-index: 40; border-radius: 28px; padding: 26px 16px 16px; overflow: hidden; transition: transform 240ms var(--liquid-ease), opacity 240ms; }
 .app-shell .liquid-sidebar-concealed { transform: translateX(-115%); opacity: 0; pointer-events: none; }
 .liquid-brand-link { display: block; margin: 0 5px 34px; }
 .liquid-nav { flex: 1; }

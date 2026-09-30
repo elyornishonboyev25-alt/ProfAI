@@ -1,4 +1,4 @@
-export type AiWorkspaceId = 'general' | 'ielts' | 'sat' | 'english' | 'plan' | 'admission'
+export type AiWorkspaceId = 'general' | 'ielts' | 'sat' | 'english' | 'admission'
 
 export type AiWorkspace = {
   id: AiWorkspaceId
@@ -52,17 +52,6 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ["Grammatik xatolarimni to'g'rila", "5 ta yangi so'z o'rgat"],
       en: ['Correct my grammar', 'Teach me five useful words'],
-    },
-  },
-  {
-    id: 'plan',
-    title: 'Daily Study Plan',
-    shortTitle: 'Study plan',
-    detail: 'Turn goals and deadlines into daily actions',
-    prompt: 'Act as an evidence-based study planner. Ask only for truly missing constraints, then create realistic daily tasks with duration, priority, breaks, review and a measurable finish condition. Adapt plans to the learner’s live progress.',
-    starters: {
-      uz: ['Bugungi rejamni tuzib ber', 'IELTS uchun haftalik reja tuz'],
-      en: ['Build today’s study plan', 'Make my weekly IELTS plan'],
     },
   },
   {

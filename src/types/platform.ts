@@ -13,7 +13,7 @@ export type AuthUser = {
   nickname?: string | null
   /** Profile photo as a (compressed) data URL or external URL. */
   avatarUrl?: string | null
-  /** Server-backed flag that makes the study-plan onboarding a one-time flow. */
+  /** Server-backed flag that makes onboarding a one-time flow. */
   onboardingCompleted: boolean
 }
 
@@ -75,14 +75,6 @@ export type DashboardOverview = {
     currentSatScore: number | null
     targetSatScore: number | null
   }
-  journeyPlan?: {
-    id: string
-    answers: import('@/lib/guestDiagnostic').GuestDiagnosticAnswers
-    result: import('@/lib/guestDiagnostic').GuestDiagnosticResult
-    completedAt: string | null
-    claimedAt: string | null
-    updatedAt: string
-  } | null
 }
 
 export type ProfileOverview = {

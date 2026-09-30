@@ -18,7 +18,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import {
@@ -57,12 +57,14 @@ const modeCards = [
 
 export default function MockSAT() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
   const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
   const sectionQuery = section ? `?section=${section}` : ''
-  const backPath = section ? `/sat/${section}` : '/sat'
+  const fromMockCatalog = (location.state as { from?: string } | null)?.from === '/sat/mocks'
+  const backPath = section ? `/sat/${section}` : fromMockCatalog ? '/sat/mocks' : '/sat'
   const isSectionPractice = Boolean(section)
   const { supported: fullscreenSupported, enter } = useFullscreen()
   const [selectedMode, setSelectedMode] = useState<SATMode>('practice')
@@ -118,7 +120,7 @@ export default function MockSAT() {
             onClick={() => navigate(backPath)}
             className="route-back-button"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : 'SAT Prep'}
+            <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : fromMockCatalog ? 'Full mocks' : 'SAT Prep'}
           </button>
         </header>
 

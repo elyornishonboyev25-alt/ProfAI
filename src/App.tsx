@@ -36,7 +36,6 @@ const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssista
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
-const Landing = lazy(() => import('@/pages/Landing'))
 const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
 const JourneyPlan = lazy(() => import('@/pages/JourneyPlan'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
@@ -254,13 +253,11 @@ function App() {
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
-  const isAuthPage = pathname === '/login' || pathname === '/register'
+  const isGuestHome = pathname === '/' && hydrated && !user
+  const isAuthPage = pathname === '/login' || pathname === '/register' || isGuestHome
   const isLearningCenterMode = pathname === '/learning-center' || pathname.startsWith('/learning-center/')
-  // Guests at the root get the full-bleed marketing landing (its own nav + footer),
-  // so the global top-nav and footer chrome are suppressed there.
-  const isGuestLanding = pathname === '/' && hydrated && !user
   const isGuestDiagnostic = pathname === '/diagnostic'
-  const isGuestExperience = isGuestLanding || isGuestDiagnostic
+  const isGuestExperience = isGuestDiagnostic
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
   const isLeaderboardMode = pathname === '/leaderboard'
   const isProfileStandalone = pathname === '/profile'
@@ -455,7 +452,7 @@ function App() {
       {!isTestMode ? (
         <>
           {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}
-          {!isExamModeActive && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
           {!isExamModeActive && isFocusContentMode && pathname !== '/onboarding' && pathname !== '/focus' ? <FullscreenToggle /> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
@@ -477,7 +474,7 @@ function App() {
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
-                      <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
+                      <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Login />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/owner" element={<ProtectedRoute><AnimatedRoute><OwnerDashboard /></AnimatedRoute></ProtectedRoute>} />

@@ -10,7 +10,7 @@ export default function AuthShowcasePanel({ mode }: { mode: 'login' | 'register'
     { icon: GraduationCap, title: 'Plan what comes next', detail: 'Explore universities and prepare for applications.' },
   ]
 
-  return <aside className="auth-cinema-showcase" aria-label={mode === 'register' ? 'ProfAI account features' : 'ProfAI sign in features'}>
+  return <aside id="auth-showcase" className="auth-cinema-showcase" aria-label={mode === 'register' ? 'ProfAI account features' : 'ProfAI sign in features'}>
     <div className="auth-arena-orb auth-arena-orb-red" aria-hidden="true" />
     <div className="auth-arena-orb auth-arena-orb-blue" aria-hidden="true" />
     <div className="auth-cinema-brand"><span className="auth-cinema-brand-icon"><BrandMark size={38} /></span><div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div></div>

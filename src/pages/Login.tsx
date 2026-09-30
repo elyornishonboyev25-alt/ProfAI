@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { useCopy } from '@/i18n/interface'
 import { apiClient, ApiError } from '@/lib/apiClient'
@@ -16,6 +16,7 @@ import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
+import AuthInfoSections from '@/components/auth/AuthInfoSections'
 import { takeFlashToast } from '@/utils/authFlash'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
@@ -119,12 +120,12 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: minimalMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="auth-cinema-shell"
+        id="sign-in"
       >
         <AuthShowcasePanel mode={createMode ? 'register' : 'login'} />
 
         <section className="auth-cinema-form-side" aria-label={createMode ? 'Create account' : 'Sign in'}>
           <div className="auth-cinema-form-inner">
-            <Link to="/" className="auth-arena-back"><ArrowLeft size={15} /> {c('Back to home')}</Link>
             <div className="auth-cinema-lockup">
               <span className="auth-cinema-lockup-icon"><BrandMark size={43} /></span>
               <div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div>
@@ -193,6 +194,7 @@ export default function Login() {
           </div>
         </section>
       </motion.main>
+      <AuthInfoSections />
       <PasswordRecoveryDialog open={recoveryOpen} initialEmail={recoveryEmail} onClose={() => setRecoveryOpen(false)} />
     </div>
   )

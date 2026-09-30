@@ -59,21 +59,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
         completed: completedTestIds.has(entry.testId),
       }))
 
-      const upcomingRows: CompactIeltsTestRow[] = Array.from({ length: 8 }, (_, index) => {
-        const number = index + 23
-        return {
-          id: `reading-upcoming-${number}`,
-          number,
-          title: `Reading Full Test ${number}`,
-          subtitle: 'New full test in preparation',
-          badge: 'Full test',
-          durationMinutes: 60,
-          detail: '3 passages · 40 questions',
-          available: false,
-        }
-      })
-
-      return [...liveRows, ...upcomingRows]
+      return liveRows
     }
 
     return getIeltsFullTestCatalog('listening').map((entry) => ({

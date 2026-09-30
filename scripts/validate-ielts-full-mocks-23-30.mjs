@@ -88,7 +88,7 @@ function verify(kind, tests) {
         seenTitles.add(key)
         for (const question of section.questions) {
           if (!question.options) continue
-          assert.ok(question.options.every(option => !/^(?:[A-Z]|[ivx]+)\. \1$/i.test(option)), `Reading ${number}: missing option label`)
+          assert.ok(question.options.every(option => !/^([A-Z]|[ivx]+)\.\s+\1$/i.test(option)), `Reading ${number}: missing option label`)
         }
       }
     }

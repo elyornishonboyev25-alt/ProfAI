@@ -14,6 +14,7 @@ import { fullReadingTest7 } from '../data/fullReadingTest7'
 import { fullReadingTest8 } from '../data/fullReadingTest8'
 import { fullReadingTest9 } from '../data/fullReadingTest9'
 import { fullReadingTest10 } from '../data/fullReadingTest10'
+import { readingFullTests23to30 } from '../data/readingFullTests23to30'
 import IELTSReadingInterface from '../components/IELTSReadingInterface'
 import { IELTSTest, TestResult } from '../types/ieltsTypes'
 import {
@@ -143,6 +144,8 @@ export default function TestInterface() {
         foundTest = fullReadingTest9
       } else if (id === 'ielts-reading-full-vol10') {
         foundTest = fullReadingTest10
+      } else if (readingFullTests23to30.some((test) => test.id === id)) {
+        foundTest = readingFullTests23to30.find((test) => test.id === id)
       } else if (id === 'random') {
         foundTest = generateRandomReadingTest()
       } else {

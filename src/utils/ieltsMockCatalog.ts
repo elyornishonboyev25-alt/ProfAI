@@ -38,8 +38,7 @@ export type FullMockEntry = {
   fullyReady: boolean
 }
 
-// A mock needs four distinct, runnable tests. The Reading catalog currently has
-// 22 complete tests, so later Speaking/Writing content does not create empty mocks.
+// A mock needs four distinct, runnable tests from the four track catalogs.
 export const TOTAL_FULL_MOCKS = Math.min(
   getIeltsFullTestCatalog('listening').filter((entry) => isAvailableIeltsTrackTest('listening', entry.testId)).length,
   getIeltsReadingUnifiedCatalog().filter((entry) => isAvailableIeltsTrackTest('reading', entry.testId)).length,

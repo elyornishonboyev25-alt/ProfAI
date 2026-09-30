@@ -35,6 +35,14 @@ const READING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
   8: 'ielts-reading-full-vol8',
   9: 'ielts-reading-full-vol9',
   10: 'ielts-reading-full-vol10',
+  23: 'ielts-reading-full-vol23',
+  24: 'ielts-reading-full-vol24',
+  25: 'ielts-reading-full-vol25',
+  26: 'ielts-reading-full-vol26',
+  27: 'ielts-reading-full-vol27',
+  28: 'ielts-reading-full-vol28',
+  29: 'ielts-reading-full-vol29',
+  30: 'ielts-reading-full-vol30',
 }
 
 const LISTENING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
@@ -60,6 +68,14 @@ const LISTENING_FULL_TEST_SOURCE_IDS: Record<number, string> = {
   20: 'ielts-listening-20',
   21: 'ielts-listening-21',
   22: 'ielts-listening-22',
+  23: 'ielts-listening-23',
+  24: 'ielts-listening-24',
+  25: 'ielts-listening-25',
+  26: 'ielts-listening-26',
+  27: 'ielts-listening-27',
+  28: 'ielts-listening-28',
+  29: 'ielts-listening-29',
+  30: 'ielts-listening-30',
 }
 
 const MOCK_READING_DAYS = new Set([10, 20, 30])
@@ -133,6 +149,14 @@ const CURRENTLY_AVAILABLE_TRACK_TESTS: Record<IeltsTrackType, Set<string>> = {
     'ielts-reading-full-vol8',
     'ielts-reading-full-vol9',
     'ielts-reading-full-vol10',
+    'ielts-reading-full-vol23',
+    'ielts-reading-full-vol24',
+    'ielts-reading-full-vol25',
+    'ielts-reading-full-vol26',
+    'ielts-reading-full-vol27',
+    'ielts-reading-full-vol28',
+    'ielts-reading-full-vol29',
+    'ielts-reading-full-vol30',
   ]),
   listening: new Set([
     'ielts-listening-1',
@@ -157,6 +181,14 @@ const CURRENTLY_AVAILABLE_TRACK_TESTS: Record<IeltsTrackType, Set<string>> = {
     'ielts-listening-20',
     'ielts-listening-21',
     'ielts-listening-22',
+    'ielts-listening-23',
+    'ielts-listening-24',
+    'ielts-listening-25',
+    'ielts-listening-26',
+    'ielts-listening-27',
+    'ielts-listening-28',
+    'ielts-listening-29',
+    'ielts-listening-30',
   ]),
 }
 
@@ -212,7 +244,7 @@ export function getIeltsFullTestCatalog(track: IeltsTrackType): IeltsFullTestEnt
 
 /**
  * Keeps every original roadmap passage while regrouping it into 12 complete
- * tests, then appends the 10 independent Reading tests already in the library.
+ * tests, then appends 10 existing library tests and eight distinct new papers.
  */
 export function getIeltsReadingUnifiedCatalog(): IeltsReadingUnifiedEntry[] {
   const roadmapTests: IeltsReadingUnifiedEntry[] = READING_ROADMAP_FULL_TEST_DAYS.map((_, index) => ({
@@ -233,7 +265,16 @@ export function getIeltsReadingUnifiedCatalog(): IeltsReadingUnifiedEntry[] {
     source: 'library',
   }))
 
-  return [...roadmapTests, ...libraryTests]
+  const newTests: IeltsReadingUnifiedEntry[] = Array.from({ length: 8 }, (_, index) => ({
+    id: `reading-unified-${index + 23}`,
+    index: index + 23,
+    title: `Reading Full Test ${index + 23}`,
+    premiumOnly: false,
+    testId: READING_FULL_TEST_SOURCE_IDS[index + 23],
+    source: 'library',
+  }))
+
+  return [...roadmapTests, ...libraryTests, ...newTests]
 }
 
 export function isIeltsTrackCatalogTest(track: IeltsTrackType, testId: string): boolean {

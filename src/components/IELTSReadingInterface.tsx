@@ -313,6 +313,8 @@ export default function IELTSReadingInterface({
   const testShellRef = useRef<HTMLDivElement>(null)
   const selectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const selectedRangeRef = useRef<Range | null>(null)
+  const isSelectingTextRef = useRef(false)
+  const selectionOriginRef = useRef<HTMLElement | null>(null)
   const startedAtRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
   const contrastClass =
@@ -956,46 +958,87 @@ export default function IELTSReadingInterface({
   }
 
   useEffect(() => {
-    const handleSelection = () => {
-      // Clear any pending timer
-      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current)
+    const clearSelectionTools = () => {
+      setSelectionRect(null)
+      setSelectedText('')
+      selectedRangeRef.current = null
+    }
 
-      const selection = window.getSelection();
+    const publishSelection = () => {
+      const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-        // Small delay to prevent flickering when clicking buttons
-        selectionTimerRef.current = setTimeout(() => {
-          setSelectionRect(null);
-          setSelectedText('');
-          selectedRangeRef.current = null
-        }, 150)
-        return;
+        clearSelectionTools()
+        return
       }
 
-      const range = selection.getRangeAt(0);
-      const markableContainer = resolveMarkableContainerForRange(range)
+      const range = selection.getRangeAt(0)
+      const container = resolveMarkableContainerForRange(range)
+      const rect = Array.from(range.getClientRects()).find(
+        (line) => line.width > 0 && line.height > 0 && line.bottom > 0 && line.top < window.innerHeight,
+      ) ?? range.getBoundingClientRect()
+      const selected = selection.toString().trim()
+      if (!container || !isRangeInsideContainer(range, container) || !selected || rect.width <= 0 || rect.height <= 0) {
+        clearSelectionTools()
+        return
+      }
 
-      if (markableContainer && isRangeInsideContainer(range, markableContainer)) {
-        const rect = range.getBoundingClientRect();
-        const selected = selection.toString().trim()
-        if (!selected || rect.width <= 0 || rect.height <= 0) {
-          setSelectionRect(null)
-          setSelectedText('')
-          selectedRangeRef.current = null
-          return
+      selectedRangeRef.current = range.cloneRange()
+      setSelectionRect(rect)
+      setSelectedText(selected)
+      setHighlightPopover(null)
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!event.isPrimary) return
+      const target = event.target instanceof Element ? event.target : null
+      if (target?.closest('[data-reading-selection-toolbar="1"]')) return
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current)
+      selectionOriginRef.current = target?.closest('input, textarea, select, button, [contenteditable="true"], [role="textbox"]')
+        ? null
+        : target?.closest<HTMLElement>('[data-reading-markable="1"]') ?? null
+      isSelectingTextRef.current = Boolean(selectionOriginRef.current)
+      clearSelectionTools()
+    }
+
+    const handlePointerUp = () => {
+      if (!isSelectingTextRef.current) return
+      isSelectingTextRef.current = false
+      selectionOriginRef.current = null
+      // Let the browser finish its native selection before showing the tools.
+      selectionTimerRef.current = setTimeout(publishSelection, 0)
+    }
+
+    const handleSelectionChange = () => {
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current)
+      if (isSelectingTextRef.current) {
+        const selection = window.getSelection()
+        const origin = selectionOriginRef.current
+        if (origin && selection?.anchorNode && selection.focusNode && origin.contains(selection.anchorNode) && !origin.contains(selection.focusNode)) {
+          const focusBeforeOrigin = Boolean(origin.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_PRECEDING)
+          const boundary = document.createRange()
+          boundary.selectNodeContents(origin)
+          selection.setBaseAndExtent(
+            selection.anchorNode,
+            selection.anchorOffset,
+            focusBeforeOrigin ? boundary.startContainer : boundary.endContainer,
+            focusBeforeOrigin ? boundary.startOffset : boundary.endOffset,
+          )
         }
-        selectedRangeRef.current = range.cloneRange()
-        setSelectionRect(rect);
-        setSelectedText(selected);
-        setHighlightPopover(null)
-      } else {
-        setSelectionRect(null);
-        setSelectedText('');
-        selectedRangeRef.current = null
+        return
       }
-    };
-    document.addEventListener('selectionchange', handleSelection);
+      // Keyboard selection has no pointer release; wait until its range settles.
+      selectionTimerRef.current = setTimeout(publishSelection, 120)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown, true)
+    document.addEventListener('pointerup', handlePointerUp)
+    document.addEventListener('pointercancel', handlePointerUp)
+    document.addEventListener('selectionchange', handleSelectionChange)
     return () => {
-      document.removeEventListener('selectionchange', handleSelection)
+      document.removeEventListener('pointerdown', handlePointerDown, true)
+      document.removeEventListener('pointerup', handlePointerUp)
+      document.removeEventListener('pointercancel', handlePointerUp)
+      document.removeEventListener('selectionchange', handleSelectionChange)
       if (selectionTimerRef.current) {
         clearTimeout(selectionTimerRef.current)
       }
@@ -1165,10 +1208,7 @@ export default function IELTSReadingInterface({
 
   const applyHighlight = (type: 'highlight' | 'note') => {
     if (!selectionRect || !selectedText) return;
-    const selection = window.getSelection()
-    const activeRange = selection && selection.rangeCount > 0 && !selection.isCollapsed
-      ? selection.getRangeAt(0).cloneRange()
-      : selectedRangeRef.current?.cloneRange()
+    const activeRange = selectedRangeRef.current?.cloneRange()
     if (!activeRange) return
 
     if (type === 'note') {
@@ -1192,6 +1232,7 @@ export default function IELTSReadingInterface({
   }
 
   const handleMarkPaneClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (window.getSelection()?.toString().trim()) return
     const target = (event.target as HTMLElement).closest('.ielts-highlight, .ielts-note') as HTMLElement | null
     if (!target) {
       setHighlightPopover(null)
@@ -3035,15 +3076,17 @@ export default function IELTSReadingInterface({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed z-[100] flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
+            data-reading-selection-toolbar="1"
+            className="fixed z-[100] flex w-[340px] max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
             style={{
-              top: selectionRect.top - 55,
-              left: Math.max(10, Math.min(window.innerWidth - 250, selectionRect.left + (selectionRect.width / 2) - 120))
+              top: selectionRect.top >= 64 ? selectionRect.top - 60 : selectionRect.bottom + 10,
+              left: Math.max(8, Math.min(window.innerWidth - Math.min(340, window.innerWidth - 16) - 8, selectionRect.left + selectionRect.width / 2 - Math.min(340, window.innerWidth - 16) / 2)),
             }}
           >
             <button
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); applyHighlight('highlight'); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyHighlight('highlight')}
               className="group flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50/60"
               title="Highlight"
             >
@@ -3052,7 +3095,8 @@ export default function IELTSReadingInterface({
             </button>
             <button
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); applyHighlight('note'); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyHighlight('note')}
               className="flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50/60"
             >
               <ChatBubbleBottomCenterTextIcon className="w-4 h-4 text-red-500" />
@@ -3060,8 +3104,8 @@ export default function IELTSReadingInterface({
             </button>
             <button
               type="button"
-              onMouseDown={(e) => {
-                e.preventDefault()
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
                 const sel = window.getSelection()
                 const word = (selectedText || sel?.toString() || '').trim()
                 if (!word) return
@@ -3076,7 +3120,7 @@ export default function IELTSReadingInterface({
               <SparklesIcon className="w-4 h-4" />
               Ask AI
             </button>
-            <div className="absolute -bottom-1.5 left-1/2 -ml-1.5 h-3 w-3 rotate-45 border-b border-r border-red-200 bg-white" />
+            <div className={`absolute left-1/2 -ml-1.5 h-3 w-3 rotate-45 border-red-200 bg-white ${selectionRect.top >= 64 ? '-bottom-1.5 border-b border-r' : '-top-1.5 border-l border-t'}`} />
           </motion.div>
         )}
       </AnimatePresence>

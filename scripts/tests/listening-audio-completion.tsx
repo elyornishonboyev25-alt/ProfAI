@@ -43,6 +43,7 @@ export async function run() {
       assert.ok(!container.querySelector('.reading-toolbar')!.textContent!.match(/\d+:\d{2}/), 'Listening has no countdown')
       assert.equal(results.length, 0, 'Short nominal duration must not submit Listening')
       await click('Play')
+      assert.equal(container.querySelector('[aria-label="Practice audio controls"]'), null, 'Simulation hides playback controls')
       if (playlist) {
         for (let i = 1; i < 4; i++) {
           await ended()
@@ -86,8 +87,25 @@ export async function run() {
     await act(async () => manualRoot.render(<IELTSReadingInterface test={base} launchPreset={{ mode: 'practice' }} onComplete={r => manualResults.push(r)} onExit={() => {}} />))
     await delay(2400)
     await click('Play')
+    const practiceControls = container.querySelector('[aria-label="Practice audio controls"]')!
+    assert.ok(practiceControls, 'Practice shows playback controls')
+    const audio = container.querySelector('audio')!
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 100 })
+    await act(async () => audio.dispatchEvent(new window.Event('loadedmetadata')))
+    const back = practiceControls.querySelector<HTMLButtonElement>('[aria-label="Back 10 seconds"]')!
+    const forward = practiceControls.querySelector<HTMLButtonElement>('[aria-label="Forward 10 seconds"]')!
+    assert.equal(back.disabled, true, 'Back is disabled at the start')
+    await act(async () => forward.click())
+    assert.equal(audio.currentTime, 10, 'Forward skips ten seconds')
+    await act(async () => back.click())
+    assert.equal(audio.currentTime, 0, 'Back skips ten seconds')
+    await click('Pause')
+    assert.ok(practiceControls.textContent?.includes('Resume'), 'Practice can pause')
+    await click('Resume')
+    assert.ok(practiceControls.textContent?.includes('Pause'), 'Practice can resume')
     await ended()
     assert.equal(deadlines.size, 1)
+    assert.equal(practiceControls.querySelector<HTMLButtonElement>('[aria-label="Forward 10 seconds"]')!.disabled, true, 'Controls stop after the final audio')
     await click('Submit')
     await click('Submit test')
     await click('Check score')
@@ -115,7 +133,7 @@ export async function run() {
     await delay(2400)
     assert.match(container.querySelector('.reading-toolbar')!.textContent!, /\d+:\d{2}/, 'Reading keeps its timer')
     await act(async () => readingRoot.unmount())
-    console.log('PASS: no Listening countdown; final audio + 20s; latest answers; playlists; errors; review; unmount; Reading timer')
+    console.log('PASS: Listening practice playback controls; simulation restrictions; final audio + 20s; playlists; errors; review; unmount; Reading timer')
   } finally {
     window.setTimeout = originalTimeout
     window.clearTimeout = originalClear

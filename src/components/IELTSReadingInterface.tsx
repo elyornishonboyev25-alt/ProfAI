@@ -19,6 +19,8 @@ import {
   SpeakerWaveIcon,
   PlayIcon,
   PauseIcon,
+  BackwardIcon,
+  ForwardIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
 
@@ -237,7 +239,7 @@ export default function IELTSReadingInterface({
   const isListening = test.module === 'Listening'
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
   const badgeUserId = useAuthStore((s: AuthState) => s.user?.id ?? null)
-  // Listening audio state (continuous, non-controllable playlist)
+  // Listening audio state (playlist with controls in practice and review)
   const [audioStarted, setAudioStarted] = useState(false)
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0)
   const [isAudioPlaying, setIsAudioPlaying] = useState(false)
@@ -247,8 +249,8 @@ export default function IELTSReadingInterface({
   const [audioError, setAudioError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const submissionStartedRef = useRef(false)
-  // True while a clip is meant to be playing. Lets us block external pauses
-  // (media keys / OS controls) and avoid fighting an intentional stop.
+  // True while a clip is meant to be playing. Simulation blocks external pauses;
+  // practice and review can clear this for an intentional pause.
   const shouldPlayRef = useRef(false)
   // State
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
@@ -478,7 +480,7 @@ export default function IELTSReadingInterface({
   const isDayOneCurieSection = currentSection?.id === 'day1-curie-p1'
   const currentPassageNumber = resolvePassageNumber(currentSection, currentSectionIndex + 1)
 
-  // ---- Listening: continuous non-controllable audio playlist ----
+  // ---- Listening audio playlist ----
   const listeningAudioSources = useMemo(
     () => (isListening ? (test.continuousAudioUrl ? [test.continuousAudioUrl] : activeSections.map((section) => section.audioUrl ?? '')) : []),
     [isListening, activeSections, test.continuousAudioUrl],
@@ -542,9 +544,10 @@ export default function IELTSReadingInterface({
     }
   }
 
-  const toggleReviewAudio = () => {
+  const toggleListeningAudio = () => {
+    if (!isReviewMode && testMode !== 'practice') return
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || (!isReviewMode && audioDone)) return
 
     if (isAudioPlaying) {
       shouldPlayRef.current = false
@@ -566,6 +569,15 @@ export default function IELTSReadingInterface({
       setIsAudioPlaying(false)
       setAudioError('Audio could not start. Please check your connection and try again.')
     })
+  }
+
+  const skipPracticeAudio = (seconds: number) => {
+    if (isReviewMode || testMode !== 'practice' || !audioStarted || audioDone || audioError) return
+    const audio = audioRef.current
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return
+    const nextTime = Math.min(audio.duration, Math.max(0, audio.currentTime + seconds))
+    audio.currentTime = nextTime
+    setAudioCurrentTime(nextTime)
   }
 
   const handleReviewAudioSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -599,12 +611,10 @@ export default function IELTSReadingInterface({
     setAudioError('The Listening audio could not be loaded. Refresh the page or check your connection.')
   }
 
-  // IELTS listening is continuous and may not be paused. If the audio is paused
-  // from outside the app (media keys, OS / browser media controls) while a clip
-  // should still be playing, resume it right away.
+  // Simulation audio cannot be paused, even by external media controls.
   const handleAudioPause = () => {
     const audio = audioRef.current
-    if (!isReviewMode && shouldPlayRef.current && audio && !audio.ended) {
+    if (!isReviewMode && testMode === 'simulation' && shouldPlayRef.current && audio && !audio.ended) {
       audio.play().catch(() => { /* ignore */ })
       return
     }
@@ -3683,6 +3693,8 @@ export default function IELTSReadingInterface({
 
   const renderListeningAudioPanel = () => {
     const hasAudioSource = listeningAudioSources.some(Boolean)
+    const practiceControls = !isReviewMode && testMode === 'practice'
+    const canControlPracticeAudio = practiceControls && audioStarted && !audioDone && !audioError && hasAudioSource
     const safeDuration = audioDuration > 0 ? audioDuration : 0
     const safeCurrentTime = safeDuration > 0 ? Math.min(audioCurrentTime, safeDuration) : 0
     const progress = safeDuration > 0 ? Math.min(100, Math.max(0, (safeCurrentTime / safeDuration) * 100)) : 0
@@ -3707,7 +3719,11 @@ export default function IELTSReadingInterface({
               <div>
                 <p className="text-sm font-black text-slate-900">Listening audio</p>
                 <p className="text-xs text-slate-500">
-                  {isReviewMode ? 'Review mode — playback and seeking are available.' : 'Exam mode — the recording plays continuously.'}
+                  {isReviewMode
+                    ? 'Review mode — playback and seeking are available.'
+                    : practiceControls
+                      ? 'Practice mode — pause or skip 10 seconds at a time.'
+                      : 'Simulation mode — the recording plays continuously.'}
                 </p>
               </div>
               <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
@@ -3721,10 +3737,40 @@ export default function IELTSReadingInterface({
               </span>
             </div>
           </div>
-          {isReviewMode ? (
+          {practiceControls ? (
+            <div className="flex items-center gap-2" aria-label="Practice audio controls">
+              <button
+                type="button"
+                onClick={() => skipPracticeAudio(-10)}
+                disabled={!canControlPracticeAudio || audioCurrentTime <= 0}
+                aria-label="Back 10 seconds"
+                className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <BackwardIcon className="h-4 w-4" /> 10s
+              </button>
+              <button
+                type="button"
+                onClick={toggleListeningAudio}
+                disabled={!canControlPracticeAudio}
+                className="inline-flex h-10 min-w-[92px] items-center justify-center gap-2 rounded-xl bg-red-600 px-3 text-sm font-bold text-white shadow-[0_10px_20px_rgba(220,38,38,0.24)] transition hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+              >
+                {isAudioPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+                {isAudioPlaying ? 'Pause' : 'Resume'}
+              </button>
+              <button
+                type="button"
+                onClick={() => skipPracticeAudio(10)}
+                disabled={!canControlPracticeAudio || audioDuration <= 0 || audioCurrentTime >= audioDuration}
+                aria-label="Forward 10 seconds"
+                className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                10s <ForwardIcon className="h-4 w-4" />
+              </button>
+            </div>
+          ) : isReviewMode ? (
             <button
               type="button"
-              onClick={toggleReviewAudio}
+              onClick={toggleListeningAudio}
               disabled={!hasAudioSource}
               className="inline-flex h-10 min-w-[104px] items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white shadow-[0_10px_20px_rgba(220,38,38,0.24)] transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
             >
@@ -6337,7 +6383,7 @@ export default function IELTSReadingInterface({
         </>
       )}
 
-      {/* LISTENING AUDIO (continuous, no user controls) */}
+      {/* LISTENING AUDIO */}
       {isListening && isTestActive ? (
         <audio
           ref={audioRef}
@@ -6372,8 +6418,9 @@ export default function IELTSReadingInterface({
                 <SpeakerWaveIcon className="h-10 w-10" />
               </div>
               <p className="mt-5 text-[15px] leading-relaxed text-slate-700">
-                You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the
-                audio while answering the questions.
+                {testMode === 'practice'
+                  ? 'You will be listening to an audio clip during this practice test. You can pause it or skip 10 seconds backward or forward while answering.'
+                  : 'You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions.'}
               </p>
               <p className="mt-4 text-[15px] font-semibold text-slate-900">To continue, click Play.</p>
               <button

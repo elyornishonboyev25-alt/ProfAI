@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -30,6 +31,7 @@ import {
 } from '@/lib/speech'
 import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
+import { premiumLanguage, type PremiumLanguage } from '@/i18n/premium'
 import {
   createAiThread,
   deleteAiMemory,
@@ -87,21 +89,26 @@ export type PendingAiAction = {
   label: string
 }
 
-function describeAction(action: GeminiChatAction, locale: ChatLocale): string {
-  const uz = locale === 'uz'
+function localized(locale: PremiumLanguage, en: string, ru: string, uz: string) {
+  return locale === 'ru' ? ru : locale === 'uz' ? uz : en
+}
+
+function describeAction(action: GeminiChatAction, locale: PremiumLanguage): string {
   if (action.type === 'open_test') {
     const track = action.payload?.track === 'listening' ? 'Listening' : 'Reading'
-    return uz ? `${track} testini ochish` : `Open ${track} test`
+    return localized(locale, `Open ${track} test`, `Открыть тест ${track}`, `${track} testini ochish`)
   }
-  if (action.type === 'open_writing_test') return uz ? 'Writing testini ochish' : 'Open Writing test'
+  if (action.type === 'open_writing_test') return localized(locale, 'Open Writing test', 'Открыть тест Writing', 'Writing testini ochish')
   if (action.type === 'start_mock') {
     const mock = action.payload?.mock?.toUpperCase() ?? 'IELTS'
-    return uz ? `${mock} mock imtihonini boshlash` : `Start ${mock} mock exam`
+    return localized(locale, `Start ${mock} mock exam`, `Начать пробный экзамен ${mock}`, `${mock} mock imtihonini boshlash`)
   }
-  return uz ? 'Tavsiya qilingan sahifani ochish' : 'Open the suggested page'
+  return localized(locale, 'Open the suggested page', 'Открыть предложенную страницу', 'Tavsiya qilingan sahifani ochish')
 }
 
 export function useAiTutor() {
+  const { i18n } = useTranslation()
+  const uiLocale = premiumLanguage(i18n.resolvedLanguage ?? i18n.language)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -457,12 +464,11 @@ export function useAiTutor() {
           response.actions.slice(0, 3).map((action) => ({
             id: createId(),
             action,
-            label: describeAction(action, currentLocale),
+            label: describeAction(action, uiLocale),
           })),
         )
-      } catch (requestError) {
-        const message = requestError instanceof Error ? requestError.message : 'Unable to process your request.'
-        setError(message)
+      } catch {
+        setError(localized(uiLocale, 'Unable to process your request. Please try again.', 'Не удалось обработать запрос. Повторите попытку.', 'So‘rovingizni bajarib bo‘lmadi. Qayta urinib ko‘ring.'))
         setVoiceState('idle')
         stopLevelPulse()
         const fallbackMessage = createMessage(
@@ -486,7 +492,7 @@ export function useAiTutor() {
       activeThreadId, createNewChat, draft, images, isSending, memories, messages, ownerKey, preferredName,
       location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace,
+      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale,
     ],
   )
 
@@ -509,7 +515,7 @@ export function useAiTutor() {
     stoppingVoiceRef.current = false
     voiceTurnRef.current = true
     if (!recognition.supported) {
-      setVoiceError('Voice input requires Chrome or Edge with microphone access.')
+      setVoiceError(localized(uiLocale, 'Voice input requires Chrome or Edge with microphone access.', 'Для голосового ввода нужен Chrome или Edge с доступом к микрофону.', 'Ovozli kiritish uchun mikrofon ruxsati bilan Chrome yoki Edge kerak.'))
       voiceTurnRef.current = false
       return
     }
@@ -519,17 +525,14 @@ export function useAiTutor() {
     const meterResult = await startListeningMeter()
     if (!meterResult.ok) {
       const errorName = meterResult.error instanceof DOMException ? meterResult.error.name : ''
-      const uz = preferredLocale === 'uz'
       const detail =
         errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError'
-          ? (uz ? 'Mikrofon topilmadi. Qurilmani ulang va qayta urinib ko‘ring.' : 'No microphone was found. Connect one and try again.')
+          ? localized(uiLocale, 'No microphone was found. Connect one and try again.', 'Микрофон не найден. Подключите его и повторите попытку.', 'Mikrofon topilmadi. Qurilmani ulang va qayta urinib ko‘ring.')
           : errorName === 'NotReadableError' || errorName === 'TrackStartError'
-            ? (uz ? 'Mikrofon boshqa dastur tomonidan band. Uni yoping va qayta urinib ko‘ring.' : 'The microphone is busy in another app. Close it there and try again.')
+            ? localized(uiLocale, 'The microphone is busy in another app. Close it there and try again.', 'Микрофон занят другим приложением. Закройте его и повторите попытку.', 'Mikrofon boshqa dastur tomonidan band. Uni yoping va qayta urinib ko‘ring.')
             : errorName === 'SecurityError' || !window.isSecureContext
-              ? (uz ? 'Mikrofon faqat HTTPS yoki localhost orqali ishlaydi.' : 'Microphone access requires HTTPS or localhost.')
-              : (uz
-                  ? 'Mikrofonga ruxsat bloklangan. Manzil satridagi qulf belgisidan Microphone → Allow ni tanlang.'
-                  : 'Microphone permission is blocked. Use the lock icon in the address bar and set Microphone to Allow.')
+              ? localized(uiLocale, 'Microphone access requires HTTPS or localhost.', 'Доступ к микрофону требует HTTPS или localhost.', 'Mikrofon faqat HTTPS yoki localhost orqali ishlaydi.')
+              : localized(uiLocale, 'Microphone permission is blocked. Use the lock icon in the address bar and set Microphone to Allow.', 'Доступ к микрофону заблокирован. Нажмите на значок замка в адресной строке и разрешите доступ к микрофону.', 'Mikrofonga ruxsat bloklangan. Manzil satridagi qulf belgisidan Microphone → Allow ni tanlang.')
       setVoiceError(detail)
       voiceTurnRef.current = false
       setVoiceState('idle')
@@ -538,7 +541,7 @@ export function useAiTutor() {
 
     setVoiceState('listening')
     recognition.start()
-  }, [preferredLocale, recognition, setVoiceState, startListeningMeter, stopLevelPulse, stopListeningMeter])
+  }, [uiLocale, recognition, setVoiceState, startListeningMeter, stopLevelPulse, stopListeningMeter])
 
   const stopVoice = useCallback(async () => {
     if (stoppingVoiceRef.current) return
@@ -555,23 +558,19 @@ export function useAiTutor() {
       voiceTurnRef.current = false
       setVoiceState('idle')
       if (!recognition.error) {
-        setVoiceError(
-          preferredLocale === 'uz'
-            ? "Ovoz aniqlanmadi. Mikrofonga yaqinroq gapirib, yana urinib ko'ring."
-            : 'No speech was detected. Try again and speak a little closer to the microphone.',
-        )
+        setVoiceError(localized(uiLocale, 'No speech was detected. Try again and speak a little closer to the microphone.', 'Речь не обнаружена. Говорите ближе к микрофону и повторите попытку.', 'Ovoz aniqlanmadi. Mikrofonga yaqinroq gapirib, yana urinib ko‘ring.'))
       }
     }
     stoppingVoiceRef.current = false
-  }, [preferredLocale, recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
+  }, [uiLocale, recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   useEffect(() => {
     if (!recognition.error) return
-    setVoiceError(recognition.error)
+    setVoiceError(localized(uiLocale, 'Voice recognition failed. Please try again.', 'Не удалось распознать речь. Повторите попытку.', 'Ovozni aniqlab bo‘lmadi. Qayta urinib ko‘ring.'))
     setVoiceState('idle')
     stopListeningMeter()
     stopLevelPulse()
-  }, [recognition.error, setVoiceState, stopLevelPulse, stopListeningMeter])
+  }, [recognition.error, uiLocale, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   // Keep the silence-detector pointed at the latest stopVoice.
   useEffect(() => {

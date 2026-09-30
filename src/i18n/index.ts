@@ -3,8 +3,10 @@ import { initReactI18next } from 'react-i18next'
 import { russianInterface } from './interface'
 import russianUI from './ru-ui.json'
 import russianCompletion from './ru-completion.json'
+import { russianAdditions } from './ru-additions'
 import russianTranslation from './ru.json'
 import uzbekUI from './uz-ui.json'
+import { uzbekCompletion } from './uz-completion'
 
 const translation = {
   nav: {
@@ -106,16 +108,18 @@ const translation = {
   },
 }
 
+const uzbekInterface = { ...uzbekUI, ...uzbekCompletion }
+
 function localizeTree(value: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(value).map(([key, item]) => [key,
-    typeof item === 'string' ? (uzbekUI as Record<string, string>)[item] || item
+    typeof item === 'string' ? (uzbekInterface as Record<string, string>)[item] || item
       : item && typeof item === 'object' ? localizeTree(item as Record<string, unknown>) : item,
   ]))
 }
 const resources = {
   en: { translation, interface: {} },
-  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface, ...russianCompletion } },
-  uz: { translation: localizeTree(translation), interface: uzbekUI },
+  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface, ...russianCompletion, ...russianAdditions } },
+  uz: { translation: localizeTree(translation), interface: uzbekInterface },
 }
 
 function savedLanguage() {

@@ -42,7 +42,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
       </details>
     </nav>
     <div className="liquid-sidebar-footer">
-      <button type="button" className="liquid-support-link" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} title={collapsed ? 'Report an issue' : undefined} aria-label="Report an issue"><CircleHelp size={19} aria-hidden="true" /><span>Report an issue</span></button>
+      <button type="button" className="liquid-support-link" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} title={collapsed ? c('Report an issue') : undefined} aria-label={c('Report an issue')}><CircleHelp size={19} aria-hidden="true" /><span>{c('Report an issue')}</span></button>
       <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c(premiumLabel)} title={collapsed ? c(premiumLabel) : undefined}>
         <Crown size={19} aria-hidden="true" /><span>{c(premiumLabel)}</span>
       </NavLink>

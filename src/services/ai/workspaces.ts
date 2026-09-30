@@ -6,7 +6,7 @@ export type AiWorkspace = {
   shortTitle: string
   detail: string
   prompt: string
-  starters: { uz: string[]; en: string[] }
+  starters: { uz: string[]; en: string[]; ru: string[] }
 }
 
 export const AI_WORKSPACES: AiWorkspace[] = [
@@ -19,6 +19,7 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ['Bugun nimadan boshlashim kerak?', 'Shu rasmni tushuntir'],
       en: ['What should I work on today?', 'Explain this screenshot'],
+      ru: ['Над чем мне сегодня поработать?', 'Объясни этот скриншот'],
     },
   },
   {
@@ -30,6 +31,7 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ['Writing Task 2 reja tuzib ber', 'Speaking javobimni tekshir'],
       en: ['Plan my Writing Task 2 answer', 'Coach my Speaking response'],
+      ru: ['Помоги составить план ответа Writing Task 2', 'Оцени мой ответ Speaking'],
     },
   },
   {
@@ -41,6 +43,7 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ['Bu SAT Math savolini yech', 'Algebrani sodda tushuntir'],
       en: ['Solve this SAT Math question', 'Teach me this algebra concept'],
+      ru: ['Реши эту задачу SAT Math', 'Объясни эту тему по алгебре'],
     },
   },
   {
@@ -52,6 +55,7 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ["Grammatik xatolarimni to'g'rila", "5 ta yangi so'z o'rgat"],
       en: ['Correct my grammar', 'Teach me five useful words'],
+      ru: ['Исправь мои ошибки в грамматике', 'Научи меня пяти полезным словам'],
     },
   },
   {
@@ -63,6 +67,7 @@ export const AI_WORKSPACES: AiWorkspace[] = [
     starters: {
       uz: ['MIT talablari qanday?', 'Portfolio uchun reja tuz'],
       en: ['What are MIT’s requirements?', 'Help me plan my portfolio'],
+      ru: ['Какие требования у MIT?', 'Помоги составить план портфолио'],
     },
   },
 ]

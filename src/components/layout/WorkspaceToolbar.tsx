@@ -9,10 +9,10 @@ export default function WorkspaceToolbar() {
   const { pathname } = useLocation()
   return <div className="workspace-toolbar"><Link to="/dashboard" className="workspace-mobile-brand">Prof<span>AI</span></Link><div className="workspace-toolbar-actions">
     <details className="liquid-mobile-tools"><summary aria-label={c('Study tools')}><Menu size={19} /></summary><nav className="glass-control" aria-label={c('Study tools')} onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')}>
-      <Link to="/academic-skills">{c('Academic Skills')}</Link><Link to="/ai-tutor">{c('AI Coach')}</Link><Link to="/community">{c('Community')}</Link><Link to="/leaderboard">{c('Leaderboard')}</Link><Link to="/learning-center">{c('Classes')}</Link>{owner && <Link to="/owner">Boshqaruv paneli</Link>}<button type="button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))}>Report an issue</button>
+      <Link to="/academic-skills">{c('Academic Skills')}</Link><Link to="/ai-tutor">{c('AI Coach')}</Link><Link to="/community">{c('Community')}</Link><Link to="/leaderboard">{c('Leaderboard')}</Link><Link to="/learning-center">{c('Classes')}</Link>{owner && <Link to="/owner">{c('Owner dashboard')}</Link>}<button type="button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))}>{c('Report an issue')}</button>
     </nav></details>
-    <button type="button" className="liquid-icon-button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} aria-label="Report an issue" title="Report an issue"><CircleHelp size={18} /></button>
-    {owner && <Link to="/owner" className="liquid-icon-button" aria-label="Boshqaruv paneli" title="Boshqaruv paneli"><ShieldCheck size={18} /></Link>}
+    <button type="button" className="liquid-icon-button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} aria-label={c('Report an issue')} title={c('Report an issue')}><CircleHelp size={18} /></button>
+    {owner && <Link to="/owner" className="liquid-icon-button" aria-label={c('Owner dashboard')} title={c('Owner dashboard')}><ShieldCheck size={18} /></Link>}
     <LanguageSelector />{pathname !== '/dashboard' && pathname !== '/' ? <Link to="/account" className="liquid-icon-button" aria-label={c('Account settings')}><Settings size={18} /></Link> : null}
   </div></div>
 }

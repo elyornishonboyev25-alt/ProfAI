@@ -4,6 +4,7 @@ import { Mic, Minimize2, Square, X } from 'lucide-react'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
+import { useCopy } from '@/i18n/interface'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -11,6 +12,7 @@ const EASE = [0.22, 1, 0.36, 1] as const
 // it keeps running while the learner navigates. Can be docked to the corner (animated
 // via a shared layoutId) and re-expanded — it never stops listening or speaking.
 export function TalkOverlay() {
+  const { c } = useCopy()
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
   const [docked, setDocked] = useState(false)
@@ -18,7 +20,7 @@ export function TalkOverlay() {
   const tutor = useAiTutor()
   const {
     hasPremium, messages, voiceState, voiceLevel, voiceSupported,
-    isListening, interimTranscript, startVoice, stopVoice, preferredLocale,
+    isListening, interimTranscript, startVoice, stopVoice,
     voiceLang, setVoiceLang, voiceError, cancelVoice,
   } = tutor
 
@@ -73,14 +75,7 @@ export function TalkOverlay() {
   const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? ''
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
 
-  const status =
-    voiceState === 'listening'
-      ? preferredLocale === 'uz' ? 'Tinglayapman…' : 'Listening…'
-      : voiceState === 'thinking'
-        ? preferredLocale === 'uz' ? 'O‘ylayapman…' : 'Thinking…'
-        : voiceState === 'speaking'
-          ? preferredLocale === 'uz' ? 'Gapiryapman…' : 'Speaking…'
-          : preferredLocale === 'uz' ? 'Mikrofonni bosing va gapiring' : 'Tap the mic and speak'
+  const status = c(voiceState === 'listening' ? 'Listening…' : voiceState === 'thinking' ? 'Thinking…' : voiceState === 'speaking' ? 'Speaking…' : 'Tap the mic and speak')
 
   // ── Docked: a small living orb in the corner, persists across pages ──────────
   if (docked) {
@@ -114,7 +109,7 @@ export function TalkOverlay() {
             }
           }}
           className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
-          aria-label="End voice"
+          aria-label={c('End voice')}
         >
           <X className="h-3.5 w-3.5" />
         </span>
@@ -139,7 +134,7 @@ export function TalkOverlay() {
             type="button"
             onClick={() => setDocked(true)}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
-            aria-label="Minimize to corner"
+            aria-label={c('Minimize to corner')}
           >
             <Minimize2 className="h-4 w-4" />
           </button>
@@ -147,7 +142,7 @@ export function TalkOverlay() {
             type="button"
             onClick={endTalk}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
-            aria-label="End voice"
+            aria-label={c('End voice')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -181,9 +176,7 @@ export function TalkOverlay() {
               </p>
             ) : (
               <p className="text-sm text-slate-400">
-                {preferredLocale === 'uz'
-                  ? 'Masalan: “Grammatikani tushuntir” yoki “Reading testimni och”.'
-                  : 'Try: “Explain this grammar” or “Open my reading test”.'}
+                {c('Try: “Explain this grammar” or “Open my reading test”.')}
               </p>
             )}
           </div>
@@ -219,7 +212,7 @@ export function TalkOverlay() {
                   ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
                   : 'bg-gradient-to-br from-red-500 to-rose-600 hover:brightness-110'
               }`}
-              aria-label={isListening ? 'Stop' : 'Speak'}
+              aria-label={c(isListening ? 'Stop' : 'Speak')}
             >
               {isListening ? (
                 <>
@@ -232,9 +225,7 @@ export function TalkOverlay() {
             </motion.button>
           ) : (
             <p className="mt-10 max-w-sm text-sm text-amber-200">
-              {preferredLocale === 'uz'
-                ? 'Bu brauzer ovozni qo‘llab-quvvatlamaydi. Chrome yoki Edge’dan foydalaning, yoki yozib muloqot qiling.'
-                : 'Voice input isn’t supported in this browser. Use Chrome/Edge, or chat by typing.'}
+              {c('Voice input isn’t supported in this browser. Use Chrome/Edge, or chat by typing.')}
             </p>
           )}
         </div>

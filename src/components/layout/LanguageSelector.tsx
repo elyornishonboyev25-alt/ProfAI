@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Check, ChevronDown, Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const languages = [{ code: 'en', label: 'English', detail: 'English' }, { code: 'ru', label: 'Русский', detail: 'Russian' }, { code: 'uz', label: 'O‘zbekcha', detail: 'Uzbek' }]
+const languages = [{ code: 'en', label: 'English' }, { code: 'ru', label: 'Русский' }, { code: 'uz', label: 'O‘zbekcha' }]
 export default function LanguageSelector() {
   const { i18n } = useTranslation()
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
@@ -40,6 +40,6 @@ export default function LanguageSelector() {
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length
         options[next]?.focus()
       }
-    }}><p>{title}</p>{languages.map(item => <button type="button" role="menuitemradio" aria-checked={active.code === item.code} key={item.code} onClick={() => { void i18n.changeLanguage(item.code); close(true) }}><span><strong>{item.label}</strong><small>{item.detail}</small></span>{active.code === item.code && <Check size={17} />}</button>)}</div>, document.body)}
+    }}><p>{title}</p>{languages.map(item => <button type="button" role="menuitemradio" aria-checked={active.code === item.code} key={item.code} onClick={() => { void i18n.changeLanguage(item.code); close(true) }}><span><strong>{item.label}</strong></span>{active.code === item.code && <Check size={17} />}</button>)}</div>, document.body)}
   </div>
 }

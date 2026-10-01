@@ -1,142 +1,143 @@
 import type { Part1Topic, Part2Card, Part3Theme } from './ieltsSpeakingBank'
 
-// Original exam-style material reserved for full mocks 21–30. The questions
-// and model answers are written for this app; they are not past IELTS papers.
+// Full Mocks 21–30 follow the ten topics supplied by the user. The source lists
+// more possible prompts than one sitting needs; each mock uses four Part 1
+// questions, one four-point cue card and four related Part 3 questions.
 export const MOCK_21_TO_30_PART1: Part1Topic[] = [
-  { id: 'm21-puzzles', topic: 'Puzzles', icon: '🧩', questions: [
-    { q: 'Did you enjoy doing puzzles when you were a child?', sample: 'Yes. I used to do jigsaws with my grandfather, and finishing one felt like a small achievement.' },
-    { q: 'What kinds of puzzles do you do nowadays?', sample: 'I sometimes solve word puzzles on the train because they help me pass the time without scrolling through my phone.' },
-    { q: 'Do you prefer solving a puzzle alone or with other people?', sample: 'I prefer working alone at first, though it is fun to compare ideas with a friend when I get stuck.' },
-    { q: 'Would you give a puzzle as a present?', sample: 'I would, if I knew the person liked a challenge. It feels more thoughtful than buying something generic.' },
+  { id: 'm21-animals', topic: 'Animals', icon: '🐾', questions: [
+    { q: 'What is a popular pet in your country?', sample: 'Cats and dogs are both common, but cats are particularly popular in cities because they adapt well to smaller homes.' },
+    { q: 'What problems do people have with pets?', sample: 'The main challenge is finding enough time for daily care, especially when a pet needs exercise or regular veterinary visits.' },
+    { q: 'Have you ever seen a wild animal?', sample: 'Yes, I once saw a fox at the edge of a forest. I kept my distance and watched it disappear into the trees.' },
+    { q: 'Are there many wild animals in your country?', sample: 'There is a surprising variety in the mountains and rural areas, although people in cities rarely encounter them.' },
   ] },
-  { id: 'm22-museums', topic: 'Museums', icon: '🏛️', questions: [
-    { q: 'When did you last visit a museum?', sample: 'I visited a local history museum a few months ago and spent most of the afternoon looking at old photographs.' },
-    { q: 'What do you usually look at first in a museum?', sample: 'I read the introductory display first. It gives me enough context to understand the objects that follow.' },
-    { q: 'Are museums popular with young people where you live?', sample: 'Some are, especially when they run interactive exhibitions, although many young people still see them as school trip destinations.' },
-    { q: 'Is there a museum you would like to visit?', sample: 'I would love to visit a science museum with working demonstrations, as I learn more easily by seeing an idea in action.' },
+  { id: 'm22-art', topic: 'Art', icon: '🎨', questions: [
+    { q: 'What kind of art do you enjoy?', sample: 'I enjoy landscape paintings because they can capture the atmosphere of a place as well as its appearance.' },
+    { q: 'Do you have any paintings or pictures on your walls at home?', sample: 'Yes, I have a landscape print above my desk. It makes the room feel more personal.' },
+    { q: 'Can you draw or paint?', sample: 'I can make a simple sketch, but I need a lot more practice before I could call myself a painter.' },
+    { q: 'Do you like visiting museums or art galleries?', sample: 'I do. Seeing a work in person lets me notice its scale and texture in a way a screen cannot.' },
   ] },
-  { id: 'm23-houseplants', topic: 'Houseplants', icon: '🪴', questions: [
-    { q: 'Do you keep any plants inside your home?', sample: 'I keep a few small plants on the windowsill. They make the room feel more welcoming.' },
-    { q: 'How did you learn to look after plants?', sample: 'My aunt gave me some basic advice, and after that I learned by observing which spots had enough light.' },
-    { q: 'Have you ever given someone a plant?', sample: 'Yes, I gave a friend a small herb plant when she moved into a new flat because she enjoys cooking.' },
-    { q: 'Would you like to grow more plants in the future?', sample: 'Definitely. If I had a balcony, I would try growing tomatoes and herbs in containers.' },
+  { id: 'm23-apps', topic: 'Apps', icon: '📱', questions: [
+    { q: 'Do you often use apps?', sample: 'Yes, several times a day. I mainly use them for messages, travel information and organising my tasks.' },
+    { q: 'What are the most popular apps in your country?', sample: 'Messaging and payment apps seem especially popular because people use them for everyday plans and purchases.' },
+    { q: 'Would you ever spend money on an app?', sample: 'I would pay for one that saves me time or helps me learn, provided I can try it before subscribing.' },
+    { q: 'Have you ever deleted an app?', sample: 'Yes. I removed a game when I realised I was opening it out of habit rather than enjoying it.' },
   ] },
-  { id: 'm24-stationery', topic: 'Pens and stationery', icon: '✏️', questions: [
-    { q: 'What do you normally use to write a quick note?', sample: 'I usually use a pen and a small notebook because I can find the note quickly later.' },
-    { q: 'Do you enjoy buying stationery?', sample: 'Occasionally. A good notebook is pleasant to use, but I try to finish the ones I already own first.' },
-    { q: 'Did you use a lot of stationery at school?', sample: 'Yes, particularly coloured pens for diagrams. They helped me organise information when I was revising.' },
-    { q: 'Is handwriting still useful to you?', sample: 'It is useful for planning. Writing an idea by hand often makes it easier for me to remember.' },
+  { id: 'm24-books', topic: 'Books', icon: '📚', questions: [
+    { q: 'Do you ever read e-books?', sample: 'Yes, particularly while travelling. They let me carry several books without adding weight to my bag.' },
+    { q: 'What children’s story is popular in your country?', sample: 'A traditional tale about a clever child is widely known. Families often retell it in their own words.' },
+    { q: 'What type of books are most popular in your country?', sample: 'Fiction and practical self-improvement books both seem popular, judging by what local bookshops display.' },
+    { q: 'What other reading materials do you enjoy?', sample: 'I like long magazine articles about science and history because they explore one subject in more depth than a short post.' },
   ] },
-  { id: 'm25-bridges', topic: 'Bridges', icon: '🌉', questions: [
-    { q: 'Is there a bridge near where you live?', sample: 'There is a pedestrian bridge over a busy road near my neighbourhood, and I use it quite often.' },
-    { q: 'Do you notice the design of bridges?', sample: 'I do when a bridge has an unusual shape. It is interesting to see how a practical structure can also look elegant.' },
-    { q: 'Have you ever crossed a very long bridge?', sample: 'I crossed one while travelling by train. The view over the river was memorable, even though the journey lasted only a minute.' },
-    { q: 'Would you like to walk across a famous bridge?', sample: 'Yes. Walking would give me time to appreciate the view and the details of its construction.' },
+  { id: 'm25-buildings', topic: 'Buildings', icon: '🏛️', questions: [
+    { q: 'Are there many old buildings where you live?', sample: 'A few historic buildings remain in the centre, though most streets have been redeveloped over time.' },
+    { q: 'Is there a building in a foreign country you would like to visit?', sample: 'I would like to see a historic library abroad because its architecture and collection would tell two different stories.' },
+    { q: 'Did you ever visit a historical building when you were at school?', sample: 'Yes, our class visited an old fortress. Walking through it made the history lesson much easier to imagine.' },
+    { q: 'Would you like to live in an old or modern house?', sample: 'I would choose a modern house for its comfort, although I admire the character of older homes.' },
   ] },
-  { id: 'm26-queues', topic: 'Waiting in queues', icon: '⌛', questions: [
-    { q: 'Where do you most often have to wait in a queue?', sample: 'Usually at the supermarket after work, when many other people are shopping at the same time.' },
-    { q: 'What do you do while you are waiting?', sample: 'I check my shopping list or listen to a short podcast if the queue is moving slowly.' },
-    { q: 'Are you patient when you have to wait?', sample: 'Most of the time, yes. I get impatient only when nobody explains the cause of a long delay.' },
-    { q: 'Have queues changed in your area in recent years?', sample: 'Digital booking has reduced queues at some offices, though busy shops still have them.' },
+  { id: 'm26-challenges', topic: 'Challenges', icon: '🧗', questions: [
+    { q: 'When was the last time you tried something new?', sample: 'I tried a climbing class recently. I was nervous at first, but learning the basic moves was rewarding.' },
+    { q: 'Do you enjoy stepping out of your comfort zone?', sample: 'Sometimes. I prefer a manageable challenge that teaches me something over taking a risk just for excitement.' },
+    { q: 'What did you find most challenging at school?', sample: 'Speaking in front of the class was hardest for me, although regular presentations gradually helped.' },
+    { q: 'When was the last time you found something too difficult?', sample: 'A complicated recipe defeated me last month. I simplified it and tried again the next day.' },
   ] },
-  { id: 'm27-maps', topic: 'Maps', icon: '🗺️', questions: [
-    { q: 'When did you last use a map?', sample: 'I used one last weekend to find a walking route through an unfamiliar part of the city.' },
-    { q: 'Do you find paper maps easy to read?', sample: 'Generally, yes, although it takes me a moment to work out which direction I am facing.' },
-    { q: 'Did anyone teach you how to read a map?', sample: 'My father showed me how to use a scale and a compass on a family hike.' },
-    { q: 'Would you rely on a map when visiting a new city?', sample: 'Certainly. It helps me plan the day and notice places that I might miss if I followed directions blindly.' },
+  { id: 'm27-clothes', topic: 'Clothes', icon: '👕', questions: [
+    { q: 'When was the last time you bought an item of clothing?', sample: 'I bought a light jacket a few weeks ago because my old one had worn out.' },
+    { q: 'Did you wear a school uniform as a child?', sample: 'Yes. It made getting ready in the morning simple, although I sometimes wished I could choose my own clothes.' },
+    { q: 'Do you have any traditional clothes?', sample: 'I have an outfit for family celebrations. I do not wear it often, but it connects me with local customs.' },
+    { q: 'What kind of bag do you often use?', sample: 'I usually carry a small backpack because it keeps my hands free and has room for a book and water.' },
   ] },
-  { id: 'm28-crafts', topic: 'Making things by hand', icon: '🧵', questions: [
-    { q: 'Did you make things by hand when you were younger?', sample: 'Yes, I made simple paper models at school and enjoyed turning a flat sheet into something three dimensional.' },
-    { q: 'What would you like to learn to make?', sample: 'I would like to learn basic woodworking so I could build a small shelf for my room.' },
-    { q: 'Do people in your area buy handmade products?', sample: 'They do at local markets, especially when the maker can explain how an item was produced.' },
-    { q: 'Is it difficult to make time for a craft?', sample: 'It can be, but even half an hour at the weekend is enough to make progress on a small project.' },
+  { id: 'm28-confidence', topic: 'Confidence', icon: '✨', questions: [
+    { q: 'Would you describe yourself as a confident person?', sample: 'I am confident in familiar situations, but I still get nervous when I have to speak to a large group.' },
+    { q: 'Were you a confident child?', sample: 'Not particularly. I was quiet at first, though I became more comfortable once I knew the people around me.' },
+    { q: 'What made you nervous as a child at school?', sample: 'Being asked to answer without preparation made me nervous because I worried about making a mistake.' },
+    { q: 'What do you do to help you build confidence?', sample: 'I prepare carefully and set small goals. Each time I manage one, the next task feels less intimidating.' },
   ] },
-  { id: 'm29-libraries', topic: 'Public libraries', icon: '📚', questions: [
-    { q: 'Is there a public library near your home?', sample: 'There is one about fifteen minutes away. It has a quiet reading area and a useful collection of local history books.' },
-    { q: 'What do you usually do in a library?', sample: 'I look for books that I cannot easily find online, and sometimes I work there when I need a quiet place.' },
-    { q: 'Did you visit libraries as a child?', sample: 'I did. My school arranged regular visits, which helped me discover books beyond the classroom reading list.' },
-    { q: 'What could make libraries more useful?', sample: 'Longer evening hours and more places to work in groups would help people who study or work during the day.' },
+  { id: 'm29-education', topic: 'Education', icon: '🎓', questions: [
+    { q: 'Did you enjoy school as a child?', sample: 'Mostly, yes. I enjoyed learning new things and spending time with classmates, even when some lessons were demanding.' },
+    { q: 'What was your favourite subject?', sample: 'History was my favourite because the teacher connected past events to places we knew.' },
+    { q: 'Did you ever do any extra-curricular activities?', sample: 'I joined a debate club for a year. It helped me organise my thoughts and listen to other views.' },
+    { q: 'Are you currently learning anything new?', sample: 'I am learning basic photography. Practising with ordinary scenes has taught me to notice light more carefully.' },
   ] },
-  { id: 'm30-repairs', topic: 'Repairing things', icon: '🔧', questions: [
-    { q: 'Do you try to repair things that break?', sample: 'I try simple repairs, such as replacing a loose handle, before I decide whether something needs a professional.' },
-    { q: 'Who taught you to fix small problems at home?', sample: 'My mother showed me how to diagnose a problem carefully and check the instructions before touching anything.' },
-    { q: 'What was the last item you repaired?', sample: 'I repaired a desk lamp by replacing its damaged plug. It was satisfying to use it again.' },
-    { q: 'Are repair services easy to find where you live?', sample: 'For phones and bicycles, yes. It is harder to find someone willing to fix a small household appliance.' },
+  { id: 'm30-food', topic: 'Food', icon: '🍲', questions: [
+    { q: 'What’s your favourite meal of the day?', sample: 'Dinner is my favourite because I can slow down and talk with my family after a busy day.' },
+    { q: 'Were you a fussy eater when you were younger?', sample: 'A little. I avoided vegetables with strong flavours, but I enjoy most of them now.' },
+    { q: 'When was the last time you tried a new dish?', sample: 'I tried a spicy noodle dish at a small restaurant last weekend and liked its balance of flavours.' },
+    { q: 'Do you ever skip meals?', sample: 'I try not to, because I find it harder to concentrate when I have not eaten properly.' },
   ] },
 ]
 
 export const MOCK_21_TO_30_PART2: Part2Card[] = [
-  { id: 'm21-repaired-object', title: 'Describe an object you repaired or had repaired', bullets: ['what the object was', 'how it was damaged', 'what was done to repair it', 'and explain why the repair mattered to you'], followUp: 'Would you try to repair a similar object yourself?', theme: 'Repair and reuse', sample: 'My old desk lamp stopped working just before an important project. A repair shop found a loose connection in the switch and replaced one small part. I was relieved because the lamp had belonged to my grandfather, so replacing it would have felt wasteful as well as disappointing.' },
-  { id: 'm22-public-talk', title: 'Describe a public talk you found useful', bullets: ['where you heard the talk', 'who gave it', 'what the main message was', 'and explain how it affected you'], followUp: 'Would you attend another talk by this speaker?', theme: 'Public knowledge', sample: 'At our library, a local architect gave a talk about making streets safer for pedestrians. She used photographs of familiar junctions and explained how small design changes could prevent accidents. I left noticing crossings more carefully and thinking differently about how public space is planned.' },
-  { id: 'm23-resolved-complaint', title: 'Describe a complaint that was handled well', bullets: ['what the problem was', 'who you contacted', 'how the person responded', 'and explain why you were satisfied with the outcome'], followUp: 'Did the experience change your opinion of the organisation?', theme: 'Customer service', sample: 'A book I ordered arrived with several pages missing. I contacted the shop and sent a photograph. The assistant apologised, arranged a replacement immediately and kept me informed. The solution was straightforward, but the clear communication made the experience memorable.' },
-  { id: 'm24-unfamiliar-route', title: 'Describe a time you found your way through an unfamiliar place', bullets: ['where you were going', 'why the place was unfamiliar', 'how you chose your route', 'and explain how you felt when you arrived'], followUp: 'Would you use the same method of navigation again?', theme: 'Navigation and independence', sample: 'I had to find a small art centre in a city I had never visited. My phone signal failed, so I studied a map at the station and asked a shopkeeper which street led to the river. I reached the centre with time to spare and felt more confident about travelling independently.' },
-  { id: 'm25-renovated-place', title: 'Describe a public place that improved after renovation', bullets: ['where the place is', 'what it was like before', 'what was changed', 'and explain whether people use it differently now'], followUp: 'Would you recommend this place to a visitor?', theme: 'Public spaces', sample: 'A small square near my home used to be mostly broken paving and parked cars. The council added trees, benches and safer paths. Families now stop there in the evenings, and the square feels like part of the neighbourhood rather than a shortcut through it.' },
-  { id: 'm26-important-measurement', title: 'Describe a time when you needed to measure something carefully', bullets: ['what you measured', 'why accuracy was important', 'what equipment you used', 'and explain what happened as a result'], followUp: 'Do you normally check measurements twice?', theme: 'Accuracy and planning', sample: 'I measured a window before ordering a set of blinds. I used a tape measure and checked the width in three places because the frame was slightly uneven. The blinds fitted perfectly, and the experience taught me that a few extra minutes of checking can prevent an expensive mistake.' },
-  { id: 'm27-kept-promise', title: 'Describe a promise you were pleased to keep', bullets: ['who you made the promise to', 'what you promised', 'what you did to keep it', 'and explain why it was important'], followUp: 'Was it difficult to keep your promise?', theme: 'Trust and responsibility', sample: 'I promised my younger cousin I would attend her school performance, even though I had a busy week. I finished my work early and travelled across town. She was delighted to see me in the audience, and I realised that being reliable can matter more than making a grand gesture.' },
-  { id: 'm28-new-rule', title: 'Describe a rule that improved an activity you take part in', bullets: ['what the activity was', 'what rule was introduced', 'why the rule was needed', 'and explain what changed afterwards'], followUp: 'Did everyone accept the rule immediately?', theme: 'Rules and cooperation', sample: 'Our study group introduced a rule that everyone should send one question before each meeting. Previously, the discussions often drifted. The new routine gave us a clear starting point and helped quieter members contribute, so meetings became shorter and much more useful.' },
-  { id: 'm29-handmade-item', title: 'Describe a handmade item you received', bullets: ['who made it', 'what materials were used', 'when you received it', 'and explain why you value it'], followUp: 'Would you like to learn to make something similar?', theme: 'Craft and value', sample: 'A friend gave me a small ceramic cup that she had made during a pottery course. Its shape is slightly uneven, but the blue glaze catches the light beautifully. I use it every morning because it reminds me of the time and care she put into making it.' },
-  { id: 'm30-useful-instruction', title: 'Describe an instruction that helped you complete a task', bullets: ['what the task was', 'where you found the instruction', 'how you followed it', 'and explain why it was helpful'], followUp: 'Do you usually read instructions before starting?', theme: 'Clear communication', sample: 'When I assembled a bicycle stand, the printed guide was confusing, but a short video from the manufacturer showed each step from the right angle. I paused it as I worked and checked the parts against the diagram. The stand was stable on my first attempt, which rarely happens with flat-pack equipment.' },
+  { id: 'm21-interesting-animal', title: 'Describe an interesting animal', bullets: ['what it is', 'where it lives', 'where you first saw it', 'and explain why you find it interesting'], followUp: 'Would you like to see this animal again?', theme: 'Animals', sample: 'I find the snow leopard fascinating. It lives in high mountain regions, and I first saw one in a wildlife documentary. Its thick fur and long tail help it survive in a harsh climate, while its ability to move quietly across steep rocks is remarkable. I would love to see one from a safe distance in its natural habitat.' },
+  { id: 'm22-work-of-art', title: 'Describe a work of art you like', bullets: ['what it is', 'where you saw it', 'what it shows', 'and explain why you like it'], followUp: 'Would you like to own a copy of this work?', theme: 'Art', sample: 'I like a large landscape painting in a local gallery. It shows a quiet street just after rain, with reflections from the shop lights on the pavement. I first noticed it during a school visit. The artist made an ordinary scene feel calm and memorable, and each time I see it I notice a different detail.' },
+  { id: 'm23-useful-app', title: 'Describe a useful app', bullets: ['what it is', 'how you heard about it', 'what it does', 'and explain why you find it useful'], followUp: 'Would you recommend this app to someone else?', theme: 'Apps', sample: 'A friend recommended a public transport app when I started commuting across the city. It shows routes, live arrival times and service changes. I use it before leaving home so I can choose the quickest connection. It is useful because it removes much of the uncertainty from a journey, especially when a bus is delayed.' },
+  { id: 'm24-childhood-story', title: 'Describe a childhood story you enjoyed', bullets: ['what type of story it was', 'which characters were in it', 'what happened in the story', 'and explain why you enjoyed it'], followUp: 'Would you tell this story to a child today?', theme: 'Books', sample: 'My grandmother used to tell me a folk story about a child who outsmarted a greedy merchant. The child solved a riddle and helped the villagers keep their harvest. I enjoyed the clever ending, but I remember my grandmother’s lively way of telling it even more. It made me look forward to reading other stories.' },
+  { id: 'm25-historical-building', title: 'Describe a historical building in your country', bullets: ['where it is', 'what it looks like', 'what it is used for today', 'and explain why you think it is important'], followUp: 'Would you take a visitor to this building?', theme: 'Buildings', sample: 'An old observatory in my country is a building I would choose. It has a modest entrance and a large dome that stands above the surrounding streets. Today it welcomes visitors and hosts exhibitions about astronomy. I think it matters because it preserves both the architecture and the history of scientific work carried out there.' },
+  { id: 'm26-adventurous-person', title: 'Describe someone who is adventurous', bullets: ['who the person is', 'how you know them', 'what they enjoy doing', 'and explain why you consider them adventurous'], followUp: 'Would you join this person on an adventure?', theme: 'Challenges', sample: 'My cousin enjoys taking on activities she has never tried before, from hiking new trails to learning to sail. I have known her all my life, and I admire how thoroughly she prepares before going somewhere unfamiliar. She is adventurous because she is willing to face uncertainty and learn from the experience, rather than simply seeking a thrill.' },
+  { id: 'm27-useful-bag', title: 'Describe a useful bag you own', bullets: ['what kind of bag it is', 'what it looks like', 'what you use it for', 'and explain why you find it useful'], followUp: 'Would you buy the same bag again?', theme: 'Clothes and accessories', sample: 'I own a simple dark backpack with a padded section for my laptop. I bought it before starting a new course and use it almost every day. Its pockets keep small items easy to find, and the straps are comfortable on longer walks. I value it for its practical design rather than its brand.' },
+  { id: 'm28-confident-person', title: 'Describe a person you know who is confident', bullets: ['who they are', 'how you know them', 'what they are like', 'and explain why you think they are confident'], followUp: 'Has this person influenced your confidence?', theme: 'Confidence', sample: 'My former colleague speaks calmly even when a meeting becomes difficult. I worked with her for two years and saw how she listened before offering a clear view. She is friendly and well prepared, but she is also willing to admit when she does not know something. That honesty makes her confidence seem grounded rather than boastful.' },
+  { id: 'm29-favourite-subject', title: 'Describe a subject you enjoyed at school', bullets: ['what it was', 'who taught you', 'what you learned', 'and explain why you enjoyed it'], followUp: 'Would you study this subject again?', theme: 'Education', sample: 'Geography was a subject I enjoyed at school. Our teacher used maps and local examples to explain how landscapes and cities change. We studied rivers, climates and how people adapt to their surroundings. I liked it because each lesson helped me understand a real place, rather than just remember a set of facts.' },
+  { id: 'm30-foreign-food', title: 'Describe a foreign food you would like to try', bullets: ['what it is', 'where it comes from', 'how you heard about it', 'and explain why you would like to try it'], followUp: 'Would you try making this food at home?', theme: 'Food', sample: 'I would like to try a traditional Ethiopian meal served with injera. I learned about it from a friend who described the soft flatbread and the shared dishes eaten with it. I am curious about the different spices and the way the meal brings people around one table. I would prefer to try it first at a restaurant that prepares it traditionally.' },
 ]
 
 export const MOCK_21_TO_30_PART3: Part3Theme[] = [
-  { id: 'm21-repair-reuse', theme: 'Repair and reuse', questions: [
-    { q: 'Why do some people replace an item instead of repairing it?', sample: 'Repairs can cost almost as much as a replacement, and people may not know where to find a reliable technician.' },
-    { q: 'Should schools teach children basic repair skills?', sample: 'Yes. Simple skills build confidence and help children understand the resources behind everyday products.' },
-    { q: 'How can manufacturers make products easier to repair?', sample: 'They can use standard fasteners, sell spare parts and provide clear instructions for common faults.' },
-    { q: 'Could repairing products reduce environmental damage?', sample: 'It could, especially for electronics, because keeping an item in use delays both waste and the demand for new materials.' },
+  { id: 'm21-animals-discussion', theme: 'Animals and conservation', questions: [
+    { q: 'How can elderly people benefit from having a pet?', sample: 'A pet can provide companionship and a daily routine, although the person needs support if caring for it becomes physically difficult.' },
+    { q: 'Should the government protect wild animals?', sample: 'Yes. Protecting habitats and enforcing wildlife laws help species survive when private decisions alone would not be enough.' },
+    { q: 'Why are some animals endangered?', sample: 'Habitat loss, pollution and illegal hunting are major causes, and climate change adds pressure to species with narrow ranges.' },
+    { q: 'What are the advantages and disadvantages of zoos?', sample: 'Good zoos can support research and conservation, but keeping wild animals in limited spaces raises serious welfare concerns.' },
   ] },
-  { id: 'm22-public-knowledge', theme: 'Sharing knowledge in public', questions: [
-    { q: 'What makes a public speaker easy to understand?', sample: 'A clear structure, familiar examples and enough time for listeners to absorb each idea are all important.' },
-    { q: 'Are free public lectures valuable to a community?', sample: 'They give people access to expertise regardless of income and can encourage discussion of local issues.' },
-    { q: 'How have online talks changed access to information?', sample: 'They allow people in remote areas to hear specialists, though an online audience may ask fewer spontaneous questions.' },
-    { q: 'Should experts simplify complex ideas for the general public?', sample: 'Yes, provided they keep the key evidence and uncertainty visible rather than presenting a misleadingly simple answer.' },
+  { id: 'm22-art-discussion', theme: 'Art in society', questions: [
+    { q: 'What role does art play in society?', sample: 'Art helps people express experiences, preserve cultural memory and see familiar issues from a new perspective.' },
+    { q: 'What role do museums and galleries play?', sample: 'They preserve works, make them accessible to the public and provide context that helps visitors understand them.' },
+    { q: 'How can children benefit from art?', sample: 'Making and discussing art gives children a way to experiment, express feelings and pay attention to detail.' },
+    { q: 'Should the government support the arts?', sample: 'I think so, especially where funding gives schools and communities access to work they could not otherwise afford.' },
   ] },
-  { id: 'm23-service', theme: 'Complaints and customer service', questions: [
-    { q: 'Why are some people reluctant to make a complaint?', sample: 'They may expect an argument or feel that a small problem is not worth the effort.' },
-    { q: 'What should a company do first when a customer reports a problem?', sample: 'It should listen carefully, confirm the facts and explain when the customer can expect a response.' },
-    { q: 'Can negative feedback help an organisation?', sample: 'Certainly. Repeated complaints can reveal a flaw in a product or process that internal checks missed.' },
-    { q: 'Should staff always follow a script when handling complaints?', sample: 'A script can ensure consistency, but staff also need freedom to respond to the person and the circumstances.' },
+  { id: 'm23-apps-discussion', theme: 'Apps and everyday life', questions: [
+    { q: 'Are apps useful or are they a distraction?', sample: 'They can be either. Their value depends on the task they support and whether people can control the time they spend on them.' },
+    { q: 'How do people stop themselves getting distracted by apps on their phone?', sample: 'Turning off unnecessary notifications and setting specific times to check an app can make a real difference.' },
+    { q: 'Why do older people sometimes struggle with apps?', sample: 'Unfamiliar layouts and frequent updates can be confusing, particularly when instructions assume prior experience.' },
+    { q: 'How do you think apps will develop in the future?', sample: 'They will probably become more personalised, but developers will need to make privacy choices clearer to users.' },
   ] },
-  { id: 'm24-navigation', theme: 'Navigation and independence', questions: [
-    { q: 'Why do some people enjoy exploring without a fixed route?', sample: 'It can lead to unexpected discoveries and make a place feel less like a checklist of attractions.' },
-    { q: 'Are navigation apps making people less aware of their surroundings?', sample: 'Sometimes. Turn-by-turn instructions can reduce the need to remember landmarks or understand the wider area.' },
-    { q: 'What information should a good city map include?', sample: 'It should show accessible routes, public transport links and recognisable landmarks, as well as street names.' },
-    { q: 'Should children learn to navigate without a phone?', sample: 'Yes. Reading signs and planning a route are useful skills if a device loses power or signal.' },
+  { id: 'm24-books-discussion', theme: 'Books and children', questions: [
+    { q: 'What do children gain from reading books?', sample: 'Books introduce new words and ideas, while stories let children imagine how other people experience the world.' },
+    { q: 'How can children be encouraged to read more?', sample: 'Giving them a choice of enjoyable books and making time to read together works better than treating reading as a punishment.' },
+    { q: 'Why do some adults read children’s books?', sample: 'Some read them with young relatives, while others appreciate the storytelling or return to books they loved earlier.' },
+    { q: 'How do people’s reading tastes differ as they grow older?', sample: 'Their interests often broaden with experience, though a favourite genre from childhood can remain appealing.' },
   ] },
-  { id: 'm25-public-spaces', theme: 'Designing public spaces', questions: [
-    { q: 'What makes a public square pleasant to use?', sample: 'Shade, seating, safe crossings and room for different activities make people want to stay.' },
-    { q: 'Who should be consulted before a public place is redesigned?', sample: 'Local residents, businesses and people with disabilities all see different problems and needs.' },
-    { q: 'Can attractive public spaces benefit local businesses?', sample: 'Yes. If people spend longer in an area, they may also visit its shops and cafes.' },
-    { q: 'How can cities keep renovated spaces in good condition?', sample: 'They need a realistic maintenance budget and a way for residents to report damage quickly.' },
+  { id: 'm25-buildings-discussion', theme: 'Historical buildings', questions: [
+    { q: 'Do you think it is important to conserve all old buildings?', sample: 'It is important to assess their historical value and condition, since preserving every structure may be impossible.' },
+    { q: 'Why do people enjoy visiting historical buildings?', sample: 'They offer a physical connection to the past and show how people once lived, worked or designed public spaces.' },
+    { q: 'Can people learn things from old buildings?', sample: 'Yes. Their materials and layout can reveal the skills, needs and values of the period in which they were built.' },
+    { q: 'Do you think old buildings attract tourists? Why?', sample: 'They often do, because distinctive architecture and the stories behind it give visitors a reason to explore a place.' },
   ] },
-  { id: 'm26-accuracy', theme: 'Accuracy and planning', questions: [
-    { q: 'In which jobs are small measurement errors especially serious?', sample: 'Construction, medicine and engineering come to mind, because a small error can affect safety or cost.' },
-    { q: 'Why do people sometimes skip checking their work?', sample: 'They may be under time pressure or assume that a familiar task cannot go wrong.' },
-    { q: 'Is careful planning always more useful than flexibility?', sample: 'No. Planning gives direction, while flexibility helps when new information changes what is possible.' },
-    { q: 'How can teams reduce avoidable mistakes?', sample: 'Clear responsibilities and an independent final check catch many errors without creating excessive paperwork.' },
+  { id: 'm26-challenges-discussion', theme: 'Challenges and resilience', questions: [
+    { q: 'Why do some people relish a challenge?', sample: 'They may enjoy testing their abilities and feel a strong sense of progress when they master something difficult.' },
+    { q: 'Why do some people avoid challenges?', sample: 'Fear of failure or a lack of time and support can make a new task feel more threatening than rewarding.' },
+    { q: 'Should we protect children from difficult situations?', sample: 'Children need protection from harm, but age-appropriate difficulties can help them learn to solve problems.' },
+    { q: 'What skills can help people face difficult times?', sample: 'Planning, asking for help and adjusting expectations are useful skills when a first approach does not work.' },
   ] },
-  { id: 'm27-trust', theme: 'Trust and responsibility', questions: [
-    { q: 'How do people usually decide whether someone is reliable?', sample: 'They look at a pattern of behaviour, such as whether the person arrives on time and keeps small promises.' },
-    { q: 'Is it better to decline a request than to promise too much?', sample: 'Usually, yes. An honest refusal lets the other person make another plan.' },
-    { q: 'How can organisations rebuild trust after a mistake?', sample: 'They should acknowledge the mistake, explain its cause and show what has changed to prevent it happening again.' },
-    { q: 'Do digital reminders make people more responsible?', sample: 'They help people remember tasks, but responsibility still depends on deciding to follow through.' },
+  { id: 'm27-clothes-discussion', theme: 'Clothing and fashion', questions: [
+    { q: 'Do you think fashion is important?', sample: 'It can be a way to express identity, although comfort and affordability matter more to many people.' },
+    { q: 'Can you tell a lot about a person from what they wear?', sample: 'Clothes may hint at a situation or preference, but they rarely tell us much about a person’s character.' },
+    { q: 'What traditional clothes are there in your country?', sample: 'There are embroidered garments worn at celebrations, with patterns and materials that vary by region.' },
+    { q: 'How have clothing trends changed over the last few decades?', sample: 'Everyday styles have become more casual, and social media has made trends spread much faster.' },
   ] },
-  { id: 'm28-cooperation', theme: 'Rules and cooperation', questions: [
-    { q: 'Why do groups need rules even when members get along?', sample: 'Rules make expectations clear and prevent small misunderstandings from becoming personal disputes.' },
-    { q: 'When should a rule be changed?', sample: 'It should be reviewed when it repeatedly causes unfair outcomes or no longer serves its original purpose.' },
-    { q: 'Are people more likely to follow rules they helped create?', sample: 'Often, because they understand the reasoning and feel their concerns were heard.' },
-    { q: 'Can too many rules reduce creativity?', sample: 'Yes. Detailed restrictions can discourage people from trying sensible new approaches.' },
+  { id: 'm28-confidence-discussion', theme: 'Building confidence', questions: [
+    { q: 'Why is confidence important?', sample: 'It helps people share ideas and attempt unfamiliar tasks, even when success is not guaranteed.' },
+    { q: 'How can people develop confidence?', sample: 'Preparation and gradual practice help, especially when people reflect on progress rather than expect immediate perfection.' },
+    { q: 'Can someone ever be over-confident?', sample: 'Yes. If confidence stops a person from listening to evidence or advice, it can lead to poor decisions.' },
+    { q: 'Do you think social media makes people more or less confident?', sample: 'It can provide encouragement, but constant comparison with carefully selected images may undermine confidence.' },
   ] },
-  { id: 'm29-craft', theme: 'Craft and value', questions: [
-    { q: 'Why are some handmade objects more expensive than factory products?', sample: 'They require skilled labour and are usually produced in small quantities rather than on automated lines.' },
-    { q: 'Do handmade goods have value beyond their practical use?', sample: 'They can carry a maker’s story or a local tradition, which gives them personal and cultural meaning.' },
-    { q: 'How can traditional craft skills survive?', sample: 'Apprenticeships, fair prices and opportunities to teach younger people can keep the skills viable.' },
-    { q: 'Could new technology help craftspeople?', sample: 'Yes. Digital tools can help them sell work and plan designs while the making itself remains hands-on.' },
+  { id: 'm29-education-discussion', theme: 'Schools and learning', questions: [
+    { q: 'Do you think education in schools has changed a lot in the last few decades?', sample: 'Technology has changed access to materials and assignments, while many schools now give more attention to discussion and projects.' },
+    { q: 'How could teachers in schools improve their lessons?', sample: 'They can use clear examples, invite questions and check whether students can apply an idea rather than repeat it.' },
+    { q: 'Do you think parents sometimes pressure their children to learn too much?', sample: 'Some do. Encouragement is valuable, but children also need rest and space to develop their own interests.' },
+    { q: 'What makes a good teacher?', sample: 'A good teacher understands the subject, explains it patiently and adapts when students are struggling.' },
   ] },
-  { id: 'm30-instructions', theme: 'Giving clear instructions', questions: [
-    { q: 'What is the most common problem with written instructions?', sample: 'They often assume the reader already knows technical terms or can identify parts that look similar.' },
-    { q: 'When is a video more useful than a printed guide?', sample: 'A video helps when movement or the order of physical steps is difficult to describe in words.' },
-    { q: 'How should teachers check that students understood a task?', sample: 'They can ask students to explain the first step in their own words and invite specific questions.' },
-    { q: 'Should instructions include an explanation of why each step matters?', sample: 'For complex or risky tasks, yes. Understanding the reason helps people adapt when conditions change.' },
+  { id: 'm30-food-discussion', theme: 'Food and society', questions: [
+    { q: 'Do you think food plays an important role in society?', sample: 'Yes. Shared meals bring people together, and recipes can carry family and cultural traditions across generations.' },
+    { q: 'How has popular food changed in your country over the last few decades?', sample: 'People have more access to international dishes now, although traditional meals remain popular at home and celebrations.' },
+    { q: 'Do schools in your country provide children with healthy meals?', sample: 'Provision varies, but a healthy meal should include a balance of vegetables, protein and filling staple foods.' },
+    { q: 'What is a balanced diet?', sample: 'It is a varied pattern of eating that provides enough nutrients and energy without relying too heavily on one food group.' },
   ] },
 ]

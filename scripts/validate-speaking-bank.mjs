@@ -41,6 +41,14 @@ const part1 = [...base.PART1_TOPICS, ...extra.EXTRA_PART1_TOPICS, ...mock21to30.
 const part2 = [...base.CUE_CARDS, ...extra.EXTRA_CUE_CARDS, ...mock21to30.MOCK_21_TO_30_PART2]
 const part3 = [...base.PART3_THEMES, ...extra.EXTRA_PART3_THEMES, ...mock21to30.MOCK_21_TO_30_PART3]
 
+for (const [label, items] of [
+  ['Part 1', mock21to30.MOCK_21_TO_30_PART1],
+  ['Part 2', mock21to30.MOCK_21_TO_30_PART2],
+  ['Part 3', mock21to30.MOCK_21_TO_30_PART3],
+]) {
+  if (items.length !== 10) throw new Error(`Full Mocks 21–30 need exactly ten ${label} sets.`)
+}
+
 if (part1.length < 40 || part2.length < 40 || part3.length < 40) {
   throw new Error('IELTS Speaking requires at least 40 complete sets for every part.')
 }
@@ -50,11 +58,15 @@ assertUniqueIds('Part 2', part2)
 assertUniqueIds('Part 3', part3)
 
 const seenPrompts = new Map()
+const duplicatePrompts = []
 function register(location, prompt) {
   const normalized = normalizePrompt(prompt)
   if (!normalized) throw new Error(`${location} contains an empty prompt.`)
   const existing = seenPrompts.get(normalized)
-  if (existing) throw new Error(`Duplicate question found in ${existing} and ${location}.`)
+  if (existing) {
+    duplicatePrompts.push(`${existing} and ${location}: ${prompt}`)
+    return
+  }
   seenPrompts.set(normalized, location)
 }
 
@@ -81,6 +93,25 @@ for (const theme of part3) {
     if (!question.sample?.trim()) throw new Error(`Part 3/${theme.id}/${index + 1} has no sample answer.`)
     register(`Part 3/${theme.id}/${index + 1}`, question.q)
   })
+}
+
+if (duplicatePrompts.length) {
+  throw new Error(`Duplicate questions:\n${duplicatePrompts.join('\n')}`)
+}
+
+for (let index = 0; index < 10; index += 1) {
+  if (mock21to30.MOCK_21_TO_30_PART1[index]?.questions.length !== 4) {
+    throw new Error(`Full Mock ${index + 21} must have four Part 1 questions.`)
+  }
+  if (mock21to30.MOCK_21_TO_30_PART3[index]?.questions.length !== 4) {
+    throw new Error(`Full Mock ${index + 21} must have four Part 3 questions.`)
+  }
+}
+
+for (let index = 10; index < 30; index += 1) {
+  if (part1[index]?.questions.length !== 4 || part3[index]?.questions.length !== 4) {
+    throw new Error(`Full Mock ${index - 9} no longer follows the four-question baseline.`)
+  }
 }
 
 const part1QuestionCount = part1.reduce((total, topic) => total + topic.questions.length, 0)

@@ -103,7 +103,10 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
 }
 
 export function isSATTestComplete(test: SATTestDefinition): boolean {
-  return !test.missingModuleIds?.length
+  if (test.missingModuleIds?.length) return false
+  const readingWriting = test.modules.filter((module) => module.section === 'reading-writing').length
+  const math = test.modules.filter((module) => module.section === 'math').length
+  return (readingWriting === 2 && math === 2) || (readingWriting === 2 && math === 0) || (math === 2 && readingWriting === 0)
 }
 
 export function satAvailabilityNote(test: SATTestDefinition): string | null {

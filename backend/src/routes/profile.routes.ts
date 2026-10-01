@@ -1652,6 +1652,7 @@ const SKILL_TRACKS = [
   'IELTS_READING',
   'IELTS_WRITING',
   'IELTS_SPEAKING',
+  'IELTS_OVERALL',
   'SAT_MATH',
   'SAT_ENGLISH',
   'SAT_OVERALL',
@@ -1749,15 +1750,19 @@ function serializeProfile(profile: Record<string, any> | null) {
 }
 
 function tierForBand(band: number) {
-  return Math.max(6, Math.min(9, Math.floor(band)))
+  return Math.min(9, Math.floor(band))
 }
 
 function tierForAchievement(track: (typeof SKILL_TRACKS)[number], score: number) {
   if (track === 'SAT_OVERALL') {
     if (score >= 1600) return 9
     if (score >= 1550) return 8
-    if (score >= 1500) return 7
-    return 6
+    return 7
+  }
+  if (track === 'SAT_MATH' || track === 'SAT_ENGLISH') {
+    if (score >= 790) return 9
+    if (score >= 750) return 8
+    return 7
   }
   return tierForBand(score)
 }
@@ -1857,8 +1862,18 @@ router.delete(
 const badgeUpsertSchema = z.object({
   track: z.enum(SKILL_TRACKS),
   band: z.coerce.number().min(0).max(1600),
-  source: z.string().max(40).optional(),
+  source: z.string().max(40),
 })
+const BADGE_SOURCES: Record<(typeof SKILL_TRACKS)[number], readonly string[]> = {
+  IELTS_LISTENING: ['ielts-listening-sim'],
+  IELTS_READING: ['ielts-reading-sim'],
+  IELTS_WRITING: ['ielts-writing-full'],
+  IELTS_SPEAKING: ['ielts-speaking-mock'],
+  IELTS_OVERALL: ['ielts-full-mock'],
+  SAT_MATH: ['sat-section', 'sat-full-mock'],
+  SAT_ENGLISH: ['sat-section', 'sat-full-mock'],
+  SAT_OVERALL: ['sat-full-mock'],
+}
 const badgePinSchema = z.object({
   id: z.string().min(1).max(191),
   pinned: z.boolean(),
@@ -1881,11 +1896,14 @@ router.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     const { track, band, source } = badgeUpsertSchema.parse(req.body ?? {})
-    if (track === 'SAT_OVERALL' ? band < 1400 : band < 7 || band > 9) {
+    const validScore = track === 'SAT_OVERALL'
+      ? Number.isInteger(band) && band >= 1400 && band <= 1600
+      : track === 'SAT_MATH' || track === 'SAT_ENGLISH'
+        ? Number.isInteger(band) && band >= 700 && band <= 800
+        : band >= 7 && band <= 9
+    if (!validScore || !BADGE_SOURCES[track].includes(source)) {
       return res.status(400).json({
-        message: track === 'SAT_OVERALL'
-          ? 'SAT achievements are awarded for complete mock scores of 1400 and above only.'
-          : 'IELTS achievements are awarded for band 7.0 and above only.',
+        message: 'This achievement requires a qualifying complete exam result.',
       })
     }
     const tier = tierForAchievement(track, band)

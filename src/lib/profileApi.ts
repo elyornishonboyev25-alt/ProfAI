@@ -9,6 +9,7 @@ export type SkillTrackKey =
   | 'IELTS_READING'
   | 'IELTS_WRITING'
   | 'IELTS_SPEAKING'
+  | 'IELTS_OVERALL'
   | 'SAT_MATH'
   | 'SAT_ENGLISH'
   | 'SAT_OVERALL'

@@ -36,6 +36,7 @@ type BadgeState = {
     band: number
     mode: AwardMode
     source?: string
+    silent?: boolean
   }) => { celebrated: boolean; tier: number | null }
 }
 
@@ -49,13 +50,12 @@ export const useBadgeStore = create<BadgeState>()(
           .records.filter((r) => r.userId === userId && r.track === track)
           .reduce((max, r) => Math.max(max, r.band), 0),
       clearForUser: (userId) => set((state) => ({ records: state.records.filter((record) => record.userId !== userId) })),
-      awardIfEligible: ({ userId, track, band, mode, source }) => {
+      awardIfEligible: ({ userId, track, band, mode, source, silent = false }) => {
         if (!isEligibleMode(mode)) return { celebrated: false, tier: null }
         const tier = tierForAchievement(track, band)
         if (!tier) return { celebrated: false, tier: null }
 
-        const prevBest = get().bestBand(userId, track)
-        const shouldCelebrate = band > prevBest
+        const shouldCelebrate = !silent && !get().records.some((record) => record.userId === userId && record.track === track && record.tier === tier)
 
         set((state) => {
           const idx = state.records.findIndex(
@@ -73,9 +73,9 @@ export const useBadgeStore = create<BadgeState>()(
         })
 
         // Best-effort server persistence (drives the public profile + cross-device).
-        void upsertBadge({ track, band, source: source ?? mode })
-          .then((res) => {
-            if (shouldCelebrate) useCelebrationStore.getState().setServerBadgeId(res.badge.id)
+        if (userId) void upsertBadge({ track, band, source: source ?? mode })
+          .then(() => {
+            window.dispatchEvent(new Event('smarttest:badges-synced'))
           })
           .catch(() => {})
 
@@ -86,6 +86,21 @@ export const useBadgeStore = create<BadgeState>()(
         return { celebrated: shouldCelebrate, tier }
       },
     }),
-    { name: 'smarttest-skill-badges-v1' },
+    {
+      name: 'smarttest-skill-badges-v1',
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as BadgeState
+        const normalized = new Map<string, LocalBadgeRecord>()
+        for (const record of Array.isArray(state.records) ? state.records : []) {
+          const tier = tierForAchievement(record.track, record.band)
+          if (!tier) continue
+          const next = { ...record, tier }
+          const key = `${record.userId ?? 'guest'}:${record.track}:${tier}`
+          if (!normalized.has(key) || normalized.get(key)!.band < record.band) normalized.set(key, next)
+        }
+        return { ...state, records: [...normalized.values()] }
+      },
+    },
   ),
 )

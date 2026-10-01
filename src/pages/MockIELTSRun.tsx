@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Reveal } from '@/components/fx'
+import { useAuthStore } from '@/store/authStore'
+import { useBadgeStore } from '@/store/badgeStore'
 import {
   formatMockDuration,
   FULL_MOCK_PROGRESS_EVENT,
@@ -59,6 +61,8 @@ function resolveStatus(
 }
 
 export default function MockIELTSRun() {
+  const userId = useAuthStore((state) => state.user?.id ?? null)
+  const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const navigate = useNavigate()
   const location = useLocation()
   const { mockId } = useParams<{ mockId: string }>()
@@ -97,6 +101,11 @@ export default function MockIELTSRun() {
     return mockId ? getFullMockResults(mockId) : {}
   }, [completedKeys, mockId])
   const overallBand = mockId ? getFullMockOverallBand(mockId) : null
+
+  useEffect(() => {
+    if (!mock?.fullyReady || completedKeys.length !== MOCK_SECTION_COUNT || overallBand === null) return
+    awardBadge({ userId, track: 'IELTS_OVERALL', band: overallBand, mode: 'full_mock', source: 'ielts-full-mock' })
+  }, [awardBadge, completedKeys.length, mock?.fullyReady, overallBand, userId])
 
   const launchSection = useCallback(
     (section: MockSection) => {

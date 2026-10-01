@@ -46,6 +46,7 @@ import {
 } from '../utils/ieltsUtils'
 import { AnimatedBackground } from './AnimatedBackground'
 import { useBadgeStore } from '@/store/badgeStore'
+import { isCompleteIeltsObjectiveSection } from '@/components/achievements/badgeMeta'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 
 interface IELTSReadingInterfaceProps {
@@ -1365,7 +1366,7 @@ export default function IELTSReadingInterface({
     const analysis = evaluateReadingAnswers(activeSections, answers)
     const correctCount = analysis.summary.correctAnswers
     const totalQuestions = analysis.summary.totalQuestions
-    const isPartial = activeSections.length < test.sections.length
+    const isPartial = !isCompleteIeltsObjectiveSection(isListening ? 'IELTS_LISTENING' : 'IELTS_READING', test.sections.length, activeSections.length)
     const score = isPartial ? 0 : calculateBandScore(correctCount)
     const timeSpent = getCurrentTimeSpent()
 

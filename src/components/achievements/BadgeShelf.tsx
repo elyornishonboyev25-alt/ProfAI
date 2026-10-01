@@ -11,7 +11,7 @@ import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import SkillBadge from './SkillBadge'
-import { TIER_NAME, TRACK_META, formatAchievementScore } from './badgeMeta'
+import { TRACK_META, TRACK_ORDER, formatAchievementScore } from './badgeMeta'
 
 // Owner-facing badge manager: shows every earned badge and lets the learner pin the
 // ones they want on their public profile (or remove an old, lower one). Falls back to
@@ -29,34 +29,29 @@ export default function BadgeShelf() {
   useEffect(() => {
     let active = true
     setLoading(true)
-    fetchBadges()
-      .then((list) => {
-        if (!active) return
-        setBadges(list)
-        setOffline(false)
-      })
+    const local = localRecords.filter((record) => record.userId === userId).map<SkillBadgeRecord>((record) => ({
+      id: `local-${record.track}-${record.tier}`, userId: userId ?? '', track: record.track,
+      tier: record.tier, band: record.band, pinned: false, source: null,
+      unlockedAt: record.unlockedAt, updatedAt: record.unlockedAt,
+    }))
+    const refresh = () => fetchBadges().then((list) => {
+      if (!active) return
+      setBadges([...list, ...local.filter((record) => !list.some((saved) => saved.track === record.track && saved.tier === record.tier))])
+      setOffline(false)
+    })
+    const onSynced = () => { void refresh().catch(() => { if (active) setOffline(true) }) }
+    window.addEventListener('smarttest:badges-synced', onSynced)
+    refresh()
       .catch(() => {
         if (!active) return
         // Fall back to the local mirror (read-only — ids are synthetic).
-        const local = localRecords
-          .filter((r) => r.userId === userId)
-          .map<SkillBadgeRecord>((r) => ({
-            id: `local-${r.track}-${r.tier}`,
-            userId: userId ?? '',
-            track: r.track,
-            tier: r.tier,
-            band: r.band,
-            pinned: false,
-            source: null,
-            unlockedAt: r.unlockedAt,
-            updatedAt: r.unlockedAt,
-          }))
         setBadges(local)
         setOffline(true)
       })
       .finally(() => active && setLoading(false))
     return () => {
       active = false
+      window.removeEventListener('smarttest:badges-synced', onSynced)
     }
   }, [userId, localRecords])
 
@@ -85,6 +80,7 @@ export default function BadgeShelf() {
     try {
       await deleteBadge(badge.id)
       setBadges((prev) => prev.filter((b) => b.id !== badge.id))
+      useBadgeStore.setState((state) => ({ records: state.records.filter((record) => !(record.userId === userId && record.track === badge.track && record.tier === badge.tier)) }))
     } catch (e) {
       pushToast({ type: 'error', title: 'Could not remove', message: e instanceof Error ? e.message : 'Try again.' })
     } finally {
@@ -108,7 +104,7 @@ export default function BadgeShelf() {
         </span>
         <p className="mt-3 text-sm font-bold text-slate-700">No badges yet</p>
         <p className="mt-1 max-w-xs text-xs text-slate-500">
-          Reach IELTS band 7.0+ or score 1400+ in a complete Digital SAT mock to earn your first professional badge.
+          Finish an IELTS section or full mock with band 7.0+, a SAT section with 700+, or a full SAT mock with 1400+.
         </p>
       </div>
     )
@@ -116,17 +112,17 @@ export default function BadgeShelf() {
 
   return (
     <div>
-      <p className="mb-3 text-xs font-medium text-slate-500">
-        <Star className="mr-1 inline h-3.5 w-3.5 -translate-y-0.5 fill-amber-400 text-amber-500" />
-        Pinned badges appear on your public profile. Pin a higher band and unpin the old one — or keep both.
-      </p>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {badges.map((badge) => (
+      <div className="mb-5 rounded-2xl border border-amber-200/70 bg-[linear-gradient(115deg,#fff9e9,#fff,#f6f9ff)] p-4 sm:p-5">
+        <p className="flex items-center gap-2 text-sm font-black text-slate-900"><Sparkles className="h-4 w-4 text-amber-500" /> Your honors collection</p>
+        <p className="mt-1 text-xs leading-5 text-slate-600">Each medal marks a complete section or full mock. Pin favorites to your public profile.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {[...badges].sort((a, b) => TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier).map((badge) => (
           <motion.div
             key={badge.id}
             layout
-            className={`group relative flex flex-col items-center rounded-2xl border p-3 transition ${
-              badge.pinned ? 'border-amber-300 bg-amber-50/60 shadow-[0_8px_20px_rgba(245,158,11,0.18)]' : 'border-slate-100 bg-white'
+            className={`group relative flex flex-col items-center overflow-hidden rounded-[1.5rem] border px-4 pb-5 pt-3 text-center transition hover:-translate-y-1 ${
+              badge.pinned ? 'border-amber-300 bg-[radial-gradient(circle_at_50%_35%,#fff2c8,#fffaf0_55%,#fff)] shadow-[0_14px_28px_rgba(153,104,23,0.17)]' : 'border-slate-200 bg-[radial-gradient(circle_at_50%_35%,#fff8e9,#fff_60%)] shadow-[0_9px_24px_rgba(24,33,53,0.07)]'
             }`}
           >
             {badge.pinned ? (
@@ -135,27 +131,27 @@ export default function BadgeShelf() {
               </span>
             ) : null}
 
-            <SkillBadge track={badge.track} band={badge.band} size={104} showBand />
-            <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[badge.track]?.short}</p>
+            <SkillBadge track={badge.track} band={badge.band} size={168} showBand />
+            <p className="mt-1 font-serif text-lg font-bold text-slate-900">{TRACK_META[badge.track]?.title}</p>
             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              {TIER_NAME[badge.tier]} · {formatAchievementScore(badge.track, badge.band)}
+              Tier {badge.tier} · {TRACK_META[badge.track]?.group === 'SAT' ? 'Score' : 'Band'} {formatAchievementScore(badge.track, badge.band)}
             </p>
 
-            <div className="mt-2 flex items-center gap-1.5">
+            <div className="mt-4 flex items-center gap-2">
               <button
                 onClick={() => void togglePin(badge)}
-                disabled={busyId === badge.id}
-                className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-bold transition disabled:opacity-50 ${
-                  badge.pinned ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                disabled={busyId === badge.id || badge.id.startsWith('local-')}
+                className={`inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-bold transition disabled:opacity-50 ${
+                  badge.pinned ? 'bg-amber-200 text-amber-900 hover:bg-amber-300' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
                 }`}
               >
                 <Star className={`h-3 w-3 ${badge.pinned ? 'fill-amber-500 text-amber-600' : ''}`} />
-                {badge.pinned ? 'Unpin' : 'Pin'}
+                {badge.id.startsWith('local-') ? 'Syncing' : badge.pinned ? 'Unpin' : 'Pin'}
               </button>
               <button
                 onClick={() => void removeBadge(badge)}
-                disabled={busyId === badge.id}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-blue-100 hover:text-blue-600 disabled:opacity-50"
+                disabled={busyId === badge.id || badge.id.startsWith('local-')}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 title="Remove badge"
               >
                 <Trash2 className="h-3.5 w-3.5" />

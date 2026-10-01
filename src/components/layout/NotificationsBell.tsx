@@ -16,8 +16,10 @@ const TRACK_LABELS: Record<string, string> = {
   IELTS_READING: 'Reading',
   IELTS_WRITING: 'Writing',
   IELTS_SPEAKING: 'Speaking',
+  IELTS_OVERALL: 'IELTS Full Mock',
   SAT_MATH: 'SAT Math',
   SAT_ENGLISH: 'SAT English',
+  SAT_OVERALL: 'SAT Full Mock',
 }
 
 type NotificationItem = {

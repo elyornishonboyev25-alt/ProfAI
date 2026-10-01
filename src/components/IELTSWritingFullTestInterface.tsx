@@ -252,12 +252,12 @@ export default function IELTSWritingFullTestInterface({
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
-      awardBadge({
+      if (tasks.some((task) => task.taskType === 'task1') && tasks.some((task) => task.taskType === 'task2') && timerEnabled) awardBadge({
         userId: user?.id ?? null,
         track: 'IELTS_WRITING',
         band: overallBand,
-        mode: timerEnabled ? 'exam' : 'practice',
-        source: 'ielts-writing',
+        mode: 'exam',
+        source: 'ielts-writing-full',
       })
 
       const timeSpent = timerEnabled ? effectiveDuration * 60 - timeRemaining : 0

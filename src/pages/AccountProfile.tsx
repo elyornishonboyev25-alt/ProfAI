@@ -22,7 +22,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import {
@@ -253,6 +253,7 @@ function CountryPicker({ value, onChange }: { value: string; onChange: (country:
 }
 
 export default function AccountProfile() {
+  const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const setUserNickname = useAuthStore((state) => state.setUserNickname)
@@ -266,6 +267,15 @@ export default function AccountProfile() {
   const [targetCountriesDraft, setTargetCountriesDraft] = useState('')
   const [activeSection, setActiveSection] = useState<string>('identity')
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (loading || location.hash !== '#achievements') return
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('achievements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setActiveSection('achievements')
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [loading, location.hash])
   const [loadError, setLoadError] = useState(false)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [saving, setSaving] = useState(false)

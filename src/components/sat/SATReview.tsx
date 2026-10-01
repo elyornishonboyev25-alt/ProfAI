@@ -242,15 +242,16 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   }
 
   useEffect(() => {
-    if (historyReview || !submitted || !completeTest || onlySection || displayedMidpoint < 1400) return
-    awardBadge({
-      userId,
-      track: 'SAT_OVERALL',
-      band: displayedMidpoint,
-      mode: attempt.mode,
-      source: 'mock',
-    })
-  }, [attempt.mode, awardBadge, completeTest, displayedMidpoint, historyReview, onlySection, submitted, userId])
+    if (historyReview || !submitted || !completeTest) return
+    const mode = 'mock'
+    if (onlySection) {
+      awardBadge({ userId, track: onlySection === 'math' ? 'SAT_MATH' : 'SAT_ENGLISH', band: Math.round(displayedMidpoint / 10) * 10, mode, source: 'sat-section' })
+      return
+    }
+    awardBadge({ userId, track: 'SAT_OVERALL', band: report.midpoint, mode, source: 'sat-full-mock' })
+    awardBadge({ userId, track: 'SAT_MATH', band: Math.round((report.mathRange[0] + report.mathRange[1]) / 20) * 10, mode, source: 'sat-full-mock' })
+    awardBadge({ userId, track: 'SAT_ENGLISH', band: Math.round((report.readingWritingRange[0] + report.readingWritingRange[1]) / 20) * 10, mode, source: 'sat-full-mock' })
+  }, [awardBadge, completeTest, displayedMidpoint, historyReview, onlySection, report.mathRange, report.midpoint, report.readingWritingRange, submitted, userId])
   const headline = !submitted ? 'Your saved answers are ready to review.' : !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (

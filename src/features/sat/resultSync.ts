@@ -1,5 +1,6 @@
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { useAuthStore } from '@/store/authStore'
+import { useBadgeStore } from '@/store/badgeStore'
 import { loadSATAttempt, loadSATAttemptHistory } from './attemptStorage'
 import { getSATReviewTests, isSATTestComplete, type SATTestDefinition } from './catalog'
 import { isSATAnswerCorrect, scoreSATModules, type SATAttempt } from './practiceTest4'
@@ -11,6 +12,7 @@ export async function syncSATAttemptResult(
   test: SATTestDefinition,
   attempt: SATAttempt,
   assignmentId?: string,
+  silent = false,
 ): Promise<void> {
   if (attempt.status !== 'submitted' || useAuthStore.getState().user?.id !== userId) return
   const endedAt = attempt.submittedAt ?? attempt.updatedAt
@@ -18,6 +20,21 @@ export async function syncSATAttemptResult(
   // Match the existing submission key so backfills update, never duplicate, results.
   const sourceKey = `sat-${test.id}-${endedAt}`
   const syncKey = `smarttest-sat-result-sync:${userId}:${sourceKey}`
+  const report = scoreSATModules(test.modules, attempt.answers)
+  const onlySection = test.modules.every((module) => module.section === test.modules[0]?.section)
+  const section = onlySection ? test.modules[0]?.section : null
+  const complete = isSATTestComplete(test)
+  if (complete) {
+    const award = useBadgeStore.getState().awardIfEligible
+    if (section) {
+      const range = section === 'math' ? report.mathRange : report.readingWritingRange
+      award({ userId, track: section === 'math' ? 'SAT_MATH' : 'SAT_ENGLISH', band: Math.round((range[0] + range[1]) / 20) * 10, mode: 'mock', source: 'sat-section', silent })
+    } else {
+      award({ userId, track: 'SAT_OVERALL', band: report.midpoint, mode: 'mock', source: 'sat-full-mock', silent })
+      award({ userId, track: 'SAT_MATH', band: Math.round((report.mathRange[0] + report.mathRange[1]) / 20) * 10, mode: 'mock', source: 'sat-full-mock', silent })
+      award({ userId, track: 'SAT_ENGLISH', band: Math.round((report.readingWritingRange[0] + report.readingWritingRange[1]) / 20) * 10, mode: 'mock', source: 'sat-full-mock', silent })
+    }
+  }
   try {
     if (!assignmentId && window.localStorage.getItem(syncKey) === 'ok') return
   } catch { /* The server upsert still makes retries safe without local storage. */ }
@@ -25,10 +42,6 @@ export async function syncSATAttemptResult(
   const existing = pending.get(pendingKey)
   if (existing) return existing
 
-  const report = scoreSATModules(test.modules, attempt.answers)
-  const onlySection = test.modules.every((module) => module.section === test.modules[0]?.section)
-  const section = onlySection ? test.modules[0]?.section : null
-  const complete = isSATTestComplete(test)
   const range = section === 'math' ? report.mathRange : report.readingWritingRange
   const topicStats = new Map<string, { correct: number; total: number }>()
   const skillStats = new Map<string, { correct: number; total: number }>()
@@ -83,7 +96,7 @@ export async function syncSavedSATAttemptResults(userId: string): Promise<{ fail
     if (useAuthStore.getState().user?.id !== userId) break
     const results = await Promise.allSettled(entries.slice(index, index + 3).map(({ attempt }) => {
       const test = byId.get(attempt.testId)
-      return test ? syncSATAttemptResult(userId, test, attempt) : Promise.resolve()
+      return test ? syncSATAttemptResult(userId, test, attempt, undefined, true) : Promise.resolve()
     }))
     failed += results.filter((result) => result.status === 'rejected').length
   }

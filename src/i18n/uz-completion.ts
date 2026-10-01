@@ -1,5 +1,16 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Make every': 'Har bir',
+  'step': 'qadam',
+  'count.': 'muhim.',
+  'Practice with purpose. Track your progress.': 'Maqsad bilan mashq qiling. Natijalaringizni kuzating.',
+  'Plan what comes next.': 'Keyingi qadamingizni rejalang.',
+  'Sample': 'Namuna',
+  'Sample score trend across seven practice tests': 'Yetti mashq testi bo‘yicha namunaviy ball o‘sishi',
+  'Test': 'Test',
+  'IELTS + SAT practice': 'IELTS + SAT mashqlari',
+  'Actionable insights': 'Amaliy tahlillar',
+  'University planning': 'Universitet rejalari',
   'No numeric cutoff to compare': 'Taqqoslash uchun aniq minimal ball yo‘q',
   'Score gap': 'Ball farqi',
   'Score met': 'Talab etilgan ballga erishilgan',

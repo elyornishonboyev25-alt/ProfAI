@@ -1,5 +1,16 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Make every': 'Каждый',
+  'step': 'шаг',
+  'count.': 'важен.',
+  'Practice with purpose. Track your progress.': 'Занимайтесь осознанно. Следите за своим прогрессом.',
+  'Plan what comes next.': 'Планируйте следующий шаг.',
+  'Sample': 'Пример',
+  'Sample score trend across seven practice tests': 'Пример роста баллов за семь пробных тестов',
+  'Test': 'Тест',
+  'IELTS + SAT practice': 'Подготовка к IELTS и SAT',
+  'Actionable insights': 'Полезная аналитика',
+  'University planning': 'Планирование поступления',
   'YOUR PREPARATION SPACE': 'ВАШЕ ПРОСТРАНСТВО ДЛЯ ПОДГОТОВКИ',
   'Prepare for IELTS and the Digital SAT in one workspace designed to help every session move you forward.': 'Готовьтесь к IELTS и Digital SAT в едином пространстве, где каждое занятие помогает двигаться вперёд.',
   'One account for practice, results and your university plan.': 'Один аккаунт для практики, результатов и планирования поступления.',

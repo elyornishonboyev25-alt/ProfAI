@@ -283,10 +283,10 @@ function App() {
     pathname.startsWith('/admission') ||
     pathname === '/ai-tutor' ||
     isLeaderboardMode
+  const isSatTestRoute = /^\/mock\/sat(?:\/\d+)?$/.test(pathname) || /^\/sat\/mock\/\d+\/run$/.test(pathname)
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
-    /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
-    /^\/sat\/mock\/\d+\/run$/.test(pathname)
+    isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
   const isTestMode = isCustomTestMode || isClassicTestMode
   const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
@@ -320,7 +320,6 @@ function App() {
   const pathParts = pathname.split('/').filter(Boolean)
   const isFocusContentMode =
     (pathname === '/onboarding' || pathname === '/focus') ||
-    pathname.startsWith('/sat/') ||
     (pathname.startsWith('/ielts/') && !/^\/ielts\/(?:tests|(?:listening|reading|writing|speaking)\/tests)$/.test(pathname)) ||
     pathname.startsWith('/ielts/speaking/test/') ||
     pathname.startsWith('/ielts/writing/test/') ||
@@ -343,7 +342,7 @@ function App() {
   // intentionally keep their standalone layouts.
   const showSidebar =
     !isPublicStandalone &&
-    !isTestMode &&
+    (!isTestMode || isSatTestRoute) &&
     !isFocusContentMode &&
     !isIeltsMockMode
   const isAiTutorMode = pathname === '/ai-tutor'

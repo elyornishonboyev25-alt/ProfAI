@@ -72,6 +72,7 @@ const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
 const Onboarding = lazy(() => import('@/pages/Onboarding'))
 const QuickOnboarding = lazy(() => import('@/pages/QuickOnboarding'))
+const Premium = lazy(() => import('@/pages/Premium'))
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'))
 const IELTSWritingTest = lazy(() => import('@/pages/IELTSWritingTest'))
 const IELTSSpeakingTest = lazy(() => import('@/pages/IELTSSpeakingTest'))
@@ -837,7 +838,7 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route path="/premium" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/premium" element={<AnimatedRoute><Premium /></AnimatedRoute>} />
                       <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
                       <Route path="/register" element={<AnimatedRoute><Register /></AnimatedRoute>} />
                       <Route path="/learning-center" element={<AnimatedRoute><LearningCenterPortal /></AnimatedRoute>} />

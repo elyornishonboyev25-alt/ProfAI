@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Clock3, Copy, Crown, ExternalLink, ShieldCheck, Wallet } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fillPremium, premiumCopy, premiumLanguage, type PremiumCopyKey } from '@/i18n/premium'
+import { useCopy } from '@/i18n/interface'
 import { useAuthStore } from '@/store/authStore'
-import { isPremiumUser } from '@/utils/premiumAccess'
+import { ENFORCE_PREMIUM, isPremiumUser } from '@/utils/premiumAccess'
 
 const TELEGRAM_USERNAME = 'nishonboyev7'
 const CARD_NUMBER = '5614 6827 0376 3088'
@@ -22,7 +23,28 @@ const statusKeys: Record<string, PremiumCopyKey> = {
   REJECTED: 'rejected', CANCELED: 'canceled',
 }
 
+function UnlimitedAccess() {
+  const navigate = useNavigate()
+  const { c } = useCopy()
+
+  return <main className="workspace-page min-h-screen px-4 py-9 sm:px-6 lg:px-10">
+    <div className="mx-auto max-w-4xl">
+      <button type="button" onClick={() => navigate('/dashboard')} className="route-back-button mb-6"><ArrowLeft size={17} /> {c('Dashboard')}</button>
+      <section className="rounded-[2rem] bg-gradient-to-br from-red-950 via-red-800 to-rose-600 p-7 text-white shadow-xl sm:p-10">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider"><Crown size={15} /> {c('Unlimited')}</span>
+        <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-5xl">{c('Free access for everyone')}</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-red-50 sm:text-base">{c('Everything is free for now.')} {c('Practice tests, results, AI tools and university planning are open to everyone.')}</p>
+        <button type="button" onClick={() => navigate('/dashboard')} className="mt-7 rounded-xl bg-white px-5 py-3 text-sm font-bold text-red-800 transition hover:bg-red-50">{c('Dashboard')}</button>
+      </section>
+    </div>
+  </main>
+}
+
 export default function Premium() {
+  return ENFORCE_PREMIUM ? <PremiumPlans /> : <UnlimitedAccess />
+}
+
+function PremiumPlans() {
   const navigate = useNavigate()
   const { i18n } = useTranslation()
   const language = premiumLanguage(i18n.resolvedLanguage ?? i18n.language)

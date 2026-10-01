@@ -25,11 +25,8 @@ import { useRegisterModalStore } from '@/store/registerModalStore'
 import { addTrackedMinutes, routeToActivityKey } from '@/utils/weeklyPlanner'
 import { startSiteTimeTracking } from '@/utils/siteTime'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
-import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
 import ReportIssueModal from '@/components/support/ReportIssueModal'
-
-const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
@@ -37,7 +34,6 @@ const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
-const GuestDiagnostic = lazy(() => import('@/pages/GuestDiagnostic'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
@@ -441,7 +437,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
+    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
@@ -474,7 +470,7 @@ function App() {
                 <Suspense fallback={<RouteLoader />}>
                     <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
-                      <Route path="/diagnostic" element={guestDiagnosticEnabled ? <AnimatedRoute><GuestDiagnostic /></AnimatedRoute> : <Navigate to="/register" replace />} />
+                      <Route path="/diagnostic" element={<Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route path="/journey-plan" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/owner" element={<ProtectedRoute><AnimatedRoute><OwnerDashboard /></AnimatedRoute></ProtectedRoute>} />

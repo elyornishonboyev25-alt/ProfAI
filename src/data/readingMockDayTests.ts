@@ -345,7 +345,7 @@ const siliconQuestions: Question[] = [
     }),
   ),
   ...[
-    ['Emanuel Sachs made two major changes to the manufacture of a ______.', 'multi-crystalline silicon cell', 'C'],
+    ['Emanuel Sachs made two major changes to the manufacture of a multi-crystalline ______.', 'silicon cell', 'C'],
     ['One change uses a ______ to produce finer wires.', 'proprietary wet process', 'D'],
     ['The finer wires draw more current from the ______.', 'neighbouring active material|neighboring active material', 'D'],
     ['The other change places ______ on interconnect wires.', 'textured mirror surfaces', 'E'],

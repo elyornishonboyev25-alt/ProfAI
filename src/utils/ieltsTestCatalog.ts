@@ -9,6 +9,7 @@ import { fullReadingTest7 } from '../data/fullReadingTest7'
 import { fullReadingTest8 } from '../data/fullReadingTest8'
 import { fullReadingTest9 } from '../data/fullReadingTest9'
 import { fullReadingTest10 } from '../data/fullReadingTest10'
+import { readingFullTests23to30 } from '../data/readingFullTests23to30'
 import { mockReadingTests } from '../data/ieltsReadingPassages'
 import { mockListeningTests } from '../data/listeningPassages'
 import { resolveGeneratedTestById } from './generatedIeltsTests'
@@ -24,6 +25,7 @@ const CATALOG: IELTSTest[] = [
   fullReadingTest8,
   fullReadingTest9,
   fullReadingTest10,
+  ...readingFullTests23to30,
   ...mockReadingTests,
   ...mockListeningTests,
 ]

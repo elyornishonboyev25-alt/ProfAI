@@ -40,7 +40,7 @@ function cloneReadingTest(test: IELTSTest, index: number): IELTSTest {
     id: `reading-test-${index}`,
     title: `IELTS Academic Reading Test ${index}`,
     sections: test.sections.map((section, sectionIndex) => cloneSection(section, `mock-${index}-p${sectionIndex + 1}`)),
-    totalQuestions: test.sections.reduce((total, section) => total + section.questions.length, 0),
+    totalQuestions: test.totalQuestions,
   }
 }
 

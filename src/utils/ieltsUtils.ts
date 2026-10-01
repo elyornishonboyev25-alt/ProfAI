@@ -82,6 +82,7 @@ export const checkAnswer = (
   correctAnswer: string | string[],
   options?: string[],
   strictAnswerMatch = false,
+  penalizeWrongSelections = true,
 ): boolean | number => {
   if (Array.isArray(correctAnswer)) {
     const userSelections = Array.isArray(userAnswer) ? userAnswer : []
@@ -103,7 +104,7 @@ export const checkAnswer = (
       }
     })
     const wrongCount = Math.max(0, normalizedUser.size - correctCount)
-    return clamp(correctCount - wrongCount, 0, normalizedCorrect.size)
+    return clamp(correctCount - (penalizeWrongSelections ? wrongCount : 0), 0, normalizedCorrect.size)
   }
 
   if (isSkipped(userAnswer)) return false
@@ -172,7 +173,14 @@ export const evaluateReadingAnswers = (
       }
     }
 
+    let instruction: string | undefined
+    let groupTitle: string | undefined
     for (const question of section.questions) {
+      if (question.instruction) instruction = question.instruction
+      else if (question.groupTitle && question.groupTitle !== groupTitle) instruction = undefined
+      if (question.groupTitle) groupTitle = question.groupTitle
+      const isReading = !section.audioUrl && !section.groups
+      const isTextCompletion = question.type === 'summary-completion' || question.type === 'note-completion' || question.type === 'short-answer'
       const userAnswer = answers[question.id]
       const questionNumbers = getQuestionNumbers(question)
       const maxScore = Math.max(1, questionNumbers.length)
@@ -189,10 +197,13 @@ export const evaluateReadingAnswers = (
             userAnswer as string | number | string[] | undefined,
             question.correctAnswer,
             question.options,
-            question.strictAnswerMatch,
+            question.strictAnswerMatch ?? (isReading && isTextCompletion),
+            !isReading,
           )
           score =
             typeof checked === 'number' ? clamp(checked, 0, maxScore) : checked ? maxScore : 0
+          const wordLimit = isReading && isTextCompletion ? parseWordLimit(instruction) : null
+          if (wordLimit && typeof userAnswer === 'string' && countWords(userAnswer) > wordLimit) score = 0
         }
       }
 
@@ -543,9 +554,9 @@ const WORD_LIMIT_MAP: Record<string, number> = {
 
 function parseWordLimit(instruction?: string): number | null {
   if (!instruction) return null
-  const match = instruction.match(/NO MORE THAN\s+([A-Z0-9]+)\s+WORDS?/i)
-  if (!match?.[1]) return null
-  const token = match[1].toLowerCase()
+  const match = instruction.match(/(?:NO MORE THAN\s+([A-Z0-9]+)\s+WORDS?|\b(ONE)\s+WORD\s+ONLY)/i)
+  if (!match) return null
+  const token = (match[1] ?? match[2]).toLowerCase()
   const numeric = Number(token)
   if (!Number.isNaN(numeric)) return numeric
   return WORD_LIMIT_MAP[token] ?? null

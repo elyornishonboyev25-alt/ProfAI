@@ -94,12 +94,33 @@ export function buildReadingRoadmapFullTest(index: number): IELTSTest | null {
   const days = READING_ROADMAP_FULL_TEST_DAYS[index - 1]
   if (!days) return null
 
+  let nextQuestionNumber = 1
   const sections = days
     .flatMap((day) => buildReadingDayTest(day).sections)
-    .map((section, sectionIndex) => ({
-      ...cloneSection(section),
-      title: cleanReadingSectionTitle(section.title, sectionIndex + 1),
-    }))
+    .map((section, sectionIndex) => {
+      const cloned = cloneSection(section)
+      const numberMap = new Map<number, number>()
+      for (const question of cloned.questions) {
+        const slots = Array.isArray(question.correctAnswer) ? question.correctAnswer.length : 1
+        for (let offset = 0; offset < slots; offset++) numberMap.set(question.number + offset, nextQuestionNumber + offset)
+        question.number = nextQuestionNumber
+        nextQuestionNumber += slots
+      }
+      const renumberReferences = (text: string | undefined) => text?.replace(
+        /\b(Questions?|boxes?)\s+(\d+)(?:\s*([–-]|and)\s*(\d+))?/gi,
+        (match, label: string, start: string, separator?: string, end?: string) => {
+          const first = numberMap.get(Number(start))
+          const last = end ? numberMap.get(Number(end)) : undefined
+          if (first === undefined || (end && last === undefined)) return match
+          return `${label} ${first}${end ? `${separator === 'and' ? ' and ' : separator}${last}` : ''}`
+        },
+      )
+      for (const question of cloned.questions) {
+        question.groupTitle = renumberReferences(question.groupTitle)
+        question.instruction = renumberReferences(question.instruction)
+      }
+      return { ...cloned, premiumQuestionGroups: true, title: cleanReadingSectionTitle(section.title, sectionIndex + 1) }
+    })
 
   return {
     ...fullReadingTest,

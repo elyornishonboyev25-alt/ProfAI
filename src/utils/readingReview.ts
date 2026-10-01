@@ -1,5 +1,7 @@
 ﻿import type { ReadingQuestionResult, Section } from '@/types/ieltsTypes'
 
+import { optionDisplayText } from './readingPresentation'
+
 export type ParsedParagraph = {
   label: string
   content: string
@@ -51,7 +53,7 @@ export function formatUserAnswer(answer: unknown, options?: string[]): string {
   if (Array.isArray(answer)) return answer.join(', ')
   if (typeof answer === 'number' && options?.[answer]) {
     const label = String.fromCharCode(65 + answer)
-    return `${label}. ${options[answer].replace(/^[A-Za-z0-9]+\s*[.)-]?\s*/, '').trim()}`
+    return `${label}. ${optionDisplayText(options[answer], options)}`
   }
   return String(answer)
 }

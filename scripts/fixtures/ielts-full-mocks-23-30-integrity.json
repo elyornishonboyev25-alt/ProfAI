@@ -1404,6 +1404,35 @@
         "38": "G",
         "39": "D",
         "40": "C"
+      },
+      "acceptedAnswerCorrections": {
+        "8": {
+          "accepted": [
+            "university"
+          ],
+          "reason": "Remove source variants that exceed the question word limit or repeat the article already supplied before the blank."
+        },
+        "11": {
+          "accepted": [
+            "archaeologist",
+            "archeologist"
+          ],
+          "reason": "Remove source variants that exceed the question word limit or repeat the article already supplied before the blank."
+        },
+        "24": {
+          "accepted": [
+            "national newspaper",
+            "newspaper"
+          ],
+          "reason": "Remove source variants that exceed the question word limit or repeat the article already supplied before the blank."
+        },
+        "25": {
+          "accepted": [
+            "arms dealers",
+            "arms dealer"
+          ],
+          "reason": "Remove source variants that exceed the question word limit or repeat the article already supplied before the blank."
+        }
       }
     },
     "26": {
@@ -1480,6 +1509,20 @@
         "38": "E",
         "39": "A",
         "40": "C"
+      },
+      "acceptedAnswerCorrections": {
+        "7": {
+          "accepted": [
+            "sail"
+          ],
+          "reason": "Remove source variants that exceed the question word limit or repeat the article already supplied before the blank."
+        },
+        "12": {
+          "accepted": [
+            "ground"
+          ],
+          "reason": "Remove the misspelling gound; the passage says ground."
+        }
       }
     },
     "27": {

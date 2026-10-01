@@ -48,7 +48,8 @@ function verify(kind, tests) {
     assert.equal(Object.keys(source.answers).length, 40)
     const answerMap = {}
     for (const [n, question, position] of allSlots) {
-      const sourceValues = Array.isArray(source.answers[n]) ? source.answers[n] : [source.answers[n]]
+      const accepted = source.acceptedAnswerCorrections?.[n]?.accepted ?? source.answers[n]
+      const sourceValues = Array.isArray(accepted) ? accepted : [accepted]
       const variants = sourceValues.map(value => String(value).toLowerCase()).sort()
       const actual = Array.isArray(question.correctAnswer)
         ? [String(question.correctAnswer[position]).toLowerCase()]

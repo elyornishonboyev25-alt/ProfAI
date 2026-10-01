@@ -4,6 +4,7 @@ import { useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, MessageSquareText, Pause, Play, Quote, Star, X } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
+import { featuredTestimonials, type DisplayReview } from './featuredTestimonials'
 
 const GAP = 18
 
@@ -15,13 +16,13 @@ function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
 }
 
-function ReviewCard({ review, hidden = false }: { review: LandingReview; hidden?: boolean }) {
+function ReviewCard({ review, hidden = false }: { review: DisplayReview; hidden?: boolean }) {
   const { c, language } = useCopy()
   const [expanded, setExpanded] = useState(false)
   const long = review.text.length > 260
   const text = long && !expanded ? `${review.text.slice(0, 260).trimEnd()}…` : review.text
-  const date = new Date(review.createdAt)
-  const formattedDate = Number.isNaN(date.getTime()) ? null : new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium' }).format(date)
+  const date = review.createdAt ? new Date(review.createdAt) : null
+  const formattedDate = date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium' }).format(date) : null
   const rating = typeof review.rating === 'number' && review.rating >= 1 && review.rating <= 5 ? review.rating : null
 
   return <article className="landing-review-card" aria-hidden={hidden || undefined}>
@@ -29,6 +30,7 @@ function ReviewCard({ review, hidden = false }: { review: LandingReview; hidden?
     {rating !== null && <div className="landing-review-stars" aria-label={c('Rated {rating} out of 5 stars').replace('{rating}', String(rating))}>{Array.from({ length: rating }, (_, index) => <Star key={index} size={15} fill="currentColor" aria-hidden="true" />)}</div>}
     <p className="landing-review-text">{text}</p>
     {long && !hidden && <button type="button" className="landing-review-more" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{c(expanded ? 'Read less' : 'Read more')}</button>}
+    {review.bandBefore && review.bandAfter && <div className="landing-review-progress" aria-label={`${review.exam}: ${review.bandBefore} to ${review.bandAfter}`}><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
     <div className="landing-review-author"><span className="landing-review-avatar" aria-hidden="true">{initials(review.name)}</span><div><strong>{review.name}</strong>{formattedDate && <small>{formattedDate}</small>}</div></div>
   </article>
 }
@@ -107,7 +109,11 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
 export default function Testimonials() {
   const { c } = useCopy()
   const reducedMotion = useReducedMotion()
-  const [reviews, setReviews] = useState<LandingReview[]>([])
+  const [apiReviews, setApiReviews] = useState<LandingReview[]>([])
+  const reviews = useMemo(() => {
+    const featuredText = new Set(featuredTestimonials.map(review => review.text.trim().toLocaleLowerCase()))
+    return [...featuredTestimonials, ...apiReviews.filter(review => !featuredText.has(review.text.trim().toLocaleLowerCase()))]
+  }, [apiReviews])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [message, setMessage] = useState('')
@@ -129,7 +135,7 @@ export default function Testimonials() {
   const canCycle = reviews.length > visible
 
   const refresh = useCallback(async () => {
-    try { setReviews(await loadReviews()); setLoadError(false) }
+    try { setApiReviews(await loadReviews()); setLoadError(false) }
     catch { setLoadError(true) }
     finally { setLoading(false) }
   }, [])
@@ -223,7 +229,7 @@ export default function Testimonials() {
   return <section id="comments" className="landing-reviews-section landing-arena-section" aria-labelledby="landing-reviews-title">
     <div className="landing-reviews-heading"><div><span className="landing-section-kicker"><MessageSquareText size={15} /> {c('COMMUNITY VOICES')}</span><h2 id="landing-reviews-title">{c('What learners are saying')}</h2><p>{c('Real comments shared by people using ProfAI.')}</p></div><button type="button" className="landing-button landing-button-primary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={18} /></button></div>
     {message && <p className="landing-review-message" role="status">{message}</p>}
-    {loading ? <div className="landing-reviews-state" role="status">{c('Loading comments…')}</div> : loadError ? <div className="landing-reviews-state"><p>{c('Comments could not be loaded right now.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => void refresh()}>{c('Try again')}</button></div> : reviews.length === 0 ? <div className="landing-reviews-state"><Quote size={29} aria-hidden="true" /><h3>{c('Be the first to share your experience.')}</h3><p>{c('Your comment could help another learner take the next step.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={17} /></button></div> : <div className="landing-reviews-carousel" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onKeyDown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); manualMove(1) } else if (event.key === 'ArrowLeft') { event.preventDefault(); manualMove(-1) } }}>
+    {loading && reviews.length === 0 ? <div className="landing-reviews-state" role="status">{c('Loading comments…')}</div> : loadError && reviews.length === 0 ? <div className="landing-reviews-state"><p>{c('Comments could not be loaded right now.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => void refresh()}>{c('Try again')}</button></div> : reviews.length === 0 ? <div className="landing-reviews-state"><Quote size={29} aria-hidden="true" /><h3>{c('Be the first to share your experience.')}</h3><p>{c('Your comment could help another learner take the next step.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={17} /></button></div> : <div className="landing-reviews-carousel" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onKeyDown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); manualMove(1) } else if (event.key === 'ArrowLeft') { event.preventDefault(); manualMove(-1) } }}>
       <div className="landing-reviews-viewport" style={{ maxWidth: reviews.length === 1 ? 430 : reviews.length === 2 && columns > 2 ? 820 : undefined }} ref={viewportRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="landing-reviews-track" aria-live="off" style={{ gap: GAP, transform: canCycle ? `translate3d(${-position * (cardWidth + GAP)}px, 0, 0)` : undefined, transitionDuration: animated && !reducedMotion ? '550ms' : '0ms', opacity: viewportWidth ? 1 : 0 }} onTransitionEnd={event => { if (event.target === event.currentTarget) finishSlide() }}>
           {slides.map((review, index) => {

@@ -93,7 +93,7 @@
 .landing-arena-preview-foot { flex-wrap: wrap; justify-content: center; gap: 8px 16px; padding: 15px 2px 1px; }
 .landing-arena-preview-foot span { display: inline-flex; align-items: center; gap: 4px; color: #52525b; font-size: 10px; font-weight: 700; }
 .landing-arena-preview-foot svg { color: var(--landing-red); }
-.landing-arena-proof { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: min(1200px,calc(100% - 48px)); margin: 0 auto 40px; padding: 20px 6px; border-top: 1px solid var(--landing-border); border-bottom: 1px solid var(--landing-border); }
+.landing-arena-proof { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: min(1200px,calc(100% - 48px)); margin: 38px auto 40px; padding: 20px 6px; border-top: 1px solid var(--landing-border); border-bottom: 1px solid var(--landing-border); }
 .landing-arena-proof > div { display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; padding: 8px 14px; }
 .landing-arena-proof > div + div { border-left: 1px solid var(--landing-border); }
 .landing-arena-proof svg { flex: 0 0 auto; color: var(--landing-red); }
@@ -102,6 +102,7 @@
 .landing-arena-proof small { margin-top: 3px; color: #71717a; font-size: 10px; }
 .landing-arena-section { padding-block: 88px; scroll-margin-top: 94px; }
 .landing-arena-exams, .landing-reviews-section { width: 100%; padding-inline: max(24px,calc((100% - 1200px)/2)); background: #fff5f5; }
+.landing-reviews-section { padding-block: 68px 76px; border-block: 1px solid rgba(254,202,202,.65); background: radial-gradient(circle at 10% 0%,rgba(255,255,255,.88),transparent 34%),#fff5f5; }
 .landing-arena-section-intro { max-width: 730px; margin: 0 auto 36px; text-align: center; }
 .landing-arena-section-intro h2, .landing-arena-faq h2, .landing-arena-plans h2, .landing-arena-bottom-cta h2, .landing-reviews-heading h2 { margin-top: 12px; font-size: clamp(31px,3.7vw,50px); font-weight: 900; line-height: 1.12; letter-spacing: -.055em; text-wrap: balance; }
 .landing-arena-section-intro p { max-width: 610px; margin: 13px auto 0; color: var(--landing-muted); font-size: 15px; line-height: 1.65; }
@@ -148,6 +149,9 @@
 .landing-review-stars { display: flex; gap: 3px; margin-top: 12px; color: #b91c1c; }
 .landing-review-text { flex: 1; margin-top: 14px; color: #27272a; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 .landing-review-more { align-self: flex-start; min-height: 35px; margin-top: 2px; color: var(--landing-red-dark); font-size: 12px; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; }
+.landing-review-progress { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; margin-top: 16px; padding: 9px 12px; border: 1px solid rgba(254,202,202,.9); border-radius: 11px; color: #7f1d1d; background: rgba(255,245,245,.92); font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 800; }
+.landing-review-progress svg { color: var(--landing-red); }
+.landing-review-progress strong { color: var(--landing-red-dark); font-weight: 900; }
 .landing-review-author { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #f4e4e4; }
 .landing-review-avatar { display: grid; width: 39px; height: 39px; place-items: center; flex: 0 0 auto; border-radius: 11px; color: #991b1b; background: #fee2e2; font-size: 13px; font-weight: 900; }
 .landing-review-author strong, .landing-review-author small { display: block; }

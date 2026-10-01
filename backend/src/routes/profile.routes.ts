@@ -1775,7 +1775,7 @@ router.get(
     const [user, profile] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
-        select: { fullName: true, email: true, nickname: true, avatarUrl: true, level: true, xp: true, createdAt: true },
+        select: { fullName: true, email: true, nickname: true, avatarUrl: true, googleAvatarUrl: true, level: true, xp: true, createdAt: true },
       }),
       prisma.userProfile.findUnique({ where: { userId } }),
     ])
@@ -1785,6 +1785,7 @@ router.get(
       email: user.email,
       nickname: user.nickname ?? null,
       avatarUrl: user.avatarUrl ?? null,
+      googleAvatarUrl: user.googleAvatarUrl ?? null,
       level: user.level,
       xp: user.xp,
       memberSince: user.createdAt,
@@ -1845,15 +1846,17 @@ router.delete(
   requireAuth,
   asyncHandler(async (req, res) => {
     const expectedAvatarUrl = z.string().max(700_000).optional().parse(req.body?.expectedAvatarUrl)
+    const current = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { googleAvatarUrl: true } })
+    const fallbackAvatarUrl = current?.googleAvatarUrl ?? null
     if (expectedAvatarUrl) {
       const result = await prisma.user.updateMany({
         where: { id: req.user!.id, avatarUrl: expectedAvatarUrl },
-        data: { avatarUrl: null },
+        data: { avatarUrl: fallbackAvatarUrl },
       })
       if (result.count) invalidateLeaderboardCache()
       return res.json({ removed: result.count > 0 })
     }
-    await prisma.user.update({ where: { id: req.user!.id }, data: { avatarUrl: null } })
+    await prisma.user.update({ where: { id: req.user!.id }, data: { avatarUrl: fallbackAvatarUrl } })
     invalidateLeaderboardCache()
     return res.status(204).send()
   }),

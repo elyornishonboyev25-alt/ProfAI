@@ -234,10 +234,14 @@ async function verifyGoogleIdentityToken(idToken: string) {
 
   const normalizedEmail = payload.email.toLowerCase().trim()
   const normalizedName = payload.name?.trim() || normalizedEmail.split('@')[0]
+  const googleAvatarUrl = payload.picture && /^https:\/\//i.test(payload.picture) && payload.picture.length <= 2048
+    ? payload.picture
+    : null
 
   return {
     email: normalizedEmail,
     fullName: normalizedName,
+    googleAvatarUrl,
   }
 }
 
@@ -563,7 +567,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { idToken, allowCreate } = req.body
 
-    let identity: { email: string; fullName: string }
+    let identity: { email: string; fullName: string; googleAvatarUrl: string | null }
     try {
       identity = await verifyGoogleIdentityToken(idToken)
     } catch (error) {
@@ -584,6 +588,7 @@ router.post(
         currentStreak: true,
         nickname: true,
         avatarUrl: true,
+        googleAvatarUrl: true,
         profile: { select: { onboardingCompletedAt: true } },
       },
     })
@@ -595,12 +600,27 @@ router.post(
       })
     }
 
-    const user =
-      existingUser ??
-      (await prisma.user.create({
+    const user = existingUser
+      ? await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          googleAvatarUrl: identity.googleAvatarUrl,
+          avatarUrl: !existingUser.avatarUrl || existingUser.avatarUrl === existingUser.googleAvatarUrl
+            ? identity.googleAvatarUrl
+            : existingUser.avatarUrl,
+        },
+        select: {
+          id: true, email: true, fullName: true, role: true, xp: true, level: true,
+          currentStreak: true, nickname: true, avatarUrl: true,
+          profile: { select: { onboardingCompletedAt: true } },
+        },
+      })
+      : await prisma.user.create({
         data: {
           fullName: identity.fullName,
           email: identity.email,
+          googleAvatarUrl: identity.googleAvatarUrl,
+          avatarUrl: identity.googleAvatarUrl,
           // Keep password auth path consistent while creating OAuth-first accounts.
           passwordHash: await hashPassword(`google-oauth-${crypto.randomUUID()}`),
           premiumGrant: welcomePremiumGrant(),
@@ -617,7 +637,7 @@ router.post(
           avatarUrl: true,
           profile: { select: { onboardingCompletedAt: true } },
         },
-      }))
+      })
 
     const tokens = await issueAuthTokens({
       userId: user.id,

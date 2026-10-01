@@ -24,7 +24,8 @@ export function useProfileIdentitySync() {
         if (user.avatarUrl && await isLegacyGeneratedAvatar(user.avatarUrl)) {
           if (!active || useAuthStore.getState().user?.avatarUrl !== before.avatarUrl) return
           if (!await removeAvatar(user.avatarUrl)) return
-          user.avatarUrl = null
+          const refreshed = await apiClient.get<{ user: AuthUser }>('/auth/me')
+          user.avatarUrl = refreshed.user.avatarUrl ?? null
         }
         useAuthStore.setState((state) => {
           if (state.user?.id !== userId) return {}

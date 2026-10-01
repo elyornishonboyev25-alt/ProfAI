@@ -50,6 +50,7 @@ export type AccountResponse = {
   email: string
   nickname: string | null
   avatarUrl: string | null
+  googleAvatarUrl: string | null
   level: number
   xp: number
   memberSince: string

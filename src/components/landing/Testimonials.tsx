@@ -13,11 +13,11 @@ function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
 }
 
-function ReviewCard({ review, hidden = false, full = false }: { review: DisplayReview; hidden?: boolean; full?: boolean }) {
+function ReviewCard({ review, hidden = false, onRead }: { review: DisplayReview; hidden?: boolean; onRead: (review: DisplayReview) => void }) {
   const { c, language } = useCopy()
-  const [expanded, setExpanded] = useState(false)
-  const long = !full && review.text.length > 260
-  const text = long && !expanded ? `${review.text.slice(0, 260).trimEnd()}…` : review.text
+  const long = review.text.length > 135
+  const cut = review.text.slice(0, 135)
+  const text = long ? `${cut.slice(0, cut.lastIndexOf(' ')).trimEnd()}…` : review.text
   const date = review.createdAt ? new Date(review.createdAt) : null
   const formattedDate = date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium' }).format(date) : null
   const rating = typeof review.rating === 'number' && review.rating >= 1 && review.rating <= 5 ? review.rating : null
@@ -26,10 +26,36 @@ function ReviewCard({ review, hidden = false, full = false }: { review: DisplayR
     <div className="landing-review-card-top"><Quote size={24} aria-hidden="true" /><span>{review.exam}</span></div>
     {rating !== null && <div className="landing-review-stars" aria-label={c('Rated {rating} out of 5 stars').replace('{rating}', String(rating))}>{Array.from({ length: rating }, (_, index) => <Star key={index} size={15} fill="currentColor" aria-hidden="true" />)}</div>}
     <p className="landing-review-text">{text}</p>
-    {long && !hidden && <button type="button" className="landing-review-more" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{c(expanded ? 'Read less' : 'Read more')}</button>}
+    {long && <button type="button" className="landing-review-more" tabIndex={hidden ? -1 : 0} onClick={() => onRead(review)}>{c('Read more')}</button>}
     {review.bandBefore && review.bandAfter && <div className="landing-review-progress" aria-label={`${review.exam}: ${review.bandBefore} to ${review.bandAfter}`}><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
     <div className="landing-review-author"><span className="landing-review-avatar" aria-hidden="true">{initials(review.name)}</span><div><strong>{review.name}</strong>{formattedDate && <small>{formattedDate}</small>}</div></div>
   </article>
+}
+
+function ReviewDetailDialog({ review, onClose }: { review: DisplayReview; onClose: () => void }) {
+  const { c } = useCopy()
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose() }
+      if (event.key === 'Tab') { event.preventDefault(); closeRef.current?.focus() }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', onKeyDown); previousFocus?.focus() }
+  }, [onClose])
+  return createPortal(<div className="landing-comment-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <div role="dialog" aria-modal="true" aria-labelledby="landing-review-detail-title" className="landing-comment-dialog landing-review-detail-dialog">
+      <button ref={closeRef} type="button" className="landing-icon-button landing-comment-close" aria-label={c('Close')} onClick={onClose}><X size={20} /></button>
+      <span className="landing-section-kicker"><Quote size={15} /> {review.exam}</span>
+      <h2 id="landing-review-detail-title">{review.name}</h2>
+      <p className="landing-review-detail-text">{review.text}</p>
+      {review.bandBefore && review.bandAfter && <div className="landing-review-progress"><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
+    </div>
+  </div>, document.body)
 }
 
 function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmitted: (review: LandingReview) => void }) {
@@ -116,6 +142,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const [interacting, setInteracting] = useState(false)
+  const [detail, setDetail] = useState<DisplayReview | null>(null)
   const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
   const topTrack = useRef<HTMLDivElement>(null)
   const bottomTrack = useRef<HTMLDivElement>(null)
@@ -125,7 +152,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
   const interactionTimer = useRef<number | null>(null)
   const phase = useRef<{ top: number; bottom: number; last: number; manual: ManualMove | null }>({ top: 0, bottom: 0, last: 0, manual: null })
   const flowing = reviews.length >= 4 && !reducedMotion
-  const active = playing && !hovered && !focused && !interacting && pageVisible && !dialogOpen
+  const active = playing && !hovered && !focused && !interacting && pageVisible && !dialogOpen && !detail
   const middle = Math.ceil(reviews.length / 2)
   const rows = [reviews.slice(0, middle), reviews.slice(middle)]
 
@@ -210,17 +237,18 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
     if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) nudge(dx < 0 ? 1 : -1)
   }
 
-  if (!flowing) return <div className="landing-reviews-static">{reviews.map(review => <ReviewCard key={review.id} review={review} full />)}</div>
+  if (!flowing) return <><div className="landing-reviews-static">{reviews.map(review => <ReviewCard key={review.id} review={review} onRead={setDetail} />)}</div>{detail && <ReviewDetailDialog review={detail} onClose={() => setDetail(null)} />}</>
 
   return <div className="landing-reviews-marquee" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); nudge(event.key === 'ArrowRight' ? 1 : -1) } }}>
     {rows.map((row, rowIndex) => <div className="landing-reviews-marquee-lane" key={rowIndex} role="group" aria-label={`${c('What learners are saying')} ${rowIndex + 1}`}>
       <div className="landing-reviews-marquee-track" ref={rowIndex === 0 ? topTrack : bottomTrack}>
         {[false, true].map(duplicate => <div key={String(duplicate)} className="landing-reviews-marquee-group" ref={!duplicate ? rowIndex === 0 ? topGroup : bottomGroup : undefined} aria-hidden={duplicate || undefined}>
-          {row.map(review => <div className="landing-reviews-marquee-card" key={`${review.id}-${duplicate}`}><ReviewCard review={review} hidden={duplicate} full /></div>)}
+          {row.map(review => <div className="landing-reviews-marquee-card" key={`${review.id}-${duplicate}`}><ReviewCard review={review} hidden={duplicate} onRead={setDetail} /></div>)}
         </div>)}
       </div>
     </div>)}
     <div className="landing-reviews-marquee-controls"><span className="landing-reviews-marquee-count">{String(reviews.length).padStart(2, '0')} · {c('Comments')}</span><div className="landing-reviews-actions"><button type="button" className="landing-icon-button" aria-label={c(playing ? 'Pause carousel' : 'Play carousel')} aria-pressed={!playing} onClick={() => setPlaying(value => !value)}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="landing-icon-button" aria-label={c('Previous comment')} onClick={() => nudge(-1)}><ArrowLeft size={19} /></button><button type="button" className="landing-icon-button" aria-label={c('Next comment')} onClick={() => nudge(1)}><ArrowRight size={19} /></button></div></div>
+    {detail && <ReviewDetailDialog review={detail} onClose={() => setDetail(null)} />}
   </div>
 }
 

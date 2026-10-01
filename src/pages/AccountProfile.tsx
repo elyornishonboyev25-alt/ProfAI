@@ -283,6 +283,7 @@ export default function AccountProfile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl ?? null)
+  const [googleAvatarUrl, setGoogleAvatarUrl] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const nameEditRef = useRef<HTMLButtonElement>(null)
@@ -341,6 +342,7 @@ export default function AccountProfile() {
         setForm({ ...EMPTY_PROFILE, ...data.profile })
         setTargetCountriesDraft((data.profile.targetCountries ?? []).join(', '))
         setAvatarUrl(data.avatarUrl)
+        setGoogleAvatarUrl(data.googleAvatarUrl)
         setUserAvatar(data.avatarUrl)
         setUserFullName(data.fullName)
         if (data.nickname) {
@@ -488,8 +490,9 @@ export default function AccountProfile() {
     setUploadingAvatar(true)
     try {
       await removeAvatar()
-      setAvatarUrl(null)
-      setUserAvatar(null)
+      const account = await fetchAccount()
+      setAvatarUrl(account.avatarUrl)
+      setUserAvatar(account.avatarUrl)
     } catch {
       pushToast({ type: 'error', title: 'Could not remove', message: 'Try again.' })
     } finally {
@@ -589,7 +592,7 @@ export default function AccountProfile() {
                   {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                 </button>
               </div>
-              {avatarUrl ? (
+              {!loading && avatarUrl && avatarUrl !== googleAvatarUrl ? (
                 <button disabled={uploadingAvatar} onClick={() => void onRemoveAvatar()} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-blue-600 disabled:opacity-60">
                   <Trash2 className="h-3 w-3" />  <UiText text={"Remove"} /> </button>
               ) : null}

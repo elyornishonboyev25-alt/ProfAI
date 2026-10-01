@@ -719,9 +719,9 @@ export default function IELTSWritingFullTestInterface({
       {showImagePreview && activeTask.imageUrl ? (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Enlarged Task 1 image">
           <button type="button" onClick={() => setShowImagePreview(false)} aria-label="Close enlarged image" className="absolute inset-0" />
-          <div className="relative max-h-full max-w-[1200px] overflow-auto rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
+          <div className="relative max-h-[90vh] w-full max-w-[1200px] overflow-auto rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
             <button type="button" onClick={() => setShowImagePreview(false)} className="absolute right-3 top-3 z-10 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow">Close</button>
-            <img src={activeTask.imageUrl} alt={activeTask.imageAlt ?? 'Writing Task 1 visual'} className="h-auto max-h-[88vh] max-w-full object-contain" />
+            <img src={activeTask.imageUrl} alt={activeTask.imageAlt ?? 'Writing Task 1 visual'} className="h-auto max-w-full object-contain" />
           </div>
         </div>
       ) : null}

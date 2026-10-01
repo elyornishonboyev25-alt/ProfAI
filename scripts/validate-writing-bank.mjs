@@ -7,14 +7,20 @@ import ts from 'typescript'
 
 const source = readFileSync(new URL('../src/data/writingFullTests5to30.ts', import.meta.url), 'utf8')
 const practiceSource = readFileSync(new URL('../src/data/writingFullTestPracticeVisuals.ts', import.meta.url), 'utf8')
+const sourceVisualsSource = readFileSync(new URL('../src/data/writingFullTestSourceVisuals.ts', import.meta.url), 'utf8')
 const options = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
 const practice = {}
 runInNewContext(ts.transpileModule(practiceSource, { compilerOptions: options }).outputText, { exports: practice })
+const supplied = {}
+runInNewContext(ts.transpileModule(sourceVisualsSource, { compilerOptions: options }).outputText, { exports: supplied })
 const compiled = ts.transpileModule(source, {
   compilerOptions: options,
 }).outputText
 const exports = {}
-runInNewContext(compiled, { exports, require: () => practice })
+runInNewContext(compiled, {
+  exports,
+  require: (moduleName) => moduleName === './writingFullTestSourceVisuals' ? supplied : practice,
+})
 const tests = exports.WRITING_TESTS_5_TO_30
 
 assert.equal(tests.length, 26)
@@ -47,14 +53,21 @@ for (let offset = 0; offset < tests.length; offset++) {
   assert.equal(visualTask.diagram, undefined)
   assert.ok(!images.has(visualTask.imageUrl), `Repeated image: ${visualTask.imageUrl}`)
   images.add(visualTask.imageUrl)
-  const visual = practice.PRACTICE_TASK_VISUALS[index]
+  const sourceVisual = supplied.SOURCE_TASK_VISUALS[index]
+  const visual = sourceVisual ?? practice.PRACTICE_TASK_VISUALS[index]
   assert.ok(visual)
   assert.equal(visualTask.promptLead, visual.lead)
   assert.ok(visualTask.subtitle.includes(visual.kind))
-  assert.equal(visualTask.imageUrl, `/images/ielts-writing/full-writing-test-${index}-practice.svg`)
+  assert.equal(visualTask.imageUrl, sourceVisual
+    ? `/images/ielts-writing/full-writing-test-${index}-source.${sourceVisual.extension}`
+    : `/images/ielts-writing/full-writing-test-${index}-practice.svg`)
   visualKinds.add(visual.kind)
   kindCounts.set(visual.kind, (kindCounts.get(visual.kind) ?? 0) + 1)
-  if (visual.series) {
+  if (sourceVisual) {
+    assert.ok(sourceVisual.sourceUrl.startsWith('https://'))
+    assert.ok(sourceVisual.context.length > 120)
+    assert.equal(visualTask.visualContext, sourceVisual.context)
+  } else if (visual.series) {
     assert.ok(visual.categories.length >= 3 && visual.categories.length <= 6)
     for (const series of visual.series) {
       assert.equal(series.values.length, visual.categories.length)
@@ -76,15 +89,17 @@ for (let offset = 0; offset < tests.length; offset++) {
   assert.ok(existsSync(image), `Missing image file: ${visualTask.imageUrl}`)
   const bytes = readFileSync(image)
   const signature = bytes.subarray(0, 100).toString('utf8')
-  assert.ok(signature.includes('<svg'), `Invalid image: ${visualTask.imageUrl}`)
+  if (!sourceVisual) assert.ok(signature.includes('<svg'), `Invalid image: ${visualTask.imageUrl}`)
+  else if (sourceVisual.extension === 'png') assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
+  else if (sourceVisual.extension === 'jpg') assert.equal(bytes.subarray(0, 3).toString('hex'), 'ffd8ff')
+  else assert.equal(bytes.subarray(0, 4).toString('utf8'), 'RIFF')
 }
-for (const kind of ['Bar chart', 'Line graph', 'Pie charts', 'Maps', 'Process diagram']) {
+for (const kind of ['Bar chart', 'Line graph', 'Pie charts', 'Maps', 'Process diagram', 'Table', 'Charts']) {
   assert.ok(visualKinds.has(kind), `Missing Task 1 diagram variety: ${kind}`)
 }
-assert.ok(kindCounts.get('Bar chart') >= 6)
-assert.ok(kindCounts.get('Line graph') >= 6)
-assert.ok(kindCounts.get('Pie charts') >= 4)
-assert.ok(kindCounts.get('Maps') >= 4)
-assert.ok(kindCounts.get('Process diagram') >= 4)
+assert.equal(Object.keys(supplied.SOURCE_TASK_VISUALS).length, 13)
+assert.equal(Object.keys(practice.PRACTICE_TASK_VISUALS).length, 13)
+assert.ok(kindCounts.get('Maps') >= 2)
+assert.ok(kindCounts.get('Process diagram') >= 2)
 execFileSync(process.execPath, [fileURLToPath(new URL('./generate-writing-practice-images.mjs', import.meta.url)), '--check'])
 console.log('Writing bank valid: 26 full tests, 52 unique tasks, 26 Task 1 visuals.')

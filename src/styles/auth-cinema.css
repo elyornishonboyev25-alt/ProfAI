@@ -786,151 +786,59 @@
   .auth-cinema-submit { min-height: 58px; }
 }
 
-/* The guest home continues directly from account access into the requested FAQ. */
+/* Keep account access within the viewport after the extra content is removed. */
 .app-shell .auth-cinema-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-.auth-cinema-shell { flex: none; }
-.auth-info {
-  width: min(1280px, 100%);
-  margin: clamp(68px, 7vw, 104px) auto 0;
-  color: #121626;
-}
-.auth-info :is(a, button):focus-visible { outline: 3px solid #5788df; outline-offset: 3px; }
-.auth-info-faq {
   display: grid;
-  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
-  gap: clamp(32px, 5vw, 70px);
-  padding: 0 0 clamp(74px, 7vw, 96px);
-}
-.auth-info-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #c82e37;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .2em;
-  line-height: 1.3;
-}
-.auth-info-faq h2,
-.auth-info-cta h2 {
-  margin-top: 14px;
-  font-size: clamp(34px, 3.7vw, 52px);
-  font-weight: 900;
-  line-height: 1.08;
-  letter-spacing: -.055em;
-  text-wrap: balance;
-}
-.auth-info-faq-intro > p {
-  max-width: 340px;
-  margin-top: 17px;
-  color: #647087;
-  font-size: 15px;
-  line-height: 1.65;
-}
-.auth-info-support {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 23px;
-  color: #d3333c;
-  font-size: 13px;
-  font-weight: 850;
-}
-.auth-info-faq-list { display: grid; align-content: start; gap: 10px; }
-.auth-info-faq-item {
+  height: 100dvh;
+  min-height: 0;
+  place-items: center;
   overflow: hidden;
-  border: 1px solid #fff;
-  border-radius: 17px;
-  background: rgba(255,255,255,.8);
-  box-shadow: 0 10px 28px rgba(32,55,94,.06);
+  padding: clamp(10px, 2vh, 24px) clamp(12px, 2vw, 32px);
+  padding-bottom: clamp(10px, 2vh, 24px) !important;
 }
-.auth-info-faq-item button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 20px 22px;
-  color: #1d2b41;
-  font-size: 14px;
-  font-weight: 850;
-  text-align: left;
+.auth-cinema-shell {
+  flex: initial;
+  height: 100%;
+  max-height: 900px;
+  min-height: 0;
 }
-.auth-info-faq-item button svg { flex: none; color: #8694a8; transition: transform .2s; }
-.auth-info-faq-item button svg.is-open { transform: rotate(180deg); }
-.auth-info-faq-item p { padding: 0 22px 21px; color: #65738a; font-size: 13px; line-height: 1.7; }
-.auth-info-cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 90px;
-  padding: 37px 42px;
-  border: 1px solid #dce7f6;
-  border-radius: 26px;
-  background: radial-gradient(circle at 90% 20%,rgba(248,146,151,.17),transparent 30%),linear-gradient(100deg,#fff,#f1f6ff);
-  box-shadow: 0 20px 50px rgba(42,70,112,.07);
+.auth-cinema-showcase { min-height: 0; }
+.auth-cinema-form-side {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.auth-info-cta h2 { font-size: clamp(28px,3vw,39px); }
-.auth-info-cta p { margin-top: 11px; color: #647087; font-size: 14px; }
-.auth-info-button {
-  display: inline-flex;
-  min-height: 50px;
-  align-items: center;
-  justify-content: center;
-  gap: 11px;
-  padding: 12px 23px;
-  border: 1px solid #ce2c36;
-  border-radius: 16px;
-  color: #fff;
-  background: linear-gradient(135deg, #ed474e, #cf222d);
-  box-shadow: 0 13px 25px rgba(215,39,50,.22), inset 0 1px rgba(255,255,255,.48);
-  font-size: 14px;
-  font-weight: 850;
-  white-space: nowrap;
-  transition: transform .22s, box-shadow .22s;
-}
-.auth-info-button:hover { transform: translateY(-2px); box-shadow: 0 18px 31px rgba(215,39,50,.29), inset 0 1px rgba(255,255,255,.48); }
-.auth-info-footer { padding-bottom: 10px; }
-.auth-info-footer-main,
-.auth-info-footer-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-  padding: 27px 0;
-  border-top: 1px solid #dae4f1;
-}
-.auth-info-footer-logo { display: inline-flex; align-items: center; gap: 9px; color: #182239; white-space: nowrap; }
-.auth-info-footer-logo strong { font-size: 24px; font-weight: 900; letter-spacing: -.07em; }
-.auth-info-footer-logo strong span { color: #dd3039; }
-.auth-info-footer-main p { margin-top: 8px; color: #78869a; font-size: 12px; }
-.auth-info-footer-main nav { display: flex; flex-wrap: wrap; gap: 9px 20px; }
-.auth-info-footer-main nav a { color: #5f6d82; font-size: 12px; font-weight: 750; }
-.auth-info-footer-main nav a:hover { color: #d42e39; }
-.auth-info-footer-bottom { align-items: flex-start; padding: 20px 0 0; color: #8b98aa; font-size: 10px; line-height: 1.5; }
 
 @media (max-width: 900px) {
-  .auth-info-faq { grid-template-columns: 1fr; }
+  .auth-cinema-shell {
+    grid-template-columns: 1fr;
+    width: min(620px, 100%);
+    height: auto;
+    max-height: 100%;
+  }
+  .auth-cinema-showcase { display: none; }
+  .auth-cinema-form-side { padding: clamp(18px, 3vh, 32px) clamp(20px, 5vw, 48px); }
 }
-@media (max-width: 700px) {
-  .auth-info { margin-top: 64px; }
-  .auth-info-faq { gap: 28px; padding-bottom: 64px; }
-  .auth-info-cta { align-items: flex-start; flex-direction: column; margin-bottom: 56px; padding: 30px; }
-  .auth-info-footer-main,
-  .auth-info-footer-bottom { align-items: flex-start; flex-direction: column; }
+
+@media (max-height: 900px) {
+  .auth-cinema-form-side { padding-top: 18px; padding-bottom: 18px; }
+  .auth-cinema-lockup { margin-bottom: 12px; }
+  .auth-cinema-intro { margin: 12px 0; }
+  .auth-cinema-divider { margin: 12px 0 8px; }
+  .auth-cinema-privacy { margin-top: 8px; }
 }
-@media (max-width: 500px) {
-  .auth-info-faq h2 { font-size: 37px; }
-  .auth-info-cta { padding: 25px; }
-  .auth-info-button { width: 100%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-info-button,
-  .auth-info-faq-item button svg { transition: none; }
+
+@media (max-width: 600px) {
+  .app-shell .auth-cinema-page {
+    padding: 8px;
+    padding-bottom: 8px !important;
+  }
+  .auth-cinema-form-side { padding: 16px 18px; }
+  .auth-cinema-lockup-icon { width: 40px; height: 40px; }
+  .auth-cinema-lockup-icon svg { width: 32px; height: 32px; }
+  .auth-cinema-tabs a { min-height: 42px; }
+  .auth-cinema-intro h1 { font-size: 28px; }
+  .auth-cinema-input-wrap { min-height: 48px; }
+  .auth-cinema-submit { min-height: 50px; margin-top: 10px; }
+  .auth-cinema-switch-method { margin-top: 8px; }
 }

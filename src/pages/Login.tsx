@@ -16,7 +16,6 @@ import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
-import AuthInfoSections from '@/components/auth/AuthInfoSections'
 import { takeFlashToast } from '@/utils/authFlash'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
@@ -194,7 +193,6 @@ export default function Login() {
           </div>
         </section>
       </motion.main>
-      <AuthInfoSections />
       <PasswordRecoveryDialog open={recoveryOpen} initialEmail={recoveryEmail} onClose={() => setRecoveryOpen(false)} />
     </div>
   )

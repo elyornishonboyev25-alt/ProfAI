@@ -19,6 +19,7 @@ import type { WritingError } from '@/services/geminiAI'
 import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
+import WritingTaskImage from '@/components/writing/WritingTaskImage'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -193,7 +194,7 @@ export default function WritingResultModal({
             {task?.imageUrl ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
                 <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
-                <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto mt-4 max-w-full" />
+                <WritingTaskImage task={task} className="mx-auto mt-4 max-w-full" />
               </details>
             ) : null}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">

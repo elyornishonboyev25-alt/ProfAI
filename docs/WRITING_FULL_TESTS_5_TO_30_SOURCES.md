@@ -1,6 +1,6 @@
 # Writing Full Tests 5–30: Task 1 visuals
 
-Full Tests 5–17 use the 13 Task 1 visuals supplied by the user, in order. The image files in `public/images/ielts-writing/full-writing-test-*-source.*` were downloaded from the source pages below and are displayed without altering the image pixels, geometry, labels or watermarks. The prompt and AI evaluation context for each visual are in `src/data/writingFullTestSourceVisuals.ts`. Task 2 prompts were not changed.
+Full Tests 5–17 use the 13 Task 1 visuals supplied by the user, in order. The image files in `public/images/ielts-writing/full-writing-test-*-source.*` are unchanged copies from the source pages below. `WritingTaskImage.tsx` trims repeated question headings and covers the red IELTS Liz logo in the displayed view only, including review views; chart data and labels stay visible. The prompt and AI evaluation context for each visual are in `src/data/writingFullTestSourceVisuals.ts`. Task 2 prompts were not changed.
 
 | Test | Task 1 visual | Source page |
 | --- | --- | --- |

@@ -24,6 +24,7 @@ import {
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
+import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -519,7 +520,7 @@ export default function IELTSWritingFullTestInterface({
                   {task.imageUrl ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
                       <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task visual</summary>
-                      <img src={task.imageUrl} alt={task.imageAlt ?? `${task.title} task visual`} className="mx-auto mt-4 h-auto max-w-full object-contain" draggable={false} />
+                      <WritingTaskImage task={task} className="mx-auto mt-4 h-auto max-w-full object-contain" />
                     </details>
                   ) : null}
                   <details className="mt-4 rounded-2xl border border-red-100 bg-red-50/30 p-4">
@@ -662,12 +663,7 @@ export default function IELTSWritingFullTestInterface({
               <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="absolute right-4 top-4 z-10 rounded-lg border border-slate-200 bg-white/95 p-2 text-slate-700 shadow-sm hover:bg-slate-50">
                 <Maximize2 className="h-4 w-4" />
               </button>
-              <img
-                src={activeTask.imageUrl}
-                alt={activeTask.imageAlt ?? `${activeTask.title} Task 1 visual`}
-                className="h-auto w-full object-contain"
-                draggable={false}
-              />
+              <WritingTaskImage task={activeTask} className="h-auto w-full object-contain" />
             </div>
           ) : null}
           {activeTask.diagram ? (
@@ -721,7 +717,7 @@ export default function IELTSWritingFullTestInterface({
           <button type="button" onClick={() => setShowImagePreview(false)} aria-label="Close enlarged image" className="absolute inset-0" />
           <div className="relative max-h-[90vh] w-full max-w-[1200px] overflow-auto rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
             <button type="button" onClick={() => setShowImagePreview(false)} className="absolute right-3 top-3 z-10 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow">Close</button>
-            <img src={activeTask.imageUrl} alt={activeTask.imageAlt ?? 'Writing Task 1 visual'} className="h-auto max-w-full object-contain" />
+            <WritingTaskImage task={activeTask} className="h-auto max-w-full object-contain" />
           </div>
         </div>
       ) : null}

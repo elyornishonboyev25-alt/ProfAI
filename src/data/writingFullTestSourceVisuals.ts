@@ -29,7 +29,7 @@ export const SOURCE_TASK_VISUALS: Record<number, SourceTaskVisual> = {
   },
   8: {
     kind: 'Line graph', title: 'UK radio and television audiences',
-    lead: 'The line graph below shows radio and television audiences throughout the day in 1992.',
+    lead: 'The line graph shows radio and television audiences in the UK throughout the day between October and December 1992.',
     context: 'Radio and television audiences in the UK from October to December 1992, as percentages of people over four across the day. Radio peaks at about 26% around 8 a.m., then declines. Television stays below 10% through the morning, rises sharply in the late afternoon and peaks near 45% around 8 to 9 p.m. Both are low overnight.',
     extension: 'png', sourceUrl: 'https://ieltsliz.com/ielts-line-graph-sample-answer/',
   },
@@ -59,7 +59,7 @@ export const SOURCE_TASK_VISUALS: Record<number, SourceTaskVisual> = {
   },
   13: {
     kind: 'Charts', title: 'Arrests by gender and reason',
-    lead: 'The charts below show the males and females arrested over 5 years and the reasons for the most recent arrests.',
+    lead: 'The charts show the percentages of males and females arrested over the five years ending in 1994 and the reasons for the most recent arrests.',
     context: 'Over the five years ending 1994, 32% of males and 9% of females were arrested. The most recent arrest reasons in percent (males, females approximately): drink driving 26, 14; public drinking 31, 37; breach of order 18, 12; assault 17, 19; theft 16, 13; other reason 19, 18; no answer 4, 7. Public drinking was the leading reason for both genders.',
     extension: 'jpg', sourceUrl: 'https://ieltsliz.com/ielts-charts-writing-task-1/',
   },

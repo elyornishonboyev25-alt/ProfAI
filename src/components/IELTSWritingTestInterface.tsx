@@ -36,6 +36,7 @@ import type { WritingTask, LineChartData, ChartSeries } from '@/data/writingTest
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
+import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { useSearchParams } from 'react-router-dom'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -835,7 +836,7 @@ export default function IELTSWritingTestInterface({
               {task.imageUrl ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
-                  <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto mt-4 h-auto max-w-full" />
+                  <WritingTaskImage task={task} className="mx-auto mt-4 h-auto max-w-full" />
                 </details>
               ) : null}
               <div className="grid gap-4 md:grid-cols-2">
@@ -1213,7 +1214,7 @@ export default function IELTSWritingTestInterface({
           ) : null}
           {task.imageUrl ? (
             <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-              <img src={task.imageUrl} alt={task.imageAlt ?? 'Writing Task 1 visual'} className="mx-auto h-auto max-w-full" draggable={false} />
+              <WritingTaskImage task={task} className="mx-auto h-auto max-w-full" />
             </div>
           ) : null}
         </div>

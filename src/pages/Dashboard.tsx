@@ -180,6 +180,10 @@ export default function Dashboard() {
     ...(ieltsTarget != null ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: ieltsTarget, path: '/ielts/tests#mocks' }] : []),
     ...(satTarget != null ? [{ label: 'SAT' as const, current: satCurrent, target: satTarget, path: '/sat' }] : []),
   ]
+  const practiceCards = [
+    { label: 'IELTS' as const, current: ieltsCurrent, target: ieltsTarget, path: '/ielts/tests#mocks' },
+    { label: 'SAT' as const, current: satCurrent, target: satTarget, path: '/sat' },
+  ]
   const targetProgress = Math.max(0, Math.min(100, Math.round(
     examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
   )))
@@ -293,15 +297,15 @@ export default function Dashboard() {
           </article>
 
           <div className="min-w-0 space-y-4">
-            {examTargets.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
-              {examTargets.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {practiceCards.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><Target className="h-5 w-5" /></span>
-                <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}: {exam.current ? `${exam.current} → ${exam.target}` : <><UiText text="Target" /> {exam.target}</>}</strong>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600"><UiText text={scoreRecommendation(exam.label, exam.current, exam.target)} /></span>
+                <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}{exam.target != null ? <>: {exam.current ? `${exam.current} → ${exam.target}` : <><UiText text="Target" /> {exam.target}</>}</> : exam.current ? `: ${exam.current}` : null}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600"><UiText text={exam.target != null ? scoreRecommendation(exam.label, exam.current, exam.target) : exam.current ? 'Review mistakes and practice the areas that need a final push.' : 'Start with a full mock to find your current level.'} /></span>
                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-red-700"><UiText text={exam.label === 'IELTS' ? 'Open IELTS practice' : 'Open SAT practice'} /> <ArrowRight className="h-3.5 w-3.5" /></span>
                 </span>
               </button>)}
-            </div>}
+            </div>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard

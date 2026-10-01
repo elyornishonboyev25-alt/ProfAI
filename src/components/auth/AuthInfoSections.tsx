@@ -5,7 +5,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is there a free plan?', answer: 'Yes. You can create a free account and begin practicing. The plans page shows current Pro access and terms.' },
+  { question: 'Is ProfAI free to use?', answer: 'Yes. All practice, results, AI tools and university planning are currently free for everyone.' },
   { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
   { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]
@@ -44,7 +44,7 @@ export default function AuthInfoSections() {
         <nav aria-label="Footer navigation">
           <Link to="/test-preparation">IELTS &amp; SAT</Link>
           <a href="#auth-showcase">How it works</a>
-          <Link to="/premium">Plans</Link>
+          <Link to="/#plans">Free access</Link>
           <a href="#faq">FAQ</a>
           <Link to="/login#sign-in">Sign in</Link>
         </nav>

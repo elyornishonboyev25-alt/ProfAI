@@ -16,7 +16,7 @@ export const ENFORCE_PREMIUM = false
  * accounts. Independent of ENFORCE_PREMIUM (which drives the older
  * attempt-based gate). Flip to `false` to instantly reopen every section.
  */
-export const ENFORCE_CONTENT_PREMIUM = true
+export const ENFORCE_CONTENT_PREMIUM = false
 
 /** Free users get this many test attempts before the upgrade prompt appears. */
 export const FREE_ATTEMPT_LIMIT = 4

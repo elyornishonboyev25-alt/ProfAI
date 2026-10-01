@@ -10,10 +10,8 @@ import Testimonials from '@/components/landing/Testimonials'
 import { apiClient } from '@/lib/apiClient'
 import { useCopy } from '@/i18n/interface'
 import { premiumLanguage } from '@/i18n/premium'
-import { isPublicFeatureEnabled } from '@/config/featureFlags'
 import '@/styles/landing-arena.css'
 
-const guestDiagnosticEnabled = isPublicFeatureEnabled('guestDiagnostic')
 const SUPPORT_EMAIL = 'support@profai.uz'
 const navItems = [
   { label: 'IELTS & SAT', id: 'exams' },
@@ -38,14 +36,14 @@ const ieltsSkills = [
 type Plans = Record<'MONTHLY' | 'QUARTERLY' | 'YEARLY', { amountUzs: number }>
 const currentPlanPrices: Plans = { MONTHLY: { amountUzs: 39000 }, QUARTERLY: { amountUzs: 89000 }, YEARLY: { amountUzs: 299000 } }
 
-function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
+function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const reducedMotion = useReducedMotion()
-  return <motion.div className={className} initial={reducedMotion ? false : { opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .12 }} transition={{ duration: reducedMotion ? 0 : .46, ease: 'easeOut' }}>{children}</motion.div>
+  return <motion.div className={className} initial={reducedMotion ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .1, margin: '0px 0px -32px 0px' }} transition={{ duration: reducedMotion ? 0 : .62, delay: reducedMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] }}>{children}</motion.div>
 }
 
 function SectionIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   const { c } = useCopy()
-  return <div className="landing-arena-section-intro"><span className="landing-section-kicker"><Sparkles size={15} /> {c(eyebrow)}</span><h2>{c(title)}</h2><p>{c(description)}</p></div>
+  return <Reveal className="landing-arena-section-intro"><span className="landing-section-kicker"><Sparkles size={15} /> {c(eyebrow)}</span><h2>{c(title)}</h2><p>{c(description)}</p></Reveal>
 }
 
 function ArenaPreview() {
@@ -97,14 +95,13 @@ export default function Landing() {
     return () => { active = false }
   }, [])
 
-  const start = () => navigate(guestDiagnosticEnabled ? '/diagnostic' : '/register')
+  const start = () => navigate('/register')
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false)
     document.getElementById(id)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })
   }
 
   return <div className="landing-arena-page">
-    <div className="landing-arena-announcement"><span><Sparkles size={14} /> {c('NEW HERE? YOUR FIRST MONTH OF PREMIUM IS FREE')}</span><button type="button" onClick={start}>{c('Claim your gift')} <ArrowRight size={14} /></button></div>
     <header className={`landing-arena-header ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="landing-arena-nav"><button type="button" className="landing-arena-logo" aria-label={c('ProfAI home')} onClick={() => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })}><BrandMark size={38} /><span>Prof<span>AI</span></span></button>
         <nav className="landing-arena-nav-links" aria-label={c('Main navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{c(label)}</button>)}</nav>
@@ -133,17 +130,17 @@ export default function Landing() {
       </section>
 
       <section id="how-it-works" className="landing-arena-section landing-arena-workflow"><SectionIntro eyebrow="A BETTER WAY TO PREPARE" title="From practice to progress, without losing your way." description="A simple rhythm that helps you turn each study session into a clear next step." />
-        <div className="landing-arena-steps">{[{ number: '01', icon: Target, title: 'Find your focus', body: 'Choose an exam, skill or section that matters for your goal.' }, { number: '02', icon: PenLine, title: 'Put in the work', body: 'Practice specific topics or sit a complete test when you are ready.' }, { number: '03', icon: Sparkles, title: 'Review and improve', body: 'See your results, revisit answers and decide what to study next.' }].map(({ number, icon: Icon, title, body }) => <article className="landing-arena-step" key={number}><div className="landing-arena-step-top"><span>{number}</span><Icon size={24} /></div><h3>{c(title)}</h3><p>{c(body)}</p></article>)}</div>
-        <div className="landing-arena-beyond"><div className="landing-arena-beyond-icon"><GraduationCap size={26} /></div><div><span>{c('BEYOND TEST DAY')}</span><h3>{c('Keep your university plan connected.')}</h3><p>{c('Bring preparation, academic skills and university research together in one account.')}</p></div><button type="button" onClick={start}>{c('Build your journey')} <ArrowRight size={18} /></button></div>
+        <Reveal className="landing-arena-steps" delay={.06}>{[{ number: '01', icon: Target, title: 'Find your focus', body: 'Choose an exam, skill or section that matters for your goal.' }, { number: '02', icon: PenLine, title: 'Put in the work', body: 'Practice specific topics or sit a complete test when you are ready.' }, { number: '03', icon: Sparkles, title: 'Review and improve', body: 'See your results, revisit answers and decide what to study next.' }].map(({ number, icon: Icon, title, body }) => <article className="landing-arena-step" key={number}><div className="landing-arena-step-top"><span>{number}</span><Icon size={24} /></div><h3>{c(title)}</h3><p>{c(body)}</p></article>)}</Reveal>
+        <Reveal delay={.1}><div className="landing-arena-beyond"><div className="landing-arena-beyond-icon"><GraduationCap size={26} /></div><div><span>{c('BEYOND TEST DAY')}</span><h3>{c('Keep your university plan connected.')}</h3><p>{c('Bring preparation, academic skills and university research together in one account.')}</p></div><button type="button" onClick={start}>{c('Build your journey')} <ArrowRight size={18} /></button></div></Reveal>
       </section>
 
-      <Testimonials />
+      <Reveal><Testimonials /></Reveal>
 
       <section id="plans" className="landing-arena-section landing-arena-plans"><Reveal className="landing-arena-plans-panel"><div><span className="landing-section-kicker"><Sparkles size={15} /> {c('YOUR FIRST MONTH IS ON US')}</span><h2>{c('Start with everything. Stay on your terms.')}</h2><p>{c('New members receive one month of full Premium access automatically. After your gift month, keep going with a plan that works for you. No automatic renewal.')}</p><div className="landing-arena-plans-actions"><button type="button" onClick={() => navigate('/register')} className="landing-button landing-button-primary">{c('Claim free month')} <ArrowRight size={18} /></button><button type="button" onClick={() => navigate('/premium')} className="landing-button landing-button-secondary">{c('Compare plans')}</button></div></div><div className="landing-arena-plans-list"><span>{c('ONE PREMIUM EXPERIENCE · THREE OPTIONS')}</span>{(['MONTHLY', 'QUARTERLY', 'YEARLY'] as const).map((code, index) => <div className="landing-arena-plan-line" key={code}><span>{c(['1 month', '3 months', '12 months'][index])}</span><strong>{new Intl.NumberFormat(locale).format(plans[code].amountUzs)} <small>{c('UZS')}</small></strong></div>)}<p><Check size={17} /> {c('Full access in every plan')}</p>{!plansLive && <button type="button" onClick={() => navigate('/premium')} className="landing-plans-fallback">{c('See current prices')} <ArrowUpRight size={16} /></button>}</div></Reveal></section>
 
-      <section id="faq" className="landing-arena-section landing-arena-faq"><div><span className="landing-section-kicker"><ShieldCheck size={15} /> {c('GOOD TO KNOW')}</span><h2>{c('Questions before you begin?')}</h2><p>{c('Get a clear picture of what ProfAI offers, then take your first step.')}</p><a href={`mailto:${SUPPORT_EMAIL}`} className="landing-arena-support">{c('Contact support')} <ArrowUpRight size={16} /></a></div><div className="landing-arena-faq-list">{faqs.map(({ question, answer }, index) => <div className="landing-arena-faq-item" key={question}><button type="button" aria-expanded={openFaq === index} aria-controls={`landing-faq-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)}>{c(question)}<ChevronDown size={19} className={openFaq === index ? 'is-open' : ''} /></button>{openFaq === index && <p id={`landing-faq-${index}`}>{c(answer)}</p>}</div>)}</div></section>
+      <Reveal><section id="faq" className="landing-arena-section landing-arena-faq"><div><span className="landing-section-kicker"><ShieldCheck size={15} /> {c('GOOD TO KNOW')}</span><h2>{c('Questions before you begin?')}</h2><p>{c('Get a clear picture of what ProfAI offers, then take your first step.')}</p><a href={`mailto:${SUPPORT_EMAIL}`} className="landing-arena-support">{c('Contact support')} <ArrowUpRight size={16} /></a></div><div className="landing-arena-faq-list">{faqs.map(({ question, answer }, index) => <div className="landing-arena-faq-item" key={question}><button type="button" aria-expanded={openFaq === index} aria-controls={`landing-faq-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)}>{c(question)}<ChevronDown size={19} className={openFaq === index ? 'is-open' : ''} /></button>{openFaq === index && <p id={`landing-faq-${index}`}>{c(answer)}</p>}</div>)}</div></section></Reveal>
 
-      <section className="landing-arena-bottom-cta"><div><span className="landing-section-kicker">{c('READY WHEN YOU ARE')}</span><h2>{c('Your next chapter starts with one step.')}</h2><p>{c('Build momentum in IELTS, SAT and everything that comes after.')}</p></div><button type="button" onClick={start} className="landing-button landing-button-primary">{c('Get started free')} <ArrowRight size={19} /></button></section>
+      <Reveal><section className="landing-arena-bottom-cta"><div><span className="landing-section-kicker">{c('READY WHEN YOU ARE')}</span><h2>{c('Your next chapter starts with one step.')}</h2><p>{c('Build momentum in IELTS, SAT and everything that comes after.')}</p></div><button type="button" onClick={start} className="landing-button landing-button-primary">{c('Get started free')} <ArrowRight size={19} /></button></section></Reveal>
     </main>
 
     <footer className="landing-arena-footer"><div className="landing-arena-footer-main"><div><div className="landing-arena-footer-logo"><BrandMark size={34} /><strong>Prof<span>AI</span></strong></div><p>{c('Preparation and planning for the journey ahead.')}</p></div><nav aria-label={c('Footer navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{c(label)}</button>)}<button type="button" onClick={() => navigate('/login')}>{c('Sign in')}</button></nav></div><div className="landing-arena-footer-bottom"><span>© {new Date().getFullYear()} ProfAI. {c('All rights reserved.')}</span><span>{c('Independent platform · Not affiliated with IELTS, College Board or any university.')}</span></div></footer>

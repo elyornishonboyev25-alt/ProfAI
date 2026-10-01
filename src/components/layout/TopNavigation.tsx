@@ -11,8 +11,6 @@ import { apiClient } from '@/lib/apiClient'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { setFlashToast } from '@/utils/authFlash'
 import { BrandLockup } from '@/components/brand/BrandLogo'
-import { isPremiumUser } from '@/utils/premiumAccess'
-import { CrownBadge } from '@/components/fx'
 import NotificationsBell from '@/components/layout/NotificationsBell'
 
 export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }) {
@@ -260,7 +258,6 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
-          {user && isPremiumUser(user) ? <CrownBadge size="sm" /> : null}
           {user ? (
             <div className="inline-flex items-center gap-1 rounded-xl border border-blue-300/75 bg-gradient-to-br from-blue-50 to-indigo-100 px-3 py-2 text-sm font-semibold text-blue-800 shadow-[0_10px_22px_rgba(185,28,28,0.18)]">
               <Zap className="h-4 w-4" />

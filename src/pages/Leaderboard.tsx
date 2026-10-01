@@ -18,9 +18,8 @@ import { apiClient } from '@/lib/apiClient'
 import type { LeaderboardResponse, LeaderboardRow } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { isPremiumUser } from '@/utils/premiumAccess'
 import { motion } from 'framer-motion'
-import { Burst, CountUp, CrownBadge, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
+import { Burst, CountUp, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
@@ -180,7 +179,6 @@ export default function Leaderboard() {
                 <p className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
                   <Sparkles className="h-3.5 w-3.5" />
                    <UiText text={"XP Ranking Board"} /> </p>
-                {isPremiumUser(user) ? <CrownBadge size="sm" /> : null}
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
                  <UiText text={"Global"} /> <span className="arena-title-accent-red"> <UiText text={"Leaderboard"} /> </span>

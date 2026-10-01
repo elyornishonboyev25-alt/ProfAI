@@ -72,7 +72,6 @@ const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
 const Onboarding = lazy(() => import('@/pages/Onboarding'))
 const QuickOnboarding = lazy(() => import('@/pages/QuickOnboarding'))
-const Premium = lazy(() => import('@/pages/Premium'))
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'))
 const IELTSWritingTest = lazy(() => import('@/pages/IELTSWritingTest'))
 const IELTSSpeakingTest = lazy(() => import('@/pages/IELTSSpeakingTest'))
@@ -759,21 +758,17 @@ function App() {
                       <Route
                         path="/analyze-mistakes"
                         element={
-                          <PremiumRoute>
-                            <AnimatedRoute>
-                              <AnalyzeMistakes />
-                            </AnimatedRoute>
-                          </PremiumRoute>
+                          <AnimatedRoute>
+                            <AnalyzeMistakes />
+                          </AnimatedRoute>
                         }
                       />
                       <Route
                         path="/profile"
                         element={
-                          <PremiumRoute>
-                            <AnimatedRoute>
-                              <Profile />
-                            </AnimatedRoute>
-                          </PremiumRoute>
+                          <AnimatedRoute>
+                            <Profile />
+                          </AnimatedRoute>
                         }
                       />
 
@@ -823,13 +818,7 @@ function App() {
                         path="/admission"
                         element={
                           <AnimatedRoute>
-                            <PremiumOnly
-                              title="Application Planning is Premium"
-                              description="Guided application lessons and the university research workspace are part of ProfAI Premium."
-                              perks={['30+ study-abroad lessons', 'QS university rankings explorer', 'Scholarship & application guidance']}
-                            >
-                              <Admission />
-                            </PremiumOnly>
+                            <Admission />
                           </AnimatedRoute>
                         }
                       />
@@ -848,7 +837,7 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route path="/premium" element={<AnimatedRoute><Premium /></AnimatedRoute>} />
+                      <Route path="/premium" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
                       <Route path="/register" element={<AnimatedRoute><Register /></AnimatedRoute>} />
                       <Route path="/learning-center" element={<AnimatedRoute><LearningCenterPortal /></AnimatedRoute>} />

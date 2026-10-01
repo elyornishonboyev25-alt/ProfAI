@@ -9,7 +9,6 @@ import { generateLeaderboard, invalidateLeaderboardCache } from '../services/lea
 import { generateSkillAnalytics } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
 import { generateAiChatResponse } from '../services/aiChat.service.js'
-import { hasPremiumAccess } from '../utils/premium.js'
 import { env } from '../config/env.js'
 import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
 import {
@@ -403,8 +402,6 @@ router.get(
           id: true,
           fullName: true,
           email: true,
-          nickname: true,
-          role: true,
           xp: true,
           level: true,
           currentStreak: true,
@@ -462,12 +459,6 @@ router.get(
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
-    }
-
-    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
-      return res.status(403).json({
-        message: 'AI Analysis is available for Premium users only.',
-      })
     }
 
     const [skillAnalytics, leaderboardSnapshot, learningStreak] = await Promise.all([
@@ -602,21 +593,11 @@ router.post(
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        email: true,
-        nickname: true,
-        role: true,
-      },
+      select: { id: true },
     })
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
-    }
-
-    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
-      return res.status(403).json({
-        message: 'AI Analysis is available for Premium users only.',
-      })
     }
 
     try {
@@ -643,21 +624,11 @@ router.post(
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        email: true,
-        nickname: true,
-        role: true,
-      },
+      select: { id: true },
     })
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
-    }
-
-    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
-      return res.status(403).json({
-        message: 'AI Copilot is available for Premium users only.',
-      })
     }
 
     const response = await generateAiChatResponse(userId, {
@@ -1160,21 +1131,11 @@ router.post(
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        email: true,
-        nickname: true,
-        role: true,
-      },
+      select: { id: true },
     })
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
-    }
-
-    if (!await hasPremiumAccess({ id: req.user!.id, role: user.role, email: user.email, nickname: user.nickname })) {
-      return res.status(403).json({
-        message: 'Realtime speaking is available for Premium users only.',
-      })
     }
 
     if (!env.OPENAI_API_KEY.trim()) {

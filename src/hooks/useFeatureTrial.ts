@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { isPremiumUser } from '@/utils/premiumAccess'
+import { hasPremiumAccess } from '@/utils/premiumAccess'
 import {
   COMMUNITY_TRIAL_SECONDS,
   TRIAL_LIMITS,
@@ -12,26 +12,25 @@ import {
 } from '@/utils/freeTrial'
 
 export type FeatureTrial = {
-  /** Genuine premium owner — unlimited, never gated. */
+  /** Unlimited access under the current access settings. */
   isPremium: boolean
   used: number
   limit: number
-  /** Remaining free uses (Infinity for premium). */
+  /** Remaining uses (Infinity while access is unlimited). */
   remaining: number
-  /** True when a non-premium account has spent its allowance. */
+  /** True only when limits are enabled and the allowance is spent. */
   locked: boolean
-  /** Spend one use (no-op for premium). Returns true if a use was counted. */
+  /** Spend one use (no-op while access is unlimited). */
   consume: () => boolean
 }
 
 /**
- * Access state for a trial-gated feature. Non-premium accounts get
- * {@link TRIAL_LIMITS} free uses, then `locked` flips true so the caller can
- * render the premium gate.
+ * Access state for a trial-gated feature. The shared access switch currently
+ * gives everyone unlimited use, so the old trial gate stays inactive.
  */
 export function useFeatureTrial(feature: TrialFeature): FeatureTrial {
   const user = useAuthStore((state: AuthState) => state.user)
-  const isPremium = isPremiumUser(user)
+  const isPremium = hasPremiumAccess(user)
   const [used, setUsed] = useState(() => getTrialUsed(feature, user?.id))
 
   const limit = TRIAL_LIMITS[feature]
@@ -61,7 +60,7 @@ export type CommunityTrial = {
 /** Access state for the Speaking-community time budget (debate + partner). */
 export function useCommunityTrial(): CommunityTrial {
   const user = useAuthStore((state: AuthState) => state.user)
-  const isPremium = isPremiumUser(user)
+  const isPremium = hasPremiumAccess(user)
   const [secondsUsed, setSecondsUsed] = useState(() => getCommunitySecondsUsed(user?.id))
 
   const secondsLimit = COMMUNITY_TRIAL_SECONDS

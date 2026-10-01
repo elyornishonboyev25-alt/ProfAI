@@ -37,9 +37,7 @@ import type { AuthUser, ProfileOverview } from '@/types/platform'
 import { Skeleton } from '@/components/common/Skeleton'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, XPGem } from '@/components/fx'
-import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
-import { isPremiumUser } from '@/utils/premiumAccess'
 import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
 import '@/styles/profile-recent-attempts.css'
 
@@ -168,8 +166,7 @@ const guestProfilePreview: ProfileOverview = {
   recentAttempts: [],
 }
 
-// When the live /profile/overview call is unavailable (e.g. it's Premium-gated
-// or the user simply has no attempts yet), fall back to a complete overview
+// When the live /profile/overview call is unavailable, fall back to a complete overview
 // built from the signed-in user so the page always renders — real XP, level and
 // streak up top, with zeroed analytics that show friendly empty states.
 function buildProfileFallback(user: AuthUser | null): ProfileOverview {
@@ -248,11 +245,9 @@ export default function Profile() {
     () => (user ? mergeLocalProfilePerformance(fallbackData, user.id) : fallbackData),
     [fallbackData, user],
   )
-  const usingFallback = !fetchedData
   const hasSkillActivity = data?.skillAnalytics.trackBreakdown.some((item) => item.attempts > 0) ?? false
   const hasXpHistory = data?.skillAnalytics.xpMomentum.some((item) => item.xp > 0) ?? false
   const hasWeeklyActivity = data?.weeklyActivity.some((item) => item.active || item.xpEarned > 0 || (item.studyMinutes ?? 0) > 0) ?? false
-  const premiumLocked = Boolean(user) && !isPremiumUser(user)
   const averageAccuracy = safePercent(data?.stats.averageAccuracy ?? 0)
   const averageScore = safePercent(data?.stats.averageScore ?? 0)
   const radarData = useMemo(
@@ -414,24 +409,6 @@ export default function Profile() {
             <ArrowUpRight className="h-5 w-5 shrink-0 text-blue-500" />
           </button>
         </Reveal>
-      ) : usingFallback && premiumLocked && !loading ? (
-        <Reveal className="mt-6">
-          <button
-            type="button"
-            onClick={() => navigate('/premium')}
-            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-4 text-left shadow-[0_10px_24px_rgba(245,158,11,0.12)]"
-          >
-            <ArenaMetricMark icon={BrainCircuit} tone="amber" size="sm" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black text-slate-900"> <UiText text={"Live AI analytics are Premium"} /> </span>
-              <span className="block text-[12px] text-slate-500">
-                 <UiText text={"Your XP, level and streak are shown below. Unlock the AI skill matrix, ranking and insights with Premium."} /> </span>
-            </span>
-            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-bold text-white sm:inline-flex">
-               <UiText text={"Go Premium"} /> <ArrowUpRight className="h-3.5 w-3.5" />
-            </span>
-          </button>
-        </Reveal>
       ) : null}
 
       {/* ── Hero metrics ────────────────────────────────────────── */}
@@ -442,11 +419,6 @@ export default function Profile() {
             const Icon = card.icon
             return (
               <StaggerItem key={card.label} className="h-full">
-                <PremiumFeatureLock
-                    locked={premiumLocked && (card.label === 'Tests Completed' || card.label === 'Average Accuracy')}
-                    title={`Unlock ${card.label}`}
-                    compact
-                  >
                   <article className="performance-metric-card group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/80 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
                     <div className="flex items-center justify-between">
@@ -466,7 +438,6 @@ export default function Profile() {
                       <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
                        <UiText text={"Live data"} /> </div>
                   </article>
-                  </PremiumFeatureLock>
               </StaggerItem>
             )
           })}
@@ -475,11 +446,6 @@ export default function Profile() {
       {/* ── Skill matrix radar + Average accuracy ring ─────────── */}
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Reveal>
-          <PremiumFeatureLock
-            locked={premiumLocked}
-            title="Unlock your AI Skill Matrix"
-            description="See IELTS and SAT skill power, track-by-track strengths and precision trends."
-          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
             <div className="flex items-center justify-between">
@@ -539,15 +505,9 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
-          </PremiumFeatureLock>
         </Reveal>
 
         <Reveal delay={0.08}>
-          <PremiumFeatureLock
-            locked={premiumLocked}
-            title="Unlock Accuracy Intelligence"
-            description="Reveal verified accuracy, average score and test-based XP analytics."
-          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
@@ -585,17 +545,11 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
-          </PremiumFeatureLock>
         </Reveal>
       </section>
 
       {/* ── XP Momentum ─────────────────────────────────────────── */}
       <Reveal className="mt-6">
-        <PremiumFeatureLock
-          locked={premiumLocked}
-          title="Unlock XP Momentum"
-          description="Explore your cumulative XP curve and understand how every attempt changes your trajectory."
-        >
         <article className="surface-card relative overflow-hidden p-6">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
           <div className="flex items-center justify-between">
@@ -638,17 +592,11 @@ export default function Profile() {
             </div>
           ) : null}
         </article>
-        </PremiumFeatureLock>
       </Reveal>
 
       {/* ── Weekly activity + Achievements ──────────────────────── */}
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <Reveal>
-          <PremiumFeatureLock
-            locked={premiumLocked}
-            title="Unlock Weekly Activity"
-            description="Compare daily XP, consistency and study intensity across your week."
-          >
           <article className="surface-card relative overflow-hidden p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
             <div className="flex items-center gap-2">
@@ -682,7 +630,6 @@ export default function Profile() {
               </div>
             ) : null}
           </article>
-          </PremiumFeatureLock>
         </Reveal>
 
         <Reveal delay={0.08}>

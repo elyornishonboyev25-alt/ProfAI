@@ -7,19 +7,16 @@ import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '
 import { featuredTestimonials, type DisplayReview } from './featuredTestimonials'
 
 const GAP = 18
-
-function columnsForWidth(width: number) {
-  return width < 700 ? 1 : width < 1050 ? 2 : 3
-}
+const FLOW_SPEED = 42
 
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
 }
 
-function ReviewCard({ review, hidden = false }: { review: DisplayReview; hidden?: boolean }) {
+function ReviewCard({ review, hidden = false, full = false }: { review: DisplayReview; hidden?: boolean; full?: boolean }) {
   const { c, language } = useCopy()
   const [expanded, setExpanded] = useState(false)
-  const long = review.text.length > 260
+  const long = !full && review.text.length > 260
   const text = long && !expanded ? `${review.text.slice(0, 260).trimEnd()}…` : review.text
   const date = review.createdAt ? new Date(review.createdAt) : null
   const formattedDate = date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium' }).format(date) : null
@@ -106,9 +103,129 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
   </div>, document.body)
 }
 
-export default function Testimonials() {
+type ManualMove = { startedAt: number; top: number; bottom: number; topDelta: number; bottomDelta: number }
+
+function wrap(value: number, width: number) {
+  return width > 0 ? ((value % width) + width) % width : 0
+}
+
+function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[]; dialogOpen: boolean }) {
   const { c } = useCopy()
   const reducedMotion = useReducedMotion()
+  const [playing, setPlaying] = useState(true)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [interacting, setInteracting] = useState(false)
+  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
+  const topTrack = useRef<HTMLDivElement>(null)
+  const bottomTrack = useRef<HTMLDivElement>(null)
+  const topGroup = useRef<HTMLDivElement>(null)
+  const bottomGroup = useRef<HTMLDivElement>(null)
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const interactionTimer = useRef<number | null>(null)
+  const phase = useRef<{ top: number; bottom: number; last: number; manual: ManualMove | null }>({ top: 0, bottom: 0, last: 0, manual: null })
+  const flowing = reviews.length >= 4 && !reducedMotion
+  const active = playing && !hovered && !focused && !interacting && pageVisible && !dialogOpen
+  const middle = Math.ceil(reviews.length / 2)
+  const rows = [reviews.slice(0, middle), reviews.slice(middle)]
+
+  useEffect(() => {
+    const update = () => setPageVisible(!document.hidden)
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  useEffect(() => () => { if (interactionTimer.current !== null) window.clearTimeout(interactionTimer.current) }, [])
+
+  useEffect(() => {
+    if (!flowing) return
+    const top = topTrack.current
+    const bottom = bottomTrack.current
+    const firstTop = topGroup.current
+    const firstBottom = bottomGroup.current
+    if (!top || !bottom || !firstTop || !firstBottom) return
+
+    let topWidth = 0
+    let bottomWidth = 0
+    const measure = () => {
+      topWidth = firstTop.getBoundingClientRect().width
+      bottomWidth = firstBottom.getBoundingClientRect().width
+      phase.current.top = wrap(phase.current.top, topWidth)
+      phase.current.bottom = wrap(phase.current.bottom, bottomWidth)
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(firstTop)
+    observer.observe(firstBottom)
+    measure()
+
+    let frame = 0
+    const tick = (now: number) => {
+      const current = phase.current
+      const elapsed = current.last ? Math.min((now - current.last) / 1000, .05) : 0
+      current.last = now
+      if (topWidth && bottomWidth) {
+        if (current.manual) {
+          const move = current.manual
+          const progress = Math.min((now - move.startedAt) / 550, 1)
+          const eased = 1 - (1 - progress) ** 3
+          current.top = wrap(move.top + move.topDelta * eased, topWidth)
+          current.bottom = wrap(move.bottom + move.bottomDelta * eased, bottomWidth)
+          if (progress === 1) current.manual = null
+        } else if (active) {
+          current.top = wrap(current.top + FLOW_SPEED * elapsed, topWidth)
+          current.bottom = wrap(current.bottom - FLOW_SPEED * elapsed, bottomWidth)
+        }
+        top.style.transform = `translate3d(${-current.top}px, 0, 0)`
+        bottom.style.transform = `translate3d(${-current.bottom}px, 0, 0)`
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); phase.current.last = 0 }
+  }, [active, flowing, reviews.length])
+
+  function nudge(direction: number) {
+    const topCard = topGroup.current?.querySelector<HTMLElement>('.landing-reviews-marquee-card')
+    const bottomCard = bottomGroup.current?.querySelector<HTMLElement>('.landing-reviews-marquee-card')
+    if (!topCard || !bottomCard) return
+    const current = phase.current
+    current.manual = {
+      startedAt: performance.now(), top: current.top, bottom: current.bottom,
+      topDelta: direction * (topCard.offsetWidth + GAP),
+      bottomDelta: -direction * (bottomCard.offsetWidth + GAP),
+    }
+    setInteracting(true)
+    if (interactionTimer.current !== null) window.clearTimeout(interactionTimer.current)
+    interactionTimer.current = window.setTimeout(() => setInteracting(false), 6000)
+  }
+
+  function onTouchStart(event: TouchEvent<HTMLDivElement>) {
+    touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+  }
+  function onTouchEnd(event: TouchEvent<HTMLDivElement>) {
+    const start = touchStart.current
+    touchStart.current = null
+    if (!start) return
+    const dx = event.changedTouches[0].clientX - start.x
+    const dy = event.changedTouches[0].clientY - start.y
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) nudge(dx < 0 ? 1 : -1)
+  }
+
+  if (!flowing) return <div className="landing-reviews-static">{reviews.map(review => <ReviewCard key={review.id} review={review} full />)}</div>
+
+  return <div className="landing-reviews-marquee" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); nudge(event.key === 'ArrowRight' ? 1 : -1) } }}>
+    {rows.map((row, rowIndex) => <div className="landing-reviews-marquee-lane" key={rowIndex} role="group" aria-label={`${c('What learners are saying')} ${rowIndex + 1}`}>
+      <div className="landing-reviews-marquee-track" ref={rowIndex === 0 ? topTrack : bottomTrack}>
+        {[false, true].map(duplicate => <div key={String(duplicate)} className="landing-reviews-marquee-group" ref={!duplicate ? rowIndex === 0 ? topGroup : bottomGroup : undefined} aria-hidden={duplicate || undefined}>
+          {row.map(review => <div className="landing-reviews-marquee-card" key={`${review.id}-${duplicate}`}><ReviewCard review={review} hidden={duplicate} full /></div>)}
+        </div>)}
+      </div>
+    </div>)}
+    <div className="landing-reviews-marquee-controls"><span className="landing-reviews-marquee-count">{String(reviews.length).padStart(2, '0')} · {c('Comments')}</span><div className="landing-reviews-actions"><button type="button" className="landing-icon-button" aria-label={c(playing ? 'Pause carousel' : 'Play carousel')} aria-pressed={!playing} onClick={() => setPlaying(value => !value)}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="landing-icon-button" aria-label={c('Previous comment')} onClick={() => nudge(-1)}><ArrowLeft size={19} /></button><button type="button" className="landing-icon-button" aria-label={c('Next comment')} onClick={() => nudge(1)}><ArrowRight size={19} /></button></div></div>
+  </div>
+}
+
+export default function Testimonials() {
+  const { c } = useCopy()
   const [apiReviews, setApiReviews] = useState<LandingReview[]>([])
   const reviews = useMemo(() => {
     const featuredText = new Set(featuredTestimonials.map(review => review.text.trim().toLocaleLowerCase()))
@@ -118,108 +235,14 @@ export default function Testimonials() {
   const [loadError, setLoadError] = useState(false)
   const [message, setMessage] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [columns, setColumns] = useState(() => columnsForWidth(typeof window === 'undefined' ? 1200 : window.innerWidth))
-  const [viewportWidth, setViewportWidth] = useState(0)
-  const [position, setPosition] = useState(0)
-  const [animated, setAnimated] = useState(false)
-  const [sliding, setSliding] = useState(false)
-  const [playing, setPlaying] = useState(true)
-  const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
-  const [interacting, setInteracting] = useState(false)
-  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
-  const viewportRef = useRef<HTMLDivElement>(null)
-  const touchStart = useRef<{ x: number; y: number } | null>(null)
-  const interactionTimer = useRef<number | null>(null)
-  const visible = Math.min(columns, Math.max(reviews.length, 1))
-  const canCycle = reviews.length > visible
 
   const refresh = useCallback(async () => {
     try { setApiReviews(await loadReviews()); setLoadError(false) }
     catch { setLoadError(true) }
     finally { setLoading(false) }
   }, [])
-
   useEffect(() => { void refresh() }, [refresh])
-  useEffect(() => {
-    const update = () => setColumns(columnsForWidth(window.innerWidth))
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-  useEffect(() => {
-    const viewport = viewportRef.current
-    if (!viewport) return
-    const observer = new ResizeObserver(() => setViewportWidth(viewport.clientWidth))
-    observer.observe(viewport)
-    setViewportWidth(viewport.clientWidth)
-    return () => observer.disconnect()
-  }, [loading, reviews.length])
-  useEffect(() => {
-    setAnimated(false)
-    setPosition(canCycle ? visible : 0)
-    setSliding(false)
-    const frame = requestAnimationFrame(() => setAnimated(true))
-    return () => cancelAnimationFrame(frame)
-  }, [canCycle, visible, reviews.length])
-  useEffect(() => {
-    const update = () => setPageVisible(!document.hidden)
-    document.addEventListener('visibilitychange', update)
-    return () => document.removeEventListener('visibilitychange', update)
-  }, [])
-  useEffect(() => () => { if (interactionTimer.current !== null) window.clearTimeout(interactionTimer.current) }, [])
 
-  const noteInteraction = useCallback(() => {
-    setInteracting(true)
-    if (interactionTimer.current !== null) window.clearTimeout(interactionTimer.current)
-    interactionTimer.current = window.setTimeout(() => setInteracting(false), 8000)
-  }, [])
-  const move = useCallback((direction: number) => {
-    if (!canCycle || sliding) return
-    if (reducedMotion) {
-      setPosition(current => visible + (((current - visible + direction) % reviews.length + reviews.length) % reviews.length))
-      return
-    }
-    setSliding(true)
-    setAnimated(true)
-    setPosition(current => current + direction)
-  }, [canCycle, reducedMotion, reviews.length, sliding, visible])
-  const manualMove = (direction: number) => { noteInteraction(); move(direction) }
-
-  useEffect(() => {
-    if (!canCycle || reducedMotion || !playing || hovered || focused || interacting || !pageVisible || dialogOpen) return
-    const timer = window.setInterval(() => move(1), 5000)
-    return () => window.clearInterval(timer)
-  }, [canCycle, reducedMotion, playing, hovered, focused, interacting, pageVisible, dialogOpen, move])
-
-  const slides = useMemo(() => canCycle
-    ? [...reviews.slice(-visible), ...reviews, ...reviews.slice(0, visible)]
-    : reviews, [canCycle, reviews, visible])
-  const cardWidth = viewportWidth > 0 ? (viewportWidth - GAP * (visible - 1)) / visible : 0
-  const active = canCycle ? ((position - visible) % reviews.length + reviews.length) % reviews.length : 0
-
-  function finishSlide() {
-    if (!canCycle) return
-    if (position >= reviews.length + visible) { setAnimated(false); setPosition(visible) }
-    else if (position < visible) { setAnimated(false); setPosition(reviews.length + visible - 1) }
-    setSliding(false)
-  }
-  function jumpTo(index: number) {
-    if (!canCycle || sliding || index === active) return
-    noteInteraction()
-    if (reducedMotion) { setPosition(visible + index); return }
-    setAnimated(true)
-    setSliding(true)
-    setPosition(visible + index)
-  }
-  function onTouchStart(event: TouchEvent) { touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY } }
-  function onTouchEnd(event: TouchEvent) {
-    const start = touchStart.current
-    touchStart.current = null
-    if (!start) return
-    const dx = event.changedTouches[0].clientX - start.x
-    const dy = event.changedTouches[0].clientY - start.y
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) manualMove(dx < 0 ? 1 : -1)
-  }
   const onSubmitted = (review: LandingReview) => {
     setDialogOpen(false)
     setMessage(review.approved === false ? c('Thank you. Your comment was submitted for review.') : c('Thank you. Your comment was submitted.'))
@@ -229,17 +252,7 @@ export default function Testimonials() {
   return <section id="comments" className="landing-reviews-section landing-arena-section" aria-labelledby="landing-reviews-title">
     <div className="landing-reviews-heading"><div><span className="landing-section-kicker"><MessageSquareText size={15} /> {c('COMMUNITY VOICES')}</span><h2 id="landing-reviews-title">{c('What learners are saying')}</h2><p>{c('Real comments shared by people using ProfAI.')}</p></div><button type="button" className="landing-button landing-button-primary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={18} /></button></div>
     {message && <p className="landing-review-message" role="status">{message}</p>}
-    {loading && reviews.length === 0 ? <div className="landing-reviews-state" role="status">{c('Loading comments…')}</div> : loadError && reviews.length === 0 ? <div className="landing-reviews-state"><p>{c('Comments could not be loaded right now.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => void refresh()}>{c('Try again')}</button></div> : reviews.length === 0 ? <div className="landing-reviews-state"><Quote size={29} aria-hidden="true" /><h3>{c('Be the first to share your experience.')}</h3><p>{c('Your comment could help another learner take the next step.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={17} /></button></div> : <div className="landing-reviews-carousel" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onKeyDown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); manualMove(1) } else if (event.key === 'ArrowLeft') { event.preventDefault(); manualMove(-1) } }}>
-      <div className="landing-reviews-viewport" style={{ maxWidth: reviews.length === 1 ? 430 : reviews.length === 2 && columns > 2 ? 820 : undefined }} ref={viewportRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <div className="landing-reviews-track" aria-live="off" style={{ gap: GAP, transform: canCycle ? `translate3d(${-position * (cardWidth + GAP)}px, 0, 0)` : undefined, transitionDuration: animated && !reducedMotion ? '550ms' : '0ms', opacity: viewportWidth ? 1 : 0 }} onTransitionEnd={event => { if (event.target === event.currentTarget) finishSlide() }}>
-          {slides.map((review, index) => {
-            const cloned = canCycle && (index < visible || index >= visible + reviews.length)
-            return <div key={`${review.id}-${index}`} className="landing-reviews-slide" style={{ width: cardWidth || undefined }}><ReviewCard review={review} hidden={cloned} /></div>
-          })}
-        </div>
-      </div>
-      {canCycle && <div className="landing-reviews-controls"><div className="landing-reviews-pagination" aria-label={c('Comment pages')}>{reviews.map((review, index) => <button key={review.id} type="button" aria-label={`${c('Go to comment')} ${index + 1}`} aria-current={index === active ? 'true' : undefined} className={index === active ? 'is-active' : ''} onClick={() => jumpTo(index)} />)}</div><div className="landing-reviews-actions"><button type="button" className="landing-icon-button" aria-label={c(playing ? 'Pause carousel' : 'Play carousel')} onClick={() => setPlaying(value => !value)}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="landing-icon-button" aria-label={c('Previous comment')} onClick={() => manualMove(-1)}><ArrowLeft size={19} /></button><button type="button" className="landing-icon-button" aria-label={c('Next comment')} onClick={() => manualMove(1)}><ArrowRight size={19} /></button></div></div>}
-    </div>}
+    {loading && reviews.length === 0 ? <div className="landing-reviews-state" role="status">{c('Loading comments…')}</div> : loadError && reviews.length === 0 ? <div className="landing-reviews-state"><p>{c('Comments could not be loaded right now.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => void refresh()}>{c('Try again')}</button></div> : reviews.length === 0 ? <div className="landing-reviews-state"><Quote size={29} aria-hidden="true" /><h3>{c('Be the first to share your experience.')}</h3><p>{c('Your comment could help another learner take the next step.')}</p><button type="button" className="landing-button landing-button-secondary" onClick={() => setDialogOpen(true)}>{c('Leave a comment')} <ArrowRight size={17} /></button></div> : <TestimonialMarquee reviews={reviews} dialogOpen={dialogOpen} />}
     {dialogOpen && <CommentDialog onClose={() => setDialogOpen(false)} onSubmitted={onSubmitted} />}
   </section>
 }

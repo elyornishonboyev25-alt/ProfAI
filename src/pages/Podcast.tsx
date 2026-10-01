@@ -1,5 +1,5 @@
 import UiText from '@/components/common/UiText'
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -11,10 +11,10 @@ import {
   Captions,
   CaptionsOff,
   Check,
-  CheckCircle2,
   ChevronRight,
   GraduationCap,
   Ear,
+  Mic,
   Gauge,
   Headphones,
   Keyboard,
@@ -27,7 +27,6 @@ import {
   MoreHorizontal,
   Moon,
   Pause,
-  Palette,
   PictureInPicture2,
   Play,
   Plus,
@@ -46,22 +45,18 @@ import {
   Volume2,
   VolumeX,
   X,
-  Youtube,
 } from 'lucide-react'
 import '@/styles/podcast-library.css'
+import '@/styles/educational-library.css'
+import { LibraryControls, LibraryPagination, LIBRARY_PAGE_SIZE } from '@/components/learning/LibraryControls'
+import { PODCAST_CATALOG, filterMedia } from '@/data/educationalMedia'
+import { useCopy } from '@/i18n/interface'
+import StudyObject from '@/components/visuals/StudyObject'
+import VideoPlaybackError from '@/components/learning/VideoPlaybackError'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { PODCAST_EPISODES, getPodcastEpisode, type PodcastEpisode } from '@/data/podcasts'
-import { ApiError } from '@/lib/apiClient'
-import { useAuthStore, type AuthState } from '@/store/authStore'
-import { canSubmitCommunityVideo } from '@/utils/videoSubmissionAccess'
-import {
-  getCommunityPodcast,
-  listCommunityPodcasts,
-  submitCommunityPodcast,
-  type CommunityPodcastDetail,
-  type CommunityPodcastSummary,
-} from '@/services/podcasts'
+import { getCommunityPodcast } from '@/services/podcasts'
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function formatTime(seconds: number) {
@@ -94,15 +89,6 @@ type Prefs = {
 }
 
 const PREFS_KEY = 'smarttest-podcast-prefs'
-
-// These use the same subtitle-checked source as Shadowing Lab. They make a
-// submitted clip immediately useful as a listening episode, including a synced
-// transcript in the podcast player.
-const SUGGESTED_PODCASTS = [
-  { label: 'Everyday English', url: 'https://www.youtube.com/watch?v=P26AE7NLx4Q' },
-  { label: 'Inspiring 3-min talk', url: 'https://www.youtube.com/watch?v=mgmVOuLgFB0' },
-  { label: 'Steve Jobs — Stay Hungry', url: 'https://www.youtube.com/watch?v=UF8uR6Z6KLc' },
-]
 
 function loadPrefs(): Prefs {
   const fallback: Prefs = { speed: 1, volume: 100, captionsOn: true, captionSize: 0, theater: false }
@@ -146,43 +132,20 @@ function loadProgress(id: string): Progress {
   }
 }
 
-function podcastLevel(level: string): PodcastEpisode['level'] {
-  if (level === 'Beginner' || level === 'A2') return 'Beginner'
-  if (level === 'Advanced' || level === 'C1' || level === 'C2') return 'Advanced'
-  return 'Intermediate'
-}
-
 type CefrLevel = 'A2' | 'B1' | 'B2' | 'C1'
-type PodcastCategory = 'Daily Life' | 'Science' | 'Business' | 'Culture'
+type PodcastCategory = 'All' | 'Everyday English' | 'SAT foundations' | 'Science & ideas' | 'Academic English' | 'Communication' | 'Admissions'
 
-const LEVELS: CefrLevel[] = ['A2', 'B1', 'B2', 'C1']
 const CATEGORIES: { label: PodcastCategory; icon: typeof Ear }[] = [
-  { label: 'Daily Life', icon: Ear },
-  { label: 'Science', icon: Atom },
-  { label: 'Business', icon: BriefcaseBusiness },
-  { label: 'Culture', icon: Palette },
+  { label: 'All', icon: ListMusic }, { label: 'Everyday English', icon: Ear },
+  { label: 'SAT foundations', icon: Languages }, { label: 'Science & ideas', icon: Atom },
+  { label: 'Academic English', icon: GraduationCap }, { label: 'Communication', icon: Headphones },
+  { label: 'Admissions', icon: BriefcaseBusiness },
 ]
-
-function episodeCefr(item: PodcastEpisode): CefrLevel {
-  if (item.level === 'Beginner') return 'A2'
-  if (item.level === 'Advanced') return 'C1'
-  return item.id === 'ep-001' || item.youtubeId.charCodeAt(0) % 2 === 0 ? 'B2' : 'B1'
-}
-
-function episodeCategory(item: PodcastEpisode): PodcastCategory {
-  const value = `${item.topic} ${item.title}`.toLowerCase()
-  if (/science|technology|health|nature|brain|habit/.test(value)) return 'Science'
-  if (/business|career|work|success|startup|money/.test(value)) return 'Business'
-  if (/culture|travel|history|art|food/.test(value)) return 'Culture'
-  return 'Daily Life'
-}
+function episodeCefr(item: PodcastEpisode): CefrLevel { return item.cefr ?? 'B1' }
+function episodeCategory(item: PodcastEpisode): PodcastCategory { return item.topic as PodcastCategory }
 
 function episodeArtwork(item: PodcastEpisode) {
   return item.coverUrl || `https://i.ytimg.com/vi/${item.youtubeId}/maxresdefault.jpg`
-}
-
-function fallbackArtwork(item: PodcastEpisode) {
-  return `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`
 }
 
 function artworkFallbacks(item: PodcastEpisode) {
@@ -219,28 +182,6 @@ function handleArtworkError(event: React.SyntheticEvent<HTMLImageElement>, item:
   image.src = candidates[index]
 }
 
-function communityPodcast(video: CommunityPodcastSummary | CommunityPodcastDetail): PodcastEpisode {
-  return {
-    id: `community-${video.youtubeId}`,
-    slug: `community-${video.youtubeId}`,
-    title: video.title,
-    description: video.topic
-      ? `Community-added English listening practice about ${video.topic}. Use captions, speed control and A–B loops to master each part.`
-      : 'Community-added English listening practice. Use captions, speed control and A–B loops to master each part.',
-    youtubeId: video.youtubeId,
-    startSeconds: 0,
-    level: podcastLevel(video.level),
-    durationLabel: video.durationSec > 0 ? formatTime(video.durationSec) : 'Full episode',
-    topic: video.topic || 'English listening',
-    source: 'Community · YouTube',
-    coverUrl: video.thumbnailUrl,
-    captionKind: video.captionKind === 'unavailable' ? 'unavailable' : video.captionKind as PodcastEpisode['captionKind'],
-    transcript: 'segments' in video
-      ? video.segments.map((segment) => ({ start: segment.startSec, end: segment.endSec, text: segment.text }))
-      : undefined,
-  }
-}
-
 const LISTEN_STEPS = [
   { icon: Ear, title: 'Listen once', detail: 'Play through and catch the gist — no captions yet.' },
   { icon: Captions, title: 'Turn on CC', detail: 'Replay with English captions and read along.' },
@@ -271,26 +212,18 @@ export default function Podcast() {
   const plannedPodcast = studySearchParams.get('video')
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
-  const user = useAuthStore((state: AuthState) => state.user)
-  const canSubmitVideo = canSubmitCommunityVideo(user)
+  const { c } = useCopy()
   const prefs0 = useRef<Prefs>(loadPrefs())
 
-  const [communityVideos, setCommunityVideos] = useState<CommunityPodcastSummary[]>([])
   const [selectedEpisode, setSelectedEpisode] = useState<PodcastEpisode | null>(null)
-  const [podcastUrl, setPodcastUrl] = useState('')
-  const [addingPodcast, setAddingPodcast] = useState(false)
-  const [podcastError, setPodcastError] = useState<string | null>(null)
-  const [podcastNotice, setPodcastNotice] = useState<string | null>(null)
-  const [openingPodcastId, setOpeningPodcastId] = useState<string | null>(null)
-  const [activeLevel, setActiveLevel] = useState<CefrLevel>('B2')
-  const [activeCategory, setActiveCategory] = useState<PodcastCategory>('Daily Life')
-  const [showAddPanel, setShowAddPanel] = useState(false)
+  const [activeLevel, setActiveLevel] = useState<string>('All')
+  const [libraryQuery, setLibraryQuery] = useState('')
+  const [libraryPage, setLibraryPage] = useState(1)
+  const [activeCategory, setActiveCategory] = useState<PodcastCategory>('All')
+  useEffect(() => setLibraryPage(1), [libraryQuery, activeLevel, activeCategory])
   const [showDetails, setShowDetails] = useState(false)
 
-  const episodes = useMemo(
-    () => [...PODCAST_EPISODES, ...communityVideos.map(communityPodcast)],
-    [communityVideos],
-  )
+  const episodes = PODCAST_EPISODES
   const episode = selectedEpisode ?? getPodcastEpisode()
   const artworkUrl = episodeArtwork(episode)
   const captionsAvailable = episode.captionKind !== 'unavailable'
@@ -307,6 +240,7 @@ export default function Podcast() {
 
   /* playback */
   const [ready, setReady] = useState(false)
+  const [playbackError, setPlaybackError] = useState(false)
   const [started, setStarted] = useState(false)
   const [ended, setEnded] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -360,82 +294,21 @@ export default function Podcast() {
     setToast({ id: Date.now(), msg })
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    void listCommunityPodcasts()
-      .then((videos) => {
-        if (!cancelled) setCommunityVideos(videos)
-      })
-      .catch(() => {
-        // The core podcast remains available if the community library is not
-        // reachable (for example, while signed out or offline).
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const addPodcast = useCallback(
-    async (rawUrl?: string) => {
-      const target = (rawUrl ?? podcastUrl).trim()
-      if (!canSubmitVideo || !target || addingPodcast) return
-
-      setAddingPodcast(true)
-      setPodcastError(null)
-      setPodcastNotice(null)
-      try {
-        const { video, created } = await submitCommunityPodcast(target)
-        const podcast = communityPodcast(video)
-        setCommunityVideos((current) => [
-          { ...video },
-          ...current.filter((item) => item.youtubeId !== video.youtubeId),
-        ])
-        setSelectedEpisode(podcast)
-        setPodcastUrl('')
-        setPodcastNotice(
-          created
-            ? video.captionKind === 'unavailable'
-              ? 'Podcast added — playback is ready. This source does not currently provide a transcript.'
-              : 'Podcast added to the community library — ready to listen.'
-            : 'This podcast is already in the library — opening it now.',
-        )
-      } catch (error) {
-        setPodcastError(
-          error instanceof ApiError || error instanceof Error
-            ? error.message
-            : 'Something went wrong. Try another link.',
-        )
-      } finally {
-        setAddingPodcast(false)
-      }
-    },
-    [addingPodcast, canSubmitVideo, podcastUrl],
-  )
-
+  const captionRequest = useRef(0)
   const openEpisode = useCallback(async (item: PodcastEpisode) => {
-    if (!item.id.startsWith('community-')) {
-      setSelectedEpisode(item)
-      return
-    }
-
-    const youtubeId = item.youtubeId
-    setOpeningPodcastId(youtubeId)
-    setPodcastError(null)
+    const request = ++captionRequest.current
+    setSelectedEpisode(item)
     try {
-      const video = await getCommunityPodcast(youtubeId)
-      setSelectedEpisode(communityPodcast(video))
-    } catch (error) {
-      setPodcastError(error instanceof Error ? error.message : 'Could not open this podcast.')
-    } finally {
-      setOpeningPodcastId(null)
-    }
+      const video = await getCommunityPodcast(item.youtubeId)
+      if (request === captionRequest.current && video.segments.length) {
+        setSelectedEpisode({ ...item, captionKind: video.captionKind as PodcastEpisode['captionKind'], transcript: video.segments.map(segment => ({ start: segment.startSec, end: segment.endSec, text: segment.text })) })
+      }
+    } catch { /* The embedded educational episode remains playable. */ }
   }, [])
-
   useEffect(() => {
-    if (!plannedPodcast) return
-    const video = communityVideos.find(item => item.youtubeId === plannedPodcast)
-    if (video) void openEpisode(communityPodcast(video))
-  }, [plannedPodcast, communityVideos, openEpisode])
+    const item = plannedPodcast ? PODCAST_EPISODES.find(item => item.youtubeId === plannedPodcast) : PODCAST_EPISODES[0]
+    if (item) void openEpisode(item)
+  }, [plannedPodcast, openEpisode])
 
   useEffect(() => {
     if (!toast) return
@@ -465,9 +338,11 @@ export default function Podcast() {
   /* Build the player once the API + container are ready. */
   useEffect(() => {
     let cancelled = false
+    const loadingTimeout = window.setTimeout(() => { if (!cancelled) setPlaybackError(true) }, 15000)
     const saved = loadProgress(episode.id)
     progressRef.current = saved
     setReady(false)
+    setPlaybackError(false)
     setStarted(false)
     setEnded(false)
     setPlaying(false)
@@ -500,6 +375,8 @@ export default function Podcast() {
         events: {
           onReady: (event) => {
             if (cancelled) return
+            window.clearTimeout(loadingTimeout)
+            setPlaybackError(false)
             const player = event.target
             setReady(true)
             // Rename the injected iframe so the original YouTube video/channel
@@ -521,6 +398,7 @@ export default function Podcast() {
               flash(`Resumed from ${formatTime(resumeAt)}`)
             }
           },
+          onError: () => { if (!cancelled) { window.clearTimeout(loadingTimeout); setPlaybackError(true) } },
           onStateChange: (event) => {
             const YTState = window.YT?.PlayerState
             if (!YTState) return
@@ -545,10 +423,11 @@ export default function Podcast() {
           },
         },
       })
-    })
+    }).catch(() => { if (!cancelled) setPlaybackError(true) })
 
     return () => {
       cancelled = true
+      window.clearTimeout(loadingTimeout)
       if (pollRef.current) window.clearInterval(pollRef.current)
       persistProgress()
       try {
@@ -916,13 +795,7 @@ export default function Podcast() {
     return transcriptCues.findIndex((cue) => currentTime >= cue.start && currentTime < cue.end)
   }, [transcriptCues, currentTime])
 
-  // Keep every saved episode visible. Level/category controls rank matching
-  // items first instead of hiding older community submissions behind filters.
-  const visibleEpisodes = useMemo(() => {
-    const rank = (item: PodcastEpisode) =>
-      Number(episodeCefr(item) === activeLevel) * 2 + Number(episodeCategory(item) === activeCategory)
-    return [...episodes].sort((left, right) => rank(right) - rank(left))
-  }, [activeCategory, activeLevel, episodes])
+  const visibleEpisodes = useMemo(() => filterMedia(episodes, item => PODCAST_CATALOG.find(media => media.youtubeId === item.youtubeId)!, libraryQuery, activeLevel, activeCategory), [episodes, libraryQuery, activeLevel, activeCategory])
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
 
@@ -1328,6 +1201,7 @@ export default function Podcast() {
           </div>
         ) : null}
 
+        {playbackError && <VideoPlaybackError youtubeId={episode.youtubeId} />}
         {/* Loading */}
         {!ready ? (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950">
@@ -1454,7 +1328,7 @@ export default function Podcast() {
   )
 
   return (
-    <div className="podcast-library min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
+    <div className="podcast-library educational-podcast min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
       <div className="podcast-aurora podcast-aurora-one" />
       <div className="podcast-aurora podcast-aurora-two" />
       <div className="podcast-aurora podcast-aurora-three" />
@@ -1469,118 +1343,20 @@ export default function Podcast() {
       <div className="podcast-orb podcast-orb-nine" />
 
       <div className={`podcast-page-frame relative z-10 mx-auto w-full ${theater ? 'max-w-[1980px]' : 'max-w-[1900px]'}`}>
-        <motion.header
-          initial={{ opacity: 0, y: -18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: minimalMotion ? 0 : 0.55 }}
-          className="podcast-glass podcast-library-header relative isolate mx-auto rounded-[2rem] px-4 pb-14 pt-5 sm:px-7 sm:pb-16"
-          style={{ '--podcast-header-artwork': `url("${fallbackArtwork(episode)}")` } as CSSProperties}
-        >
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={artworkUrl}
-              src={artworkUrl}
-              onError={(event) => handleArtworkError(event, episode)}
-              alt=""
-              decoding="async"
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 0.68, scale: 1.045 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: minimalMotion ? 0 : 0.45 }}
-              className="podcast-header-artwork absolute inset-0 h-full w-full rounded-[inherit] object-cover"
-            />
-          </AnimatePresence>
-          <span className="podcast-header-vignette pointer-events-none absolute inset-0 rounded-[inherit]" />
-          <div className="flex items-center justify-between gap-3">
-            <button type="button" onClick={() => navigate('/academic-skills')} className="podcast-soft-button route-back-button group">
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              <span className="hidden sm:inline"> <UiText text={"Academic Skills"} /> </span>
-            </button>
-            <div className="flex items-center gap-3">
-              <span className="podcast-logo-orb"><GraduationCap className="h-6 w-6" /></span>
-              <span className="text-xl font-black tracking-[-0.04em] text-white sm:text-2xl">Prof<span className="text-red-500">AI</span></span>
-            </div>
-            <div className="flex items-center gap-2">
-              {canSubmitVideo ? (
-                <button type="button" onClick={() => setShowAddPanel((value) => !value)} className="podcast-soft-button text-red-700">
-                  <Plus className="h-4 w-4" /><span className="hidden sm:inline"> <UiText text={"Add podcast"} /> </span>
-                </button>
-              ) : null}
-              <button type="button" onClick={() => setShowHelp(true)} className="podcast-icon-button" aria-label="Keyboard shortcuts">
-                <Keyboard className="h-4 w-4" />
-              </button>
-            </div>
+        <header className="learning-hero podcast-learning-hero">
+          <div className="learning-hero-copy">
+            <button type="button" onClick={() => navigate('/academic-skills')} className="learning-back"><ArrowLeft size={16} />{c('Academic Skills')}</button>
+            <p className="learning-eyebrow"><Headphones size={16} />{c('English Podcasts')}</p>
+            <h1>{c('A little listening.')}<br /><span>{c('A bigger perspective.')}</span></h1>
+            <p className="learning-intro">{c('English conversations, academic ideas and admissions insights. Listen with purpose, at your own pace.')}</p>
+            <div className="learning-hero-actions"><a href="#podcast-player" className="learning-primary"><Play size={17} />{c('Start listening')}<ChevronRight size={16} /></a><button type="button" className="learning-secondary" onClick={() => navigate('/shadowing-lab')}><Mic size={17} />{c('Explore shadowing')}</button></div>
+            <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>100 {c('episodes')}<span>•</span>A2–C1</div>
           </div>
-          <div className="mt-5 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-red-300/90"> <UiText text={"Listen · Learn · Level up"} /> </p>
-            <h1 className="mt-2 text-4xl font-black tracking-[-0.055em] text-white sm:text-6xl"> <UiText text={"English Podcasts"} /> </h1>
-            <p className="mt-2 text-base font-medium text-white/55 sm:text-xl"> <UiText text={"Train your ears daily"} /> </p>
-          </div>
-          <div className="podcast-level-dock absolute -bottom-8 left-1/2 flex -translate-x-1/2 gap-2 rounded-[1.75rem] p-2 sm:gap-3">
-            {LEVELS.map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setActiveLevel(level)}
-                className={`podcast-level-button ${activeLevel === level ? 'is-active' : ''}`}
-              >
-                {level}
-              </button>
-            ))}
-          </div>
-        </motion.header>
+          <div className="learning-hero-visual"><div className="learning-visual-halo" /><StudyObject kind="headphones" /><div className="learning-visual-caption"><Headphones size={20} /><span>{c('Listen. Learn. Think bigger.')}</span></div></div>
+        </header>
 
-        <AnimatePresence>
-          {canSubmitVideo && showAddPanel ? (
-            <motion.section
-              initial={{ opacity: 0, height: 0, y: -10 }}
-              animate={{ opacity: 1, height: 'auto', y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -10 }}
-              transition={{ duration: minimalMotion ? 0 : 0.32 }}
-              className="podcast-add-panel mx-auto mt-12 overflow-hidden rounded-[1.75rem]"
-            >
-              <div className="p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-red-600 shadow-sm"><Sparkles className="h-5 w-5" /></span>
-                    <div><h2 className="text-lg font-black"> <UiText text={"Add a podcast to listen"} /> </h2><p className="text-xs text-slate-500"> <UiText text={"Paste any public English YouTube video — AI creates synced subtitles when needed."} /> </p></div>
-                  </div>
-                  <button type="button" onClick={() => setShowAddPanel(false)} className="podcast-icon-button"><X className="h-4 w-4" /></button>
-                </div>
-                <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={(event) => { event.preventDefault(); void addPodcast() }}>
-                  <div className="relative flex-1">
-                    <Youtube className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
-                    <input type="text" value={podcastUrl} onChange={(event) => setPodcastUrl(event.target.value)} disabled={addingPodcast} placeholder="Paste a YouTube link — youtube.com/watch?v=… or youtu.be/…" className="podcast-url-input" />
-                  </div>
-                  <button type="submit" disabled={addingPodcast || !podcastUrl.trim()} className="podcast-add-button">
-                    {addingPodcast ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{addingPodcast ? 'Analyzing…' : 'Add & listen'}
-                  </button>
-                </form>
-                {addingPodcast ? <p className="podcast-import-status mt-3"><Loader2 className="h-3.5 w-3.5 animate-spin" /> <UiText text={"Checking the source, artwork and available captions…"} /> </p> : null}
-                <AnimatePresence mode="popLayout">
-                  {podcastError ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-error mt-3">{podcastError}</motion.p> : null}
-                  {podcastNotice ? <motion.p initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} className="podcast-feedback is-success mt-3"><CheckCircle2 className="h-3.5 w-3.5" />{podcastNotice}</motion.p> : null}
-                </AnimatePresence>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400"> <UiText text={"Try:"} /> </span>
-                  {SUGGESTED_PODCASTS.map((suggestion) => <button key={suggestion.url} type="button" disabled={addingPodcast} onClick={() => void addPodcast(suggestion.url)} className="podcast-suggestion"><Sparkles className="h-3 w-3" />{suggestion.label}</button>)}
-                </div>
-                <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400"><ShieldCheck className="h-3.5 w-3.5" /> <UiText text={"Public, embeddable English videos only. Audio is processed securely and is never stored."} /> </p>
-              </div>
-            </motion.section>
-          ) : null}
-        </AnimatePresence>
-
-        <div className="podcast-workspace mt-14 grid items-start gap-6 xl:grid-cols-[132px_minmax(0,1fr)_335px]">
-          <motion.aside initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.15 }} className="podcast-glass podcast-category-rail xl:sticky xl:top-5">
-            {CATEGORIES.map(({ label, icon: Icon }) => (
-              <button key={label} type="button" onClick={() => setActiveCategory(label)} className={`podcast-category-button ${activeCategory === label ? 'is-active' : ''}`}>
-                <Icon className="h-6 w-6" /><span>{label}</span>
-              </button>
-            ))}
-          </motion.aside>
-
-          <main className="podcast-main min-w-0">
+        <div className="podcast-workspace mt-7 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <main className="podcast-main min-w-0" id="podcast-player">
             <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : 0.2, duration: 0.5 }}>
               <div className="podcast-featured-heading mb-4 flex items-end justify-between gap-4 px-1">
                 <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600"> <UiText text={"Featured episode"} /> </p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
@@ -1597,28 +1373,33 @@ export default function Podcast() {
             </motion.div>
 
             <div className="podcast-library-heading mt-7 flex items-center justify-between gap-3 px-1">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"> <UiText text={"Podcast library"} /> </p><h2 className="text-xl font-black text-slate-950"> <UiText text={"All saved episodes"} /> </h2></div>
-              <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length}  <UiText text={"episode"} /> {visibleEpisodes.length === 1 ? '' : 's'}</span>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"> <UiText text={"Podcast library"} /> </p><h2 className="text-xl font-black text-slate-950"> <UiText text={"Curated podcast library"} /> </h2></div>
+              <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length} {c('episodes')}</span>
             </div>
+            <LibraryControls query={libraryQuery} onQuery={setLibraryQuery} level={activeLevel} onLevel={setActiveLevel} category={activeCategory} onCategory={value => setActiveCategory(value as PodcastCategory)} categories={CATEGORIES.filter(item => item.label !== 'All').map(item => item.label)} />
             {visibleEpisodes.length > 0 ? (
               <div className="podcast-episode-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleEpisodes.map((item, index) => (
-                  <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} disabled={openingPodcastId === item.youtubeId} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : index * 0.06 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
+                {visibleEpisodes.slice((libraryPage - 1) * LIBRARY_PAGE_SIZE, libraryPage * LIBRARY_PAGE_SIZE).map((item, index) => (
+                  <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : Math.min(index, 5) * 0.035 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
                     <span className="podcast-episode-artwork relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
-                      <img src={episodeArtwork(item)} onError={(event) => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                      <img loading="lazy" src={episodeArtwork(item)} onError={(event) => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                       <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
                       <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow-[0_0_22px_rgba(239,68,68,.65)] transition group-hover:opacity-100"><Play className="h-4 w-4 fill-current" /></span>
                       {item.id === episode.id ? <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white shadow-lg"><Check className="h-3.5 w-3.5" /></span> : null}
                     </span>
+                    <span className="learning-card-category mt-3 block">{episodeCefr(item)} · {c(item.topic)}</span>
                     <span className="podcast-episode-title block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
-                    <span className="podcast-episode-meta flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : '22%' }} /></span></span>
+                    <span className="learning-card-source block">{item.source}</span>
+                    <span className="learning-card-focus block">{c(item.focus || item.description)}</span>
+                    <span className="podcast-episode-meta flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : `${loadProgress(item.id).position / (PODCAST_CATALOG.find(media => media.youtubeId === item.youtubeId)?.durationSec || 1) * 100}%` }} /></span></span>
                   </motion.button>
                 ))}
               </div>
             ) : (
-              <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800"> <UiText text={"No"} /> {activeLevel} {activeCategory.toLowerCase()}  <UiText text={"episodes yet"} /> </p><p className="mt-1 text-sm text-slate-500"> <UiText text={"Choose another level or category"} /> {canSubmitVideo ? ', or add a podcast.' : '.'}</p></div>
+              <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800"> {c("No matching episodes")} </p><p className="mt-1 text-sm text-slate-500"> {c("Choose another level or category")}</p></div>
             )}
 
+            <LibraryPagination page={libraryPage} total={visibleEpisodes.length} onPage={setLibraryPage} />
             <button type="button" onClick={() => setShowDetails((value) => !value)} className="podcast-details-toggle mt-6 w-full">
               <span className="flex items-center gap-2"><Captions className="h-4 w-4 text-red-500" /> <UiText text={"Transcript, bookmarks & practice tools"} /> </span><ChevronRight className={`h-4 w-4 transition ${showDetails ? 'rotate-90' : ''}`} />
             </button>
@@ -1629,7 +1410,7 @@ export default function Podcast() {
                     <article className="podcast-detail-card podcast-transcript-card">
                       <div className="flex items-center justify-between gap-3">
                         <h3><Captions className="h-4 w-4 text-red-500" /> <UiText text={"Transcript"} /> </h3>
-                        <span className="podcast-live-pill"><span /> <UiText text={"Synced"} /> </span>
+                        {transcriptCues.length > 0 && <span className="podcast-live-pill"><span /> <UiText text={"Synced"} /> </span>}
                       </div>
                       {transcriptCues.length ? (
                         <div className="pod-scroll mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">

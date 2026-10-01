@@ -1,4 +1,5 @@
 import type { SubtitleCue } from '@/utils/subtitleParser'
+import { PODCAST_CATALOG, type MediaLevel } from './educationalMedia'
 
 export type PodcastLevel = 'Beginner' | 'Intermediate' | 'Advanced'
 
@@ -15,6 +16,8 @@ export type PodcastEpisode = {
   durationLabel: string
   topic: string
   source: string
+  cefr?: MediaLevel
+  focus?: string
   /** Optional artwork supplied by the podcast source. Falls back to the video's YouTube thumbnail. */
   coverUrl?: string | null
   /** Transcript source state. Metadata-only podcasts remain fully playable. */
@@ -23,31 +26,20 @@ export type PodcastEpisode = {
    * Optional synced transcript. When present the transcript panel highlights
    * along with playback and each line is click-to-seek. When absent we rely on
    * YouTube's own English captions (toggled with the CC button on the player),
-   * so subtitles are always available without shipping transcript text.
+   * Caption availability depends on the source and YouTube's playback rules.
    */
   transcript?: SubtitleCue[]
 }
 
-/**
- * English-listening podcast episodes. More are added over time; the first one
- * is fully wired with the professional player below.
- */
-export const PODCAST_EPISODES: PodcastEpisode[] = [
-  {
-    id: 'ep-001',
-    slug: 'english-listening-episode-1',
-    title: 'English Listening Practice — Episode 1',
-    description:
-      'Sharpen your ear for natural, connected English. Listen actively, turn on captions, slow the pace down when you need to, and loop the tricky sections until every word is crystal clear.',
-    youtubeId: 'P26AE7NLx4Q',
-    startSeconds: 11,
-    level: 'Intermediate',
-    durationLabel: 'Full episode',
-    topic: 'Everyday English',
-    source: 'YouTube',
-    captionKind: 'auto',
-  },
-]
+/** Reviewed, stable IDs preserve per-episode listening progress. */
+export const PODCAST_EPISODES: PodcastEpisode[] = PODCAST_CATALOG.map(item => ({
+  id: 'curated-' + item.youtubeId, slug: 'curated-' + item.youtubeId, title: item.title,
+  description: item.focus, youtubeId: item.youtubeId, startSeconds: 0,
+  level: item.cefr === 'A2' ? 'Beginner' : item.cefr === 'C1' ? 'Advanced' : 'Intermediate',
+  cefr: item.cefr, focus: item.focus,
+  durationLabel: Math.floor(item.durationSec / 60) + ':' + String(item.durationSec % 60).padStart(2, '0'),
+  topic: item.category, source: item.source, coverUrl: item.thumbnailUrl,
+}))
 
 export function getPodcastEpisode(slug?: string): PodcastEpisode {
   if (!slug) return PODCAST_EPISODES[0]

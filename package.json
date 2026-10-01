@@ -23,6 +23,7 @@
     "start": "npm --prefix backend run start",
     "validate:vocabulary": "npm run sync:sat-vocabulary && node scripts/validate-vocabulary.mjs",
     "test:auth-session": "node scripts/test-auth-session.mjs",
+    "test:educational-media": "node scripts/test-educational-media.mjs",
     "test:vocabulary-ui": "npm run sync:sat-vocabulary && node scripts/test-vocabulary-ui.mjs",
     "sync:sat-vocabulary": "node scripts/sync-sat-vocabulary.mjs",
     "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs",

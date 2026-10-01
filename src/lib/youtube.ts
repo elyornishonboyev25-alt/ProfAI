@@ -30,6 +30,7 @@ export type YTNamespace = {
       events?: {
         onReady?: (event: { target: YTPlayer }) => void
         onStateChange?: (event: { data: number; target: YTPlayer }) => void
+        onError?: (event: { data: number; target: YTPlayer }) => void
       }
     },
   ) => YTPlayer

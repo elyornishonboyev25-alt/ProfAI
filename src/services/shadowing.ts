@@ -40,10 +40,10 @@ export async function listShadowingVideos(): Promise<ShadowingVideoSummary[]> {
   return res.videos ?? []
 }
 
-export async function getShadowingVideo(youtubeId: string): Promise<ShadowingVideoDetail> {
+export async function getShadowingVideo(youtubeId: string, signal?: AbortSignal): Promise<ShadowingVideoDetail> {
   const res = await apiClient.get<{ video: ShadowingVideoDetail }>(
     `/shadowing/${encodeURIComponent(youtubeId)}`,
-    { auth: true },
+    { auth: true, signal },
   )
   return res.video
 }

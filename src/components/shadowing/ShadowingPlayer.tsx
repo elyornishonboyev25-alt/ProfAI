@@ -35,6 +35,9 @@ import {
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import type { ShadowingVideoDetail } from '@/services/shadowing'
+import { shadowingIntervals } from '@/utils/shadowingIntervals'
+import { useCopy } from '@/i18n/interface'
+import VideoPlaybackError from '@/components/learning/VideoPlaybackError'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25] as const
 // Repeat target for the active line: how many times it loops before stopping /
@@ -80,7 +83,10 @@ type Props = {
 }
 
 export default function ShadowingPlayer({ video, onBack }: Props) {
-  const segments = video.segments
+  const { c } = useCopy()
+  const guided = video.segments.length === 0
+  const [intervalSeconds, setIntervalSeconds] = useState(6)
+  const segments = useMemo(() => guided ? shadowingIntervals(video.youtubeId, video.durationSec, intervalSeconds) : video.segments, [guided, video, intervalSeconds])
   const lastIndex = segments.length - 1
   const { minimalMotion } = useMotionPreferences()
 
@@ -93,6 +99,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   const lineRefs = useRef<Array<HTMLButtonElement | null>>([])
 
   const [ready, setReady] = useState(false)
+  const [playbackError, setPlaybackError] = useState(false)
   const [started, setStarted] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -154,6 +161,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   /* Build the player once. */
   useEffect(() => {
     let cancelled = false
+    const loadingTimeout = window.setTimeout(() => { if (!cancelled) setPlaybackError(true) }, 15000)
     // Resume the last line shadowed for this clip (saved per device).
     let resumeIndex = 0
     try {
@@ -187,6 +195,8 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
         events: {
           onReady: (event) => {
             if (cancelled) return
+            window.clearTimeout(loadingTimeout)
+            setPlaybackError(false)
             event.target.setPlaybackRate(0.75)
             event.target.setVolume(100)
             // Rename the injected iframe so the original YouTube video / channel
@@ -203,6 +213,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             }
             setReady(true)
           },
+          onError: () => { if (!cancelled) { window.clearTimeout(loadingTimeout); setPlaybackError(true) } },
           onStateChange: (event) => {
             const YTState = window.YT?.PlayerState
             if (!YTState) return
@@ -212,10 +223,11 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
           },
         },
       })
-    })
+    }).catch(() => { if (!cancelled) setPlaybackError(true) })
 
     return () => {
       cancelled = true
+      window.clearTimeout(loadingTimeout)
       if (pollRef.current) window.clearInterval(pollRef.current)
       try {
         playerRef.current?.destroy()
@@ -888,7 +900,8 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[15] h-10 bg-gradient-to-t from-black/55 to-transparent" />
 
         {/* Karaoke active-line caption */}
-        {ready && started && activeSegment ? (
+        {playbackError && <VideoPlaybackError youtubeId={video.youtubeId} />}
+        {ready && started && activeSegment && !guided ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-12 z-20 px-5">
             <p className={`text-center text-base font-semibold leading-7 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-lg ${blindMode ? 'blur-md' : ''}`}>
               {activeSegment.text}
@@ -940,7 +953,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
                 <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-red-500/20 blur-3xl" />
               </div>
               <span className={`relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${levelBadge(video.level)}`}>
-                <Mic className="h-3.5 w-3.5" /> {video.level} · {segments.length} lines
+                <Mic className="h-3.5 w-3.5" /> {video.level} · {segments.length} {guided ? c('intervals') : c('lines')}
               </span>
               <h3 className="relative max-w-lg px-6 text-xl font-black text-white sm:text-2xl">{video.title}</h3>
               <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 backdrop-blur transition group-hover:scale-105">
@@ -1022,7 +1035,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             Shortcuts
           </button>
           <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
-            {segments.length} lines
+            {segments.length} {guided ? c('intervals') : c('lines')}
           </span>
         </div>
       </div>
@@ -1048,6 +1061,25 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             {playerShell}
           </div>
 
+          {guided && <div className="mt-4 rounded-2xl border border-rose-100 bg-white p-4 text-xs leading-6 text-slate-500">
+            <p className="font-bold text-slate-800">{c('Guided shadowing')}</p>
+            <p>{c('Follow the teacher and on-screen examples. These are timed practice intervals, not a synced transcript.')}</p>
+            <label className="mt-2 flex items-center gap-3">{c('Interval length')}
+              <select value={intervalSeconds} disabled={recording} className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-700" onChange={event => {
+                playerRef.current?.pauseVideo()
+                ctrl.current.segmentActive = false
+                ctrl.current.activeIndex = 0
+                ctrl.current.repeats = 0
+                setActiveIndex(0)
+                setCurrentRepeat(0)
+                setCompleted(new Set())
+                for (const url of recordingsRef.current.values()) URL.revokeObjectURL(url)
+                recordingsRef.current.clear()
+                setRecordingsVersion(value => value + 1)
+                setIntervalSeconds(Number(event.target.value))
+              }}>{[4, 6, 8, 12].map(value => <option key={value} value={value}>{value} {c('seconds')}</option>)}</select>
+            </label>
+          </div>}
           {/* Record + compare */}
           <div className="mt-4 rounded-2xl border border-red-100 bg-white/90 p-4 shadow-[0_14px_30px_rgba(225,29,72,0.08)]">
             <div className="flex flex-wrap items-center gap-2">
@@ -1102,7 +1134,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             {video.author ? <p className="mt-0.5 text-xs font-semibold text-slate-500">{video.author}</p> : null}
             <div className="mt-3">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                <span>Lines shadowed</span>
+                <span>{guided ? c('Intervals practised') : c('Lines shadowed')}</span>
                 <span>
                   {completed.size}/{segments.length}
                 </span>
@@ -1123,9 +1155,9 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             <div className="mb-3 flex items-center justify-between">
               <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
                 <Captions className="h-4 w-4 text-red-600" />
-                Shadowing script
+                {guided ? c('Practice intervals') : c('Shadowing script')}
               </h3>
-              <span className="text-[11px] font-semibold text-slate-400">Tap a line to jump</span>
+              <span className="text-[11px] font-semibold text-slate-400">{guided ? c('Choose a section to repeat') : c('Tap a line to jump')}</span>
             </div>
             <div className="pod-scroll max-h-[30rem] space-y-1.5 overflow-y-auto pr-1">
               {segments.map((seg, index) => {

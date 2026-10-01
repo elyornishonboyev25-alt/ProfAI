@@ -13,7 +13,7 @@ const listQuerySchema = z.object({
 const createSchema = z.object({
   name: z.string().trim().min(2).max(60),
   exam: z.enum(['IELTS', 'SAT', 'General']).default('IELTS'),
-  rating: z.coerce.number().int().min(1).max(5).default(5),
+  rating: z.number().int().min(1).max(5).optional(),
   bandBefore: z.string().trim().max(12).optional().or(z.literal('')),
   bandAfter: z.string().trim().max(12).optional().or(z.literal('')),
   text: z.string().trim().min(8).max(600),
@@ -58,7 +58,7 @@ router.post(
       data: {
         name: body.name,
         exam: body.exam,
-        rating: body.rating,
+        rating: body.rating ?? null,
         bandBefore: body.bandBefore ? body.bandBefore : null,
         bandAfter: body.bandAfter ? body.bandAfter : null,
         text: body.text,
@@ -71,6 +71,7 @@ router.post(
         bandBefore: true,
         bandAfter: true,
         text: true,
+        approved: true,
         createdAt: true,
       },
     })

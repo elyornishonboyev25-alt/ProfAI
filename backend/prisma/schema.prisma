@@ -1115,7 +1115,7 @@ model Review {
   id         String   @id @default(cuid())
   name       String
   exam       String   @default("IELTS") // IELTS | SAT | General
-  rating     Int      @default(5) // 1..5 stars
+  rating     Int?     // 1..5 stars when the visitor supplies a rating
   bandBefore String? // e.g. "5.5" or SAT "1100"
   bandAfter  String? // e.g. "7.5" or SAT "1450"
   text       String

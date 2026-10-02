@@ -342,7 +342,7 @@ function App() {
   // intentionally keep their standalone layouts.
   const showSidebar =
     !isPublicStandalone &&
-    (!isTestMode || isSatTestRoute) &&
+    !isTestMode &&
     !isFocusContentMode &&
     !isIeltsMockMode
   const isAiTutorMode = pathname === '/ai-tutor'

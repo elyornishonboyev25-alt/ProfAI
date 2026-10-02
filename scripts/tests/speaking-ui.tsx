@@ -18,6 +18,9 @@ let recorderStarts = 0
 let transcriptionFails = false
 let transcribedFiles: Array<{ audioBase64: string; mimeType: string }> = []
 let requestedVoices: string[] = []
+let recordingMimeType = 'audio/mp4'
+let browserTranscript = ''
+const recognizers: FakeRecognition[] = []
 
 class FakeAudio {
   src = ''
@@ -37,8 +40,8 @@ class FakeAudio {
 }
 
 class FakeRecorder {
-  static isTypeSupported(type: string) { return type === 'audio/mp4' }
-  mimeType = 'audio/mp4'
+  static isTypeSupported(type: string) { return type === recordingMimeType }
+  mimeType = recordingMimeType
   state = 'inactive'
   ondataavailable: ((event: { data: Blob }) => void) | null = null
   onstop: (() => void) | null = null
@@ -55,8 +58,16 @@ class FakeRecorder {
 }
 
 class FakeRecognition {
+  onresult: ((event: any) => void) | null = null
+  onend: (() => void) | null = null
+  onerror: ((event: any) => void) | null = null
+  constructor() { recognizers.push(this) }
   start() { recognitionStarts++ }
-  stop() { (this as unknown as { onend?: () => void }).onend?.() }
+  words(text: string, isFinal = false) {
+    const result = Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal })
+    this.onresult?.({ resultIndex: 0, results: [result] })
+  }
+  stop() { if (browserTranscript) this.words(browserTranscript, true); this.onend?.() }
   abort() {}
 }
 
@@ -222,4 +233,52 @@ export async function run() {
   assert.ok(container.querySelector('audio'), 'Self-recording provides playback')
   await act(async () => libraryRoot.unmount())
   console.log('PASS: library self-recording and cleanup')
+
+  for (const desktop of [
+    { name: 'Windows Chrome', userAgent: 'Windows Chrome/130 Safari/537.36', vendor: 'Google Inc.', recognition: true, mime: 'audio/webm;codecs=opus', simultaneous: true },
+    { name: 'Windows Edge', userAgent: 'Windows Chrome/130 Safari/537.36 Edg/130', vendor: 'Google Inc.', recognition: true, mime: 'audio/webm;codecs=opus', simultaneous: true },
+    { name: 'Windows Firefox', userAgent: 'Windows Firefox/130', vendor: '', recognition: false, mime: 'audio/ogg;codecs=opus', simultaneous: true },
+    { name: 'Mac Safari', userAgent: 'Macintosh Version/18 Safari/605.1.15', vendor: 'Apple Computer, Inc.', recognition: true, mime: 'audio/mp4', simultaneous: false },
+  ]) {
+    Object.defineProperty(navigator, 'userAgent', { value: desktop.userAgent, configurable: true })
+    Object.defineProperty(navigator, 'vendor', { value: desktop.vendor, configurable: true })
+    Object.defineProperty(window, 'webkitSpeechRecognition', { value: desktop.recognition ? FakeRecognition : undefined, configurable: true })
+    assert.equal(canRecognizeWhileRecording(), desktop.simultaneous, desktop.name)
+    recordingMimeType = desktop.mime
+    browserTranscript = 'I enjoy studying languages in my spare time.'
+    transcribedFiles = []
+    const starts = recognitionStarts
+    const desktopRoot = createRoot(container)
+    await act(async () => desktopRoot.render(<ExaminerSession config={{ mode: 'part1' }} modeLabel="Speaking Mock 1" onExit={() => {}} onSaved={() => {}} />))
+    try {
+      await click('Begin speaking test')
+      await endAudio() // greeting
+      await endAudio() // first part instructions
+      await endAudio() // first question
+      assert.ok(button('Finish answer'), `${desktop.name} starts recording after the question`)
+      assert.equal(recognitionStarts > starts, desktop.recognition && desktop.simultaneous)
+      if (desktop.recognition && desktop.simultaneous) {
+        // Preserve words when the browser recognition service disconnects while
+        // MediaRecorder keeps the user's recording running.
+        const recognizer = recognizers.at(-1)!
+        await act(async () => {
+          recognizer.words(browserTranscript)
+          recognizer.onerror?.({ error: 'network' })
+          recognizer.onend?.()
+        })
+        browserTranscript = '' // There will be no new final results on stop.
+        transcriptionFails = true
+      }
+      await click('Finish answer')
+      assert.equal(transcribedFiles[0].mimeType, desktop.mime.split(';')[0])
+      assert.equal(atob(transcribedFiles[0].audioBase64).length, 200)
+      assert.equal(button('Retry processing saved answer'), undefined, `${desktop.name} retains browser words when server transcription fails`)
+      assert.ok(players.at(-1)?.onended, `${desktop.name} advances to the next examiner question`)
+      console.log(`PASS: ${desktop.name} recording format, examiner playback and answer capture`)
+    } finally {
+      transcriptionFails = false
+      browserTranscript = ''
+      await act(async () => desktopRoot.unmount())
+    }
+  }
 }

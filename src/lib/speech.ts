@@ -137,6 +137,10 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
 
     recognition.onend = () => {
       const transcript = `${finalRef.current} ${interimRef.current}`.replace(/\s+/g, ' ').trim()
+      // Desktop recognition can end after a network/service error before the
+      // recorder is stopped. Keep the last interim phrase for audio fallback.
+      finalRef.current = transcript
+      setFinalTranscript(transcript)
       if (pendingStopRef.current) {
         pendingStopRef.current(transcript)
         pendingStopRef.current = null
@@ -144,8 +148,6 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
       // Chrome ends recognition every ~minute; restart unless the user stopped.
       if (!stoppingRef.current) {
         committedRef.current = transcript
-        finalRef.current = transcript
-        setFinalTranscript(transcript)
         currentResultsRef.current.clear()
         interimRef.current = ''
         setInterimTranscript('')

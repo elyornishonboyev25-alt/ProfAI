@@ -143,7 +143,9 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
       }
       // Chrome ends recognition every ~minute; restart unless the user stopped.
       if (!stoppingRef.current) {
-        committedRef.current = finalRef.current
+        committedRef.current = transcript
+        finalRef.current = transcript
+        setFinalTranscript(transcript)
         currentResultsRef.current.clear()
         interimRef.current = ''
         setInterimTranscript('')
@@ -257,6 +259,10 @@ export function useSpeechRecognition(lang = 'en-US'): UseSpeechRecognitionResult
       if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current)
       const recognition = recognitionRef.current
       if (recognition) {
+        recognition.onend = null
+        recognition.onerror = null
+        recognition.onresult = null
+        recognitionRef.current = null
         try {
           recognition.abort()
         } catch {
@@ -323,9 +329,12 @@ export function pickVoiceForLang(lang: SpeechLang): SpeechSynthesisVoice | null 
 
 /** Prefer a natural English (UK first) voice for the examiner. */
 export function getExaminerVoice(profile: 'male' | 'female' = 'female'): SpeechSynthesisVoice | null {
-  const voices = cachedVoices.length ? cachedVoices : loadVoices()
+  const voices = loadVoices()
   if (voices.length === 0) return null
-  const english = voices.filter((voice) => voice.lang?.toLowerCase().startsWith('en'))
+  const names = profile === 'male'
+    ? /\b(male|ryan|george|oliver|daniel|james|david|guy|alex|tom|aaron|arthur|rishi|gordon|reed|rocko|evan)\b/i
+    : /\b(female|sonia|libby|hazel|susan|aria|jenny|zira|samantha|serena|karen|moira|tessa|fiona|ava|allison|shelley|sandy|nicky)\b/i
+  const english = voices.filter((voice) => voice.lang?.toLowerCase().startsWith('en') && names.test(voice.name))
   if (english.length === 0) return null
   const score = (voice: SpeechSynthesisVoice) => {
     const name = voice.name.toLowerCase()
@@ -346,6 +355,7 @@ export function getExaminerVoice(profile: 'male' | 'female' = 'female'): SpeechS
 export type SpeakOptions = {
   onStart?: () => void
   onEnd?: () => void
+  onError?: () => void
   rate?: number
   pitch?: number
   /** Language of the text — selects a matching voice. Defaults to auto-detect. */
@@ -357,6 +367,7 @@ export type SpeakOptions = {
 /** Speak `text` aloud. Cancels any in-flight utterance first. Returns a stop fn. */
 export function speak(text: string, options: SpeakOptions = {}): () => void {
   if (!isSpeechSynthesisSupported() || !text.trim()) {
+    if (options.onError) { options.onError(); return () => {} }
     options.onStart?.()
     options.onEnd?.()
     return () => {}
@@ -368,12 +379,13 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
   let finished = false
   let watchdog = 0
   let startTimer = 0
-  const finish = () => {
+  const finish = (failed = false) => {
     if (finished) return
     finished = true
     window.clearTimeout(startTimer)
     window.clearTimeout(watchdog)
-    options.onEnd?.()
+    if (failed && options.onError) options.onError()
+    else options.onEnd?.()
   }
 
   const lang = options.lang ?? detectSpeechLang(text)
@@ -388,9 +400,10 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
   // A touch above 1.0 sounds natural and responsive (was sluggish at 0.96).
   utterance.rate = options.rate ?? 1.04
   utterance.pitch = options.pitch ?? 1
-  utterance.onstart = () => options.onStart?.()
-  utterance.onend = finish
-  utterance.onerror = finish
+  let actuallyStarted = false
+  utterance.onstart = () => { actuallyStarted = true; options.onStart?.() }
+  utterance.onend = () => finish(!actuallyStarted)
+  utterance.onerror = () => finish(true)
 
   // Browser voices can speak long IELTS cue cards for more than 22 seconds.
   // Wait while speech is actually playing so recording never overlaps a prompt.
@@ -403,14 +416,16 @@ export function speak(text: string, options: SpeakOptions = {}): () => void {
       return
     }
     if (synth.speaking) synth.cancel()
-    finish()
+    finish(true)
   }
   watchdog = window.setTimeout(checkSpeech, estimateMs)
 
   // Chrome needs a brief tick after cancel() before speak() takes — keep it minimal
   // so speech starts almost immediately (the long pause was perceived latency).
   startTimer = window.setTimeout(() => {
-    if (!finished) synth.speak(utterance)
+    if (!finished) {
+      try { synth.resume(); synth.speak(utterance) } catch { finish(true) }
+    }
   }, 15)
 
   return () => {

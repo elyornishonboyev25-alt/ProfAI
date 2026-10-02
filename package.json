@@ -9,6 +9,7 @@
     "api:dev": "npm --prefix backend run dev",
     "dev:tunnel": "vite --host",
     "validate:speaking": "node scripts/validate-speaking-bank.mjs",
+    "test:speaking-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/speaking-ui.tsx",
     "validate:reading": "node scripts/validate-reading-bank.mjs",
     "test:reading-ui": "node scripts/test-reading-ui.mjs",
     "validate:sat-assets": "node scripts/validate-sat-assets.mjs",

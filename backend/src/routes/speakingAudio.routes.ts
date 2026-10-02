@@ -5,6 +5,11 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 
 const router = Router()
 const origin = env.OPENAI_API_BASE.replace(/\/$/, '')
+const voiceCache = new Map<string, { audioBase64: string; expires: number }>()
+
+async function audioRequest(url: string, options: RequestInit): Promise<Response | null> {
+  try { return await fetch(url, options) } catch { return null }
+}
 
 router.post('/voice', asyncHandler(async (req, res) => {
   const { text, voice } = z.object({
@@ -12,18 +17,26 @@ router.post('/voice', asyncHandler(async (req, res) => {
     voice: z.enum(['marin', 'cedar']).default('marin'),
   }).strict().parse(req.body)
   if (!env.OPENAI_API_KEY) return res.status(503).json({ message: 'Examiner voice is unavailable.' })
-  const response = await fetch(`${origin}/audio/speech`, {
+  const cacheKey = JSON.stringify([req.user!.id, voice, text])
+  const cached = voiceCache.get(cacheKey)
+  if (cached && cached.expires > Date.now()) return res.json({ audioBase64: cached.audioBase64 })
+  const response = await audioRequest(`${origin}/audio/speech`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o-mini-tts', voice, response_format: 'mp3', input: text,
-      instructions: `Use a clear, natural British English accent and a ${voice === 'cedar' ? 'masculine' : 'feminine'} voice. Sound like a calm, experienced IELTS Speaking examiner in a quiet room: professional, attentive, and conversational, with measured pacing and realistic pauses. Ask questions with natural intonation. No theatrical emphasis, no preamble, and no added words.`,
+      instructions: `Use a clear, natural British English accent and a ${voice === 'cedar' ? 'masculine adult male' : 'feminine adult female'} voice. Sound like a calm, experienced IELTS Speaking examiner in a quiet room: professional, attentive, and conversational. Use an even, natural speaking pace, short pauses between sentences, and gentle falling intonation for instructions. Questions should sound interested without exaggerated emphasis. Keep the same voice and accent throughout. No theatrical delivery, no preamble, and no added words.`,
     }),
-    signal: AbortSignal.timeout(Math.min(25_000, 8_000 + text.length * 45)),
+    signal: AbortSignal.timeout(25_000),
   })
-  if (!response.ok) return res.status(503).json({ message: 'Examiner voice is temporarily unavailable.' })
-  const bytes = Buffer.from(await response.arrayBuffer())
-  return res.json({ audioBase64: bytes.toString('base64') })
+  if (!response?.ok) return res.status(503).json({ message: 'Examiner voice is temporarily unavailable.' })
+  const buffer = await response.arrayBuffer().catch(() => null)
+  if (!buffer || !buffer.byteLength) return res.status(503).json({ message: 'Examiner voice returned no audio.' })
+  const audioBase64 = Buffer.from(buffer).toString('base64')
+  // A small per-user cache makes retries immediate without caching candidate audio.
+  if (voiceCache.size >= 24) voiceCache.delete(voiceCache.keys().next().value!)
+  voiceCache.set(cacheKey, { audioBase64, expires: Date.now() + 10 * 60_000 })
+  return res.json({ audioBase64 })
 }))
 
 router.post('/transcribe', asyncHandler(async (req, res) => {
@@ -42,16 +55,17 @@ router.post('/transcribe', asyncHandler(async (req, res) => {
     form.append('language', 'en')
     form.append('response_format', 'json')
     form.append('prompt', 'IELTS Speaking answer in English. Preserve the speaker’s exact words, including fillers, repetitions, and natural errors. Do not rewrite or invent any answer.')
-    return fetch(`${origin}/audio/transcriptions`, {
+    return audioRequest(`${origin}/audio/transcriptions`, {
       method: 'POST', headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` }, body: form,
       signal: AbortSignal.timeout(35_000),
     })
   }
   let response = await transcribe('gpt-transcribe')
-  if (response.status === 400 || response.status === 404) response = await transcribe('gpt-4o-transcribe')
-  if (!response.ok) return res.status(503).json({ message: 'Speech transcription is temporarily unavailable.' })
-  const payload = await response.json() as { text?: string }
-  return res.json({ text: String(payload.text ?? '').trim() })
+  if (response?.status === 400 || response?.status === 404) response = await transcribe('gpt-4o-transcribe')
+  if (!response?.ok) return res.status(503).json({ message: 'Speech transcription is temporarily unavailable. Your recording can be retried.' })
+  const payload = await response.json().catch(() => null) as { text?: unknown } | null
+  if (!payload || typeof payload.text !== 'string') return res.status(503).json({ message: 'Speech transcription returned an invalid response.' })
+  return res.json({ text: payload.text.trim() })
 }))
 
 export default router

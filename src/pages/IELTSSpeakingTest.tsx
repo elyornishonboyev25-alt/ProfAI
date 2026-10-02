@@ -29,6 +29,8 @@ import {
   type SpeakingFullMockEntry,
 } from '@/utils/ieltsSpeakingCatalog'
 import { useSpeechRecognition } from '@/lib/speech'
+import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, microphoneError } from '@/lib/speakingMedia'
+import { transcribeAnswer } from '@/lib/speakingAudio'
 import { analyzeSpeakingResponse, type SpeakingResponseAnalysis } from '@/services/speakingAI'
 import ExaminerSession from '@/components/speaking/ExaminerSession'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -258,14 +260,18 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const [answers, setAnswers] = useState<AnswerState[]>(() => items.map(blankAnswer))
   const [recording, setRecording] = useState(false)
   const [stoppingRecording, setStoppingRecording] = useState(false)
-  const [typingMode, setTypingMode] = useState(!recognition.supported)
+  const [typingMode, setTypingMode] = useState(!canRecordAudio())
   const [drafts, setDrafts] = useState<string[]>(() => items.map(() => ''))
   const [prepLeft, setPrepLeft] = useState(0)
   const [speakLeft, setSpeakLeft] = useState(0)
   const [finished, setFinished] = useState(false)
 
-  const audioRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
+  const audioRecorderRef = useRef<AnswerRecording | null>(null)
+  const audioBlobsRef = useRef(new Map<number, Blob>())
+  const capturePendingRef = useRef(false)
+  const stopPendingRef = useRef(false)
+  const disposedRef = useRef(false)
+  const processingAbortRef = useRef<AbortController | null>(null)
   const audioStreamRef = useRef<MediaStream | null>(null)
   const recordStartRef = useRef(0)
   const latestTranscriptRef = useRef('')
@@ -308,53 +314,86 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     })
   }, [index])
 
-  // Audio capture (MediaRecorder) — saves a playback URL on stop.
+  // Audio capture works independently of the browser's speech recognition API.
   const startRecording = useCallback(async () => {
-    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    if (capturePendingRef.current || audioRecorderRef.current || stopPendingRef.current) return
+    if (!canRecordAudio()) {
       setTypingMode(true)
       return
     }
+    capturePendingRef.current = true
+    setStoppingRecording(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
+      if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
       audioStreamRef.current = stream
-      audioChunksRef.current = []
-      const recorder = new MediaRecorder(stream)
+      const recorder = new AnswerRecording(stream)
       const questionIndex = index
       recordingQuestionRef.current = questionIndex
-      recorder.ondataavailable = (e) => e.data.size > 0 && audioChunksRef.current.push(e.data)
-      recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        const url = URL.createObjectURL(blob)
-        audioUrlsRef.current.push(url)
-        updateAnswer({ audioUrl: url }, questionIndex)
-        stream.getTracks().forEach((t) => t.stop())
-        audioStreamRef.current = null
-      }
-      recorder.start()
       audioRecorderRef.current = recorder
 
       recognition.reset()
       latestTranscriptRef.current = ''
       recordStartRef.current = Date.now()
+      updateAnswer({ spoken: '', analysis: null, error: null }, questionIndex)
+      if (isPart2) setSpeakLeft(120)
       setRecording(true)
-      recognition.start()
-    } catch {
-      setTypingMode(true)
-    }
-  }, [index, recognition, updateAnswer])
+      if (recognition.supported && canRecognizeWhileRecording()) recognition.start()
+    } catch (error) {
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop())
+      audioStreamRef.current = null
+      updateAnswer({ error: microphoneError(error) })
+    } finally { capturePendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
+  }, [index, isPart2, recognition, updateAnswer])
 
   const stopRecording = useCallback(async () => {
-    if (stoppingRecording) return
+    const recorder = audioRecorderRef.current
+    if (stopPendingRef.current || !recorder) return
+    stopPendingRef.current = true
     setStoppingRecording(true)
     const questionIndex = recordingQuestionRef.current
-    audioRecorderRef.current?.stop()
-    audioRecorderRef.current = null
-    const transcript = await recognition.stop()
-    latestTranscriptRef.current = transcript
-    if (transcript) updateAnswer({ spoken: transcript, error: null }, questionIndex)
     setRecording(false)
-    setStoppingRecording(false)
-  }, [recognition, stoppingRecording, updateAnswer])
+    try {
+      const [blob, browserText] = await Promise.all([recorder.stop(), recognition.stop()])
+      audioRecorderRef.current = null
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop())
+      audioStreamRef.current = null
+      if (disposedRef.current) return
+      let transcript = browserText
+      if (blob.size) {
+        audioBlobsRef.current.set(questionIndex, blob)
+        const url = URL.createObjectURL(blob)
+        audioUrlsRef.current.push(url)
+        updateAnswer({ audioUrl: url }, questionIndex)
+        const controller = new AbortController()
+        processingAbortRef.current = controller
+        try { transcript = await transcribeAnswer(blob, controller.signal) || transcript } catch { /* Keep the browser's final words and the audio. */ }
+      }
+      if (disposedRef.current) return
+      latestTranscriptRef.current = transcript
+      updateAnswer({ spoken: transcript, error: transcript ? null : 'Your recording is saved. Retry processing below, or record again if no voice is audible.' }, questionIndex)
+    } finally { stopPendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
+  }, [recognition, updateAnswer])
+
+  const retryTranscription = useCallback(async () => {
+    const blob = audioBlobsRef.current.get(index)
+    if (!blob || stopPendingRef.current) return
+    stopPendingRef.current = true
+    setStoppingRecording(true)
+    const questionIndex = index
+    const controller = new AbortController()
+    processingAbortRef.current = controller
+    try {
+      const text = await transcribeAnswer(blob, controller.signal)
+      if (!disposedRef.current) updateAnswer({ spoken: text, error: text ? null : 'No clear words were detected. Listen to your recording and record again.' }, questionIndex)
+    } catch {
+      if (!disposedRef.current) updateAnswer({ error: 'Processing is unavailable. Your recording is saved; please retry.' }, questionIndex)
+    } finally { stopPendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
+  }, [index, updateAnswer])
+
+  useEffect(() => {
+    if (isPart2 && recording && speakLeft === 0) void stopRecording()
+  }, [isPart2, recording, speakLeft, stopRecording])
 
   const submitSpoken = useCallback(async () => {
     const questionIndex = index
@@ -388,14 +427,18 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
 
   // Cleanup audio URL when leaving a card.
   useEffect(() => {
+    disposedRef.current = false
     return () => {
+      disposedRef.current = true
+      processingAbortRef.current?.abort()
+      void audioRecorderRef.current?.stop()
       audioStreamRef.current?.getTracks().forEach((t) => t.stop())
       audioUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
 
   const selectQuestion = (nextIndex: number) => {
-    if (recording) return
+    if (recording || capturePendingRef.current || stopPendingRef.current) return
     latestTranscriptRef.current = ''
     recognition.reset()
     setIndex(Math.max(0, Math.min(items.length - 1, nextIndex)))
@@ -436,7 +479,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   return (
     <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <header className="speaking-exam-header mb-4">
-        <button onClick={onExit} disabled={recording} className="speaking-icon-button disabled:opacity-50" aria-label="Back to roadmap"><ArrowLeft className="h-5 w-5" /></button>
+        <button onClick={onExit} disabled={recording || stoppingRecording} className="speaking-icon-button disabled:opacity-50" aria-label="Back to roadmap"><ArrowLeft className="h-5 w-5" /></button>
         <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking · Part {day.part}</p><h1 className="truncate text-lg font-black text-slate-900">{day.title}</h1><p className="text-xs text-slate-500">{day.subtitle}</p></div>
         <span className="speaking-part-pill">{index + 1} / {items.length}</span>
       </header>
@@ -546,7 +589,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
               <button onClick={submitTyped} disabled={!draft.trim() || answer.loading} className="arena-primary-btn justify-center disabled:opacity-50">
                 <Send className="mr-2 h-4 w-4" /> Submit for AI feedback
               </button>
-              {recognition.supported ? (
+              {canRecordAudio() ? (
                 <button onClick={() => setTypingMode(false)} className="text-xs font-medium text-slate-500 hover:text-rose-600">
                   <Mic className="mr-1 inline h-3 w-3" /> Use microphone instead
                 </button>
@@ -556,7 +599,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         ) : (
           <div className="flex flex-col items-center gap-3">
             {!recording ? (
-              <button onClick={() => void startRecording()} className="arena-primary-btn cta-sheen px-6 py-3">
+              <button disabled={stoppingRecording} onClick={() => void startRecording()} className="arena-primary-btn cta-sheen px-6 py-3 disabled:opacity-50">
                 <Mic className="mr-2 h-5 w-5" /> Record answer
               </button>
             ) : (
@@ -566,12 +609,12 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
             )}
 
             {!recording && answer.spoken ? (
-              <button onClick={submitSpoken} disabled={answer.loading} className="arena-secondary-btn text-sm disabled:opacity-50">
+              <button onClick={submitSpoken} disabled={answer.loading || stoppingRecording} className="arena-secondary-btn text-sm disabled:opacity-50">
                 <Send className="mr-1.5 h-4 w-4" /> Send for AI analysis
               </button>
             ) : null}
 
-            <button onClick={() => setTypingMode(true)} disabled={recording} className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 disabled:opacity-50">
+            <button onClick={() => setTypingMode(true)} disabled={recording || stoppingRecording} className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 disabled:opacity-50">
               <Pencil className="h-3 w-3" /> Type instead
             </button>
             {recognition.error ? <p className="text-xs text-red-600">{recognition.error}</p> : null}
@@ -598,6 +641,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         ) : null}
 
         {answer.error ? <p className="mt-3 text-sm text-red-600">{answer.error}</p> : null}
+        {answer.audioUrl && !answer.spoken && !recording ? <button disabled={stoppingRecording} onClick={() => void retryTranscription()} className="arena-secondary-btn mt-3 disabled:opacity-50">{stoppingRecording ? 'Processing recording…' : 'Retry processing saved answer'}</button> : null}
       </div>
 
       {/* AI feedback */}
@@ -615,10 +659,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
 
       {/* Footer nav */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-        <button onClick={goPrev} disabled={index === 0 || recording} className="arena-secondary-btn disabled:opacity-50">
+        <button onClick={goPrev} disabled={index === 0 || recording || stoppingRecording} className="arena-secondary-btn disabled:opacity-50">
           <ChevronLeft className="mr-1 h-4 w-4" />  <UiText text={"Previous"} /> </button>
         {index < items.length - 1 ? (
-          <button onClick={goNext} disabled={recording} className="arena-primary-btn disabled:opacity-50">
+          <button onClick={goNext} disabled={recording || stoppingRecording} className="arena-primary-btn disabled:opacity-50">
             Next question <ChevronRight className="ml-1 h-4 w-4" />
           </button>
         ) : (

@@ -7,10 +7,12 @@ export default function MicVisualizer({
   stream,
   active,
   bars = 28,
+  audioContext,
 }: {
   stream: MediaStream | null
   active: boolean
   bars?: number
+  audioContext?: AudioContext | null
 }) {
   const barRefs = useRef<Array<HTMLSpanElement | null>>([])
   const rafRef = useRef<number | null>(null)
@@ -33,7 +35,7 @@ export default function MicVisualizer({
       window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtx) return
 
-    const context = new AudioCtx()
+    const context = audioContext ?? new AudioCtx()
     void context.resume().catch(() => {})
     const analyser = context.createAnalyser()
     analyser.fftSize = 64
@@ -67,9 +69,9 @@ export default function MicVisualizer({
       } catch {
         // The browser may already have disconnected a stopped stream.
       }
-      void context.close().catch(() => {})
+      if (!audioContext) void context.close().catch(() => {})
     }
-  }, [active, stream, bars])
+  }, [active, stream, bars, audioContext])
 
   return (
     <div className="flex h-14 items-center justify-center gap-[3px]" aria-hidden>

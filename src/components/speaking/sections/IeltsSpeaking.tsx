@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { AnswerRecording, canRecordAudio, microphoneError } from '@/lib/speakingMedia'
 import { motion } from 'framer-motion'
 import { BookOpen, Eye, EyeOff, Mic, Pause, Play, Square, Timer } from 'lucide-react'
 import {
@@ -252,37 +253,65 @@ function SelfRecorder() {
   const [recording, setRecording] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [unsupported, setUnsupported] = useState(false)
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const recorderRef = useRef<AnswerRecording | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const urlRef = useRef<string | null>(null)
+  const pendingRef = useRef(false)
+  const disposedRef = useRef(false)
+
+  useEffect(() => {
+    disposedRef.current = false
+    return () => {
+      disposedRef.current = true
+      void recorderRef.current?.stop()
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current)
+    }
+  }, [])
 
   const start = async () => {
-    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    if (pendingRef.current || recorderRef.current) return
+    if (!canRecordAudio()) {
       setUnsupported(true)
       return
     }
+    pendingRef.current = true
+    setBusy(true)
+    setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
-      chunksRef.current = []
-      recorder.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data)
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        setAudioUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev)
-          return URL.createObjectURL(blob)
-        })
-        stream.getTracks().forEach((t) => t.stop())
-      }
-      recorder.start()
+      if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
+      streamRef.current = stream
+      const recorder = new AnswerRecording(stream)
       recorderRef.current = recorder
       setRecording(true)
-    } catch {
-      setUnsupported(true)
-    }
+    } catch (reason) {
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      setError(microphoneError(reason))
+    } finally { pendingRef.current = false; if (!disposedRef.current) setBusy(false) }
   }
-  const stop = () => {
-    recorderRef.current?.stop()
-    setRecording(false)
+  const stop = async () => {
+    const recorder = recorderRef.current
+    if (!recorder || pendingRef.current) return
+    pendingRef.current = true
+    setBusy(true)
+    try {
+      const blob = await recorder.stop()
+      if (!disposedRef.current) {
+        if (urlRef.current) URL.revokeObjectURL(urlRef.current)
+        urlRef.current = URL.createObjectURL(blob)
+        setAudioUrl(urlRef.current)
+        setRecording(false)
+      }
+    } finally {
+      recorderRef.current = null
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+      pendingRef.current = false
+      if (!disposedRef.current) setBusy(false)
+    }
   }
 
   return (
@@ -291,14 +320,15 @@ function SelfRecorder() {
         <Mic className="h-4 w-4" /> Record yourself
       </span>
       {!recording ? (
-        <button onClick={() => void start()} className="arena-secondary-btn text-sm">
+        <button disabled={busy} onClick={() => void start()} className="arena-secondary-btn text-sm disabled:opacity-50">
           <Play className="mr-1.5 h-3.5 w-3.5" /> Record
         </button>
       ) : (
-        <button onClick={stop} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 text-sm">
+        <button disabled={busy} onClick={() => void stop()} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 text-sm disabled:opacity-50">
           <Square className="mr-1.5 h-3.5 w-3.5 fill-white" /> Stop
         </button>
       )}
+      {error ? <p role="alert" className="w-full text-sm text-red-600">{error}</p> : null}
       {audioUrl ? (
         <audio controls src={audioUrl} className="h-9 max-w-[260px] flex-1">
           <track kind="captions" />

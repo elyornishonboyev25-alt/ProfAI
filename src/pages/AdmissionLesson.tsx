@@ -1,260 +1,139 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Lightbulb, Target } from 'lucide-react'
-import { AmbientBackdrop, Burst, Reveal } from '@/components/fx'
-import { isLessonCompleted, toggleLessonCompleted } from '@/utils/admissionProgressStore'
+import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, Lightbulb, Target } from 'lucide-react'
+import { getCompletedLessons, subscribeLessonProgress, toggleLessonCompleted } from '@/utils/admissionProgressStore'
 import LucideIcon from '@/components/admission/LucideIcon'
-import { getAdjacentLessons, getLessonBySlug, getPhaseById } from '@/data/admission'
+import { getAdjacentLessons, getLessonBySlug, getLessonsByPhase, getPhaseById } from '@/data/admission'
 import type { LessonBlock } from '@/data/admission'
+import './admission-lessons.css'
 
-function Block({ block, accent }: { block: LessonBlock; accent: string }) {
+function Block({ block }: { block: LessonBlock }) {
   switch (block.type) {
     case 'lead':
-      return <p className="text-[17px] font-medium leading-8 text-slate-700">{block.text}</p>
+      return <p className="lesson-lead">{block.text}</p>
     case 'heading':
-      return <h2 className="mt-8 text-xl font-black tracking-tight text-slate-900">{block.text}</h2>
+      return <h2>{block.text}</h2>
     case 'paragraph':
-      return <p className="mt-4 text-[15px] leading-7 text-slate-600">{block.text}</p>
+      return <p>{block.text}</p>
     case 'list':
-      return (
-        <ul className="mt-4 space-y-2.5">
-          {block.items.map((item, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-[15px] leading-7 text-slate-600">
-              <CheckCircle2 className="mt-1 h-4 w-4 flex-shrink-0" style={{ color: accent }} />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      )
+      return <ul className="lesson-checklist">{block.items.map((item, index) => <li key={index}><CheckCircle2 size={17} aria-hidden="true" /><span>{item}</span></li>)}</ul>
     case 'tip':
-      return (
-        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
-          <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
-          <p className="text-[14px] leading-7 text-amber-900">{block.text}</p>
-        </div>
-      )
+      return <aside className="lesson-callout lesson-tip"><Lightbulb size={21} aria-hidden="true" /><p>{block.text}</p></aside>
     case 'callout':
-      return (
-        <div
-          className="mt-5 rounded-2xl border p-5"
-          style={{ borderColor: `${accent}40`, background: `${accent}0d` }}
-        >
-          <p className="text-[14px] font-black uppercase tracking-[0.1em]" style={{ color: accent }}>
-            {block.title}
-          </p>
-          <p className="mt-1.5 text-[15px] leading-7 text-slate-700">{block.text}</p>
-        </div>
-      )
+      return <aside className="lesson-callout"><div><h3>{block.title}</h3><p>{block.text}</p></div></aside>
     default:
       return null
   }
 }
 
 export default function AdmissionLesson() {
-  const navigate = useNavigate()
   const { slug } = useParams<{ slug: string }>()
   const lesson = slug ? getLessonBySlug(slug) : undefined
   const phase = lesson ? getPhaseById(lesson.phaseId) : undefined
   const { prev, next } = slug ? getAdjacentLessons(slug) : {}
+  const [completedSlugs, setCompletedSlugs] = useState(() => getCompletedLessons())
 
-  const [completed, setCompleted] = useState(() => (slug ? isLessonCompleted(slug) : false))
-  const [justCompleted, setJustCompleted] = useState(false)
-
-  // Reset scroll when moving between lessons.
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' })
-    setCompleted(slug ? isLessonCompleted(slug) : false)
-    setJustCompleted(false)
-  }, [slug])
+  useEffect(() => subscribeLessonProgress(() => setCompletedSlugs(getCompletedLessons())), [])
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }) }, [slug])
 
   const handleToggleComplete = () => {
     if (!slug) return
     const nowCompleted = toggleLessonCompleted(slug)
-    setCompleted(nowCompleted)
-    setJustCompleted(nowCompleted)
+    setCompletedSlugs((previous) => {
+      const updated = new Set(previous)
+      if (nowCompleted) updated.add(slug)
+      else updated.delete(slug)
+      return updated
+    })
   }
 
   if (!lesson || !phase) {
     return (
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-10">
-        <AmbientBackdrop variant="red" />
-        <div className="relative mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-white p-10 text-center">
-          <h1 className="text-2xl font-black text-slate-900"> <UiText text={"Lesson not found"} /> </h1>
-          <p className="mt-2 text-slate-500"> <UiText text={"This lesson doesn’t exist or hasn’t been added yet."} /> </p>
-          <button type="button" onClick={() => navigate('/admission/lessons')} className="premium-back-btn mt-6">
-            <ArrowLeft className="h-3.5 w-3.5" />
-             <UiText text={"Back to lessons"} /> </button>
+      <main className="workspace-page admission-lessons-page">
+        <div className="lesson-not-found lessons-glass">
+          <BookOpen size={32} aria-hidden="true" />
+          <h1><UiText text="Lesson not found" /></h1>
+          <p><UiText text="This lesson doesn’t exist or hasn’t been added yet." /></p>
+          <Link to="/admission/lessons" className="route-back-button"><ArrowLeft size={16} aria-hidden="true" /><UiText text="Back to lessons" /></Link>
         </div>
-      </div>
+      </main>
     )
   }
 
-  const accent = phase.accent
+  const completed = completedSlugs.has(lesson.slug)
+  const phaseLessons = getLessonsByPhase(phase.id)
+  const phaseDone = phaseLessons.filter((item) => completedSlugs.has(item.slug)).length
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <AmbientBackdrop variant="red" />
+    <main className="workspace-page admission-lessons-page lesson-reader-page">
+      <div className="lessons-shell">
+        <Link to="/admission/lessons" className="route-back-button lessons-back"><ArrowLeft size={16} aria-hidden="true" /><UiText text="All lessons" /></Link>
 
-      <div className="relative mx-auto w-full max-w-3xl space-y-6">
-        {/* Hero */}
-        <Reveal>
-          <section
-            className="relative overflow-hidden rounded-[1.8rem] p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:p-8"
-            style={{ background: phase.gradient }}
-          >
-            <div
-              className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full opacity-30 blur-3xl"
-              style={{ background: 'radial-gradient(circle,#ffffff,transparent 70%)' }}
-            />
-            <div className="relative">
-              <button
-                onClick={() => navigate('/admission/lessons')}
-                className="route-back-button"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                 <UiText text={"All lessons"} /> </button>
-
-              <div className="mt-5 flex items-center gap-3">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-                  <LucideIcon name={lesson.icon} className="h-6 w-6" />
-                </span>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
-                     <UiText text={"Lesson"} /> {String(lesson.order).padStart(2, '0')} · {phase.title}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] font-semibold text-white/80">
-                    <span className="inline-flex items-center gap-1">
-                      <Clock3 className="h-3.5 w-3.5" />
-                      {lesson.durationMin}  <UiText text={"min read"} /> </span>
-                    <span className="rounded-full bg-white/15 px-2 py-0.5">{lesson.level}</span>
-                  </div>
-                </div>
-              </div>
-
-              <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight">{lesson.title}</h1>
-              <p className="mt-2 text-[15px] leading-7 text-white/85">{lesson.summary}</p>
-            </div>
-          </section>
-        </Reveal>
-
-        {/* Body */}
-        <Reveal delay={0.04}>
-          <article className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
-            {lesson.blocks.map((block, i) => (
-              <Block key={i} block={block} accent={accent} />
-            ))}
-
-            {/* Key takeaways */}
-            <div className="mt-9 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-              <h3 className="flex items-center gap-2 text-base font-black text-slate-900">
-                <CheckCircle2 className="h-5 w-5" style={{ color: accent }} />
-                 <UiText text={"Key takeaways"} /> </h3>
-              <ul className="mt-3 space-y-2">
-                {lesson.keyTakeaways.map((point, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[14px] leading-6 text-slate-700">
-                    <span
-                      className="mt-2 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                      style={{ background: accent }}
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Action step */}
-            <div
-              className="mt-4 flex items-start gap-3 rounded-2xl border p-5"
-              style={{ borderColor: `${accent}40`, background: `${accent}0d` }}
-            >
-              <Target className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: accent }} />
-              <div>
-                <p className="text-[12px] font-black uppercase tracking-[0.1em]" style={{ color: accent }}>
-                   <UiText text={"Your action step"} /> </p>
-                <p className="mt-1 text-[15px] leading-7 text-slate-700">{lesson.actionStep}</p>
-              </div>
-            </div>
-          </article>
-        </Reveal>
-
-        {/* Mark complete (concept: 23-StudyAbroad-Lessons path nodes) */}
-        <Reveal delay={0.02}>
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4">
-            <Burst count={20} play={justCompleted} />
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                    completed ? 'bg-emerald-500 text-white shadow-[0_8px_18px_rgba(16,185,129,0.35)]' : 'bg-slate-100 text-slate-400'
-                  }`}
-                >
-                  <CheckCircle2 className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-black text-slate-900">{completed ? 'Lesson completed' : 'Finished this lesson?'}</p>
-                  <p className="text-[12px] text-slate-500">
-                    {completed ? 'It now counts toward your roadmap progress.' : 'Mark it to track your roadmap progress.'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleToggleComplete}
-                className={`interactive-lift rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                  completed
-                    ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                    : 'cta-sheen bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] text-white shadow-[0_10px_22px_rgba(37,99,235,0.28)]'
-                }`}
-              >
-                {completed ? 'Completed ✓' : 'Mark as complete'}
-              </button>
+        <header className="lesson-reader-hero lessons-glass">
+          <div className="lesson-reader-hero-copy">
+            <span className="lessons-eyebrow"><LucideIcon name={phase.icon} className="h-4 w-4" /><UiText text="Phase" /> {phase.order} <span>·</span> {phase.title}</span>
+            <h1>{lesson.title}</h1>
+            <p>{lesson.summary}</p>
+            <div className="lesson-reader-meta">
+              <span><Clock3 size={15} aria-hidden="true" />{lesson.durationMin} <UiText text="min read" /></span>
+              <span className="lessons-level">{lesson.level}</span>
+              {completed ? <span className="lesson-completed-label"><CheckCircle2 size={15} aria-hidden="true" /><UiText text="Completed" /></span> : null}
             </div>
           </div>
-        </Reveal>
+          <div className="lesson-reader-emblem" aria-hidden="true"><LucideIcon name={lesson.icon} className="h-10 w-10" /><span>{String(lesson.order).padStart(2, '0')}</span></div>
+        </header>
 
-        {/* Prev / Next */}
-        <Reveal delay={0.04}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {prev ? (
-              <button
-                onClick={() => navigate(`/admission/lessons/${prev.slug}`)}
-                className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:shadow-md"
-              >
-                <ArrowLeft className="h-5 w-5 flex-shrink-0 text-slate-400 transition group-hover:-translate-x-1" />
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"> <UiText text={"Previous"} /> </span>
-                  <span className="block truncate text-[14px] font-bold text-slate-800">{prev.title}</span>
-                </span>
+        <div className="lesson-reader-layout">
+          <div className="lesson-reader-main">
+            <article className="lesson-article">
+              {lesson.blocks.map((block, index) => <Block key={index} block={block} />)}
+
+              <section className="lesson-takeaways">
+                <h2><CheckCircle2 size={21} aria-hidden="true" /><UiText text="Key takeaways" /></h2>
+                <ul>{lesson.keyTakeaways.map((point, index) => <li key={index}>{point}</li>)}</ul>
+              </section>
+
+              <section className="lesson-callout lesson-action">
+                <Target size={23} aria-hidden="true" />
+                <div><h2><UiText text="Your action step" /></h2><p>{lesson.actionStep}</p></div>
+              </section>
+            </article>
+
+            <section className={`lesson-completion lessons-glass${completed ? ' is-done' : ''}`} aria-labelledby="lesson-completion-title">
+              <span className="lessons-card-icon" aria-hidden="true"><CheckCircle2 size={23} /></span>
+              <div className="lesson-completion-copy" aria-live="polite">
+                <h2 id="lesson-completion-title">{completed ? 'Lesson completed' : 'Finished this lesson?'}</h2>
+                <p>{completed ? 'It now counts toward your roadmap progress.' : 'Mark it to track your roadmap progress.'}</p>
+              </div>
+              <button type="button" onClick={handleToggleComplete} aria-pressed={completed} className="lesson-completion-button">
+                {completed ? <CheckCircle2 size={16} aria-hidden="true" /> : null}{completed ? 'Completed ✓' : 'Mark as complete'}
               </button>
-            ) : (
-              <div className="hidden sm:block" />
-            )}
-            {next ? (
-              <button
-                onClick={() => navigate(`/admission/lessons/${next.slug}`)}
-                className="group flex items-center justify-end gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:border-slate-300 hover:shadow-md"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"> <UiText text={"Next"} /> </span>
-                  <span className="block truncate text-[14px] font-bold text-slate-800">{next.title}</span>
-                </span>
-                <ArrowRight className="h-5 w-5 flex-shrink-0 text-slate-400 transition group-hover:translate-x-1" />
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/admission/universities')}
-                className="group flex items-center justify-end gap-3 rounded-2xl border p-4 text-right text-white transition hover:shadow-lg"
-                style={{ background: phase.gradient }}
-              >
-                <span>
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-white/70"> <UiText text={"Finished!"} /> </span>
-                  <span className="block text-[14px] font-bold"> <UiText text={"Explore universities →"} /> </span>
-                </span>
-              </button>
-            )}
+            </section>
+
+            <nav className="lesson-adjacent-navigation" aria-label="Lesson navigation">
+              {prev ? <Link to={`/admission/lessons/${prev.slug}`} className="lesson-adjacent-link lessons-glass"><ArrowLeft size={19} aria-hidden="true" /><span><small><UiText text="Previous" /></small><strong>{prev.title}</strong></span></Link> : <span className="lesson-nav-spacer" />}
+              {next ? <Link to={`/admission/lessons/${next.slug}`} className="lesson-adjacent-link lessons-glass is-next"><span><small><UiText text="Next" /></small><strong>{next.title}</strong></span><ArrowRight size={19} aria-hidden="true" /></Link> : <Link to="/admission/universities" className="lesson-adjacent-link lessons-glass is-next"><span><small><UiText text="Finished!" /></small><strong><UiText text="Explore universities →" /></strong></span><ArrowRight size={19} aria-hidden="true" /></Link>}
+            </nav>
           </div>
-        </Reveal>
+
+          <aside className="lesson-reader-sidebar lessons-glass">
+            <div className="lesson-sidebar-heading">
+              <span className="lessons-eyebrow"><UiText text="Phase" /> {phase.order}</span>
+              <h2>{phase.title}</h2>
+              <p>{phaseDone}/{phaseLessons.length} <UiText text="Lessons completed" /></p>
+              <div className="lessons-progress-track" aria-hidden="true"><span style={{ width: `${(phaseDone / phaseLessons.length) * 100}%` }} /></div>
+            </div>
+            <nav aria-label={phase.title} className="lesson-sidebar-links">
+              {phaseLessons.map((item) => <Link key={item.id} to={`/admission/lessons/${item.slug}`} aria-current={item.slug === slug ? 'page' : undefined}>
+                <span className="lesson-sidebar-number">{completedSlugs.has(item.slug) ? <CheckCircle2 size={16} aria-hidden="true" /> : String(item.order).padStart(2, '0')}</span>
+                <span>{item.title}</span>
+              </Link>)}
+            </nav>
+            <Link to="/admission/lessons" className="lesson-sidebar-back"><BookOpen size={16} aria-hidden="true" /><UiText text="All lessons" /><ArrowRight size={15} aria-hidden="true" /></Link>
+          </aside>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

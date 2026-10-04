@@ -1,165 +1,121 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
-import { AmbientBackdrop, CountUp, ProgressRing, Reveal, Stagger, StaggerItem } from '@/components/fx'
+import { Link } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, Clock3, GraduationCap } from 'lucide-react'
+import { ProgressRing } from '@/components/fx'
 import LucideIcon from '@/components/admission/LucideIcon'
-import { getLessonsByPhase, lessonPhases, LESSON_COUNT, totalLessonMinutes } from '@/data/admission'
+import { getLessons, getLessonsByPhase, lessonPhases, LESSON_COUNT, totalLessonMinutes } from '@/data/admission'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
-
-const LEVEL_TONE: Record<string, string> = {
-  Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Intermediate: 'bg-amber-50 text-amber-700 border-amber-200',
-  Advanced: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-}
+import './admission-lessons.css'
 
 export default function AdmissionLessons() {
-  const navigate = useNavigate()
-  const studyHours = Math.round(totalLessonMinutes / 60)
   const [completed, setCompleted] = useState<Set<string>>(() => getCompletedLessons())
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
+  const orderedLessons = getLessons()
+  const completedCount = orderedLessons.filter((lesson) => completed.has(lesson.slug)).length
+  const progress = Math.round((completedCount / LESSON_COUNT) * 100)
+  const nextLesson = orderedLessons.find((lesson) => !completed.has(lesson.slug))
+
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <AmbientBackdrop variant="red" />
+    <main className="workspace-page admission-lessons-page">
+      <div className="lessons-shell">
+        <Link to="/admission" className="route-back-button lessons-back">
+          <ArrowLeft size={16} aria-hidden="true" /><UiText text="Back to Applications" />
+        </Link>
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-7">
-        <Reveal>
-          <section className="premium-hero p-6 sm:p-9">
-            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
-              <div>
-                <div className="premium-top-controls">
-                  <button type="button" onClick={() => navigate('/admission')} className="premium-back-btn">
-                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                    <UiText text="Back to Applications" />
-                  </button>
-                  <span className="premium-top-chip">
-                    <GraduationCap className="h-3.5 w-3.5" />
-                     <UiText text={"Study-Abroad Track"} /> </span>
-                </div>
-                <h1 className="premium-section-title mt-4">
-                   <UiText text={"Study Abroad"} /> <span className="arena-title-accent-red"> <UiText text={"Lessons"} /> </span>
-                </h1>
-                <p className="premium-section-subtitle max-w-3xl">
-                  A {LESSON_COUNT} <UiText text={"-lesson roadmap that walks you through the entire journey — five phases, from your first decision to thriving on campus. Follow it in order, or jump straight to the phase you need next."} /> </p>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label"> <UiText text={"Lessons"} /> </p>
-                  <p className="hero-metric-value-sm">
-                    <CountUp value={LESSON_COUNT} />
-                  </p>
-                  <p className="hero-metric-note"> <UiText text={"Across 5 phases"} /> </p>
-                </div>
-                <div className="hero-metric-card interactive-lift">
-                  <p className="hero-metric-label"> <UiText text={"Study time"} /> </p>
-                  <p className="hero-metric-value-sm">
-                    ≈ <CountUp value={studyHours} />h
-                  </p>
-                  <p className="hero-metric-note"> <UiText text={"Self-paced"} /> </p>
-                </div>
-                <div className="hero-metric-card interactive-lift flex-row items-center gap-3">
-                  <ProgressRing value={(completed.size / LESSON_COUNT) * 100} size={68} stroke={7}>
-                    <span className="text-xs font-black text-slate-900">{Math.round((completed.size / LESSON_COUNT) * 100)}%</span>
-                  </ProgressRing>
-                  <div>
-                    <p className="hero-metric-label"> <UiText text={"Overall progress"} /> </p>
-                    <p className="mt-1 text-lg font-black text-slate-900">{completed.size}/{LESSON_COUNT}</p>
-                    <p className="text-[10px] font-semibold text-slate-500"> <UiText text={"Lessons completed"} /> </p>
-                  </div>
-                </div>
-              </div>
+        <header className="lessons-hero lessons-glass">
+          <div className="lessons-hero-copy">
+            <span className="lessons-eyebrow"><GraduationCap size={16} aria-hidden="true" /><UiText text="Study-Abroad Track" /></span>
+            <h1><UiText text="Study Abroad" /> <span><UiText text="Lessons" /></span></h1>
+            <p>{LESSON_COUNT}<UiText text="-lesson roadmap that walks you through the entire journey — five phases, from your first decision to thriving on campus. Follow it in order, or jump straight to the phase you need next." /></p>
+            <div className="lessons-hero-facts">
+              <span><BookOpen size={16} aria-hidden="true" /><strong>{LESSON_COUNT}</strong> <UiText text="Lessons" /></span>
+              <span><Clock3 size={16} aria-hidden="true" /><strong>≈ {Math.round(totalLessonMinutes / 60)}h</strong> <UiText text="Study time" /></span>
+              <span><UiText text="Self-paced" /></span>
             </div>
-          </section>
-        </Reveal>
+          </div>
+          <div className="lessons-progress-panel" role="status" aria-live="polite">
+            <ProgressRing value={progress} size={112} stroke={8} from="#e34b59" to="#b72336" trackColor="rgba(150,165,187,.22)">
+              <strong className="lessons-progress-value">{progress}%</strong>
+            </ProgressRing>
+            <div>
+              <span className="lessons-eyebrow"><UiText text="Overall progress" /></span>
+              <p className="lessons-progress-count"><strong>{completedCount}</strong><span> / {LESSON_COUNT}</span></p>
+              <p className="lessons-progress-label"><UiText text="Lessons completed" /></p>
+            </div>
+          </div>
+        </header>
 
-        {/* Phases */}
-        {lessonPhases.map((phase, phaseIndex) => {
-          const phaseLessons = getLessonsByPhase(phase.id)
-          const phaseDone = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length
-          return (
-            <Reveal key={phase.id} delay={0.03}>
-              <section>
-                {/* Phase header */}
-                <div
-                  className="relative overflow-hidden rounded-[1.5rem] p-5 text-white shadow-[0_18px_44px_rgba(15,23,42,0.18)] sm:p-6"
-                  style={{ background: phase.gradient }}
-                >
-                  <div
-                    className="pointer-events-none absolute -right-12 -top-14 h-44 w-44 rounded-full opacity-30 blur-2xl"
-                    style={{ background: 'radial-gradient(circle,#ffffff,transparent 70%)' }}
-                  />
-                  <div className="relative flex items-center gap-4">
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-                      <LucideIcon name={phase.icon} className="h-7 w-7" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">
-                         <UiText text={"Phase"} /> {phaseIndex + 1} · {phaseLessons.length}  <UiText text={"lessons"} /> </p>
-                      <h2 className="text-xl font-black tracking-tight sm:text-2xl">{phase.title}</h2>
-                      <p className="mt-0.5 text-[13px] font-medium text-white/80">{phase.subtitle}</p>
-                    </div>
-                    {phaseDone > 0 ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-black backdrop-blur">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {phaseDone}/{phaseLessons.length}
-                      </span>
-                    ) : null}
+        <Link to={nextLesson ? `/admission/lessons/${nextLesson.slug}` : '/admission/universities'} className="lessons-resume lessons-glass">
+          <span className="lessons-resume-icon" aria-hidden="true">{nextLesson ? <LucideIcon name={nextLesson.icon} className="h-6 w-6" /> : <CheckCircle2 size={24} />}</span>
+          <span className="lessons-resume-copy">
+            <small><UiText text={nextLesson ? 'Continue learning' : 'Completed'} /></small>
+            <strong>{nextLesson ? <><UiText text="Lesson" /> {nextLesson.order}: {nextLesson.title}</> : <><UiText text="Lessons completed" />: {LESSON_COUNT}/{LESSON_COUNT}</>}</strong>
+          </span>
+          <span className="lessons-resume-action"><UiText text={nextLesson ? 'Continue' : 'Explore universities →'} /><ArrowRight size={18} aria-hidden="true" /></span>
+        </Link>
+
+        <nav className="lessons-phase-navigation" aria-label="Study-abroad phases">
+          {lessonPhases.map((phase, index) => {
+            const phaseLessons = getLessonsByPhase(phase.id)
+            const done = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length
+            return (
+              <a key={phase.id} href={`#phase-${phase.id}`} className="lessons-phase-link lessons-glass">
+                <span className="lessons-phase-link-top"><LucideIcon name={phase.icon} className="h-5 w-5" /><span>{String(index + 1).padStart(2, '0')}</span></span>
+                <strong>{phase.title}</strong>
+                <span className="lessons-phase-link-bottom"><UiText text="Phase" /> {index + 1}<span>{done}/{phaseLessons.length}<ArrowUpRight size={14} aria-hidden="true" /></span></span>
+              </a>
+            )
+          })}
+        </nav>
+
+        <div className="lessons-phases">
+          {lessonPhases.map((phase, index) => {
+            const phaseLessons = getLessonsByPhase(phase.id)
+            const done = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length
+            return (
+              <section key={phase.id} id={`phase-${phase.id}`} className="lessons-phase" aria-labelledby={`phase-title-${phase.id}`}>
+                <header className="lessons-phase-header">
+                  <span className="lessons-phase-icon lessons-glass" aria-hidden="true"><LucideIcon name={phase.icon} className="h-6 w-6" /></span>
+                  <div className="lessons-phase-copy">
+                    <p className="lessons-eyebrow"><UiText text="Phase" /> {index + 1} <span>·</span> {phaseLessons.length} <UiText text="lessons" /></p>
+                    <h2 id={`phase-title-${phase.id}`}>{phase.title}</h2>
+                    <p>{phase.subtitle}</p>
                   </div>
-                  {/* phase progress line (concept: 23-StudyAbroad-Lessons) */}
-                  <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/20">
-                    <div
-                      className="h-full rounded-full bg-white/90 transition-[width] duration-700"
-                      style={{ width: `${phaseLessons.length ? (phaseDone / phaseLessons.length) * 100 : 0}%` }}
-                    />
+                  <div className="lessons-phase-progress">
+                    <span>{done}/{phaseLessons.length} <UiText text="Completed" /></span>
+                    <div className="lessons-progress-track" aria-hidden="true"><span style={{ width: `${(done / phaseLessons.length) * 100}%` }} /></div>
                   </div>
+                </header>
+
+                <div className="lessons-card-grid">
+                  {phaseLessons.map((lesson) => {
+                    const isDone = completed.has(lesson.slug)
+                    const isNext = lesson.slug === nextLesson?.slug
+                    return (
+                      <Link key={lesson.id} to={`/admission/lessons/${lesson.slug}`} className={`lessons-card lessons-glass${isDone ? ' is-done' : ''}${isNext ? ' is-next' : ''}`} aria-current={isNext ? 'step' : undefined}>
+                        <div className="lessons-card-top">
+                          <span className="lessons-card-icon" aria-hidden="true">{isDone ? <CheckCircle2 size={24} /> : <LucideIcon name={lesson.icon} className="h-6 w-6" />}</span>
+                          <span className="lessons-card-number" aria-hidden="true">{String(lesson.order).padStart(2, '0')}</span>
+                        </div>
+                        <p className="lessons-card-kicker"><UiText text="Lesson" /> {String(lesson.order).padStart(2, '0')}{isDone ? <span><CheckCircle2 size={12} aria-hidden="true" /><UiText text="Completed" /></span> : null}</p>
+                        <h3>{lesson.title}</h3>
+                        <p className="lessons-card-summary">{lesson.summary}</p>
+                        <div className="lessons-card-footer">
+                          <span><Clock3 size={14} aria-hidden="true" />{lesson.durationMin} <UiText text="min" /></span>
+                          <span className="lessons-level">{lesson.level}</span>
+                          <ArrowUpRight size={18} className="lessons-card-arrow" aria-hidden="true" />
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
-
-                {/* Lessons grid */}
-                <Stagger className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {phaseLessons.map((lesson) => (
-                    <StaggerItem key={lesson.id} className="h-full">
-                      <button
-                        onClick={() => navigate(`/admission/lessons/${lesson.slug}`)}
-                        className="group flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.12)]"
-                        style={{ borderTop: `3px solid ${phase.accent}` }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm"
-                            style={{ background: completed.has(lesson.slug) ? 'linear-gradient(135deg,#10b981,#059669)' : phase.gradient }}
-                          >
-                            {completed.has(lesson.slug) ? <CheckCircle2 className="h-5 w-5" /> : <LucideIcon name={lesson.icon} className="h-5 w-5" />}
-                          </span>
-                          <span className="text-2xl font-black text-slate-100 transition group-hover:text-slate-200">
-                            {String(lesson.order).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <h3 className="mt-3 text-[15px] font-black leading-snug tracking-tight text-slate-900">
-                          {lesson.title}
-                        </h3>
-                        <p className="mt-2 flex-1 text-[13px] leading-6 text-slate-600 line-clamp-3">{lesson.summary}</p>
-                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                          <span className="inline-flex items-center gap-3 text-[11px] font-semibold text-slate-400">
-                            <span className="inline-flex items-center gap-1">
-                              <Clock3 className="h-3.5 w-3.5" />
-                              {lesson.durationMin}  <UiText text={"min"} /> </span>
-                            <span className={`rounded-full border px-2 py-0.5 ${LEVEL_TONE[lesson.level]}`}>
-                              {lesson.level}
-                            </span>
-                          </span>
-                          <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-slate-500" />
-                        </div>
-                      </button>
-                    </StaggerItem>
-                  ))}
-                </Stagger>
               </section>
-            </Reveal>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

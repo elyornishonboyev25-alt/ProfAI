@@ -1,3 +1,4 @@
+import { moduleTimes, totalTime } from './timing'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
@@ -63,10 +64,12 @@ export async function syncSATAttemptResult(
     score: !complete ? report.percent : section ? Math.round((range[0] + range[1]) / 20) * 10 : report.midpoint,
     maxScore: !complete ? 100 : section ? 800 : 1600,
     accuracy: report.percent,
-    durationSec: Math.min(8 * 60 * 60, Math.max(0, Math.round((endedAt - attempt.startedAt) / 1000))),
+    durationSec: Math.min(8 * 60 * 60, Math.round(totalTime(attempt, test.modules))),
     completedAt: new Date(endedAt).toISOString(),
     assignmentId,
     breakdown: {
+      mode: attempt.mode,
+      moduleElapsedSeconds: moduleTimes(attempt, test.modules),
       readingWritingRange: report.readingWritingRange,
       mathRange: report.mathRange,
       correct: report.correct,

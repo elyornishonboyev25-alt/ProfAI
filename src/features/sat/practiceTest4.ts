@@ -72,7 +72,10 @@ export type SATAttempt = {
   terminationReason?: string
   moduleStartedAt: Record<string, number>
   moduleDeadlines: Record<string, number>
-  /** Remaining whole-test exam seconds, or elapsed whole-test practice seconds, while paused. */
+  /** Active seconds recorded per module, excluding pauses. */
+  moduleElapsedSeconds?: Record<string, number>
+  moduleTimerStartedAt?: number
+  /** Remaining module exam seconds, or elapsed module practice seconds, while paused. */
   pausedModuleSeconds?: number
   timerPausedAt?: number
 }
@@ -361,7 +364,6 @@ export function scoreSATPracticeTest4(answers: Record<string, string>): SATScore
 export function createSATAttempt(testId: string, modules: SATModule[], mode: SATMode): SATAttempt {
   const now = Date.now()
   const firstModule = modules[0]
-  const totalDurationSeconds = modules.reduce((total, module) => total + module.durationSeconds, 0)
   return {
     version: 1,
     attemptId: `${testId}-${now}-${Math.random().toString(36).slice(2, 10)}`,
@@ -378,7 +380,9 @@ export function createSATAttempt(testId: string, modules: SATModule[], mode: SAT
     updatedAt: now,
     moduleStartedAt: { [firstModule.id]: now },
     moduleDeadlines:
-      mode === 'exam' ? { [SAT_TEST_TIMER_KEY]: now + totalDurationSeconds * 1000 } : {},
+      mode === 'exam' ? { [firstModule.id]: now + firstModule.durationSeconds * 1000 } : {},
+    moduleElapsedSeconds: {},
+    moduleTimerStartedAt: now,
   }
 }
 

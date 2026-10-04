@@ -1,3 +1,4 @@
+import { moduleTimes, totalTime } from '@/features/sat/timing'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
@@ -44,9 +45,11 @@ type Props = {
 }
 
 function formatDuration(seconds: number) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  return hours ? `${hours}h ${minutes}m` : `${Math.max(1, minutes)}m`
+  const whole = Math.max(0, Math.floor(seconds))
+  const hours = Math.floor(whole / 3600)
+  const minutes = Math.floor((whole % 3600) / 60)
+  const remainder = whole % 60
+  return `${hours ? `${hours}h ` : ''}${minutes}m ${remainder}s`
 }
 
 function AnimatedScore({ value }: { value: number }) {
@@ -230,7 +233,8 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const completeMath = !test.missingModuleIds?.some((id) => id.startsWith('math'))
   const displayedMidpoint = Math.round((displayedRange[0] + displayedRange[1]) / 2)
   const weakest = domainStats[0]
-  const elapsed = formatDuration(Math.max(0, ((attempt.submittedAt ?? attempt.updatedAt) - attempt.startedAt) / 1000))
+  const elapsed = formatDuration(totalTime(attempt, modules, attempt.updatedAt))
+  const times = moduleTimes(attempt, modules, attempt.updatedAt)
   const reviewWeakSpots = () => {
     const missed = allQuestions.filter((question) => question.domain === weakest?.domain && !isSATAnswerCorrect(question, attempt.answers[question.id]))
     const next = missed.find((question) => attempt.answers[question.id]?.trim()) ?? missed[0]
@@ -263,7 +267,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
               <div className="pointer-events-none absolute -right-24 -top-36 h-72 w-72 rounded-full bg-rose-100/50 blur-3xl" />
               <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={onBack ?? (() => navigate(backPath))} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-600"><ArrowLeft className="h-3.5 w-3.5" /> {returnLabel}</button>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> {test.title} · {submitted ? 'Completed' : 'Saved incomplete'}</span>
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> {test.title} · {attempt.mode === 'practice' ? 'Practice Mode' : 'Exam Mode'} · {submitted ? 'Completed' : 'Saved incomplete'}</span>
               </div>
               <p className="mt-8 text-[11px] font-black uppercase tracking-[0.22em] text-red-600">Personal score report</p>
               <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.06] tracking-[-0.055em] text-slate-950 sm:text-5xl lg:text-[3.75rem]">{headline}</h1>
@@ -273,6 +277,10 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                   ['Correct', `${report.correct}/${allQuestions.length}`], ['Accuracy', `${report.percent}%`], ['Time used', elapsed], ['Flagged', String(attempt.flagged.length)],
                 ].map(([label, value]) => <div key={label} className="rounded-[1.2rem] border border-slate-100 bg-[linear-gradient(145deg,#fff,#f5f8ff)] p-4 shadow-[0_6px_20px_rgba(43,64,110,.04)]"><p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-950">{value}</p></div>)}
               </div>
+              <div className="mt-4 flex flex-wrap gap-3" aria-label="Time used per module">
+                {modules.map((module) => <div key={module.id} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs"><span className="font-semibold text-slate-500">{module.shortTitle}</span><p className="mt-1 font-black text-slate-900">{attempt.moduleStartedAt[module.id] === undefined ? 'Not started' : formatDuration(times[module.id])}</p></div>)}
+              </div>
+              {!attempt.moduleElapsedSeconds ? <p className="mt-2 text-xs text-slate-500">Timing for this older attempt is estimated from saved timestamps.</p> : null}
             </div>
             <div className="relative flex min-h-[22rem] flex-col justify-between overflow-hidden bg-[linear-gradient(145deg,#234ac0_0%,#3935ae_54%,#11182e_100%)] p-7 text-white sm:p-10">
               <div className="absolute -right-12 -top-12 h-60 w-60 rounded-full bg-cyan-300/20 blur-3xl" /><div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-rose-400/20 blur-3xl" />

@@ -1,3 +1,7 @@
+import SATMockRun from '../../src/pages/SATMockRun'
+import { renderToStaticMarkup } from 'react-dom/server'
+import SATQuestionCanvas from '../../src/components/sat/SATQuestionCanvas'
+import { finishModule, migrateModuleTiming, moduleSeconds, moduleTimes, pauseModule, resumeModule, totalTime } from '../../src/features/sat/timing'
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, useLocation } from 'react-router-dom'
@@ -34,6 +38,53 @@ const rows = () => [...container.querySelectorAll<HTMLButtonElement>('button[ari
 
 export async function run() {
   localStorage.clear()
+  const timingModules = SAT_TEST_CATALOG[1].modules
+  for (const mode of ['exam', 'practice'] as const) {
+    let timed = createSATAttempt('timing', timingModules, mode)
+    const start = timed.startedAt
+    assert.equal(moduleSeconds(timed, timingModules, start), mode === 'exam' ? 1920 : 0)
+    timed = pauseModule(timed, timingModules, start + 65000)
+    assert.equal(totalTime(timed, timingModules, start + 600000), 65)
+    timed = resumeModule(timed, timingModules, start + 600000)
+    assert.equal(moduleSeconds(timed, timingModules, start + 610000), mode === 'exam' ? 1845 : 75)
+    timed = finishModule(timed, timingModules, start + 620000)
+    timed = { ...timed, currentModuleIndex: 1, moduleTimerStartedAt: start + 620000,
+      moduleStartedAt: { ...timed.moduleStartedAt, rw2: start + 620000 },
+      moduleDeadlines: { ...timed.moduleDeadlines, rw2: start + 620000 + 1920000 } }
+    assert.equal(moduleSeconds(timed, timingModules, start + 620000), mode === 'exam' ? 1920 : 0)
+    timed = { ...finishModule(timed, timingModules, start + 650000), status: 'submitted', submittedAt: start + 650000 }
+    assert.equal(totalTime(timed, timingModules, start + 900000), 115)
+    assert.deepEqual(moduleTimes(timed, timingModules), { rw1: 85, rw2: 30, math1: 0, math2: 0 })
+    saveSATAttemptToHistory(timed, 'submitted')
+    assert.equal(totalTime(loadSATAttemptHistory()[0].attempt, timingModules), 115)
+  }
+  const legacy = createSATAttempt('legacy', timingModules, 'exam')
+  delete legacy.moduleElapsedSeconds
+  delete legacy.moduleTimerStartedAt
+  legacy.moduleDeadlines = { __test__: legacy.startedAt + 8040000 }
+  const migrated = migrateModuleTiming(legacy, timingModules, legacy.startedAt + 60000)
+  assert.equal(moduleSeconds(migrated, timingModules, legacy.startedAt + 60000), 1860)
+  assert.equal(migrated.moduleDeadlines.__test__, undefined)
+  const expired = createSATAttempt('expired', timingModules, 'exam')
+  assert.equal(moduleSeconds(expired, timingModules, expired.startedAt + 2000000), 0)
+  assert.equal(totalTime(finishModule(expired, timingModules, expired.startedAt + 2000000), timingModules), 1920)
+
+  // Audit every current and historical Math question through the actual canvas.
+  let audited = 0
+  for (const test of getSATReviewTests().filter((test) => !test.id.endsWith('-math') && !test.id.endsWith('-reading-writing'))) {
+    for (const question of test.modules.filter((module) => module.section === 'math').flatMap((module) => module.questions)) {
+      const markup = renderToStaticMarkup(<SATQuestionCanvas question={question} answer="" onAnswer={() => {}} strokes={[]} highlightEnabled={false} highlightColor="#ffff00" onChange={() => {}} flagged={false} onToggleFlag={() => {}} />)
+      const node = document.createElement('div')
+      node.innerHTML = markup
+      if (question.sourceContent && !question.sourceContent.context) {
+        assert.equal(node.querySelectorAll('.mb-4.font-serif').length, 0, `${test.id}/${question.id}: duplicate fallback context`)
+      }
+      assert.ok(node.textContent?.includes('Mark for Review'))
+      audited++
+    }
+  }
+  console.log(`Audited ${audited} current and historical Math question renders; module timing and persistence passed.`)
+  localStorage.clear()
   // Full mocks retain the 400 floor even with every answer wrong or missing.
   for (const test of Object.values(SAT_TEST_CATALOG)) {
     const wrongAnswers = Object.fromEntries(test.modules.flatMap((module) => module.questions).map((q) => [q.id, 'wrong']))
@@ -51,6 +102,8 @@ export async function run() {
   assert.equal(questions.length, 98)
   const old = { ...createSATAttempt(test.id, test.modules, 'exam'), attemptId: 'older-result', status: 'submitted' as const, submittedAt: 1000 }
   old.answers = { [questions[0].id]: questions[0].correctAnswer, [questions[1].id]: 'wrong' }
+  old.moduleElapsedSeconds = { rw1: 65, rw2: 120, math1: 180, math2: 240 }
+  old.moduleStartedAt = { rw1: 0, rw2: 65000, math1: 185000, math2: 365000 }
   old.flagged = [questions[1].id]
   old.notes = { [questions[1].id]: 'Saved note from the older attempt' }
   saveSATAttemptToHistory(old, 'submitted')
@@ -67,6 +120,9 @@ export async function run() {
   await click(rows()[1])
   assert.match(text(), /Question navigator/)
   assert.match(text(), /Correct1\/98/)
+  assert.match(text(), /Time used10m 5s/)
+  assert.match(text(), /R&W Module 11m 5s/)
+  assert.match(text(), /Math Module 24m 0s/)
   assert.match(text(), /Saved note from the older attempt/)
   assert.match(container.querySelector('[data-location]')!.textContent!, /attempt=older-result/)
   assert.ok(!button('Start fresh'))
@@ -150,6 +206,45 @@ export async function run() {
   assert.ok(badgeCalls > 0)
   await click(button('Start fresh'))
   assert.ok(restarted)
+  // Exercise the actual runner: automatic exam progression, final submission,
+  // manual practice progression, and resume after a saved pause.
+  const runTest = SAT_TEST_CATALOG[1]
+  Object.defineProperty(document, 'fullscreenElement', { value: document.documentElement, configurable: true })
+  let exam = createSATAttempt(runTest.id, runTest.modules, 'exam')
+  exam.moduleDeadlines.rw1 = Date.now() - 1
+  saveSATAttempt(exam)
+  await render('/mock/sat/1/run', <SATMockRun />)
+  assert.match(text(), /Section 1, Module 2/)
+  assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /32:00/)
+  let stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  assert.equal(stored.status, 'active')
+  assert.equal(stored.currentModuleIndex, 1)
+  await render('/empty', <div />)
+  exam = createSATAttempt(runTest.id, runTest.modules, 'exam')
+  exam.currentModuleIndex = 3
+  exam.moduleStartedAt.math2 = Date.now() - 2100000
+  exam.moduleTimerStartedAt = exam.moduleStartedAt.math2
+  exam.moduleDeadlines.math2 = Date.now() - 1
+  saveSATAttempt(exam)
+  await render('/mock/sat/1/run', <SATMockRun />)
+  stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  assert.equal(stored.status, 'submitted')
+  assert.match(text(), /Personal score report/)
+  await render('/empty', <div />)
+  Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true })
+  let practice = createSATAttempt(runTest.id, runTest.modules, 'practice')
+  practice.moduleTimerStartedAt = Date.now() - 65000
+  practice = pauseModule(practice, runTest.modules)
+  saveSATAttempt(practice)
+  await render('/mock/sat/1/run', <SATMockRun />)
+  assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /01:05/)
+  await click([...container.querySelectorAll('button')].find((node) => node.textContent?.includes('Question 1 of')))
+  await click(button('Finish module'))
+  await click(button('Continue to next module'))
+  assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /00:00/)
+  stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  assert.equal(stored.currentModuleIndex, 1)
+  assert.ok(stored.moduleElapsedSeconds.rw1 >= 65)
   await act(async () => root.unmount())
   console.log('SAT mistake lab UI: historical answers, counts, filters, refresh, deletion, incomplete and section reviews passed.')
 }

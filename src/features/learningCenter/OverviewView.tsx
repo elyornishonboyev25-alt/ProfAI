@@ -36,12 +36,12 @@ export default function OverviewView({ slug }: { slug: string }) {
     <div className="space-y-6">
       <CenterPageHeading
         eyebrow="Learning center overview"
-        title={data.workspace.name}
+        title="Overview"
         description="Live academic operations across every IELTS and SAT cohort — from first diagnostic to target score."
         action={(
           <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             {[30, 90, 180].map((value) => (
-              <button key={value} type="button" onClick={() => setDays(value)} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${days === value ? 'bg-gradient-to-r from-red-800 to-red-500 text-white shadow-[0_8px_18px_rgba(185,28,28,.18)]' : 'text-slate-500 hover:text-slate-900'}`}>{value}d</button>
+              <button key={value} type="button" onClick={() => setDays(value)} aria-pressed={days === value} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${days === value ? 'bg-gradient-to-r from-red-800 to-red-500 text-white shadow-[0_8px_18px_rgba(185,28,28,.18)]' : 'text-slate-500 hover:text-slate-900'}`}>{value}d</button>
             ))}
           </div>
         )}

@@ -21,6 +21,7 @@ import {
   average,
   buildDataDrivenInsight,
   normalizeTestAttempt,
+  progressGrowth,
   round,
   summarizeStudent,
   type CenterStudentIdentity,
@@ -36,6 +37,14 @@ const STAFF_ROLES: LearningCenterRole[] = [
   LearningCenterRole.TEACHER,
 ]
 const MANAGER_ROLES: LearningCenterRole[] = [LearningCenterRole.OWNER, LearningCenterRole.ADMIN]
+
+async function cleanMemberGroups(tx: Prisma.TransactionClient, centerId: string, member: { id: string; userId: string }, role: LearningCenterRole) {
+  if (role === LearningCenterRole.STUDENT) {
+    await tx.learningCenterGroup.updateMany({ where: { centerId, teacherId: member.userId }, data: { teacherId: null } })
+  } else {
+    await tx.learningCenterGroupMember.deleteMany({ where: { memberId: member.id, group: { centerId } } })
+  }
+}
 
 const createWorkspaceSchema = z.object({
   name: z.string().trim().min(3).max(120),
@@ -92,17 +101,19 @@ const assignmentSchema = z.object({
   description: z.string().trim().max(1000).optional(),
   kind: z.nativeEnum(LearningAssignmentKind),
   examTrack: z.nativeEnum(LearningCenterExamTrack),
-  routePath: z.string().trim().startsWith('/').max(300),
+  routePath: z.string().trim().startsWith('/').max(300).refine((value) => !value.startsWith('//') && !value.includes('\\'), { message: 'Use a local ProfAI destination.' }),
   targetScore: z.string().trim().max(40).optional(),
   dueAt: z.string().datetime(),
   groupId: z.string().trim().min(1).max(191).optional(),
   studentId: z.string().trim().min(1).max(191).optional(),
 }).refine((input) => !(input.groupId && input.studentId), {
   message: 'Choose all students, a group, or one student.',
+}).refine((input) => !['WRITING', 'SPEAKING'].includes(input.kind) || input.examTrack === 'IELTS', {
+  message: 'Writing and Speaking assignments use the IELTS track.',
 })
 
 const submissionSchema = z.object({
-  status: z.nativeEnum(LearningSubmissionStatus),
+  status: z.enum(['ASSIGNED', 'IN_PROGRESS', 'COMPLETED']),
   progress: z.coerce.number().int().min(0).max(100),
 })
 
@@ -264,7 +275,22 @@ async function loadResults(studentIds: string[], since?: Date) {
       breakdown: result.breakdown,
     })
   }
+  // A speaking mock is saved both as a session and as a class assessment.
+  // The XP ledger shares the session's exact timestamp and original event key,
+  // so deduplicate by identity rather than matching scores or nearby times.
+  const speakingEvents = speakingSessions.length ? await prisma.xpEvent.findMany({
+    where: { userId: { in: studentIds }, source: 'SPEAKING', ...(since ? { earnedAt: { gte: since } } : {}) },
+    select: { userId: true, earnedAt: true, eventKey: true },
+  }) : []
+  const speakingSources = new Map<string, string[]>()
+  for (const event of speakingEvents) {
+    const key = `${event.userId}:${event.earnedAt.toISOString()}`
+    speakingSources.set(key, [...(speakingSources.get(key) ?? []), `speaking-${event.eventKey.replace(/^SPEAKING:/, '')}`])
+  }
+  const assessmentKeys = new Set(assessments.map((result) => `${result.userId}:${result.sourceKey}`))
   for (const session of speakingSessions) {
+    const sources = speakingSources.get(`${session.userId}:${session.createdAt.toISOString()}`)
+    if (sources?.length === 1 && assessmentKeys.has(`${session.userId}:${sources[0]}`)) continue
     byStudent.get(session.userId)?.push({
       id: session.id,
       examType: TestCategory.IELTS,
@@ -347,6 +373,9 @@ router.post(
     const result = await prisma.assessmentResult.upsert({
       where: { userId_sourceKey: { userId: req.user!.id, sourceKey: payload.sourceKey } },
       update: {
+        examType: payload.examType,
+        skill: payload.skill,
+        sourceType: payload.sourceType,
         title: payload.title,
         score: payload.score,
         maxScore: payload.maxScore,
@@ -505,15 +534,21 @@ router.post(
       where: { centerId_userId: { centerId: invitation.centerId, userId: req.user!.id } },
       select: { role: true },
     })
-    if (currentMember?.role === LearningCenterRole.OWNER || currentMember?.role === LearningCenterRole.ADMIN) {
+    if (currentMember?.role === LearningCenterRole.OWNER || currentMember?.role === LearningCenterRole.ADMIN || (currentMember?.role === LearningCenterRole.TEACHER && invitation.role === LearningCenterRole.STUDENT)) {
       return res.status(409).json({ message: 'You already have a higher role in this class.' })
     }
     const member = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.learningCenterInvitation.updateMany({
+        where: { id: invitation.id, acceptedAt: null, expiresAt: { gt: new Date() } },
+        data: { acceptedAt: new Date() },
+      })
+      if (!claimed.count) return null
       const joined = await tx.learningCenterMember.upsert({
         where: { centerId_userId: { centerId: invitation.centerId, userId: req.user!.id } },
         update: { role: invitation.role, status: LearningCenterMemberStatus.ACTIVE },
         create: { centerId: invitation.centerId, userId: req.user!.id, role: invitation.role },
       })
+      await cleanMemberGroups(tx, invitation.centerId, joined, invitation.role)
       if (invitation.groupId && invitation.role === LearningCenterRole.STUDENT) {
         await tx.learningCenterGroupMember.upsert({
           where: { groupId_memberId: { groupId: invitation.groupId, memberId: joined.id } },
@@ -521,9 +556,9 @@ router.post(
           create: { groupId: invitation.groupId, memberId: joined.id },
         })
       }
-      await tx.learningCenterInvitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } })
       return joined
     })
+    if (!member) return res.status(409).json({ message: 'This invitation has already been accepted. Ask the owner for a new link.' })
     return res.json({ workspace: invitation.center, membership: member })
   }),
 )
@@ -642,6 +677,7 @@ router.get(
     const search = query.search?.toLowerCase()
     const filtered = summaries.filter((student) => {
       if (search && !`${student.fullName} ${student.nickname ?? ''}`.toLowerCase().includes(search)) return false
+      if (query.exam === 'BOTH' && student.targetExam !== 'BOTH') return false
       if (query.exam && query.exam !== 'BOTH' && student.targetExam !== query.exam && student.targetExam !== 'BOTH') return false
       if (query.status && student.status !== query.status) return false
       return true
@@ -752,8 +788,12 @@ router.post(
         userMessage: JSON.stringify({ student: { ...summary, id: undefined, fullName: 'Student' }, recentResults: results.slice(-12) }),
         maxOutputTokens: 520,
       })
-      const parsed = JSON.parse(generated.text) as { headline?: string; summary?: string; priorities?: string[]; tone?: string }
-      if (!parsed.headline || !parsed.summary || !Array.isArray(parsed.priorities)) throw new Error('Invalid AI analysis payload')
+      const parsed = z.object({
+        headline: z.string().trim().min(1).max(200),
+        summary: z.string().trim().min(1).max(2000),
+        priorities: z.array(z.string().trim().min(1).max(500)).min(2).max(4),
+        tone: z.enum(['positive', 'neutral', 'warning']),
+      }).parse(JSON.parse(generated.text))
       return res.json({ insight: parsed, engine: generated.provider, model: generated.model, fallbackUsed: generated.fallbackUsed })
     } catch {
       return res.json({ insight: fallback, engine: 'data-analysis', model: null, fallbackUsed: true })
@@ -801,7 +841,7 @@ router.get(
           targetScore: group.targetScore,
           schedule: group.schedule,
           teacher: group.teacher,
-          students: memberSummaries,
+          students: access.role === LearningCenterRole.STUDENT ? memberSummaries.filter((student) => student.id === access.userId) : memberSummaries,
           studentCount: memberSummaries.length,
           assignmentCount: group._count.assignments,
           averageSat: Math.round(average(memberSummaries.map((student) => student.currentSat).filter((value): value is number => value !== null))),
@@ -892,7 +932,7 @@ router.post(
       if (admins + pending >= 2) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
     }
     if (payload.groupId) {
-      const group = await prisma.learningCenterGroup.findFirst({ where: { id: payload.groupId, centerId: access.centerId } })
+      const group = await prisma.learningCenterGroup.findFirst({ where: { id: payload.groupId, centerId: access.centerId, archivedAt: null } })
       if (!group) return res.status(400).json({ message: 'Selected group does not belong to this workspace.' })
     }
     const existingUser = payload.email
@@ -903,18 +943,31 @@ router.post(
     if (existingUser) {
       const existingMember = await prisma.learningCenterMember.findUnique({ where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } } })
       if (existingMember?.role === LearningCenterRole.OWNER) return res.status(409).json({ message: 'The class owner cannot be reassigned.' })
-      const member = await prisma.learningCenterMember.upsert({
-        where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } },
-        update: { role: payload.role, status: LearningCenterMemberStatus.ACTIVE, title: payload.title || null },
-        create: { centerId: access.centerId, userId: existingUser.id, role: payload.role, title: payload.title || null },
-      })
-      if (payload.groupId && payload.role === LearningCenterRole.STUDENT) {
-        await prisma.learningCenterGroupMember.upsert({
-          where: { groupId_memberId: { groupId: payload.groupId, memberId: member.id } },
-          update: {},
-          create: { groupId: payload.groupId, memberId: member.id },
-        })
+      if (payload.role === LearningCenterRole.STUDENT && existingMember && STAFF_ROLES.includes(existingMember.role)) {
+        return res.status(409).json({ message: 'This person is already a staff member. Change their role from Members first.' })
       }
+      const member = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(776392)`
+        if (payload.role === LearningCenterRole.ADMIN && existingMember?.role !== LearningCenterRole.ADMIN) {
+          const count = await tx.learningCenterMember.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, status: LearningCenterMemberStatus.ACTIVE } })
+          if (count >= 2) return null
+        }
+        const updated = await tx.learningCenterMember.upsert({
+          where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } },
+          update: { role: payload.role, status: LearningCenterMemberStatus.ACTIVE, title: payload.title || null },
+          create: { centerId: access.centerId, userId: existingUser.id, role: payload.role, title: payload.title || null },
+        })
+        await cleanMemberGroups(tx, access.centerId, updated, payload.role)
+        if (payload.groupId && payload.role === LearningCenterRole.STUDENT) {
+          await tx.learningCenterGroupMember.upsert({
+            where: { groupId_memberId: { groupId: payload.groupId, memberId: updated.id } },
+            update: {},
+            create: { groupId: payload.groupId, memberId: updated.id },
+          })
+        }
+        return updated
+      })
+      if (!member) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
       return res.status(201).json({ status: 'MEMBER_ADDED', memberId: member.id })
     }
     const invitation = await prisma.learningCenterInvitation.create({
@@ -953,7 +1006,17 @@ router.patch(
       const admins = await prisma.learningCenterMember.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, status: LearningCenterMemberStatus.ACTIVE } })
       if (admins >= 2) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
     }
-    const updated = await prisma.learningCenterMember.update({ where: { id: member.id }, data: { role } })
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(776392)`
+      if (role === LearningCenterRole.ADMIN && member.role !== LearningCenterRole.ADMIN) {
+        const admins = await tx.learningCenterMember.count({ where: { centerId: access.centerId, role: LearningCenterRole.ADMIN, status: LearningCenterMemberStatus.ACTIVE } })
+        if (admins >= 2) return null
+      }
+      const updatedMember = await tx.learningCenterMember.update({ where: { id: member.id }, data: { role } })
+      await cleanMemberGroups(tx, access.centerId, updatedMember, role)
+      return updatedMember
+    })
+    if (!updated) return res.status(409).json({ message: 'A class can have only two administrators besides its owner.' })
     return res.json({ member: updated })
   }),
 )
@@ -1024,6 +1087,7 @@ router.post(
     const access = await requireCenterAccess(res, req.params.slug, req.user!.id, STAFF_ROLES)
     if (!access) return
     const payload = req.body as z.infer<typeof assignmentSchema>
+    if (new Date(payload.dueAt).getTime() <= Date.now()) return res.status(400).json({ message: 'Choose a deadline in the future.' })
     const allowedStudents = await studentScope(access)
     let studentIds: string[] = []
     if (payload.groupId) {
@@ -1031,6 +1095,7 @@ router.post(
         where: {
           id: payload.groupId,
           centerId: access.centerId,
+          archivedAt: null,
           ...(access.role === LearningCenterRole.TEACHER ? { teacherId: access.userId } : {}),
         },
         include: { members: { include: { member: { select: { userId: true } } } } },
@@ -1087,7 +1152,7 @@ router.patch(
     const access = await requireCenterAccess(res, req.params.slug, req.user!.id)
     if (!access) return
     const existing = await prisma.learningCenterAssignmentSubmission.findFirst({
-      where: { id: req.params.submissionId, assignment: { centerId: access.centerId } },
+      where: { id: req.params.submissionId, assignment: { centerId: access.centerId, archivedAt: null } },
     })
     if (!existing) return res.status(404).json({ message: 'Assignment submission not found.' })
     if (access.role === LearningCenterRole.STUDENT && existing.studentId !== access.userId) {
@@ -1104,7 +1169,7 @@ router.patch(
       data: {
         status: payload.status,
         progress: payload.status === LearningSubmissionStatus.COMPLETED ? 100 : payload.progress,
-        startedAt: existing.startedAt ?? (payload.status === LearningSubmissionStatus.IN_PROGRESS ? now : undefined),
+        startedAt: existing.startedAt ?? (payload.status !== LearningSubmissionStatus.ASSIGNED ? now : undefined),
         submittedAt: payload.status === LearningSubmissionStatus.COMPLETED ? now : null,
       },
     })
@@ -1138,8 +1203,8 @@ router.get(
         score: exam === 'SAT' ? student.currentSat : student.currentIelts,
         highest: exam === 'SAT' ? student.highestSat : student.highestIelts,
         improvement: (() => {
-          const points = (results.get(student.id) ?? []).filter((result) => result.examType === exam).sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
-          return points.length > 1 ? round((points.at(-1)!.score / points.at(-1)!.maxScore - points[0].score / points[0].maxScore) * 100) : 0
+          const points = (results.get(student.id) ?? []).filter((result) => result.examType === exam)
+          return progressGrowth(points)
         })(),
         attempts: (results.get(student.id) ?? []).filter((result) => result.examType === exam).length,
         currentStreak: student.currentStreak,

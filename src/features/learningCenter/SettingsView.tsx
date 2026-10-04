@@ -20,7 +20,7 @@ export default function SettingsView({ workspace, onSaved }: { workspace: Center
   async function save(event: React.FormEvent) {
     event.preventDefault()
     if (busy || coverPending) return
-    setBusy(true); setError(''); setSaved(false)
+    if (name.trim().length < 3) { setError('Enter a class name with at least 3 characters.'); return }; setBusy(true); setError(''); setSaved(false)
     try {
       await learningCenterApi.updateWorkspace(workspace.slug, { name: name.trim(), city: city.trim() || null, coverUrl })
       setSaved(true); onSaved()

@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import ClassAssignmentContext from '@/features/learningCenter/ClassAssignmentContext'
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import WorkspaceToolbar from '@/components/layout/WorkspaceToolbar'
@@ -439,6 +440,7 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
+      <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
       {user?.onboardingCompleted && (pathname === '/community' || pathname === '/speaking-community' || pathname.startsWith('/speaker/')) ? <NicknameGate /> : null}

@@ -27,7 +27,7 @@ export function CenterPageHeading({ eyebrow, title, description, action }: {
     <div className="lc-page-heading flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow ? <p className="text-[10px] font-bold uppercase tracking-[.22em] text-red-700">{eyebrow}</p> : null}
-        <h1 className="mt-1 text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-[2.35rem]">{title}</h1>
+        <h2 className="mt-1 text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-[2.35rem]">{title}</h2>
         {description ? <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">{description}</p> : null}
       </div>
       {action}
@@ -70,7 +70,7 @@ export function MetricCard({ label, value, note, icon: Icon, accent = 'blue', tr
   )
 }
 
-export function Trend({ value, compact = false }: { value: number; compact?: boolean }) {
+export function Trend({ value, compact = false, unit = 'pp' }: { value: number; compact?: boolean; unit?: string }) {
   const Icon = value > 0 ? ArrowUpRight : value < 0 ? ArrowDownRight : Minus
   return (
     <span className={cn(
@@ -78,7 +78,7 @@ export function Trend({ value, compact = false }: { value: number; compact?: boo
       compact ? 'px-2 py-1 text-[10px]' : 'px-2.5 py-1.5 text-xs',
       value > 0 ? 'bg-emerald-50 text-emerald-700' : value < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500',
     )}>
-      <Icon className="h-3.5 w-3.5" /> {value > 0 ? '+' : ''}{value.toFixed(1)}%
+      <Icon className="h-3.5 w-3.5" /> {value > 0 ? '+' : ''}{value.toFixed(1)} {unit}
     </span>
   )
 }
@@ -117,7 +117,7 @@ export function EmptyState({ title, description, action }: { title: string; desc
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <CenterPanel className="p-6">
-      <div className="flex items-center gap-3 text-red-700"><AlertTriangle className="h-5 w-5" /><p className="text-sm font-bold">{message}</p></div>
+      <div role="alert" className="flex items-center gap-3 text-red-700"><AlertTriangle className="h-5 w-5" /><p className="text-sm font-bold">{message}</p></div>
       <button type="button" onClick={onRetry} className="mt-4 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white">Try again</button>
     </CenterPanel>
   )

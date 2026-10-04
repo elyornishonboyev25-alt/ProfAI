@@ -20,7 +20,7 @@ export default function LeaderboardView({ slug }: { slug: string }) {
   const rows = data?.rows ?? []
 
   return <div className="space-y-6">
-    <CenterPageHeading eyebrow="Class leaderboard" title="Every result deserves a place" description="Rank real SAT and IELTS results, or celebrate improvement within each track." action={<label className="min-w-44"><span className="sr-only">Filter group</span><select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">All groups</option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>} />
+    <CenterPageHeading eyebrow="Class leaderboard" title="Leaderboard" description="Rank real SAT and IELTS results, or celebrate improvement within each track." action={<label className="min-w-44"><span className="sr-only">Filter group</span><select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">All groups</option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>} />
     <div className="flex flex-wrap gap-3">
       <div className="lc-leader-segment" role="group" aria-label="Exam track">{(['SAT', 'IELTS'] as const).map((value) => <button key={value} type="button" aria-pressed={exam === value} onClick={() => setExam(value)} className={exam === value ? 'is-active' : ''}>{value}</button>)}</div>
       <div className="lc-leader-segment" role="group" aria-label="Ranking metric">{(['SCORE', 'IMPROVEMENT'] as const).map((value) => <button key={value} type="button" aria-pressed={metric === value} onClick={() => setMetric(value)} className={metric === value ? 'is-active' : ''}>{value === 'SCORE' ? 'Highest score' : 'Most improved'}</button>)}</div>
@@ -36,7 +36,7 @@ export default function LeaderboardView({ slug }: { slug: string }) {
 }
 
 function displayValue(row: LeaderboardRow, metric: Metric, exam: Exam) {
-  if (metric === 'IMPROVEMENT') return `${row.improvement > 0 ? '+' : ''}${row.improvement.toFixed(1)}%`
+  if (metric === 'IMPROVEMENT') return `${row.improvement > 0 ? '+' : ''}${row.improvement.toFixed(1)} pp`
   const score = row.highest ?? row.score
   return exam === 'IELTS' ? Number(score).toFixed(1) : String(score)
 }

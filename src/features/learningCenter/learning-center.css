@@ -32,9 +32,9 @@
 .learning-center .lc-primary-button:hover:not(:disabled) { box-shadow: 0 14px 28px rgba(190,31,48,.28),inset 0 1px 0 rgba(255,255,255,.5); }
 .learning-center .lc-secondary-button { border-color: rgba(167,178,195,.44); background: linear-gradient(135deg,rgba(255,255,255,.85),rgba(222,228,237,.58)); box-shadow: 0 5px 16px rgba(46,55,74,.04),inset 0 1px 0 white; }
 .learning-center .lc-secondary-button:hover:not(:disabled) { border-color: rgba(194,78,99,.45); background: rgba(255,255,255,.94); }
-.lc-workspace-banner { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; overflow: hidden; padding: clamp(26px,3.2vw,42px); border-radius: 30px; }
+.lc-workspace-banner { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; overflow: hidden; padding: clamp(20px,2vw,28px); border-radius: 28px; }
 .lc-workspace-banner::before { content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 100% 0%,rgba(161,175,197,.21),transparent 50%),linear-gradient(116deg,transparent 55%,rgba(255,255,255,.44) 55.2%,transparent 85%); }
-.lc-workspace-banner.has-cover { min-height: 320px; background: #572834; }
+.lc-workspace-banner.has-cover { min-height: 230px; background: #572834; }
 .lc-workspace-banner.has-cover::before { z-index: 1; background: linear-gradient(105deg,rgba(55,19,33,.9),rgba(86,32,50,.76) 58%,rgba(24,30,46,.65)); }
 .lc-workspace-banner-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .lc-workspace-banner.has-cover h1,.lc-workspace-banner.has-cover p { color: white; }
@@ -69,6 +69,24 @@
 .lc-cover-editor { width: 100%; }
 .lc-cover-canvas { display: block; width: 100%; height: auto; overflow: hidden; border: 1px solid #cbd2df; border-radius: 16px; cursor: grab; touch-action: none; }
 .lc-cover-canvas:active { cursor: grabbing; }
+.lc-banner-eyebrow { margin-left: 12px; vertical-align: middle; }
+.lc-workspace-banner h1 { max-width: 65ch; }
+.lc-workspace-banner.has-cover .lc-secondary-button { color: #8d2033; background: rgba(255,255,255,.9); }
+.learning-center .lc-page-heading h2 { font-size: clamp(25px,2.2vw,32px); line-height: 1.2; }
+.learning-center .lc-page-heading > div { min-width: 0; }
+.lc-section-content :is(.text-slate-400,.text-red-300,.text-orange-300) { color: #657084; }
+.lc-section-content .lc-panel { border-color: rgba(255,255,255,.95); }
+.lc-section-content .lc-panel :is(.bg-slate-50,.bg-slate-100) { background: linear-gradient(130deg,rgba(255,255,255,.65),rgba(214,221,233,.5)); box-shadow: inset 0 1px 0 rgba(255,255,255,.9); }
+.lc-section-content .lc-panel :is(.border-slate-100,.border-t) { border-color: rgba(148,163,184,.2); }
+.lc-section-content .lc-panel h2 { overflow-wrap: anywhere; }
+.lc-group-open { flex-shrink: 0; min-height: 40px; padding: 8px 12px; }
+.lc-assignment-card { transition: border-color .2s,box-shadow .2s; }
+.lc-assignment-card:hover { border-color: rgba(194,78,99,.3); box-shadow: 0 20px 45px rgba(44,53,74,.1),inset 0 1px 0 white; }
+.lc-section-content .lc-assignment-card h2 { white-space: normal; }
+.lc-section-content button { min-height: 40px; }
+.lc-section-content .lc-primary-button,.lc-section-content .lc-secondary-button { min-height: 44px; }
+.lc-section-content .lc-input:disabled { cursor: not-allowed; opacity: .65; }
+.lc-section-content .lc-chart-filter { width: auto; max-width: 100%; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .learning-center { --lc-glass: linear-gradient(135deg,#fafbfc,#edf0f5); }
 }
@@ -79,6 +97,12 @@
   .lc-section-link { padding: 0 13px; }
 }
 @media (max-width: 639px) {
+  .lc-workspace-banner { gap: 12px; padding: 18px; }
+  .lc-workspace-banner.has-cover { min-height: 210px; }
+  .lc-banner-eyebrow { margin-left: 0; margin-top: 12px; display: flex; width: fit-content; }
+  .lc-workspace-banner h1 { margin-top: 12px; font-size: 27px; }
+  .lc-workspace-banner p { margin-top: 8px; font-size: 12px; }
+  .lc-section-nav { margin-top: 16px; }
   .lc-podium { min-height: 156px; }
   .lc-podium-1 { min-height: 180px; }
 }

@@ -33,7 +33,7 @@ export default function ClassCoverEditor({ value, onChange, onPendingChange, onE
       try {
         onChange(exportCoverCrop(selected, 0.5, 0.5, 1))
         setPending(false)
-      } catch (error) { onError(error instanceof Error ? error.message : 'Could not prepare photo.') }
+      } catch (error) { onError(error instanceof Error ? error.message : 'Could not prepare photo.'); setPending(false); setImage(null) }
     }
     selected.onerror = () => { if (active) { onError('Could not open this photo.'); setPending(false) } }
     selected.src = sourceUrl

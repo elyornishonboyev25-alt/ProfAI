@@ -1,4 +1,5 @@
 import UiText from '@/components/common/UiText'
+import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -218,6 +219,8 @@ export default function Results() {
 
     const syncAttempt = async () => {
       try {
+        await waitForIeltsClassSync(result.testId, result.date)
+        if (window.localStorage.getItem(syncKey) === 'ok') return
         await apiClient.post(isListeningModule ? '/tests/listening-sync' : '/tests/reading-sync', {
           externalAttemptKey: attemptKey,
           externalTestId: result.testId,

@@ -9,20 +9,44 @@ import { InvitationLink } from '../../src/features/learningCenter/components'
 import { learningCenterApi } from '../../src/features/learningCenter/api'
 import { useAuthStore } from '../../src/store/authStore'
 import { useAsyncData } from '../../src/hooks/useAsyncData'
+import ClassAssignmentContext from '../../src/features/learningCenter/ClassAssignmentContext'
+import { syncIeltsClassResult } from '../../src/features/learningCenter/ieltsResultSync'
+import { apiClient } from '../../src/lib/apiClient'
 
 const test = window as any
-const workspace = { id: 'center', name: 'Oxford Learning Center', slug: 'oxford', city: 'Tashkent', logoUrl: null, role: 'OWNER' as const, memberCount: 24, groupCount: 3 }
+const workspace = { id: 'center', name: 'Oxford Learning Center', slug: 'oxford', city: 'Tashkent', logoUrl: null, coverUrl: null, role: 'OWNER' as const, memberCount: 24, groupCount: 3 }
 test.calls = []
 test.failWorkspaces = false
 test.assignmentRows = []
+test.groupRows = []
+test.teamRows = []
+test.studentRows = []
+test.leaderboardRows = []
+test.failAction = false
+const learner = { id: 'owner', fullName: 'Learner With A Long Name', nickname: 'learner', avatarUrl: null, targetExam: 'SAT' as const, targetScore: null, currentStreak: 3, currentSat: 1300, highestSat: 1400, targetSat: 1500, currentIelts: null, highestIelts: null, targetIelts: null, attempts: 2, averageScore: 81.3, improvement: 12.5, completionRate: 50, lastActiveAt: new Date().toISOString(), status: 'ON_TRACK' as const, skills: [{ key: 'SAT_MATH', label: 'Math', score: 650, maxScore: 800, attempts: 2, change: 50 }] }
+test.learner = learner
+test.studentAssignments = []
+test.notes = []
+test.action = (action: string, input: unknown) => { if (test.failAction) throw new Error('Please retry this action'); test.calls.push({ action, input }) }
+test.syncIelts = syncIeltsClassResult
+learningCenterApi.syncResult = async input => { test.action('result', input); return {} }
+;(apiClient as any).post = async (path: string, input: unknown) => { test.action('objective-result', { path, ...(input as object) }); return {} }
 test.workspace = workspace
 test.guest = () => useAuthStore.setState({ user: null })
 useAuthStore.setState({ user: { id: 'owner', fullName: 'Alex Teacher', onboardingCompleted: true } as any, hydrated: true })
 learningCenterApi.workspaces = async () => { if (test.failWorkspaces) throw new Error('Workspace service unavailable'); return { workspaces: [workspace] } }
 learningCenterApi.createWorkspace = async (input) => { test.calls.push({ action: 'create', input }); return { workspace } }
-learningCenterApi.groups = async () => ({ groups: [] })
-learningCenterApi.team = async () => ({ team: [] })
-learningCenterApi.students = async (_slug, query) => { test.calls.push({ action: 'students', query }); return { students: [] } }
+learningCenterApi.groups = async () => ({ groups: test.groupRows })
+learningCenterApi.createGroup = async (_slug, input) => { test.action('group', input); return {} }
+learningCenterApi.team = async () => ({ team: test.teamRows })
+learningCenterApi.updateMemberRole = async (_slug, id, role) => { test.action('role', { id, role }); test.teamRows.find((row: any) => row.id === id).role = role; return {} }
+learningCenterApi.students = async (_slug, query) => { test.calls.push({ action: 'students', query }); return { students: test.studentRows } }
+learningCenterApi.student = async () => ({ student: learner, groups: [], results: [], insight: { headline: 'Keep progressing', summary: 'Your results are improving.', tone: 'positive', priorities: ['Practice math', 'Review mistakes'] }, assignments: test.studentAssignments, notes: test.notes })
+learningCenterApi.analyzeStudent = async () => { test.action('analysis', {}); return { insight: { headline: 'Analysis refreshed', summary: 'Focus on math.', priorities: ['Practice', 'Review'], tone: 'positive' }, engine: 'data-analysis', model: null, fallbackUsed: true } }
+learningCenterApi.addNote = async (_slug, _student, note) => { test.action('note', note); test.notes.push({ id: 'note', note, createdAt: new Date().toISOString(), author: { id: 'teacher', fullName: 'Teacher', avatarUrl: null } }); return {} }
+learningCenterApi.updateWorkspace = async (_slug, input) => { test.action('settings', input); Object.assign(workspace, input); return { workspace } }
+learningCenterApi.deleteWorkspace = async () => { test.action('delete', {}); return {} }
+learningCenterApi.leaderboard = async (_slug, exam, metric, groupId) => { test.calls.push({ action: 'ranking', exam, metric, groupId }); return { exam, metric, rows: test.leaderboardRows } }
 learningCenterApi.assignments = async () => ({ assignments: test.assignmentRows })
 learningCenterApi.createAssignment = async (_slug, input) => { test.calls.push({ action: 'assignment', input }); return {} }
 learningCenterApi.updateSubmission = async (_slug, id, input) => { if (test.failSubmission) throw new Error('Progress could not be saved'); test.calls.push({ action: 'submission', id, input }); return {} }
@@ -34,7 +58,7 @@ function Bridge() {
   const navigate = useNavigate()
   const location = useLocation()
   test.go = navigate
-  test.route = location.pathname + location.search
+  test.route = location.pathname + location.search + location.hash
   test.routeState = location.state
   return null
 }
@@ -46,7 +70,7 @@ function Race() {
   return <div id="race">{result.loading ? 'loading' : result.error ?? result.data}</div>
 }
 test.pending = {}
-createRoot(document.getElementById('root')!).render(<StrictMode><MemoryRouter initialEntries={['/learning-center']}><Bridge /><Routes>
+createRoot(document.getElementById('root')!).render(<StrictMode><MemoryRouter initialEntries={['/learning-center']}><ClassAssignmentContext /><Bridge /><Routes>
   <Route path="/learning-center" element={<LearningCenterPortal />} />
   <Route path="/learning-center/join/:code" element={<ProtectedRoute><LearningCenterJoin /></ProtectedRoute>} />
   <Route path="/learning-center/:workspaceSlug/*" element={<LearningCenterWorkspace />} />
@@ -54,4 +78,6 @@ createRoot(document.getElementById('root')!).render(<StrictMode><MemoryRouter in
   <Route path="/race" element={<Race />} />
   <Route path="/login" element={<p>Sign in</p>} />
   <Route path="/sat" element={<p>SAT destination</p>} />
+  <Route path="/sat/mocks" element={<p>SAT mock catalog</p>} />
+  <Route path="/mock/sat/1" element={<p>SAT mock run</p>} />
 </Routes></MemoryRouter></StrictMode>)

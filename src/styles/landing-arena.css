@@ -148,8 +148,6 @@
 .landing-reviews-marquee-card { width: clamp(300px,28vw,365px); flex: 0 0 auto; }
 .landing-reviews-marquee-card .landing-review-card { min-height: 245px; }
 .landing-reviews-marquee-card .landing-review-text { font-size: 15px; font-weight: 500; line-height: 1.48; }
-.landing-reviews-marquee-controls { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1200px; margin: 15px auto 0; }
-.landing-reviews-marquee-count { color: #71717a; font-size: 12px; font-weight: 800; letter-spacing: .04em; }
 .landing-reviews-static { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
 .landing-reviews-static .landing-review-card { min-width: 0; }
 .landing-review-card { display: flex; height: 100%; min-height: 235px; flex-direction: column; padding: 18px 20px; border: 1px solid rgba(255,255,255,.96); border-radius: 18px; background: rgba(255,255,255,.86); box-shadow: 0 11px 28px rgba(127,29,29,.075), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(18px) saturate(145%); backdrop-filter: blur(18px) saturate(145%); }
@@ -248,12 +246,18 @@
 .landing-arena-faq { display: grid; grid-template-columns: .78fr 1.22fr; gap: 70px; }
 .landing-arena-faq > div:first-child > p { max-width: 350px; margin-top: 16px; color: var(--landing-muted); font-size: 15px; line-height: 1.65; }
 .landing-arena-support { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 16px; color: var(--landing-red-dark); font-size: 13px; font-weight: 850; }
-.landing-arena-faq-list { display: grid; align-content: start; gap: 9px; }
-.landing-arena-faq-item { border: 1px solid rgba(228,228,231,.9); border-radius: 14px; background: rgba(255,255,255,.82); box-shadow: 0 7px 21px rgba(24,24,27,.04), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
-.landing-arena-faq-item button { display: flex; align-items: center; justify-content: space-between; gap: 13px; width: 100%; min-height: 59px; padding: 16px 19px; color: #27272a; font-size: 14px; font-weight: 800; text-align: left; }
-.landing-arena-faq-item button svg { flex: 0 0 auto; color: #71717a; transition: transform .2s; }
+.landing-arena-faq-list { display: grid; align-content: start; gap: 12px; }
+.landing-arena-faq-item { overflow: hidden; border: 1px solid #e4e4e7; border-radius: 18px; background: #fff; box-shadow: 0 5px 18px rgba(24,24,27,.025); transition: border-color .25s, box-shadow .25s, background .25s; }
+.landing-arena-faq-item:hover { border-color: #d4d4d8; box-shadow: 0 8px 24px rgba(24,24,27,.05); }
+.landing-arena-faq-item.is-open { border-color: #fecaca; background: #fffafa; box-shadow: 0 8px 24px rgba(127,29,29,.045); }
+.landing-arena-faq-item h3 { margin: 0; }
+.landing-arena-faq-item button { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; min-height: 68px; padding: 18px 22px; color: #27272a; font-size: 14px; font-weight: 800; text-align: left; line-height: 1.5; }
+.landing-arena-faq-item button:focus-visible { outline: 2px solid var(--landing-red); outline-offset: -5px; border-radius: 16px; }
+.landing-arena-faq-item button svg { flex: 0 0 auto; color: #71717a; transition: transform .3s cubic-bezier(.22,1,.36,1), color .2s; }
 .landing-arena-faq-item button svg.is-open { transform: rotate(180deg); color: var(--landing-red); }
-.landing-arena-faq-item p { padding: 0 19px 18px; color: var(--landing-muted); font-size: 13px; line-height: 1.7; }
+.landing-arena-faq-answer { overflow: hidden; }
+.landing-arena-faq-item p { margin: 0; padding: 0 22px 22px; color: var(--landing-muted); font-size: 14px; line-height: 1.75; }
+@media (prefers-reduced-motion: reduce) { .landing-arena-faq-item, .landing-arena-faq-item button svg { transition: none; } }
 .landing-arena-bottom-cta { display: flex; align-items: center; justify-content: space-between; gap: 25px; margin-bottom: 72px; padding: 34px 38px; border: 1px solid rgba(254,202,202,.86); border-radius: 22px; background: rgba(255,245,245,.86); box-shadow: 0 16px 37px rgba(127,29,29,.07), inset 0 1px 0 rgba(255,255,255,.96); -webkit-backdrop-filter: blur(16px) saturate(145%); backdrop-filter: blur(16px) saturate(145%); }
 .landing-arena-bottom-cta h2 { max-width: 630px; }
 .landing-arena-bottom-cta p { margin-top: 9px; color: var(--landing-muted); font-size: 14px; }

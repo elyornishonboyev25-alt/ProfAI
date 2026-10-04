@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { requireAuth } from '../middleware/auth.js'
+import { requireOwner } from '../middleware/owner.js'
 
 const router = Router()
 
@@ -75,6 +77,15 @@ const createSchema = z.object({
   bandBefore: z.string().trim().max(12).optional().or(z.literal('')),
   bandAfter: z.string().trim().max(12).optional().or(z.literal('')),
   text: z.string().trim().min(8).max(600),
+}).superRefine((body, ctx) => {
+  const before = body.bandBefore || ''
+  const after = body.bandAfter || ''
+  if (!before && !after) return
+  const scores = [before, after].map(Number)
+  const valid = Boolean(before && after) && (body.exam === 'IELTS'
+    ? scores.every(score => Number.isFinite(score) && score >= 0 && score <= 9 && Number.isInteger(score * 2))
+    : body.exam === 'SAT' && scores.every(score => Number.isInteger(score) && score >= 400 && score <= 1600 && score % 10 === 0))
+  if (!valid) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['bandBefore'], message: 'Provide both valid IELTS bands (0-9, steps of 0.5) or SAT scores (400-1600, steps of 10).' })
 })
 
 // Public — anyone (even signed-out visitors) can read the shared testimonials.
@@ -114,6 +125,7 @@ router.post(
 
     const review = await prisma.review.create({
       data: {
+        approved: false,
         name: body.name,
         exam: body.exam,
         rating: body.rating ?? null,
@@ -137,5 +149,33 @@ router.post(
     return res.status(201).json({ review })
   }),
 )
+
+const ownerListSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  status: z.enum(['PENDING', 'PUBLISHED', 'ALL']).default('PENDING'),
+})
+
+router.get('/owner', requireAuth, requireOwner, validateQuery(ownerListSchema), asyncHandler(async (req, res) => {
+  const { page, status } = req.query as unknown as z.infer<typeof ownerListSchema>
+  const where = status === 'ALL' ? {} : { approved: status === 'PUBLISHED' }
+  const pageSize = 12
+  const [items, total] = await prisma.$transaction([
+    prisma.review.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * pageSize, take: pageSize }),
+    prisma.review.count({ where }),
+  ])
+  return res.json({ items, total, page, pageSize })
+}))
+
+router.patch('/owner/:id', requireAuth, requireOwner, validateBody(z.object({ approved: z.boolean() }).strict()), asyncHandler(async (req, res) => {
+  const result = await prisma.review.updateMany({ where: { id: req.params.id }, data: { approved: req.body.approved } })
+  if (!result.count) return res.status(404).json({ message: 'Comment not found.' })
+  return res.json({ approved: req.body.approved })
+}))
+
+router.delete('/owner/:id', requireAuth, requireOwner, asyncHandler(async (req, res) => {
+  const result = await prisma.review.deleteMany({ where: { id: req.params.id } })
+  if (!result.count) return res.status(404).json({ message: 'Comment not found.' })
+  return res.status(204).send()
+}))
 
 export default router

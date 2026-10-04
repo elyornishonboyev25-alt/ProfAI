@@ -1121,7 +1121,7 @@ model Review {
   bandBefore String? // e.g. "5.5" or SAT "1100"
   bandAfter  String? // e.g. "7.5" or SAT "1450"
   text       String
-  approved   Boolean  @default(true) // moderation flag; hidden when false
+  approved   Boolean  @default(false) // public only after owner approval
   createdAt  DateTime @default(now())
 
   @@index([approved, createdAt])

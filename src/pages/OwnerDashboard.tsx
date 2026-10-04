@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/apiClient'
 import { ownerText, type OwnerLanguage } from '@/i18n/owner'
 import { premiumLanguage } from '@/i18n/premium'
 import { useAuthStore } from '@/store/authStore'
+import ReviewModeration from '@/components/landing/ReviewModeration'
 
 const OWNER_EMAIL = 'elyornishonboyev000@gmail.com'
 type ReportStatus = 'OPEN' | 'RESOLVED'
@@ -167,6 +168,7 @@ export default function OwnerDashboard() {
     </div>
 
     {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+    <ReviewModeration language={language} reload={reload} />
     {loading && !overview && <p role="status" className="rounded-2xl bg-white p-6 text-slate-600">{t('Loading data…')}</p>}
     {overview && <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

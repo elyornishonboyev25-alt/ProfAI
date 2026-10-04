@@ -167,7 +167,7 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
         <span className="landing-comment-header-icon" aria-hidden="true"><MessageSquareText size={22} /></span>
         <span className="landing-section-kicker">{c('YOUR VOICE MATTERS')}</span>
         <h2 id="landing-comment-title">{c('Leave a comment')}</h2>
-        <p id="landing-comment-description">{c('Tell us about your experience with ProfAI. Your words will appear here when they are public.')}</p>
+        <p id="landing-comment-description">{c('Your comment will appear on the site after the owner reviews and approves it.')}</p>
       </div>
       <form onSubmit={handleSubmit} noValidate>
         <div className="landing-comment-field">
@@ -182,8 +182,8 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
         {(exam === 'IELTS' || exam === 'SAT') && <div className="landing-comment-score-group">
           <p className="landing-comment-score-heading">{c('Share your score progress (optional)')}</p>
           <div className="landing-comment-row landing-comment-score-row">
-            <div className="landing-comment-field"><label htmlFor="landing-comment-score-before">{c('Starting score')}</label><input id="landing-comment-score-before" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandBefore} onChange={event => { setBandBefore(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 6.0' : 'e.g. 1180'} /></div>
-            <div className="landing-comment-field"><label htmlFor="landing-comment-score-after">{c('Latest score')}</label><input id="landing-comment-score-after" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandAfter} onChange={event => { setBandAfter(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 7.5' : 'e.g. 1450'} /></div>
+            <div className="landing-comment-field"><label htmlFor="landing-comment-score-before">{c('Score before using ProfAI')}</label><input id="landing-comment-score-before" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandBefore} onChange={event => { setBandBefore(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 6.0' : 'e.g. 1180'} /></div>
+            <div className="landing-comment-field"><label htmlFor="landing-comment-score-after">{c('Score after using ProfAI')}</label><input id="landing-comment-score-after" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandAfter} onChange={event => { setBandAfter(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 7.5' : 'e.g. 1450'} /></div>
           </div>
           {errorField === 'scores' && error && <p id="landing-comment-scores-error" className="landing-comment-field-error" role="alert">{error}</p>}
         </div>}
@@ -316,7 +316,6 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
         </div>)}
       </div>
     </div>)}
-    <div className="landing-reviews-marquee-controls"><span className="landing-reviews-marquee-count">{String(reviews.length).padStart(2, '0')} · {c('Comments')}</span></div>
     {detail && <ReviewDetailDialog review={detail} onClose={() => setDetail(null)} />}
   </div>
 }
@@ -340,10 +339,9 @@ export default function Testimonials() {
   }, [])
   useEffect(() => { void refresh() }, [refresh])
 
-  const onSubmitted = (review: LandingReview) => {
+  const onSubmitted = () => {
     setDialogOpen(false)
-    setMessage(review.approved === false ? c('Thank you. Your comment was submitted for review.') : c('Thank you. Your comment was submitted.'))
-    if (review.approved !== false) void refresh()
+    setMessage(c('Thank you. Your comment was submitted for review.'))
   }
 
   return <section id="comments" className="landing-reviews-section landing-arena-section" aria-labelledby="landing-reviews-title">

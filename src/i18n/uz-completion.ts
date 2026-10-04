@@ -1,5 +1,8 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  "Score before using ProfAI": "ProfAI ishlatishdan oldingi ball",
+  "Score after using ProfAI": "ProfAI ishlatgandan keyingi ball",
+  "Your comment will appear on the site after the owner reviews and approves it.": "Izohingiz sayt egasi o‘qib, tasdiqlaganidan keyin saytda ko‘rinadi.",
   'Score change: {change}': 'Natijadagi o‘zgarish: {change}',
   'IELTS band points': 'IELTS band balli',
   'SAT points': 'SAT balli',

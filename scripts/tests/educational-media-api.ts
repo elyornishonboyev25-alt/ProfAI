@@ -18,7 +18,7 @@ export async function run() {
       const response = await request(`/${kind}`)
       assert.equal(response.status, 200)
       const { videos } = await response.json() as any
-      assert.equal(videos.length, 100)
+      assert.equal(videos.length, kind === 'podcasts' ? 300 : 100)
       assert.deepEqual(videos.map((item: any) => item.youtubeId), catalog[kind].map(item => item.youtubeId))
       const unknown = await request(`/${kind}/P26AE7NLx4Q`)
       assert.equal(unknown.status, 404, 'Legacy video cannot be reopened by URL')

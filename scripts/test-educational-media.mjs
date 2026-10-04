@@ -9,7 +9,7 @@ async function main() {
   const catalog = JSON.parse(await readFile('backend/src/data/educationalMedia.json', 'utf8'))
   const all = []
   for (const kind of ['shadowing', 'podcasts']) {
-    assert.equal(catalog[kind].length, 100)
+    assert.equal(catalog[kind].length, kind === 'podcasts' ? 300 : 100)
     for (const item of catalog[kind]) {
       assert.match(item.youtubeId, /^[\w-]{11}$/)
       assert.equal(item.sourceUrl, `https://www.youtube.com/watch?v=${item.youtubeId}`)
@@ -20,7 +20,11 @@ async function main() {
       all.push(item.youtubeId)
     }
   }
-  assert.equal(new Set(all).size, 200, '200 unique videos across both libraries')
+  assert.equal(new Set(all).size, 400, '400 unique videos across both libraries')
+  const normalizedTitles = catalog.podcasts.map(item => item.title.toLowerCase().replace(/English Rewind|6 Minute English|Real Easy English|BBC Learning English/gi, '').replace(/[^a-z0-9]/g, ''))
+  assert.equal(new Set(normalizedTitles).size, 300, 'No duplicate podcast titles after series-label normalization')
+  assert.equal(catalog.podcasts.slice(100).filter(item => item.source === 'BBC Learning English').length, 120)
+  assert.equal(catalog.podcasts.slice(100).filter(item => item.source === 'Think Fast, Talk Smart').length, 80)
   assert.equal(catalog.podcasts.filter(item => item.category === 'Admissions').length, 15)
   console.log('PASS: catalog counts, uniqueness, approved sources, valid metadata and duration bounds')
 
@@ -56,7 +60,7 @@ async function main() {
     dom.window.HTMLElement.prototype.scrollIntoView = () => {}
     dom.window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} })
     const outfile = join(directory, 'suite.cjs')
-    await build({ entryPoints: ['scripts/tests/educational-media-ui.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'], loader: { '.css': 'empty' } })
+    await build({ entryPoints: ['scripts/tests/educational-media-ui.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'], sourcemap: 'inline', loader: { '.css': 'empty' } })
     await createRequire(import.meta.url)(outfile).run()
   } finally { dom.window.close(); await rm(directory, { recursive: true, force: true }) }
 }

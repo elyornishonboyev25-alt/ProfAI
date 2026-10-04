@@ -69,12 +69,20 @@
 }
 
 .ielts-vocab-word {
+  box-sizing: border-box;
+  height: 360px;
+  gap: 12px;
   border: 1px solid #e2e8f0;
   border-radius: 24px;
   padding: 20px;
   background: #fff;
   box-shadow: 0 4px 16px rgb(15 23 42 / 3%);
   overflow-wrap: anywhere;
+  overflow-y: auto;
+}
+
+.ielts-vocab-word > * {
+  flex-shrink: 0;
 }
 
 .ielts-vocab-word:focus-within {

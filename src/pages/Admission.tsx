@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
 import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
-import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
 import './admission-home.css'
 import UniversityLogo from '@/components/admission/UniversityLogo'
@@ -53,7 +52,6 @@ export default function Admission() {
 
   return (
     <main className="workspace-page admission-home relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <ArenaBackdrop />
       <UniversityMatcher open={matcherOpen} onClose={closeMatcher} resumeInput={resumeMatcherInput}
         resumeVisibleCount={resumeMatcherPosition?.matcherVisibleCount} resumeScrollTop={resumeMatcherPosition?.matcherScrollTop} />
 

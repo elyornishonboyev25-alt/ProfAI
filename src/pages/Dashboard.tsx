@@ -35,7 +35,7 @@ import {
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { loadSiteTime, recentSiteTimeSeconds, SITE_TIME_UPDATED_EVENT, siteTimeStorageKey } from '@/utils/siteTime'
-import { DashboardActivityBar, DashboardActivityChart, DashboardTargetProgress } from '@/components/dashboard/DashboardAnimatedCharts'
+import { DashboardActivityBar, DashboardActivityChart, DashboardChartSequence, DashboardTargetProgress } from '@/components/dashboard/DashboardAnimatedCharts'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/dashboard-entrance.css'
 
@@ -247,6 +247,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        <DashboardChartSequence>
         <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
           <article className="dashboard-target-card dashboard-card-sheen dashboard-entry dashboard-entry-target">
             <span className="dashboard-target-ribbon" aria-hidden="true" />
@@ -313,7 +314,7 @@ export default function Dashboard() {
                    <UiText text={"Full performance"} /> <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <DashboardActivityChart className="mt-3 h-52">
+              <DashboardActivityChart className="mt-3 h-52" ready={!isInitialLoading}>
                 {isInitialLoading ? (
                   <Skeleton className="h-full w-full rounded-2xl" />
                 ) : (
@@ -427,6 +428,7 @@ export default function Dashboard() {
             </article>
           </div>
         </section>
+        </DashboardChartSequence>
 
         <section className="dashboard-entrance-learning dashboard-glass-card dashboard-entry dashboard-entry-learning mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">

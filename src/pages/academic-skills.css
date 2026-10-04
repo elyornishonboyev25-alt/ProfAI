@@ -1,104 +1,118 @@
-.academic-focus-card {
-  --skill-accent: #c43a4b;
-  --skill-tint: #fbe7eb;
+.academic-glass-card {
+  --skill-accent: #ba3448;
+  --skill-tint: #fbe5e9;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 24px;
-  border-radius: 23px;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 27px;
+  background: linear-gradient(140deg, #fffffff5, #ffffffc4);
+  box-shadow: 0 18px 40px #263d5810, inset 0 1px 0 #fff;
   transition: transform 180ms var(--liquid-ease), box-shadow 180ms var(--liquid-ease);
 }
 
-.academic-focus-card--blue { --skill-accent: #456ab4; --skill-tint: #e8efff; }
-.academic-focus-card--violet { --skill-accent: #8260b3; --skill-tint: #efe9fa; }
-.academic-focus-card--teal { --skill-accent: #288477; --skill-tint: #e4f3ef; }
+.academic-glass-card--blue { --skill-accent: #4268b1; --skill-tint: #e3edff; }
+.academic-glass-card--violet { --skill-accent: #7a58ad; --skill-tint: #eee5fb; }
+.academic-glass-card--teal { --skill-accent: #277c70; --skill-tint: #dff2ec; }
 
-.academic-focus-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
+.academic-glass-art {
+  position: relative;
+  height: 228px;
+  margin: 9px 9px 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 70%, var(--skill-tint), transparent 80%), linear-gradient(145deg, #ffffff50, var(--skill-tint));
 }
 
-.academic-focus-icon {
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  flex-shrink: 0;
-  border: 1px solid #fff;
-  border-radius: 17px;
-  background: linear-gradient(145deg, #fff, var(--skill-tint));
-  box-shadow: 0 5px 12px #24364b0c;
-  color: var(--skill-accent);
-}
-
-.academic-focus-index {
-  color: #e8edf5;
-  font-size: 38px;
-  font-weight: 750;
-  line-height: 1;
-  letter-spacing: -2px;
-}
-
-.academic-focus-category {
-  margin-bottom: 10px;
-  color: var(--skill-accent);
-  font-size: 9px;
-  font-weight: 750;
-  line-height: 1.6;
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
-}
-
-.academic-focus-card h2 {
-  margin: 0 0 9px;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -.7px;
-  overflow-wrap: anywhere;
-}
-
-.academic-focus-card > p {
-  flex: 1;
-  min-height: 44px;
-  margin: 0;
-  color: var(--liquid-muted);
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.academic-focus-action {
+.academic-glass-art-heading {
+  position: absolute;
+  inset: 15px 15px auto;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 22px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--skill-tint);
+  gap: 8px;
   color: var(--skill-accent);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
+}
+
+.academic-glass-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #ffffffd9;
+  border-radius: 30px;
+  background: #ffffffa6;
+  backdrop-filter: blur(10px);
+}
+.academic-glass-tag > span { width: 5px; height: 5px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
+.academic-glass-index { opacity: .45; font-size: 13px; letter-spacing: 1px; }
+
+.academic-glass-orbit {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 160px;
+  height: 160px;
+  transform: translate(-50%, -50%);
+  border: 1px solid #ffffffde;
+  border-radius: 50%;
+  box-shadow: 0 0 0 25px #ffffff38, 0 0 0 52px #ffffff21;
+}
+
+.academic-glass-art .academic-glass-object {
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  width: 182px;
+  height: 182px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 13px 9px #28394f15);
+}
+
+.academic-glass-float {
+  position: absolute;
+  left: 16px;
+  bottom: 17px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 32px);
+  padding: 9px 11px;
+  transform: rotate(-4deg);
+  border: 1px solid #fff;
+  border-radius: 11px;
+  background: #ffffffc9;
+  box-shadow: 0 6px 20px #213b5910;
+  backdrop-filter: blur(12px);
+  color: var(--skill-accent);
+  font-size: 10px;
+  font-weight: 600;
   line-height: 1.4;
 }
+.academic-glass-float-right { left: auto; right: 15px; bottom: 33px; transform: rotate(5deg); }
+.academic-glass-float svg { flex-shrink: 0; }
+.academic-glass-wave { display: flex; align-items: center; gap: 3px; }
+.academic-glass-wave i { display: block; width: 3px; border-radius: 3px; background: currentColor; opacity: .7; }
 
-.academic-focus-action svg { flex-shrink: 0; }
+.academic-glass-body { display: flex; flex: 1; flex-direction: column; padding: 25px 23px 23px; }
+.academic-glass-category { margin-bottom: 10px; color: var(--skill-accent); font-size: 9px; font-weight: 750; line-height: 1.6; letter-spacing: 1.4px; text-transform: uppercase; }
+.academic-glass-body h2 { margin: 0 0 11px; font-size: 25px; font-weight: 750; line-height: 1.25; letter-spacing: -.8px; overflow-wrap: anywhere; }
+.academic-glass-body > p { flex: 1; min-height: 45px; margin: 0; color: var(--liquid-muted); font-size: 13px; line-height: 1.7; }
+.academic-glass-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; padding-top: 17px; border-top: 1px solid #e8edf3; color: var(--skill-accent); font-size: 12px; font-weight: 700; line-height: 1.5; }
+.academic-glass-action > span { display: grid; place-items: center; width: 37px; height: 37px; flex-shrink: 0; border-radius: 12px; background: var(--skill-tint); }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .academic-focus-card:hover { transform: translateY(-3px); box-shadow: 0 18px 38px #273c5618, inset 0 1px 0 #fff; }
+  .academic-glass-card:hover { transform: translateY(-5px); box-shadow: 0 24px 46px #263d5818, inset 0 1px 0 #fff; }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .academic-focus-card { transition: none; }
+@media (prefers-reduced-motion: reduce) { .academic-glass-card { transition: none; } }
+@container (max-width: 320px) {
+  .academic-glass-float-right { bottom: 53px; }
 }
-
-@media (max-width: 560px) {
-  .academic-focus-card { padding: 20px; }
-}
-
+@media (max-width: 560px) { .academic-glass-body { padding: 22px 20px 20px; } }
 @media (forced-colors: active) {
-  .academic-focus-icon, .academic-focus-action { border: 1px solid ButtonText; }
+  .academic-glass-tag, .academic-glass-float, .academic-glass-action > span { border: 1px solid ButtonText; }
 }

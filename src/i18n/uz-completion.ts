@@ -1,5 +1,10 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Word collection': 'So‘zlar to‘plami',
+  'Recall': 'Eslab qolish',
+  'New perspectives': 'Yangi qarashlar',
+  'Audio + transcript': 'Audio + matn',
+  'Listen · repeat': 'Tinglang · takrorlang',
   'Words & recall': 'So‘zlar va xotira',
   'Read & discover': 'O‘qing va kashf eting',
   'Listen & learn': 'Tinglang va o‘rganing',

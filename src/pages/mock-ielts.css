@@ -1,0 +1,107 @@
+/* Restore the mock catalog's rounded, softly tinted glass surfaces. */
+.mock-ielts-glass {
+  border: 1px solid rgba(255, 255, 255, .94);
+  border-radius: 2.25rem;
+  background:
+    radial-gradient(ellipse at 96% 0%, rgba(244, 182, 190, .24), transparent 34rem),
+    radial-gradient(ellipse at 0% 30rem, rgba(191, 219, 254, .22), transparent 32rem),
+    linear-gradient(135deg, rgba(255, 255, 255, .76), rgba(247, 245, 249, .48));
+  box-shadow: 0 24px 64px rgba(30, 48, 70, .09),
+    inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255, 255, 255, .7);
+}
+
+.mock-ielts-glass-search,
+.mock-ielts-glass-metric,
+.mock-ielts-glass-filter {
+  border: 1px solid rgba(255, 255, 255, .94);
+  background: linear-gradient(135deg, rgba(255, 255, 255, .82), rgba(255, 255, 255, .38));
+  box-shadow: 0 8px 22px rgba(54, 45, 66, .06), inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+.mock-ielts-glass-search:focus {
+  border-color: #fca5a5;
+  background-color: rgba(255, 255, 255, .85);
+}
+
+.mock-ielts-glass-filter {
+  color: #475569;
+}
+
+.mock-ielts-glass-filter:hover {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.mock-ielts-glass-filter[aria-pressed='true'] {
+  border-color: rgba(255, 255, 255, .8);
+  background: linear-gradient(135deg, #ef454e, #bf1d2b);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(185, 28, 28, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .45);
+}
+
+.mock-ielts-glass-card {
+  border: 1px solid rgba(255, 255, 255, .95);
+  border-radius: 1.75rem;
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .08) 46%, rgba(255, 255, 255, .36) 47%, transparent 70%),
+    linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(254, 235, 238, .58) 58%, rgba(232, 236, 245, .65));
+  box-shadow: 0 12px 34px rgba(70, 50, 56, .09),
+    inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255, 255, 255, .64);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
+  backdrop-filter: blur(12px) saturate(135%);
+}
+
+.mock-ielts-glass-open {
+  border: 1px solid rgba(255, 255, 255, .8);
+  background: linear-gradient(135deg, rgba(255, 255, 255, .92), rgba(255, 235, 238, .74));
+  color: #b91c1c;
+  box-shadow: 0 5px 14px rgba(116, 40, 50, .08), inset 0 1px 0 #fff;
+}
+
+.mock-ielts-glass-empty {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .76), rgba(255, 255, 255, .4));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mock-ielts-glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(252, 165, 165, .7);
+    box-shadow: 0 20px 42px rgba(116, 40, 50, .13),
+      inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255, 255, 255, .8);
+  }
+}
+
+@media (max-width: 639px) {
+  .mock-ielts-glass { border-radius: 1.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mock-ielts-glass-card { transition: none; }
+  .mock-ielts-glass-card:hover { transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mock-ielts-glass,
+  .mock-ielts-glass-card,
+  .mock-ielts-glass-search,
+  .mock-ielts-glass-metric,
+  .mock-ielts-glass-filter:not([aria-pressed='true']),
+  .mock-ielts-glass-open,
+  .mock-ielts-glass-empty {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .mock-ielts-glass,
+  .mock-ielts-glass-card,
+  .mock-ielts-glass-search,
+  .mock-ielts-glass-filter,
+  .mock-ielts-glass-open { border-color: CanvasText; }
+  .mock-ielts-glass-filter[aria-pressed='true'] { outline: 2px solid Highlight; }
+}

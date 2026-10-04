@@ -1,5 +1,10 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Word collection': 'Коллекция слов',
+  'Recall': 'Запоминание',
+  'New perspectives': 'Новые взгляды',
+  'Audio + transcript': 'Аудио + текст',
+  'Listen · repeat': 'Слушайте · повторяйте',
   'Words & recall': 'Слова и запоминание',
   'Read & discover': 'Читайте и открывайте',
   'Listen & learn': 'Слушайте и учитесь',

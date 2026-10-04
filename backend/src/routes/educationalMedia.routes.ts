@@ -12,7 +12,7 @@ const schema = z.object({ url: z.string().min(5).max(400) })
 export function educationalMediaRouter(kind: MediaKind) {
   const router = Router()
   const captionLimit = rateLimit({ windowMs: 60000, max: 20, standardHeaders: true, legacyHeaders: false, message: { message: 'Please wait a moment before opening another lesson.' } })
-  router.get('/', requireAuth, asyncHandler(async (_req, res) => res.json({ videos: educationalCatalog(kind).map(educationalSummary) })))
+  router.get('/', requireAuth, asyncHandler(async (_req, res) => res.json({ videos: educationalCatalog(kind).map(item => ({ ...educationalSummary(item), durationSec: kind === 'shadowing' ? Math.min(120, item.durationSec) : item.durationSec })) })))
   router.get('/:youtubeId', requireAuth, captionLimit, asyncHandler(async (req, res) => {
     const item = approvedMedia(kind, req.params.youtubeId)
     if (!item) return res.status(404).json({ message: 'This video is not in the curated educational library.' })

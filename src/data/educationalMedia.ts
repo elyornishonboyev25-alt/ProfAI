@@ -6,7 +6,8 @@ export type EducationalMedia = {
   youtubeId: string; title: string; source: string; sourceUrl: string; channelUrl: string
   thumbnailUrl: string; durationSec: number; cefr: MediaLevel; category: string; focus: string; verifiedAt: string
 }
-export const SHADOWING_CATALOG = catalog.shadowing as EducationalMedia[]
+// Longer source lessons are offered as explicitly bounded two-minute excerpts.
+export const SHADOWING_CATALOG = (catalog.shadowing as EducationalMedia[]).map(item => ({ ...item, durationSec: Math.min(120, item.durationSec) }))
 export const PODCAST_CATALOG = catalog.podcasts as EducationalMedia[]
 
 export function mediaSummary(item: EducationalMedia): ShadowingVideoSummary {

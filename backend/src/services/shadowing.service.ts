@@ -543,7 +543,7 @@ function estimateLevel(wordCount: number, durationSec: number): string {
 /* ── 7. Orchestrator ─────────────────────────────────────────────────────── */
 
 const MIN_VIDEO_SECONDS = 15
-const MAX_SHADOWING_SECONDS = 30 * 60
+const MAX_SHADOWING_SECONDS = 120
 // YouTube allows long-form podcast uploads. Podcast playback itself does not
 // buffer media on our server, so accept episodes up to YouTube's normal
 // long-form ceiling even when their audio is too large to transcribe.
@@ -563,7 +563,7 @@ function importCopy(mode: VideoImportMode) {
         noun: 'shadowing video',
         engine: 'shadowing engine',
         maxSeconds: MAX_SHADOWING_SECONDS,
-        maxDurationError: 'This video is too long for shadowing. Pick a clip under 30 minutes.',
+        maxDurationError: 'Shadowing lessons support clips of up to 2 minutes.',
       }
 }
 
@@ -636,7 +636,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
     // Reject known out-of-range media before downloading audio or spending a
     // transcription request. Duration is checked again below for sources where
     // YouTube only reveals it through caption/audio timestamps.
-    if (durationSec && durationSec > copy.maxSeconds) {
+    if (mode === 'podcast' && durationSec && durationSec > copy.maxSeconds) {
       throw new ShadowingError(copy.maxDurationError)
     }
     if (durationSec && durationSec < MIN_VIDEO_SECONDS) {
@@ -696,10 +696,14 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
     }
   }
 
+  if (mode === 'shadowing') {
+    cues = cues.filter(cue => cue.start >= 0 && cue.end <= MAX_SHADOWING_SECONDS)
+    durationSec = Math.min(durationSec || MAX_SHADOWING_SECONDS, MAX_SHADOWING_SECONDS)
+  }
   const lastEnd = cues[cues.length - 1]?.end ?? 0
   if (!durationSec) durationSec = Math.round(lastEnd)
 
-  if (durationSec && durationSec > copy.maxSeconds) {
+  if (mode === 'podcast' && durationSec && durationSec > copy.maxSeconds) {
     throw new ShadowingError(copy.maxDurationError)
   }
   if (durationSec && durationSec < MIN_VIDEO_SECONDS) {
@@ -723,7 +727,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
         text: cue.text.trim(),
       }))
   }
-  if (mode !== 'podcast' && segments.length < 2) {
+  if (mode !== 'podcast' && segments.length === 0) {
     throw new ShadowingError(`This ${copy.noun} does not contain enough spoken English to build a transcript.`)
   }
 

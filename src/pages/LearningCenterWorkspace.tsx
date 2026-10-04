@@ -2,7 +2,7 @@ import '@/features/learningCenter/learning-center.css'
 import { ErrorState, secondaryButton } from '@/features/learningCenter/components'
 import { type ComponentType } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowUpRight, ClipboardCheck, GraduationCap, LayoutDashboard, Settings2, Trophy, UserRoundCheck, Users } from 'lucide-react'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
 export default function LearningCenterWorkspacePage() {
   const { workspaceSlug = '' } = useParams()
   const location = useLocation()
+  const reducedMotion = useReducedMotion()
   const user = useAuthStore((state) => state.user)
   const { data, loading, error, refetch } = useAsyncData(() => learningCenterApi.workspaces(), [user?.id])
   const workspace = data?.workspaces.find((item) => item.slug === workspaceSlug)
@@ -74,7 +75,7 @@ export default function LearningCenterWorkspacePage() {
 
         <div className="lc-section-content">
           <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={`${workspaceSlug}-${section}-${detailId ?? ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: .18 }}>
+            <motion.div key={`${workspaceSlug}-${section}-${detailId ?? ''}`} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -5 }} transition={{ duration: reducedMotion ? 0 : .18 }}>
               {section === 'settings' && workspace.role === 'OWNER' ? <SettingsView workspace={workspace} onSaved={() => void refetch()} /> : renderSection(section, detailId, workspaceSlug, manager, staff, workspace.role === 'OWNER')}
             </motion.div>
           </AnimatePresence>

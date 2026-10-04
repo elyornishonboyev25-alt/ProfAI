@@ -29,10 +29,15 @@ export default function LearningCenterPortal() {
     <div className="learning-center lc-portal workspace-page min-h-screen text-slate-900">
       {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span><span className="ml-3 hidden border-l border-slate-200 pl-3 text-xs font-semibold tracking-normal text-slate-500 sm:inline">Classes</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
       <main className="lc-portal-main mx-auto max-w-[1640px] px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pt-8">
+        <header className="lc-arena-heading">
+          <span className="lc-portal-kicker"><Sparkles size={13} /> YOUR CLASS COMMAND CENTER</span>
+          <h1>Classes <span>Arena</span></h1>
+          <p>Your people. Your practice. Your progress.</p>
+        </header>
         <header className="lc-portal-hero">
           <div className="lc-portal-hero-copy">
-            <span className="lc-portal-kicker"><Sparkles size={15} /> YOUR LEARNING SPACE</span>
-            <h1>Learn better,<br /><span>together.</span></h1>
+            <span className="lc-eyebrow"><span className="lc-eyebrow-dot" /> YOUR LEARNING SPACE</span>
+            <h2>Learn better,<br /><span>together.</span></h2>
             <p>Bring classes, people and progress into one place. Your next step starts here.</p>
             <div className="lc-portal-actions">
               <button type="button" onClick={create} className="lc-portal-button lc-portal-button-primary"><Plus size={19} /> Create class <ArrowRight size={18} /></button>
@@ -43,7 +48,7 @@ export default function LearningCenterPortal() {
           <div className="lc-portal-visual" aria-hidden="true">
             <div className="lc-visual-orbit lc-visual-orbit-outer" />
             <div className="lc-visual-orbit lc-visual-orbit-inner" />
-            <div className="lc-visual-core"><span className="lc-visual-core-icon"><GraduationCap size={42} strokeWidth={1.7} /></span><small>PROFAI CLASSES</small><strong>One shared<br />place to grow.</strong></div>
+            <div className="lc-visual-core"><span className="lc-visual-core-icon"><GraduationCap size={42} strokeWidth={1.7} /></span><small>PROFAI CLASSES</small><strong>One shared<br />place to grow.</strong><div className="lc-visual-tracks"><span>IELTS</span><span>SAT</span></div></div>
             <div className="lc-visual-float lc-visual-float-people"><span><Users size={18} /></span><b>People</b></div>
             <div className="lc-visual-float lc-visual-float-practice"><span><BookOpen size={18} /></span><b>Practice</b></div>
             <div className="lc-visual-float lc-visual-float-progress"><span><ClipboardCheck size={18} /></span><b>Progress</b></div>
@@ -68,7 +73,7 @@ export default function LearningCenterPortal() {
               {loading && user ? <CenterSkeleton blocks={2} /> : error && user ? <ErrorState message={error} onRetry={() => void refetch()} /> : workspaces.length ? (
                 filtered.length ? <div className="lc-portal-card-grid">{filtered.map((workspace) => <Link key={workspace.id} to={`/learning-center/${workspace.slug}`} className="lc-portal-class-card" aria-label={`Open ${workspace.name} class`}>
                   <div className="lc-portal-class-cover">
-                    {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={58} strokeWidth={1.35} /></div>}
+                    {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" loading="lazy" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={58} strokeWidth={1.35} /><span className="lc-class-art-wordmark">PROFAI CLASSES</span></div>}
                     <span className="lc-portal-role">{workspace.role.toLowerCase()}</span>
                   </div>
                   <div className="lc-portal-class-body"><div className="lc-portal-class-title-row"><span className="lc-portal-class-initial" aria-hidden="true">{workspace.name.trim().charAt(0).toUpperCase() || 'C'}</span><span className="lc-portal-open-label">Open class <ArrowUpRight size={16} /></span></div><h3>{workspace.name}</h3><p className="lc-portal-class-location"><MapPin size={16} /> {workspace.city || 'Location not set'}</p><div className="lc-portal-class-footer"><span><Users size={16} /> {workspace.memberCount} members</span><span><BookOpen size={16} /> {workspace.groupCount} groups</span></div></div>

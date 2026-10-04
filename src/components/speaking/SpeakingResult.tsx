@@ -12,6 +12,8 @@ import {
 import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { Burst } from '@/components/fx'
 import BandGauge from './BandGauge'
+import TestVocabulary from '@/components/vocab/TestVocabulary'
+import { speakingVocabularyTestId } from '@/utils/ieltsTestVocabulary'
 
 const CRITERIA: Array<{ key: keyof SpeakingEvaluation; label: string }> = [
   { key: 'fluencyBand', label: 'Fluency & Coherence' },
@@ -48,6 +50,7 @@ export default function SpeakingResult({
   onRetry,
   onRegrade,
   onExit,
+  hideVocabularyReview = false,
 }: {
   evaluation: SpeakingEvaluation
   modeLabel: string
@@ -56,8 +59,10 @@ export default function SpeakingResult({
   onRetry: () => void
   onRegrade?: () => void
   onExit: () => void
+  hideVocabularyReview?: boolean
 }) {
   const stats = evaluation.stats
+  const vocabularyTestId = speakingVocabularyTestId(modeLabel)
 
   return (
     <div className="speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6">
@@ -90,6 +95,7 @@ export default function SpeakingResult({
       </motion.div>
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">IELTS-style practice estimate from your transcribed answers. Pronunciation needs audio or examiner review; this is not an official IELTS score.</p>
+      {!hideVocabularyReview ? <TestVocabulary testId={vocabularyTestId} variant="review" /> : null}
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}

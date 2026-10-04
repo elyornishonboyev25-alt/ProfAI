@@ -1,3 +1,4 @@
+import TestVocabulary from '@/components/vocab/TestVocabulary'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -204,6 +205,7 @@ export default function ResultsReview() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-5 pb-8 sm:px-6">
+        <TestVocabulary testId={resolvedTestId} variant="review" />
         <section className="surface-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>

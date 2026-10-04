@@ -1,3 +1,4 @@
+import TestVocabulary from '@/components/vocab/TestVocabulary'
 import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
@@ -315,6 +316,7 @@ export default function MockIELTSRun() {
                           <strong className="text-lg text-slate-950">{saved?.band.toFixed(1)}</strong>
                         </div>
                         {saved?.summary ? <p className="mt-1 text-xs leading-5 text-slate-600">{saved.summary}</p> : null}
+                        <TestVocabulary testId={saved?.testId ?? ''} skill={section.key} variant="review" />
                         {saved?.result ? <button type="button" onClick={() => reviewSection(section)} className="mt-2 text-xs font-bold text-red-700 hover:underline">Review answers →</button> : null}
                         {saved?.review?.length ? <details className="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-700">
                           <summary className="cursor-pointer font-bold text-red-700">Review {section.title.toLowerCase()} responses</summary>

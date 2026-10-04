@@ -19,6 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
+import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import './admission-universities.css'
 import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
@@ -132,13 +133,13 @@ const UniversityCard = memo(function UniversityCard({
           <small><UiText text="Living costs" /></small>
           <strong>{yearlyCostLabel(university, c)}</strong>
         </div>
-        {hasProfileScores ? <div
+        <div
           className="admission-match-ring"
           style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
-          title="Planning fit from saved scores; not admission probability"
+          title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Planning fit only; add your scores and check full admission requirements'}
         >
           <span><small><UiText text="Fit" /></small><strong>{fit.fitPercent}%</strong></span>
-        </div> : <Link to="/account" className="admission-card-add-scores"><UiText text="Add scores for fit" /><ArrowUpRight size={14} /></Link>}
+        </div>
       </div>
 
       <span className="admission-card-open" aria-label={`Explore ${university.name}`}>
@@ -336,22 +337,14 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
   return (
     <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
-      <div className="admission-universities-blur-field" aria-hidden="true">
-        <span className="admission-blur-glow admission-blur-glow-left" />
-        <span className="admission-blur-glow admission-blur-glow-right" />
-        <span className="admission-blur-glow admission-blur-glow-center" />
-      </div>
+      <ArenaBackdrop />
 
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
-        <nav className="admission-catalog-navigation" aria-label="University navigation">
-          <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <UiText text={shortlistOnly ? 'Back to Universities' : 'Back to Applications'} />
-          </Link>
-          {!shortlistOnly && <Link to="/admission/shortlist" className="admission-catalog-shortlist"><BookmarkCheck size={17} aria-hidden="true" /><UiText text="My shortlist" /><span>{shortlistCount}</span></Link>}
-        </nav>
-
         <div className="admission-discovery-layout">
           <aside className="admission-universities-intro-column">
+            <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <UiText text={shortlistOnly ? 'Back to Universities' : 'Back to Applications'} />
+            </Link>
             <div className="admission-university-intro-sticky">
               {shortlistOnly ? (
                 <div className="admission-shortlist-summary">
@@ -429,6 +422,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               className="admission-university-scroll"
               role="region"
               aria-label="University results"
+              tabIndex={0}
             >
               {shortlistOnly && shortlistCount === 0 ? (
                 <div className="admission-empty-state admission-shortlist-empty">
@@ -466,7 +460,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   <button
                     type="button"
                     onClick={() => setVisibleCount((count) => Math.min(filtered.length, count + UNIVERSITY_PAGE_SIZE))}
-                    className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-black text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50"
+                    className="admission-show-more"
                   >
                      <UiText text={"Show more universities"} /> <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs">{filtered.length - displayedUniversities.length}</span>
                   </button>

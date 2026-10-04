@@ -253,6 +253,7 @@ function App() {
   const isGuestLanding = pathname === '/' && hydrated && !user
   const isAuthPage = pathname === '/login' || pathname === '/register'
   const isLearningCenterMode = pathname === '/learning-center' || pathname.startsWith('/learning-center/')
+  const isClassWorkspaceMode = /^\/learning-center\/(?!join(?:\/|$))[^/]+(?:\/|$)/.test(pathname)
   const isGuestDiagnostic = pathname === '/diagnostic'
   const isGuestExperience = isGuestLanding || isGuestDiagnostic
   const isVocabularyMode = pathname === '/vocabulary' || pathname.startsWith('/vocabulary/')
@@ -343,6 +344,7 @@ function App() {
   // intentionally keep their standalone layouts.
   const showSidebar =
     !isPublicStandalone &&
+    !isClassWorkspaceMode &&
     !isTestMode &&
     !isFocusContentMode &&
     !isIeltsMockMode
@@ -350,6 +352,7 @@ function App() {
   const isVocabularyPracticeMode = /^\/vocabulary\/my-words\/?$/.test(pathname) || /^\/vocabulary\/(?:ielts\/[^/]+\/[^/]+\/[^/]+|sat\/[^/]+\/[^/]+|articles\/[^/]+|my-words\/[^/]+\/(?:flashcards|matching|quiz|typing))(?:\/(?:flashcards|matching|quiz|typing))?\/?$/.test(pathname)
   const showMobileNav =
     !isPublicStandalone &&
+    !isClassWorkspaceMode &&
     !isTestMode &&
     !isFocusContentMode &&
     !isIeltsMockMode &&

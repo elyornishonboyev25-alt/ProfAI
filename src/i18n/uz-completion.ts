@@ -768,4 +768,7 @@ export const uzbekCompletion: Record<string, string> = {
   "Practise with purpose. Simulate with confidence.": "Maqsad bilan mashq qiling. Imtihonga ishonch bilan tayyorlaning.",
   "Prepare with this test’s vocabulary, then practise all three parts with the AI examiner.": "Shu test so‘zlari bilan tayyorlaning, so‘ng AI imtihon oluvchi bilan uchala qismni mashq qiling.",
   "Complete all three parts with the AI examiner. Explore this test’s vocabulary in your review after finishing.": "AI imtihon oluvchi bilan uchala qismni yakunlang. Test tugagach, natijalar tahlilida uning so‘zlarini o‘rganing.",
+"Practise vocabulary": "So‘zlarni mashq qilish",
+"A quick vocabulary warm-up for this exact test.": "Aynan shu test so‘zlari bilan qisqa tayyorgarlik.",
+"Practise these words in context before your next attempt.": "Keyingi urinishdan oldin shu so‘zlarni kontekstda mashq qiling.",
 }

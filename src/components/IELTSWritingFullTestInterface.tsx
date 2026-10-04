@@ -23,6 +23,7 @@ import {
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
@@ -721,8 +722,9 @@ export default function IELTSWritingFullTestInterface({
 }
 
 function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, simulation = false, onClick, vocabularyTestId }: { icon: React.ReactNode; title: string; eyebrow: string; description: string; features: string[]; buttonLabel: string; simulation?: boolean; onClick: () => void; vocabularyTestId?: string }) {
+  const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   return (
-    <motion.div whileHover={{ y: -5 }} className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white/95 p-6 text-left shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] backdrop-blur-xl transition-all duration-300 sm:p-10 ${simulation ? 'border-red-200' : 'border-red-100'}`}>
+    <motion.div initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: simulation ? 0.12 : 0.06 }} whileHover={allowHoverMotion ? { y: -5 } : undefined} className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white/95 p-6 text-left shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] backdrop-blur-xl transition-all duration-300 sm:p-10 ${simulation ? 'border-red-200' : 'border-red-100'}`}>
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-5 ${simulation ? 'from-red-700 to-rose-600' : 'from-red-600 to-rose-600'}`} />
       <div className="relative z-10 flex h-full w-full flex-col">
         <div className="mb-8 flex items-center gap-4">

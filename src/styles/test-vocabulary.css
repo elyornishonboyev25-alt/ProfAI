@@ -1,0 +1,95 @@
+.test-vocab-presence { overflow: hidden; }
+.test-vocab-slot { padding: 4px; container-type: inline-size; container-name: test-vocabulary; }
+.test-vocab-slot--reminder, .test-vocab-slot--review { margin: 12px 0; }
+.test-vocab-slot--link { margin: 10px 0 0; }
+
+.test-vocab-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  overflow: hidden;
+  border: 1px solid rgb(244 63 94 / 16%);
+  border-radius: 24px;
+  padding: 20px 48px 20px 20px;
+  background: linear-gradient(115deg, #fff 35%, #fff5f6 100%);
+  box-shadow: 0 8px 28px -16px rgb(159 18 57 / 18%), inset 0 1px 0 #fff;
+}
+.test-vocab-card--review { border-radius: 32px; padding-right: 24px; background: linear-gradient(115deg, #fff 25%, #fff1f3 100%); }
+.test-vocab-card--compact { gap: 14px; padding: 12px 20px; border-radius: 28px; }
+.test-vocab-glow { position: absolute; top: -70px; right: 0; width: 240px; max-width: 100%; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgb(251 113 133 / 11%), transparent 68%); pointer-events: none; }
+.test-vocab-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; align-self: start; margin-top: 3px; border: 1px solid rgb(251 113 133 / 20%); border-radius: 16px; background: linear-gradient(145deg, #ffe4e6, #fff1f2); color: #e11d48; }
+.test-vocab-icon-badge { position: absolute; right: -4px; bottom: -3px; display: grid; place-items: center; width: 19px; height: 19px; border: 2px solid white; border-radius: 50%; background: #e11d48; color: white; }
+.test-vocab-copy { position: relative; min-width: 0; }
+.test-vocab-eyebrow { margin: 0 0 4px; color: #e11d48; font-size: 9px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
+.test-vocab-heading { margin: 0; color: #0f172a; font-size: 17px; font-weight: 750; letter-spacing: -0.025em; line-height: 1.35; }
+.test-vocab-description { margin: 5px 0 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+.test-vocab-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; color: #64748b; font-size: 11px; font-weight: 600; line-height: 1.4; }
+.test-vocab-count { border-radius: 999px; background: rgb(255 228 230 / 65%); padding: 3px 8px; color: #be123c; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.test-vocab-words { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.test-vocab-word { max-width: 100%; overflow-wrap: anywhere; border: 1px solid #ffe4e6; border-radius: 999px; background: rgb(255 255 255 / 85%); padding: 3px 9px; color: #9f1239; font-size: 10px; font-weight: 500; line-height: 1.4; }
+.test-vocab-actions { position: relative; display: flex; flex-direction: column; align-items: center; gap: 9px; min-width: 0; }
+.test-vocab-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  max-width: 100%;
+  min-height: 42px;
+  border: 1px solid rgb(225 29 72 / 12%);
+  border-radius: 999px;
+  background: linear-gradient(115deg, #dc2626, #e11d48);
+  padding: 10px 17px;
+  color: white;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+  box-shadow: 0 6px 18px -7px rgb(225 29 72 / 35%);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+.test-vocab-cta:hover { box-shadow: 0 8px 22px -7px rgb(225 29 72 / 45%); }
+.test-vocab-cta span { min-width: 0; }
+.test-vocab-cta-arrow { transition: transform 200ms ease; }
+.test-vocab-cta:hover .test-vocab-cta-arrow { transform: translate(2px, -2px); }
+.test-vocab-cta--secondary { width: 100%; border-color: #fecdd3; background: linear-gradient(100deg, #fff, #fff1f2); color: #be123c; box-shadow: none; }
+.test-vocab-cta--secondary:hover { background: #fff1f2; box-shadow: none; }
+.test-vocab-never { min-height: 28px; border-radius: 999px; padding: 3px 8px; color: #64748b; font-size: 10px; font-weight: 500; line-height: 1.5; transition: color 160ms ease, background 160ms ease; }
+.test-vocab-never:hover { background: white; color: #be123c; }
+.test-vocab-dismiss { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 50%; color: #94a3b8; transition: background 180ms ease, color 180ms ease, transform 180ms ease; }
+.test-vocab-dismiss:hover { transform: rotate(90deg); background: white; color: #e11d48; }
+.test-vocab-cta:focus-visible, .test-vocab-never:focus-visible, .test-vocab-dismiss:focus-visible { outline: 2px solid #fb7185; outline-offset: 3px; }
+
+@container test-vocabulary (max-width: 680px) {
+  .test-vocab-card { grid-template-columns: 38px minmax(0, 1fr); gap: 12px; padding: 17px; border-radius: 22px; }
+  .test-vocab-icon { width: 38px; height: 38px; border-radius: 14px; }
+  .test-vocab-copy { padding-right: 18px; }
+  .test-vocab-heading { font-size: 15px; }
+  .test-vocab-actions { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; gap: 8px; }
+  .test-vocab-cta { gap: 7px; padding: 10px 13px; font-size: 11px; }
+  .test-vocab-never { max-width: 130px; font-size: 9px; }
+  .test-vocab-card--review { border-radius: 28px; }
+  .test-vocab-card--review .test-vocab-copy { padding-right: 0; }
+  .test-vocab-card--compact { padding: 12px 16px; gap: 8px 12px; border-radius: 24px; }
+  .test-vocab-card--compact .test-vocab-icon { align-self: center; margin-top: 0; }
+  .test-vocab-card--compact .test-vocab-eyebrow { display: none; }
+  .test-vocab-card--compact .test-vocab-meta { margin-top: 4px; }
+  .test-vocab-card--compact .test-vocab-cta { width: 100%; min-height: 36px; padding-block: 7px; }
+}
+@container test-vocabulary (max-width: 320px) {
+  .test-vocab-card { padding: 14px; gap: 10px; }
+  .test-vocab-copy { padding-right: 8px; }
+  .test-vocab-description { display: none; }
+  .test-vocab-word:nth-child(n + 3) { display: none; }
+  .test-vocab-actions { flex-wrap: wrap; justify-content: flex-start; }
+  .test-vocab-actions .test-vocab-cta { flex: 1 1 auto; }
+  .test-vocab-never { max-width: none; padding-left: 0; }
+}
+.test-vocab-card--still *, .test-vocab-card--still .test-vocab-dismiss:hover { transition: none; transform: none; }
+html[data-effects="reduced"] .test-vocab-cta-arrow { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .test-vocab-card *, .test-vocab-cta, .test-vocab-cta-arrow { transition: none; }
+  .test-vocab-dismiss:hover, .test-vocab-cta:hover .test-vocab-cta-arrow { transform: none; }
+}

@@ -415,4 +415,7 @@ export const russianAdditions: Record<string, string> = {
   "Practise with purpose. Simulate with confidence.": "Практикуйтесь осознанно. Готовьтесь к экзамену уверенно.",
   "Prepare with this test’s vocabulary, then practise all three parts with the AI examiner.": "Изучите слова этого теста, затем пройдите все три части с ИИ-экзаменатором.",
   "Complete all three parts with the AI examiner. Explore this test’s vocabulary in your review after finishing.": "Пройдите все три части с ИИ-экзаменатором. После завершения изучите слова этого теста в разборе результатов.",
+"Practise vocabulary": "Изучить слова",
+"A quick vocabulary warm-up for this exact test.": "Короткая разминка со словами именно этого теста.",
+"Practise these words in context before your next attempt.": "Потренируйте эти слова в контексте перед следующей попыткой.",
 }

@@ -21,6 +21,7 @@ async function main() {
     import IELTSReadingInterface from './src/components/IELTSReadingInterface';
     import IELTSWritingFullTestInterface from './src/components/IELTSWritingFullTestInterface';
     import IELTSSpeakingTest from './src/pages/IELTSSpeakingTest';
+    import TestVocabulary from './src/components/vocab/TestVocabulary';
     import { resolveIeltsTestById } from './src/utils/ieltsTestCatalog';
     import { getWritingFullTestCatalog } from './src/data/writingTestData';
     const root = createRoot(document.getElementById('root'));
@@ -34,6 +35,10 @@ async function main() {
       </MemoryRouter>);
     };
     window.show('listening');
+    window.showVocabularyCard = (skill, ready = true) => {
+      const ids = { listening: 'ielts-listening-1', reading: 'reading-roadmap-full-1', writing: 'writing-full-1', speaking: 'speaking-full-1' };
+      root.render(<div style={{width: 300, margin: 10}}><TestVocabulary testId={ids[skill]} variant='review' ready={ready} /></div>);
+    };
   `
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: 'tmp/ielts-vocabulary-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const css = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css + bundle.outputFiles.filter((file) => file.path.endsWith('.css')).map((file) => file.text).join('\n')
@@ -93,7 +98,7 @@ async function main() {
       for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
         await evaluate(`localStorage.clear();sessionStorage.clear();window.show('${skill}')`)
         await until('document.querySelector(\'[data-test-vocabulary="link"] a\')')
-        await new Promise((resolve) => setTimeout(resolve, skill === 'speaking' ? 2100 : 500))
+        await new Promise((resolve) => setTimeout(resolve, skill === 'speaking' ? 2700 : 750))
         if (skill === 'speaking') await until("!document.body.textContent.includes('Preparing your Speaking test')")
         const layout = await evaluate(`(() => {
           const anchors = [...document.querySelectorAll('[data-test-vocabulary] a')];
@@ -101,13 +106,16 @@ async function main() {
           const last = document.querySelector('[data-test-vocabulary="link"] a');last.scrollIntoView({block:'center',behavior:'instant'});
           const r=last.getBoundingClientRect();
           const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
-          return {horizontal,reachable:r.top>=-1 && r.bottom<=innerHeight+1 && last.contains(hit),href:last.getAttribute('href'),reminder:!!document.querySelector('[data-test-vocabulary="reminder"]'),top:r.top,bottom:r.bottom,hit:hit?.outerHTML.slice(0,250),scroll:document.scrollingElement.scrollTop,height:document.scrollingElement.scrollHeight};
+          const card=document.querySelector('[data-test-vocabulary="reminder"] aside');
+          return {horizontal,reachable:r.top>=-1 && r.bottom<=innerHeight+1 && last.contains(hit),href:last.getAttribute('href'),reminder:!!card,cardHeight:card.getBoundingClientRect().height,opacity:getComputedStyle(card).opacity,top:r.top,bottom:r.bottom,hit:hit?.outerHTML.slice(0,250),scroll:document.scrollingElement.scrollTop,height:document.scrollingElement.scrollHeight};
         })()`)
         assert.equal(layout.horizontal, true, `${width} ${skill}: no horizontal overflow`)
         if (!layout.reachable) { const shot = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(join(screenshots, `${width}-${skill}-failure.png`), Buffer.from(shot.data, 'base64')) }
         assert.equal(layout.reachable, true, `${width} ${skill}: vocabulary CTA is reachable ${JSON.stringify(layout)}`)
         assert.equal(layout.href, `/vocabulary/ielts?skill=${skill}&test=1`)
         assert.equal(layout.reminder, true)
+        assert.ok(layout.cardHeight <= (width >= 768 ? 190 : 270), `${width} ${skill}: reminder stays compact (${layout.cardHeight}px)`)
+        assert.equal(layout.opacity, '1', 'Entry animation finishes with a readable card')
         await evaluate(`document.querySelector('[data-test-vocabulary="reminder"]').scrollIntoView({block:'start',behavior:'instant'})`)
         const shot = await send('Page.captureScreenshot', { format: 'png' })
         await writeFile(join(screenshots, `${width}-${skill}.png`), Buffer.from(shot.data, 'base64'))
@@ -118,11 +126,34 @@ async function main() {
       for (const skill of ['listening', 'reading']) {
         await evaluate(`window.show('${skill}',true)`)
         await until('document.querySelector(\'[data-test-vocabulary="review"]\')')
-        const layout = await evaluate(`(() => {const card=document.querySelector('[data-test-vocabulary="review"]'),a=card.querySelector('a'),r=a.getBoundingClientRect();return {horizontal:card.scrollWidth<=card.clientWidth+1,visible:r.top>=0 && r.bottom<=innerHeight,questions:document.querySelector('#test-main-container').getBoundingClientRect().height};})()`)
+        await new Promise((resolve) => setTimeout(resolve, 750))
+        const layout = await evaluate(`(() => {const card=document.querySelector('[data-test-vocabulary="review"]'),a=card.querySelector('a'),r=a.getBoundingClientRect();return {horizontal:card.scrollWidth<=card.clientWidth+1,visible:r.top>=0 && r.bottom<=innerHeight,radius:parseFloat(getComputedStyle(card.querySelector('aside')).borderRadius),questions:document.querySelector('#test-main-container').getBoundingClientRect().height};})()`)
         assert.ok(layout.horizontal && layout.visible && layout.questions > 100, `${width} ${skill}: review vocabulary and test panels fit ${JSON.stringify(layout)}`)
+        assert.ok(layout.radius >= 24, 'Review card uses rounded corners')
+        const shot = await send('Page.captureScreenshot', { format: 'png' })
+        await writeFile(join(screenshots, `${width}-${skill}-review.png`), Buffer.from(shot.data, 'base64'))
       }
       console.log(`PASS: ${width}x${height}, four skill launch cards, dismissal and compact review`)
     }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false })
+    await evaluate("window.showVocabularyCard('speaking', false)")
+    await until('!document.querySelector(\'[data-test-vocabulary]\')')
+    await evaluate("window.showVocabularyCard('speaking')")
+    await until('document.querySelector(\'[data-test-vocabulary="review"] aside\')')
+    assert.ok(await evaluate("Number(getComputedStyle(document.querySelector('.test-vocab-card')).opacity) < 1"), 'Card enters with an animation after the screen is ready')
+    for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
+      await evaluate(`window.showVocabularyCard('${skill}')`)
+      await new Promise((resolve) => setTimeout(resolve, 750))
+      const layout = await evaluate(`(() => {const card=document.querySelector('.test-vocab-card'),r=card.getBoundingClientRect(),a=card.querySelector('a').getBoundingClientRect();return {fits:card.scrollWidth<=card.clientWidth+1 && a.left>=r.left && a.right<=r.right,rounded:parseFloat(getComputedStyle(card).borderRadius)>=28,href:card.querySelector('a').getAttribute('href')};})()`)
+      assert.ok(layout.fits && layout.rounded, `${skill}: rounded review adapts to a narrow sidebar ${JSON.stringify(layout)}`)
+      assert.equal(layout.href, `/vocabulary/ielts?skill=${skill}&test=1`)
+      const shot = await send('Page.captureScreenshot', { format: 'png' })
+      await writeFile(join(screenshots, `sidebar-${skill}-review.png`), Buffer.from(shot.data, 'base64'))
+    }
+    await evaluate("document.documentElement.dataset.effects='reduced';window.dispatchEvent(new Event('profai:effects-changed'))")
+    await until('!document.querySelector(\'.test-vocab-presence\')')
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('.test-vocab-card')).opacity"), '1', 'Reduced effects show the card immediately')
+    console.log('PASS: deferred animated entry, rounded review in narrow sidebars and reduced effects')
     await send('Browser.close').catch(() => {})
   } finally {
     socket?.close(); browser.kill(); await exited

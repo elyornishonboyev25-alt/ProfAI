@@ -35,6 +35,7 @@ import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import TestVocabulary from './vocab/TestVocabulary'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
@@ -203,6 +204,7 @@ function CompactSelect({ options, value, onChange, disabled = false }: { options
 }
 
 function PremiumCard({ children, onClick, className = "", gradient = "from-red-500 to-rose-500" }: { children: React.ReactNode, onClick?: () => void, className?: string, gradient?: string }) {
+  const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const divRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
@@ -217,8 +219,11 @@ function PremiumCard({ children, onClick, className = "", gradient = "from-red-5
       ref={divRef}
       onMouseMove={handleMouseMove}
       onClick={onClick}
-      whileHover={{ y: -5 }}
-      whileTap={{ scale: 0.98 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.06 }}
+      whileHover={allowHoverMotion ? { y: -5 } : undefined}
+      whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       className={`relative overflow-hidden rounded-3xl border border-red-100 bg-white/95 backdrop-blur-xl shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] transition-all duration-300 group cursor-pointer ${className}`}
     >
       <div

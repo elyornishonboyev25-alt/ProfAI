@@ -35,6 +35,9 @@ import {
 import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { loadSiteTime, recentSiteTimeSeconds, SITE_TIME_UPDATED_EVENT, siteTimeStorageKey } from '@/utils/siteTime'
+import { DashboardActivityBar, DashboardActivityChart, DashboardTargetProgress } from '@/components/dashboard/DashboardAnimatedCharts'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import '@/styles/dashboard-entrance.css'
 
 const emptyWeek = Array.from({ length: 7 }, (_, index) => {
   const date = new Date()
@@ -109,7 +112,7 @@ function StatCard({
   icon: typeof Clock3
 }) {
   return (
-    <article className="dashboard-stat-card group">
+    <article className="dashboard-stat-card dashboard-entry group">
       <span className="dashboard-stat-icon"><Icon className="h-[18px] w-[18px]" /></span>
       <p className="dashboard-stat-label text-[13px] font-semibold leading-5 text-slate-600"><UiText text={label} /></p>
       <p className={`dashboard-stat-value ${value === 'Unranked' ? 'dashboard-stat-value-long' : ''} font-black leading-none tracking-tight text-slate-950`}>{value}</p>
@@ -120,6 +123,7 @@ function StatCard({
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { reducedMotion } = useMotionPreferences()
   const user = useAuthStore((state: AuthState) => state.user)
   const [siteTimeRevision, setSiteTimeRevision] = useState(0)
   useEffect(() => {
@@ -205,7 +209,7 @@ export default function Dashboard() {
     ?? null
 
   return (
-    <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
+    <div data-dashboard-motion={reducedMotion ? 'reduced' : 'full'} className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
       <div className="dashboard-main-shell mx-auto max-w-[98rem]">
         {error ? (
           <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
@@ -214,7 +218,7 @@ export default function Dashboard() {
               <RefreshCw className="h-3.5 w-3.5" />  <UiText text={"Try again"} /> </button>
           </div>
         ) : null}
-        <header className="dashboard-entrance-header flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
+        <header className="dashboard-entrance-header dashboard-entry dashboard-entry-header flex flex-wrap items-center justify-between gap-4 px-1 pb-5">
           <div className="flex min-w-0 items-center gap-4">
             <div className="dashboard-avatar-ring">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-black text-red-700">
@@ -244,7 +248,7 @@ export default function Dashboard() {
         </header>
 
         <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
-          <article className="dashboard-target-card dashboard-card-sheen">
+          <article className="dashboard-target-card dashboard-card-sheen dashboard-entry dashboard-entry-target">
             <span className="dashboard-target-ribbon" aria-hidden="true" />
             <span className="dashboard-target-orb" aria-hidden="true" />
             <div className="relative z-10">
@@ -258,26 +262,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="dashboard-progress-orbit">
-              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="41"
-                  fill="none"
-                  stroke="#fff"
-                  strokeLinecap="round"
-                  strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 41}`}
-                  strokeDashoffset={2 * Math.PI * 41 * (1 - targetProgress / 100)}
-                />
-              </svg>
-              <div className="relative text-center">
-                <p className="text-4xl font-black tracking-[-0.05em]">{hasCurrentScore ? `${targetProgress}%` : '—'}</p>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/80"> <UiText text={hasCurrentScore ? 'toward target' : 'No score yet'} /> </p>
-              </div>
-            </div>
+            <DashboardTargetProgress value={targetProgress} hasScore={hasCurrentScore} ready={!isInitialLoading} />
 
             <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {examTargets.map((exam) => (
@@ -298,7 +283,7 @@ export default function Dashboard() {
 
           <div className="min-w-0 space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              {practiceCards.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
+              {practiceCards.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card dashboard-entry dashboard-entry-practice flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><Target className="h-5 w-5" /></span>
                 <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}{exam.target != null ? <>: {exam.current ? `${exam.current} → ${exam.target}` : <><UiText text="Target" /> {exam.target}</>}</> : exam.current ? `: ${exam.current}` : null}</strong>
                   <span className="mt-1 block text-xs leading-5 text-slate-600"><UiText text={exam.target != null ? scoreRecommendation(exam.label, exam.current, exam.target) : exam.current ? 'Review mistakes and practice the areas that need a final push.' : 'Start with a full mock to find your current level.'} /></span>
@@ -306,7 +291,7 @@ export default function Dashboard() {
                 </span>
               </button>)}
             </div>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="dashboard-entry-statistics grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard
                 label="Practices completed"
@@ -318,7 +303,7 @@ export default function Dashboard() {
               <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
             </div>
 
-            <article className="dashboard-glass-card p-5">
+            <article className="dashboard-glass-card dashboard-entry dashboard-entry-weekly p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Weekly activity"} /> </p>
@@ -328,7 +313,7 @@ export default function Dashboard() {
                    <UiText text={"Full performance"} /> <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="mt-3 h-52">
+              <DashboardActivityChart className="mt-3 h-52">
                 {isInitialLoading ? (
                   <Skeleton className="h-full w-full rounded-2xl" />
                 ) : (
@@ -362,17 +347,18 @@ export default function Dashboard() {
                         radius={[10, 10, 3, 3]}
                         maxBarSize={42}
                         isAnimationActive={false}
+                        shape={<DashboardActivityBar />}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
-              </div>
+              </DashboardActivityChart>
             </article>
           </div>
 
-          <div className="space-y-4">
+          <div className="dashboard-entry-rail space-y-4">
             <article
-              className="dashboard-glass-card dashboard-leaderboard-preview cursor-pointer p-5"
+              className="dashboard-glass-card dashboard-leaderboard-preview dashboard-entry cursor-pointer p-5"
               role="link"
               tabIndex={0}
               onClick={() => navigate('/leaderboard')}
@@ -421,7 +407,7 @@ export default function Dashboard() {
               )}
             </article>
 
-            <article className="dashboard-glass-card p-5">
+            <article className="dashboard-glass-card dashboard-entry p-5">
               <div className="flex items-center gap-3">
                 <span className="dashboard-medal-icon"><Award className="h-5 w-5" /></span>
                 <div>
@@ -442,7 +428,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="dashboard-entrance-learning dashboard-glass-card mt-4 p-5">
+        <section className="dashboard-entrance-learning dashboard-glass-card dashboard-entry dashboard-entry-learning mt-4 p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Continue learning"} /> </p>

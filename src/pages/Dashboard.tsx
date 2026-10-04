@@ -85,9 +85,10 @@ function scoreRecommendation(exam: 'IELTS' | 'SAT', current: number, target: num
 }
 
 function formatStudyTime(seconds: number) {
-  if (seconds >= 3600) return `${Number((seconds / 3600).toFixed(2))}h`
-  if (seconds > 0 && seconds < 60) return '<1 min'
-  return `${Math.round(seconds / 60)} min`
+  const totalMinutes = Math.floor(Math.max(0, seconds) / 60)
+  if (totalMinutes >= 60) return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+  if (seconds > 0 && totalMinutes === 0) return '<1m'
+  return `${totalMinutes}m`
 }
 
 function achievementProgressLabel(current: number, target: number, unit: 'count' | 'days' | 'minutes' | 'percent') {

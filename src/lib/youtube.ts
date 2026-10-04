@@ -51,18 +51,37 @@ export function loadYouTubeApi(): Promise<void> {
   if (window.YT?.Player) return Promise.resolve()
   if (ytApiPromise) return ytApiPromise
 
-  ytApiPromise = new Promise<void>((resolve) => {
+  ytApiPromise = new Promise<void>((resolve, reject) => {
     const previous = window.onYouTubeIframeAPIReady
-    window.onYouTubeIframeAPIReady = () => {
-      previous?.()
-      resolve()
+    let settled = false
+    let tag = document.getElementById('youtube-iframe-api') as HTMLScriptElement | null
+    const fail = () => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      tag?.removeEventListener('error', fail)
+      tag?.remove()
+      if (window.onYouTubeIframeAPIReady === onReady) window.onYouTubeIframeAPIReady = previous
+      ytApiPromise = null
+      reject(new Error('YouTube player API could not load. Please retry.'))
     }
-    if (!document.getElementById('youtube-iframe-api')) {
-      const tag = document.createElement('script')
+    const onReady = () => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      tag?.removeEventListener('error', fail)
+      if (window.onYouTubeIframeAPIReady === onReady) window.onYouTubeIframeAPIReady = previous
+      try { previous?.() } finally { resolve() }
+    }
+    const timeout = window.setTimeout(fail, 15000)
+    window.onYouTubeIframeAPIReady = onReady
+    if (!tag) {
+      tag = document.createElement('script')
       tag.id = 'youtube-iframe-api'
       tag.src = 'https://www.youtube.com/iframe_api'
+      tag.addEventListener('error', fail, { once: true })
       document.head.appendChild(tag)
-    }
+    } else tag.addEventListener('error', fail, { once: true })
   })
   return ytApiPromise
 }

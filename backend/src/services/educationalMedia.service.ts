@@ -1,3 +1,4 @@
+import { prepareShadowingLesson } from './shadowingLesson.js'
 import catalog from '../data/educationalMedia.json' with { type: 'json' }
 import { prisma } from '../lib/prisma.js'
 import { buildPodcastDraft, buildShadowingDraft } from './shadowing.service.js'
@@ -29,7 +30,13 @@ export function educationalSummary(item: CatalogEntry) {
 
 /** Only approved IDs reach extraction or saved caption retrieval. Old submissions stay archived. */
 export async function educationalDetail(kind: MediaKind, item: CatalogEntry) {
-  const summary = educationalSummary(item)
+  const summary = { ...educationalSummary(item), durationSec: kind === 'shadowing' ? Math.min(120, item.durationSec) : item.durationSec }
+  const prepare = (detail: any) => {
+    if (kind !== 'shadowing') return detail
+    const lesson = prepareShadowingLesson(detail.segments, item.durationSec)
+    const segments = lesson.segments.map((segment, index) => ({ ...segment, id: `shadowing:${item.youtubeId}:${index}` }))
+    return { ...detail, ...lesson, segments, segmentCount: segments.length, wordCount: lesson.captions.reduce((total, cue) => total + cue.text.split(/\s+/).length, 0) }
+  }
   const fallback = { ...summary, segments: [] }
   const key = `${kind}:${item.youtubeId}`
   const memory = cached.get(key)
@@ -37,7 +44,7 @@ export async function educationalDetail(kind: MediaKind, item: CatalogEntry) {
   const delegate = kind === 'shadowing' ? runtime.shadowingVideo : runtime.podcastVideo
   try {
     const saved = await within<any>(delegate.findUnique({ where: { youtubeId: item.youtubeId }, include: { segments: { orderBy: { orderIndex: 'asc' } } } }), null, 1500)
-    if (saved?.segments?.length) return { ...saved, ...summary, captionKind: saved.captionKind, segmentCount: saved.segments.length, wordCount: saved.wordCount, segments: saved.segments }
+    if (saved?.segments?.length) return prepare({ ...saved, ...summary, captionKind: saved.captionKind, segmentCount: saved.segments.length, wordCount: saved.wordCount, segments: saved.segments })
   } catch { /* Catalog playback must not depend on database health. */ }
 
   let job = pending.get(key)
@@ -47,7 +54,7 @@ export async function educationalDetail(kind: MediaKind, item: CatalogEntry) {
         const draft = await (kind === 'shadowing' ? buildShadowingDraft(item.youtubeId) : buildPodcastDraft(item.youtubeId))
         if (!draft.segments.length) return fallback
         const segments = draft.segments.map((segment, index) => ({ ...segment, id: `${key}:${index}` }))
-        const detail = { ...summary, captionKind: draft.captionKind, segmentCount: segments.length, wordCount: draft.wordCount, segments }
+        const detail = prepare({ ...summary, captionKind: draft.captionKind, segmentCount: segments.length, wordCount: draft.wordCount, segments })
         const data = {
           title: summary.title, author: summary.author, thumbnailUrl: summary.thumbnailUrl,
           durationSec: summary.durationSec, level: summary.level, accent: summary.accent, topic: summary.topic,
@@ -59,7 +66,8 @@ export async function educationalDetail(kind: MediaKind, item: CatalogEntry) {
         return detail
       } catch { return fallback }
     })().then(detail => {
-      cached.set(key, { detail, expires: Date.now() + (detail.segments.length ? 300000 : 120000) })
+      // A failed shadowing download must not make the Retry captions button inert.
+      if (kind !== 'shadowing' || detail.captions?.length) cached.set(key, { detail, expires: Date.now() + (detail.segments.length ? 300000 : 120000) })
       return detail
     }).finally(() => pending.delete(key))
     pending.set(key, job)

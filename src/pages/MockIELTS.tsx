@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import './mock-ielts.css'
 import {
   formatMockDuration,
   getFullMockCatalog,
@@ -85,8 +86,7 @@ function IELTSMockCatalog() {
   }, [completedByMock, filter, mocks, search])
 
   return (
-    <section id="mocks" className="relative isolate scroll-mt-24 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-[#f8f8f7] p-4 shadow-[0_24px_64px_rgba(30,48,70,.08)] sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_85%_0%,rgba(239,68,68,.11),transparent_45%),linear-gradient(180deg,#fff,transparent)]" />
+    <section id="mocks" className="mock-ielts-glass relative isolate scroll-mt-24 overflow-hidden p-4 sm:p-5 lg:p-6">
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -96,13 +96,14 @@ function IELTSMockCatalog() {
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           <label className="relative block w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search mock..."
-              className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,48,70,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
+              aria-label="Search full mocks"
+              className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100"
             />
           </label>
         </div>
@@ -114,7 +115,7 @@ function IELTSMockCatalog() {
           { value: inProgressCount, label: 'In progress' },
           { value: completedCount, label: 'Completed' },
         ].map((metric) => (
-          <div key={metric.label} className="rounded-2xl border border-white/90 bg-white/70 px-3 py-2.5 shadow-[0_7px_20px_rgba(30,48,70,.05)] sm:px-4">
+          <div key={metric.label} className="mock-ielts-glass-metric rounded-2xl px-3 py-2.5 sm:px-4">
             <strong className="block text-xl font-black leading-none tracking-tight text-slate-950">{metric.value}</strong>
             <span className="mt-1 block text-[10px] font-bold text-slate-500 sm:text-[11px]">{metric.label}</span>
           </div>
@@ -129,7 +130,7 @@ function IELTSMockCatalog() {
               type="button"
               aria-pressed={filter === id}
               onClick={() => setFilter(id)}
-              className={`rounded-full border px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${filter === id ? 'border-red-200 bg-red-50 text-red-700 shadow-[0_6px_16px_rgba(185,28,28,.08)]' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-red-200 hover:bg-white hover:text-red-700'}`}
+              className="mock-ielts-glass-filter rounded-full px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
             >
               {label}
             </button>
@@ -151,7 +152,7 @@ function IELTSMockCatalog() {
                 key={mock.id}
                 type="button"
                 onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}
-                className="ielts-catalog-card group relative flex min-h-[15rem] w-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-6 text-left shadow-[0_8px_24px_rgba(30,48,70,.04)] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_20px_36px_rgba(91,34,34,.11)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+                className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6"
               >
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">IELTS FULL MOCK {String(mock.index).padStart(2, '0')}</p>
@@ -190,14 +191,14 @@ function IELTSMockCatalog() {
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
                   <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {formatMockDuration(mock.totalMinutes)} session</span>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-black text-red-700">{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                  <span className="mock-ielts-glass-open inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black">{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
                 </div>
               </button>
             )
           })}
         </div>
       ) : (
-        <div className="mt-5 rounded-[1.75rem] border border-dashed border-red-200 bg-white/65 px-4 py-12 text-center text-sm font-semibold text-slate-500">No mocks found for this filter.</div>
+        <div className="mock-ielts-glass-empty mt-5 rounded-[1.75rem] border border-dashed border-red-200 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status">No mocks found for this filter.</div>
       )}
     </section>
   )

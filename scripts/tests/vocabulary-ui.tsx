@@ -11,6 +11,8 @@ import VocabularyActivity from '../../src/pages/VocabularyActivity'
 import Vocabulary from '../../src/pages/Vocabulary'
 import { apiClient } from '../../src/lib/apiClient'
 import { useAuthStore } from '../../src/store/authStore'
+import { normalizeVocabularyAnswer } from '../../src/utils/vocabularyAnswers'
+import VocabularyExample from '../../src/components/vocab/VocabularyExample'
 
 const satVocabularyPacks = vocabularyCollections.sat
 const entries = satVocabularyPacks[0].sections[0].entries
@@ -50,6 +52,45 @@ async function matchAll() {
 }
 
 export async function run() {
+  assert.equal(normalizeVocabularyAnswer('  O‘BRIEN  '), normalizeVocabularyAnswer("o'brien"))
+  assert.equal(normalizeVocabularyAnswer('well–known'), normalizeVocabularyAnswer('well-known'))
+  assert.notEqual(normalizeVocabularyAnswer('habitat'), normalizeVocabularyAnswer('habbitat'))
+  const firstListening = vocabularyCollections.ielts[0].tests[0].sections[0].entries
+  assert.equal(firstListening.find((entry) => entry.term === 'availability')!.uzbek, 'mavjudlik')
+  assert.ok(firstListening.find((entry) => entry.term === 'availability')!.exampleUzbek)
+  const sourceEntry = { ...entries[0], example: 'Test extract ____', sourceExcerpt: 'Test extract ____' }
+  await render(<VocabularyExample entry={sourceEntry} />)
+  assert.match(container.textContent!, /From the test/)
+  assert.doesNotMatch(container.textContent!, /Example sentence/)
+  await render(<VocabularyExample entry={entries[0]} />)
+  assert.match(container.textContent!, /Example sentence/)
+
+  // Equal personal-word meanings are interchangeable in matching, and cannot
+  // create duplicate choices or multiple correct buttons in a quiz.
+  const equalEntries = [
+    { ...entries[0], id: 'equal-a', term: 'first', definition: 'The same meaning.' },
+    { ...entries[1], id: 'equal-b', term: 'second', definition: 'The same meaning.' },
+  ]
+  const equalCompletions: number[] = []
+  await render(<MatchingActivity entries={equalEntries} rewardKey="equal-definitions" onComplete={(accuracy) => equalCompletions.push(accuracy)} />)
+  const meaningButtons = () => [...container.querySelectorAll<HTMLButtonElement>('.vocab-matching-column:nth-child(2) button')]
+  await click(button('first'))
+  await click(meaningButtons()[1])
+  assert.ok(meaningButtons()[1].disabled)
+  assert.ok(!meaningButtons()[0].disabled)
+  await click(button('second'))
+  await click(meaningButtons()[0])
+  assert.deepEqual(equalCompletions, [100])
+  await render(<QuizActivity entries={equalEntries} />)
+  assert.equal(container.querySelectorAll('.vocab-quiz-options button').length, 1)
+
+  await render(<TypingActivity entries={[entries[0]]} />)
+  await act(async () => container.querySelector('input')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
+  assert.ok(button('Check').disabled, 'Empty Enter does not submit a wrong answer')
+  assert.doesNotMatch(container.textContent!, /Answer:/)
+  window.localStorage.removeItem('smarttest_vocab_matching_rewards_v2')
+  window.localStorage.removeItem('smarttest_vocab_diamond_bank_v1')
+
   const ieltsRoutes = <Routes>
     <Route path="/vocabulary/:track" element={<Vocabulary />} />
     <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId" element={<VocabularyActivity />} />

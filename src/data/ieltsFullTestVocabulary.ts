@@ -26,6 +26,7 @@ export const ieltsFullTestVocabulary: IeltsBook[] = content.books.map((book) => 
         ...lexicon[entry.term],
         id: `${section.id}_entry_${index + 1}`,
         example: entry.example,
+        exampleUzbek: 'exampleUzbek' in entry ? String(entry.exampleUzbek) : undefined,
         sourceExcerpt: entry.sourceExcerpt,
         sourceSectionId: entry.sourceSectionId,
         sourceTitle: entry.sourceTitle,

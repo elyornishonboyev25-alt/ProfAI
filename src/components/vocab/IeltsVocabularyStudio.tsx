@@ -8,6 +8,7 @@ import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCo
 import type { IeltsVocabularySkill } from '@/data/ieltsFullTestVocabulary'
 import { SaveWordButton, WordSaveProvider } from './SaveWordButton'
 import { usePronunciation } from './activities'
+import VocabularyExample from './VocabularyExample'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/ielts-vocabulary.css'
 
@@ -67,10 +68,7 @@ export function IeltsVocabularyWord({ entry }: { entry: VocabularyEntry }) {
           <p className="min-w-0 text-xs font-semibold leading-5 text-red-800">{entry.synonym}</p>
         </div> : null}
       </div>
-      <blockquote className="ielts-vocab-example break-words">
-        <p className="ielts-vocab-label mb-1.5"><UiText text="Example" /></p>
-        <p className="text-xs leading-5 text-slate-600">{entry.example}</p>
-      </blockquote>
+      <VocabularyExample entry={entry} />
       {entry.sourceExcerpt ? (
         <div className="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">
           <button type="button" aria-expanded={contextOpen} aria-controls={contextId} onClick={() => setContextOpen((previous) => !previous)} className="ielts-vocab-context flex w-full items-center justify-between gap-2 rounded-lg px-1 py-1 text-left font-semibold leading-5 text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">

@@ -264,9 +264,11 @@ export default function VocabularyActivity() {
               ) : null}
             </div>
             <div className="vocab-practice-heading">
+              <p className="vocab-header-eyebrow">YOUR VOCABULARY WORKSPACE</p>
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
+            <div className="vocab-header-stamp" aria-hidden="true"><BookOpenCheck size={26} strokeWidth={1.4} /><span>SMALL STEPS<br /><strong>LASTING KNOWLEDGE</strong></span></div>
           </header>
 
           {xpStatus?.key === rewardKey ? (
@@ -285,7 +287,7 @@ export default function VocabularyActivity() {
                 </div>
                 <p className="vocab-reward-note">XP once per activity · 120 XP daily limit</p>
               </section>
-              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} />
+              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} />
               <details key={basePath} className="vocab-word-list">
                 <summary>
                   <span className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4" /><UiText text="Vocabulary" /><span className="vocab-word-count">{entries.length}</span></span>

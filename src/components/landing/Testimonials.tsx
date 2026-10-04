@@ -14,6 +14,15 @@ function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
 }
 
+function scoreChange(review: DisplayReview, c: (source: string) => string) {
+  if (!review.bandBefore || !review.bandAfter) return null
+  const change = Number(review.bandAfter) - Number(review.bandBefore)
+  if (!Number.isFinite(change)) return null
+  const amount = `${change > 0 ? '+' : ''}${review.exam === 'IELTS' ? change.toFixed(1) : change}`
+  const unit = review.exam === 'IELTS' ? c('IELTS band points') : c('SAT points')
+  return c('Score change: {change}').replace('{change}', `${amount} ${unit}`)
+}
+
 function ReviewAvatar({ review }: { review: DisplayReview }) {
   const [failed, setFailed] = useState(false)
   const featured = review.id.startsWith('featured-')
@@ -38,19 +47,21 @@ function ReviewCard({ review, hidden = false, onRead }: { review: DisplayReview;
   const date = review.createdAt ? new Date(review.createdAt) : null
   const formattedDate = date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium' }).format(date) : null
   const rating = typeof review.rating === 'number' && review.rating >= 1 && review.rating <= 5 ? review.rating : null
+  const change = scoreChange(review, c)
 
   return <article className="landing-review-card" aria-hidden={hidden || undefined}>
     <div className="landing-review-card-top"><Quote size={24} aria-hidden="true" /><span>{review.exam}</span></div>
     {rating !== null && <div className="landing-review-stars" aria-label={c('Rated {rating} out of 5 stars').replace('{rating}', String(rating))}>{Array.from({ length: rating }, (_, index) => <Star key={index} size={15} fill="currentColor" aria-hidden="true" />)}</div>}
     <p className="landing-review-text">{text}</p>
     {long && <button type="button" className="landing-review-more" tabIndex={hidden ? -1 : 0} onClick={() => onRead(review)}>{c('Read more')}</button>}
-    {review.bandBefore && review.bandAfter && <div className="landing-review-progress" aria-label={`${review.exam}: ${review.bandBefore} to ${review.bandAfter}`}><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
+    {review.bandBefore && review.bandAfter && <div className="landing-review-progress" aria-label={`${review.exam}: ${review.bandBefore} to ${review.bandAfter}${change ? `, ${change}` : ''}`}><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong>{change && <small>{change}</small>}</div>}
     <div className="landing-review-author"><ReviewAvatar review={review} /><div><strong>{review.name}</strong>{formattedDate && <small>{formattedDate}</small>}</div></div>
   </article>
 }
 
 function ReviewDetailDialog({ review, onClose }: { review: DisplayReview; onClose: () => void }) {
   const { c } = useCopy()
+  const change = scoreChange(review, c)
   const closeRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -70,7 +81,7 @@ function ReviewDetailDialog({ review, onClose }: { review: DisplayReview; onClos
       <span className="landing-section-kicker"><Quote size={15} /> {review.exam}</span>
       <h2 id="landing-review-detail-title">{review.name}</h2>
       <p className="landing-review-detail-text">{review.text}</p>
-      {review.bandBefore && review.bandAfter && <div className="landing-review-progress"><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
+      {review.bandBefore && review.bandAfter && <div className="landing-review-progress"><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong>{change && <small>{change}</small>}</div>}
     </div>
   </div>, document.body)
 }
@@ -83,10 +94,12 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
   const [name, setName] = useState('')
   const [exam, setExam] = useState<ReviewExam>('General')
   const [rating, setRating] = useState('')
+  const [bandBefore, setBandBefore] = useState('')
+  const [bandAfter, setBandAfter] = useState('')
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
-  const [errorField, setErrorField] = useState<'name' | 'comment' | 'submit' | null>(null)
+  const [errorField, setErrorField] = useState<'name' | 'comment' | 'scores' | 'submit' | null>(null)
 
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -112,13 +125,31 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
     const cleanName = name.trim()
     const cleanComment = comment.trim()
     if (cleanName.length < 2 || cleanName.length > 60) { setErrorField('name'); setError(c('Enter a name between 2 and 60 characters.')); nameRef.current?.focus(); return }
+    const cleanBefore = bandBefore.trim()
+    const cleanAfter = bandAfter.trim()
+    if ((cleanBefore && !cleanAfter) || (!cleanBefore && cleanAfter)) { setErrorField('scores'); setError(c('Enter both scores to show your progress.')); document.getElementById('landing-comment-score-before')?.focus(); return }
+    if (cleanBefore && cleanAfter) {
+      const before = Number(cleanBefore)
+      const after = Number(cleanAfter)
+      const valid = exam === 'IELTS'
+        ? [before, after].every(score => Number.isFinite(score) && score >= 0 && score <= 9 && Number.isInteger(score * 2))
+        : exam === 'SAT'
+          ? [before, after].every(score => Number.isInteger(score) && score >= 400 && score <= 1600 && score % 10 === 0)
+          : false
+      if (!valid) {
+        setErrorField('scores')
+        setError(c(exam === 'IELTS' ? 'Enter valid IELTS band scores from 0 to 9 in 0.5 steps.' : 'Enter SAT scores from 400 to 1600 in steps of 10.'))
+        document.getElementById('landing-comment-score-before')?.focus()
+        return
+      }
+    }
     if (cleanComment.length < 8 || cleanComment.length > 600) { setErrorField('comment'); setError(c('Your comment must be between 8 and 600 characters.')); document.getElementById('landing-comment-text')?.focus(); return }
     sendingRef.current = true
     setSending(true)
     setErrorField(null)
     setError('')
     try {
-      const review = await submitReview({ name: cleanName, exam, rating: rating ? Number(rating) : undefined, text: cleanComment })
+      const review = await submitReview({ name: cleanName, exam, rating: rating ? Number(rating) : undefined, bandBefore: cleanBefore || undefined, bandAfter: cleanAfter || undefined, text: cleanComment })
       onSubmitted(review)
     } catch (cause) {
       setErrorField('submit')
@@ -145,9 +176,17 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
           {errorField === 'name' && error && <p id="landing-comment-name-error" className="landing-comment-field-error" role="alert">{error}</p>}
         </div>
         <div className="landing-comment-row">
-          <div className="landing-comment-field"><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><div className="landing-comment-select"><select id="landing-comment-exam" value={exam} onChange={event => setExam(event.target.value as ReviewExam)}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT">Digital SAT</option></select><ChevronDown size={17} aria-hidden="true" /></div></div>
+          <div className="landing-comment-field"><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><div className="landing-comment-select"><select id="landing-comment-exam" value={exam} onChange={event => { setExam(event.target.value as ReviewExam); setBandBefore(''); setBandAfter(''); if (errorField === 'scores') { setError(''); setErrorField(null) } }}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT">Digital SAT</option></select><ChevronDown size={17} aria-hidden="true" /></div></div>
           <div className="landing-comment-field"><label htmlFor="landing-comment-rating">{c('Rating (optional)')}</label><div className="landing-comment-select"><select id="landing-comment-rating" value={rating} onChange={event => setRating(event.target.value)}><option value="">{c('No rating')}</option>{[5, 4, 3, 2, 1].map(value => <option key={value} value={value}>{value} / 5</option>)}</select><ChevronDown size={17} aria-hidden="true" /></div></div>
         </div>
+        {(exam === 'IELTS' || exam === 'SAT') && <div className="landing-comment-score-group">
+          <p className="landing-comment-score-heading">{c('Share your score progress (optional)')}</p>
+          <div className="landing-comment-row landing-comment-score-row">
+            <div className="landing-comment-field"><label htmlFor="landing-comment-score-before">{c('Starting score')}</label><input id="landing-comment-score-before" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandBefore} onChange={event => { setBandBefore(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 6.0' : 'e.g. 1180'} /></div>
+            <div className="landing-comment-field"><label htmlFor="landing-comment-score-after">{c('Latest score')}</label><input id="landing-comment-score-after" type="number" inputMode="decimal" min={exam === 'IELTS' ? 0 : 400} max={exam === 'IELTS' ? 9 : 1600} step={exam === 'IELTS' ? 0.5 : 10} aria-invalid={errorField === 'scores'} aria-describedby={errorField === 'scores' ? 'landing-comment-scores-error' : undefined} value={bandAfter} onChange={event => { setBandAfter(event.target.value); if (errorField === 'scores') { setError(''); setErrorField(null) } }} placeholder={exam === 'IELTS' ? 'e.g. 7.5' : 'e.g. 1450'} /></div>
+          </div>
+          {errorField === 'scores' && error && <p id="landing-comment-scores-error" className="landing-comment-field-error" role="alert">{error}</p>}
+        </div>}
         <div className="landing-comment-field landing-comment-text-field">
           <div className="landing-comment-label-row"><label htmlFor="landing-comment-text">{c('Your comment')}</label><span className="landing-comment-count">{comment.length}/600</span></div>
           <textarea id="landing-comment-text" required minLength={8} maxLength={600} rows={4} aria-invalid={errorField === 'comment'} aria-describedby={errorField === 'comment' ? 'landing-comment-text-error' : undefined} value={comment} onChange={event => { setComment(event.target.value); if (errorField === 'comment') { setError(''); setErrorField(null) } }} placeholder={c('What was helpful? What could be better?')} />

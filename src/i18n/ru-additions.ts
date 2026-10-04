@@ -1,5 +1,14 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Score change: {change}': 'Изменение результата: {change}',
+  'IELTS band points': 'балла IELTS',
+  'SAT points': 'баллов SAT',
+  'Starting score': 'Начальный балл',
+  'Latest score': 'Итоговый балл',
+  'Share your score progress (optional)': 'Укажите изменение балла (необязательно)',
+  'Enter both scores to show your progress.': 'Укажите оба результата, чтобы показать прогресс.',
+  'Enter valid IELTS band scores from 0 to 9 in 0.5 steps.': 'Для IELTS укажите баллы от 0 до 9 с шагом 0,5.',
+  'Enter SAT scores from 400 to 1600 in steps of 10.': 'Для SAT укажите баллы от 400 до 1600 с шагом 10.',
   "Search lessons, topics or sources": "Поиск уроков, тем и источников",
   "Clear search": "Очистить поиск",
   "All levels": "Все уровни",

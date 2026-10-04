@@ -1,5 +1,14 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Score change: {change}': 'Natijadagi o‘zgarish: {change}',
+  'IELTS band points': 'IELTS band balli',
+  'SAT points': 'SAT balli',
+  'Starting score': 'Boshlang‘ich ball',
+  'Latest score': 'Yakuniy ball',
+  'Share your score progress (optional)': 'Ballingizdagi o‘zgarishni kiriting (ixtiyoriy)',
+  'Enter both scores to show your progress.': 'O‘sishni ko‘rsatish uchun ikkala ballni ham kiriting.',
+  'Enter valid IELTS band scores from 0 to 9 in 0.5 steps.': 'IELTS ballarini 0 dan 9 gacha, 0,5 qadam bilan kiriting.',
+  'Enter SAT scores from 400 to 1600 in steps of 10.': 'SAT ballarini 400 dan 1600 gacha, 10 qadam bilan kiriting.',
   "Search lessons, topics or sources": "Dars, mavzu yoki manbani qidiring",
   "Clear search": "Qidiruvni tozalash",
   "All levels": "Barcha darajalar",

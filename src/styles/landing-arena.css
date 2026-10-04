@@ -161,6 +161,7 @@
 .landing-review-progress { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; margin-top: 8px; padding: 6px 9px; border: 1px solid rgba(254,202,202,.9); border-radius: 10px; color: #7f1d1d; background: rgba(255,245,245,.92); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 800; }
 .landing-review-progress svg { color: var(--landing-red); }
 .landing-review-progress strong { color: var(--landing-red-dark); font-weight: 900; }
+.landing-review-progress small { margin-left: 2px; padding-left: 8px; border-left: 1px solid rgba(220,38,38,.2); color: #52525b; font-size: 10px; font-weight: 750; white-space: nowrap; }
 .landing-review-author { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #f4e4e4; }
 .landing-review-avatar { display: grid; width: 39px; height: 39px; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid rgba(220,38,38,.12); border-radius: 11px; color: #991b1b; background: #fee2e2; font-size: 13px; font-weight: 900; }
 .landing-review-author img.landing-review-avatar { display: block; object-fit: cover; }
@@ -208,6 +209,11 @@
 .landing-comment-form-dialog :is(input,textarea)[aria-invalid="true"] { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.1); }
 .landing-comment-form-dialog textarea { min-height: 112px; resize: vertical; line-height: 1.55; }
 .landing-comment-form-dialog .landing-comment-row { gap: 14px; }
+.landing-comment-score-group { display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(254,202,202,.65); border-radius: 15px; background: linear-gradient(135deg,rgba(255,245,245,.82),rgba(255,255,255,.92)); }
+.landing-comment-form-dialog .landing-comment-score-heading { margin: 0; color: #71717a; font-size: 11px; font-weight: 750; line-height: 1.4; }
+.landing-comment-form-dialog .landing-comment-score-row { gap: 10px; }
+.landing-comment-form-dialog .landing-comment-score-row label { font-size: 12px; }
+.landing-comment-form-dialog .landing-comment-score-row :is(input) { min-height: 45px; padding: 10px 12px; font-size: 14px; }
 .landing-comment-select { position: relative; }
 .landing-comment-select select { appearance: none; width: 100%; padding-right: 40px; cursor: pointer; }
 .landing-comment-select > svg { position: absolute; top: 50%; right: 14px; color: #52525b; pointer-events: none; transform: translateY(-50%); }

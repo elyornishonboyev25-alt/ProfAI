@@ -4,13 +4,68 @@ import { build } from 'esbuild'
 // Bundle in memory so validation uses the actual catalog (including content
 // corrections), without writing generated files into the repository.
 async function load(entryPoint) {
-  const result = await build({ entryPoints: [entryPoint], bundle: true, platform: 'node', format: 'esm', write: false })
+  const result = await build({ entryPoints: [entryPoint], bundle: true, platform: 'node', format: 'esm', write: false, loader: { '.png': 'dataurl' } })
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`)
 }
 
 async function main() {
   const { SAT_TEST_CATALOG } = await load('src/features/sat/catalog.ts')
   const { vocabularyCollections } = await load('src/data/vocabularyCollections.ts')
+  const tracks = await load('src/utils/ieltsTrackCatalog.ts')
+  const { resolveIeltsTestById } = await load('src/utils/ieltsTestCatalog.ts')
+  const { getWritingFullTestCatalog } = await load('src/data/writingTestData.ts')
+  const { getIeltsSpeakingFullMockCatalog } = await load('src/utils/ieltsSpeakingCatalog.ts')
+  const canonical = {
+    listening: tracks.getIeltsFullTestCatalog('listening').map((entry) => ({ id: entry.testId, test: resolveIeltsTestById(entry.testId) })),
+    reading: tracks.getIeltsReadingUnifiedCatalog().map((entry) => ({ id: entry.testId, test: resolveIeltsTestById(entry.testId) })),
+    writing: getWritingFullTestCatalog().map((test) => ({ id: test.id, test })),
+    speaking: getIeltsSpeakingFullMockCatalog().map((test) => ({ id: test.id, test })),
+  }
+  const wordPattern = (term) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+  const normalize = (text) => text.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim()
+  const ieltsIds = new Set()
+  assert.deepEqual(vocabularyCollections.ielts.map((book) => book.skill), ['listening', 'reading', 'writing', 'speaking'])
+  for (const book of vocabularyCollections.ielts) {
+    assert.equal(book.tests.length, canonical[book.skill].length)
+    assert.doesNotMatch(book.title, /Day|Coming soon/)
+    for (const [index, test] of book.tests.entries()) {
+      const source = canonical[book.skill][index]
+      assert.ok(source.test, `${test.title}: source test must exist`)
+      assert.equal(test.sourceTestId, source.id, `${test.title}: use visible catalog numbering`)
+      assert.equal(test.title, `${book.skill[0].toUpperCase() + book.skill.slice(1)} Full Test ${index + 1}`)
+      assert.equal(test.available, true)
+      assert.equal(test.sections.length, book.skill === 'listening' ? 1 : book.skill === 'writing' ? 2 : 3)
+      const sourceParts = book.skill === 'writing' ? source.test.tasks : book.skill === 'speaking' ? Object.values(source.test.parts) : source.test.sections
+      for (const [partIndex, section] of test.sections.entries()) {
+        assert.ok(section.topic)
+        assert.equal(section.entries.length, book.skill === 'listening' ? 20 : book.skill === 'reading' ? 15 : book.skill === 'writing' ? 10 : section.entries.length)
+        if (book.skill === 'speaking') assert.ok(section.entries.length >= 8 && section.entries.length <= 10)
+        assert.equal(new Set(section.entries.map((entry) => entry.term.toLowerCase())).size, section.entries.length, `${test.title} ${section.title}: duplicate word`)
+        assert.equal(new Set(section.entries.map((entry) => entry.definition)).size, section.entries.length, `${test.title} ${section.title}: ambiguous quiz definitions`)
+        for (const entry of section.entries) {
+          const label = `${test.title} ${section.title}: ${entry.term}`
+          assert.ok(!ieltsIds.has(entry.id), `Duplicate entry ID: ${label}`)
+          ieltsIds.add(entry.id)
+          assert.ok(entry.definition && entry.synonym && entry.example && entry.sourceExcerpt, label)
+          assert.match(entry.example, wordPattern(entry.term), `${label}: example must use the word`)
+          const part = sourceParts.find((item) => item.id === entry.sourceSectionId)
+          assert.ok(part, `${label}: missing source part`)
+          if (book.skill !== 'listening') assert.equal(part.id, sourceParts[partIndex].id, `${label}: wrong part`)
+          const body = normalize(book.skill === 'reading' ? part.content || part.paragraphs?.map((p) => p.content).join(' ') || '' : JSON.stringify(part))
+          if (book.skill === 'listening' || book.skill === 'reading' || entry.sourceKind === 'text') {
+            assert.match(body, wordPattern(entry.term), `${label}: word must occur in the actual source`)
+          }
+          if (book.skill === 'writing') {
+            assert.equal(section.topic, part.subtitle)
+            assert.equal(normalize(section.prompt), normalize([part.promptLead, part.promptQuestion].filter(Boolean).join(' ')), `${label}: wrong Writing prompt`)
+          }
+          if (book.skill === 'speaking') assert.equal(section.topic, part.topic || part.title || part.theme)
+        }
+      }
+      if (book.skill === 'listening') assert.equal(new Set(test.sections[0].entries.map((entry) => entry.sourceSectionId)).size, 4, `${test.title}: cover all four parts`)
+    }
+  }
+  console.log(`Validated 120 IELTS Full Test sets and ${ieltsIds.size} entries against the live four-skill catalogs.`)
   const tests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
   assert.equal(vocabularyCollections.sat.length, tests.length, 'Every live mock needs a curated vocabulary set')
   const ids = new Set()

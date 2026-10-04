@@ -1,6 +1,6 @@
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 
-export type VocabContext = 'reading' | 'listening' | 'article' | 'sat'
+export type VocabContext = 'reading' | 'listening' | 'writing' | 'speaking' | 'article' | 'sat'
 export type VocabSource = 'ai' | 'manual' | 'studio'
 
 export type WordOrigin = { label: string; path: string; questionId?: string }

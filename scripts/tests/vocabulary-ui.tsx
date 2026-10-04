@@ -33,7 +33,7 @@ const button = (text: string) => [...container.querySelectorAll('button')]
   .find((element) => element.textContent?.trim() === text) as HTMLButtonElement
 
 async function click(element: HTMLElement | null | undefined) {
-  assert.ok(element, 'Button must exist')
+  assert.ok(element, `Button must exist; visible text: ${container.textContent?.slice(0, 600)}; links: ${[...container.querySelectorAll('a')].map((a) => a.getAttribute('href')).join(', ')}`)
   await act(async () => element.click())
 }
 
@@ -50,6 +50,51 @@ async function matchAll() {
 }
 
 export async function run() {
+  const ieltsRoutes = <Routes>
+    <Route path="/vocabulary/:track" element={<Vocabulary />} />
+    <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId" element={<VocabularyActivity />} />
+    <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId/:activity" element={<VocabularyActivity />} />
+    <Route path="/vocabulary/my-words/:wordsContext" element={<MyWordsVocabulary />} />
+  </Routes>
+  for (const book of vocabularyCollections.ielts) {
+    await render(ieltsRoutes, `/vocabulary/ielts?skill=${book.skill}`)
+    assert.doesNotMatch(container.textContent!, /Reading Days|Day 1-30|Coming soon/)
+    assert.equal(container.querySelectorAll('button[aria-label^="Open "]').length, 30)
+    await click(container.querySelector(`button[aria-label="Open ${book.tests[29].title}"]`))
+    assert.match(container.textContent!, new RegExp(book.tests[29].title))
+    const selected = book.tests[29].sections[0]
+    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, selected.entries.length)
+    if (book.skill === 'reading') {
+      await click(button('Part 3'))
+      assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 15)
+      assert.ok(container.textContent!.includes(book.tests[29].sections[2].topic!))
+      await click(button('Part 1'))
+    }
+    await click(container.querySelector(`button[aria-label="Save ${selected.entries[0].term} to My Words"]`))
+    assert.equal(getSavedWords(book.skill).length, 1, 'Each skill saves to its own context')
+    await click(container.querySelector('a[href*="/vocabulary/ielts/"]'))
+    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, selected.entries.length)
+    await click(container.querySelector('a[href$="/flashcards"]'))
+    await click(button('I know it'))
+    await wait(180)
+    await click(container.querySelector(`a[href='/vocabulary/ielts/${book.id}/${book.tests[29].id}/${selected.id}']`))
+    await click([...container.querySelectorAll('a')].find((link) => link.getAttribute('href') === `/vocabulary/ielts?skill=${book.skill}&test=30&part=1`))
+    assert.ok(container.textContent!.includes(book.tests[29].title), 'Activity back navigation restores the selected test')
+    await render(ieltsRoutes, `/vocabulary/my-words/${book.skill}`)
+    assert.ok(container.textContent!.includes(selected.entries[0].term))
+  }
+  // Switch skills using the visible controls, clearing the selected test.
+  await render(ieltsRoutes, '/vocabulary/ielts?skill=reading&test=30&part=3')
+  await click(container.querySelector('button[aria-label="Writing"]'))
+  assert.equal(container.querySelectorAll('button[aria-label^="Open Writing Full Test "]').length, 30)
+  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 0)
+  await render(ieltsRoutes, '/vocabulary/ielts/reading_full_track/reading_full_test_1/reading_full_test_1_passage_1')
+  assert.match(container.textContent!, /Reading Full Test 13/)
+  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 15)
+  await render(ieltsRoutes, '/vocabulary/ielts/reading_days_track/reading_day_26/reading_day_26_passage_2')
+  assert.match(container.textContent!, /Reading Full Test 10 · Part 3/)
+  window.localStorage.clear()
+
   const origin = {
     label: 'SAT Full Mock 1 · English Module 1',
     path: '/vocabulary/sat/sat_full_mock_1/sat_full_mock_1_rw1',
@@ -74,7 +119,7 @@ export async function run() {
     const backLabel = fromArena ? 'Back to SAT Arena' : 'Back to Vocabulary'
     await render(navigationRoutes, entry)
     if (!fromArena) {
-      await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent === 'SAT Vocabulary'))
+      await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent?.trim() === 'SAT Vocabulary'))
     }
     assert.ok(button(backLabel))
     await click(button(backLabel))
@@ -83,7 +128,7 @@ export async function run() {
     for (const mode of ['flashcards', 'matching', 'quiz', 'typing']) {
       await render(navigationRoutes, entry)
       if (!fromArena) {
-        await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent === 'SAT Vocabulary'))
+        await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent?.trim() === 'SAT Vocabulary'))
       }
       await click(button('Start Module 1'))
       await click(container.querySelector(`a[href='${origin.path}/${mode}']`))
@@ -213,5 +258,5 @@ export async function run() {
   assert.equal(requests.length, 2)
   assert.equal(requests[0].eventKey, requests[1].eventKey, 'Retry must reuse the idempotency key')
   await act(async () => root.unmount())
-  console.log('UI passed: SAT catalog, save/source links, StrictMode matching + replay, flashcards, quiz accuracy, typing accuracy/no answer leak, XP failure + retry + profile update.')
+  console.log('UI passed: four IELTS skills, Full Tests 1–30, part counts, activity return paths, per-skill saved words, legacy Reading links, SAT catalog, matching + replay, flashcards, quiz, typing, XP failure + retry + profile update.')
 }

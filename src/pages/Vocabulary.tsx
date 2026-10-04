@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Gem, Sparkle
 import { motion } from 'framer-motion'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
+import IeltsVocabularyStudio from '@/components/vocab/IeltsVocabularyStudio'
 import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
@@ -93,8 +94,6 @@ export default function Vocabulary() {
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const minimalMotion = reducedMotion
 
-  const [openIeltsBookId, setOpenIeltsBookId] = useState<string | null>(vocabularyCollections.ielts[0]?.id ?? null)
-  const [openIeltsTestKey, setOpenIeltsTestKey] = useState<string | null>(null)
   const [openSatPackId, setOpenSatPackId] = useState<string | null>(vocabularyCollections.sat[0]?.id ?? null)
 
   const ieltsStats = useMemo(() => {
@@ -125,21 +124,6 @@ export default function Vocabulary() {
     )
     return { packs, sections, words }
   }, [])
-
-  const toggleIeltsBook = (bookId: string) => {
-    if (openIeltsBookId === bookId) {
-      setOpenIeltsBookId(null)
-      setOpenIeltsTestKey(null)
-      return
-    }
-    setOpenIeltsBookId(bookId)
-    setOpenIeltsTestKey(null)
-  }
-
-  const toggleIeltsTest = (bookId: string, testId: string) => {
-    const key = `${bookId}::${testId}`
-    setOpenIeltsTestKey((previous) => (previous === key ? null : key))
-  }
 
   const toggleSatPack = (packId: string) => {
     setOpenSatPackId((previous) => (previous === packId ? null : packId))
@@ -210,11 +194,11 @@ export default function Vocabulary() {
                      <UiText text={"IELTS Academic Track"} /> </div>
                   <h2 className="mt-4 text-3xl font-black text-slate-900"> <UiText text={"IELTS Vocabulary"} /> </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                     <UiText text={"Reading-focused roadmap with Day 1-30 plus Full Test 1-20. Full tests open by Passage 1, 2, and 3."} /> </p>
+                     <UiText text={"Full Tests 1–30 for Listening, Reading, Writing and Speaking, with vocabulary matched to each passage and topic."} /> </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.books}  <UiText text={"books"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700"><UiText text={"Four skills"} /> </span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.tests}  <UiText text={"tests"} /> </span>
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.passages}  <UiText text={"passages"} /> </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">{ieltsStats.passages}  <UiText text={"sets"} /> </span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open IELTS page ->"} /> </p>
                 </button>
@@ -279,9 +263,9 @@ export default function Vocabulary() {
                     Words saved from Vocabulary Studio, AI explanations, and your own additions — with links back to their sources.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">SAT · Reading · Listening · Article</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-slate-700">SAT · IELTS · Articles</span>
                     <span className="rounded-full bg-white px-3 py-1 text-slate-700">
-                      {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article')}  <UiText text={"saved"} /> </span>
+                      {countSavedWords('sat') + countSavedWords('reading') + countSavedWords('listening') + countSavedWords('article') + countSavedWords('writing') + countSavedWords('speaking')}  <UiText text={"saved"} /> </span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-blue-700 transition group-hover:translate-x-1"> <UiText text={"Open My Words ->"} /> </p>
                 </button>
@@ -293,137 +277,7 @@ export default function Vocabulary() {
     )
   }
 
-  if (routeTrack === 'IELTS') {
-    return (
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-
-        <div className="relative mx-auto w-full max-w-6xl space-y-6">
-          <Reveal>
-            <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="premium-top-controls">
-                    <button
-                      onClick={() => navigate('/vocabulary')}
-                      className="premium-back-btn"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                       <UiText text={"Back to Vocabulary"} /> </button>
-                    <span className="premium-top-chip"> <UiText text={"IELTS Vocabulary Track"} /> </span>
-                  </div>
-                  <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl"> <UiText text={"IELTS Reading Vocabulary Studio"} /> </h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                     <UiText text={"Reading vocabulary by roadmap: Day 1-30 and Full Test 1-20. Opening one test automatically closes the previous one."} /> </p>
-                </div>
-                <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600"> <UiText text={"IELTS Stats"} /> </p>
-                  <p className="mt-1 text-lg font-extrabold text-slate-900">{ieltsStats.tests}  <UiText text={"tests /"} /> {ieltsStats.passages}  <UiText text={"passages"} /> </p>
-                  <p className="text-sm font-semibold text-blue-700">
-                    <CountUp value={ieltsStats.words} />  <UiText text={"terms"} /> </p>
-                </div>
-              </div>
-            </section>
-          </Reveal>
-
-          <Stagger className="space-y-3">
-            {vocabularyCollections.ielts.map((book) => {
-              const bookOpen = openIeltsBookId === book.id
-              return (
-                <StaggerItem
-                  key={book.id}
-                  className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
-                >
-                  <button
-                    onClick={() => toggleIeltsBook(book.id)}
-                    className={`group flex w-full items-center justify-between px-5 py-4 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-white hover:bg-blue-50/55'}`}
-                  >
-                    <div>
-                      <p className="text-xl font-bold text-slate-900">{book.title}</p>
-                      <p className="text-xs font-semibold text-slate-500">{book.tests.length}  <UiText text={"tests available"} /> </p>
-                    </div>
-                    <ChevronDown
-                      className={`h-5 w-5 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${bookOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-
-                  <CollapsiblePanel
-                    isOpen={bookOpen}
-                    minimalMotion={minimalMotion}
-                    lazy
-                    className="bg-gradient-to-b from-white via-blue-50/30 to-blue-50/45"
-                  >
-                    <div className="space-y-2 border-t border-blue-100 px-3 py-3">
-                      {book.tests.map((test) => {
-                        const testKey = `${book.id}::${test.id}`
-                        const testOpen = openIeltsTestKey === testKey
-                        return (
-                          <div
-                            key={test.id}
-                            className="overflow-hidden rounded-xl border border-blue-100 bg-white"
-                          >
-                            <button
-                              onClick={() => toggleIeltsTest(book.id, test.id)}
-                              className={`flex w-full items-center justify-between px-4 py-3 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'bg-blue-50' : 'hover:bg-blue-50/65'}`}
-                            >
-                              <div>
-                                <p className="text-base font-bold text-slate-900">{test.title}</p>
-                                <p className="text-xs text-slate-500">
-                                  {test.available === false
-                                    ? 'Coming soon'
-                                    : book.id === 'reading_days_track'
-                                      ? test.sections.length > 1
-                                        ? `${test.sections.length} passages available`
-                                        : `${test.sections[0]?.title ?? 'Passage'} available`
-                                      : 'Click to choose one passage'}
-                                </p>
-                              </div>
-                              <ChevronDown
-                                className={`h-4 w-4 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${testOpen ? 'rotate-180' : ''}`}
-                              />
-                            </button>
-
-                            <CollapsiblePanel isOpen={testOpen} minimalMotion={minimalMotion} lazy className="bg-white">
-                              {() => (
-                                <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-3">
-                                  {test.sections.map((section, sectionIndex) => (
-                                    <div
-                                      key={section.id}
-                                      className={`rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
-                                    >
-                                      <p className="text-sm font-bold text-slate-900">{section.title}</p>
-                                      <p className="mt-1 text-xs text-slate-500">{section.entries.length}  <UiText text={"terms"} /> </p>
-                                      <button
-                                        onClick={() => {
-                                          if (test.available === false) return
-                                          navigate(`/vocabulary/ielts/${book.id}/${test.id}/${section.id}`)
-                                        }}
-                                        disabled={test.available === false}
-                                        className={`mt-3 inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold shadow-[0_8px_20px_rgba(59,130,246,0.32)] ${
-                                          test.available === false
-                                            ? 'cursor-not-allowed border border-amber-300 bg-amber-100 text-amber-800 shadow-none'
-                                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                                        }`}
-                                      >
-                                        {test.available === false ? 'Coming soon' : `Start Passage ${sectionIndex + 1}`}
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CollapsiblePanel>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </CollapsiblePanel>
-                </StaggerItem>
-              )
-            })}
-          </Stagger>
-        </div>
-      </div>
-    )
-  }
+  if (routeTrack === 'IELTS') return <IeltsVocabularyStudio />
 
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">

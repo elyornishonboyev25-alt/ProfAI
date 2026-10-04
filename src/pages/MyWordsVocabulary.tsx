@@ -9,6 +9,8 @@ import {
   Bookmark,
   FileText,
   Headphones,
+  Mic,
+  PenLine,
   Plus,
   Sparkles,
   Trash2,
@@ -30,8 +32,10 @@ import {
 
 const CONTEXTS: Array<{ key: VocabContext; label: string; icon: typeof BookOpen; desc: string; siteLink?: { to: string; label: string } }> = [
   { key: 'sat', label: 'SAT', icon: Bookmark, desc: 'Words saved from SAT Full Mock English modules.', siteLink: { to: '/vocabulary/sat', label: 'SAT Full Mock sets' } },
-  { key: 'reading', label: 'Reading', icon: BookOpen, desc: 'Words you met in reading passages.', siteLink: { to: '/vocabulary/ielts', label: 'IELTS reading sets' } },
-  { key: 'listening', label: 'Listening', icon: Headphones, desc: 'Words you met while listening.' },
+  { key: 'reading', label: 'Reading', icon: BookOpen, desc: 'Words you met in reading passages.', siteLink: { to: '/vocabulary/ielts?skill=reading', label: 'IELTS reading sets' } },
+  { key: 'listening', label: 'Listening', icon: Headphones, desc: 'Words you met while listening.', siteLink: { to: '/vocabulary/ielts?skill=listening', label: 'IELTS listening sets' } },
+  { key: 'writing', label: 'Writing', icon: PenLine, desc: 'Vocabulary for Writing Task 1 and Task 2 topics.', siteLink: { to: '/vocabulary/ielts?skill=writing', label: 'IELTS writing sets' } },
+  { key: 'speaking', label: 'Speaking', icon: Mic, desc: 'Vocabulary for Speaking questions and cue cards.', siteLink: { to: '/vocabulary/ielts?skill=speaking', label: 'IELTS speaking sets' } },
   { key: 'article', label: 'Article', icon: FileText, desc: 'Words you met inside articles.', siteLink: { to: '/vocabulary/articles', label: 'Article sets' } },
 ]
 
@@ -72,7 +76,7 @@ function Overview() {
           </section>
         </Reveal>
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {CONTEXTS.map((c) => {
             const Icon = c.icon
             const ai = countSavedWords(c.key, 'ai')
@@ -275,7 +279,7 @@ function WordCard({ word, onSpeak, onRemove }: { word: SavedWord; onSpeak: () =>
 export default function MyWordsVocabulary() {
   const { wordsContext } = useParams<{ wordsContext?: string }>()
   if (!wordsContext) return <Overview />
-  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'article' || wordsContext === 'sat') {
+  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'writing' || wordsContext === 'speaking' || wordsContext === 'article' || wordsContext === 'sat') {
     return <Collection context={wordsContext} />
   }
   return <Navigate to="/vocabulary/my-words" replace />

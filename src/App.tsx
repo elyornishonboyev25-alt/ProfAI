@@ -346,7 +346,7 @@ function App() {
     !isFocusContentMode &&
     !isIeltsMockMode
   const isAiTutorMode = pathname === '/ai-tutor'
-  const isVocabularyPracticeMode = /^\/vocabulary\/(?:ielts\/[^/]+\/[^/]+\/[^/]+|sat\/[^/]+\/[^/]+|articles\/[^/]+|my-words\/[^/]+\/(?:flashcards|matching|quiz|typing))(?:\/(?:flashcards|matching|quiz|typing))?\/?$/.test(pathname)
+  const isVocabularyPracticeMode = /^\/vocabulary\/my-words\/?$/.test(pathname) || /^\/vocabulary\/(?:ielts\/[^/]+\/[^/]+\/[^/]+|sat\/[^/]+\/[^/]+|articles\/[^/]+|my-words\/[^/]+\/(?:flashcards|matching|quiz|typing))(?:\/(?:flashcards|matching|quiz|typing))?\/?$/.test(pathname)
   const showMobileNav =
     !isPublicStandalone &&
     !isTestMode &&

@@ -54,35 +54,29 @@ function Overview() {
   const total = CONTEXTS.reduce((sum, c) => sum + countSavedWords(c.key), 0)
 
   return (
-    <div className="my-vocabulary workspace-page" data-motion={minimalMotion ? 'reduced' : 'full'}>
+    <div className="my-vocabulary my-vocabulary-overview workspace-page" data-motion={minimalMotion ? 'reduced' : 'full'}>
       <div className="my-vocabulary-shell">
         <header className="my-vocabulary-hero">
           <div className="my-vocabulary-intro">
-            <div className="premium-top-controls">
-              <button type="button" onClick={() => navigate('/vocabulary')} className="premium-back-btn">
+            <div className="my-vocabulary-controls">
+              <button type="button" onClick={() => navigate('/vocabulary')} className="my-vocabulary-back">
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" /><UiText text="Back to Vocabulary" />
               </button>
               <span className="my-vocabulary-eyebrow"><Sparkles aria-hidden="true" className="h-3.5 w-3.5" /><UiText text="My Words" /></span>
             </div>
-            <h1>My Vocabulary<span className="my-vocabulary-title-dot" aria-hidden="true">.</span></h1>
+            <h1>My Vocabulary</h1>
             <p className="my-vocabulary-description">
-              Words you save from Vocabulary Studio, AI explanations, and your own additions.
-              All in one place, ready to practise.
+              Your saved words. One personal library, ready to practise.
             </p>
-            <div className="my-vocabulary-tracks" aria-label="Vocabulary tracks">
-              <span data-track="sat">SAT</span><span data-track="ielts">IELTS</span><span data-track="articles"><UiText text="Articles" /></span>
-            </div>
           </div>
           <div className="my-vocabulary-summary">
             <span className="my-vocabulary-summary-icon" aria-hidden="true"><Bookmark className="h-5 w-5" /></span>
-            <p className="my-vocabulary-eyebrow">Collected</p>
             <p className="my-vocabulary-total"><CountUp value={total} /></p>
             <p className="my-vocabulary-summary-label">words saved</p>
-            <div className="my-vocabulary-summary-sources"><Bot aria-hidden="true" className="h-3.5 w-3.5" /> AI <span aria-hidden="true">·</span> Studio <span aria-hidden="true">·</span> You</div>
           </div>
         </header>
 
-        <section aria-labelledby="my-vocabulary-collections">
+        <section className="my-vocabulary-collections" aria-labelledby="my-vocabulary-collections">
           <div className="my-vocabulary-section-heading">
             <h2 id="my-vocabulary-collections">Your collections</h2>
             <span>6 collections</span>
@@ -103,10 +97,10 @@ function Overview() {
                 >
                   <div className="my-vocabulary-card-top">
                     <span className="my-vocabulary-card-icon"><Icon aria-hidden="true" className="h-6 w-6" /></span>
-                    <span className="my-vocabulary-card-track">{c.key === 'sat' ? 'SAT' : c.key === 'article' ? 'Articles' : 'IELTS'}</span>
-                  </div>
-                  <div className="my-vocabulary-card-heading">
-                    <h3>{c.label}</h3>
+                    <div className="my-vocabulary-card-heading">
+                      <span className="my-vocabulary-card-track">{c.key === 'sat' ? 'SAT' : c.key === 'article' ? 'Articles' : 'IELTS'}</span>
+                      <h3>{c.label}</h3>
+                    </div>
                     <span className="my-vocabulary-card-count">{ai + manual + studio}<span>saved</span></span>
                   </div>
                   <p className="my-vocabulary-card-description">{c.desc}</p>

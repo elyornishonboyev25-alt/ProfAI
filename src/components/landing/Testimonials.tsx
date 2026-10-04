@@ -1,7 +1,7 @@
 import { type FormEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ChevronDown, MessageSquareText, Pause, Play, Quote, Star, X } from 'lucide-react'
+import { ArrowRight, ChevronDown, MessageSquareText, Quote, Star, X } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
 import { publicApiUrl } from '@/lib/apiClient'
@@ -208,7 +208,6 @@ function wrap(value: number, width: number) {
 function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[]; dialogOpen: boolean }) {
   const { c } = useCopy()
   const reducedMotion = useReducedMotion()
-  const [playing, setPlaying] = useState(true)
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const [interacting, setInteracting] = useState(false)
@@ -222,7 +221,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
   const interactionTimer = useRef<number | null>(null)
   const phase = useRef<{ top: number; bottom: number; last: number; manual: ManualMove | null }>({ top: 0, bottom: 0, last: 0, manual: null })
   const flowing = reviews.length >= 4 && !reducedMotion
-  const active = playing && !hovered && !focused && !interacting && pageVisible && !dialogOpen && !detail
+  const active = !hovered && !focused && !interacting && pageVisible && !dialogOpen && !detail
   const middle = Math.ceil(reviews.length / 2)
   const rows = [reviews.slice(0, middle), reviews.slice(middle)]
 
@@ -317,7 +316,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
         </div>)}
       </div>
     </div>)}
-    <div className="landing-reviews-marquee-controls"><span className="landing-reviews-marquee-count">{String(reviews.length).padStart(2, '0')} · {c('Comments')}</span><div className="landing-reviews-actions"><button type="button" className="landing-icon-button" aria-label={c(playing ? 'Pause carousel' : 'Play carousel')} aria-pressed={!playing} onClick={() => setPlaying(value => !value)}>{playing ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="landing-icon-button" aria-label={c('Previous comment')} onClick={() => nudge(-1)}><ArrowLeft size={19} /></button><button type="button" className="landing-icon-button" aria-label={c('Next comment')} onClick={() => nudge(1)}><ArrowRight size={19} /></button></div></div>
+    <div className="landing-reviews-marquee-controls"><span className="landing-reviews-marquee-count">{String(reviews.length).padStart(2, '0')} · {c('Comments')}</span></div>
     {detail && <ReviewDetailDialog review={detail} onClose={() => setDetail(null)} />}
   </div>
 }

@@ -170,7 +170,6 @@
 .landing-review-detail-dialog { width: min(640px,100%); }
 .landing-review-detail-dialog .landing-review-detail-text { margin-top: 18px; color: #27272a; font-size: 16px; font-weight: 500; line-height: 1.7; }
 .landing-review-author small { margin-top: 3px; color: #71717a; font-size: 10px; }
-.landing-reviews-actions { display: flex; align-items: center; gap: 8px; }
 .landing-review-message { max-width: 1200px; margin: 0 auto 16px; color: #166534; font-size: 13px; font-weight: 750; }
 .landing-reviews-state { display: grid; justify-items: center; gap: 12px; min-height: 200px; place-content: center; padding: 30px; border: 1px dashed #f3b3b3; border-radius: 20px; background: rgba(255,255,255,.78); box-shadow: 0 10px 26px rgba(127,29,29,.05), inset 0 1px 0 #fff; text-align: center; }
 .landing-reviews-state svg { color: var(--landing-red); }

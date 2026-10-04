@@ -32,7 +32,7 @@ async function render(node: React.ReactNode, path: string | { pathname: string; 
 }
 
 const button = (text: string) => [...container.querySelectorAll('button')]
-  .find((element) => element.textContent?.trim() === text) as HTMLButtonElement
+  .find((element) => element.textContent?.trim() === text || element.getAttribute('aria-label') === text) as HTMLButtonElement
 
 async function click(element: HTMLElement | null | undefined) {
   assert.ok(element, `Button must exist; visible text: ${container.textContent?.slice(0, 600)}; links: ${[...container.querySelectorAll('a')].map((a) => a.getAttribute('href')).join(', ')}`)

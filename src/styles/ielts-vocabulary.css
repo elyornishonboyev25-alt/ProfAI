@@ -1,3 +1,12 @@
+.sat-vocab-studio {
+  --vocab-accent-border: #bfdbfe;
+  --vocab-accent-divider: #dbeafe;
+  --vocab-accent-surface: #f5f9ff;
+  --vocab-accent-soft: #eff6ff;
+  --vocab-accent: #2563eb;
+  --vocab-accent-text: #1d4ed8;
+}
+
 .ielts-vocab-test,
 .ielts-vocab-part,
 .ielts-vocab-word,
@@ -15,7 +24,7 @@
 }
 
 .ielts-vocab-test.is-open {
-  border-color: #fecaca;
+  border-color: var(--vocab-accent-border, #fecaca);
   box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
 }
 
@@ -25,7 +34,7 @@
 }
 
 .ielts-vocab-test.is-open .ielts-vocab-test-toggle {
-  background: #fff8f8;
+  background: var(--vocab-accent-surface, #fff8f8);
 }
 
 .ielts-vocab-chevron,
@@ -37,8 +46,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #dc2626;
-  background: #fef2f2;
+  color: var(--vocab-accent, #dc2626);
+  background: var(--vocab-accent-soft, #fef2f2);
   transition: transform 240ms ease, background-color 240ms ease, color 240ms ease;
 }
 
@@ -47,7 +56,7 @@
 }
 
 .ielts-vocab-parts {
-  border-top: 1px solid #fee2e2;
+  border-top: 1px solid var(--vocab-accent-divider, #fee2e2);
   background: linear-gradient(135deg, #fff, #f8fafc);
 }
 
@@ -60,9 +69,9 @@
 
 .ielts-vocab-part-label {
   border-radius: 7px;
-  background: #fef2f2;
+  background: var(--vocab-accent-soft, #fef2f2);
   padding: 3px 7px;
-  color: #b91c1c;
+  color: var(--vocab-accent-text, #b91c1c);
   font-size: 11px;
   font-weight: 700;
   line-height: 16px;
@@ -181,26 +190,26 @@
 
 @media (hover: hover) and (pointer: fine) {
   .ielts-vocab-test:hover {
-    border-color: #fecaca;
+    border-color: var(--vocab-accent-border, #fecaca);
     box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
   }
 
   .ielts-vocab-test-toggle:hover {
-    background: #fff8f8;
+    background: var(--vocab-accent-surface, #fff8f8);
   }
 
   .ielts-vocab-part:hover,
   .ielts-vocab-word:hover,
   .ielts-vocab-skill:hover {
     transform: translateY(-3px);
-    border-color: #fecaca;
+    border-color: var(--vocab-accent-border, #fecaca);
     box-shadow: 0 10px 24px rgb(15 23 42 / 7%);
   }
 
   .ielts-vocab-part:hover .ielts-vocab-part-arrow {
     transform: translateX(2px);
     color: white;
-    background: #dc2626;
+    background: var(--vocab-accent, #dc2626);
   }
 }
 

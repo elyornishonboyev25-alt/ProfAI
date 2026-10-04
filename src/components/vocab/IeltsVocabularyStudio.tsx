@@ -19,7 +19,7 @@ const skills = [
   { id: 'speaking', label: 'Speaking', icon: Mic, description: 'Vocabulary for Parts 1–3' },
 ] as const
 
-function VocabularyPanel({ open, id, children }: { open: boolean; id: string; children: ReactNode }) {
+export function VocabularyPanel({ open, id, children }: { open: boolean; id: string; children: ReactNode }) {
   const { reducedMotion } = useMotionPreferences()
   const panelRef = useRef<HTMLDivElement>(null)
   useEffect(() => {

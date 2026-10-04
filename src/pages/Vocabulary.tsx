@@ -1,78 +1,17 @@
 import UiText from '@/components/common/UiText'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ArrowLeft, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Gem, Sparkles, Star } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ArrowRight, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Search, Sparkles, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
-import IeltsVocabularyStudio from '@/components/vocab/IeltsVocabularyStudio'
+import IeltsVocabularyStudio, { VocabularyPanel } from '@/components/vocab/IeltsVocabularyStudio'
+import { useCopy } from '@/i18n/interface'
 import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 
 const fastTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
-const collapseDurationMs = 320
-
-type CollapsiblePanelProps = {
-  isOpen: boolean
-  minimalMotion: boolean
-  className?: string
-  children: ReactNode | ((mounted: boolean) => ReactNode)
-  lazy?: boolean
-}
-
-function CollapsiblePanel({ isOpen, minimalMotion, className, children, lazy = false }: CollapsiblePanelProps) {
-  const [shouldRender, setShouldRender] = useState(() => !lazy || isOpen)
-
-  useEffect(() => {
-    if (!lazy) {
-      setShouldRender(true)
-      return
-    }
-
-    if (isOpen) {
-      setShouldRender(true)
-      return
-    }
-
-    if (minimalMotion) {
-      setShouldRender(false)
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setShouldRender(false)
-    }, collapseDurationMs)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [isOpen, lazy, minimalMotion])
-
-  if (minimalMotion) {
-    if (!isOpen || (lazy && !shouldRender)) return null
-
-    return (
-      <div className={className} aria-hidden={!isOpen}>
-        {typeof children === 'function' ? children(true) : children}
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className={`accordion-collapse ${isOpen ? 'is-open' : ''} ${className ?? ''}`.trim()}
-      aria-hidden={!isOpen}
-    >
-      <div
-        className="accordion-collapse-inner"
-        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
-      >
-        {shouldRender ? (typeof children === 'function' ? children(true) : children) : null}
-      </div>
-    </div>
-  )
-}
 
 function resolveTrack(trackParam?: string): VocabularyTrack | null {
   if (!trackParam) return null
@@ -83,6 +22,7 @@ function resolveTrack(trackParam?: string): VocabularyTrack | null {
 }
 
 export default function Vocabulary() {
+  const { c } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const [, refreshSavedCount] = useState(0)
@@ -92,9 +32,12 @@ export default function Vocabulary() {
   const fromSatArena = routeTrack === 'SAT' && (location.state as { from?: string } | null)?.from === '/sat'
   const satNavigationState = fromSatArena ? { from: '/sat' } : undefined
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
-  const minimalMotion = reducedMotion
-
   const [openSatPackId, setOpenSatPackId] = useState<string | null>(vocabularyCollections.sat[0]?.id ?? null)
+  const [satQuery, setSatQuery] = useState('')
+  const satSearch = satQuery.trim().toLowerCase()
+  const visibleSatPacks = vocabularyCollections.sat.filter((pack) =>
+    `${pack.title} ${pack.sections.map((section) => `${section.title} ${section.entries.map((entry) => entry.term).join(' ')}`).join(' ')}`.toLowerCase().includes(satSearch),
+  )
 
   const ieltsStats = useMemo(() => {
     const books = vocabularyCollections.ielts.length
@@ -280,90 +223,74 @@ export default function Vocabulary() {
   if (routeTrack === 'IELTS') return <IeltsVocabularyStudio />
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className={`sat-vocab-studio workspace-page min-h-screen px-4 py-8 sm:px-6 lg:px-10 ${reducedMotion ? 'ielts-vocab-reduced-motion' : ''}`}>
+      <div className="mx-auto max-w-[1440px] space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
+          <div>
+            <button type="button" onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')} className="premium-back-btn">
+              <ArrowLeft className="h-4 w-4" />
+              <UiText text={fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'} />
+            </button>
+            <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.22em] text-blue-600"><UiText text="SAT Vocabulary Track" /></p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"><UiText text="SAT Vocabulary" /></h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+              Choose a SAT Full Mock and study 20 challenging words from each English module.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 px-6 py-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-500"><UiText text="SAT Stats" /></p>
+            <p className="mt-1 text-2xl font-black text-slate-950">{satStats.packs} mocks / {satStats.sections} <UiText text="modules" /></p>
+            <p className="mt-1 text-sm font-semibold text-slate-500">{satStats.words.toLocaleString()} <UiText text="terms" /></p>
+          </div>
+        </header>
 
-      <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <Reveal>
-          <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] sm:p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="premium-top-controls">
-                  <button
-                    onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')}
-                    className="premium-back-btn"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    {fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'}
-                  </button>
-                  <span className="premium-top-chip"> <UiText text={"SAT Vocabulary Track"} /> </span>
-                </div>
-                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl"> <UiText text={"SAT Vocabulary"} /> </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Choose a SAT Full Mock and study 20 challenging words from each English module.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white px-4 py-3 text-right shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600"> <UiText text={"SAT Stats"} /> </p>
-                <p className="mt-1 text-lg font-extrabold text-slate-900">{satStats.packs} mocks / {satStats.sections}  <UiText text={"modules"} /> </p>
-                <p className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
-                  <Gem className="h-4 w-4" />
-                  <CountUp value={satStats.words} />  <UiText text={"terms"} /> </p>
-              </div>
+        <section className="rounded-[2rem] border border-white/90 bg-white/25 p-4 shadow-[0_20px_65px_rgba(30,64,175,0.06)] sm:p-6 lg:p-8">
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-5">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-500"><UiText text="SAT Vocabulary Track" /></p>
+              <h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">SAT Full Mocks</h2>
+              <p className="mt-2 text-sm font-medium text-slate-500">{satStats.packs} mocks · {satStats.words.toLocaleString()} <UiText text="terms" /></p>
             </div>
-          </section>
-        </Reveal>
-
-        <Stagger className="space-y-3">
-          {vocabularyCollections.sat.map((pack) => {
-            const isOpen = openSatPackId === pack.id
-            return (
-              <StaggerItem
-                key={pack.id}
-                className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
-              >
-                <button
-                  onClick={() => toggleSatPack(pack.id)}
-                  className={`flex w-full items-center justify-between px-5 py-4 text-left transition-[background-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-white hover:bg-blue-50/60'}`}
-                >
-                  <div>
-                    <p className="text-xl font-bold text-slate-900">{pack.title}</p>
-                    <p className="text-xs font-semibold text-slate-500">{pack.sections.length} modules · 20 words each</p>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 text-blue-700 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                <CollapsiblePanel
-                  isOpen={isOpen}
-                  minimalMotion={minimalMotion}
-                  lazy
-                  className="bg-gradient-to-b from-white to-blue-50/45"
-                >
-                  {() => (
-                    <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-2">
+            <label className="flex w-full items-center gap-3 rounded-full border border-white bg-white/95 px-5 py-4 text-slate-400 sm:w-80">
+              <Search className="h-5 w-5" />
+              <span className="sr-only"><UiText text="Search tests or vocabulary" /></span>
+              <input type="search" value={satQuery} onChange={(event) => setSatQuery(event.target.value)} placeholder={c('Search test, topic or word…')} className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" />
+            </label>
+          </div>
+          <div className="ielts-vocab-enter space-y-3">
+            {visibleSatPacks.map((pack) => {
+              const isOpen = openSatPackId === pack.id
+              const count = pack.sections.reduce((sum, section) => sum + section.entries.length, 0)
+              return (
+                <div key={pack.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
+                  <button type="button" aria-label={`Open ${pack.title}`} aria-expanded={isOpen} aria-controls={`${pack.id}-sections`} onClick={() => toggleSatPack(pack.id)} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400">
+                    <span className="min-w-0">
+                      <span className="block text-base font-bold text-slate-900 sm:text-lg">{pack.title}</span>
+                      <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" /> · {pack.sections.length} <UiText text="modules" /></span>
+                    </span>
+                    <span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
+                  </button>
+                  <VocabularyPanel id={`${pack.id}-sections`} open={isOpen}>
+                    <div className="ielts-vocab-parts grid gap-2.5 p-3 sm:grid-cols-2">
                       {pack.sections.map((section, sectionIndex) => (
-                        <div
-                          key={section.id}
-                          className={`rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/80 p-3 shadow-sm transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${allowHoverMotion ? 'hover:-translate-y-0.5 hover:shadow-md' : ''}`}
-                        >
-                          <p className="text-sm font-bold text-slate-900">{section.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{section.entries.length}  <UiText text={"terms"} /> </p>
-                          <button
-                            onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`, { state: satNavigationState })}
-                            className="mt-3 inline-flex items-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.35)]"
-                          >
-                            Start Module {sectionIndex + 1}
-                          </button>
-                        </div>
+                        <button key={section.id} type="button" aria-label={`Start Module ${sectionIndex + 1}`} onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`, { state: satNavigationState })} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="ielts-vocab-part-label">{section.title}</span>
+                              <span className="text-[11px] font-medium text-slate-500">{section.entries.length} <UiText text="terms" /></span>
+                            </span>
+                          </span>
+                          <span className="ielts-vocab-part-arrow"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span>
+                        </button>
                       ))}
                     </div>
-                  )}
-                </CollapsiblePanel>
-              </StaggerItem>
-            )
-          })}
-        </Stagger>
+                  </VocabularyPanel>
+                </div>
+              )
+            })}
+          </div>
+          {visibleSatPacks.length === 0 ? <p role="status" className="py-12 text-center text-slate-500"><UiText text="No matching tests. Try another topic or word." /></p> : null}
+        </section>
       </div>
     </div>
   )

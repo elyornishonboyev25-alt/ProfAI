@@ -54,6 +54,7 @@ export default function IeltsVocabularyStudio() {
   const { c } = useCopy()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState('')
+  const [expandedTests, setExpandedTests] = useState<Partial<Record<IeltsVocabularySkill, string | null>>>({})
   const sectionRef = useRef<HTMLElement>(null)
   const skill: IeltsVocabularySkill = skills.some((item) => item.id === params.get('skill'))
     ? params.get('skill') as IeltsVocabularySkill : 'listening'
@@ -126,16 +127,30 @@ export default function IeltsVocabularyStudio() {
                 <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-500">IELTS ACADEMIC</p><h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">{book.title}</h2><p className="mt-2 text-sm font-medium text-slate-500">{book.tests.length} <UiText text="full tests" /> · {words.toLocaleString()} <UiText text="terms" /></p></div>
                 <label className="flex w-full items-center gap-3 rounded-full border border-white bg-white/95 px-5 py-4 text-slate-400 sm:w-80"><Search className="h-5 w-5" /><span className="sr-only"><UiText text="Search tests or vocabulary" /></span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={c('Search test, topic or word…')} className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" /></label>
               </div>
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="space-y-3">
                 {visible.map((test) => {
                   const number = test.id.split('_').slice(-1)[0]
                   const count = test.sections.reduce((n, section) => n + section.entries.length, 0)
-                  return <button key={test.id} type="button" aria-label={`Open ${test.title}`} onClick={() => update({ skill, test: number })} className="group flex min-h-64 flex-col rounded-[2rem] border border-red-100 bg-gradient-to-br from-white/95 via-rose-50/60 to-blue-50/75 p-6 text-left shadow-[0_12px_34px_rgba(59,130,246,0.07)] transition duration-200 hover:border-red-300 hover:shadow-[0_18px_40px_rgba(59,130,246,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 sm:p-7">
-                    <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-500">IELTS {activeSkill.label.toUpperCase()} {number.padStart(2, '0')}</span>
-                    <h3 className="mt-5 text-2xl font-black tracking-tight text-slate-950">{test.title}</h3>
-                    <p className="mb-6 mt-3 line-clamp-2 text-sm leading-6 text-slate-500">{test.sections.map((section) => section.topic?.replace(/^(?:Reading )?Passage \d+:\s*|^Task \d+ · /g, '')).join(' · ')}</p>
-                    <span className="mt-auto flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-500">{count} <UiText text="words" />{test.sections.length > 1 ? ` · ${test.sections.length} ${skill === 'writing' ? 'tasks' : 'parts'}` : ' · 4 parts'}</span><span className="flex items-center gap-2 text-sm font-extrabold text-red-700"><UiText text="Open" /><ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></span>
-                  </button>
+                  const isOpen = (expandedTests[skill] === undefined ? book.tests[0]?.id : expandedTests[skill]) === test.id
+                  return <div key={test.id} className="overflow-hidden rounded-[1.4rem] border border-blue-100 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+                    <button type="button" aria-label={`Open ${test.title}`} aria-expanded={isOpen} aria-controls={`${test.id}-sections`} onClick={() => setExpandedTests((previous) => ({ ...previous, [skill]: isOpen ? null : test.id }))} className={`flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400 ${isOpen ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-white hover:bg-blue-50/60'}`}>
+                      <span className="min-w-0">
+                        <span className="block text-xl font-bold text-slate-900">{test.title}</span>
+                        <span className="block text-xs font-semibold text-slate-500">{count} <UiText text="words" />{test.sections.length > 1 ? ` · ${test.sections.length} ${skill === 'writing' ? 'tasks' : 'parts'}` : ' · 4 parts'}</span>
+                      </span>
+                      <ChevronDown aria-hidden="true" className={`h-5 w-5 shrink-0 text-blue-700 transition-transform motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div id={`${test.id}-sections`} hidden={!isOpen} className="bg-gradient-to-b from-white to-blue-50/45">
+                      {isOpen ? <div className="grid gap-3 border-t border-blue-100 p-3 sm:grid-cols-2">
+                        {test.sections.map((section, index) => <div key={section.id} className="min-w-0 rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/80 p-3 shadow-sm">
+                          <h3 className="text-sm font-bold text-slate-900">{section.title}</h3>
+                          {section.topic ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{section.topic}</p> : null}
+                          <p className="mt-1 text-xs text-slate-500">{section.entries.length} <UiText text="terms" /></p>
+                          <button type="button" aria-label={`View ${test.title} ${section.title}`} onClick={() => update({ skill, test: number, part: String(index + 1) })} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(220,38,38,0.2)] transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"><UiText text="Open" /><ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
+                        </div>)}
+                      </div> : null}
+                    </div>
+                  </div>
                 })}
               </div>
               {visible.length === 0 ? <p role="status" className="py-12 text-center text-slate-500"><UiText text="No matching tests. Try another topic or word." /></p> : null}

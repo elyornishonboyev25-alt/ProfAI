@@ -60,9 +60,16 @@ export async function run() {
     await render(ieltsRoutes, `/vocabulary/ielts?skill=${book.skill}`)
     assert.doesNotMatch(container.textContent!, /Reading Days|Day 1-30|Coming soon/)
     assert.equal(container.querySelectorAll('button[aria-label^="Open "]').length, 30)
+    assert.equal(container.querySelector(`button[aria-label="Open ${book.tests[0].title}"]`)?.getAttribute('aria-expanded'), 'true')
+    await click(container.querySelector(`button[aria-label="Open ${book.tests[29].title}"]`))
+    assert.equal(container.querySelectorAll('button[aria-expanded="true"]').length, 1)
+    assert.equal(container.querySelectorAll('button[aria-label^="View "]').length, book.tests[29].sections.length)
+    await click(container.querySelector(`button[aria-label="Open ${book.tests[29].title}"]`))
+    assert.equal(container.querySelectorAll('button[aria-label^="View "]').length, 0, 'Collapsing a test hides its sections')
     await click(container.querySelector(`button[aria-label="Open ${book.tests[29].title}"]`))
     assert.match(container.textContent!, new RegExp(book.tests[29].title))
     const selected = book.tests[29].sections[0]
+    await click(container.querySelector(`button[aria-label="View ${book.tests[29].title} ${selected.title}"]`))
     assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, selected.entries.length)
     if (book.skill === 'reading') {
       await click(button('Part 3'))

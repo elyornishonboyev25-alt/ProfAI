@@ -31,6 +31,7 @@ import {
   formatQuestionTypeLabel,
 } from '@/utils/ieltsUtils'
 import { saveReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { createSharedResult } from '@/lib/sharedResultsApi'
 import { useToastStore } from '@/store/toastStore'
 import {
@@ -80,7 +81,10 @@ export default function Results() {
   const location = useLocation()
   const navigate = useNavigate()
   const authUser = useAuthStore((state) => state.user)
-  const { result, test, mock, from } = (location.state as ResultLocationState) || {}
+  const { result, test: storedTest, mock, from } = (location.state as ResultLocationState) || {}
+  const test = storedTest?.module === 'Listening'
+    ? resolveIeltsTestById(storedTest.id) ?? storedTest
+    : storedTest
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)
   const [sharingResult, setSharingResult] = useState(false)
@@ -101,17 +105,19 @@ export default function Results() {
   )
   const activeSectionIds = result?.detailedBreakdown?.activeSectionIds
   const activeSections = useMemo(
-    () => allSections.filter((section) => !activeSectionIds || activeSectionIds.includes(section.id)),
+    () => allSections.filter((section) => !activeSectionIds?.length || activeSectionIds.includes(section.id)),
     [allSections, activeSectionIds],
   )
 
   const analysis = useMemo(() => {
     if (!result || !test) return EMPTY_ANALYSIS
-    return result.detailedBreakdown?.readingAnalysis ?? evaluateReadingAnswers(activeSections, result.answers)
+    return test.module === 'Listening'
+      ? evaluateReadingAnswers(activeSections, result.answers)
+      : result.detailedBreakdown?.readingAnalysis ?? evaluateReadingAnswers(activeSections, result.answers)
   }, [activeSections, result, test])
 
   const bandScore = calculateBandScore(analysis.summary.correctAnswers)
-  const effectiveBandScore = Number((result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
+  const effectiveBandScore = Number((!isListeningTest && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
   const recommendations = useMemo(() => [
     analysis.summary.skippedAnswers > 0
       ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
@@ -153,6 +159,11 @@ export default function Results() {
 
     const persistedResultPayload: TestResult = {
       ...result,
+      ...(test.module === 'Listening' ? {
+        score: effectiveBandScore,
+        correctAnswers: analysis.summary.correctAnswers,
+        totalQuestions: analysis.summary.totalQuestions,
+      } : {}),
       detailedBreakdown: {
         activeSectionIds: result.detailedBreakdown?.activeSectionIds ?? activeSections.map((section) => section.id),
         readingAnalysis: analysis,
@@ -165,7 +176,7 @@ export default function Results() {
       savedAt: result.date,
       testId: result.testId,
       testTitle: test.title,
-      score: result.score,
+      score: persistedResultPayload.score,
       bandScore: effectiveBandScore,
       isPartial: Boolean(result.isPartial),
       accuracy: analysis.summary.accuracy,

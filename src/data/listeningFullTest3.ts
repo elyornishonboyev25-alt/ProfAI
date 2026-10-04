@@ -38,16 +38,16 @@ const part1: Section = {
     ],
   }],
   questions: [
-    q(1, 'note-completion', 'Holiday begins on', ['17th April', '17 April']),
-    q(2, 'note-completion', 'Maximum number of people in the cycling group', '16'),
-    q(3, 'note-completion', 'Average distance cycled each day', ['45 km', '45 kilometres', '45 kilometers']),
-    q(4, 'note-completion', 'Some hotels have a', 'swimming pool'),
-    q(5, 'note-completion', 'Holiday cost per person without flights', ['103', '£103']),
+    q(1, 'note-completion', 'Holiday begins on', ['17th April', '17 April', 'April 17', 'April 17th']),
+    q(2, 'note-completion', 'Maximum number of people in the cycling group', '16 / sixteen'),
+    q(3, 'note-completion', 'Average distance cycled each day', ['45 km', '45 kilometres', '45 kilometers', '45km', 'forty-five km']),
+    q(4, 'note-completion', 'Some hotels have a', 'swimming pool / pool'),
+    q(5, 'note-completion', 'Holiday cost per person without flights', ['1013', '1,013', '£1013', '£1,013']),
     q(6, 'note-completion', 'Food not included', 'snacks'),
-    q(7, 'note-completion', 'Essential item to bring', 'helmet'),
+    q(7, 'note-completion', 'Essential item to bring', 'helmet / cycle helmet'),
     q(8, 'note-completion', 'Equipment discount website', 'ballantyne'),
     q(9, 'note-completion', 'Item that may change', 'route'),
-    q(10, 'note-completion', 'Guided tour destination', 'theatre'),
+    q(10, 'note-completion', 'Guided tour destination', 'theatre / theater'),
   ],
 }
 
@@ -192,7 +192,7 @@ const part4: Section = {
     blocks: [{
       kind: 'table', columns: ['Origin', 'Name', 'New habitat / notes'], rows: [
         [{ segments: ['Australia'] }, { segments: ['red-backed spider'] }, { segments: ['Even on island in middle of ', { blank: 31, width: 'xl' }] }],
-        [{ segments: ['England'] }, { segments: ['rabbit'] }, { segments: ['800 years ago: imported into England to be used for ', { blank: 32, width: 'lg' }] }],
+        [{ segments: ['England'] }, { segments: ['rabbit'] }, { segments: ['Australia; 800 years ago: imported into England to be used for ', { blank: 32, width: 'lg' }] }],
         [{ segments: ['America'] }, { segments: ['fire ants'] }, { segments: ['New habitat: ', { blank: 33, width: 'md' }, ' in Brisbane; imported by chance'] }],
         [{ segments: ['Australia'] }, { segments: [{ blank: 34, width: 'md' }] }, { segments: ['New habitat: Scotland. Deliberately introduced in order to improve ', { blank: 35, width: 'md' }, ' (not effective)'] }],
         [{ segments: ['New Zealand'] }, { segments: ['flatworm'] }, { segments: ['New habitat: ', { blank: 36, width: 'md' }, ' Europe. Accidental introduction inside imported ', { blank: 37, width: 'md' }] }],
@@ -202,16 +202,16 @@ const part4: Section = {
     }],
   }],
   questions: [
-    q(31, 'note-completion', 'Island in the middle of', 'the Atlantic Ocean'),
-    q(32, 'note-completion', 'Rabbit was imported into England to be used for', 'food source'),
-    q(33, 'note-completion', 'Fire ants: new habitat in Brisbane', 'gardens'),
-    q(34, 'note-completion', 'Australian pest introduced to Scotland', 'earthworm'),
-    q(35, 'note-completion', 'Purpose of deliberate introduction', 'soil'),
-    q(36, 'note-completion', 'Flatworm new habitat in Europe', 'northwest'),
+    q(31, 'note-completion', 'Island in the middle of', 'Atlantic / Atlantic Ocean / the Atlantic'),
+    q(32, 'note-completion', 'Rabbit was imported into England to be used for', 'food source / food / luxury food'),
+    q(33, 'note-completion', 'Fire ants: new habitat in Brisbane', 'gardens / in gardens'),
+    q(34, 'note-completion', 'Australian pest introduced to Scotland', 'earthworm / earth worm'),
+    q(35, 'note-completion', 'Purpose of deliberate introduction', 'soil / soil condition'),
+    q(36, 'note-completion', 'Flatworm new habitat in Europe', 'northwest / north-west / north west'),
     q(37, 'note-completion', 'Accidental introduction inside imported', 'plant pots'),
-    q(38, 'note-completion', 'Japanese pest in Australian coastal waters', 'seaweed'),
-    q(39, 'note-completion', 'Budgerigar habitat in south-east', 'United States'),
-    q(40, 'note-completion', 'Cause of smaller flocks', 'competitors'),
+    q(38, 'note-completion', 'Japanese pest in Australian coastal waters', 'seaweed / seaweeds / sea weed / sea weeds'),
+    q(39, 'note-completion', 'Budgerigar habitat in south-east', 'United States / USA'),
+    q(40, 'note-completion', 'Cause of smaller flocks', 'competitors / new competitors'),
   ],
 }
 

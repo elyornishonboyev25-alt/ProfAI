@@ -58,8 +58,8 @@ export default function ResultsReview() {
   const result = state.result ?? sessionState?.result ?? fallbackEntry?.resultPayload
   const storedTest = state.test ?? sessionState?.test
   const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '')
-  // Saved answers retain their IDs while Reading prompts use the corrected catalog.
-  const test = catalogTest?.module === 'Reading' ? catalogTest : storedTest ?? catalogTest ?? undefined
+  // Stable question IDs allow saved answers to use corrected prompts and keys.
+  const test = catalogTest ?? storedTest ?? undefined
   const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''
   const skill = `${resolvedTestId} ${test?.title ?? ''} ${test?.module ?? ''}`.toLowerCase().includes('listening')
     ? 'listening'
@@ -73,15 +73,13 @@ export default function ResultsReview() {
   const allSections = useMemo(() => ((test?.sections as Section[]) ?? []), [test])
   const activeSectionIds = result?.detailedBreakdown?.activeSectionIds
   const activeSections = useMemo(
-    () => allSections.filter((section) => !activeSectionIds || activeSectionIds.includes(section.id)),
+    () => allSections.filter((section) => !activeSectionIds?.length || activeSectionIds.includes(section.id)),
     [allSections, activeSectionIds],
   )
 
   const analysis = useMemo(() => {
     if (!result || !test) return EMPTY_ANALYSIS
-    return test.module === 'Reading'
-      ? evaluateReadingAnswers(activeSections, result.answers)
-      : result.detailedBreakdown?.readingAnalysis ?? evaluateReadingAnswers(activeSections, result.answers)
+    return evaluateReadingAnswers(activeSections, result.answers)
   }, [activeSections, result, test])
 
   useEffect(() => {

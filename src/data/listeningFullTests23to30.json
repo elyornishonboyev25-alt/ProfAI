@@ -1703,7 +1703,15 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 27",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "can reduce the effect of global warming",
+              "can be used as an alternative energy resource",
+              "can make quick profits",
+              "can produce material for plants to grow in",
+              "can be good for human health",
+              "can produce fertiliser"
+            ]
           },
           {
             "id": "lt24-q28",
@@ -1713,7 +1721,15 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 28",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "can reduce the effect of global warming",
+              "can be used as an alternative energy resource",
+              "can make quick profits",
+              "can produce material for plants to grow in",
+              "can be good for human health",
+              "can produce fertiliser"
+            ]
           },
           {
             "id": "lt24-q29",
@@ -1723,7 +1739,15 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 29",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "can reduce the effect of global warming",
+              "can be used as an alternative energy resource",
+              "can make quick profits",
+              "can produce material for plants to grow in",
+              "can be good for human health",
+              "can produce fertiliser"
+            ]
           },
           {
             "id": "lt24-q30",
@@ -1733,7 +1757,15 @@
             "correctAnswer": "B",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 30",
-            "explanation": "The recording gives B as the answer."
+            "explanation": "The recording gives B as the answer.",
+            "options": [
+              "can reduce the effect of global warming",
+              "can be used as an alternative energy resource",
+              "can make quick profits",
+              "can produce material for plants to grow in",
+              "can be good for human health",
+              "can produce fertiliser"
+            ]
           }
         ]
       },
@@ -2433,7 +2465,16 @@
             "correctAnswer": "A",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 17",
-            "explanation": "The recording gives A as the answer."
+            "explanation": "The recording gives A as the answer.",
+            "options": [
+              "doesn't have a long wait",
+              "is suitable for all families",
+              "is suitable for children",
+              "is suitable for young adults",
+              "is based on a real story",
+              "is the most frightening one",
+              "has a surprising ending"
+            ]
           },
           {
             "id": "lt25-q18",
@@ -2443,7 +2484,16 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 18",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "doesn't have a long wait",
+              "is suitable for all families",
+              "is suitable for children",
+              "is suitable for young adults",
+              "is based on a real story",
+              "is the most frightening one",
+              "has a surprising ending"
+            ]
           },
           {
             "id": "lt25-q19",
@@ -2453,7 +2503,16 @@
             "correctAnswer": "F",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 19",
-            "explanation": "The recording gives F as the answer."
+            "explanation": "The recording gives F as the answer.",
+            "options": [
+              "doesn't have a long wait",
+              "is suitable for all families",
+              "is suitable for children",
+              "is suitable for young adults",
+              "is based on a real story",
+              "is the most frightening one",
+              "has a surprising ending"
+            ]
           },
           {
             "id": "lt25-q20",
@@ -2463,7 +2522,16 @@
             "correctAnswer": "G",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 20",
-            "explanation": "The recording gives G as the answer."
+            "explanation": "The recording gives G as the answer.",
+            "options": [
+              "doesn't have a long wait",
+              "is suitable for all families",
+              "is suitable for children",
+              "is suitable for young adults",
+              "is based on a real story",
+              "is the most frightening one",
+              "has a surprising ending"
+            ]
           }
         ]
       },
@@ -3385,7 +3453,16 @@
             "correctAnswer": "A",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 16",
-            "explanation": "The recording gives A as the answer."
+            "explanation": "The recording gives A as the answer.",
+            "options": [
+              "good signage",
+              "multiple access roads",
+              "police control points",
+              "ring roads",
+              "one-way streets",
+              "effective traffic lights",
+              "additional lanes"
+            ]
           },
           {
             "id": "lt26-q17",
@@ -3395,7 +3472,16 @@
             "correctAnswer": "F",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 17",
-            "explanation": "The recording gives F as the answer."
+            "explanation": "The recording gives F as the answer.",
+            "options": [
+              "good signage",
+              "multiple access roads",
+              "police control points",
+              "ring roads",
+              "one-way streets",
+              "effective traffic lights",
+              "additional lanes"
+            ]
           },
           {
             "id": "lt26-q18",
@@ -3405,7 +3491,16 @@
             "correctAnswer": "G",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 18",
-            "explanation": "The recording gives G as the answer."
+            "explanation": "The recording gives G as the answer.",
+            "options": [
+              "good signage",
+              "multiple access roads",
+              "police control points",
+              "ring roads",
+              "one-way streets",
+              "effective traffic lights",
+              "additional lanes"
+            ]
           },
           {
             "id": "lt26-q19",
@@ -3415,7 +3510,16 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 19",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "good signage",
+              "multiple access roads",
+              "police control points",
+              "ring roads",
+              "one-way streets",
+              "effective traffic lights",
+              "additional lanes"
+            ]
           },
           {
             "id": "lt26-q20",
@@ -3425,7 +3529,16 @@
             "correctAnswer": "B",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 20",
-            "explanation": "The recording gives B as the answer."
+            "explanation": "The recording gives B as the answer.",
+            "options": [
+              "good signage",
+              "multiple access roads",
+              "police control points",
+              "ring roads",
+              "one-way streets",
+              "effective traffic lights",
+              "additional lanes"
+            ]
           }
         ]
       },
@@ -3566,7 +3679,15 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 21",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q22",
@@ -3576,7 +3697,15 @@
             "correctAnswer": "B",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 22",
-            "explanation": "The recording gives B as the answer."
+            "explanation": "The recording gives B as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q23",
@@ -3586,7 +3715,15 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 23",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q24",
@@ -3596,7 +3733,15 @@
             "correctAnswer": "F",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 24",
-            "explanation": "The recording gives F as the answer."
+            "explanation": "The recording gives F as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q25",
@@ -3606,7 +3751,15 @@
             "correctAnswer": "A",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 25",
-            "explanation": "The recording gives A as the answer."
+            "explanation": "The recording gives A as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q26",
@@ -3616,7 +3769,15 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 26",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "it lacks patience",
+              "it is very strict",
+              "it is a daily routine",
+              "it lacks sufficient staff",
+              "it is noisy",
+              "it is very tiring"
+            ]
           },
           {
             "id": "lt26-q27",
@@ -4636,7 +4797,15 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 27",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "people will spend more money in the restaurant",
+              "people don't even notice the music",
+              "people will come back again",
+              "people don't think the restaurant is worth the price",
+              "people will leave the restaurant right after eating",
+              "people don't like the restaurant at all"
+            ]
           },
           {
             "id": "lt27-q28",
@@ -4646,7 +4815,15 @@
             "correctAnswer": "A",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 28",
-            "explanation": "The recording gives A as the answer."
+            "explanation": "The recording gives A as the answer.",
+            "options": [
+              "people will spend more money in the restaurant",
+              "people don't even notice the music",
+              "people will come back again",
+              "people don't think the restaurant is worth the price",
+              "people will leave the restaurant right after eating",
+              "people don't like the restaurant at all"
+            ]
           },
           {
             "id": "lt27-q29",
@@ -4656,7 +4833,15 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 29",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "people will spend more money in the restaurant",
+              "people don't even notice the music",
+              "people will come back again",
+              "people don't think the restaurant is worth the price",
+              "people will leave the restaurant right after eating",
+              "people don't like the restaurant at all"
+            ]
           },
           {
             "id": "lt27-q30",
@@ -4666,7 +4851,15 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 30",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "people will spend more money in the restaurant",
+              "people don't even notice the music",
+              "people will come back again",
+              "people don't think the restaurant is worth the price",
+              "people will leave the restaurant right after eating",
+              "people don't like the restaurant at all"
+            ]
           }
         ]
       },
@@ -5146,7 +5339,9 @@
                   "D",
                   "E",
                   "F",
-                  "G"
+                  "G",
+                  "H",
+                  "I"
                 ],
                 "options": [
                   {
@@ -5176,6 +5371,14 @@
                   {
                     "letter": "G",
                     "text": "waterfalls"
+                  },
+                  {
+                    "letter": "H",
+                    "text": "wild flowers"
+                  },
+                  {
+                    "letter": "I",
+                    "text": "hills"
                   }
                 ],
                 "inputMode": true,
@@ -5258,21 +5461,43 @@
             "id": "lt28-q11",
             "number": 11,
             "text": "Sheepfold",
-            "type": "note-completion",
+            "type": "matching-information",
             "correctAnswer": "I",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 11",
-            "explanation": "The recording gives I as the answer."
+            "explanation": "The recording gives I as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q12",
             "number": 12,
             "text": "Brown Mare",
-            "type": "note-completion",
+            "type": "matching-information",
             "correctAnswer": "H",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 12",
-            "explanation": "The recording gives H as the answer."
+            "explanation": "The recording gives H as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q13",
@@ -5282,7 +5507,18 @@
             "correctAnswer": "B",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 13",
-            "explanation": "The recording gives B as the answer."
+            "explanation": "The recording gives B as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q14",
@@ -5292,7 +5528,18 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 14",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q15",
@@ -5302,7 +5549,18 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 15",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q16",
@@ -5312,7 +5570,18 @@
             "correctAnswer": "F",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 16",
-            "explanation": "The recording gives F as the answer."
+            "explanation": "The recording gives F as the answer.",
+            "options": [
+              "farming life in the past",
+              "nature reserve",
+              "canoes",
+              "old ruins",
+              "newly born deer",
+              "birds",
+              "waterfalls",
+              "wild flowers",
+              "hills"
+            ]
           },
           {
             "id": "lt28-q17",
@@ -6501,7 +6770,14 @@
             "correctAnswer": "A",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 26",
-            "explanation": "The recording gives A as the answer."
+            "explanation": "The recording gives A as the answer.",
+            "options": [
+              "do it with a partner",
+              "not worthy of doing",
+              "leave it to others",
+              "do it later",
+              "need special training beforehand"
+            ]
           },
           {
             "id": "lt29-q27",
@@ -6511,7 +6787,14 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 27",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "do it with a partner",
+              "not worthy of doing",
+              "leave it to others",
+              "do it later",
+              "need special training beforehand"
+            ]
           },
           {
             "id": "lt29-q28",
@@ -6521,7 +6804,14 @@
             "correctAnswer": "B",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 28",
-            "explanation": "The recording gives B as the answer."
+            "explanation": "The recording gives B as the answer.",
+            "options": [
+              "do it with a partner",
+              "not worthy of doing",
+              "leave it to others",
+              "do it later",
+              "need special training beforehand"
+            ]
           },
           {
             "id": "lt29-q29",
@@ -6531,7 +6821,14 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 29",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "do it with a partner",
+              "not worthy of doing",
+              "leave it to others",
+              "do it later",
+              "need special training beforehand"
+            ]
           },
           {
             "id": "lt29-q30",
@@ -6541,7 +6838,14 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 3 · Question 30",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "do it with a partner",
+              "not worthy of doing",
+              "leave it to others",
+              "do it later",
+              "need special training beforehand"
+            ]
           }
         ]
       },
@@ -7260,7 +7564,15 @@
             "correctAnswer": "E",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 17",
-            "explanation": "The recording gives E as the answer."
+            "explanation": "The recording gives E as the answer.",
+            "options": [
+              "gain more donation",
+              "involve more children in need",
+              "earn support from colleges",
+              "help look for equipment manufacturers",
+              "take the reputation to a higher level",
+              "recruit and support staff"
+            ]
           },
           {
             "id": "lt30-q18",
@@ -7270,7 +7582,15 @@
             "correctAnswer": "D",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 18",
-            "explanation": "The recording gives D as the answer."
+            "explanation": "The recording gives D as the answer.",
+            "options": [
+              "gain more donation",
+              "involve more children in need",
+              "earn support from colleges",
+              "help look for equipment manufacturers",
+              "take the reputation to a higher level",
+              "recruit and support staff"
+            ]
           },
           {
             "id": "lt30-q19",
@@ -7280,7 +7600,15 @@
             "correctAnswer": "C",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 19",
-            "explanation": "The recording gives C as the answer."
+            "explanation": "The recording gives C as the answer.",
+            "options": [
+              "gain more donation",
+              "involve more children in need",
+              "earn support from colleges",
+              "help look for equipment manufacturers",
+              "take the reputation to a higher level",
+              "recruit and support staff"
+            ]
           },
           {
             "id": "lt30-q20",
@@ -7290,7 +7618,15 @@
             "correctAnswer": "F",
             "strictAnswerMatch": true,
             "location": "Part 2 · Question 20",
-            "explanation": "The recording gives F as the answer."
+            "explanation": "The recording gives F as the answer.",
+            "options": [
+              "gain more donation",
+              "involve more children in need",
+              "earn support from colleges",
+              "help look for equipment manufacturers",
+              "take the reputation to a higher level",
+              "recruit and support staff"
+            ]
           }
         ]
       },

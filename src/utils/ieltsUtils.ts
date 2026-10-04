@@ -141,7 +141,7 @@ export const evaluateReadingAnswers = (
 
   for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
     const section = sections[sectionIndex]
-    const partNumber = sectionIndex + 1
+    const partNumber = Number(section.partLabel?.match(/\bPart\s+(\d+)\b/i)?.[1]) || sectionIndex + 1
     const sectionQuestionResults: ReadingQuestionResult[] = []
     let sectionTotal = 0
     let sectionCorrect = 0
@@ -193,11 +193,17 @@ export const evaluateReadingAnswers = (
         } else if (question.type === 'drag-drop-summary' && Array.isArray(question.correctAnswer)) {
           score = evaluateOrderedSlotScore(userAnswer, question.correctAnswer)
         } else {
+          // Listening completion arrays are alternative spellings for ONE blank,
+          // unlike multi-selection questions. Compare the entire answer: accepting
+          // only its first word incorrectly marks "swimming" as "swimming pool".
+          const answerKey = !isReading && isTextCompletion && Array.isArray(question.correctAnswer)
+            ? question.correctAnswer.join(' / ')
+            : question.correctAnswer
           const checked = checkAnswer(
             userAnswer as string | number | string[] | undefined,
-            question.correctAnswer,
+            answerKey,
             question.options,
-            question.strictAnswerMatch ?? (isReading && isTextCompletion),
+            question.strictAnswerMatch ?? isTextCompletion,
             !isReading,
           )
           score =
@@ -399,7 +405,7 @@ function normalizeText(input: string): string {
   const cleaned = input
     .toLowerCase()
     .replace(/&/g, ' and ')
-    .replace(/['"`]/g, '')
+    .replace(/['’‘"`]/g, '')
     .replace(/[^a-z0-9\s]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

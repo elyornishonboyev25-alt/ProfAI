@@ -33,6 +33,7 @@ import {
   type WritingAnalysisEntry,
 } from '@/utils/writingAnalysisStorage'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
+import { calculateBandScore, evaluateReadingAnswers } from '@/utils/ieltsUtils'
 import { saveReviewState } from '@/utils/resultsReviewState'
 import WritingResultModal from '@/components/WritingResultModal'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
@@ -67,16 +68,24 @@ type ConfirmState =
   | null
 
 function buildReadingAttempt(entry: ReadingAnalysisHistoryEntry): UnifiedAttempt {
+  const test = resolveIeltsTestById(entry.testId)
+  const isListening = test?.module === 'Listening'
+  const sectionIds = entry.resultPayload.detailedBreakdown?.activeSectionIds
+  const analysis = isListening
+    ? evaluateReadingAnswers(test.sections.filter(section => !sectionIds?.length || sectionIds.includes(section.id)), entry.resultPayload.answers)
+    : null
+  const summary = analysis?.summary ?? entry
+  const band = analysis ? calculateBandScore(summary.correctAnswers) : entry.bandScore
   return {
     id: `reading-${entry.attemptKey}`,
     title: entry.testTitle,
-    category: 'IELTS Reading',
+    category: isListening ? 'IELTS Listening' : 'IELTS Reading',
     savedAt: entry.savedAt,
     source: 'reading-local',
-    score: entry.isPartial ? 'Partial' : `Band ${entry.bandScore.toFixed(1)}`,
-    accuracy: `${entry.accuracy.toFixed(1)}%`,
-    mistakes: `${entry.incorrectAnswers} incorrect | ${entry.skippedAnswers} skipped`,
-    reviewable: Boolean(resolveIeltsTestById(entry.testId)),
+    score: entry.isPartial ? 'Partial' : `Band ${band.toFixed(1)}`,
+    accuracy: `${summary.accuracy.toFixed(1)}%`,
+    mistakes: `${summary.incorrectAnswers} incorrect | ${summary.skippedAnswers} skipped`,
+    reviewable: Boolean(test),
     readingEntry: entry,
   }
 }
@@ -275,7 +284,7 @@ export default function AnalyzeMistakes() {
       test: resolvedTest,
     })
 
-    navigate(`/test/reading/${attempt.readingEntry.testId}`, {
+    navigate(`/test/${resolvedTest.module === 'Listening' ? 'listening' : 'reading'}/${attempt.readingEntry.testId}`, {
       state: {
         reviewPayload: {
           result: attempt.readingEntry.resultPayload,

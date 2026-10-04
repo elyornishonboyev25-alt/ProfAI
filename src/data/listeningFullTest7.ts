@@ -80,7 +80,7 @@ const historicalSiteOptions: ListeningOption[] = historicalSites.map((text, inde
 const part2Mcq: Record<number, string[]> = {
   16: ['watch a movie.', 'see a live performance.', 'enjoy local food.'],
   17: ['extra summer events.', 'popular activities for kids.', 'better public transport.'],
-  18: ['find a discount shop.', 'visit a museum.', 'attend a university lecture.'],
+  18: ['find a discount shop.', 'visit an old house.', 'attend a university lecture.'],
   19: ['have a picnic.', 'rent a bicycle.', 'take a guided tour.'],
   20: ['visit all the sites.', 'carry water.', 'use public transport.'],
 }
@@ -121,11 +121,11 @@ const part2: Section = {
     ],
   }],
   questions: [
-    q(11, 'multiple-choice', 'Information given about Chamber Museum', 'B', historicalSites),
-    q(12, 'multiple-choice', 'Information given about Harris Park', 'F', historicalSites),
-    q(13, 'multiple-choice', 'Information given about State Building', 'C', historicalSites),
-    q(14, 'multiple-choice', 'Information given about High Court', 'A', historicalSites),
-    q(15, 'multiple-choice', 'Information given about Castle Mount', 'E', historicalSites),
+    q(11, 'matching-information', 'Information given about Chamber Museum', 'B', historicalSites),
+    q(12, 'matching-information', 'Information given about Harris Park', 'F', historicalSites),
+    q(13, 'matching-information', 'Information given about State Building', 'C', historicalSites),
+    q(14, 'matching-information', 'Information given about High Court', 'A', historicalSites),
+    q(15, 'matching-information', 'Information given about Castle Mount', 'E', historicalSites),
     q(16, 'multiple-choice', 'At the King Centre, you can', 'B', part2Mcq[16]),
     q(17, 'multiple-choice', "Why the 'T Park' attendance has recently improved", 'C', part2Mcq[17]),
     q(18, 'multiple-choice', 'What you may be able to do in Marytown', 'C', part2Mcq[18]),
@@ -205,14 +205,14 @@ const part3: Section = {
   questions: [
     q(21, 'multiple-choice', 'Why John is unhappy with the work experience programme', 'C', part3Mcq[21]),
     q(22, 'multiple-choice', 'The unnecessary part of the preparation course', 'A', part3Mcq[22]),
-    q(23, 'multiple-choice', 'What Emma says about the role John might take on', 'A', part3Mcq[23]),
+    q(23, 'multiple-choice', 'What Emma says about the role John might take on', 'C', part3Mcq[23]),
     q(24, 'multiple-choice', 'What John says about work experience after the second year', 'B', part3Mcq[24]),
-    q(25, 'multiple-choice', 'The student gets a simple ___ form', 'C', workExperienceOptions),
-    q(26, 'multiple-choice', 'The college looks at a short ___', 'E', workExperienceOptions),
-    q(27, 'multiple-choice', 'The college obtains the relevant ___ from the employer', 'H', workExperienceOptions),
-    q(28, 'multiple-choice', 'A meeting is arranged to discuss ___ issues', 'A', workExperienceOptions),
-    q(29, 'multiple-choice', 'The student must complete a ___ form', 'B', workExperienceOptions),
-    q(30, 'multiple-choice', 'Employers receive a voluntary ___ form', 'F', workExperienceOptions),
+    q(25, 'matching-information', 'The student gets a simple ___ form', 'C', workExperienceOptions),
+    q(26, 'matching-information', 'The college looks at a short ___', 'E', workExperienceOptions),
+    q(27, 'matching-information', 'The college obtains the relevant ___ from the employer', 'H', workExperienceOptions),
+    q(28, 'matching-information', 'A meeting is arranged to discuss ___ issues', 'A', workExperienceOptions),
+    q(29, 'matching-information', 'The student must complete a ___ form', 'B', workExperienceOptions),
+    q(30, 'matching-information', 'Employers receive a voluntary ___ form', 'F', workExperienceOptions),
   ],
 }
 

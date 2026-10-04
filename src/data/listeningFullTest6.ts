@@ -18,7 +18,7 @@ function q(
 const part1Options: Record<number, string[]> = {
   7: ['The glass may be cracked', 'The lock may be broken', 'The frame may need repainting'],
   8: ['after the washing machine is examined.', 'when the lights are being repaired.', 'before the main switch is renewed.'],
-  9: ['checked.', 'replaced.', 'renewed.'],
+  9: ['checked.', 'repaired.', 'renewed.'],
   10: ['the paintwork', 'the glue', 'the carpet'],
 }
 

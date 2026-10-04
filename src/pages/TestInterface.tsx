@@ -112,7 +112,7 @@ export default function TestInterface() {
     }
 
     if (sourceTest?.id === id) {
-      setTestData(sourceTest)
+      setTestData(type === 'listening' ? mockListeningTests.find(test => test.id === id) ?? sourceTest : sourceTest)
       setLoading(false)
       return
     }

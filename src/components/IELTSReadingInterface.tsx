@@ -96,6 +96,8 @@ function sectionHasLabeledParagraphs(section: Section | undefined): boolean {
 }
 
 function resolvePassageNumber(section: Section | undefined, fallback: number): number {
+  const listeningPart = section?.partLabel?.match(/\bPart\s+(\d+)\b/i)
+  if (listeningPart) return Number(listeningPart[1])
   const match = section?.title?.match(/\bPassage\s+([1-3])\b/i)
   return match ? Number(match[1]) : fallback
 }
@@ -746,8 +748,8 @@ export default function IELTSReadingInterface({
 
   const reviewAnalysis = useMemo(() => {
     if (!isReviewMode || !reviewPayload?.result) return null
-    return evaluateReadingAnswers(test.sections as Section[], reviewPayload.result.answers)
-  }, [isReviewMode, reviewPayload, test.sections])
+    return evaluateReadingAnswers(activeSections, reviewPayload.result.answers)
+  }, [isReviewMode, reviewPayload, activeSections])
 
   const reviewQuestionMap = useMemo(() => {
     const map = new Map<string, { status: 'correct' | 'incorrect' | 'skipped'; correctAnswer: string | string[] }>()
@@ -792,7 +794,7 @@ export default function IELTSReadingInterface({
     const meta = getQuestionReviewMeta(question)
     if (!meta) return []
     const candidates = Array.isArray(meta.correctAnswer) ? meta.correctAnswer : [meta.correctAnswer]
-    return candidates.map((entry) => normalizeChoiceToken(String(entry))).filter(Boolean)
+    return candidates.flatMap((entry) => String(entry).split(/\s*[/;|]\s*/).map(normalizeChoiceToken)).filter(Boolean)
   }
 
   const getChoiceVisualState = (
@@ -3167,21 +3169,21 @@ export default function IELTSReadingInterface({
       const inputValue = Array.isArray(rawAnswer) ? rawAnswer.join(', ') : String(rawAnswer ?? '')
       const widthCls =
         width === 'sm'
-          ? 'min-w-[60px] max-w-[88px]'
+          ? 'w-[88px]'
           : width === 'lg'
-            ? 'min-w-[140px] max-w-[200px]'
+            ? 'w-[200px]'
             : width === 'xl'
-              ? 'min-w-[180px] max-w-[240px]'
-              : 'min-w-[100px] max-w-[168px]'
+              ? 'w-[240px]'
+              : 'w-[168px]'
       return (
-        <span id={`question-card-${question.id}`} className={onDiagram ? 'relative inline-flex w-full flex-col items-start align-middle' : 'mx-1 inline-flex flex-col items-start align-middle'}>
+        <span id={`question-card-${question.id}`} className={onDiagram ? 'relative inline-flex w-full flex-col items-start align-middle' : `listening-answer-slot mx-1 my-1.5 inline-flex max-w-full ${widthCls} flex-col items-start align-middle leading-normal`}>
           <input
             type="text"
-            aria-label={onDiagram ? `Question ${number}: ${question.text}` : undefined}
+            aria-label={`Question ${number}: ${question.text}`}
             maxLength={onDiagram ? 1 : undefined}
-            autoComplete={onDiagram ? 'off' : undefined}
+            autoComplete="off"
             autoCapitalize={onDiagram ? 'characters' : undefined}
-            spellCheck={onDiagram ? false : undefined}
+            spellCheck={false}
             value={inputValue}
             onChange={(event) => handleAnswerChange(question.id, onDiagram ? event.target.value.toUpperCase() : event.target.value)}
             onFocus={(event) => {
@@ -3191,7 +3193,7 @@ export default function IELTSReadingInterface({
             onClick={onDiagram ? event => event.currentTarget.select() : undefined}
             disabled={isReviewMode}
             placeholder={String(number)}
-            className={`inline-flex ${onDiagram ? 'h-8 w-full min-w-0 bg-white text-base leading-none caret-red-600' : `h-9 ${widthCls} text-sm`} rounded-lg border px-2 text-center font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
+            className={`inline-flex ${onDiagram ? 'h-8 w-full min-w-0 bg-white text-base leading-none caret-red-600' : 'h-9 w-full min-w-0 text-sm'} rounded-lg border px-2 text-center font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed ${
               isReviewMode && reviewShowCorrectAnswers
                 ? isWrong
                   ? 'border-red-300 bg-red-50/70 text-red-700'
@@ -3209,7 +3211,7 @@ export default function IELTSReadingInterface({
             </button>
           ) : null}
           {isReviewMode && reviewShowCorrectAnswers && correctAnswerText ? (
-            <span className="mt-1 inline-flex max-w-[240px] items-center rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.04em] text-emerald-700">
+            <span className="mt-1 inline-flex max-w-full items-center break-words rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.04em] text-emerald-700 [overflow-wrap:anywhere]">
               Correct: {correctAnswerText}
             </span>
           ) : null}
@@ -3251,7 +3253,7 @@ export default function IELTSReadingInterface({
               const globalIdx = getCurrentSectionGlobalIndex(question.id)
               const isFlagged = flaggedQuestions.includes(globalIdx)
               return (
-                <div key={row.blank} id={`question-card-${question.id}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-3">
+                <div key={row.blank} className="flex flex-wrap items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-3">
                   <button
                     type="button"
                     onClick={() => handleFlagQuestion(globalIdx)}
@@ -3458,6 +3460,7 @@ export default function IELTSReadingInterface({
 
       return (
         <div id={`question-card-${primaryQuestion.id}`} className="mt-3 rounded-2xl border border-red-100 bg-white p-3">
+          {questions.slice(1).map(question => <span key={question.id} id={`question-card-${question.id}`} />)}
           <div className="mb-1 flex items-start gap-2.5">
             <button
               type="button"
@@ -3500,6 +3503,7 @@ export default function IELTSReadingInterface({
                   type="button"
                   key={letter}
                   disabled={isReviewMode}
+                  aria-pressed={isSelected}
                   onClick={() => { if (!isReviewMode) toggleChoice(letter) }}
                   className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 ${optionTone}`}
                 >
@@ -3564,7 +3568,7 @@ export default function IELTSReadingInterface({
           )
         case 'note':
           return (
-            <p key={key} className={`text-[15px] leading-loose text-slate-900 ${block.bullet ? 'pl-6' : ''}`}>
+            <p key={key} className={`text-[15px] leading-loose text-slate-900 ${block.bullet || block.indent ? 'pl-6' : ''}`}>
               {block.bullet ? '• ' : ''}
               {segs(block.segments)}
             </p>
@@ -3783,7 +3787,7 @@ export default function IELTSReadingInterface({
                   </span>
                 ) : null}
                 <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold tracking-wide">
-                  {firstNum}-{lastNum} of {totalNum}
+                  {firstNum}-{lastNum} · {totalNum} questions
                 </span>
               </div>
             </div>
@@ -6395,7 +6399,7 @@ export default function IELTSReadingInterface({
                         {section.questions.map((q, qIdx) => {
                           const startIndex = getQuestionGlobalIndex(sIdx, qIdx);
                           const slotCount = getQuestionSlotCount(q);
-                          const questionNumbers = Array.from({ length: slotCount }, (_, index) => startIndex + index + 1);
+                          const questionNumbers = Array.from({ length: slotCount }, (_, index) => q.number + index);
                           const displayNumber = formatQuestionNumberRange(questionNumbers);
                           const ans = answers[q.id];
                           const display = Array.isArray(ans)

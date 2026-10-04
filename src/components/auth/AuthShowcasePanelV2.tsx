@@ -35,7 +35,7 @@ function ScoreTrend({ trend, minimalMotion, delay }: {
           transition={{ duration: .55, delay: minimalMotion ? 0 : delay + .6, type: 'spring', bounce: .28 }}
         >{trend.gain}</motion.span>
       </div>
-      <svg className="auth-showcase-chart" viewBox="0 0 340 122" role="img" aria-label={`${trend.exam}: ${c('Sample score trend across seven practice tests')}`}>
+      <svg className="auth-showcase-chart" viewBox="0 0 340 122" preserveAspectRatio="none" role="img" aria-label={`${trend.exam}: ${c('Sample score trend across seven practice tests')}`}>
         <defs>
           <linearGradient id={`auth-${trend.exam}-bars`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#f27682" stopOpacity=".82" />
@@ -134,13 +134,14 @@ export default function AuthShowcasePanelV2({ mode }: { mode: 'login' | 'registe
         </motion.div>
 
         <div className="auth-showcase-content">
-          <motion.h2 {...reveal(.2)}>{c('Make every')}<br />{' '}{c('step')} <span>{c('count.')}</span></motion.h2>
-          <motion.p className="auth-showcase-description" {...reveal(.34)}>
-            {c('Practice with purpose. Track your progress.')}<br className="auth-showcase-desktop-break" />{' '}{c('Plan what comes next.')}
-          </motion.p>
+          <div className="auth-showcase-intro">
+            <motion.h2 {...reveal(.2)}>{c('Make every')}<br />{' '}{c('step')} <span>{c('count.')}</span></motion.h2>
+            <motion.p className="auth-showcase-description" {...reveal(.34)}>
+              {c('Practice with purpose. Track your progress.')}<br className="auth-showcase-desktop-break" />{' '}{c('Plan what comes next.')}
+            </motion.p>
+          </div>
 
           <motion.div className="auth-showcase-progress" {...reveal(.47, 42)}>
-            <div className="auth-showcase-progress-label">{c('Your progress')} <span>· {c('Sample')}</span></div>
             <div className="auth-showcase-trends">
               {trends.map((trend, index) => <ScoreTrend key={trend.exam} trend={trend} minimalMotion={minimalMotion} delay={.57 + index * .18} />)}
             </div>

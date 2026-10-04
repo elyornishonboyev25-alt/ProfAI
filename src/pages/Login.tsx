@@ -39,7 +39,6 @@ export default function Login() {
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const { minimalMotion } = useMotionPreferences()
   const [showPassword, setShowPassword] = useState(false)
-  const [codeMode, setCodeMode] = useState(false)
   const [notFound, setNotFound] = useState<{ email?: string } | null>(null)
   const [recoveryOpen, setRecoveryOpen] = useState(false)
   const [recoveryEmail, setRecoveryEmail] = useState('')
@@ -154,11 +153,6 @@ export default function Login() {
 
             {createMode ? (
               <EmailCodeForm key="create" intent="create-account" initialEmail={initialEmail} onAuthenticated={finishEmailAuth} />
-            ) : codeMode ? (
-              <>
-                <EmailCodeForm key="signin-code" initialEmail={getValues('email')} onAuthenticated={finishEmailAuth} onRecover={(email) => { setRecoveryEmail(email); setRecoveryOpen(true) }} />
-                <button type="button" className="auth-cinema-switch-method" onClick={() => setCodeMode(false)}>{c('Use your password instead')}</button>
-              </>
             ) : (
               <form onSubmit={handleSubmit(signInWithPassword)} className="auth-cinema-password-form" aria-label="Sign in with password">
                 <label htmlFor="auth-email">{c('Gmail address')}</label>
@@ -183,7 +177,6 @@ export default function Login() {
                   {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
                   {c(isSubmitting ? 'Signing in...' : 'Continue')}
                 </button>
-                <button type="button" className="auth-cinema-switch-method" onClick={() => setCodeMode(true)}>{c('Sign in with a Gmail code instead')}</button>
               </form>
             )}
 

@@ -1,4 +1,4 @@
-// Shared types for the Articles knowledge hub. Every article the user adds (target: 150)
+// Shared types for the Articles knowledge hub. Every article the user adds
 // follows this exact shape so the list page, the reader, and the vocabulary arena can all
 // consume the data without any per-article special casing.
 
@@ -19,7 +19,7 @@ export type ArticleVocabEntry = {
 }
 
 // Cover art is generated (no external image, no channel watermark) from a theme + icon so it
-// stays professional and scales to 150 articles. `image` is optional — drop a file in
+// stays professional as the library grows. `image` is optional — drop a file in
 // /public/articles and set it here to use a real photo instead of the generated cover.
 export type ArticleCover = {
   theme: ArticleCoverTheme
@@ -61,4 +61,14 @@ export type Article = {
   cover: ArticleCover
   blocks: ArticleBlock[]
   vocabulary: ArticleVocabEntry[]
+  source?: {
+    publisher: string
+    url: string
+    authors: string[]
+    citation: string
+    copyright: string
+    license: string
+    licenseUrl: string
+    adaptationNote: string
+  }
 }

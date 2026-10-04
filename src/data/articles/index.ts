@@ -3,10 +3,14 @@ import { fiveBooksArticle } from './a001-five-books'
 import { birthOfTheUniverseArticle } from './a002-birth-of-the-universe'
 import { theLostArticle } from './a003-the-lost'
 import { chooseTheRightUniversityArticle } from './a004-choose-the-right-university'
+import { curatedArticles1 } from './curated-01'
+import { curatedArticles2 } from './curated-02'
+import { curatedArticles3 } from './curated-03'
+import { curatedArticles4 } from './curated-04'
 
 export type { Article, ArticleBlock, ArticleVocabEntry, ArticleCategory, ArticleCover, ArticleCoverTheme } from './types'
 
-// The full library. To add one of the remaining articles, create a new `aNNN-*.ts` file that
+// The full library. To add an article, create a new `aNNN-*.ts` file that
 // exports an `Article` (same shape as a001) and append it here. The list page, reader, and
 // vocabulary arena all pick it up automatically — no other wiring required.
 export const articles: Article[] = [
@@ -14,10 +18,14 @@ export const articles: Article[] = [
   birthOfTheUniverseArticle,
   theLostArticle,
   chooseTheRightUniversityArticle,
+  ...curatedArticles1,
+  ...curatedArticles2,
+  ...curatedArticles3,
+  ...curatedArticles4,
 ]
 
 // How many article slots the hub is designed to grow into.
-export const ARTICLE_LIBRARY_TARGET = 150
+export const ARTICLE_LIBRARY_TARGET = 250
 
 export const articleCategories: ArticleCategory[] = [
   'Mindset',

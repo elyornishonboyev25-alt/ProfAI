@@ -1,6 +1,8 @@
 import UiText from '@/components/common/UiText'
-import { useMemo, useRef, useState } from 'react'
-import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Volume2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Trophy, X } from 'lucide-react'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCollections'
 import { getArticleBySlug } from '@/data/articles'
@@ -11,11 +13,10 @@ import {
   MatchingActivity,
   QuizActivity,
   TypingActivity,
-  usePronunciation,
   type ActivityMode,
 } from '@/components/vocab/activities'
-import { SaveWordButton, WordSaveProvider } from '@/components/vocab/SaveWordButton'
-import { IeltsVocabularyWord } from '@/components/vocab/IeltsVocabularyStudio'
+import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
+import { VocabularyLibrary } from '@/components/vocab/VocabularyDetails'
 import { useAuthStore } from '@/store/authStore'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
@@ -30,6 +31,10 @@ type Selection = {
   rewardKey: string
   masteryKey: string
   accent: 'red' | 'blue'
+}
+
+const ACTIVITY_LABELS: Record<ActivityMode, string> = {
+  flashcards: 'Flashcards', matching: 'Matching Game', quiz: 'Quiz', typing: 'Typing Drill',
 }
 
 function resolveActivity(activity?: string): ActivityMode | null {
@@ -145,26 +150,6 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
   return null
 }
 
-function TermPreview({ entries }: { entries: VocabularyEntry[] }) {
-  const { speak } = usePronunciation()
-  return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {entries.map((entry) => (
-        <div key={entry.id} className="flex items-start justify-between gap-2 rounded-xl border border-blue-100 bg-white px-3.5 py-2.5">
-          <div className="min-w-0">
-            <SaveWordButton entry={entry} />
-            <p className="text-sm font-bold text-slate-900">{entry.term}</p>
-            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{entry.uzbek ?? entry.definition}</p>
-          </div>
-          <button onClick={() => speak(entry.term)} className="shrink-0 rounded-md p-1 text-slate-400 hover:text-blue-600" aria-label="Pronounce">
-            <Volume2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default function VocabularyActivity() {
   const params = useParams()
   const location = useLocation()
@@ -176,6 +161,13 @@ export default function VocabularyActivity() {
   const activity = resolveActivity(params.activity)
   const [xpStatus, setXpStatus] = useState<{ key: string; message: string; retry?: () => void } | null>(null)
   const pendingXp = useRef(new Set<string>())
+  const { reducedMotion } = useMotionPreferences()
+  const [celebration, setCelebration] = useState<{ key: string; amount: number; mode: ActivityMode } | null>(null)
+  useEffect(() => {
+    if (!celebration) return
+    const timer = window.setTimeout(() => setCelebration(null), 3200)
+    return () => window.clearTimeout(timer)
+  }, [celebration])
   const selection = useMemo(() => findSelection(params), [params])
 
   if (!selection) return <Navigate to="/vocabulary" replace />
@@ -187,6 +179,11 @@ export default function VocabularyActivity() {
   const chipClass = isBlue ? 'premium-top-chip-blue' : 'premium-top-chip'
   const awardVocabulary = (mode: ActivityMode, accuracy: number) => {
     if (useAuthStore.getState().user?.id !== user?.id) return
+    setCelebration(null)
+    if (accuracy < 80) {
+      setXpStatus({ key: rewardKey, message: 'Reach at least 80% to earn XP. Try again!' })
+      return
+    }
     if (!user) {
       setXpStatus({ key: rewardKey, message: 'Sign in to earn XP for completed activities.' })
       return
@@ -209,6 +206,9 @@ export default function VocabularyActivity() {
     }).then((reward) => {
       if (useAuthStore.getState().user?.id !== user.id) return
       updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
+      if (!reward.duplicate && reward.xpEarned > 0) {
+        setCelebration({ key: eventKey, amount: reward.xpEarned, mode })
+      }
       setXpStatus({ key: rewardKey, message: reward.duplicate
         ? 'XP for this activity has already been collected.'
         : reward.xpEarned > 0 ? `+${reward.xpEarned} XP earned!` : 'Daily vocabulary XP limit reached (120 XP).' })
@@ -239,11 +239,11 @@ export default function VocabularyActivity() {
 
   return (
     <WordSaveProvider value={saveContext}>
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+      <div className="workspace-page vocab-practice" data-mode={activity ?? 'picker'} data-accent={accent}>
 
-        <div className="relative mx-auto w-full max-w-5xl space-y-5">
+        <div className="vocab-practice-shell">
           {/* hero */}
-          <section className={`relative overflow-hidden rounded-[1.8rem] border bg-white/90 p-5 shadow-[0_24px_54px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-7 ${isBlue ? 'border-blue-100' : 'border-blue-100'}`}>
+          <header className="vocab-practice-header">
             <div className="premium-top-controls">
               <Link to={activity ? basePath : trackPath} state={navigationState} className={`${backClass} group`}>
                 <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
@@ -259,31 +259,35 @@ export default function VocabularyActivity() {
                    <UiText text={"Track"} /> </Link>
               ) : null}
             </div>
-            <h1 className="mt-4 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h1>
-            <p className="mt-1 text-sm font-semibold text-slate-500">{subtitle}</p>
-          </section>
+            <div className="vocab-practice-heading">
+              <p className="vocab-header-eyebrow">YOUR VOCABULARY WORKSPACE</p>
+              <h1>{title}</h1>
+              <p>{subtitle}</p>
+            </div>
+            <div className="vocab-header-stamp" aria-hidden="true"><BookOpenCheck size={26} strokeWidth={1.4} /><span>SMALL STEPS<br /><strong>LASTING KNOWLEDGE</strong></span></div>
+          </header>
 
           {xpStatus?.key === rewardKey ? (
-            <div role="status" className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm font-semibold text-blue-800">
+            <div role="status" className="vocab-xp-status flex flex-wrap items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-2 text-xs font-semibold text-blue-800">
               {xpStatus.message}
               {xpStatus.retry ? <button onClick={xpStatus.retry} className="rounded-lg bg-blue-600 px-3 py-1.5 text-white">Retry XP</button> : null}
+              <button type="button" onClick={() => setXpStatus(null)} aria-label="Close XP notification" className="ml-auto rounded-lg p-1.5"><X className="h-4 w-4" /></button>
             </div>
           ) : null}
           {!activity ? (
             <>
-              <section className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-5">
-                <h2 className="text-xl font-black text-slate-900">Choose how to study</h2>
-                <p className="mt-1 text-sm text-slate-600">Four focused drills — flip, match, quiz, and type — with audio, instant feedback, and diamond rewards.</p>
-                <p className="mt-2 text-xs text-slate-500">XP is awarded once per activity in each set, up to 120 vocabulary XP per day.</p>
+              <section className="vocab-practice-intro">
+                <div>
+                  <h2>Choose how to study</h2>
+                  <p>Flip, match, quiz, and type — build confidence one word at a time.</p>
+                </div>
+                <p className="vocab-reward-note">80% to earn XP · Once per activity · 120 XP daily limit</p>
               </section>
-              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} />
-              <section className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-                <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400"> <UiText text={"Vocabulary"} /> </p>
-                {params.bookId ? <div className="grid gap-4 md:grid-cols-2">{entries.map((entry) => <IeltsVocabularyWord key={entry.id} entry={entry} />)}</div> : <TermPreview entries={entries} />}
-              </section>
+              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} />
+              <VocabularyLibrary key={basePath} entries={entries} />
             </>
           ) : (
-            <section className="rounded-[1.6rem] border border-blue-100 bg-white/70 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.08)] sm:p-5">
+            <section className={`vocab-game-stage vocab-game-stage-${activity}`} aria-label={ACTIVITY_LABELS[activity]}>
               {activity === 'flashcards' ? <FlashcardsActivity key={basePath} entries={entries} masteryKey={masteryKey} onComplete={(accuracy) => awardVocabulary('flashcards', accuracy)} /> : null}
               {activity === 'matching' ? <MatchingActivity key={basePath} entries={entries} rewardKey={rewardKey} onComplete={(accuracy) => awardVocabulary('matching', accuracy)} /> : null}
               {activity === 'quiz' ? <QuizActivity key={basePath} entries={entries} onComplete={(accuracy) => awardVocabulary('quiz', accuracy)} /> : null}
@@ -291,6 +295,21 @@ export default function VocabularyActivity() {
             </section>
           )}
         </div>
+        <AnimatePresence>
+          {celebration && celebration.key === `${rewardKey}:${activity}` ? (
+            <motion.div key={celebration.key} role="status" aria-label={`+${celebration.amount} XP earned`} className="pointer-events-none fixed inset-0 z-[130] flex items-center justify-center px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" />
+              <motion.div initial={reducedMotion ? false : { scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="relative rounded-[2rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-orange-100 px-12 py-10 text-center shadow-2xl">
+                <Trophy className="mx-auto h-12 w-12 text-amber-500" />
+                <p className="mt-4 text-5xl font-black text-slate-900">+{celebration.amount} XP</p>
+                <p className="mt-3 font-bold text-amber-700">{ACTIVITY_LABELS[celebration.mode]} complete!</p>
+                {!reducedMotion ? Array.from({ length: 8 }, (_, i) => (
+                  <motion.span key={i} aria-hidden="true" className="absolute text-amber-400" style={{ left: `${10 + (i % 4) * 25}%`, top: i < 4 ? '15%' : '80%' }} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [0, 1.3, 0.5], y: [0, -45, -90], rotate: [0, 90] }} transition={{ duration: 2, delay: i * 0.1 }}><Sparkles className="h-6 w-6" /></motion.span>
+                )) : null}
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
     </WordSaveProvider>
   )

@@ -210,7 +210,7 @@ function AnimatedRoute({ children, dashboardEntrance = false }: { children: Reac
   )
 }
 
-function WorkspaceFrame({ showSidebar, isAiTutorMode, children }: { showSidebar: boolean; isAiTutorMode: boolean; children: ReactNode }) {
+function WorkspaceFrame({ showSidebar, isAiTutorMode, isVocabularyPracticeMode, children }: { showSidebar: boolean; isAiTutorMode: boolean; isVocabularyPracticeMode: boolean; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('profai-sidebar-collapsed') === 'true' } catch { return false }
   })
@@ -222,7 +222,7 @@ function WorkspaceFrame({ showSidebar, isAiTutorMode, children }: { showSidebar:
 
   return <div className="flex min-h-0 flex-1">
     {showSidebar ? <Sidebar collapsed={collapsed} onToggle={toggleSidebar} /> : null}
-    <main className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${showSidebar ? (collapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'} ${isAiTutorMode ? 'flex min-h-0 flex-col' : ''}`}>
+    <main className={`workspace-main min-w-0 w-full flex-1 overflow-x-clip ${showSidebar ? (collapsed ? 'lg:ml-[6.25rem]' : 'lg:ml-[18.75rem]') : 'ml-0'} ${isAiTutorMode || isVocabularyPracticeMode ? 'flex min-h-0 flex-col' : ''}`}>
       {children}
     </main>
   </div>
@@ -347,6 +347,7 @@ function App() {
     !isFocusContentMode &&
     !isIeltsMockMode
   const isAiTutorMode = pathname === '/ai-tutor'
+  const isVocabularyPracticeMode = /^\/vocabulary\/my-words\/?$/.test(pathname) || /^\/vocabulary\/(?:ielts\/[^/]+\/[^/]+\/[^/]+|sat\/[^/]+\/[^/]+|articles\/[^/]+|my-words\/[^/]+\/(?:flashcards|matching|quiz|typing))(?:\/(?:flashcards|matching|quiz|typing))?\/?$/.test(pathname)
   const showMobileNav =
     !isPublicStandalone &&
     !isTestMode &&
@@ -454,11 +455,11 @@ function App() {
         </>
       ) : null}
 
-      <div className={`relative z-10 flex min-h-screen flex-col ${isAiTutorMode ? 'h-dvh overflow-hidden' : ''}`}>
-        <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode}>
+      <div className={`relative z-10 flex min-h-screen flex-col ${isAiTutorMode || isVocabularyPracticeMode ? 'h-dvh overflow-hidden' : ''}`}>
+        <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode} isVocabularyPracticeMode={isVocabularyPracticeMode}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
-              className={`flex flex-col ${isAiTutorMode
+              className={`flex flex-col ${isAiTutorMode || isVocabularyPracticeMode
                 ? 'min-h-0 flex-1 overflow-hidden'
                 : isTestMode
                   ? location.pathname.startsWith('/results/')

@@ -1,5 +1,9 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Words & recall': 'Слова и запоминание',
+  'Read & discover': 'Читайте и открывайте',
+  'Listen & learn': 'Слушайте и учитесь',
+  'Speak & refine': 'Говорите и совершенствуйтесь',
   'Score change: {change}': 'Изменение результата: {change}',
   'IELTS band points': 'балла IELTS',
   'SAT points': 'баллов SAT',
@@ -376,7 +380,8 @@ export const russianAdditions: Record<string, string> = {
   "Source context": "Контекст в тесте",
   "Vocabulary matched to every Full Test, passage and topic.": "Слова для каждого полного теста, текста и темы.",
   "full tests": "полных тестов",
-  "20 words · all four parts": "20 слов · все четыре части",
+  "20 words · 1-4 parts": "20 слов · 1-4 части",
+  "Example": "Пример",
   "15 words · per passage": "15 слов · на каждый текст",
   "Vocabulary for Tasks 1 & 2": "Слова для заданий 1 и 2",
   "Vocabulary for Parts 1–3": "Слова для частей 1–3",

@@ -11,6 +11,8 @@ import VocabularyActivity from '../../src/pages/VocabularyActivity'
 import Vocabulary from '../../src/pages/Vocabulary'
 import { apiClient } from '../../src/lib/apiClient'
 import { useAuthStore } from '../../src/store/authStore'
+import { normalizeVocabularyAnswer } from '../../src/utils/vocabularyAnswers'
+import VocabularyExample from '../../src/components/vocab/VocabularyExample'
 
 const satVocabularyPacks = vocabularyCollections.sat
 const entries = satVocabularyPacks[0].sections[0].entries
@@ -30,7 +32,7 @@ async function render(node: React.ReactNode, path: string | { pathname: string; 
 }
 
 const button = (text: string) => [...container.querySelectorAll('button')]
-  .find((element) => element.textContent?.trim() === text) as HTMLButtonElement
+  .find((element) => element.textContent?.trim() === text || element.getAttribute('aria-label') === text) as HTMLButtonElement
 
 async function click(element: HTMLElement | null | undefined) {
   assert.ok(element, `Button must exist; visible text: ${container.textContent?.slice(0, 600)}; links: ${[...container.querySelectorAll('a')].map((a) => a.getAttribute('href')).join(', ')}`)
@@ -50,6 +52,66 @@ async function matchAll() {
 }
 
 export async function run() {
+  assert.equal(normalizeVocabularyAnswer('  O‘BRIEN  '), normalizeVocabularyAnswer("o'brien"))
+  assert.equal(normalizeVocabularyAnswer('well–known'), normalizeVocabularyAnswer('well-known'))
+  assert.notEqual(normalizeVocabularyAnswer('habitat'), normalizeVocabularyAnswer('habbitat'))
+  const firstListening = vocabularyCollections.ielts[0].tests[0].sections[0].entries
+  assert.equal(firstListening.find((entry) => entry.term === 'availability')!.uzbek, 'mavjudlik')
+  assert.ok(firstListening.find((entry) => entry.term === 'availability')!.exampleUzbek)
+  const sourceEntry = { ...entries[0], example: 'Test extract ____', sourceExcerpt: 'Test extract ____' }
+  await render(<VocabularyExample entry={sourceEntry} />)
+  assert.match(container.textContent!, /From the test/)
+  assert.doesNotMatch(container.textContent!, /Example sentence/)
+  await render(<VocabularyExample entry={entries[0]} />)
+  assert.match(container.textContent!, /Example sentence/)
+
+  // Equal personal-word meanings are interchangeable in matching, and cannot
+  // create duplicate choices or multiple correct buttons in a quiz.
+  const equalEntries = [
+    { ...entries[0], id: 'equal-a', term: 'first', definition: 'The same meaning.' },
+    { ...entries[1], id: 'equal-b', term: 'second', definition: 'The same meaning.' },
+  ]
+  const equalCompletions: number[] = []
+  await render(<MatchingActivity entries={equalEntries} rewardKey="equal-definitions" onComplete={(accuracy) => equalCompletions.push(accuracy)} />)
+  const meaningButtons = () => [...container.querySelectorAll<HTMLButtonElement>('.vocab-matching-column:nth-child(2) button.vocab-matching-cell')]
+  await click(button('first'))
+  await click(meaningButtons()[1])
+  assert.ok(meaningButtons()[1].disabled)
+  assert.ok(!meaningButtons()[0].disabled)
+  await click(button('second'))
+  await click(meaningButtons()[0])
+  assert.deepEqual(equalCompletions, [100])
+  await render(<QuizActivity entries={equalEntries} />)
+  assert.equal(container.querySelectorAll('.vocab-quiz-options button[data-letter]').length, 1)
+
+  // Paging either matching column keeps the selected term and all six pairs.
+  const originalWidth = window.innerWidth
+  Object.defineProperty(window, 'innerWidth', { value: 320, configurable: true })
+  const pagedCompletions: number[] = []
+  await render(<MatchingActivity entries={entries.slice(0, 6)} rewardKey="paged-matching" onComplete={(accuracy) => pagedCompletions.push(accuracy)} />)
+  assert.equal(container.querySelectorAll('.vocab-matching-column:first-child .vocab-matching-cell').length, 3)
+  for (const entry of entries.slice(0, 6)) {
+    if (!button(entry.term)) await click(button('Next terms'))
+    const selected = button(entry.term)
+    await click(selected)
+    if (!button(entry.definition)) {
+      const next = button('Next meanings')
+      await click(next.disabled ? button('Previous meanings') : next)
+    }
+    assert.equal(selected.getAttribute('aria-pressed'), 'true', 'Term remains selected while paging meanings')
+    await click(button(entry.definition))
+    assert.ok(selected.disabled, 'Matching across pages marks the correct term')
+  }
+  assert.deepEqual(pagedCompletions, [100], 'Pagination retains the complete six-pair group')
+  Object.defineProperty(window, 'innerWidth', { value: originalWidth, configurable: true })
+
+  await render(<TypingActivity entries={[entries[0]]} />)
+  await act(async () => container.querySelector('input')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
+  assert.ok(button('Check').disabled, 'Empty Enter does not submit a wrong answer')
+  assert.doesNotMatch(container.textContent!, /Answer:/)
+  window.localStorage.removeItem('smarttest_vocab_matching_rewards_v2')
+  window.localStorage.removeItem('smarttest_vocab_diamond_bank_v1')
+
   const ieltsRoutes = <Routes>
     <Route path="/vocabulary/:track" element={<Vocabulary />} />
     <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId" element={<VocabularyActivity />} />
@@ -80,7 +142,7 @@ export async function run() {
     await click(container.querySelector(`button[aria-label="Save ${selected.entries[0].term} to My Words"]`))
     assert.equal(getSavedWords(book.skill).length, 1, 'Each skill saves to its own context')
     await click(container.querySelector('a[href*="/vocabulary/ielts/"]'))
-    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, selected.entries.length)
+    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4, 'Practice library displays a bounded page of words')
     await click(container.querySelector('a[href$="/flashcards"]'))
     await click(button('I know it'))
     await wait(180)
@@ -97,7 +159,7 @@ export async function run() {
   assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 0)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_full_track/reading_full_test_1/reading_full_test_1_passage_1')
   assert.match(container.textContent!, /Reading Full Test 13/)
-  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 15)
+  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_days_track/reading_day_26/reading_day_26_passage_2')
   assert.match(container.textContent!, /Reading Full Test 10 · Part 3/)
   window.localStorage.clear()
@@ -138,6 +200,7 @@ export async function run() {
         await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent?.trim() === 'SAT Vocabulary'))
       }
       await click(button('Start Module 1'))
+      await click(container.querySelector(`a[href='${origin.path}']`))
       await click(container.querySelector(`a[href='${origin.path}/${mode}']`))
       if (mode === 'typing') {
         await click(container.querySelector("a[href='/vocabulary/sat']"))
@@ -154,7 +217,7 @@ export async function run() {
     <Routes><Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} /></Routes>,
     origin.path,
   )
-  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 20, 'All module words must be saveable')
+  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 4, 'Every word on the current library page must be saveable')
 
   await render(
     <WordSaveProvider value={{ context: 'sat', origin }}><SaveWordButton entry={entries[0]} /></WordSaveProvider>,
@@ -202,9 +265,30 @@ export async function run() {
     await click(button('I know it'))
     await wait(180)
   }
-  await click(button('I know it'))
-  await wait(180)
+  assert.ok(!button('I know it'), 'Completed flashcards must not wrap to the first word')
+  assert.match(container.textContent!, /Flashcards complete/)
   assert.deepEqual(completions, [100])
+  await act(async () => window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })))
+  assert.ok(!button('I know it'), 'Keyboard navigation cannot reopen a completed deck')
+
+  const smallDeck = entries.slice(0, 5)
+  completions = []
+  await render(<FlashcardsActivity entries={smallDeck} masteryKey="eighty-percent" onComplete={(accuracy) => completions.push(accuracy)} />)
+  await click(button('Prev'))
+  assert.match(container.textContent!, /Card 1 \/ 5/)
+  for (let index = 0; index < 5; index++) {
+    await click(button(index < 4 ? 'I know it' : 'Still learning'))
+    await wait(180)
+  }
+  assert.deepEqual(completions, [80])
+  assert.match(container.textContent!, /Flashcards complete/)
+  completions = []
+  await render(<FlashcardsActivity entries={smallDeck} masteryKey="eighty-percent" onComplete={(accuracy) => completions.push(accuracy)} />)
+  for (let index = 0; index < 5; index++) {
+    await click(button('Still learning'))
+    await wait(180)
+  }
+  assert.deepEqual(completions, [0], 'Past mastery must not inflate a new session result')
 
   completions = []
   await render(<QuizActivity entries={entries} onComplete={(accuracy) => completions.push(accuracy)} />)
@@ -230,7 +314,7 @@ export async function run() {
   )
   for (let index = 0; index < 10; index++) {
     assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 0, 'Typing must not expose the answer via the save label')
-    const entry = entries.find((item) => container.textContent!.includes(item.definition))!
+    const entry = entries.find((item) => container.querySelector('.vocab-typing-prompt p')?.textContent === item.definition)!
     const input = container.querySelector('input')!
     await act(async () => {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, index < 8 ? entry.term : 'wrong')
@@ -262,8 +346,73 @@ export async function run() {
   assert.match(container.textContent!, /\+20 XP earned/)
   assert.equal(useAuthStore.getState().user!.xp, 20)
   assert.equal(useAuthStore.getState().user!.currentStreak, 1)
+  assert.ok(container.querySelector('[aria-label="+20 XP earned"]'), 'Successful completion shows the XP celebration')
   assert.equal(requests.length, 2)
   assert.equal(requests[0].eventKey, requests[1].eventKey, 'Retry must reuse the idempotency key')
+  apiClient.post = async (_path: any, body: any) => {
+    requests.push(body)
+    return { duplicate: true, xpEarned: 0, totalXp: 20, level: 1, currentStreak: 1 } as any
+  }
+  await render(
+    <Routes><Route path="/vocabulary/sat/:packId/:sectionId/:activity" element={<VocabularyActivity />} /></Routes>,
+    `${origin.path}/matching`,
+  )
+  await matchAll()
+  assert.match(container.textContent!, /already been collected/)
+  assert.ok(!container.querySelector('[aria-label="+20 XP earned"]'), 'Replay does not celebrate an unearned reward')
+  assert.equal(requests[2].eventKey, requests[0].eventKey)
+  // Verify page-level threshold and the shared celebration for each remaining game.
+  const rewardAmounts = { flashcards: 12, quiz: 26, typing: 30 }
+  const claimed = new Set<string>()
+  apiClient.post = async (_path: any, body: any) => {
+    requests.push(body)
+    const duplicate = claimed.has(body.eventKey)
+    claimed.add(body.eventKey)
+    const amount = duplicate ? 0 : rewardAmounts[body.metadata.mode as keyof typeof rewardAmounts]
+    return { duplicate, xpEarned: amount, totalXp: 20 + amount, level: 1, currentStreak: 1 } as any
+  }
+  const playPage = async (mode: 'flashcards' | 'quiz' | 'typing', pass: boolean) => {
+    await render(
+      <Routes><Route path="/vocabulary/sat/:packId/:sectionId/:activity" element={<VocabularyActivity />} /></Routes>,
+      `${origin.path}/${mode}`,
+    )
+    const count = mode === 'flashcards' ? entries.length : 10
+    for (let index = 0; index < count; index++) {
+      const correct = pass && index < Math.ceil(count * 0.8)
+      if (mode === 'flashcards') {
+        await click(button(correct ? 'I know it' : 'Still learning'))
+        await wait(180)
+      } else if (mode === 'quiz') {
+        const term = container.querySelector('h3 span')!.textContent!.replace(/[“”]/g, '')
+        const entry = entries.find((item) => item.term === term)!
+        const options = [...container.querySelectorAll<HTMLButtonElement>('.vocab-quiz-options button[data-letter]')]
+        await click(options.find((option) => (option.textContent?.trim() === entry.definition) === correct))
+        await click(button(index === count - 1 ? 'Finish' : 'Next'))
+      } else {
+        const entry = entries.find((item) => container.querySelector('.vocab-typing-prompt p')?.textContent === item.definition)!
+        const input = container.querySelector('input')!
+        await act(async () => {
+          Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, correct ? entry.term : 'wrong')
+          input.dispatchEvent(new window.Event('input', { bubbles: true }))
+        })
+        await click(button('Check'))
+        await click(button(index === count - 1 ? 'Finish' : 'Next'))
+      }
+    }
+  }
+  for (const mode of ['flashcards', 'quiz', 'typing'] as const) {
+    const before = requests.length
+    await playPage(mode, false)
+    assert.match(container.textContent!, /Reach at least 80%/)
+    assert.equal(requests.length, before, 'Below-threshold results never submit an XP claim')
+    await playPage(mode, true)
+    assert.ok(container.querySelector(`[aria-label="+${rewardAmounts[mode]} XP earned"]`), `${mode} shows earned XP animation`)
+    assert.ok(!requests.at(-1)!.eventKey.endsWith(':matching'), 'Every mode has a separate event key')
+    await playPage(mode, true)
+    assert.match(container.textContent!, /already been collected/)
+    assert.ok(!container.querySelector(`[aria-label="+${rewardAmounts[mode]} XP earned"]`), `${mode} replay has no XP animation`)
+    assert.equal(requests.length, before + 2)
+  }
   await act(async () => root.unmount())
   console.log('UI passed: four IELTS skills, Full Tests 1–30, part counts, activity return paths, per-skill saved words, legacy Reading links, SAT catalog, matching + replay, flashcards, quiz, typing, XP failure + retry + profile update.')
 }

@@ -9,18 +9,18 @@ import {
   CheckCircle2,
   Clock3,
   Crown,
+  Lightbulb,
   Loader2,
   Maximize2,
   Minimize2,
+  Monitor,
   PenLine,
   RotateCcw,
   Send,
-  Sparkles,
   Target,
-  Timer,
-  TimerOff,
 } from 'lucide-react'
 
+import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
@@ -364,7 +364,8 @@ export default function IELTSWritingFullTestInterface({
 
   if (phase === 'landing') {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
+        <AnimatedBackground />
         <AnimatePresence>
           {isLaunching ? (
             <TestLaunchOverlay
@@ -373,53 +374,43 @@ export default function IELTSWritingFullTestInterface({
             />
           ) : null}
         </AnimatePresence>
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-rose-200/40 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-orange-200/30 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 w-full max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mb-9 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white/85 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-red-600">
-              <Sparkles className="h-3.5 w-3.5" /> Full exam simulation
-            </span>
-            <h1 className="mt-4 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-4xl font-black tracking-tight text-transparent lg:text-5xl">
+        <div className="relative z-10 w-full max-w-5xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-16 text-center">
+            <h1 className="mb-6 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-5xl font-black tracking-tight text-transparent lg:text-6xl">
               {fullTest.title}
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Complete Task 1 and Task 2 in one continuous sitting. Your answers stay saved while you move between tasks.
+            <p className="mx-auto max-w-2xl text-lg font-light italic text-slate-600">
+              Experience the authentic IELTS Computer-Delivered environment with ProfAI precision.
             </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">Task 1 · 150+ words</span>
-              <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700">Task 2 · 250+ words</span>
-              <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold text-red-700">60 minutes total</span>
-            </div>
           </motion.div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <ModeCard
-              icon={<Timer className="h-6 w-6" />}
-              title="Timed Mode"
-              eyebrow="Full exam simulation"
-              description="Use one 60-minute countdown across both writing tasks, just like the real exam."
-              buttonLabel="Start Full Test"
-              tone="red"
-              onClick={() => handleStart(true)}
+              icon={<Lightbulb className="h-8 w-8" />}
+              title="Practice Mode"
+              eyebrow="Casual Learning"
+              description="Write at your own pace without time pressure. Perfect for learning structure and vocabulary."
+              features={['Unlimited writing time', 'Task 1: 150+ words · Task 2: 250+ words']}
+              buttonLabel="Start Practice"
+              onClick={() => handleStart(false)}
             />
             <ModeCard
-              icon={<TimerOff className="h-6 w-6" />}
-              title="Free Mode"
-              eyebrow="No time limit"
-              description="Work through both tasks at your own pace while keeping the same full-test workspace."
-              buttonLabel="Practice Without Timer"
-              tone="orange"
-              onClick={() => handleStart(false)}
+              icon={<Monitor className="h-8 w-8" />}
+              title="Simulation Mode"
+              eyebrow="Exam Simulation"
+              description="Authentic IELTS CD environment. Replicates the high-pressure conditions of the real exam with strict timing and official layout standards."
+              features={[`Strict ${effectiveDuration}-minute limit across both tasks`, 'IELTS Writing band scoring']}
+              buttonLabel="Launch Final Simulation"
+              simulation
+              onClick={() => handleStart(true)}
             />
           </div>
 
-          <button type="button" onClick={onExit} className="mx-auto mt-8 flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:text-red-600">
-            <ArrowLeft className="h-4 w-4" /> Return to Writing Tests
-          </button>
+          <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+            <button type="button" onClick={onExit} className="mx-auto flex items-center gap-2 rounded-full border border-white/5 px-6 py-2 text-sm text-slate-500 transition-colors hover:bg-white/5 hover:text-red-600">
+              <ArrowLeft className="h-4 w-4" /> Return to Writing Tests
+            </button>
+          </motion.div>
         </div>
       </div>
     )
@@ -725,16 +716,29 @@ export default function IELTSWritingFullTestInterface({
   )
 }
 
-function ModeCard({ icon, title, eyebrow, description, buttonLabel, tone, onClick }: { icon: React.ReactNode; title: string; eyebrow: string; description: string; buttonLabel: string; tone: 'red' | 'orange'; onClick: () => void }) {
-  const isRed = tone === 'red'
+function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, simulation = false, onClick }: { icon: React.ReactNode; title: string; eyebrow: string; description: string; features: string[]; buttonLabel: string; simulation?: boolean; onClick: () => void }) {
   return (
-    <motion.button type="button" whileHover={{ y: -4, scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={onClick} className="group rounded-3xl border border-red-100 bg-white/95 p-7 text-left shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)]">
-      <div className="flex items-center gap-3">
-        <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg ${isRed ? 'bg-gradient-to-br from-red-500 to-rose-500 shadow-red-500/20' : 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-orange-500/20'}`}>{icon}</span>
-        <div><h2 className="text-xl font-black text-slate-900">{title}</h2><p className={`text-[10px] font-black uppercase tracking-widest ${isRed ? 'text-red-500' : 'text-orange-500'}`}>{eyebrow}</p></div>
+    <motion.button type="button" whileHover={{ y: -5 }} whileTap={{ scale: 0.98 }} onClick={onClick} className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white/95 p-6 text-left shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] backdrop-blur-xl transition-all duration-300 sm:p-10 ${simulation ? 'border-red-200' : 'border-red-100'}`}>
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-5 ${simulation ? 'from-red-700 to-rose-600' : 'from-red-600 to-rose-600'}`} />
+      <div className="relative z-10 flex h-full w-full flex-col">
+        <div className="mb-8 flex items-center gap-4">
+          <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br to-rose-500 text-white shadow-lg shadow-red-500/20 transition-transform group-hover:scale-110 ${simulation ? 'from-red-600' : 'from-red-500'}`}>{icon}</span>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+            <p className={`text-xs font-bold uppercase tracking-widest ${simulation ? 'text-red-600' : 'text-red-500'}`}>{eyebrow}</p>
+          </div>
+        </div>
+        <p className="mb-8 flex-1 text-[15px] italic leading-relaxed text-slate-600 transition-colors group-hover:text-slate-700">{description}</p>
+        <ul className="mb-10 space-y-4">
+          {features.map((feature, index) => (
+            <li key={feature} className={`flex items-center gap-3 text-xs ${simulation && index === 0 ? 'font-bold text-rose-400' : 'font-semibold text-slate-500'}`}>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${index === 0 && simulation ? 'animate-pulse bg-rose-500' : index === 1 && !simulation ? 'bg-rose-500' : 'bg-red-500'}`} />
+              {feature}
+            </li>
+          ))}
+        </ul>
+        <div className={`flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-4 text-center text-sm font-bold text-white shadow-lg transition-all ${simulation ? 'shadow-red-500/20 group-hover:scale-[1.02]' : 'border border-red-500 shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500'}`}>{buttonLabel}</div>
       </div>
-      <p className="mt-5 text-sm italic leading-6 text-slate-600">{description}</p>
-      <div className={`mt-7 rounded-2xl py-3.5 text-center text-sm font-black text-white shadow-lg ${isRed ? 'bg-gradient-to-r from-red-600 to-rose-600 shadow-red-500/20' : 'bg-gradient-to-r from-orange-500 to-amber-500 shadow-orange-500/20'}`}>{buttonLabel}</div>
     </motion.button>
   )
 }

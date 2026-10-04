@@ -44,6 +44,7 @@ function clamp(value: number, min: number, max: number) {
 
 export function calculateActivityXp(input: XpRewardInput) {
   const policy = XP_REWARD_POLICY[input.source]
+  if (input.source.startsWith('VOCAB_') && clamp(input.accuracy ?? 0, 0, 100) < 80) return 0
   if ('fixed' in policy) return policy.fixed
   if ('perFiveMinutes' in policy) return policy.perFiveMinutes
   if ('quadraticCap' in policy) {
@@ -113,6 +114,12 @@ export async function awardActivityXp(
   }
 
   const requestedAmount = calculateActivityXp(params)
+  // A failed attempt must not consume the once-per-activity reward key.
+  if (requestedAmount === 0 && params.source.startsWith('VOCAB_')) {
+    const user = await client.user.findUnique({ where: { id: params.userId }, select: { xp: true, level: true } })
+    if (!user) throw new Error('User not found while awarding XP.')
+    return { duplicate: false, xpEarned: 0, originalXp: 0, totalXp: user.xp, level: user.level }
+  }
   const timeZone = validTimeZone(params.timeZone)
   const localDay = localDateKey(earnedAt, timeZone)
   // Time-zone boundaries can be up to 14 hours away from UTC. Fetch a safe

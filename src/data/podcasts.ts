@@ -10,6 +10,8 @@ export type PodcastEpisode = {
   description: string
   /** YouTube video id (the part after watch?v= or youtu.be/). */
   youtubeId: string
+  durationSec: number
+  sourceUrl: string
   /** Where playback should begin, in seconds. */
   startSeconds: number
   level: PodcastLevel
@@ -34,7 +36,7 @@ export type PodcastEpisode = {
 /** Reviewed, stable IDs preserve per-episode listening progress. */
 export const PODCAST_EPISODES: PodcastEpisode[] = PODCAST_CATALOG.map(item => ({
   id: 'curated-' + item.youtubeId, slug: 'curated-' + item.youtubeId, title: item.title,
-  description: item.focus, youtubeId: item.youtubeId, startSeconds: 0,
+  description: item.focus, durationSec: item.durationSec, sourceUrl: item.sourceUrl, youtubeId: item.youtubeId, startSeconds: 0,
   level: item.cefr === 'A2' ? 'Beginner' : item.cefr === 'C1' ? 'Advanced' : 'Intermediate',
   cefr: item.cefr, focus: item.focus,
   durationLabel: Math.floor(item.durationSec / 60) + ':' + String(item.durationSec % 60).padStart(2, '0'),

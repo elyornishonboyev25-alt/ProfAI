@@ -543,7 +543,7 @@ export default function IELTSWritingTestInterface({
                     <Timer className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Timed Mode</h3>
+                    <h3 className="text-xl font-bold text-slate-900">Simulation Mode</h3>
                     <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
                       Exam Simulation
                     </span>
@@ -564,7 +564,7 @@ export default function IELTSWritingTestInterface({
                   </div>
                 </div>
                 <div className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all">
-                  Start with Timer
+                  Start Simulation
                 </div>
               </div>
             </motion.button>
@@ -586,7 +586,7 @@ export default function IELTSWritingTestInterface({
                     <TimerOff className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Free Mode</h3>
+                    <h3 className="text-xl font-bold text-slate-900">Practice Mode</h3>
                     <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
                       No Time Limit
                     </span>
@@ -607,7 +607,7 @@ export default function IELTSWritingTestInterface({
                   </div>
                 </div>
                 <div className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:from-orange-400 group-hover:to-amber-400 transition-all">
-                  Start Without Timer
+                  Start Practice
                 </div>
               </div>
             </motion.button>

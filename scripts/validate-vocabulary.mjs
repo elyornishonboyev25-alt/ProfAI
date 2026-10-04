@@ -47,6 +47,11 @@ async function main() {
           assert.ok(!ieltsIds.has(entry.id), `Duplicate entry ID: ${label}`)
           ieltsIds.add(entry.id)
           assert.ok(entry.definition && entry.synonym && entry.example && entry.sourceExcerpt, label)
+          assert.ok(entry.uzbek?.trim(), `${label}: Uzbek translation must be in its own field`)
+          assert.doesNotMatch(entry.uzbek, /[?\uFFFD]/, `${label}: translation must not contain corrupted characters`)
+          assert.doesNotMatch(entry.definition, /\|\s*UZ:|^EN:/, `${label}: English meaning must not mix languages`)
+          assert.notEqual(entry.definition.trim(), entry.uzbek.trim(), `${label}: English meaning must differ from the translation`)
+          assert.doesNotMatch(entry.example, /\|\s*UZ:|^EN:/, `${label}: examples must use separate language fields`)
           assert.match(entry.example, wordPattern(entry.term), `${label}: example must use the word`)
           const part = sourceParts.find((item) => item.id === entry.sourceSectionId)
           assert.ok(part, `${label}: missing source part`)
@@ -132,10 +137,10 @@ async function main() {
 
   // Exercise the real server reward policy and event deduplication without a DB.
   const { calculateActivityXp, awardActivityXp } = await load('backend/src/services/xpRewards.service.ts')
-  assert.equal(calculateActivityXp({ source: 'VOCAB_FLASHCARDS' }), 12)
-  assert.equal(calculateActivityXp({ source: 'VOCAB_MATCHING' }), 20)
+  assert.equal(calculateActivityXp({ source: 'VOCAB_FLASHCARDS', accuracy: 80 }), 12)
+  assert.equal(calculateActivityXp({ source: 'VOCAB_MATCHING', accuracy: 80 }), 20)
   for (const [source, maximum] of [['VOCAB_QUIZ', 30], ['VOCAB_TYPING', 35]]) {
-    assert.equal(calculateActivityXp({ source, accuracy: 0 }), 10)
+    assert.equal(calculateActivityXp({ source, accuracy: 0 }), 0)
     assert.equal(calculateActivityXp({ source, accuracy: 100 }), maximum)
   }
   const rewardEvents = []

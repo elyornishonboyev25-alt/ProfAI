@@ -1,5 +1,9 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Words & recall': 'So‘zlar va xotira',
+  'Read & discover': 'O‘qing va kashf eting',
+  'Listen & learn': 'Tinglang va o‘rganing',
+  'Speak & refine': 'Gapiring va yaxshilang',
   "Score before using ProfAI": "ProfAI ishlatishdan oldingi ball",
   "Score after using ProfAI": "ProfAI ishlatgandan keyingi ball",
   "Your comment will appear on the site after the owner reviews and approves it.": "Izohingiz sayt egasi o‘qib, tasdiqlaganidan keyin saytda ko‘rinadi.",
@@ -729,7 +733,8 @@ export const uzbekCompletion: Record<string, string> = {
   "Source context": "Testdagi qo‘llanishi",
   "Vocabulary matched to every Full Test, passage and topic.": "Har bir Full Test, matn va mavzuga mos lug‘at.",
   "full tests": "to‘liq testlar",
-  "20 words · all four parts": "20 ta so‘z · to‘rtta partdan",
+  "20 words · 1-4 parts": "20 ta so‘z · 1-4 parts",
+  "Example": "Misol",
   "15 words · per passage": "Har bir passage uchun 15 ta so‘z",
   "Vocabulary for Tasks 1 & 2": "Task 1 va 2 uchun lug‘at",
   "Vocabulary for Parts 1–3": "Part 1–3 uchun lug‘at",

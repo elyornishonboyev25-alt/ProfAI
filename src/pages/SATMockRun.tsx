@@ -39,9 +39,7 @@ import SATSourceContent from '@/components/sat/SATSourceContent'
 import '@/components/sat/sat-exam-layout.css'
 import {
   isSATAnswerCorrect,
-  SAT_TEST_TIMER_KEY,
   scoreSATModules,
-  type SATModule,
   type HighlightStroke,
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
@@ -56,6 +54,8 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
+
+import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
 const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
 const FULLSCREEN_RECOVERY_SECONDS = 30
@@ -73,25 +73,6 @@ function fullscreenElement() {
   return document.fullscreenElement ?? webkitDocument.webkitFullscreenElement ?? null
 }
 
-function testDeadlineFor(attempt: SATAttempt, modules: SATModule[]) {
-  const testDeadline = attempt.moduleDeadlines[SAT_TEST_TIMER_KEY]
-  if (testDeadline !== undefined) return testDeadline
-
-  // Migrate an active attempt created before the timer became test-wide.
-  const moduleIndex = Math.min(attempt.currentModuleIndex, modules.length - 1)
-  const currentModule = modules[moduleIndex]
-  const currentDeadline = currentModule ? attempt.moduleDeadlines[currentModule.id] : undefined
-  if (currentDeadline) {
-    const futureSeconds = modules
-      .slice(moduleIndex + 1)
-      .reduce((total, module) => total + module.durationSeconds, 0)
-    return currentDeadline + futureSeconds * 1000
-  }
-
-  const totalSeconds = modules.reduce((total, module) => total + module.durationSeconds, 0)
-  return attempt.startedAt + totalSeconds * 1000
-}
-
 export default function SATMockRun() {
   const navigate = useNavigate()
   const { mockId = '1' } = useParams<{ mockId: string }>()
@@ -104,7 +85,10 @@ export default function SATMockRun() {
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const { isFullscreen, enter, exit } = useFullscreen()
-  const [attempt, setAttempt] = useState<SATAttempt | null>(() => loadSATAttempt(test.id))
+  const [attempt, setAttempt] = useState<SATAttempt | null>(() => {
+    const saved = loadSATAttempt(test.id)
+    return saved ? migrateModuleTiming(saved, modules) : null
+  })
   const [now, setNow] = useState(Date.now())
   const [timerVisible, setTimerVisible] = useState(true)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
@@ -148,15 +132,7 @@ export default function SATMockRun() {
     ? Math.max(0, Math.ceil((violationDeadline - now) / 1000))
     : 0
 
-  const testSeconds = useMemo(() => {
-    if (!attempt) return test.totalDurationSeconds
-    if (attempt.pausedModuleSeconds !== undefined) return attempt.pausedModuleSeconds
-    if (attempt.mode === 'exam') {
-      const deadline = testDeadlineFor(attempt, modules)
-      return Math.max(0, Math.ceil((deadline - now) / 1000))
-    }
-    return Math.max(0, Math.floor((now - attempt.startedAt) / 1000))
-  }, [attempt, modules, now, test.totalDurationSeconds])
+  const testSeconds = attempt ? moduleSeconds(attempt, modules, now) : currentModule.durationSeconds
 
   const persistUpdate = useCallback((updater: (current: SATAttempt) => SATAttempt) => {
     setAttempt((current) => {
@@ -179,7 +155,7 @@ export default function SATMockRun() {
       source: 'SAT_PRACTICE',
       eventKey: sourceKey,
       accuracy: report.percent,
-      durationSec: test.totalDurationSeconds,
+      durationSec: Math.round(totalTime(attempt, modules)),
       metadata: { testId: test.id, title: test.title, ...(isSATTestComplete(test) ? { score: report.midpoint } : {}), accuracy: report.percent },
     }).then((reward) => {
       markXpActivitySynced(user.id, sourceKey)
@@ -190,21 +166,7 @@ export default function SATMockRun() {
   const pauseAndSaveAttempt = useCallback(() => {
     const current = attemptRef.current
     if (!current || current.status !== 'active') return
-    const timestamp = Date.now()
-    const pausedSeconds = current.pausedModuleSeconds ?? (
-      current.mode === 'exam'
-        ? Math.max(0, Math.ceil((testDeadlineFor(current, modules) - timestamp) / 1000))
-        : Math.max(0, Math.floor((timestamp - current.startedAt) / 1000))
-    )
-    const paused: SATAttempt = {
-      ...current,
-      pausedModuleSeconds: pausedSeconds,
-      timerPausedAt: timestamp,
-      moduleDeadlines: current.mode === 'exam'
-        ? { ...current.moduleDeadlines, [SAT_TEST_TIMER_KEY]: 0 }
-        : current.moduleDeadlines,
-      updatedAt: timestamp,
-    }
+    const paused = pauseModule(current, modules)
     attemptRef.current = paused
     saveSATAttempt(paused)
     saveSATAttemptToHistory(paused, 'exit')
@@ -234,7 +196,7 @@ export default function SATMockRun() {
 
   const submitAttempt = useCallback(() => {
     persistUpdate((current) => ({
-      ...current,
+      ...finishModule(current, modules),
       status: 'submitted',
       submittedAt: Date.now(),
       pausedModuleSeconds: undefined,
@@ -247,7 +209,7 @@ export default function SATMockRun() {
     setCalculatorOpen(false)
     setFormulaSheetOpen(false)
     if (fullscreenElement()) void exit()
-  }, [exit, persistUpdate])
+  }, [exit, modules, persistUpdate])
 
   const closeCalculator = useCallback(() => {
     setCalculatorOpen(false)
@@ -263,14 +225,19 @@ export default function SATMockRun() {
     const nextModule = modules[nextModuleIndex]
     const startedAt = Date.now()
     persistUpdate((current) => ({
-      ...current,
+      ...finishModule(current, modules, startedAt),
+      moduleTimerStartedAt: startedAt,
+      moduleDeadlines: { ...current.moduleDeadlines, [nextModule.id]: startedAt + nextModule.durationSeconds * 1000 },
       currentModuleIndex: nextModuleIndex,
       currentQuestionIndex: 0,
       moduleStartedAt: { ...current.moduleStartedAt, [nextModule.id]: startedAt },
       pausedModuleSeconds: undefined,
       timerPausedAt: undefined,
     }))
+    setNow(startedAt)
     setModuleComplete(false)
+    setNavigatorOpen(false)
+    setNotesOpen(false)
     setZoom(1)
     setHighlightEnabled(false)
   }, [attempt, modules, persistUpdate, submitAttempt])
@@ -288,31 +255,10 @@ export default function SATMockRun() {
   }, [attempt])
 
   useEffect(() => {
-    if (
-      !attempt ||
-      attempt.status !== 'active' ||
-      attempt.mode !== 'exam' ||
-      attempt.moduleDeadlines[SAT_TEST_TIMER_KEY] !== undefined
-    ) return
-    const deadline = testDeadlineFor(attempt, modules)
-    persistUpdate((current) => ({
-      ...current,
-      moduleDeadlines: { ...current.moduleDeadlines, [SAT_TEST_TIMER_KEY]: deadline },
-    }))
-  }, [attempt, modules, persistUpdate])
-
-  useEffect(() => {
     const current = attemptRef.current
-    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined) return
-    if (current.mode === 'exam') return
-    const timestamp = Date.now()
-    persistUpdate((value) => ({
-      ...value,
-      pausedModuleSeconds: undefined,
-      timerPausedAt: undefined,
-      startedAt: timestamp - (value.pausedModuleSeconds ?? 0) * 1000,
-    }))
-  }, [persistUpdate])
+    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined || current.mode === 'exam') return
+    persistUpdate((value) => resumeModule(value, modules))
+  }, [modules, persistUpdate])
 
   useEffect(() => {
     const pauseForPageExit = () => pauseAndSaveAttempt()
@@ -338,33 +284,16 @@ export default function SATMockRun() {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
 
     if (!isFullscreen && !violationDeadline) {
-      const deadline = testDeadlineFor(attempt, modules)
-      const remaining = attempt.pausedModuleSeconds ?? (deadline
-        ? Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
-        : test.totalDurationSeconds)
       violationFrozenRef.current = true
-      persistUpdate((current) => ({
-        ...current,
-        pausedModuleSeconds: remaining,
-        moduleDeadlines: { ...current.moduleDeadlines, [SAT_TEST_TIMER_KEY]: 0 },
-      }))
+      persistUpdate((current) => pauseModule(current, modules))
       setViolationDeadline(Date.now() + FULLSCREEN_RECOVERY_MS)
       return
     }
 
     if (isFullscreen && (violationDeadline || attempt.pausedModuleSeconds !== undefined)) {
-      const remaining = attempt.pausedModuleSeconds ?? test.totalDurationSeconds
       setViolationDeadline(null)
       violationFrozenRef.current = false
-      persistUpdate((current) => ({
-        ...current,
-        pausedModuleSeconds: undefined,
-        timerPausedAt: undefined,
-        moduleDeadlines: {
-          ...current.moduleDeadlines,
-          [SAT_TEST_TIMER_KEY]: Date.now() + remaining * 1000,
-        },
-      }))
+      persistUpdate((current) => resumeModule(current, modules))
     }
   }, [
     attempt,
@@ -381,25 +310,28 @@ export default function SATMockRun() {
     setViolationDeadline(null)
     violationFrozenRef.current = false
     persistUpdate((current) => ({
-      ...current,
+      ...finishModule(current, modules),
       status: 'terminated',
       terminatedAt: Date.now(),
       terminationReason: 'Fullscreen recovery window expired.',
     }))
     if (fullscreenElement()) void exit()
-  }, [attempt, exit, persistUpdate, violationDeadline, violationSeconds])
+  }, [attempt, exit, modules, persistUpdate, violationDeadline, violationSeconds])
 
   useEffect(() => {
     if (
       !attempt ||
       attempt.status !== 'active' ||
       attempt.mode !== 'exam' ||
-      violationDeadline
+      violationDeadline ||
+      attempt.pausedModuleSeconds !== undefined ||
+      !isFullscreen
     ) return
-    if (testSeconds <= 0) submitAttempt()
+    if (testSeconds <= 0) advanceModule()
   }, [
     attempt,
-    submitAttempt,
+    advanceModule,
+    isFullscreen,
     testSeconds,
     violationDeadline,
   ])

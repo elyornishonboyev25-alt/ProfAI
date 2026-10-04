@@ -22,7 +22,7 @@ import { analyseTranscript, mergeStats, type SpeechStats } from '@/lib/speakingS
 import { cancelSpeech, useSpeechRecognition } from '@/lib/speech'
 import { transcribeAnswer, type ExaminerVoice } from '@/lib/speakingAudio'
 import { ExaminerPlayback } from '@/lib/examinerPlayback'
-import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, createAudioContext, microphoneError } from '@/lib/speakingMedia'
+import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, createAudioContext, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
 import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
 import MicVisualizer from './MicVisualizer'
 import SpeakingResult from './SpeakingResult'
@@ -242,6 +242,7 @@ export default function ExaminerSession({
   const [stopping, setStopping] = useState(false)
   const [examinerLabel, setExaminerLabel] = useState('Examiner')
   const [logOffset, setLogOffset] = useState(0)
+  const [prepNotes, setPrepNotes] = useState('')
   const examiner = useRef(chooseExaminer(modeLabel)).current
 
   const stagesRef = useRef<Stage[]>([])
@@ -271,6 +272,7 @@ export default function ExaminerSession({
   const stopPendingRef = useRef(false)
   const microphoneInterruptedRef = useRef(false)
   const beginPendingRef = useRef(false)
+  const savedEvaluationRef = useRef(false)
   const disposedRef = useRef(false)
 
   // Cleanup speech on unmount.
@@ -333,7 +335,7 @@ export default function ExaminerSession({
         setVoiceError(null)
         playback.ask(text, examiner.voice, examiner.gender, {
           loading: setVoiceLoading,
-          started: (source) => { setVoiceError(null); setVoiceSource(source); reveal() },
+          started: (source) => { deviceVoiceRef.current = source === 'device'; setVoiceError(null); setVoiceSource(source); reveal() },
           ended: () => { promptReplayRef.current = null; next() },
           failed: setVoiceError,
         }, device)
@@ -357,13 +359,18 @@ export default function ExaminerSession({
     if (voiceContextRef.current) void voiceContextRef.current.close().catch(() => {})
     voiceContextRef.current = null
     const version = sessionVersionRef.current
-    const stats = mergeStats(answersRef.current.length ? answersRef.current : [analyseTranscript('', 0)])
+    const stats = mergeStats(answersRef.current, historyRef.current.filter((turn) => turn.role === 'candidate').map((turn) => turn.text).join('\n'))
     try {
       const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats })
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
-      onSaved(result, [...historyRef.current])
+      // A service outage must not mark a full mock complete or award an AI band.
+      // The candidate can retry grading these exact answers from the result.
+      if (result.source === 'ai' && !savedEvaluationRef.current) {
+        savedEvaluationRef.current = true
+        onSaved(result, [...historyRef.current])
+      }
     } catch {
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvalError('Could not complete the evaluation. Please try again.')
@@ -425,6 +432,7 @@ export default function ExaminerSession({
       })
     } else if (move.type === 'cuecard') {
       setCueCard(move.card)
+      setPrepNotes('')
       longTurnFinishedRef.current = false
       setActivePart(2)
       const cardText = `I’m going to give you a topic, and I’d like you to talk about it for one to two minutes. You have one minute to prepare. Here is your topic: ${move.card.title}.`
@@ -461,6 +469,9 @@ export default function ExaminerSession({
     beginPendingRef.current = true
     setStarting(true)
     setAnswerError(null)
+    savedEvaluationRef.current = false
+    deviceVoiceRef.current = false
+    setVoiceSource('connecting')
     // Both calls must happen inside the button gesture, before getUserMedia.
     playbackRef.current ??= new ExaminerPlayback()
     playbackRef.current.unlock()
@@ -475,9 +486,7 @@ export default function ExaminerSession({
       return
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
-      })
+      const stream = await requestSpeakingMicrophone()
       if (disposedRef.current) {
         stream.getTracks().forEach((track) => track.stop())
         return
@@ -622,9 +631,7 @@ export default function ExaminerSession({
     void voiceContextRef.current?.resume().catch(() => {})
     try {
       if (!micStreamRef.current?.active || !micStreamRef.current.getAudioTracks().some((track) => track.readyState === 'live')) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
-        })
+        const stream = await requestSpeakingMicrophone()
         if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
         attachMicrophone(stream)
       }
@@ -793,6 +800,7 @@ export default function ExaminerSession({
         modeLabel={modeLabel}
         transcript={historyRef.current}
         onRetry={retrySession}
+        onRegrade={() => void runEvaluation()}
         onExit={onExit}
       />
     )
@@ -851,7 +859,7 @@ export default function ExaminerSession({
           <p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p>
           <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl">{modeLabel}</h1>
         </div>
-        <span className="speaking-header-status"><span /> {recording ? 'Recording your answer' : phase === 'examiner_speaking' ? 'Examiner speaking' : 'Session in progress'}</span>
+        <span className={`speaking-header-status ${voiceError || answerError ? 'is-paused' : ''}`}><span /> {voiceError ? 'Examiner audio paused' : answerError ? 'Recording needs attention' : voiceLoading ? 'Preparing examiner audio' : stopping ? 'Processing your answer' : recording ? 'Recording your answer' : phase === 'examiner_speaking' ? 'Examiner speaking' : 'Session in progress'}</span>
         <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? `Part ${activePart} of 3` : `Part ${activePart}` : 'Interview'}</span>
       </header>
 
@@ -881,7 +889,7 @@ export default function ExaminerSession({
             <span className="speaking-turn-avatar" aria-hidden>{turn.role === 'candidate' ? <Mic className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span>
             <div className="speaking-turn-bubble">
               <span className="speaking-turn-name">{turn.role === 'candidate' ? 'You' : examinerLabel}</span>
-              <p>{turn.role === 'candidate' ? (turn.text ? 'Spoken answer captured' : 'No clear speech captured') : turn.text}</p>
+              <p title={turn.text}>{turn.text || 'No clear speech captured'}</p>
               {turn.role === 'candidate' && turn.durationSec ? <span className="speaking-answer-duration">{formatClock(Math.round(turn.durationSec))} recorded</span> : null}
             </div>
           </motion.div>
@@ -913,12 +921,12 @@ export default function ExaminerSession({
         <div className="speaking-panel-heading speaking-panel-heading--focus">
           <span className="speaking-panel-icon"><Headphones className="h-[18px] w-[18px]" /></span>
           <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the question below' : 'Listen and get ready to respond'}</p></div>
-          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError ? 'is-error' : ''}`}><span />{recording ? 'Recording' : answerError ? 'Mic check' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
+          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError || voiceError ? 'is-error' : ''}`} role="status"><span />{recording ? 'Recording' : voiceError ? 'Audio paused' : voiceLoading ? 'Connecting' : answerError ? 'Mic check' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
         </div>
         <div className="speaking-focus-content">
           <div className={`speaking-examiner-stage ${phase === 'examiner_speaking' ? 'is-speaking' : ''} ${recording ? 'is-listening' : ''}`}>
             <div className="speaking-examiner-avatar" aria-hidden><span>{examiner.name[0]}</span><i /></div>
-            <div className="speaking-examiner-identity"><span>YOUR EXAMINER</span><strong>{examiner.name}</strong><small>{voiceSource === 'neural' ? 'Natural AI voice' : voiceSource === 'device' ? 'English device voice' : 'English voice'}</small></div>
+            <div className="speaking-examiner-identity"><span>YOUR EXAMINER</span><strong>{examiner.name}</strong><small>{examiner.gender === 'male' ? 'Male' : 'Female'} · {voiceSource === 'neural' ? 'Natural AI voice' : voiceSource === 'device' ? 'English device voice' : 'English voice'}</small></div>
             <div className="speaking-examiner-state"><span className="speaking-examiner-state-icon">{voiceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : recording || answerError ? <Mic className="h-4 w-4" /> : phase === 'examiner_speaking' ? <Volume2 className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span><span>{voiceLoading ? 'Preparing the question' : voiceError ? 'Tap to resume examiner audio' : stopping ? 'Processing answer' : answerError ? pendingAudioUrl ? 'Recording saved · retry processing' : 'Microphone needs attention' : recording ? 'Listening to you' : phase === 'examiner_speaking' ? 'Asking a question' : phase === 'preparing' ? 'Preparation time' : phase === 'thinking' ? 'Preparing the next question' : 'In the exam room'}</span></div>
           </div>
           {cueCard && (phase === 'preparing' || isExaminerBusy || canRecord) ? (
@@ -928,6 +936,7 @@ export default function ExaminerSession({
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+              {phase === 'preparing' || canRecord ? <><label className="speaking-notes-label" htmlFor="speaking-prep-notes">Your notes <span>Keywords and ideas</span></label><textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} maxLength={1000} readOnly={phase !== 'preparing'} placeholder="Plan your answer here…" /></> : null}
               {canRecord ? <p className="speaking-timer-help">The examiner moves on when you finish speaking or the two-minute limit is reached.</p> : null}
             </div>
           ) : (

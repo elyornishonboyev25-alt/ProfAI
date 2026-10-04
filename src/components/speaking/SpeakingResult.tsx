@@ -46,6 +46,7 @@ export default function SpeakingResult({
   transcript,
   reviewMode = false,
   onRetry,
+  onRegrade,
   onExit,
 }: {
   evaluation: SpeakingEvaluation
@@ -53,6 +54,7 @@ export default function SpeakingResult({
   transcript?: ExaminerTurn[]
   reviewMode?: boolean
   onRetry: () => void
+  onRegrade?: () => void
   onExit: () => void
 }) {
   const stats = evaluation.stats
@@ -88,6 +90,7 @@ export default function SpeakingResult({
       </motion.div>
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">IELTS-style practice estimate from your transcribed answers. Pronunciation needs audio or examiner review; this is not an official IELTS score.</p>
+      {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -95,6 +98,7 @@ export default function SpeakingResult({
           <div key={key} className="surface-card flex flex-col items-center p-4">
             <BandGauge band={evaluation[key] as number} size={84} />
             <p className="mt-2 text-center text-xs font-semibold text-slate-600">{label}</p>
+            {key === 'pronunciationBand' ? <p className="mt-1 text-center text-[10px] text-amber-700">Transcript estimate</p> : null}
           </div>
         ))}
       </div>

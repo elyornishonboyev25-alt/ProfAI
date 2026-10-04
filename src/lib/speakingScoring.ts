@@ -22,10 +22,12 @@ export type SpeechStats = {
 const FILLER_PATTERNS: Array<{ label: string; re: RegExp }> = [
   { label: 'um', re: /\b(um+)\b/gi },
   { label: 'uh', re: /\b(uh+|er+|erm+|ah+)\b/gi },
-  { label: 'like', re: /\b(like)\b/gi },
+  // Count discourse markers conservatively; "I like music" and "actually
+  // happened" are meaningful English, not evidence of hesitation.
+  { label: 'like', re: /(?:^|[,;.!?]\s*)like\s*,/gi },
   { label: 'you know', re: /\byou know\b/gi },
-  { label: 'basically', re: /\b(basically)\b/gi },
-  { label: 'actually', re: /\b(actually)\b/gi },
+  { label: 'basically', re: /(?:^|[,;.!?]\s*)basically\s*,/gi },
+  { label: 'actually', re: /(?:^|[,;.!?]\s*)actually\s*,/gi },
   { label: 'sort of', re: /\b(sort of|kind of|kinda)\b/gi },
   { label: 'I mean', re: /\bi mean\b/gi },
   { label: 'so', re: /\b(so so)\b/gi },
@@ -48,8 +50,9 @@ export function analyseTranscript(transcript: string, durationSec: number): Spee
     }
   }
 
-  const sentenceCount = Math.max(1, (clean.match(/[.!?]+/g) ?? []).length || Math.round(wordCount / 14))
-  const minutes = Math.max(durationSec / 60, 1 / 60)
+  const sentenceCount = wordCount ? Math.max(1, (clean.match(/[.!?]+/g) ?? []).length || Math.round(wordCount / 14)) : 0
+  const safeDuration = Number.isFinite(durationSec) ? Math.max(0, durationSec) : 0
+  const minutes = Math.max(safeDuration / 60, 1 / 60)
   const wordsPerMinute = Math.round(wordCount / minutes)
 
   return {
@@ -60,36 +63,14 @@ export function analyseTranscript(transcript: string, durationSec: number): Spee
     fillerWords,
     wordsPerMinute: Number.isFinite(wordsPerMinute) ? wordsPerMinute : 0,
     sentenceCount,
-    durationSec: Math.round(durationSec),
+    durationSec: +safeDuration.toFixed(2),
   }
 }
 
 /** Combine multiple answers' stats into one session-level summary. */
-export function mergeStats(parts: SpeechStats[]): SpeechStats {
-  if (parts.length === 0) return analyseTranscript('', 0)
-  const wordCount = parts.reduce((s, p) => s + p.wordCount, 0)
-  const uniqueWords = parts.reduce((s, p) => s + p.uniqueWords, 0)
-  const fillerCount = parts.reduce((s, p) => s + p.fillerCount, 0)
-  const durationSec = parts.reduce((s, p) => s + p.durationSec, 0)
-  const sentenceCount = parts.reduce((s, p) => s + p.sentenceCount, 0)
-  const minutes = Math.max(durationSec / 60, 1 / 60)
-  const fillerLabels = new Map<string, number>()
-  for (const p of parts) {
-    for (const f of p.fillerWords) {
-      const [label, count] = f.split(' ×')
-      fillerLabels.set(label, (fillerLabels.get(label) ?? 0) + Number(count || 1))
-    }
-  }
-  return {
-    wordCount,
-    uniqueWords,
-    typeTokenRatio: wordCount ? +(uniqueWords / wordCount).toFixed(3) : 0,
-    fillerCount,
-    fillerWords: [...fillerLabels.entries()].map(([l, c]) => `${l} ×${c}`),
-    wordsPerMinute: Math.round(wordCount / minutes),
-    sentenceCount,
-    durationSec,
-  }
+export function mergeStats(parts: SpeechStats[], transcript: string): SpeechStats {
+  const durationSec = parts.reduce((sum, part) => sum + part.durationSec, 0)
+  return analyseTranscript(transcript, durationSec)
 }
 
 function clampBand(value: number): number {

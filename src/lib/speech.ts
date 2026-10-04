@@ -354,6 +354,27 @@ export function getExaminerVoice(profile: 'male' | 'female' = 'female'): SpeechS
   return english.sort((left, right) => score(right) - score(left))[0]
 }
 
+/** Browsers can populate installed voices only after the first user gesture. */
+export async function waitForExaminerVoice(profile: 'male' | 'female', signal: AbortSignal): Promise<SpeechSynthesisVoice | null> {
+  const ready = getExaminerVoice(profile)
+  if (ready || signal.aborted || !isSpeechSynthesisSupported()) return ready
+  return new Promise((resolve) => {
+    const synth = window.speechSynthesis
+    const finish = (voice: SpeechSynthesisVoice | null) => {
+      clearTimeout(timer)
+      synth.removeEventListener('voiceschanged', changed)
+      signal.removeEventListener('abort', aborted)
+      resolve(voice)
+    }
+    const changed = () => { const voice = getExaminerVoice(profile); if (voice) finish(voice) }
+    const aborted = () => finish(null)
+    const timer = setTimeout(() => finish(getExaminerVoice(profile)), 2000)
+    synth.addEventListener('voiceschanged', changed)
+    signal.addEventListener('abort', aborted, { once: true })
+    changed()
+  })
+}
+
 export type SpeakOptions = {
   onStart?: () => void
   onEnd?: () => void

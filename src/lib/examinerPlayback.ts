@@ -1,5 +1,5 @@
 import { examinerAudio, type ExaminerVoice } from './speakingAudio'
-import { getExaminerVoice, speak } from './speech'
+import { getExaminerVoice, speak, waitForExaminerVoice } from './speech'
 
 type Callbacks = {
   loading: (value: boolean) => void
@@ -60,21 +60,32 @@ export class ExaminerPlayback {
       callbacks.failed(message)
     }
     callbacks.loading(true)
-    if (device) {
-      const installedVoice = getExaminerVoice(gender)
-      if (!installedVoice) { fail('A matching English voice is not installed. Retry the natural examiner voice.'); return }
+    const playDevice = async () => {
+      const installedVoice = getExaminerVoice(gender) ?? await waitForExaminerVoice(gender, controller.signal)
+      if (!current() || completed) return
+      if (!installedVoice) { fail('Examiner audio is unavailable and a matching English voice is not installed. Check your connection and retry audio.'); return }
       this.retry = () => this.ask(text, voice, gender, callbacks, true)
       this.stopSpeech = speak(text, {
         lang: 'en', voice: installedVoice, rate: 0.98,
         onStart: () => { if (current()) { callbacks.loading(false); callbacks.started('device') } },
         onEnd: finish, onError: () => fail('Examiner playback was interrupted. Tap Play examiner to hear the question.'),
       })
-      return
     }
+    if (device) { void playDevice(); return }
     void examinerAudio(text, voice, controller.signal).then((url) => {
       if (!current()) { URL.revokeObjectURL(url); return }
       this.url = url
       this.player.src = url
+      let switchingToDevice = false
+      const fallback = () => {
+        if (!current() || completed || switchingToDevice) return
+        switchingToDevice = true
+        this.retry = null
+        clearTimeout(this.timer)
+        this.player.onplaying = this.player.onended = this.player.onerror = null
+        this.player.pause()
+        void playDevice()
+      }
       const play = () => {
         if (!current() || completed) return
         callbacks.loading(true)
@@ -84,18 +95,19 @@ export class ExaminerPlayback {
           this.player.pause()
           fail('Examiner audio was interrupted. Tap Play examiner to resume.')
         }, 120_000)
-        void this.player.play().catch(() => fail('Tap Play examiner to enable sound and hear the question.'))
+        void this.player.play().catch((error: unknown) => {
+          if (switchingToDevice) return
+          if (error instanceof Error && error.name === 'NotSupportedError') fallback()
+          else fail('Tap Play examiner to enable sound and hear the question.')
+        })
       }
       this.retry = play
-      this.player.onplaying = () => { if (current()) { callbacks.loading(false); callbacks.started('neural') } }
-      this.player.onended = finish
-      this.player.onerror = () => {
-        if (!current()) return
-        this.retry = null
-        fail('Examiner audio could not load. Retry the question audio.')
-      }
+      let heardAudio = false
+      this.player.onplaying = () => { if (current() && !completed) { heardAudio = true; callbacks.loading(false); callbacks.started('neural') } }
+      this.player.onended = () => { if (heardAudio) finish(); else fail('Examiner audio did not start. Tap Play examiner to hear the question.') }
+      this.player.onerror = fallback
       play()
-    }).catch(() => fail('Natural examiner voice is unavailable. Retry audio, or use the matching device voice.'))
+    }).catch(() => { if (current() && !controller.signal.aborted) void playDevice() })
   }
 
   cancel(): void {

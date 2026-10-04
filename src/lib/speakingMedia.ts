@@ -2,6 +2,13 @@ export function canRecordAudio(): boolean {
   return typeof navigator.mediaDevices?.getUserMedia === 'function' && typeof MediaRecorder !== 'undefined'
 }
 
+export function requestSpeakingMicrophone(): Promise<MediaStream> {
+  return navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: { ideal: 1 }, sampleRate: { ideal: 48_000 }, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    video: false,
+  })
+}
+
 // WebKit's speech recognizer can take over the microphone/audio session from
 // MediaRecorder. Record first on Apple devices and transcribe the actual file.
 export function canRecognizeWhileRecording(): boolean {
@@ -33,7 +40,7 @@ export class AnswerRecording {
   constructor(stream: MediaStream, onError?: () => void) {
     const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
       .find((type) => MediaRecorder.isTypeSupported(type))
-    const options = { audioBitsPerSecond: 64_000, ...(mimeType ? { mimeType } : {}) }
+    const options = { audioBitsPerSecond: 96_000, ...(mimeType ? { mimeType } : {}) }
     try { this.recorder = new MediaRecorder(stream, options) }
     catch { this.recorder = new MediaRecorder(stream) }
     this.result = new Promise((resolve) => {

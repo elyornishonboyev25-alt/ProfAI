@@ -79,7 +79,7 @@ export async function setNickname(nickname: string): Promise<void> {
 export async function saveSpeakingSession(input: SpeakingSessionInput, userId?: string): Promise<XpAwardResponse | null> {
   // Best-effort: a failure here must never break the on-device result screen.
   try {
-    const reward = await apiClient.post<XpAwardResponse>('/profile/speaking/session', input, { auth: true })
+    const reward = await apiClient.post<XpAwardResponse>('/profile/speaking/session', { ...input, durationSec: Math.round(input.durationSec) }, { auth: true })
     if (userId && input.eventKey) markXpActivitySynced(userId, input.eventKey)
     return reward
   } catch {

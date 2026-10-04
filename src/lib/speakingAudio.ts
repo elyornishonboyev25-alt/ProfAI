@@ -3,11 +3,11 @@ import { apiClient } from '@/lib/apiClient'
 export type ExaminerVoice = 'marin' | 'cedar'
 
 export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal): Promise<string> {
-  return withTimeout(signal, 30_000, async (bounded) => {
-    const response = await apiClient.post<{ audioBase64: string }>('/ai/speaking-audio/voice', { text, voice }, { signal: bounded })
+  return withTimeout(signal, 45_000, async (bounded) => {
+    const response = await apiClient.post<{ audioBase64: string; mimeType?: string }>('/ai/speaking-audio/voice', { text, voice }, { signal: bounded })
     if (!response.audioBase64) throw new Error('Examiner audio was empty.')
     const bytes = Uint8Array.from(atob(response.audioBase64), (character) => character.charCodeAt(0))
-    return URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }))
+    return URL.createObjectURL(new Blob([bytes], { type: response.mimeType === 'audio/wav' ? 'audio/wav' : 'audio/mpeg' }))
   })
 }
 

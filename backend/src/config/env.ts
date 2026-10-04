@@ -35,6 +35,7 @@ const envSchema = z.object({
   GEMINI_API_KEY_4: z.string().default(''),
   GEMINI_API_KEY_5: z.string().default(''),
   GEMINI_MODELS: z.string().default('gemini-2.5-flash,gemini-2.5-flash-lite'),
+  GEMINI_TTS_MODEL: z.string().default('gemini-3.8-flash-tts'),
   AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).default(30_000),
   AI_RATE_LIMIT_MAX: z.coerce.number().int().positive().max(300).default(30),
   HF_ACCESS_TOKEN: z.string().default(''),

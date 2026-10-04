@@ -8,7 +8,10 @@ process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
 process.env.ACCESS_TOKEN_SECRET = 'speaking-test-access-secret-000'
 process.env.REFRESH_TOKEN_SECRET = 'speaking-test-refresh-secret-000'
 process.env.OPENAI_API_KEY = 'speaking-test-key'
+process.env.OPENAI_TRANSCRIBE_MODEL = 'whisper-1'
+for (const name of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4', 'GEMINI_API_KEY_5']) process.env[name] = ''
 const { default: routes } = await import('../dist/routes/speakingAudio.routes.js')
+const { env } = await import('../dist/config/env.js')
 const { errorHandler } = await import('../dist/middleware/error.js')
 
 test('speaking audio preserves voice profiles, retries and MP4 transcription', async (t) => {
@@ -57,17 +60,56 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
     assert.equal(body.get('file').name, 'answer.mp4')
     assert.equal(body.get('file').type, 'audio/mp4')
     assert.equal(await body.get('file').text(), Buffer.from(audioBase64, 'base64').toString())
-    return body.get('model') === 'gpt-transcribe'
+    return body.get('model') === 'gpt-4o-transcribe'
       ? new Response('{}', { status: 404 })
       : Response.json({ text: '  My name is Ali.  ' })
   }
   const transcript = await request('/transcribe', { audioBase64, mimeType: 'audio/mp4' })
   assert.equal(transcript.status, 200)
   assert.deepEqual(await transcript.json(), { text: 'My name is Ali.' })
-  assert.deepEqual(models, ['gpt-transcribe', 'gpt-4o-transcribe'])
+  assert.deepEqual(models, ['gpt-4o-transcribe', 'whisper-1'])
   provider = async () => { throw new Error('offline') }
   assert.equal((await request('/transcribe', { audioBase64, mimeType: 'audio/mp4' })).status, 503)
   provider = async () => Response.json({ text: [] })
   assert.equal((await request('/transcribe', { audioBase64, mimeType: 'audio/mp4' })).status, 503)
   assert.equal((await request('/transcribe', { audioBase64: 'not base64!', mimeType: 'audio/mp4' })).status, 400)
+
+  env.GEMINI_API_KEY = 'speaking-test-gemini-key'
+  env.GEMINI_MODELS = 'gemini-2.5-flash'
+  for (const [voice, profile] of [['cedar', 'Charon'], ['marin', 'Kore']]) {
+    provider = async (url, { body }) => {
+      if (String(url).includes('/audio/speech')) return new Response('{}', { status: 503 })
+      assert.ok(String(url).includes(env.GEMINI_TTS_MODEL))
+      const payload = JSON.parse(body)
+      assert.equal(payload.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName, profile)
+      assert.equal(payload.contents[0].parts[0].text, `Gemini fallback ${voice}?`)
+      return Response.json({ candidates: [{ content: { parts: [{ inlineData: { data: Buffer.from([0, 1, 2, 3]).toString('base64'), mimeType: 'audio/L16;codec=pcm;rate=24000' } }] } }] })
+    }
+    const response = await request('/voice', { text: `Gemini fallback ${voice}?`, voice })
+    assert.equal(response.status, 200)
+    const result = await response.json()
+    assert.equal(result.mimeType, 'audio/wav')
+    const wave = Buffer.from(result.audioBase64, 'base64')
+    assert.equal(wave.toString('ascii', 0, 4), 'RIFF')
+    assert.equal(wave.readUInt32LE(24), 24000)
+    assert.deepEqual([...wave.subarray(44)], [0, 1, 2, 3])
+  }
+  // A deployment with only Gemini still records/transcribes every browser format.
+  env.OPENAI_API_KEY = ''
+  for (const mimeType of ['audio/mp4', 'audio/webm', 'audio/ogg', 'audio/wav']) {
+    provider = async (_url, { body }) => {
+      const payload = JSON.parse(body)
+      assert.deepEqual(payload.contents[0].parts[0].inlineData, { mimeType, data: audioBase64 })
+      assert.match(payload.systemInstruction.parts[0].text, /verbatim/)
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ text: 'Um, I like music.' }) }] } }] })
+    }
+    const response = await request('/transcribe', { audioBase64, mimeType })
+    assert.equal(response.status, 200)
+    assert.deepEqual(await response.json(), { text: 'Um, I like music.' })
+  }
+  provider = async () => Response.json({ candidates: [{ content: { parts: [{ text: '{"text":""}' }] } }] })
+  assert.deepEqual(await (await request('/transcribe', { audioBase64, mimeType: 'audio/webm' })).json(), { text: '' }, 'Silence does not become an invented answer')
+  env.GEMINI_API_KEY = ''
+  assert.equal((await request('/voice', { text: 'No configured provider?', voice: 'marin' })).status, 503)
+  assert.equal((await request('/transcribe', { audioBase64, mimeType: 'audio/webm' })).status, 503)
 })

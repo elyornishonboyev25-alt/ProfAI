@@ -326,6 +326,7 @@ export async function callGeminiAPI(
   maxOutputTokens = 2048,
   images: string[] = [],
   purpose: AiGenerationPurpose = 'assistant_chat',
+  signal?: AbortSignal,
 ): Promise<string> {
   const response = await apiClient.post<{ text: string }>('/ai/generate', {
     purpose,
@@ -333,7 +334,7 @@ export async function callGeminiAPI(
     userMessage,
     maxOutputTokens,
     images,
-  })
+  }, { signal })
   return response.text
 }
 

@@ -29,7 +29,7 @@ import {
   type SpeakingFullMockEntry,
 } from '@/utils/ieltsSpeakingCatalog'
 import { useSpeechRecognition } from '@/lib/speech'
-import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, microphoneError } from '@/lib/speakingMedia'
+import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
 import { transcribeAnswer } from '@/lib/speakingAudio'
 import { analyzeSpeakingResponse, type SpeakingResponseAnalysis } from '@/services/speakingAI'
 import ExaminerSession from '@/components/speaking/ExaminerSession'
@@ -176,7 +176,7 @@ export default function IELTSSpeakingTest() {
               title: mode.mock.title,
               score: analysis.overallBand,
               maxScore: 9,
-              durationSec: analysis.stats.durationSec,
+              durationSec: Math.round(analysis.stats.durationSec),
               completedAt: new Date().toISOString(),
               assignmentId: new URLSearchParams(location.search).get('assignmentId') ?? undefined,
               breakdown: {
@@ -324,7 +324,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     capturePendingRef.current = true
     setStoppingRecording(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
+      const stream = await requestSpeakingMicrophone()
       if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
       audioStreamRef.current = stream
       const recorder = new AnswerRecording(stream)

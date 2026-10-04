@@ -490,6 +490,25 @@ export default function ArticleReader() {
                     />
                   ))}
 
+                  {article.source && (
+                    <footer className={`mt-8 border-t pt-5 text-xs leading-6 ${
+                      prefs.theme === 'dark' ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'
+                    }`}>
+                      <p>{article.source.authors.join(', ')}</p>
+                      <p>{article.source.citation}</p>
+                      <p>{article.source.copyright}</p>
+                      <p className="flex flex-wrap items-center gap-x-3">
+                        <a href={article.source.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                          {article.source.publisher}
+                        </a>
+                        <a href={article.source.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                          {article.source.license}
+                        </a>
+                      </p>
+                      <p>{article.source.adaptationNote}</p>
+                    </footer>
+                  )}
+
                   <div className={`mt-12 rounded-[1.5rem] border p-5 sm:p-6 ${
                     prefs.theme === 'dark' ? 'border-slate-700 bg-slate-900/60' : 'border-red-100 bg-white/72'
                   }`}>

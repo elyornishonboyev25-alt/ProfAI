@@ -30,3 +30,20 @@ export function filterMedia<T>(items: T[], metadata: (item: T) => EducationalMed
       && (!needle || `${media.title} ${media.source} ${media.category} ${media.focus}`.toLocaleLowerCase().includes(needle))
   })
 }
+
+export type MediaDuration = 'All' | '1-10' | '10-30' | '30-60' | '60+'
+export const DURATION_OPTIONS: { value: MediaDuration; label: string }[] = [
+  { value: 'All', label: 'All durations' }, { value: '1-10', label: '1–10 minutes' },
+  { value: '10-30', label: '10–30 minutes' }, { value: '30-60', label: '30–60 minutes' },
+  { value: '60+', label: 'Over 60 minutes' },
+]
+/** Adjacent ranges do not overlap: exactly ten minutes belongs to 1–10. */
+export function matchesMediaDuration(seconds: number, duration: MediaDuration): boolean {
+  switch (duration) {
+    case '1-10': return seconds >= 60 && seconds <= 600
+    case '10-30': return seconds > 600 && seconds <= 1800
+    case '30-60': return seconds > 1800 && seconds <= 3600
+    case '60+': return seconds > 3600
+    default: return true
+  }
+}

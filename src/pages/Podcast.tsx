@@ -1,5 +1,6 @@
+import { createPortal } from 'react-dom'
 import UiText from '@/components/common/UiText'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -24,7 +25,6 @@ import {
   Maximize,
   Minimize,
   Monitor,
-  MoreHorizontal,
   Moon,
   Pause,
   PictureInPicture2,
@@ -49,7 +49,7 @@ import {
 import '@/styles/podcast-library.css'
 import '@/styles/educational-library.css'
 import { LibraryControls, LibraryPagination, LIBRARY_PAGE_SIZE } from '@/components/learning/LibraryControls'
-import { PODCAST_CATALOG, filterMedia } from '@/data/educationalMedia'
+import { PODCAST_CATALOG, filterMedia, matchesMediaDuration, type MediaDuration } from '@/data/educationalMedia'
 import { useCopy } from '@/i18n/interface'
 import StudyObject from '@/components/visuals/StudyObject'
 import VideoPlaybackError from '@/components/learning/VideoPlaybackError'
@@ -70,6 +70,8 @@ function formatTime(seconds: number) {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+const PODCAST_METADATA = new Map(PODCAST_CATALOG.map(item => [item.youtubeId, item]))
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
 const SLEEP_OPTIONS = [5, 10, 15, 30, 45] as const
@@ -182,6 +184,24 @@ function handleArtworkError(event: React.SyntheticEvent<HTMLImageElement>, item:
   image.src = candidates[index]
 }
 
+const PodcastCard = memo(function PodcastCard({ item, selected, progress, onOpen }: {
+  item: PodcastEpisode; selected: boolean; progress: number; onOpen: (item: PodcastEpisode) => Promise<void>
+}) {
+  const { c } = useCopy()
+  return <button type="button" onClick={() => void onOpen(item)} aria-pressed={selected} className={`podcast-episode-card group text-left ${selected ? 'is-current' : ''}`}>
+    <span className="podcast-episode-artwork relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
+      <img loading="lazy" decoding="async" src={episodeArtwork(item)} onError={event => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
+      {selected && <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white"><Check className="h-3.5 w-3.5" /></span>}
+    </span>
+    <span className="learning-card-category mt-3 block">{episodeCefr(item)} · {c(item.topic)}</span>
+    <span className="podcast-episode-title block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
+    <span className="learning-card-source block">{item.source}</span>
+    <span className="learning-card-focus block">{c(item.focus || item.description)}</span>
+    <span className="podcast-episode-meta flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: `${progress}%` }} /></span></span>
+  </button>
+})
+
 const LISTEN_STEPS = [
   { icon: Ear, title: 'Listen once', detail: 'Play through and catch the gist — no captions yet.' },
   { icon: Captions, title: 'Turn on CC', detail: 'Replay with English captions and read along.' },
@@ -213,18 +233,22 @@ export default function Podcast() {
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
   const { c } = useCopy()
-  const prefs0 = useRef<Prefs>(loadPrefs())
+  const [initialPrefs] = useState(loadPrefs)
+  const prefs0 = useRef<Prefs>(initialPrefs)
 
   const [selectedEpisode, setSelectedEpisode] = useState<PodcastEpisode | null>(null)
   const [activeLevel, setActiveLevel] = useState<string>('All')
   const [libraryQuery, setLibraryQuery] = useState('')
+  const [activeDuration, setActiveDuration] = useState<MediaDuration>('All')
   const [libraryPage, setLibraryPage] = useState(1)
   const [activeCategory, setActiveCategory] = useState<PodcastCategory>('All')
-  useEffect(() => setLibraryPage(1), [libraryQuery, activeLevel, activeCategory])
+  useEffect(() => setLibraryPage(1), [libraryQuery, activeLevel, activeCategory, activeDuration])
+  const [showSources, setShowSources] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
 
   const episodes = PODCAST_EPISODES
   const episode = selectedEpisode ?? getPodcastEpisode()
+  const [initialProgress] = useState(() => loadProgress(episode.id))
   const artworkUrl = episodeArtwork(episode)
   const captionsAvailable = episode.captionKind !== 'unavailable'
 
@@ -257,7 +281,7 @@ export default function Podcast() {
   const [loopA, setLoopA] = useState<number | null>(null)
   const [loopB, setLoopB] = useState<number | null>(null)
   const [loopVideo, setLoopVideo] = useState(false)
-  const [bookmarks, setBookmarks] = useState<number[]>([])
+  const [bookmarks, setBookmarks] = useState<number[]>(initialProgress.bookmarks)
   const [sleepUntil, setSleepUntil] = useState<number | null>(null)
 
   /* layout / chrome */
@@ -275,7 +299,8 @@ export default function Podcast() {
   const loopVideoRef = useRef(false)
   const playingRef = useRef(false)
   const startedRef = useRef(false)
-  const progressRef = useRef<Progress>({ position: 0, bookmarks: [] })
+  const progressOwnerRef = useRef(episode.id)
+  const progressRef = useRef<Progress>(initialProgress)
 
   useEffect(() => {
     loopRef.current = { a: loopA, b: loopB }
@@ -319,11 +344,11 @@ export default function Podcast() {
   /* persist progress (position + bookmarks) */
   const persistProgress = useCallback(() => {
     try {
-      window.localStorage.setItem(progressKey(episode.id), JSON.stringify(progressRef.current))
+      window.localStorage.setItem(progressKey(progressOwnerRef.current), JSON.stringify(progressRef.current))
     } catch {
       /* ignore */
     }
-  }, [episode.id])
+  }, [])
 
   useEffect(() => {
     progressRef.current.bookmarks = bookmarks
@@ -332,7 +357,8 @@ export default function Podcast() {
 
   /* persist prefs whenever a sticky pref changes */
   useEffect(() => {
-    savePrefs({ speed, volume, captionsOn, captionSize, theater })
+    prefs0.current = { speed, volume, captionsOn, captionSize, theater }
+    savePrefs(prefs0.current)
   }, [speed, volume, captionsOn, captionSize, theater])
 
   /* Build the player once the API + container are ready. */
@@ -340,7 +366,9 @@ export default function Podcast() {
     let cancelled = false
     const loadingTimeout = window.setTimeout(() => { if (!cancelled) setPlaybackError(true) }, 15000)
     const saved = loadProgress(episode.id)
+    progressOwnerRef.current = episode.id
     progressRef.current = saved
+    setOpenMenu(null)
     setReady(false)
     setPlaybackError(false)
     setStarted(false)
@@ -355,7 +383,7 @@ export default function Podcast() {
 
     void loadYouTubeApi().then(() => {
       if (cancelled || !containerRef.current || !window.YT) return
-      playerRef.current = new window.YT.Player(containerRef.current, {
+      playerRef.current = new window.YT.Player(containerRef.current.appendChild(document.createElement('div')), {
         videoId: episode.youtubeId,
         playerVars: {
           start: episode.startSeconds,
@@ -389,7 +417,10 @@ export default function Podcast() {
             const total = player.getDuration()
             setDuration(total)
             player.setPlaybackRate(prefs0.current.speed)
+            try { player.setOption('captions', 'fontSize', prefs0.current.captionSize) } catch { /* captions may load later */ }
             player.setVolume(prefs0.current.volume)
+            setMuted(prefs0.current.volume === 0)
+            if (prefs0.current.volume === 0) player.mute()
             // Resume where the listener left off, if it's a meaningful spot.
             const resumeAt = saved.position
             if (resumeAt > episode.startSeconds + 5 && (!total || resumeAt < total - 5)) {
@@ -400,6 +431,7 @@ export default function Podcast() {
           },
           onError: () => { if (!cancelled) { window.clearTimeout(loadingTimeout); setPlaybackError(true) } },
           onStateChange: (event) => {
+            if (cancelled) return
             const YTState = window.YT?.PlayerState
             if (!YTState) return
             const state = event.data
@@ -410,11 +442,18 @@ export default function Podcast() {
               if (!duration) setDuration(event.target.getDuration())
             } else if (state === YTState.PAUSED) {
               setPlaying(false)
+              progressRef.current.position = event.target.getCurrentTime()
+              setCurrentTime(progressRef.current.position)
               persistProgress()
             } else if (state === YTState.ENDED) {
               setPlaying(false)
+              progressRef.current.position = event.target.getCurrentTime()
+              setCurrentTime(progressRef.current.position)
+              persistProgress()
               if (loopVideoRef.current) {
                 event.target.seekTo(episode.startSeconds, true)
+                progressRef.current.position = episode.startSeconds
+                setCurrentTime(episode.startSeconds)
                 event.target.playVideo()
               } else {
                 setEnded(true)
@@ -436,6 +475,7 @@ export default function Podcast() {
         /* player already gone */
       }
       playerRef.current = null
+      containerRef.current?.replaceChildren()
     }
     // Rebuild when the listener changes episode; the player API has no safe
     // way to swap the caption transcript and source as one atomic update.
@@ -443,7 +483,7 @@ export default function Podcast() {
 
   /* Poll time, buffered, A–B loop + throttled position save. */
   useEffect(() => {
-    if (!ready) return
+    if (!ready || !playing) return
     if (pollRef.current) window.clearInterval(pollRef.current)
     pollRef.current = window.setInterval(() => {
       const player = playerRef.current
@@ -465,13 +505,13 @@ export default function Podcast() {
         player.seekTo(a, true)
       }
       saveTickRef.current += 1
-      if (saveTickRef.current % 20 === 0) persistProgress() // ~every 5s
-    }, 250)
+      if (saveTickRef.current % 10 === 0) persistProgress() // ~every 5s
+    }, 500)
 
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current)
     }
-  }, [ready, duration, persistProgress])
+  }, [ready, playing, duration, persistProgress])
 
   /* Fullscreen tracking */
   useEffect(() => {
@@ -506,9 +546,11 @@ export default function Podcast() {
   const seekTo = useCallback((seconds: number) => {
     const player = playerRef.current
     if (!player) return
-    const clamped = Math.max(0, seconds)
+    const total = player.getDuration()
+    const clamped = clamp(seconds, 0, total || Math.max(0, seconds))
     player.seekTo(clamped, true)
     setCurrentTime(clamped)
+    progressRef.current.position = clamped
     setEnded(false)
   }, [])
 
@@ -611,13 +653,15 @@ export default function Podcast() {
       const time = Math.floor(currentTime)
       if (point === 'a') {
         setLoopA(time)
+        if (loopB !== null && loopB <= time) setLoopB(null)
         flash(`Loop A · ${formatTime(time)}`)
       } else {
+        if (loopA !== null && time <= loopA) { flash('Loop end must follow loop start'); return }
         setLoopB(time)
         flash(`Loop B · ${formatTime(time)}`)
       }
     },
-    [currentTime, flash],
+    [currentTime, loopA, loopB, flash],
   )
 
   const clearLoop = useCallback(() => {
@@ -644,12 +688,14 @@ export default function Podcast() {
     if (!el) return
     const doc = document as Document & { webkitExitFullscreen?: () => void }
     if (document.fullscreenElement) {
-      ;(doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc)
+      void Promise.resolve((doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc)).catch(() => flash('Fullscreen unavailable'))
     } else {
       setMini(false)
-      ;(el.requestFullscreen || el.webkitRequestFullscreen)?.call(el)
+      const request = el.requestFullscreen || el.webkitRequestFullscreen
+      if (request) void Promise.resolve(request.call(el)).catch(() => flash('Fullscreen unavailable'))
+      else flash('Fullscreen unavailable')
     }
-  }, [])
+  }, [flash])
 
   const toggleTheater = useCallback(() => setTheater((value) => !value), [])
   const toggleMini = useCallback(() => {
@@ -687,8 +733,9 @@ export default function Podcast() {
   /* ── Keyboard shortcuts ────────────────────────────────────────── */
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setOpenMenu(null); setShowHelp(false); return }
       const target = event.target as HTMLElement | null
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.tagName === 'BUTTON' || target.tagName === 'A' || target.isContentEditable)) {
         return
       }
       const k = event.key
@@ -795,7 +842,9 @@ export default function Podcast() {
     return transcriptCues.findIndex((cue) => currentTime >= cue.start && currentTime < cue.end)
   }, [transcriptCues, currentTime])
 
-  const visibleEpisodes = useMemo(() => filterMedia(episodes, item => PODCAST_CATALOG.find(media => media.youtubeId === item.youtubeId)!, libraryQuery, activeLevel, activeCategory), [episodes, libraryQuery, activeLevel, activeCategory])
+  const visibleEpisodes = useMemo(() => filterMedia(episodes, item => PODCAST_METADATA.get(item.youtubeId)!, libraryQuery, activeLevel, activeCategory).filter(item => matchesMediaDuration(item.durationSec, activeDuration)), [episodes, libraryQuery, activeLevel, activeCategory, activeDuration])
+  const pageEpisodes = useMemo(() => visibleEpisodes.slice((libraryPage - 1) * LIBRARY_PAGE_SIZE, libraryPage * LIBRARY_PAGE_SIZE), [visibleEpisodes, libraryPage])
+  const savedPositions = useMemo(() => new Map(pageEpisodes.map(item => [item.id, loadProgress(item.id).position])), [pageEpisodes, episode.id])
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
 
@@ -883,7 +932,7 @@ export default function Podcast() {
       </div>
 
       {/* Buttons */}
-      <div className="pointer-events-auto flex items-center justify-between gap-1 sm:gap-2">
+      <div className="podcast-player-buttons pointer-events-auto flex flex-wrap items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-0.5 sm:gap-1">
           <button type="button" onClick={togglePlay} className={controlButton} aria-label={playing ? 'Pause' : 'Play'}>
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-0.5" />}
@@ -907,7 +956,7 @@ export default function Podcast() {
               step={1}
               value={muted ? 0 : volume}
               onChange={(event) => applyVolume(Number(event.target.value))}
-              className="podcast-volume h-1 w-0 cursor-pointer opacity-0 transition-all duration-200 group-hover/vol:w-16 group-hover/vol:opacity-100 sm:w-16 sm:opacity-100"
+              className="podcast-volume hidden h-1 w-16 cursor-pointer sm:block"
               aria-label="Volume"
             />
           </div>
@@ -938,18 +987,20 @@ export default function Podcast() {
               <Gauge className="h-4 w-4" />
               {speed}×
             </button>
-            <AnimatePresence>
-              {openMenu === 'speed' ? (
+            {createPortal(<AnimatePresence>
+              {openMenu === 'speed' ? (<div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4" onClick={() => setOpenMenu(null)}>
+
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: minimalMotion ? 0 : 0.16 }}
-                  className="absolute bottom-12 right-0 z-50 w-28 overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 p-1 shadow-2xl backdrop-blur"
+                  role="dialog" aria-modal="true" aria-label="Playback speed options" onClick={event => event.stopPropagation()} className="w-40 max-h-[80dvh] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl"
                 >
                   {SPEEDS.map((rate) => (
                     <button
                       key={rate}
+                      autoFocus={rate === speed}
                       type="button"
                       onClick={() => {
                         changeSpeed(rate)
@@ -963,8 +1014,9 @@ export default function Podcast() {
                     </button>
                   ))}
                 </motion.div>
+                </div>
               ) : null}
-            </AnimatePresence>
+            </AnimatePresence>, document.fullscreenElement || document.body)}
           </div>
 
           <button
@@ -993,14 +1045,15 @@ export default function Podcast() {
             >
               <Settings className="h-[18px] w-[18px]" />
             </button>
-            <AnimatePresence>
-              {openMenu === 'settings' ? (
+            {createPortal(<AnimatePresence>
+              {openMenu === 'settings' ? (<div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4" onClick={() => setOpenMenu(null)}>
+
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: minimalMotion ? 0 : 0.16 }}
-                  className="absolute bottom-12 right-0 z-50 w-64 space-y-3 rounded-2xl border border-white/10 bg-slate-900/95 p-3.5 shadow-2xl backdrop-blur"
+                  role="dialog" aria-modal="true" aria-label="Player settings" onClick={event => event.stopPropagation()} className="w-80 max-w-full max-h-[80dvh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl"
                 >
                   {/* A–B loop */}
                   <div>
@@ -1009,6 +1062,7 @@ export default function Podcast() {
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
+                        autoFocus
                         onClick={() => setLoopPoint('a')}
                         className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
                           loopA !== null ? 'bg-red-500/30 text-red-100' : 'bg-white/10 text-slate-300 hover:bg-white/20'
@@ -1039,6 +1093,8 @@ export default function Podcast() {
                   {/* Loop video */}
                   <button
                     type="button"
+                    aria-label="Loop whole video"
+                    aria-pressed={loopVideo}
                     onClick={() => setLoopVideo((v) => !v)}
                     className="flex w-full items-center justify-between rounded-lg bg-white/5 px-2.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
                   >
@@ -1107,8 +1163,9 @@ export default function Podcast() {
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </motion.div>
+                </div>
               ) : null}
-            </AnimatePresence>
+            </AnimatePresence>, document.fullscreenElement || document.body)}
           </div>
 
           {!isFs ? (
@@ -1158,6 +1215,7 @@ export default function Podcast() {
         className={`podcast-stage relative w-full bg-black ${mini ? 'aspect-video' : 'podcast-featured-stage'} ${immersive ? 'cursor-none' : 'cursor-default'}`}
         onMouseMove={revealControls}
         onClick={(event) => {
+          if ((event.target as HTMLElement).closest('button, input, a')) return
           if (openMenu) {
             setOpenMenu(null)
             return
@@ -1166,7 +1224,7 @@ export default function Podcast() {
             togglePlay()
           }
         }}
-        onDoubleClick={toggleFullscreen}
+        onDoubleClick={event => { if (!(event.target as HTMLElement).closest('button, input, a')) toggleFullscreen() }}
         onWheel={(event) => {
           event.preventDefault()
           nudgeVolume(event.deltaY < 0 ? 5 : -5)
@@ -1203,7 +1261,7 @@ export default function Podcast() {
 
         {playbackError && <VideoPlaybackError youtubeId={episode.youtubeId} />}
         {/* Loading */}
-        {!ready ? (
+        {!ready && !playbackError ? (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950">
             <div className="flex flex-col items-center gap-3 text-slate-300">
               <Loader2 className="h-9 w-9 animate-spin text-red-400" />
@@ -1349,8 +1407,8 @@ export default function Podcast() {
             <p className="learning-eyebrow"><Headphones size={16} />{c('English Podcasts')}</p>
             <h1>{c('A little listening.')}<br /><span>{c('A bigger perspective.')}</span></h1>
             <p className="learning-intro">{c('English conversations, academic ideas and admissions insights. Listen with purpose, at your own pace.')}</p>
-            <div className="learning-hero-actions"><a href="#podcast-player" className="learning-primary"><Play size={17} />{c('Start listening')}<ChevronRight size={16} /></a><button type="button" className="learning-secondary" onClick={() => navigate('/shadowing-lab')}><Mic size={17} />{c('Explore shadowing')}</button></div>
-            <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>100 {c('episodes')}<span>•</span>A2–C1</div>
+            <div className="learning-hero-actions"><a href="#podcast-player" onClick={togglePlay} className="learning-primary"><Play size={17} />{c('Start listening')}<ChevronRight size={16} /></a><button type="button" className="learning-secondary" onClick={() => navigate('/shadowing-lab')}><Mic size={17} />{c('Explore shadowing')}</button></div>
+            <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>{episodes.length} {c('episodes')}<span>•</span>A2–C1</div>
           </div>
           <div className="learning-hero-visual"><div className="learning-visual-halo" /><StudyObject kind="headphones" /><div className="learning-visual-caption"><Headphones size={20} /><span>{c('Listen. Learn. Think bigger.')}</span></div></div>
         </header>
@@ -1372,28 +1430,19 @@ export default function Podcast() {
               </div>
             </motion.div>
 
-            <div className="podcast-library-heading mt-7 flex items-center justify-between gap-3 px-1">
+            <div id="podcast-library" className="podcast-library-heading mt-7 flex items-center justify-between gap-3 px-1">
               <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"> <UiText text={"Podcast library"} /> </p><h2 className="text-xl font-black text-slate-950"> <UiText text={"Curated podcast library"} /> </h2></div>
               <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-bold text-slate-500 backdrop-blur">{visibleEpisodes.length} {c('episodes')}</span>
             </div>
-            <LibraryControls query={libraryQuery} onQuery={setLibraryQuery} level={activeLevel} onLevel={setActiveLevel} category={activeCategory} onCategory={value => setActiveCategory(value as PodcastCategory)} categories={CATEGORIES.filter(item => item.label !== 'All').map(item => item.label)} />
+            <LibraryControls query={libraryQuery} onQuery={setLibraryQuery} level={activeLevel} onLevel={setActiveLevel} category={activeCategory} onCategory={value => setActiveCategory(value as PodcastCategory)} duration={activeDuration} onDuration={setActiveDuration} categories={CATEGORIES.filter(item => item.label !== 'All').map(item => item.label)} />
+            <div className="podcast-filter-actions">
+              <button type="button" onClick={() => { setLibraryQuery(''); setActiveLevel('All'); setActiveCategory('All'); setActiveDuration('All'); setLibraryPage(1) }}>{c('Reset filters')}</button>
+              <button type="button" aria-expanded={showSources} onClick={() => setShowSources(value => !value)}>{c('Podcast sources')}</button>
+            </div>
+            {showSources && <div className="podcast-sources">{Array.from(new Map(PODCAST_CATALOG.map(item => [item.source, item.channelUrl])).entries()).map(([source, url]) => <a key={source} href={url} target="_blank" rel="noopener noreferrer">{source} ↗</a>)}</div>}
             {visibleEpisodes.length > 0 ? (
               <div className="podcast-episode-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleEpisodes.slice((libraryPage - 1) * LIBRARY_PAGE_SIZE, libraryPage * LIBRARY_PAGE_SIZE).map((item, index) => (
-                  <motion.button key={item.id} type="button" onClick={() => void openEpisode(item)} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: minimalMotion ? 0 : Math.min(index, 5) * 0.035 }} className={`podcast-episode-card group text-left ${item.id === episode.id ? 'is-current' : ''}`}>
-                    <span className="podcast-episode-artwork relative block aspect-[16/10] overflow-hidden rounded-[1.3rem]">
-                      <img loading="lazy" src={episodeArtwork(item)} onError={(event) => handleArtworkError(event, item)} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-                      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/45 to-transparent" />
-                      <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow-[0_0_22px_rgba(239,68,68,.65)] transition group-hover:opacity-100"><Play className="h-4 w-4 fill-current" /></span>
-                      {item.id === episode.id ? <span className="absolute right-3 top-3 rounded-full bg-emerald-500 p-1.5 text-white shadow-lg"><Check className="h-3.5 w-3.5" /></span> : null}
-                    </span>
-                    <span className="learning-card-category mt-3 block">{episodeCefr(item)} · {c(item.topic)}</span>
-                    <span className="podcast-episode-title block line-clamp-2 text-base font-black leading-5 text-slate-900">{item.title}</span>
-                    <span className="learning-card-source block">{item.source}</span>
-                    <span className="learning-card-focus block">{c(item.focus || item.description)}</span>
-                    <span className="podcast-episode-meta flex items-center justify-between text-xs font-medium text-slate-500"><span>{item.durationLabel}</span><span className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-red-500" style={{ width: item.id === episode.id ? `${Math.max(10, progress)}%` : `${loadProgress(item.id).position / (PODCAST_CATALOG.find(media => media.youtubeId === item.youtubeId)?.durationSec || 1) * 100}%` }} /></span></span>
-                  </motion.button>
-                ))}
+                {pageEpisodes.map(item => <PodcastCard key={item.id} item={item} selected={item.id === episode.id} progress={item.id === episode.id ? progress : clamp((savedPositions.get(item.id) || 0) / item.durationSec * 100, 0, 100)} onOpen={openEpisode} />)}
               </div>
             ) : (
               <div className="podcast-empty mt-4 rounded-[1.5rem] p-7 text-center"><ListMusic className="mx-auto h-7 w-7 text-red-400" /><p className="mt-2 font-black text-slate-800"> {c("No matching episodes")} </p><p className="mt-1 text-sm text-slate-500"> {c("Choose another level or category")}</p></div>
@@ -1453,7 +1502,7 @@ export default function Podcast() {
           </main>
 
           <motion.aside initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: minimalMotion ? 0 : 0.28 }} className="podcast-glass podcast-continue xl:sticky xl:top-5">
-            <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950"> <UiText text={"Continue listening"} /> </h2><button type="button" className="text-slate-500" aria-label="More"><MoreHorizontal className="h-5 w-5" /></button></div>
+            <div className="flex items-center justify-between"><h2 className="text-lg font-black text-slate-950"> <UiText text={"Continue listening"} /> </h2><a href={episode.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-red-600">{c('View source')} ↗</a></div>
             <div className="mt-5 flex items-center gap-3">
               <img src={artworkUrl} onError={(event) => handleArtworkError(event, episode)} alt="" className="podcast-continue-artwork h-20 w-20 rounded-2xl object-cover shadow-lg" />
               <div className="min-w-0"><p className="line-clamp-2 font-black leading-5 text-slate-900">{episode.title}</p><p className="mt-1 text-sm font-semibold text-slate-500">{formatTime(duration || currentTime)}</p></div>

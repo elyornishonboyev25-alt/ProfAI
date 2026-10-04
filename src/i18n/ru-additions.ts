@@ -1,5 +1,9 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Words & recall': 'Слова и запоминание',
+  'Read & discover': 'Читайте и открывайте',
+  'Listen & learn': 'Слушайте и учитесь',
+  'Speak & refine': 'Говорите и совершенствуйтесь',
   'Score change: {change}': 'Изменение результата: {change}',
   'IELTS band points': 'балла IELTS',
   'SAT points': 'баллов SAT',

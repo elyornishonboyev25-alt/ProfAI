@@ -371,7 +371,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                       {popularCountries.map((destination, index) => (
                         <button key={destination.name} type="button" className={country === destination.name ? 'is-active' : ''} aria-pressed={country === destination.name} onClick={() => selectDestination(destination.name)}>
                           <span className="admission-university-destination-index">0{index + 1}</span>
-                          <span className="admission-university-destination-name">{destination.name}<small>{destination.count.toLocaleString('en-US')} <UiText text="Universities" /></small></span>
+                          <span className="admission-university-destination-name"><UiText text={destination.name} /><small>{destination.count.toLocaleString('en-US')} <UiText text="Universities" /></small></span>
                           <ArrowUpRight size={17} />
                         </button>
                       ))}

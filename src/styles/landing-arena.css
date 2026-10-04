@@ -162,7 +162,8 @@
 .landing-review-progress svg { color: var(--landing-red); }
 .landing-review-progress strong { color: var(--landing-red-dark); font-weight: 900; }
 .landing-review-author { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #f4e4e4; }
-.landing-review-avatar { display: grid; width: 39px; height: 39px; place-items: center; flex: 0 0 auto; border-radius: 11px; color: #991b1b; background: #fee2e2; font-size: 13px; font-weight: 900; }
+.landing-review-avatar { display: grid; width: 39px; height: 39px; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid rgba(220,38,38,.12); border-radius: 11px; color: #991b1b; background: #fee2e2; font-size: 13px; font-weight: 900; }
+.landing-review-author img.landing-review-avatar { display: block; object-fit: cover; }
 .landing-review-author strong, .landing-review-author small { display: block; }
 .landing-review-author strong { font-size: 13px; font-weight: 850; }
 .landing-review-detail-dialog { width: min(640px,100%); }
@@ -189,6 +190,43 @@
 .landing-comment-count { justify-self: end; color: #71717a; font-size: 11px; }
 .landing-comment-error { padding: 10px 12px; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: 12px; line-height: 1.5; }
 .landing-comment-submit { width: 100%; margin-top: 8px; }
+.landing-comment-backdrop { background: rgba(24,24,27,.57); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.landing-comment-form-dialog { width: min(580px,100%); padding: 0; overflow-x: hidden; border: 1px solid rgba(255,255,255,.95); border-radius: 27px; background: rgba(255,255,255,.97); box-shadow: 0 34px 90px rgba(24,24,27,.25), 0 8px 26px rgba(127,29,29,.12), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(22px) saturate(145%); backdrop-filter: blur(22px) saturate(145%); }
+.landing-comment-form-dialog .landing-comment-close { top: 21px; right: 21px; width: 43px; height: 43px; background: rgba(255,255,255,.88); }
+.landing-comment-dialog-header { padding: 29px 32px 22px; border-bottom: 1px solid rgba(254,202,202,.6); background: radial-gradient(circle at 100% 0%,rgba(254,226,226,.7),transparent 57%),linear-gradient(155deg,#fff,#fffafa); }
+.landing-comment-header-icon { display: grid; width: 47px; height: 47px; place-items: center; margin-bottom: 16px; border: 1px solid rgba(254,202,202,.8); border-radius: 14px; color: var(--landing-red); background: #fff5f5; box-shadow: 0 5px 15px rgba(185,28,28,.07), inset 0 1px 0 #fff; }
+.landing-comment-dialog-header .landing-section-kicker { color: var(--landing-red-dark); font-size: 11px; font-weight: 900; letter-spacing: .13em; }
+.landing-comment-form-dialog h2 { margin: 8px 50px 0 0; font-size: clamp(27px,3vw,34px); line-height: 1.13; }
+.landing-comment-dialog-header p { max-width: 445px; margin-top: 9px; color: #52525b; font-size: 14px; line-height: 1.55; }
+.landing-comment-form-dialog form { gap: 16px; padding: 22px 32px 30px; }
+.landing-comment-form-dialog .landing-comment-field, .landing-comment-form-dialog .landing-comment-row > div { display: grid; gap: 7px; min-width: 0; }
+.landing-comment-form-dialog label { margin: 0; color: #27272a; font-size: 13px; font-weight: 800; line-height: 1.35; }
+.landing-comment-form-dialog :is(input,select,textarea) { min-height: 50px; padding: 12px 15px; border-color: #e4e4e7; border-radius: 13px; background: rgba(255,255,255,.94); color: #18181b; font-size: 15px; font-weight: 550; transition: border-color .2s, box-shadow .2s, background .2s; }
+.landing-comment-form-dialog :is(input,select,textarea)::placeholder { color: #9294a2; font-weight: 450; }
+.landing-comment-form-dialog :is(input,select,textarea):hover { border-color: #fca5a5; }
+.landing-comment-form-dialog :is(input,select,textarea):focus-visible { outline: none; border-color: var(--landing-red); background: #fff; box-shadow: 0 0 0 4px rgba(220,38,38,.23); }
+.landing-comment-form-dialog :is(input,textarea)[aria-invalid="true"] { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.1); }
+.landing-comment-form-dialog textarea { min-height: 112px; resize: vertical; line-height: 1.55; }
+.landing-comment-form-dialog .landing-comment-row { gap: 14px; }
+.landing-comment-select { position: relative; }
+.landing-comment-select select { appearance: none; width: 100%; padding-right: 40px; cursor: pointer; }
+.landing-comment-select > svg { position: absolute; top: 50%; right: 14px; color: #52525b; pointer-events: none; transform: translateY(-50%); }
+.landing-comment-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.landing-comment-form-dialog .landing-comment-count { color: #71717a; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.landing-comment-form-dialog .landing-comment-field-error { margin: 1px 0 0; color: #b91c1c; font-size: 12px; font-weight: 700; line-height: 1.45; }
+.landing-comment-form-dialog .landing-comment-error { margin: -4px 0 0; padding: 10px 12px; border: 1px solid #fecaca; font-size: 13px; }
+.landing-comment-form-dialog .landing-comment-submit { min-height: 52px; margin-top: 0; border-radius: 14px; font-size: 15px; }
+@media (prefers-reduced-motion: no-preference) { .landing-comment-form-dialog { animation: landing-comment-enter .22s cubic-bezier(.2,.75,.25,1) both; } }
+@keyframes landing-comment-enter { from { opacity: 0; transform: translateY(9px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .landing-comment-form-dialog { background: #fff; } }
+@media (max-width: 560px) {
+  .landing-comment-backdrop { padding: 10px; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .landing-comment-form-dialog { max-height: calc(100dvh - 20px); border-radius: 21px; }
+  .landing-comment-dialog-header { padding: 24px 20px 18px; }
+  .landing-comment-form-dialog .landing-comment-close { top: 15px; right: 15px; }
+  .landing-comment-form-dialog form { gap: 14px; padding: 19px 20px 22px; }
+}
+@media (max-width: 390px) { .landing-comment-form-dialog .landing-comment-row { grid-template-columns: 1fr; } }
 .landing-arena-plans-panel { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 45px; padding: clamp(28px,5vw,58px); border: 1px solid #fecaca; border-radius: 24px; background: #fff5f5; }
 .landing-arena-plans h2 { max-width: 600px; }
 .landing-arena-plans-panel > div:first-child > p { max-width: 570px; margin-top: 16px; color: var(--landing-muted); font-size: 15px; line-height: 1.7; }

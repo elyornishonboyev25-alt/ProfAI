@@ -4,6 +4,10 @@ import type { AuthUser } from '@/types/platform'
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
 const API_BASE_URL = configuredApiUrl?.replace(/\/$/, '') ?? '/api/v1'
 
+export function publicApiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`
+}
+
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   auth?: boolean

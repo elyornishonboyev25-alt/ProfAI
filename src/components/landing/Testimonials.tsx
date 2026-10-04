@@ -1,9 +1,10 @@
 import { type FormEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, MessageSquareText, Pause, Play, Quote, Star, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, MessageSquareText, Pause, Play, Quote, Star, X } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { loadReviews, submitReview, type LandingReview, type ReviewExam } from '@/lib/reviewsApi'
+import { publicApiUrl } from '@/lib/apiClient'
 import { featuredTestimonials, type DisplayReview } from './featuredTestimonials'
 
 const GAP = 18
@@ -11,6 +12,22 @@ const FLOW_SPEED = 42
 
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
+}
+
+function ReviewAvatar({ review }: { review: DisplayReview }) {
+  const [failed, setFailed] = useState(false)
+  const featured = review.id.startsWith('featured-')
+  if (!featured || failed) return <span className="landing-review-avatar" aria-hidden="true">{initials(review.name)}</span>
+
+  return <img
+    className="landing-review-avatar"
+    src={publicApiUrl(`/reviews/featured-avatar/${encodeURIComponent(review.id)}`)}
+    alt=""
+    loading="lazy"
+    decoding="async"
+    referrerPolicy="no-referrer"
+    onError={() => setFailed(true)}
+  />
 }
 
 function ReviewCard({ review, hidden = false, onRead }: { review: DisplayReview; hidden?: boolean; onRead: (review: DisplayReview) => void }) {
@@ -28,7 +45,7 @@ function ReviewCard({ review, hidden = false, onRead }: { review: DisplayReview;
     <p className="landing-review-text">{text}</p>
     {long && <button type="button" className="landing-review-more" tabIndex={hidden ? -1 : 0} onClick={() => onRead(review)}>{c('Read more')}</button>}
     {review.bandBefore && review.bandAfter && <div className="landing-review-progress" aria-label={`${review.exam}: ${review.bandBefore} to ${review.bandAfter}`}><span>{review.bandBefore}</span><ArrowRight size={17} aria-hidden="true" /><strong>{review.bandAfter}</strong></div>}
-    <div className="landing-review-author"><span className="landing-review-avatar" aria-hidden="true">{initials(review.name)}</span><div><strong>{review.name}</strong>{formattedDate && <small>{formattedDate}</small>}</div></div>
+    <div className="landing-review-author"><ReviewAvatar review={review} /><div><strong>{review.name}</strong>{formattedDate && <small>{formattedDate}</small>}</div></div>
   </article>
 }
 
@@ -69,6 +86,7 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [errorField, setErrorField] = useState<'name' | 'comment' | 'submit' | null>(null)
 
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -93,15 +111,17 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
     if (sendingRef.current) return
     const cleanName = name.trim()
     const cleanComment = comment.trim()
-    if (cleanName.length < 2 || cleanName.length > 60) { setError(c('Enter a name between 2 and 60 characters.')); nameRef.current?.focus(); return }
-    if (cleanComment.length < 8 || cleanComment.length > 600) { setError(c('Your comment must be between 8 and 600 characters.')); return }
+    if (cleanName.length < 2 || cleanName.length > 60) { setErrorField('name'); setError(c('Enter a name between 2 and 60 characters.')); nameRef.current?.focus(); return }
+    if (cleanComment.length < 8 || cleanComment.length > 600) { setErrorField('comment'); setError(c('Your comment must be between 8 and 600 characters.')); document.getElementById('landing-comment-text')?.focus(); return }
     sendingRef.current = true
     setSending(true)
+    setErrorField(null)
     setError('')
     try {
       const review = await submitReview({ name: cleanName, exam, rating: rating ? Number(rating) : undefined, text: cleanComment })
       onSubmitted(review)
     } catch (cause) {
+      setErrorField('submit')
       setError(cause instanceof Error ? cause.message : c('Your comment could not be sent. Please try again.'))
     } finally {
       sendingRef.current = false
@@ -110,20 +130,31 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
   }
 
   return createPortal(<div className="landing-comment-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !sending) onClose() }}>
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="landing-comment-title" aria-describedby="landing-comment-description" className="landing-comment-dialog">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="landing-comment-title" aria-describedby="landing-comment-description" className="landing-comment-dialog landing-comment-form-dialog">
       <button type="button" className="landing-icon-button landing-comment-close" aria-label={c('Close comment form')} onClick={onClose} disabled={sending}><X size={20} /></button>
-      <span className="landing-section-kicker"><MessageSquareText size={15} /> {c('YOUR VOICE MATTERS')}</span>
-      <h2 id="landing-comment-title">{c('Leave a comment')}</h2>
-      <p id="landing-comment-description">{c('Tell us about your experience with ProfAI. Your words will appear here when they are public.')}</p>
+      <div className="landing-comment-dialog-header">
+        <span className="landing-comment-header-icon" aria-hidden="true"><MessageSquareText size={22} /></span>
+        <span className="landing-section-kicker">{c('YOUR VOICE MATTERS')}</span>
+        <h2 id="landing-comment-title">{c('Leave a comment')}</h2>
+        <p id="landing-comment-description">{c('Tell us about your experience with ProfAI. Your words will appear here when they are public.')}</p>
+      </div>
       <form onSubmit={handleSubmit} noValidate>
-        <label htmlFor="landing-comment-name">{c('Display name')}</label>
-        <input ref={nameRef} id="landing-comment-name" type="text" autoComplete="name" maxLength={60} required value={name} onChange={event => setName(event.target.value)} placeholder={c('Your name')} />
-        <div className="landing-comment-row"><div><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><select id="landing-comment-exam" value={exam} onChange={event => setExam(event.target.value as ReviewExam)}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT">Digital SAT</option></select></div><div><label htmlFor="landing-comment-rating">{c('Rating (optional)')}</label><select id="landing-comment-rating" value={rating} onChange={event => setRating(event.target.value)}><option value="">{c('No rating')}</option>{[5, 4, 3, 2, 1].map(value => <option key={value} value={value}>{value} / 5</option>)}</select></div></div>
-        <label htmlFor="landing-comment-text">{c('Your comment')}</label>
-        <textarea id="landing-comment-text" required minLength={8} maxLength={600} rows={5} value={comment} onChange={event => setComment(event.target.value)} placeholder={c('What was helpful? What could be better?')} />
-        <span className="landing-comment-count">{comment.length}/600</span>
-        {error && <p className="landing-comment-error" role="alert">{error}</p>}
-        <button type="submit" className="landing-button landing-button-primary landing-comment-submit" disabled={sending} aria-busy={sending}>{sending ? c('Sending…') : c('Send comment')} <ArrowRight size={18} /></button>
+        <div className="landing-comment-field">
+          <label htmlFor="landing-comment-name">{c('Display name')}</label>
+          <input ref={nameRef} id="landing-comment-name" type="text" autoComplete="name" maxLength={60} required aria-invalid={errorField === 'name'} aria-describedby={errorField === 'name' ? 'landing-comment-name-error' : undefined} value={name} onChange={event => { setName(event.target.value); if (errorField === 'name') { setError(''); setErrorField(null) } }} placeholder={c('Your name')} />
+          {errorField === 'name' && error && <p id="landing-comment-name-error" className="landing-comment-field-error" role="alert">{error}</p>}
+        </div>
+        <div className="landing-comment-row">
+          <div className="landing-comment-field"><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><div className="landing-comment-select"><select id="landing-comment-exam" value={exam} onChange={event => setExam(event.target.value as ReviewExam)}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT">Digital SAT</option></select><ChevronDown size={17} aria-hidden="true" /></div></div>
+          <div className="landing-comment-field"><label htmlFor="landing-comment-rating">{c('Rating (optional)')}</label><div className="landing-comment-select"><select id="landing-comment-rating" value={rating} onChange={event => setRating(event.target.value)}><option value="">{c('No rating')}</option>{[5, 4, 3, 2, 1].map(value => <option key={value} value={value}>{value} / 5</option>)}</select><ChevronDown size={17} aria-hidden="true" /></div></div>
+        </div>
+        <div className="landing-comment-field landing-comment-text-field">
+          <div className="landing-comment-label-row"><label htmlFor="landing-comment-text">{c('Your comment')}</label><span className="landing-comment-count">{comment.length}/600</span></div>
+          <textarea id="landing-comment-text" required minLength={8} maxLength={600} rows={4} aria-invalid={errorField === 'comment'} aria-describedby={errorField === 'comment' ? 'landing-comment-text-error' : undefined} value={comment} onChange={event => { setComment(event.target.value); if (errorField === 'comment') { setError(''); setErrorField(null) } }} placeholder={c('What was helpful? What could be better?')} />
+          {errorField === 'comment' && error && <p id="landing-comment-text-error" className="landing-comment-field-error" role="alert">{error}</p>}
+        </div>
+        {errorField === 'submit' && error && <p className="landing-comment-error" role="alert">{error}</p>}
+        <button type="submit" className="landing-button landing-button-primary landing-comment-submit" disabled={sending} aria-busy={sending}>{sending ? c('Sending…') : c('Send comment')} <ArrowRight size={18} aria-hidden="true" /></button>
       </form>
     </div>
   </div>, document.body)

@@ -21,7 +21,6 @@ export default function ShadowingLab() {
   const [page, setPage] = useState(1)
   const [active, setActive] = useState<ShadowingVideoDetail | null>(null)
   const [loadingCaptions, setLoadingCaptions] = useState(false)
-  const [availableScript, setAvailableScript] = useState<ShadowingVideoDetail | null>(null)
   const requestRef = useRef<AbortController | null>(null)
   const filtered = useMemo(() => filterMedia(SHADOWING_CATALOG, item => item, query, level, category), [query, level, category])
   useEffect(() => setPage(1), [query, level, category])
@@ -32,20 +31,19 @@ export default function ShadowingLab() {
     const controller = new AbortController()
     requestRef.current = controller
     setActive(guidedShadowing(item))
-    setAvailableScript(null)
     setLoadingCaptions(true)
     try {
       const video = await getShadowingVideo(id, controller.signal)
-      if (!controller.signal.aborted && video.segments.length) setAvailableScript(video)
-    } catch { /* The teacher-led lesson and repeat/record tools work without a downloaded transcript. */ }
+      if (!controller.signal.aborted && (video.captions?.length || video.segments.length)) setActive(video)
+    } catch { /* Preview stays available; speech sections require real timed captions. */ }
     finally { if (!controller.signal.aborted) setLoadingCaptions(false) }
   }, [])
   useEffect(() => { if (plannedVideo) void openVideo(plannedVideo) }, [plannedVideo, openVideo])
   useEffect(() => () => requestRef.current?.abort(), [])
   if (active) return <div className="workspace-page learning-page shadowing-studio">
     {loadingCaptions && <p className="learning-caption-status" role="status">{c('Checking for a synced transcript')}</p>}
-    {availableScript && <div className="mb-4 flex justify-center"><button type="button" className="learning-secondary" onClick={() => { setActive(availableScript); setAvailableScript(null) }}>{c('Use synced transcript')}</button></div>}
-    <ShadowingPlayer key={`${active.youtubeId}-${active.segments.length ? 'script' : 'guided'}`} video={active} onBack={() => { requestRef.current?.abort(); setLoadingCaptions(false); setActive(null); if (plannedVideo) setParams({}, { replace: true }) }} />
+    {!loadingCaptions && !active.captions?.length && !active.segments.length && <div className="mb-4"><button type="button" className="learning-secondary" onClick={() => void openVideo(active.youtubeId)}>{c('Retry captions')}</button></div>}
+    <ShadowingPlayer key={active.youtubeId} video={active} onBack={() => { requestRef.current?.abort(); setLoadingCaptions(false); setActive(null); if (plannedVideo) setParams({}, { replace: true }) }} />
   </div>
   return <div className="workspace-page learning-page"><div className="learning-frame">
     <header className="learning-hero">
@@ -55,11 +53,11 @@ export default function ShadowingLab() {
         <h1>{c('Find your rhythm.')}<br /><span>{c('Make English your own.')}</span></h1>
         <p className="learning-intro">{c('Short, focused lessons to train pronunciation, sentence rhythm and confident academic English.')}</p>
         <div className="learning-hero-actions"><a href="#shadowing-library" className="learning-primary"><Mic size={17} />{c('Start shadowing')}<ArrowRight size={16} /></a><Link to="/podcast" className="learning-secondary"><Headphones size={17} />{c('Explore podcasts')}</Link></div>
-        <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>100 {c('lessons')}<span>•</span>A2–B2</div>
+        <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>100 {c('lessons')}<span>•</span>{c('Up to 2 minutes')}</div>
       </div>
       <div className="learning-hero-visual"><div className="learning-visual-halo" /><StudyObject kind="microphone" /><div className="learning-visual-caption"><AudioLines size={20} /><span>{c('Listen. Repeat. Record.')}</span></div><div className="learning-wave" aria-hidden="true">{[14,26,18,40,54,32,66,44,30,48,24,40,18,28,14].map((height, index) => <i key={index} style={{ height }} />)}</div></div>
     </header>
-    <div className="learning-method">{[{ icon: Headphones, title: 'Listen closely', detail: 'Notice sounds, stress and pauses.' }, { icon: Repeat, title: 'Repeat in rhythm', detail: 'Slow down and loop short sections.' }, { icon: Mic, title: 'Record & compare', detail: 'Hear your progress, one phrase at a time.' }].map(({ icon: Icon, title, detail }, index) => <div key={title}><span className="learning-step-icon"><Icon size={20} /></span><div><span className="learning-step-number">0{index + 1}</span><h2>{c(title)}</h2><p>{c(detail)}</p></div></div>)}</div>
+    <div className="learning-method">{[{ icon: Headphones, title: 'Listen closely', detail: 'Notice sounds, stress and pauses.' }, { icon: Repeat, title: 'Repeat in rhythm', detail: 'Prepare with short audio sections.' }, { icon: Mic, title: 'Record & compare', detail: 'Hear your progress, one phrase at a time.' }].map(({ icon: Icon, title, detail }, index) => <div key={title}><span className="learning-step-icon"><Icon size={20} /></span><div><span className="learning-step-number">0{index + 1}</span><h2>{c(title)}</h2><p>{c(detail)}</p></div></div>)}</div>
     <section id="shadowing-library" className="learning-library">
       <div className="learning-section-heading"><div><p className="learning-eyebrow">{c('Your daily speaking practice')}</p><h2>{c('Shadowing library')}</h2></div><span className="learning-count">{filtered.length} / 100 {c('lessons')}</span></div>
       <LibraryControls query={query} onQuery={setQuery} level={level} onLevel={setLevel} category={category} onCategory={setCategory} categories={categories} />

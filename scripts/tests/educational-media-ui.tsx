@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import i18n from '../../src/i18n/index'
+import ShadowingPlayer from '../../src/components/shadowing/ShadowingPlayer'
+import { guidedShadowing } from '../../src/data/educationalMedia'
+import { loadYouTubeApi } from '../../src/lib/youtube'
+import { prepareShadowingLesson } from '../../backend/src/services/shadowingLesson'
 import ShadowingLab from '../../src/pages/ShadowingLab'
 import Podcast from '../../src/pages/Podcast'
 import { apiClient } from '../../src/lib/apiClient'
@@ -59,22 +63,101 @@ export async function run() {
     assert.match(container.textContent!, /No matching lessons/)
     await click(button('Reset filters'))
     await click(container.querySelector<HTMLButtonElement>('.learning-card'))
-    assert.match(container.textContent!, /Guided shadowing|timed practice intervals/)
-    assert.ok(container.querySelector('button[aria-label="Play line"]'))
-    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play line"]'))
-    assert.equal(seeks.at(-1), 0)
-    currentTime = 6.1
-    await wait(210)
-    assert.equal(seeks.at(-1), 0, 'First repeat loops the selected six-second section')
-    currentTime = 6.1
-    await wait(210)
-    assert.equal(seeks.at(-1), 6, 'Second repeat advances to the next section')
-    await select(container.querySelector('select')!, '4')
-    assert.match(container.textContent!, /0:00 – 0:04/)
-    assert.ok(button('Record yourself'), 'Recording remains available without captions')
-    await act(async () => playerOptions.events.onError({ data: 150, target: fakePlayer }))
+    assert.match(container.textContent!, /Audio sections need timed English captions/)
+    assert.equal(container.querySelector('button[aria-label="Play audio 1"]'), null, 'Never invent speech boundaries when captions are offline')
+    assert.ok(button('Retry captions'))
+    assert.equal(button('I am ready — start practice')!.disabled, true)
+    assert.ok(SHADOWING_CATALOG.every(item => item.durationSec <= 120))
+
+    // Independent players let full video continue across every audio boundary.
+    const originalPlayer = window.YT.Player
+    const players: any[] = []
+    window.YT.Player = class {
+      constructor(element: HTMLElement, options: any) {
+        const iframe = document.createElement('iframe')
+        element.replaceWith(iframe)
+        const state = { time: 0, seeks: [] as number[], pauses: 0, rate: 0 }
+        const player = { ...fakePlayer,
+          state, options,
+          getCurrentTime: () => state.time,
+          setPlaybackRate: (rate: number) => { state.rate = rate },
+          seekTo: (time: number) => { state.time = time; state.seeks.push(time) },
+          playVideo: () => options.events.onStateChange({ data: 1 }),
+          pauseVideo: () => { state.pauses++; options.events.onStateChange({ data: 2 }) },
+          destroy: () => iframe.remove(),
+        }
+        players.push(player)
+        queueMicrotask(() => options.events.onReady({ target: player }))
+        return player
+      }
+    } as any
+    const captions = Array.from({ length: 45 }, (_, index) => ({ id: `cue:${index}`, orderIndex: index, startSec: index * 3, endSec: (index + 1) * 3, text: `Complete sentence ${index + 1}.` }))
+    const prepared = prepareShadowingLesson(captions, 135)
+    assert.equal(prepared.durationSec, 120)
+    assert.equal(prepared.captions.length, 40)
+    assert.equal(prepared.segments.length, 8)
+    assert.ok(prepared.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
+    assert.equal(prepared.segments.map(section => section.text).join(' '), captions.slice(0, 40).map(cue => cue.text).join(' '), 'No words lost or duplicated at joins')
+    assert.equal(prepareShadowingLesson([{ startSec: 0, endSec: 22, text: 'One long cue without safe word boundaries.' }], 22).segments.length, 0, 'Do not cut speech with unknown word timestamps')
+    await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 135, segments: captions }} onBack={() => {}} />)
+    const [full, sectionPlayer] = players
+    assert.equal(full.state.rate, 1)
+    assert.equal(sectionPlayer.state.rate, 1)
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play video"]'))
+    const fullPauses = full.state.pauses
+    full.state.time = 16
+    await wait(180)
+    assert.equal(full.state.pauses, fullPauses, 'Full video never stops at audio-section boundaries')
+    assert.match(container.textContent!, /Complete sentence 6/)
+    await click(container.querySelector<HTMLElement>('[data-testid="shadowing-stage"]'))
+    assert.equal(full.state.pauses, fullPauses, 'Clicking video outside central control does not pause')
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Pause video"]'))
+    assert.equal(full.state.pauses, fullPauses + 1)
+    assert.ok(container.querySelector('[data-testid="shadowing-stage"] iframe'), 'Paused frame stays visible without an opaque cover')
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play video"]'))
+    assert.equal(full.state.time, 16, 'Pause/resume preserves full-video position')
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 1"]'))
+    await wait(100)
+    sectionPlayer.state.time = 15.01
+    await wait(180)
+    assert.deepEqual(sectionPlayer.state.seeks, [0], 'Section plays once without automatic repeats or auto-next')
+    assert.ok(container.querySelector('[aria-label="Completed"]'))
+    assert.equal(full.state.time, 16, 'Audio player never seeks the full video')
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 2"]'))
+    sectionPlayer.state.time = 70
+    const audioPauses = sectionPlayer.state.pauses
+    await wait(180)
+    assert.equal(sectionPlayer.state.pauses, audioPauses, 'Stale buffered time does not finish a newly selected section')
+    sectionPlayer.state.time = 15.2
+    await wait(100)
+    sectionPlayer.state.time = 30.01
+    await wait(180)
+    assert.equal(sectionPlayer.state.pauses, audioPauses + 1)
+    await click(button('I am ready — start practice'))
+    assert.match(container.textContent!, /Full video practice/)
+    assert.equal(full.state.seeks.at(-1), 0)
+    full.state.time = 0.2
+    await wait(100)
+    full.state.time = 120.1
+    const endPauses = full.state.pauses
+    await wait(180)
+    assert.equal(full.state.pauses, endPauses + 1, 'Full practice stops at the two-minute clip boundary')
+    await act(async () => full.options.events.onError({ data: 150 }))
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /Playback could not load/)
-    assert.match(container.querySelector('[role="alert"] a')!.getAttribute('href')!, /youtube\.com\/watch/)
+    assert.ok(button('Retry player'))
+    window.YT.Player = originalPlayer
+    const savedYouTube = window.YT
+    window.YT = undefined
+    const failedLoad = loadYouTubeApi()
+    const rejection = assert.rejects(failedLoad, /could not load/)
+    document.getElementById('youtube-iframe-api')!.dispatchEvent(new Event('error'))
+    await rejection
+    assert.equal(document.getElementById('youtube-iframe-api'), null)
+    const retryLoad = loadYouTubeApi()
+    assert.ok(document.getElementById('youtube-iframe-api'), 'Failed API script can be retried')
+    window.YT = savedYouTube
+    window.onYouTubeIframeAPIReady!()
+    await retryLoad
 
     localStorage.setItem(`smarttest-podcast:curated-${PODCAST_CATALOG[0].youtubeId}`, JSON.stringify({ position: 42, bookmarks: [12] }))
     await render(<Podcast />)
@@ -219,7 +302,7 @@ export async function run() {
     assert.match(container.textContent!, /1–10 daqiqa/)
     await render(<ShadowingLab />)
     assert.match(container.textContent!, /Inglizcha nutq ritmini toping/)
-    console.log('PASS: 100/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, offline guided loops, recording control, playback errors, planned links and Uzbek UI')
+    console.log('PASS: 100/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, independent shadowing playback, one-pass audio, caption boundaries, two-minute clips, playback errors, planned links and Uzbek UI')
   } finally {
     apiClient.get = originalGet
     if (root) await act(async () => root!.unmount())

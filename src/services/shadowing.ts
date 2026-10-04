@@ -33,6 +33,7 @@ export type ShadowingVideoSummary = {
 
 export type ShadowingVideoDetail = ShadowingVideoSummary & {
   segments: ShadowingSegment[]
+  captions?: ShadowingSegment[]
 }
 
 export async function listShadowingVideos(): Promise<ShadowingVideoSummary[]> {

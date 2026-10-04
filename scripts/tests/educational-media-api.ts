@@ -30,7 +30,11 @@ export async function run() {
       const { video } = await detail.json() as any
       assert.equal(video.title, metadata.title, 'Curated metadata overrides legacy cached metadata')
       assert.equal(video.author, metadata.source)
-      assert.equal(video.segments.length, 2, 'Real extracted cues remain usable')
+      assert.equal((kind === 'shadowing' ? video.captions : video.segments).length, 2, 'Real extracted cues remain usable')
+      if (kind === 'shadowing') {
+        assert.ok(video.durationSec <= 120)
+        assert.equal(video.segments.length, 1, 'Short complete lesson stays in one section')
+      }
       const again = await request(`/${kind}/${metadata.youtubeId}`)
       assert.equal(again.status, 200)
     }

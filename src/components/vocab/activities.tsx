@@ -181,8 +181,8 @@ function addToDiamondBank(amount: number) {
 const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; xp: string; icon: typeof Layers }> = [
   { mode: 'flashcards', title: 'Flashcards', desc: 'Flip cards with audio, shuffle & mastery tracking.', xp: '+12 XP', icon: Layers },
   { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', xp: '+20 XP', icon: Link2 },
-  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', xp: '+10–30 XP', icon: CheckCircle2 },
-  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with hints and instant feedback.', xp: '+10–35 XP', icon: Keyboard },
+  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', xp: '+26–30 XP', icon: CheckCircle2 },
+  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with hints and instant feedback.', xp: '+30–35 XP', icon: Keyboard },
 ]
 
 function ActivityPreview({ mode, entry }: { mode: ActivityMode; entry?: VocabularyEntry }) {
@@ -242,6 +242,8 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
   useEffect(() => () => window.clearTimeout(advanceTimer.current), [])
   const [deck, setDeck] = useState(entries)
   const completionReported = useRef(false)
+  const sessionAnswers = useRef<Record<string, boolean>>({})
+  const [finished, setFinished] = useState(false)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [known, setKnown] = useState<Record<string, boolean>>(() => getMastery(masteryKey))
@@ -257,25 +259,33 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
       window.clearTimeout(advanceTimer.current)
       stop()
       setFlipped(false)
-      setIndex((p) => (p + dir + deck.length) % deck.length)
+      if (finished) return
+      if (dir === 1 && index === deck.length - 1) {
+        setFinished(true)
+        if (!completionReported.current) {
+          completionReported.current = true
+          onComplete?.((deck.filter((card) => sessionAnswers.current[card.id]).length / deck.length) * 100)
+        }
+        return
+      }
+      setIndex((p) => Math.max(0, Math.min(deck.length - 1, p + dir)))
     },
-    [deck.length, stop],
+    [deck, index, finished, onComplete, stop],
   )
 
   const mark = (value: boolean) => {
     window.clearTimeout(advanceTimer.current)
+    if (finished) return
+    sessionAnswers.current[current.id] = value
     const next = { ...known, [current.id]: value }
     setKnown(next)
     setMastery(masteryKey, next)
-    if (value && !completionReported.current && deck.every((card) => next[card.id])) {
-      completionReported.current = true
-      onComplete?.(100)
-    }
     advanceTimer.current = window.setTimeout(() => go(1), 160)
   }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (finished) return
       const target = e.target instanceof HTMLElement ? e.target : null
       if (target?.closest('input, textarea, select, a') || (target?.closest('button') && !target.closest('.vocab-flash-card'))) return
       if (e.key === 'ArrowRight') go(1)
@@ -284,8 +294,21 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go])
+  }, [go, finished])
 
+  if (finished) {
+    const count = deck.filter((card) => sessionAnswers.current[card.id]).length
+    const pct = Math.round((count / deck.length) * 100)
+    return (
+      <motion.section initial={reducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result text-center">
+        <ScoreRing pct={pct} />
+        <h3 className="mt-4 text-3xl font-black text-slate-900">Flashcards complete</h3>
+        <p className="mt-2 text-lg text-slate-600">{count} / {deck.length} marked “I know it”</p>
+        <p className="mt-2 text-sm text-slate-500">Reach at least 80% to earn XP once for this activity.</p>
+        <button onClick={() => { sessionAnswers.current = {}; completionReported.current = false; setIndex(0); setFlipped(false); setFinished(false) }} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
+      </motion.section>
+    )
+  }
   if (!current) return null
 
   return (
@@ -375,9 +398,9 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
 
       <p className="vocab-flash-shortcuts"><kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate</p>
       <div className="vocab-flash-navigation">
-        <button onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
-        <button onClick={() => { window.clearTimeout(advanceTimer.current); stop(); setDeck((p) => shuffle(p)); setIndex(0); setFlipped(false) }} className="inline-flex items-center rounded-xl vocab-primary-button px-4 py-2 text-sm font-semibold text-white"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
-        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">Next <ArrowRight className="ml-1 h-4 w-4" /></button>
+        <button disabled={index === 0} onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
+        <button onClick={() => { window.clearTimeout(advanceTimer.current); stop(); setDeck((p) => [...p.slice(0, index), ...shuffle(p.slice(index))]); setFlipped(false) }} className="inline-flex items-center rounded-xl vocab-primary-button px-4 py-2 text-sm font-semibold text-white"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
+        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">{index === deck.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="ml-1 h-4 w-4" /></button>
       </div>
       </div>
     </div>
@@ -646,7 +669,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
     if (opt === current.definition) { setScore((s) => s + 1); setCombo((c) => c + 1); playCorrect() } else { setCombo(0); setMistakes((previous) => [...previous, current]); playWrong() }
   }
   const next = () => {
-    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.(Math.round((score / questions.length) * 100)); return }
+    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.((score / questions.length) * 100); return }
     setIndex((i) => i + 1); setPicked(null); setLocked(false)
   }
   const restart = () => { setIndex(0); setPicked(null); setLocked(false); setScore(0); setCombo(0); setFinished(false); setMistakes([]) }
@@ -773,7 +796,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
     if (correct) { setScore((s) => s + 1); playCorrect(); speak(current.term) } else { setMistakes((previous) => [...previous, current]); playWrong() }
   }
   const next = () => {
-    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.(Math.round((score / questions.length) * 100)); return }
+    if (index === questions.length - 1) { setFinished(true); playWin(); onComplete?.((score / questions.length) * 100); return }
     setIndex((i) => i + 1); setValue(''); setChecked(false); setReveal(false)
   }
   const restart = () => { setIndex(0); setValue(''); setChecked(false); setReveal(false); setScore(0); setFinished(false); setMistakes([]) }

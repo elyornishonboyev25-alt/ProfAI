@@ -15,7 +15,12 @@ const WebSocket = requireBackend('ws')
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-vocabulary-browser-'))
   const source = "import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter,Routes,Route}from'react-router-dom';import VocabularyActivity from'./src/pages/VocabularyActivity';import IeltsVocabularyStudio from'./src/components/vocab/IeltsVocabularyStudio';import{vocabularyCollections}from'./src/data/vocabularyCollections';const root=createRoot(document.getElementById('root'));const book=vocabularyCollections.ielts[0],test=book.tests[0],section=test.sections[0];const base='/vocabulary/ielts/'+book.id+'/'+test.id+'/'+section.id;window.show=(mode='picker')=>{const path=mode==='studio'?'/vocabulary/ielts':base+(mode==='picker'?'':'/'+mode);root.render(<MemoryRouter key={path} initialEntries={[path]}><div className=\"workspace-main\" style={{height:'100dvh',display:'flex',flexDirection:'column'}}><div className=\"workspace-toolbar\" style={{height:58,flexShrink:0}}>English</div><div className=\"arena-route\"><Routes><Route path=\"/vocabulary/ielts\" element={<IeltsVocabularyStudio/>}/><Route path=\"/vocabulary/ielts/:bookId/:testId/:sectionId/:activity?\" element={<VocabularyActivity/>}/></Routes></div></div></MemoryRouter>);};window.show();"
-  const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: 'tmp/vocabulary-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
+  const extraFixture = `
+    import { TextDetailsButton } from './src/components/vocab/VocabularyDetails';
+    window.stressText = 'A longer source extract with every word retained and readable on a small screen. '.repeat(80);
+    window.showStress = () => root.render(<TextDetailsButton text={window.stressText} label="Read stress text" />);
+  `
+  const bundle = await build({ stdin: { contents: source + extraFixture, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: 'tmp/vocabulary-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const styles = await Promise.all(['src/index.css'].map((file) => readFile(file, 'utf8')))
   const css = (await postcss([tailwindcss()]).process(styles[0], { from: 'src/index.css' })).css + '\n' + bundle.outputFiles.filter(f=>f.path.endsWith('.css')).map(f=>f.text).join('\n')
   const server = createServer((req, res) => {
@@ -76,7 +81,8 @@ async function main() {
     await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false })
     await send('Page.navigate', { url: 'http://127.0.0.1:' + server.address().port + '/' })
     await until("document.querySelector('.vocab-activity-card')")
-    for (const [width, height] of [[1366, 900], [1024, 640], [768, 1024], [390, 844], [320, 568]]) {
+    const viewports = JSON.parse(process.env.VOCABULARY_TEST_VIEWPORTS || '[[1366,900],[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]')
+    for (const [width, height] of viewports) {
       await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 640 })
       for (const mode of ['picker', 'flashcards', 'matching', 'quiz', 'typing', 'studio']) {
         await evaluate('window.show(' + JSON.stringify(mode) + ')')
@@ -85,12 +91,13 @@ async function main() {
         const layout = await evaluate(`(() => {
           const page = document.querySelector('.vocab-practice') || document.querySelector('.workspace-page');
           const nodes = [...page.querySelectorAll('a,button,input,summary')].filter(n => n.checkVisibility() && !n.closest('[aria-hidden="true"]'));
-          const overflowing = nodes.filter(n => { const r=n.getBoundingClientRect(); return r.left < -1 || r.right > innerWidth + 1; }).map(n => n.textContent.slice(0,90));
-          const last=nodes.at(-1); last?.scrollIntoView({block:'center',behavior:'instant'});
+          const overflowing = nodes.filter(n => { const r=n.getBoundingClientRect(); return r.left < -1 || r.right > innerWidth + 1 || (page.matches('.vocab-practice') && (r.top < -1 || r.bottom > innerHeight + 1)); }).map(n => n.textContent.slice(0,90));
+          const last=nodes.at(-1); if(!page.matches('.vocab-practice'))last?.scrollIntoView({block:'center',behavior:'instant'});
           const r=last?.getBoundingClientRect();
-          return {horizontal:document.documentElement.scrollWidth<=innerWidth+1 && page.scrollWidth<=page.clientWidth+1, overflowing, reachable:!r || (r.top>=-1 && r.bottom<=innerHeight+1), last:last?.textContent, top:r?.top,bottom:r?.bottom,pageHeight:page.clientHeight,pageScroll:page.scrollHeight,scrollTop:page.scrollTop};
+          return {horizontal:document.documentElement.scrollWidth<=innerWidth+1 && page.scrollWidth<=page.clientWidth+1, vertical:page.scrollHeight<=page.clientHeight+1, overflowing, reachable:!r || (r.top>=-1 && r.bottom<=innerHeight+1), last:last?.textContent, top:r?.top,bottom:r?.bottom,pageHeight:page.clientHeight,pageScroll:page.scrollHeight,scrollTop:page.scrollTop};
         })()`)
         assert.equal(layout.horizontal, true, `${width} ${mode}: no horizontal overflow ${JSON.stringify(layout)}`)
+        if (mode !== 'studio') assert.equal(layout.vertical, true, `${width}x${height} ${mode}: no page scrolling ${JSON.stringify(layout)}`)
         assert.deepEqual(layout.overflowing, [], `${width} ${mode}: controls stay inside viewport`)
         assert.equal(layout.reachable, true, `${width} ${mode}: final control reachable ${JSON.stringify(layout)}`)
         if (width === 1366 || width === 390) {
@@ -99,36 +106,74 @@ async function main() {
           await writeFile(join(screenshots, `${width}-${mode}.png`), Buffer.from(shot.data, 'base64'))
         }
         if (mode === 'flashcards') {
-          await evaluate("document.querySelector('.vocab-flash-card').scrollIntoView({block:'center',behavior:'instant'});document.querySelector('.vocab-flash-card').click()")
+          await evaluate("document.querySelector('.vocab-flash-card').click()")
           await new Promise((resolve) => setTimeout(resolve, 650))
           assert.equal(await evaluate("document.querySelector('.vocab-flash-back').getAttribute('aria-hidden')"), 'false')
           const flip = await evaluate(`(() => {
             const face=document.querySelector('.vocab-flash-back'),r=face.getBoundingClientRect();
             const x=r.left+r.width/2,y=Math.max(0,r.top)+Math.min(r.height/2,100);
-            return {hit:!!document.elementFromPoint(x,y)?.closest('.vocab-flash-back'),scroll:face.scrollHeight>face.clientHeight};
+            return {hit:!!document.elementFromPoint(x,y)?.closest('.vocab-flash-back'),scroll:face.scrollHeight>face.clientHeight,height:face.clientHeight,content:face.scrollHeight};
           })()`)
           assert.equal(flip.hit, true, `Back of flashcard is visible and interactive ${width} ${JSON.stringify(flip)}`)
+          assert.equal(flip.scroll, false, `${width}: flashcard back does not scroll ${JSON.stringify(flip)}`)
           if (width === 1366 || width === 390) {
             const shot = await send('Page.captureScreenshot', { format: 'png' })
             await writeFile(join(screenshots, `${width}-flashcards-back.png`), Buffer.from(shot.data, 'base64'))
           }
         }
         if (mode === 'typing') assert.equal(await evaluate(`document.querySelectorAll('button[aria-label^="Save "]').length`), 0, 'Typing does not reveal answer')
+        if (mode === 'quiz') {
+          for (let index = 0; index < 10; index++) {
+            await evaluate(`document.querySelector('button[data-letter]').click()`)
+            await new Promise((resolve) => setTimeout(resolve, 100))
+            const feedback = await evaluate(`(() => {const page=document.querySelector('.vocab-practice'),next=document.querySelector('.vocab-question-footer > button').getBoundingClientRect();return {fit:page.scrollHeight<=page.clientHeight+1,bottom:next.bottom};})()`)
+            assert.ok(feedback.fit && feedback.bottom <= height + 1, `${width}: quiz feedback and Next fit without scrolling`)
+            await evaluate(`document.querySelector('.vocab-question-footer > button').click()`)
+            await new Promise((resolve) => setTimeout(resolve, 50))
+          }
+          assert.equal(await evaluate(`document.querySelector('.vocab-practice').scrollHeight<=document.querySelector('.vocab-practice').clientHeight+1`), true, `${width}: result screen does not scroll`)
+        }
         if (mode === 'picker') {
-          await evaluate(`document.querySelector('.vocab-word-list').open=true`)
+          await evaluate(`document.querySelector('.vocab-word-list').click()`)
           await new Promise((resolve) => setTimeout(resolve, 350))
           const library = await evaluate(`(() => {
-            const words=[...document.querySelectorAll('.vocab-word-list article')],last=words.at(-1);
-            last.scrollIntoView({block:'end',behavior:'instant'});const r=last.getBoundingClientRect();
-            return {count:words.length,bottom:r.bottom,width:document.querySelector('.vocab-practice').scrollWidth};
+            const dialog=document.querySelector('.vocab-library-dialog'),words=[...dialog.querySelectorAll('article')],last=words.at(-1),r=last.getBoundingClientRect();
+            return {count:words.length,bottom:r.bottom,width:dialog.scrollWidth,vertical:dialog.scrollHeight<=dialog.clientHeight+1};
           })()`)
-          assert.equal(library.count, 20, 'Expanded library retains all words')
+          assert.equal(library.count, width < 640 || height < 600 ? 1 : 4, 'Library displays a bounded page of words')
+          assert.equal(library.vertical, true, `${width}: library has no scrolling`)
           assert.ok(library.bottom <= height + 1, `${width}: final library word reachable`)
           assert.ok(library.width <= width, `${width}: expanded library does not overflow horizontally`)
+          let words = await evaluate(`Array.from(document.querySelectorAll('.vocab-library-dialog h3')).map(n=>n.textContent)`)
+          while (await evaluate(`!document.querySelector('button[aria-label="Next vocabulary page"]').disabled`)) {
+            await evaluate(`document.querySelector('button[aria-label="Next vocabulary page"]').click()`)
+            await new Promise((resolve) => setTimeout(resolve, 30))
+            words.push(...await evaluate(`Array.from(document.querySelectorAll('.vocab-library-dialog h3')).map(n=>n.textContent)`))
+          }
+          assert.equal(new Set(words).size, 20, 'All words remain accessible through pagination')
+          await evaluate(`document.querySelector('button[aria-label="Close vocabulary"]').click()`)
         }
       }
       console.log(`PASS: ${width}x${height} — picker, four activities, catalog, card flip and reachable controls`)
     }
+    await evaluate('window.showStress()')
+    await until(`document.querySelector('button[aria-label="Read stress text"]')`)
+    await evaluate(`document.querySelector('button[aria-label="Read stress text"]').click()`)
+    await new Promise((resolve) => setTimeout(resolve, 350))
+    let reconstructed = ''
+    for (let page = 0; page < 100; page++) {
+      const part = await evaluate(`(() => {const dialog=document.querySelector('dialog[open]'),body=dialog.querySelector('.vocab-paged-body'),copy=body.querySelector('.vocab-page-copy');return {text:copy.textContent,fit:copy.offsetHeight<=body.clientHeight+1&&dialog.scrollHeight<=dialog.clientHeight+1,last:dialog.querySelector('button[aria-label="Next meaning page"]').disabled};})()`)
+      assert.equal(part.fit, true, 'Long source text page fits without scrolling')
+      reconstructed += part.text
+      if (part.last) break
+      await evaluate(`document.querySelector('dialog[open] button[aria-label="Next meaning page"]').click()`)
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    }
+    assert.equal(reconstructed, await evaluate('window.stressText'), 'Pagination retains every character of the long text')
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+    await until(`!document.querySelector('dialog[open]')`)
+    console.log('PASS: long source pagination retains all content, no dialog scrolling, Escape closes the dialog')
     await send('Browser.close').catch(() => {})
 
   } finally {

@@ -73,7 +73,7 @@ export async function run() {
   ]
   const equalCompletions: number[] = []
   await render(<MatchingActivity entries={equalEntries} rewardKey="equal-definitions" onComplete={(accuracy) => equalCompletions.push(accuracy)} />)
-  const meaningButtons = () => [...container.querySelectorAll<HTMLButtonElement>('.vocab-matching-column:nth-child(2) button')]
+  const meaningButtons = () => [...container.querySelectorAll<HTMLButtonElement>('.vocab-matching-column:nth-child(2) button.vocab-matching-cell')]
   await click(button('first'))
   await click(meaningButtons()[1])
   assert.ok(meaningButtons()[1].disabled)
@@ -82,7 +82,28 @@ export async function run() {
   await click(meaningButtons()[0])
   assert.deepEqual(equalCompletions, [100])
   await render(<QuizActivity entries={equalEntries} />)
-  assert.equal(container.querySelectorAll('.vocab-quiz-options button').length, 1)
+  assert.equal(container.querySelectorAll('.vocab-quiz-options button[data-letter]').length, 1)
+
+  // Paging either matching column keeps the selected term and all six pairs.
+  const originalWidth = window.innerWidth
+  Object.defineProperty(window, 'innerWidth', { value: 320, configurable: true })
+  const pagedCompletions: number[] = []
+  await render(<MatchingActivity entries={entries.slice(0, 6)} rewardKey="paged-matching" onComplete={(accuracy) => pagedCompletions.push(accuracy)} />)
+  assert.equal(container.querySelectorAll('.vocab-matching-column:first-child .vocab-matching-cell').length, 3)
+  for (const entry of entries.slice(0, 6)) {
+    if (!button(entry.term)) await click(button('Next terms'))
+    const selected = button(entry.term)
+    await click(selected)
+    if (!button(entry.definition)) {
+      const next = button('Next meanings')
+      await click(next.disabled ? button('Previous meanings') : next)
+    }
+    assert.equal(selected.getAttribute('aria-pressed'), 'true', 'Term remains selected while paging meanings')
+    await click(button(entry.definition))
+    assert.ok(selected.disabled, 'Matching across pages marks the correct term')
+  }
+  assert.deepEqual(pagedCompletions, [100], 'Pagination retains the complete six-pair group')
+  Object.defineProperty(window, 'innerWidth', { value: originalWidth, configurable: true })
 
   await render(<TypingActivity entries={[entries[0]]} />)
   await act(async () => container.querySelector('input')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
@@ -121,7 +142,7 @@ export async function run() {
     await click(container.querySelector(`button[aria-label="Save ${selected.entries[0].term} to My Words"]`))
     assert.equal(getSavedWords(book.skill).length, 1, 'Each skill saves to its own context')
     await click(container.querySelector('a[href*="/vocabulary/ielts/"]'))
-    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, selected.entries.length)
+    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4, 'Practice library displays a bounded page of words')
     await click(container.querySelector('a[href$="/flashcards"]'))
     await click(button('I know it'))
     await wait(180)
@@ -138,7 +159,7 @@ export async function run() {
   assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 0)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_full_track/reading_full_test_1/reading_full_test_1_passage_1')
   assert.match(container.textContent!, /Reading Full Test 13/)
-  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 15)
+  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_days_track/reading_day_26/reading_day_26_passage_2')
   assert.match(container.textContent!, /Reading Full Test 10 · Part 3/)
   window.localStorage.clear()
@@ -195,7 +216,7 @@ export async function run() {
     <Routes><Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} /></Routes>,
     origin.path,
   )
-  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 20, 'All module words must be saveable')
+  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 4, 'Every word on the current library page must be saveable')
 
   await render(
     <WordSaveProvider value={{ context: 'sat', origin }}><SaveWordButton entry={entries[0]} /></WordSaveProvider>,
@@ -271,7 +292,7 @@ export async function run() {
   )
   for (let index = 0; index < 10; index++) {
     assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 0, 'Typing must not expose the answer via the save label')
-    const entry = entries.find((item) => container.textContent!.includes(item.definition))!
+    const entry = entries.find((item) => container.querySelector('.vocab-typing-prompt p')?.textContent === item.definition)!
     const input = container.querySelector('input')!
     await act(async () => {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, index < 8 ? entry.term : 'wrong')

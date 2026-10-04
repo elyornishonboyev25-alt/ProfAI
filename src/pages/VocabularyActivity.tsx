@@ -1,6 +1,6 @@
 import UiText from '@/components/common/UiText'
 import { useMemo, useRef, useState } from 'react'
-import { ArrowLeft, BookOpenCheck, ChevronDown, RotateCcw, Sparkles, Volume2, X } from 'lucide-react'
+import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, X } from 'lucide-react'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCollections'
 import { getArticleBySlug } from '@/data/articles'
@@ -11,11 +11,10 @@ import {
   MatchingActivity,
   QuizActivity,
   TypingActivity,
-  usePronunciation,
   type ActivityMode,
 } from '@/components/vocab/activities'
-import { SaveWordButton, WordSaveProvider } from '@/components/vocab/SaveWordButton'
-import { IeltsVocabularyWord } from '@/components/vocab/IeltsVocabularyStudio'
+import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
+import { VocabularyLibrary } from '@/components/vocab/VocabularyDetails'
 import { useAuthStore } from '@/store/authStore'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
@@ -149,26 +148,6 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
   return null
 }
 
-function TermPreview({ entries }: { entries: VocabularyEntry[] }) {
-  const { speak } = usePronunciation()
-  return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {entries.map((entry) => (
-        <div key={entry.id} className="flex items-start justify-between gap-2 rounded-xl border border-blue-100 bg-white px-3.5 py-2.5">
-          <div className="min-w-0">
-            <SaveWordButton entry={entry} />
-            <p className="text-sm font-bold text-slate-900">{entry.term}</p>
-            <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{entry.uzbek ?? entry.definition}</p>
-          </div>
-          <button onClick={() => speak(entry.term)} className="shrink-0 rounded-md p-1 text-slate-400 hover:text-blue-600" aria-label="Pronounce">
-            <Volume2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default function VocabularyActivity() {
   const params = useParams()
   const location = useLocation()
@@ -288,15 +267,7 @@ export default function VocabularyActivity() {
                 <p className="vocab-reward-note">XP once per activity · 120 XP daily limit</p>
               </section>
               <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} />
-              <details key={basePath} className="vocab-word-list">
-                <summary>
-                  <span className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4" /><UiText text="Vocabulary" /><span className="vocab-word-count">{entries.length}</span></span>
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                </summary>
-                <div className="vocab-word-list-content">
-                  {params.bookId ? <div className="grid gap-3 md:grid-cols-2">{entries.map((entry) => <IeltsVocabularyWord key={entry.id} entry={entry} />)}</div> : <TermPreview entries={entries} />}
-                </div>
-              </details>
+              <VocabularyLibrary key={basePath} entries={entries} />
             </>
           ) : (
             <section className={`vocab-game-stage vocab-game-stage-${activity}`} aria-label={ACTIVITY_LABELS[activity]}>

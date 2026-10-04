@@ -23,7 +23,7 @@ import {
   X,
 } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import VocabularyExample from './VocabularyExample'
+import { TextDetailsButton, VocabularyLibrary, WordDetailsButton } from './VocabularyDetails'
 import { normalizeVocabularyAnswer, uniqueWrongDefinitions } from '@/utils/vocabularyAnswers'
 import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
@@ -301,7 +301,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
         </div>
       </section>
 
-      <div className="vocab-flash-save"><SaveWordButton entry={current} /></div>
+      <div className="vocab-flash-save"><SaveWordButton entry={current} /><WordDetailsButton entry={current} label="Meaning & examples" /></div>
       <div className="vocab-flash-scene">
         <motion.button
           type="button"
@@ -341,7 +341,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
                 <p className="vocab-flash-definition">{current.definition}</p>
               </div>
               </div>
-              <VocabularyExample entry={current} />
+              <p className="vocab-flash-detail-note">Open Meaning & examples for the full word guide.</p>
               {current.synonym ? <p className="vocab-flash-synonym"><span>Synonym</span> {current.synonym}</p> : null}
             </div>
           </motion.div>
@@ -363,6 +363,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
       </div>
 
       {/* known / review */}
+      <div className="vocab-flash-controls">
       <div className="vocab-flash-mastery">
         <button onClick={() => mark(false)} className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
           <RefreshCw className="h-4 w-4" /> Still learning
@@ -378,12 +379,21 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
         <button onClick={() => { window.clearTimeout(advanceTimer.current); stop(); setDeck((p) => shuffle(p)); setIndex(0); setFlipped(false) }} className="inline-flex items-center rounded-xl vocab-primary-button px-4 py-2 text-sm font-semibold text-white"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
         <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">Next <ArrowRight className="ml-1 h-4 w-4" /></button>
       </div>
+      </div>
     </div>
   )
 }
 
 // ================================================================ Matching
 export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: VocabularyEntry[]; rewardKey: string; onComplete?: (accuracy: number) => void }) {
+  const [rows, setRows] = useState(() => window.innerWidth < 640 || window.innerHeight < 650 ? 3 : 6)
+  const [wordPage, setWordPage] = useState(0)
+  const [meaningPage, setMeaningPage] = useState(0)
+  useEffect(() => {
+    const resize = () => { setRows(window.innerWidth < 640 || window.innerHeight < 650 ? 3 : 6); setWordPage(0); setMeaningPage(0) }
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [])
   const groups = useMemo(() => chunkEntries(entries, 6), [entries])
   const definitionGroups = useMemo(() => groups.map((g) => shuffle(g)), [groups])
 
@@ -499,6 +509,9 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
   const completedCount = Object.values(completedGroups).filter(Boolean).length
   const activeGroup = groups[activeGroupIndex] ?? []
   const activeDefs = definitionGroups[activeGroupIndex] ?? []
+  const visibleTerms = activeGroup.slice(wordPage * rows, (wordPage + 1) * rows)
+  const visibleMeanings = activeDefs.slice(meaningPage * rows, (meaningPage + 1) * rows)
+  useEffect(() => { setWordPage(0); setMeaningPage(0) }, [activeGroupIndex])
   const activeMatches = matchedByGroup[activeGroupIndex] ?? {}
   const activeMatchedCount = activeGroup.filter((it) => activeMatches[`term:${it.id}`]).length
   const allDone = completedCount === groups.length && groups.length > 0
@@ -548,28 +561,30 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
         </div>
         <p className="vocab-matching-instruction" role="status">{allDone ? 'Every pair is connected. Well done!' : wrongPair ? 'That pair does not match. Try another meaning.' : selectedWord || selectedDef ? 'Now choose its match in the other column.' : 'Select a term and its meaning, in either order.'}</p>
         <div className="vocab-matching-columns">
-          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${activeGroup.length}, minmax(min-content, 1fr))` }}>
+          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${visibleTerms.length}, minmax(0, 1fr)) auto` }}>
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Terms</p>
-            {activeGroup.map((it) => (
+            {visibleTerms.map((it) => (
               <div key={it.id} className="relative">
                 <button disabled={Boolean(activeMatches[`term:${it.id}`])} aria-pressed={selectedWord?.id === it.id} onClick={() => pickWord(activeGroupIndex, it.id)} className={`vocab-matching-cell vocab-matching-term font-semibold ${cellClass(Boolean(activeMatches[`term:${it.id}`]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
                   {activeMatches[`term:${it.id}`] ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : null}
-                  {it.term}
+                  <span title={it.term}>{it.term}</span>
                 </button>
                 <div className="absolute inset-y-0 right-1 flex items-center">
                   <SaveWordButton entry={it} iconOnly />
                 </div>
               </div>
             ))}
+            <ColumnPager label="terms" page={wordPage} count={Math.ceil(activeGroup.length / rows)} onChange={setWordPage} />
           </div>
-          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${activeDefs.length}, minmax(min-content, 1fr))` }}>
+          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${visibleMeanings.length}, minmax(0, 1fr)) auto` }}>
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Meanings</p>
-            {activeDefs.map((it) => (
-              <button key={it.id} disabled={Boolean(activeMatches[`definition:${it.id}`])} aria-pressed={selectedDef?.id === it.id} onClick={() => pickDef(activeGroupIndex, it.id)} className={`vocab-matching-cell ${cellClass(Boolean(activeMatches[`definition:${it.id}`]), selectedDef?.id === it.id, wrongPair?.defId === it.id)}`}>
+            {visibleMeanings.map((it) => (
+              <div key={it.id} className="vocab-matching-meaning-cell"><button disabled={Boolean(activeMatches[`definition:${it.id}`])} aria-pressed={selectedDef?.id === it.id} onClick={() => pickDef(activeGroupIndex, it.id)} className={`vocab-matching-cell ${cellClass(Boolean(activeMatches[`definition:${it.id}`]), selectedDef?.id === it.id, wrongPair?.defId === it.id)}`}>
                 {activeMatches[`definition:${it.id}`] ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : null}
-                {it.definition}
-              </button>
+                <span title={it.definition}>{it.definition}</span>
+              </button><TextDetailsButton text={it.definition} /></div>
             ))}
+            <ColumnPager label="meanings" page={meaningPage} count={Math.ceil(activeDefs.length / rows)} onChange={setMeaningPage} />
           </div>
         </div>
       </section>
@@ -685,8 +700,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
           const isPicked = picked === opt
           const state = !locked ? 'idle' : isCorrect ? 'correct' : isPicked ? 'wrong' : 'dim'
           return (
-            <motion.button
-              key={opt}
+            <div key={opt} className="vocab-quiz-option"><motion.button
               data-letter={String.fromCharCode(65 + optionIndex)}
               data-state={state}
               onClick={() => choose(opt)}
@@ -699,13 +713,13 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
                   : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
               }`}
             >
-              <span>{opt}</span>
+              <span title={opt}>{opt}</span>
               {state === 'correct' ? <CheckCircle2 className="h-5 w-5 shrink-0" /> : state === 'wrong' ? <X className="h-5 w-5 shrink-0" /> : null}
-            </motion.button>
+            </motion.button><TextDetailsButton text={opt} /></div>
           )
         })}
       </div>
-      {locked ? <div role="status" className="vocab-answer-feedback" data-correct={picked === current.definition}><p>{picked === current.definition ? 'Correct — well remembered!' : 'Not quite. The correct meaning is highlighted.'}</p><VocabularyExample entry={current} />{current.uzbek ? <p lang="uz">{current.uzbek}</p> : null}</div> : null}
+      {locked ? <div className="vocab-answer-feedback" data-correct={picked === current.definition}><p role="status">{picked === current.definition ? 'Correct — well remembered!' : 'Not quite. The correct meaning is highlighted.'}</p><WordDetailsButton entry={current} /></div> : null}
       <div className="vocab-question-footer">
         <p className="text-sm font-semibold text-slate-500">Question {index + 1} / {questions.length}</p>
         <button onClick={next} disabled={!locked} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">
@@ -815,8 +829,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div role="status" className={`vocab-answer-feedback mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
               <p>{correct ? '✓ Correct!' : <>Answer: <span className="font-black">{current.term}</span></>}</p>
-              <VocabularyExample entry={current} />
-              {current.uzbek ? <p lang="uz">{current.uzbek}</p> : null}
+              <WordDetailsButton entry={current} />
             </div>
           </motion.div>
         ) : reveal ? (
@@ -843,5 +856,10 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
 
 function MistakeReview({ entries }: { entries: VocabularyEntry[] }) {
   if (!entries.length) return <p className="vocab-result-note">Every answer correct. Keep the momentum going.</p>
-  return <details className="vocab-mistake-review"><summary>Review {entries.length} words to practise</summary><div>{entries.map((entry) => <article key={entry.id}><strong>{entry.term}</strong>{entry.uzbek ? <span lang="uz">{entry.uzbek}</span> : null}<p>{entry.definition}</p></article>)}</div></details>
+  return <div className="vocab-mistake-review"><VocabularyLibrary entries={entries} label="Review words to practise" /></div>
+}
+
+function ColumnPager({ label, page, count, onChange }: { label: string; page: number; count: number; onChange: (page: number) => void }) {
+  if (count <= 1) return null
+  return <div className="vocab-column-pager"><button type="button" aria-label={`Previous ${label}`} disabled={page === 0} onClick={() => onChange(page - 1)}><ArrowLeft size={13} /></button><span>{page + 1} / {count}</span><button type="button" aria-label={`Next ${label}`} disabled={page >= count - 1} onClick={() => onChange(page + 1)}><ArrowRight size={13} /></button></div>
 }

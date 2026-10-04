@@ -97,8 +97,11 @@ export function percentToSatScore(percentage: number) {
 export function inferAttemptSkill(category: TestCategory, subjects: string[], title = '') {
   const haystack = [...subjects, title].join(' ').toLowerCase()
   if (category === 'SAT') {
-    if (/math|algebra|geometry|quant|problem solving/.test(haystack)) return 'SAT_MATH'
-    if (/reading|writing|grammar|english|verbal|language/.test(haystack)) return 'SAT_READING_WRITING'
+    const math = /math|algebra|geometry|quant|problem solving/.test(haystack)
+    const verbal = /reading|writing|grammar|english|verbal|language/.test(haystack)
+    if (math && verbal) return 'SAT_OVERALL'
+    if (math) return 'SAT_MATH'
+    if (verbal) return 'SAT_READING_WRITING'
     return 'SAT_OVERALL'
   }
   if (/listening|audio/.test(haystack)) return 'IELTS_LISTENING'
@@ -117,7 +120,7 @@ export function normalizeTestAttempt(attempt: {
 }): LearningResultPoint {
   const skill = inferAttemptSkill(attempt.test.category, attempt.test.subjects, attempt.test.title)
   const score = attempt.test.category === 'SAT'
-    ? percentToSatScore(attempt.finalScore)
+    ? skill === 'SAT_OVERALL' ? percentToSatScore(attempt.finalScore) : Math.round((200 + Math.max(0, Math.min(100, attempt.percentage)) * 6) / 10) * 10
     : percentToIeltsBand(attempt.percentage)
   return {
     id: attempt.id,
@@ -125,12 +128,24 @@ export function normalizeTestAttempt(attempt: {
     skill,
     title: attempt.test.title,
     score,
-    maxScore: attempt.test.category === 'SAT' ? 1600 : 9,
+    maxScore: attempt.test.category === 'SAT' ? skill === 'SAT_OVERALL' ? 1600 : 800 : 9,
     accuracy: round(attempt.percentage),
     durationSec: attempt.timeSpentSec,
     completedAt: attempt.completedAt,
     source: 'TEST_ATTEMPT',
   }
+}
+
+export function progressGrowth(results: LearningResultPoint[]) {
+  const sorted = [...results].sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
+  const growth = [...new Set(sorted.map((result) => `${result.examType}:${result.skill}:${result.maxScore}`))].flatMap((key) => {
+    const points = sorted.filter((result) => `${result.examType}:${result.skill}:${result.maxScore}` === key)
+    if (points.length < 2) return []
+    const size = Math.min(3, Math.floor(points.length / 2))
+    const percentages = points.map((point) => point.score / point.maxScore * 100)
+    return [average(percentages.slice(-size)) - average(percentages.slice(0, size))]
+  })
+  return round(average(growth))
 }
 
 export function summarizeStudent(
@@ -140,10 +155,13 @@ export function summarizeStudent(
 ): StudentProgressSummary {
   const sorted = [...results].sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
   const sat = sorted.filter((result) => result.examType === 'SAT')
-  const ielts = sorted.filter((result) => result.examType === 'IELTS')
-  const satOverall = sat.filter((result) => result.skill === 'SAT_OVERALL')
-  const latestSat = satOverall.at(-1)?.score ?? sat.at(-1)?.score ?? student.profile?.currentSatScore ?? null
-  const highestSat = sat.length ? Math.max(...sat.map((result) => result.score)) : student.profile?.currentSatScore ?? null
+  const ielts = sorted.filter((result) => result.examType === 'IELTS' && result.maxScore === 9)
+  const satOverall = sat.filter((result) => result.skill === 'SAT_OVERALL' && result.maxScore === 1600)
+  const latestMath = sat.filter((result) => result.skill === 'SAT_MATH' && result.maxScore === 800).at(-1)
+  const latestVerbal = sat.filter((result) => result.skill === 'SAT_READING_WRITING' && result.maxScore === 800).at(-1)
+  const combinedSections = latestMath && latestVerbal ? latestMath.score + latestVerbal.score : null
+  const latestSat = satOverall.at(-1)?.score ?? combinedSections ?? student.profile?.currentSatScore ?? null
+  const highestSat = satOverall.length ? Math.max(...satOverall.map((result) => result.score)) : combinedSections ?? student.profile?.currentSatScore ?? null
 
   const latestIeltsBySkill = Object.keys(IELTS_SKILL_LABELS)
     .map((skill) => ielts.filter((result) => result.skill === skill).at(-1)?.score)
@@ -153,9 +171,9 @@ export function summarizeStudent(
   const highestIelts = ielts.length ? Math.max(...ielts.map((result) => result.score)) : student.profile?.currentIeltsScore ?? null
 
   const normalizedScores = sorted.map((result) => (result.score / result.maxScore) * 100)
-  const firstWindow = normalizedScores.slice(0, Math.min(3, normalizedScores.length))
-  const lastWindow = normalizedScores.slice(-Math.min(3, normalizedScores.length))
-  const improvement = normalizedScores.length > 1 ? round(average(lastWindow) - average(firstWindow)) : 0
+  // Compare like skills with non-overlapping windows. Two or three attempts
+  // must show growth, and switching from SAT to IELTS is not a score decline.
+  const improvement = progressGrowth(sorted)
   const lastActive = sorted.at(-1)?.completedAt ?? null
   const inactiveDays = lastActive ? Math.floor((Date.now() - lastActive.getTime()) / 86_400_000) : Number.POSITIVE_INFINITY
   const status = inactiveDays > 14 || improvement < -6
@@ -166,7 +184,9 @@ export function summarizeStudent(
 
   const skillKeys = [...Object.keys(IELTS_SKILL_LABELS), ...Object.keys(SAT_SKILL_LABELS)]
   const skills = skillKeys.flatMap((key) => {
-    const entries = sorted.filter((result) => result.skill === key)
+    const allEntries = sorted.filter((result) => result.skill === key)
+    const scoredEntries = allEntries.filter((result) => result.maxScore !== 100)
+    const entries = scoredEntries.length ? scoredEntries : allEntries
     if (!entries.length) return []
     const first = entries[0]
     const latest = entries.at(-1)!

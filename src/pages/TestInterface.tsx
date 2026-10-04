@@ -1,4 +1,7 @@
 import UiText from '@/components/common/UiText'
+import { useAuthStore } from '@/store/authStore'
+import { useToastStore } from '@/store/toastStore'
+import { syncIeltsClassResult } from '@/features/learningCenter/ieltsResultSync'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
@@ -163,6 +166,12 @@ export default function TestInterface() {
     // Inside a Full Mock, a section counts as done only when its test is actually
     // submitted — which is exactly here, in the completion handler.
     const result = results as TestResult
+    if (!isReviewLaunch && useAuthStore.getState().user && testData && (type === 'reading' || type === 'listening')) {
+      const assignmentId = new URLSearchParams(location.search).get('assignmentId') ?? undefined
+      void syncIeltsClassResult(type, testData, result, assignmentId).catch((failure) => {
+        if (assignmentId) useToastStore.getState().pushToast({ type: 'error', title: 'Class progress could not be saved', message: failure instanceof Error ? failure.message : 'Your result is available locally. Please try again when you are connected.' })
+      })
+    }
     if (mockContext?.id && mockContext.section && !result.isPartial) {
       saveFullMockSectionResult(mockContext.id, mockContext.section, {
         band: result.score, completedAt: result.date, testId: result.testId, result,

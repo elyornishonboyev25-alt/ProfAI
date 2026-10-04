@@ -1,6 +1,6 @@
 import '@/features/learningCenter/learning-center.css'
 import { ErrorState, secondaryButton } from '@/features/learningCenter/components'
-import { type ComponentType } from 'react'
+import { useEffect, useRef, type ComponentType } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowUpRight, ClipboardCheck, GraduationCap, LayoutDashboard, Settings2, Trophy, UserRoundCheck, Users } from 'lucide-react'
@@ -39,6 +39,11 @@ export default function LearningCenterWorkspacePage() {
   const pathAfterSlug = location.pathname.split('/').filter(Boolean).slice(2)
   const section = pathAfterSlug[0] || 'overview'
   const detailId = section === 'students' ? pathAfterSlug[1] : undefined
+  const navigation = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const active = navigation.current?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (active) navigation.current?.scrollTo({ left: Math.max(0, active.offsetLeft - 12), behavior: reducedMotion ? 'auto' : 'smooth' })
+  }, [section, workspaceSlug, reducedMotion, loading])
 
   if (loading && !data) return <div className="learning-center grid min-h-screen place-items-center"><BrandPageLoader label="Opening Classes" /></div>
   if (error) return <div className="learning-center mx-auto max-w-2xl px-5 py-12"><ErrorState message={error} onRetry={() => void refetch()} /><Link to="/learning-center" className={`${secondaryButton} mt-4`}>Back to Classes</Link></div>
@@ -56,8 +61,8 @@ export default function LearningCenterWorkspacePage() {
           {workspace.coverUrl && <img className="lc-workspace-banner-image" src={workspace.coverUrl} alt="" />}
           <div className="relative z-10 min-w-0">
             <Link to="/learning-center" className="lc-banner-back"><ArrowLeft className="h-4 w-4" /> Back to Classes</Link>
-            <p className="lc-banner-eyebrow mt-7"><GraduationCap className="h-4 w-4" /> {workspace.role} CLASS</p>
-            <h1 className="mt-4 break-words text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-5xl">{workspace.name}</h1>
+            <p className="lc-banner-eyebrow"><GraduationCap className="h-4 w-4" /> {workspace.role} CLASS</p>
+            <h1 className="mt-4 break-words text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-4xl">{workspace.name}</h1>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">{workspace.city || 'Your learning space'} · {workspace.memberCount} members · {workspace.groupCount} groups</p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-2">
@@ -65,7 +70,7 @@ export default function LearningCenterWorkspacePage() {
           </div>
         </section>
 
-        <nav aria-label="Class sections" className="lc-section-nav">
+        <nav ref={navigation} aria-label="Class sections" className="lc-section-nav">
           {nav.map((item) => {
             const Icon = item.icon
             const active = section === item.key

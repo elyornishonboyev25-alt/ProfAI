@@ -25,14 +25,14 @@ export default function StudentsView({ slug, canManage }: { slug: string; canMan
 
   return (
     <div className="space-y-6">
-      <CenterPageHeading eyebrow="Student intelligence" title="Every learner, clearly understood" description="Track score trajectory, skill gaps, engagement and assignment delivery without switching tools." action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}><UserPlus className="h-4 w-4" /> Add student</button> : undefined} />
+      <CenterPageHeading eyebrow="Learner progress" title="Students" description="Scores, targets and assignments for each learner. Growth is measured in percentage points (pp)." action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}><UserPlus className="h-4 w-4" /> Add student</button> : undefined} />
 
       <CenterPanel className="p-3 sm:p-4">
         <div className="grid gap-2 md:grid-cols-[minmax(14rem,1fr)_repeat(3,minmax(9rem,.45fr))]">
-          <label className="relative"><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search students..." className={`${inputClass} pl-10`} /></label>
-          <select value={exam} onChange={(event) => setExam(event.target.value)} className={inputClass}><option value="">All exams</option><option value="SAT">SAT</option><option value="IELTS">IELTS</option><option value="BOTH">Both tracks</option></select>
-          <select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">All groups</option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select>
-          <select value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value="">All signals</option><option value="ON_TRACK">On track</option><option value="WATCH">Watch</option><option value="NEEDS_ATTENTION">Needs attention</option></select>
+          <label className="relative"><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search students" placeholder="Search students..." className={`${inputClass} pl-10`} /></label>
+          <select aria-label="Filter exam" value={exam} onChange={(event) => setExam(event.target.value)} className={inputClass}><option value="">All exams</option><option value="SAT">SAT</option><option value="IELTS">IELTS</option><option value="BOTH">Both tracks</option></select>
+          <select aria-label="Filter group" value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">All groups</option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select>
+          <select aria-label="Filter status" value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value="">All signals</option><option value="ON_TRACK">On track</option><option value="WATCH">Watch</option><option value="NEEDS_ATTENTION">Needs attention</option></select>
         </div>
       </CenterPanel>
 
@@ -78,7 +78,7 @@ function InviteStudentModal({ open, onClose, slug, groups, onDone }: { open: boo
       {invitePath ? <InvitationLink link={absoluteLink} /> : (
         <form onSubmit={submit} className="space-y-4">
           <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Student email <span className="font-semibold text-slate-400">(optional for open link)</span></span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="student@example.com" /></label>
-          <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Assign to group</span><select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">No group yet</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
+          <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Assign to group</span><select aria-label="Filter group" value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value="">No group yet</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
           {error ? <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700">{error}</p> : null}
           <div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={onClose} className={secondaryButton}>Cancel</button><button disabled={busy} className={primaryButton}><UserPlus className="h-4 w-4" />{busy ? 'Connecting...' : 'Add or invite'}</button></div>
         </form>

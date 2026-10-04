@@ -16,6 +16,14 @@ import { invalidateAiCoachCache, precomputeAiCoachReport } from '../services/aiC
 
 const router = Router()
 
+async function completeClassSync(userId: string, assignmentId: string | undefined, client: Pick<Prisma.TransactionClient, 'learningCenterAssignmentSubmission'> = prisma) {
+  if (!assignmentId) return
+  await client.learningCenterAssignmentSubmission.updateMany({
+    where: { assignmentId, studentId: userId, assignment: { archivedAt: null } },
+    data: { status: LearningSubmissionStatus.COMPLETED, progress: 100, submittedAt: new Date() },
+  })
+}
+
 const testListQuerySchema = z.object({
   search: z.string().optional(),
   category: z.nativeEnum(TestCategory).optional(),
@@ -39,6 +47,7 @@ const submitAttemptSchema = z.object({
 })
 
 const readingSyncSchema = z.object({
+  assignmentId: z.string().min(1).max(191).optional(),
   externalAttemptKey: z.string().min(6).max(180),
   externalTestId: z.string().min(3).max(120),
   title: z.string().min(3).max(220),
@@ -54,6 +63,7 @@ const readingSyncSchema = z.object({
   subjects: z.array(z.string().min(2).max(60)).min(1).max(12).optional(),
 })
 const listeningSyncSchema = z.object({
+  assignmentId: z.string().min(1).max(191).optional(),
   externalAttemptKey: z.string().min(6).max(180),
   externalTestId: z.string().min(3).max(120),
   title: z.string().min(3).max(220),
@@ -383,6 +393,7 @@ router.post(
     })
 
     if (existingAttempt) {
+      await completeClassSync(userId, payload.assignmentId)
       return res.status(200).json({
         synced: true,
         duplicate: true,
@@ -529,6 +540,7 @@ router.post(
         })
       }
 
+      await completeClassSync(userId, payload.assignmentId, tx)
       return {
         attemptId: attempt.id,
         xpEarned,
@@ -642,6 +654,7 @@ router.post(
     })
 
     if (existingAttempt) {
+      await completeClassSync(userId, payload.assignmentId)
       return res.status(200).json({
         synced: true,
         duplicate: true,
@@ -787,6 +800,7 @@ router.post(
         })
       }
 
+      await completeClassSync(userId, payload.assignmentId, tx)
       return {
         attemptId: attempt.id,
         xpEarned,

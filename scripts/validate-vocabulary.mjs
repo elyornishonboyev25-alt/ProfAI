@@ -137,10 +137,10 @@ async function main() {
 
   // Exercise the real server reward policy and event deduplication without a DB.
   const { calculateActivityXp, awardActivityXp } = await load('backend/src/services/xpRewards.service.ts')
-  assert.equal(calculateActivityXp({ source: 'VOCAB_FLASHCARDS' }), 12)
-  assert.equal(calculateActivityXp({ source: 'VOCAB_MATCHING' }), 20)
+  assert.equal(calculateActivityXp({ source: 'VOCAB_FLASHCARDS', accuracy: 80 }), 12)
+  assert.equal(calculateActivityXp({ source: 'VOCAB_MATCHING', accuracy: 80 }), 20)
   for (const [source, maximum] of [['VOCAB_QUIZ', 30], ['VOCAB_TYPING', 35]]) {
-    assert.equal(calculateActivityXp({ source, accuracy: 0 }), 10)
+    assert.equal(calculateActivityXp({ source, accuracy: 0 }), 0)
     assert.equal(calculateActivityXp({ source, accuracy: 100 }), maximum)
   }
   const rewardEvents = []

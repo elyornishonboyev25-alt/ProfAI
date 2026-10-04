@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, BookOpen, Building2, ClipboardCheck, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, Building2, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users, X } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from '@/features/learningCenter/api'
-import { CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from '@/features/learningCenter/components'
+import { CenterPanel, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from '@/features/learningCenter/components'
+import type { CenterWorkspace } from '@/features/learningCenter/types'
 import { useAuthStore } from '@/store/authStore'
 import ClassCoverEditor from '@/features/learningCenter/ClassCoverEditor'
 import '@/features/learningCenter/learning-center.css'
 import '@/features/learningCenter/portal.css'
+
+type ClassView = 'all' | 'teaching' | 'learning'
+const roleLabels = { OWNER: 'Owner', ADMIN: 'Administrator', TEACHER: 'Teacher', STUDENT: 'Student' }
 
 export default function LearningCenterPortal() {
   const navigate = useNavigate()
@@ -16,77 +20,83 @@ export default function LearningCenterPortal() {
   const [open, setOpen] = useState(false)
   const [joinOpen, setJoinOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [view, setView] = useState<ClassView>('all')
   const { data, loading, error, refetch } = useAsyncData(
     () => user ? learningCenterApi.workspaces() : Promise.resolve({ workspaces: [] }), [user?.id],
   )
   const workspaces = user ? data?.workspaces ?? [] : []
-  const filtered = workspaces.filter((workspace) => `${workspace.name} ${workspace.city ?? ''}`.toLowerCase().includes(search.trim().toLowerCase()))
+  const teachingCount = workspaces.filter((workspace) => workspace.role !== 'STUDENT').length
+  const filtered = workspaces.filter((workspace) => (
+    (view === 'all' || (view === 'teaching' ? workspace.role !== 'STUDENT' : workspace.role === 'STUDENT')) &&
+    `${workspace.name} ${workspace.city ?? ''}`.toLowerCase().includes(search.trim().toLowerCase())
+  ))
   const memberCount = workspaces.reduce((total, workspace) => total + workspace.memberCount, 0)
   const groupCount = workspaces.reduce((total, workspace) => total + workspace.groupCount, 0)
   const create = () => user ? setOpen(true) : navigate('/login', { state: { from: { pathname: '/learning-center' } } })
+  const clearFilters = () => { setSearch(''); setView('all') }
 
   return (
     <div className="learning-center lc-portal workspace-page min-h-screen text-slate-900">
-      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span><span className="ml-3 hidden border-l border-slate-200 pl-3 text-xs font-semibold tracking-normal text-slate-500 sm:inline">Classes</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
+      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
       <main className="lc-portal-main mx-auto max-w-[1640px] px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pt-8">
-        <header className="lc-arena-heading">
-          <span className="lc-portal-kicker"><Sparkles size={13} /> YOUR CLASS COMMAND CENTER</span>
-          <h1>Classes <span>Arena</span></h1>
-          <p>Your people. Your practice. Your progress.</p>
-        </header>
-        <header className="lc-portal-hero">
-          <div className="lc-portal-hero-copy">
-            <span className="lc-eyebrow"><span className="lc-eyebrow-dot" /> YOUR LEARNING SPACE</span>
-            <h2>Learn better,<br /><span>together.</span></h2>
-            <p>Bring classes, people and progress into one place. Your next step starts here.</p>
-            <div className="lc-portal-actions">
-              <button type="button" onClick={create} className="lc-portal-button lc-portal-button-primary"><Plus size={19} /> Create class <ArrowRight size={18} /></button>
-              <button type="button" onClick={() => setJoinOpen(true)} className="lc-portal-button lc-portal-button-secondary"><Link2 size={18} /> Join class</button>
-            </div>
-            <div className="lc-portal-hero-note"><span className="lc-portal-note-icon"><ShieldCheck size={15} /></span> One space for every teacher, student and group</div>
+        <header className="lc-portal-header">
+          <div className="lc-portal-heading-copy">
+            <span className="lc-eyebrow"><GraduationCap size={15} /> YOUR LEARNING SPACE</span>
+            <h1>Your <span>classes</span></h1>
+            <p>Your team, assignments and progress. All together.</p>
+            {user && workspaces.length > 0 && <div className="lc-portal-summary" aria-label="Your class summary">
+              <span><GraduationCap size={14} /><strong>{workspaces.length}</strong> {workspaces.length === 1 ? 'class' : 'classes'}</span>
+              <span><Users size={14} /><strong>{memberCount}</strong> members</span>
+              <span><BookOpen size={14} /><strong>{groupCount}</strong> {groupCount === 1 ? 'group' : 'groups'}</span>
+            </div>}
           </div>
-          <div className="lc-portal-visual" aria-hidden="true">
-            <div className="lc-visual-orbit lc-visual-orbit-outer" />
-            <div className="lc-visual-orbit lc-visual-orbit-inner" />
-            <div className="lc-visual-core"><span className="lc-visual-core-icon"><GraduationCap size={42} strokeWidth={1.7} /></span><small>PROFAI CLASSES</small><strong>One shared<br />place to grow.</strong><div className="lc-visual-tracks"><span>IELTS</span><span>SAT</span></div></div>
-            <div className="lc-visual-float lc-visual-float-people"><span><Users size={18} /></span><b>People</b></div>
-            <div className="lc-visual-float lc-visual-float-practice"><span><BookOpen size={18} /></span><b>Practice</b></div>
-            <div className="lc-visual-float lc-visual-float-progress"><span><ClipboardCheck size={18} /></span><b>Progress</b></div>
+          <div className="lc-portal-actions">
+            <button type="button" onClick={() => setJoinOpen(true)} className="lc-portal-button lc-portal-button-secondary"><Link2 size={17} /> Join class</button>
+            <button type="button" onClick={create} className="lc-portal-button lc-portal-button-primary"><Plus size={18} /> Create class</button>
           </div>
         </header>
-
-        {user && workspaces.length > 0 && <section className="lc-portal-metrics" aria-label="Your class summary">
-          <div><span className="lc-portal-metric-icon"><GraduationCap size={20} /></span><span><strong>{workspaces.length}</strong><small>{workspaces.length === 1 ? 'Classroom' : 'Classrooms'}</small></span></div>
-          <div><span className="lc-portal-metric-icon"><Users size={20} /></span><span><strong>{memberCount}</strong><small>Members across classes</small></span></div>
-          <div><span className="lc-portal-metric-icon"><BookOpen size={20} /></span><span><strong>{groupCount}</strong><small>Learning groups</small></span></div>
-        </section>}
 
         <section aria-labelledby="classes-list-title" className="lc-portal-section">
-          <div className="lc-portal-section-heading">
-            <div><p className="lc-eyebrow">YOUR CLASSES</p><h2 id="classes-list-title">{user ? 'Your classrooms' : 'Find your place to learn'}</h2><p>{user ? 'Open a class and continue where you left off.' : 'Sign in to create a class or join your team.'}</p></div>
-            {workspaces.length > 0 && <span className="lc-portal-count"><span /> {workspaces.length} {workspaces.length === 1 ? 'class' : 'classes'}</span>}
-          </div>
-
-          <div className="lc-portal-content">
-            <div className="lc-portal-list">
-              {workspaces.length > 0 && <label className="lc-portal-search"><Search size={20} /><input type="search" aria-label="Search classes" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search your classes by name or city" /></label>}
-              {loading && user ? <CenterSkeleton blocks={2} /> : error && user ? <ErrorState message={error} onRetry={() => void refetch()} /> : workspaces.length ? (
-                filtered.length ? <div className="lc-portal-card-grid">{filtered.map((workspace) => <Link key={workspace.id} to={`/learning-center/${workspace.slug}`} className="lc-portal-class-card" aria-label={`Open ${workspace.name} class`}>
-                  <div className="lc-portal-class-cover">
-                    {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" loading="lazy" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={58} strokeWidth={1.35} /><span className="lc-class-art-wordmark">PROFAI CLASSES</span></div>}
-                    <span className="lc-portal-role">{workspace.role.toLowerCase()}</span>
-                  </div>
-                  <div className="lc-portal-class-body"><div className="lc-portal-class-title-row"><span className="lc-portal-class-initial" aria-hidden="true">{workspace.name.trim().charAt(0).toUpperCase() || 'C'}</span><span className="lc-portal-open-label">Open class <ArrowUpRight size={16} /></span></div><h3>{workspace.name}</h3><p className="lc-portal-class-location"><MapPin size={16} /> {workspace.city || 'Location not set'}</p><div className="lc-portal-class-footer"><span><Users size={16} /> {workspace.memberCount} members</span><span><BookOpen size={16} /> {workspace.groupCount} groups</span></div></div>
-                </Link>)}<button type="button" onClick={create} className="lc-portal-create-card"><span><Plus size={25} /></span><strong>Create another class</strong><small>Build a new space for your next goal</small><ArrowRight className="lc-portal-create-arrow" size={19} /></button></div> : <CenterPanel><EmptyState title="No matching classes" description="Try another name or city." action={<button type="button" onClick={() => setSearch('')} className={secondaryButton}>Clear search</button>} /></CenterPanel>
-              ) : <CenterPanel className="lc-portal-empty"><div className="lc-portal-empty-icon" aria-hidden="true"><Building2 size={34} /></div><h3>{user ? 'Your first class starts here' : 'Your classes will appear here'}</h3><p>{user ? 'Create a space for your teachers and students, then share practice and see progress together.' : 'Sign in to create a class or use an invitation from your teaching team.'}</p><button type="button" onClick={create} className="lc-portal-button lc-portal-button-primary">{user ? <Plus size={18} /> : <ArrowRight size={18} />}{user ? 'Create class' : 'Sign in to get started'}</button></CenterPanel>}
+          <h2 id="classes-list-title" className="sr-only">Your classrooms</h2>
+          {workspaces.length > 0 && <div className="lc-portal-toolbar">
+            <div className="lc-portal-filters" role="group" aria-label="Filter classes by your role">
+              {([{ key: 'all', label: 'All classes', count: workspaces.length }, { key: 'teaching', label: 'Teaching', count: teachingCount }, { key: 'learning', label: 'Learning', count: workspaces.length - teachingCount }] as const).map((filter) => (
+                <button key={filter.key} type="button" aria-pressed={view === filter.key} onClick={() => setView(filter.key)} className={view === filter.key ? 'is-active' : ''}>{filter.label}<span>{filter.count}</span></button>
+              ))}
             </div>
-            <aside className="lc-portal-guide"><div className="lc-portal-guide-mark"><GraduationCap size={24} /></div><span className="lc-eyebrow">BUILT FOR YOUR TEAM</span><h3>One space.<br />More progress.</h3><p>Everything your class needs to learn, practice and grow together.</p><ol>{[{ icon: Plus, title: 'Create a class', text: 'Give your learning space a home.' }, { icon: Users, title: 'Bring people together', text: 'Invite teachers and students into groups.' }, { icon: ClipboardCheck, title: 'See the progress', text: 'Share practice and follow results.' }].map((step, index) => <li key={step.title}><span className="lc-portal-step-icon"><step.icon size={18} /></span><div><small>0{index + 1}</small><strong>{step.title}</strong><p>{step.text}</p></div></li>)}</ol><div className="lc-portal-guide-foot"><ShieldCheck size={17} /><span>Each person sees the tools for their role.</span></div></aside>
-          </div>
+            <label className="lc-portal-search"><Search size={18} /><input type="search" aria-label="Search classes" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or city" />{search && <button type="button" aria-label="Clear search" onClick={() => setSearch('')}><X size={16} /></button>}</label>
+          </div>}
+
+          {loading && user ? <div className="lc-portal-card-grid" role="status" aria-label="Loading your classes">{Array.from({ length: 3 }, (_, index) => <div key={index} className="lc-portal-skeleton animate-pulse"><div /><span /><span /><span /></div>)}</div> : error && user ? <ErrorState message={error} onRetry={() => void refetch()} /> : workspaces.length ? (
+            filtered.length ? <div className="lc-portal-card-grid">
+              {filtered.map((workspace) => <ClassCard key={workspace.id} workspace={workspace} />)}
+              {!search.trim() && view !== 'learning' && <button type="button" onClick={create} className="lc-portal-create-card"><span><Plus size={26} /></span><strong>Create a classroom</strong><small>A new space for your next goal.</small><span className="lc-portal-create-label">Get started <ArrowRight size={16} /></span></button>}
+            </div> : <CenterPanel><EmptyState title="No matching classes" description="Try another name, city or role filter." action={<button type="button" onClick={clearFilters} className={secondaryButton}>Reset filters <ArrowRight size={16} /></button>} /></CenterPanel>
+          ) : <CenterPanel className="lc-portal-empty"><div className="lc-portal-empty-icon" aria-hidden="true"><Building2 size={32} /></div><span className="lc-eyebrow">YOUR NEXT CHAPTER</span><h3>{user ? 'Start with your first classroom' : 'Your classroom is one step away'}</h3><p>{user ? 'Create a class for your team, or join an existing one with your teacher’s invitation.' : 'Sign in to find your classes, meet your team and continue learning.'}</p><div className="lc-portal-empty-actions"><button type="button" onClick={create} className="lc-portal-button lc-portal-button-primary">{user ? <Plus size={18} /> : <ArrowRight size={18} />}{user ? 'Create your first class' : 'Sign in to get started'}</button><button type="button" onClick={() => setJoinOpen(true)} className="lc-portal-button lc-portal-button-secondary"><Link2 size={17} /> I have an invitation</button></div></CenterPanel>}
         </section>
+        <footer className="lc-portal-footnote"><ShieldCheck size={15} /><span>Your team, assignments and results. Connected in every classroom.</span></footer>
       </main>
       {open && <CreateWorkspaceModal onClose={() => setOpen(false)} onCreated={(slug) => navigate(`/learning-center/${slug}`)} />}
       {joinOpen && <JoinWorkspaceModal onClose={() => setJoinOpen(false)} />}
     </div>
+  )
+}
+
+function ClassCard({ workspace }: { workspace: CenterWorkspace }) {
+  return (
+    <Link to={`/learning-center/${workspace.slug}`} className="lc-portal-class-card" aria-label={`Open ${workspace.name} class`}>
+      <div className="lc-portal-class-cover">
+        {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" loading="lazy" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={44} strokeWidth={1.4} /><span className="lc-class-art-wordmark">PROFAI CLASSROOM</span></div>}
+        <span className="lc-portal-role"><ShieldCheck size={12} />{roleLabels[workspace.role]}</span>
+      </div>
+      <div className="lc-portal-class-body">
+        <div className="lc-portal-class-title-row"><span className="lc-portal-class-initial" aria-hidden="true">{workspace.name.trim().charAt(0).toUpperCase() || 'C'}</span><span className="lc-portal-class-caption">YOUR CLASSROOM</span></div>
+        <h3>{workspace.name}</h3>
+        <p className="lc-portal-class-location"><MapPin size={14} />{workspace.city || 'Location not set'}</p>
+        <div className="lc-portal-class-stats"><span><Users size={15} /><strong>{workspace.memberCount}</strong> {workspace.memberCount === 1 ? 'member' : 'members'}</span><span><BookOpen size={15} /><strong>{workspace.groupCount}</strong> {workspace.groupCount === 1 ? 'group' : 'groups'}</span></div>
+        <div className="lc-portal-class-footer"><span>Open classroom</span><span className="lc-portal-card-arrow"><ArrowUpRight size={17} /></span></div>
+      </div>
+    </Link>
   )
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookOpen, Headphones, Mic, PenLine, Search, Volume2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, Headphones, Mic, PenLine, Search, Volume2 } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { useCopy } from '@/i18n/interface'
 import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCollections'
@@ -18,27 +18,32 @@ const skills = [
 export function IeltsVocabularyWord({ entry }: { entry: VocabularyEntry }) {
   const { speak } = usePronunciation()
   return (
-    <article className="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-extrabold text-slate-950">{entry.term}</h3>
-          {entry.uzbek ? <p className="mt-1 text-sm font-medium text-slate-500">{entry.uzbek}</p> : null}
+    <article className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 pt-1">
+          <h3 className="break-words text-base font-semibold leading-6 text-slate-900">{entry.term}</h3>
+          {entry.uzbek ? <p className="mt-0.5 break-words text-xs leading-5 text-slate-500">{entry.uzbek}</p> : null}
         </div>
-        <div className="flex items-center gap-1">
-          <button type="button" onClick={() => speak(entry.term)} aria-label={`Pronounce ${entry.term}`} className="rounded-xl p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
-            <Volume2 className="h-4 w-4" />
+        <div className="flex shrink-0 items-center">
+          <button type="button" onClick={() => speak(entry.term)} aria-label={`Pronounce ${entry.term}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+            <Volume2 aria-hidden="true" className="h-4 w-4" />
           </button>
           <SaveWordButton entry={entry} iconOnly />
         </div>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-700">{entry.definition}</p>
-      <p className="mt-2 text-xs text-red-700"><span className="font-semibold"><UiText text="Synonym" />:</span> {entry.synonym}</p>
-      <p className="mt-3 border-l-2 border-red-200 pl-3 text-sm italic leading-6 text-slate-500">{entry.example}</p>
+      <div className="space-y-2 break-words">
+        <p className="text-sm leading-5 text-slate-700">{entry.definition}</p>
+        <p className="text-xs leading-5 text-slate-600"><span className="text-slate-500"><UiText text="Synonym" />:</span> {entry.synonym}</p>
+      </div>
+      <blockquote className="break-words rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">{entry.example}</blockquote>
       {entry.sourceExcerpt ? (
-        <details className="mt-4 text-xs text-slate-500">
-          <summary className="cursor-pointer font-semibold text-slate-600"><UiText text={entry.sourceKind === 'topic' ? 'Topic connection' : 'Source context'} /></summary>
-          <p className="mt-2 font-semibold">{entry.sourceTitle}</p>
-          <p className="mt-1 whitespace-pre-line leading-5">{entry.sourceExcerpt}</p>
+        <details className="group mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-sm leading-5 transition hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 [&::-webkit-details-marker]:hidden">
+            <UiText text={entry.sourceKind === 'topic' ? 'Topic connection' : 'Source context'} />
+            <ChevronDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <p className="mt-3 break-words font-medium text-slate-700">{entry.sourceTitle}</p>
+          <p className="mt-1 whitespace-pre-line break-words leading-5">{entry.sourceExcerpt}</p>
         </details>
       ) : null}
     </article>

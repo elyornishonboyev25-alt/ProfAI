@@ -10,7 +10,7 @@ export function WordSaveProvider({ value, children }: { value: SaveContext | nul
   return <WordSaveContext.Provider value={value}>{children}</WordSaveContext.Provider>
 }
 
-export function SaveWordButton({ entry, iconOnly = false }: { entry: VocabularyEntry; iconOnly?: boolean }) {
+export function SaveWordButton({ entry, iconOnly = false, accent = 'red' }: { entry: VocabularyEntry; iconOnly?: boolean; accent?: 'red' | 'blue' }) {
   const config = useContext(WordSaveContext)
   const [error, setError] = useState(false)
   const saved = useSyncExternalStore(subscribeSavedWords, () => {
@@ -27,6 +27,7 @@ export function SaveWordButton({ entry, iconOnly = false }: { entry: VocabularyE
       <button
         type="button"
         disabled={saved}
+        data-word-saved={saved}
         aria-label={saved ? `${entry.term} saved to My Words` : `Save ${entry.term} to My Words`}
         title={saved ? 'Saved to My Words' : 'Save to My Words'}
         onClick={(event) => {
@@ -39,7 +40,7 @@ export function SaveWordButton({ entry, iconOnly = false }: { entry: VocabularyE
           }
         }}
         className={iconOnly
-          ? 'inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:text-rose-500'
+          ? `inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition focus-visible:outline-none focus-visible:ring-2 ${accent === 'blue' ? 'hover:bg-blue-50 hover:text-blue-500 focus-visible:ring-blue-400 disabled:text-blue-500' : 'hover:bg-rose-50 hover:text-rose-500 focus-visible:ring-rose-400 disabled:text-rose-500'}`
           : 'inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:border-emerald-200 disabled:bg-emerald-50 disabled:text-emerald-700'}
       >
         {iconOnly ? <Heart aria-hidden="true" className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} /> : <>

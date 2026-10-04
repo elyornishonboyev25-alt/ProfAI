@@ -200,6 +200,7 @@ export async function run() {
         await click([...container.querySelectorAll('button')].find((element) => element.querySelector('h2')?.textContent?.trim() === 'SAT Vocabulary'))
       }
       await click(button('Start Module 1'))
+      await click(container.querySelector(`a[href='${origin.path}']`))
       await click(container.querySelector(`a[href='${origin.path}/${mode}']`))
       if (mode === 'typing') {
         await click(container.querySelector("a[href='/vocabulary/sat']"))

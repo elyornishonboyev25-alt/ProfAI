@@ -7,6 +7,62 @@
   --vocab-accent-text: #1d4ed8;
 }
 
+.sat-vocab-studio .sat-vocab-practise {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 8px 22px rgb(37 99 235 / 18%);
+}
+
+.sat-vocab-studio .sat-vocab-practise:hover {
+  background: #1d4ed8;
+}
+
+.sat-vocab-studio .sat-vocab-module[aria-pressed='true'] {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.ielts-vocab-word[data-accent='blue'] .text-red-600,
+.ielts-vocab-word[data-accent='blue'] .text-red-800,
+.ielts-vocab-word[data-accent='blue'] .ielts-vocab-label {
+  color: #1d4ed8;
+}
+
+.ielts-vocab-word[data-accent='blue'] .ielts-vocab-synonym {
+  border-color: #dbeafe;
+  background: #f5f9ff;
+}
+
+.ielts-vocab-word[data-accent='blue'] .vocab-content-example {
+  border-left-color: #bfdbfe;
+  background: #f5f9ff;
+  color: #475569;
+}
+
+.ielts-vocab-word[data-accent='blue'] .vocab-content-label,
+.ielts-vocab-word[data-accent='blue'] .vocab-example-translation {
+  color: #64748b;
+}
+
+.ielts-vocab-word[data-accent='blue']:focus-within {
+  border-color: #93c5fd;
+}
+
+.ielts-vocab-word[data-accent='blue'] button:focus-visible {
+  --tw-ring-color: #60a5fa;
+}
+
+.ielts-vocab-word[data-accent='blue'] button[data-word-saved='true'] {
+  color: #3b82f6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ielts-vocab-word[data-accent='blue'] button:hover {
+    color: #2563eb;
+    background: #eff6ff;
+  }
+}
+
 .ielts-vocab-test,
 .ielts-vocab-part,
 .ielts-vocab-word,

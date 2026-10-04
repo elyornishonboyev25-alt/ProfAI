@@ -42,13 +42,13 @@ export function VocabularyPanel({ open, id, children }: { open: boolean; id: str
   )
 }
 
-export function IeltsVocabularyWord({ entry }: { entry: VocabularyEntry }) {
+export function IeltsVocabularyWord({ entry, accent = 'red' }: { entry: VocabularyEntry; accent?: 'red' | 'blue' }) {
   const { speak } = usePronunciation()
   const { reducedMotion } = useMotionPreferences()
   const [contextOpen, setContextOpen] = useState(false)
   const contextId = useId()
   return (
-    <article className={`ielts-vocab-word flex min-w-0 flex-col gap-4 ${reducedMotion ? 'ielts-vocab-reduced-motion' : ''}`}>
+    <article data-accent={accent} className={`ielts-vocab-word flex min-w-0 flex-col gap-4 ${reducedMotion ? 'ielts-vocab-reduced-motion' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 pt-1">
           <h3 className="break-words text-base font-semibold leading-6 text-slate-900">{entry.term}</h3>
@@ -58,7 +58,7 @@ export function IeltsVocabularyWord({ entry }: { entry: VocabularyEntry }) {
           <button type="button" onClick={() => speak(entry.term)} aria-label={`Pronounce ${entry.term}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
             <Volume2 aria-hidden="true" className="h-4 w-4" />
           </button>
-          <SaveWordButton entry={entry} iconOnly />
+          <SaveWordButton entry={entry} iconOnly accent={accent} />
         </div>
       </div>
       <div className="space-y-3 break-words">

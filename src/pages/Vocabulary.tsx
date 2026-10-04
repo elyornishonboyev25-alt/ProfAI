@@ -1,10 +1,11 @@
 import UiText from '@/components/common/UiText'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, BookOpenCheck, Bookmark, ChevronDown, Search, Sparkles, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
-import IeltsVocabularyStudio, { VocabularyPanel } from '@/components/vocab/IeltsVocabularyStudio'
+import IeltsVocabularyStudio, { IeltsVocabularyWord, VocabularyPanel } from '@/components/vocab/IeltsVocabularyStudio'
+import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
 import { useCopy } from '@/i18n/interface'
 import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
@@ -25,12 +26,23 @@ export default function Vocabulary() {
   const { c } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
+  const [satParams, setSatParams] = useSearchParams()
+  const satSectionRef = useRef<HTMLElement>(null)
+  const selectedSatPack = vocabularyCollections.sat.find((pack) => pack.id === satParams.get('mock'))
+  const selectedSatSection = selectedSatPack?.sections.find((section) => section.id === satParams.get('module'))
+  const satOriginPath = selectedSatPack && selectedSatSection ? `/vocabulary/sat/${selectedSatPack.id}/${selectedSatSection.id}` : ''
   const [, refreshSavedCount] = useState(0)
   useEffect(() => subscribeSavedWords(() => refreshSavedCount((n) => n + 1)), [])
   const { track: trackParam } = useParams<{ track?: string }>()
   const routeTrack = resolveTrack(trackParam)
   const fromSatArena = routeTrack === 'SAT' && (location.state as { from?: string } | null)?.from === '/sat'
   const satNavigationState = fromSatArena ? { from: '/sat' } : undefined
+  const selectSatModule = (packId: string, sectionId: string) => {
+    setSatParams({ mock: packId, module: sectionId }, { state: satNavigationState })
+  }
+  useEffect(() => {
+    if (selectedSatSection) satSectionRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [selectedSatSection])
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const [openSatPackId, setOpenSatPackId] = useState<string | null>(vocabularyCollections.sat[0]?.id ?? null)
   const [satQuery, setSatQuery] = useState('')
@@ -244,52 +256,74 @@ export default function Vocabulary() {
           </div>
         </header>
 
-        <section className="rounded-[2rem] border border-white/90 bg-white/25 p-4 shadow-[0_20px_65px_rgba(30,64,175,0.06)] sm:p-6 lg:p-8">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-5">
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-500"><UiText text="SAT Vocabulary Track" /></p>
-              <h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">SAT Full Mocks</h2>
-              <p className="mt-2 text-sm font-medium text-slate-500">{satStats.packs} mocks · {satStats.words.toLocaleString()} <UiText text="terms" /></p>
+        <section ref={satSectionRef} className="scroll-mt-6 rounded-[2rem] border border-white/90 bg-white/25 p-4 shadow-[0_20px_65px_rgba(30,64,175,0.06)] sm:p-6 lg:p-8">
+          {selectedSatPack && selectedSatSection ? (
+            <div key={selectedSatPack.id} className="ielts-vocab-enter">
+              <button type="button" onClick={() => setSatParams({}, { state: satNavigationState })} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600"><ArrowLeft className="h-4 w-4" /><UiText text="Back to full tests" /></button>
+              <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
+                <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-500"><UiText text="SAT Vocabulary Track" /></p><h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">{selectedSatPack.title}</h2></div>
+                <span className="rounded-full border border-blue-100 bg-white/80 px-4 py-2 text-xs font-bold text-slate-600"><UiText text="Advanced & essential vocabulary" /></span>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Vocabulary sections">
+                {selectedSatPack.sections.map((section) => <button key={section.id} type="button" aria-pressed={selectedSatSection.id === section.id} onClick={() => selectSatModule(selectedSatPack.id, section.id)} className={`sat-vocab-module rounded-full border px-6 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${selectedSatSection.id === section.id ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white/80 text-slate-600 hover:border-blue-200'}`}>{section.title}</button>)}
+              </div>
+              <div className="my-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-white bg-white/70 p-5 sm:flex-row">
+                <div><h3 className="text-lg font-extrabold text-slate-900">{selectedSatSection.title}</h3><p className="mt-2 text-sm text-slate-500">{selectedSatSection.entries.length} <UiText text="terms" /></p></div>
+                <Link to={satOriginPath} state={satNavigationState} className="sat-vocab-practise inline-flex shrink-0 items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition"><UiText text="Practise this set" /><ArrowRight className="h-4 w-4" /></Link>
+              </div>
+              <WordSaveProvider value={{ context: 'sat', origin: { label: `${selectedSatPack.title} · ${selectedSatSection.title}`, path: satOriginPath } }}>
+                <div key={selectedSatSection.id} className="ielts-vocab-enter grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">{selectedSatSection.entries.map((entry) => <IeltsVocabularyWord key={entry.id} entry={entry} accent="blue" />)}</div>
+              </WordSaveProvider>
             </div>
-            <label className="flex w-full items-center gap-3 rounded-full border border-white bg-white/95 px-5 py-4 text-slate-400 sm:w-80">
-              <Search className="h-5 w-5" />
-              <span className="sr-only"><UiText text="Search tests or vocabulary" /></span>
-              <input type="search" value={satQuery} onChange={(event) => setSatQuery(event.target.value)} placeholder={c('Search test, topic or word…')} className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" />
-            </label>
-          </div>
-          <div className="ielts-vocab-enter space-y-3">
-            {visibleSatPacks.map((pack) => {
-              const isOpen = openSatPackId === pack.id
-              const count = pack.sections.reduce((sum, section) => sum + section.entries.length, 0)
-              return (
-                <div key={pack.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
-                  <button type="button" aria-label={`Open ${pack.title}`} aria-expanded={isOpen} aria-controls={`${pack.id}-sections`} onClick={() => toggleSatPack(pack.id)} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400">
-                    <span className="min-w-0">
-                      <span className="block text-base font-bold text-slate-900 sm:text-lg">{pack.title}</span>
-                      <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" /> · {pack.sections.length} <UiText text="modules" /></span>
-                    </span>
-                    <span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
-                  </button>
-                  <VocabularyPanel id={`${pack.id}-sections`} open={isOpen}>
-                    <div className="ielts-vocab-parts grid gap-2.5 p-3 sm:grid-cols-2">
-                      {pack.sections.map((section, sectionIndex) => (
-                        <button key={section.id} type="button" aria-label={`Start Module ${sectionIndex + 1}`} onClick={() => navigate(`/vocabulary/sat/${pack.id}/${section.id}`, { state: satNavigationState })} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
-                          <span className="min-w-0 flex-1">
-                            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="ielts-vocab-part-label">{section.title}</span>
-                              <span className="text-[11px] font-medium text-slate-500">{section.entries.length} <UiText text="terms" /></span>
-                            </span>
-                          </span>
-                          <span className="ielts-vocab-part-arrow"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span>
-                        </button>
-                      ))}
-                    </div>
-                  </VocabularyPanel>
+          ) : (
+            <>
+                <div className="mb-7 flex flex-wrap items-center justify-between gap-5">
+                  <div>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-500"><UiText text="SAT Vocabulary Track" /></p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">SAT Full Mocks</h2>
+                    <p className="mt-2 text-sm font-medium text-slate-500">{satStats.packs} mocks · {satStats.words.toLocaleString()} <UiText text="terms" /></p>
+                  </div>
+                  <label className="flex w-full items-center gap-3 rounded-full border border-white bg-white/95 px-5 py-4 text-slate-400 sm:w-80">
+                    <Search className="h-5 w-5" />
+                    <span className="sr-only"><UiText text="Search tests or vocabulary" /></span>
+                    <input type="search" value={satQuery} onChange={(event) => setSatQuery(event.target.value)} placeholder={c('Search test, topic or word…')} className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" />
+                  </label>
                 </div>
-              )
-            })}
-          </div>
-          {visibleSatPacks.length === 0 ? <p role="status" className="py-12 text-center text-slate-500"><UiText text="No matching tests. Try another topic or word." /></p> : null}
+                <div className="ielts-vocab-enter space-y-3">
+                  {visibleSatPacks.map((pack) => {
+                    const isOpen = openSatPackId === pack.id
+                    const count = pack.sections.reduce((sum, section) => sum + section.entries.length, 0)
+                    return (
+                      <div key={pack.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
+                        <button type="button" aria-label={`Open ${pack.title}`} aria-expanded={isOpen} aria-controls={`${pack.id}-sections`} onClick={() => toggleSatPack(pack.id)} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400">
+                          <span className="min-w-0">
+                            <span className="block text-base font-bold text-slate-900 sm:text-lg">{pack.title}</span>
+                            <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" /> · {pack.sections.length} <UiText text="modules" /></span>
+                          </span>
+                          <span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
+                        </button>
+                        <VocabularyPanel id={`${pack.id}-sections`} open={isOpen}>
+                          <div className="ielts-vocab-parts grid gap-2.5 p-3 sm:grid-cols-2">
+                            {pack.sections.map((section, sectionIndex) => (
+                              <button key={section.id} type="button" aria-label={`Start Module ${sectionIndex + 1}`} onClick={() => selectSatModule(pack.id, section.id)} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2">
+                                <span className="min-w-0 flex-1">
+                                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span className="ielts-vocab-part-label">{section.title}</span>
+                                    <span className="text-[11px] font-medium text-slate-500">{section.entries.length} <UiText text="terms" /></span>
+                                  </span>
+                                </span>
+                                <span className="ielts-vocab-part-arrow"><ArrowRight aria-hidden="true" className="h-4 w-4" /></span>
+                              </button>
+                            ))}
+                          </div>
+                        </VocabularyPanel>
+                      </div>
+                    )
+                  })}
+                </div>
+                {visibleSatPacks.length === 0 ? <p role="status" className="py-12 text-center text-slate-500"><UiText text="No matching tests. Try another topic or word." /></p> : null}
+            </>
+          )}
         </section>
       </div>
     </div>

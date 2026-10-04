@@ -71,18 +71,72 @@
 .ielts-vocab-word {
   box-sizing: border-box;
   height: 360px;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid #e2e8f0;
   border-radius: 24px;
-  padding: 20px;
+  padding: 16px;
   background: #fff;
   box-shadow: 0 4px 16px rgb(15 23 42 / 3%);
   overflow-wrap: anywhere;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .ielts-vocab-word > * {
   flex-shrink: 0;
+}
+
+.ielts-vocab-word h3,
+.ielts-vocab-word > div:first-child > div:first-child > p,
+.ielts-vocab-word > .space-y-3 > p,
+.ielts-vocab-word .ielts-vocab-synonym > p,
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) > p:not(:first-child),
+.ielts-vocab-word .ielts-vocab-panel p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.ielts-vocab-word > div:first-child > div:first-child > p,
+.ielts-vocab-word .ielts-vocab-synonym > p,
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) > p[lang='uz'],
+.ielts-vocab-word .ielts-vocab-panel p:first-child {
+  -webkit-line-clamp: 1;
+}
+
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  flex-direction: column;
+  margin-top: 0;
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) > p {
+  flex-shrink: 0;
+}
+
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) > p:not(:first-child):not([lang='uz']) {
+  flex: 0 0 auto;
+  min-height: 20px;
+  max-height: 40px;
+  line-height: 20px;
+  overflow: hidden;
+}
+
+.ielts-vocab-word > blockquote:has(> p[lang='uz']) > p[lang='en'] {
+  -webkit-line-clamp: 1;
+  max-height: 20px;
+}
+
+.ielts-vocab-word > blockquote:is(.ielts-vocab-example, .vocab-content-example) > p[lang='uz'] {
+  line-height: 20px;
+}
+
+.ielts-vocab-word:has(.ielts-vocab-context[aria-expanded='true']) > blockquote:is(.ielts-vocab-example, .vocab-content-example) {
+  display: none;
 }
 
 .ielts-vocab-word:focus-within {
@@ -112,7 +166,7 @@
 .ielts-vocab-example {
   border-left: 2px solid #fca5a5;
   border-radius: 0 12px 12px 0;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: #f8fafc;
 }
 

@@ -25,6 +25,7 @@ import {
 import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { isSpeechSynthesisSupported, speak as speakText } from '@/lib/speech'
+import '@/styles/vocabulary-practice.css'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
 
@@ -177,16 +178,16 @@ function addToDiamondBank(amount: number) {
 }
 
 // ================================================================ ActivityPicker
-const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; xp: string; icon: typeof Layers; tint: string }> = [
-  { mode: 'flashcards', title: 'Flashcards', desc: '3D flip cards with audio, shuffle & mastery tracking.', xp: '+12 XP', icon: Layers, tint: 'from-blue-500 to-indigo-600' },
-  { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', xp: '+20 XP', icon: Link2, tint: 'from-amber-500 to-orange-600' },
-  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', xp: '+10–30 XP', icon: CheckCircle2, tint: 'from-emerald-500 to-teal-600' },
-  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with live letter-by-letter feedback.', xp: '+10–35 XP', icon: Keyboard, tint: 'from-sky-500 to-indigo-600' },
+const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; xp: string; icon: typeof Layers }> = [
+  { mode: 'flashcards', title: 'Flashcards', desc: 'Flip cards with audio, shuffle & mastery tracking.', xp: '+12 XP', icon: Layers },
+  { mode: 'matching', title: 'Matching Game', desc: 'Pair terms with meanings in groups — earn diamonds.', xp: '+20 XP', icon: Link2 },
+  { mode: 'quiz', title: 'Quiz', desc: 'Multiple choice with instant feedback & scoring.', xp: '+10–30 XP', icon: CheckCircle2 },
+  { mode: 'typing', title: 'Typing Drill', desc: 'Recall spelling with hints and instant feedback.', xp: '+10–35 XP', icon: Keyboard },
 ]
 
 export function ActivityPicker({ basePath, entriesCount, navigationState }: { basePath: string; entriesCount: number; navigationState?: unknown }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="vocab-activity-picker">
       {ACTIVITY_CARDS.map((card, i) => {
         const Icon = card.icon
         return (
@@ -199,17 +200,16 @@ export function ActivityPicker({ basePath, entriesCount, navigationState }: { ba
             <Link
               to={`${basePath}/${card.mode}`}
               state={navigationState}
-              className="group relative block overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_22px_44px_rgba(37,99,235,0.16)]"
+              className="vocab-activity-card group" data-activity={card.mode}
             >
-              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-100/60 blur-2xl transition group-hover:scale-125" />
-              <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.tint} text-white shadow-md`}>
+              <span className="vocab-activity-icon">
                 <Icon className="h-5 w-5" />
               </span>
-              <h4 className="mt-3 text-lg font-black text-slate-900">{card.title}</h4>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{card.desc}</p>
-              <div className="mt-3 flex items-center justify-between gap-2 text-xs font-bold">
-                <p className="inline-flex items-center gap-1 text-blue-600 transition group-hover:gap-2">Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" /></p>
-                <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">{card.xp}</span>
+              <h4>{card.title}</h4>
+              <p className="vocab-activity-description">{card.desc}</p>
+              <div className="vocab-activity-card-footer">
+                <p className="inline-flex items-center gap-1">Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" /></p>
+                <span className="vocab-xp-chip">{card.xp}</span>
               </div>
             </Link>
           </motion.div>
@@ -266,57 +266,59 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
   if (!current) return null
 
   return (
-    <div className="space-y-5">
-      <section className="mx-auto w-full max-w-4xl rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_14px_28px_rgba(15,23,42,0.06)]">
+    <div className="vocab-flashcards">
+      <section className="vocab-flash-progress">
         <div className="flex items-center justify-between text-sm font-semibold">
           <p className="text-slate-700">Card {index + 1} / {deck.length}</p>
           <p className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> {masteredCount} mastered</p>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-blue-100">
-          <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.36, ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500" />
+        <div className="vocab-progress-track">
+          <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.36, ease: EASE }} className="vocab-progress-fill" />
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-4xl"><SaveWordButton entry={current} /></div>
-      <div className="relative mx-auto w-full max-w-4xl [perspective:2000px]">
+      <div className="vocab-flash-save"><SaveWordButton entry={current} /></div>
+      <div className="vocab-flash-scene">
         <motion.button
           type="button"
           onClick={() => setFlipped((v) => !v)}
           whileTap={{ scale: 0.99 }}
-          className={`relative block w-full text-left ${current.uzbek || current.exampleUzbek ? 'h-[500px] md:h-[520px]' : 'h-[360px] md:h-[400px]'}`}
+          className="vocab-flash-card"
+          aria-label={`${current.term}: ${flipped ? 'show term' : 'show meaning'}`}
+          aria-pressed={flipped}
         >
           <motion.div animate={{ rotateY: flipped ? 180 : 0 }} transition={FLIP} style={{ transformStyle: 'preserve-3d' }} className="relative h-full w-full">
             {/* front */}
-            <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(99,102,241,0.2)]">
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
+            <div style={{ backfaceVisibility: 'hidden' }} aria-hidden={flipped} className="vocab-flash-face vocab-flash-front">
               <div className="flex items-center justify-between pr-24">
-                <span className="inline-flex items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Term</span>
+                <span className="vocab-flash-label">Term</span>
               </div>
               <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <p className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl">{current.term}</p>
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Tap or press Space to flip</p>
+                <p className="vocab-flash-term">{current.term}</p>
+                <p className="vocab-flash-instruction">Tap or press Space to flip</p>
               </div>
-              {known[current.id] ? <span className="absolute left-6 top-6 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"><Check className="h-3 w-3" /> Mastered</span> : null}
+              {known[current.id] ? <span className="absolute bottom-4 left-5 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"><Check className="h-3 w-3" /> Mastered</span> : null}
             </div>
             {/* back */}
-            <div style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} className="absolute inset-0 flex flex-col overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/70 p-7 shadow-[0_24px_52px_rgba(59,130,246,0.2)]">
-              <div className="absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-blue-200/45 blur-2xl" />
-              <span className="inline-flex w-fit items-center rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Meaning & translation</span>
+            <div style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} aria-hidden={!flipped} className="vocab-flash-face vocab-flash-back">
+              <span className="vocab-flash-label">Meaning & translation</span>
+              <div className="vocab-flash-meaning">
               {current.uzbek ? (
-                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/80 px-4 py-3">
+                <div className="vocab-flash-translation">
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">Uzbek</p>
-                  <p className="mt-1 text-lg font-bold leading-7 text-slate-900">{current.uzbek}</p>
+                  <p className="vocab-flash-definition">{current.uzbek}</p>
                 </div>
               ) : null}
-              <div className="mt-3">
+              <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">Meaning (EN)</p>
-                <p className="mt-1 text-lg font-bold leading-7 text-slate-900">{current.definition}</p>
+                <p className="vocab-flash-definition">{current.definition}</p>
               </div>
-              <div className="mt-3 rounded-xl border border-blue-100 bg-white/90 px-4 py-3 text-sm leading-6 text-slate-700">
+              </div>
+              <div className="vocab-flash-example">
                 <p className="italic">“{current.example}”</p>
                 {current.exampleUzbek ? <p className="mt-1.5 font-medium text-slate-600">{current.exampleUzbek}</p> : null}
               </div>
-              <p className="mt-auto pt-3 text-sm font-semibold text-blue-700">Synonym (EN): {current.synonym}</p>
+              <p className="vocab-flash-synonym">Synonym (EN): {current.synonym}</p>
             </div>
           </motion.div>
         </motion.button>
@@ -327,7 +329,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
               if (speakingCurrent) stop()
               else speak(current.term)
             }}
-            className="absolute right-7 top-7 z-20 inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="vocab-flash-listen"
             aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`}
           >
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -337,7 +339,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
       </div>
 
       {/* known / review */}
-      <div className="mx-auto flex w-full max-w-4xl items-center justify-center gap-3">
+      <div className="vocab-flash-mastery">
         <button onClick={() => mark(false)} className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
           <RefreshCw className="h-4 w-4" /> Still learning
         </button>
@@ -346,7 +348,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="vocab-flash-navigation">
         <button onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
         <button onClick={() => { setDeck((p) => shuffle(p)); setIndex(0); setFlipped(false) }} className="inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.35)]"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
         <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">Next <ArrowRight className="ml-1 h-4 w-4" /></button>
@@ -471,31 +473,31 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
     matched
       ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
       : wrong
-        ? 'border-blue-500 bg-blue-50 text-blue-700 animate-[shake_0.4s]'
+        ? 'border-red-400 bg-red-50 text-red-700 animate-[shake_0.4s]'
         : selected
           ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
           : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
 
   return (
-    <div className="space-y-4">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-white via-blue-50/40 to-indigo-100/40 p-4 shadow-[0_16px_34px_rgba(99,102,241,0.12)]">
+    <div className="vocab-matching">
+      <section className="vocab-matching-rewards" role={allDone ? 'status' : undefined}>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Matching · +1 / group · +5 all-clear</p>
-          <p className="mt-1 text-sm font-semibold text-slate-700">{replayMode ? 'Replay mode — rewards already collected.' : `Earned here: ${sectionReward.totalDiamonds} diamonds`}</p>
+          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">{allDone ? <><Trophy className="h-3.5 w-3.5" /> All groups matched!</> : 'Matching · +1 / group · +5 all-clear'}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">{allDone ? (replayMode ? 'Great practice — rewards already collected.' : 'Group rewards and the all-clear bonus are applied.') : replayMode ? 'Replay mode — rewards already collected.' : `Earned here: ${sectionReward.totalDiamonds} diamonds`}</p>
         </div>
-        <div className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-right shadow-sm">
+        <div className="vocab-wallet">
           <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-blue-600"><Gem className="h-3.5 w-3.5" /> Wallet</p>
           <p className="text-2xl font-black text-slate-900">{diamondBank}</p>
         </div>
       </section>
 
       {groups.length > 1 ? (
-        <section className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <section className="vocab-matching-groups" aria-label="Matching groups">
           {groups.map((group, i) => {
             const done = Boolean(completedGroups[i])
             const claimed = sectionReward.awardedGroups.includes(i)
             return (
-              <button key={i} onClick={() => setActiveGroupIndex(i)} className={`rounded-xl border px-4 py-3 text-left transition ${activeGroupIndex === i ? 'border-blue-400 bg-blue-50 shadow-sm' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <button key={i} aria-pressed={activeGroupIndex === i} onClick={() => { setActiveGroupIndex(i); setSelectedWord(null); setSelectedDef(null) }} className={`rounded-xl border text-left transition ${activeGroupIndex === i ? 'border-blue-400 bg-blue-50 shadow-sm' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
                 <p className="text-sm font-bold text-slate-900">Group {i + 1}</p>
                 <p className={`mt-1 text-xs font-semibold ${done ? 'text-emerald-600' : claimed ? 'text-amber-600' : 'text-slate-500'}`}>{done ? 'Solved now' : claimed ? 'Reward claimed' : `${group.length} pairs`}</p>
               </button>
@@ -504,17 +506,17 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)]">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <section className="vocab-matching-board">
+        <div className="vocab-matching-board-heading">
           <h3 className="text-lg font-black text-slate-900">Group {activeGroupIndex + 1} board</h3>
           <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">{activeMatchedCount} / {activeGroup.length}</span>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-2">
+        <div className="vocab-matching-columns">
+          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${activeGroup.length}, minmax(min-content, 1fr))` }}>
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Terms</p>
             {activeGroup.map((it) => (
               <div key={it.id} className="relative">
-                <button onClick={() => pickWord(activeGroupIndex, it.id)} className={`flex w-full items-center gap-2 rounded-xl border py-2.5 pl-3.5 pr-12 text-left text-sm font-semibold transition ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
+                <button aria-pressed={selectedWord?.id === it.id} onClick={() => pickWord(activeGroupIndex, it.id)} className={`vocab-matching-cell vocab-matching-term font-semibold ${cellClass(Boolean(activeMatches[it.id]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
                   {activeMatches[it.id] ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : null}
                   {it.term}
                 </button>
@@ -524,10 +526,10 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
               </div>
             ))}
           </div>
-          <div className="space-y-2">
+          <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${activeDefs.length}, minmax(min-content, 1fr))` }}>
             <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Meanings</p>
             {activeDefs.map((it) => (
-              <button key={it.id} onClick={() => pickDef(activeGroupIndex, it.id)} className={`flex w-full items-start gap-2 rounded-xl border px-3.5 py-2.5 text-left text-sm transition ${cellClass(Boolean(activeMatches[it.id]), selectedDef?.id === it.id, wrongPair?.defId === it.id)}`}>
+              <button key={it.id} aria-pressed={selectedDef?.id === it.id} onClick={() => pickDef(activeGroupIndex, it.id)} className={`vocab-matching-cell ${cellClass(Boolean(activeMatches[it.id]), selectedDef?.id === it.id, wrongPair?.defId === it.id)}`}>
                 {activeMatches[it.id] ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : null}
                 {it.definition}
               </button>
@@ -535,13 +537,6 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
           </div>
         </div>
       </section>
-
-      {allDone ? (
-        <section className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 text-center shadow-[0_12px_30px_rgba(245,158,11,0.18)]">
-          <p className="inline-flex items-center gap-2 text-lg font-black text-amber-700"><Trophy className="h-5 w-5" /> All groups matched!</p>
-          <p className="mt-1 text-sm text-amber-800">{replayMode ? 'Great practice — rewards were collected earlier.' : 'Group rewards and the all-clear bonus are applied.'}</p>
-        </section>
-      ) : null}
 
       <CelebrationOverlay celebration={celebration} />
     </div>
@@ -607,7 +602,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
     return (
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-blue-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result relative overflow-hidden text-center">
         <Burst count={24} play={pct >= 70} />
         <ScoreRing pct={pct} />
         <h3 className="mt-4 text-3xl font-black text-slate-900">{pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practising'}</h3>
@@ -618,12 +613,12 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
-        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
+    <section className="vocab-question vocab-quiz">
+      <div className="vocab-progress-track">
+        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="vocab-progress-fill" />
       </div>
       <SaveWordButton entry={current} />
-      <div className="flex items-start justify-between gap-3">
+      <div className="vocab-quiz-heading flex items-start justify-between gap-3">
         <h3 className="text-xl font-bold text-slate-900">What does <span className="text-blue-600">“{current.term}”</span> mean?</h3>
         <AnimatePresence>
           {combo >= 2 ? (
@@ -640,12 +635,12 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
           ) : null}
         </AnimatePresence>
         {isSupported ? (
-          <button onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
+          <button aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`} onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
         ) : null}
       </div>
-      <div className="mt-4 space-y-2.5">
+      <div className="vocab-quiz-options">
         {options.map((opt) => {
           const isCorrect = opt === current.definition
           const isPicked = picked === opt
@@ -654,10 +649,11 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
             <motion.button
               key={opt}
               onClick={() => choose(opt)}
+              disabled={locked}
               whileTap={!locked ? { scale: 0.99 } : undefined}
               className={`flex w-full items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition ${
                 state === 'correct' ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                  : state === 'wrong' ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : state === 'wrong' ? 'border-red-400 bg-red-50 text-red-700'
                   : state === 'dim' ? 'border-slate-200 bg-slate-50 text-slate-400'
                   : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'
               }`}
@@ -668,7 +664,7 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
           )
         })}
       </div>
-      <div className="mt-5 flex items-center justify-between">
+      <div className="vocab-question-footer">
         <p className="text-sm font-semibold text-slate-500">Question {index + 1} / {questions.length}</p>
         <button onClick={next} disabled={!locked} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">
           {index === questions.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-4 w-4" />
@@ -724,7 +720,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
   if (finished) {
     const pct = Math.round((score / questions.length) * 100)
     return (
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-8 text-center shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result text-center">
         <ScoreRing pct={pct} />
         <h3 className="mt-4 text-3xl font-black text-slate-900">Typing complete</h3>
         <p className="mt-1 text-lg text-slate-600">Accuracy <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
@@ -734,19 +730,23 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl rounded-2xl border border-blue-100 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-200">
-        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600" />
+    <section className="vocab-question vocab-typing">
+      <div className="vocab-progress-track">
+        <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="vocab-progress-fill" />
       </div>
       {checked ? <SaveWordButton entry={current} /> : null}
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Type the term that matches this meaning</p>
-      <div className="mt-2 flex items-start gap-2 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3">
+      <label htmlFor="vocab-typing-answer" className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Type the term that matches this meaning</label>
+      <div className="vocab-typing-prompt">
         <BrainCircuit className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
         <p className="text-[15px] font-semibold leading-6 text-slate-800">{current.definition}</p>
       </div>
 
       <input
         ref={inputRef}
+        id="vocab-typing-answer"
+        autoComplete="off"
+        autoCapitalize="none"
+        spellCheck={false}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -757,14 +757,14 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
         placeholder="Type the word…"
         disabled={checked}
         className={`mt-4 w-full rounded-xl border px-4 py-3 text-base outline-none transition ${
-          checked ? (correct ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : 'border-blue-400 bg-blue-50 text-blue-700') : 'border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100'
+          checked ? (correct ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : 'border-red-400 bg-red-50 text-red-700') : 'border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100'
         }`}
       />
 
       <AnimatePresence>
         {checked ? (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>
+            <div role="status" className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
               {correct ? '✓ Correct!' : <>Answer: <span className="font-black">{current.term}</span></>}
             </div>
           </motion.div>
@@ -773,7 +773,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
         ) : null}
       </AnimatePresence>
 
-      <div className="mt-5 flex items-center justify-between">
+      <div className="vocab-question-footer">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-slate-500">{index + 1} / {questions.length}</p>
           {!checked ? (

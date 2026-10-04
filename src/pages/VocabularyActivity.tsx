@@ -15,8 +15,10 @@ import {
   type ActivityMode,
 } from '@/components/vocab/activities'
 import { SaveWordButton, WordSaveProvider } from '@/components/vocab/SaveWordButton'
+import { IeltsVocabularyWord } from '@/components/vocab/IeltsVocabularyStudio'
 import { useAuthStore } from '@/store/authStore'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
+import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
 
 type Selection = {
   title: string
@@ -39,6 +41,8 @@ function contextLabel(context: VocabContext) {
   if (context === 'sat') return 'SAT'
   if (context === 'reading') return 'Reading'
   if (context === 'listening') return 'Listening'
+  if (context === 'writing') return 'Writing'
+  if (context === 'speaking') return 'Speaking'
   return 'Article'
 }
 
@@ -63,7 +67,7 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
   }
 
   // ---- My Words (AI-asked + manually added) per context ----
-  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'article' || wordsContext === 'sat') {
+  if (wordsContext === 'reading' || wordsContext === 'listening' || wordsContext === 'writing' || wordsContext === 'speaking' || wordsContext === 'article' || wordsContext === 'sat') {
     const entries = getSavedWords(wordsContext)
     return {
       title: `My ${contextLabel(wordsContext)} Words`,
@@ -78,19 +82,41 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
     }
   }
 
-  // ---- IELTS reading sets ----
+  // ---- IELTS Full Test sets for all four skills ----
   if (bookId && testId && sectionId) {
-    const book = vocabularyCollections.ielts.find((b) => b.id === bookId)
-    const test = book?.tests.find((t) => t.id === testId)
+    let resolvedBook = bookId
+    let resolvedTest = testId
+    let resolvedSection = sectionId
+    // Keep saved-word origin links working after removing the old Day catalog
+    // and replacing library numbering with the site's visible Full Test order.
+    const legacyLibrary = sectionId.match(/^reading_full_test_(\d+)_passage_(\d+)$/)
+    const legacyDay = sectionId.match(/^reading_day_(\d+)_passage_(\d+)$/)
+    if (bookId === 'reading_full_track' && legacyLibrary && testId === `reading_full_test_${legacyLibrary[1]}` && Number(legacyLibrary[1]) <= 10) {
+      const number = Number(legacyLibrary[1]) + 12
+      resolvedTest = `reading_full_test_${number}`
+      resolvedSection = `${resolvedTest}_part_${legacyLibrary[2]}`
+    } else if (bookId === 'reading_days_track' && legacyDay && testId === `reading_day_${legacyDay[1]}`) {
+      const day = Number(legacyDay[1])
+      const index = READING_ROADMAP_FULL_TEST_DAYS.findIndex((days) => days.includes(day))
+      if (index >= 0) {
+        const days = READING_ROADMAP_FULL_TEST_DAYS[index]
+        const part = days.length === 1 ? Number(legacyDay[2]) : days.indexOf(day) + 1
+        resolvedBook = 'reading_full_track'
+        resolvedTest = `reading_full_test_${index + 1}`
+        resolvedSection = `${resolvedTest}_part_${part}`
+      }
+    }
+    const book = vocabularyCollections.ielts.find((b) => b.id === resolvedBook)
+    const test = book?.tests.find((t) => t.id === resolvedTest)
     if (!book || !test || test.available === false) return null
-    const section = test.sections.find((s) => s.id === sectionId)
+    const section = test.sections.find((s) => s.id === resolvedSection)
     if (!section) return null
     return {
       title: `${test.title} · ${section.title}`,
       subtitle: `${book.title} · ${section.entries.length} terms`,
       entries: section.entries,
       basePath: `/vocabulary/ielts/${book.id}/${test.id}/${section.id}`,
-      trackPath: '/vocabulary/ielts',
+      trackPath: `/vocabulary/ielts?skill=${book.skill}&test=${book.tests.indexOf(test) + 1}&part=${test.sections.indexOf(section) + 1}`,
       trackLabel: 'IELTS Vocabulary Track',
       rewardKey: `ielts:${book.id}:${test.id}:${section.id}`,
       masteryKey: `ielts:${book.id}:${test.id}:${section.id}`,
@@ -207,7 +233,7 @@ export default function VocabularyActivity() {
   }
 
   const saveContext = params.wordsContext ? null : {
-    context: (params.packId ? 'sat' : params.articleSlug ? 'article' : 'reading') as VocabContext,
+    context: (params.packId ? 'sat' : params.articleSlug ? 'article' : vocabularyCollections.ielts.find((book) => book.id === params.bookId)?.skill ?? 'reading') as VocabContext,
     origin: { label: params.bookId ? `${selection.subtitle.split(' · ')[0]} · ${title}` : title, path: basePath },
   }
 
@@ -253,7 +279,7 @@ export default function VocabularyActivity() {
               <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} />
               <section className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400"> <UiText text={"Vocabulary"} /> </p>
-                <TermPreview entries={entries} />
+                {params.bookId ? <div className="grid gap-4 md:grid-cols-2">{entries.map((entry) => <IeltsVocabularyWord key={entry.id} entry={entry} />)}</div> : <TermPreview entries={entries} />}
               </section>
             </>
           ) : (

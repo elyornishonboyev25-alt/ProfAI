@@ -1,5 +1,5 @@
 import UiText from '@/components/common/UiText'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Trophy, X } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
@@ -16,7 +16,7 @@ import {
   type ActivityMode,
 } from '@/components/vocab/activities'
 import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
-import { VocabularyLibrary } from '@/components/vocab/VocabularyDetails'
+import VocabularyInlineLibrary from '@/components/vocab/VocabularyInlineLibrary'
 import { useAuthStore } from '@/store/authStore'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
@@ -160,6 +160,8 @@ export default function VocabularyActivity() {
   const updateUserProgress = useAuthStore((state) => state.updateUserProgress)
   const activity = resolveActivity(params.activity)
   const [xpStatus, setXpStatus] = useState<{ key: string; message: string; retry?: () => void } | null>(null)
+  const [expandedLibrary, setExpandedLibrary] = useState<string | null>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
   const pendingXp = useRef(new Set<string>())
   const { reducedMotion } = useMotionPreferences()
   const [celebration, setCelebration] = useState<{ key: string; amount: number; mode: ActivityMode } | null>(null)
@@ -169,6 +171,37 @@ export default function VocabularyActivity() {
     return () => window.clearTimeout(timer)
   }, [celebration])
   const selection = useMemo(() => findSelection(params), [params])
+  const libraryOpen = !activity && expandedLibrary === selection?.basePath
+
+  useLayoutEffect(() => {
+    const page = pageRef.current
+    const shell = page?.querySelector<HTMLElement>('.vocab-practice-shell')
+    if (!page || !shell || activity) return
+    // Keep the activity cards at their fitted viewport height when words unfold.
+    const measure = () => {
+      const pageStyle = getComputedStyle(page)
+      const gap = parseFloat(getComputedStyle(shell).rowGap) || 0
+      const children = ([...shell.children] as HTMLElement[]).filter((child) =>
+        !['absolute', 'fixed'].includes(getComputedStyle(child).position),
+      )
+      const reserved = children.reduce((height, child) => {
+        if (child.matches('.vocab-activity-picker')) return height
+        const row = child.querySelector<HTMLElement>('.vocab-word-list') ?? child
+        return height + row.getBoundingClientRect().height
+      }, 0)
+      const height = page.clientHeight - parseFloat(pageStyle.paddingTop) - parseFloat(pageStyle.paddingBottom)
+        - reserved - gap * (children.length - 1)
+      shell.style.setProperty('--vocab-picker-height', `${Math.max(0, height)}px`)
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(page)
+    for (const child of shell.children) {
+      if (!child.matches('.vocab-activity-picker, .vocab-inline-library')) observer?.observe(child)
+    }
+    window.addEventListener('resize', measure)
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  }, [activity, selection?.basePath, xpStatus])
 
   if (!selection) return <Navigate to="/vocabulary" replace />
   if (params.activity && !activity) return <Navigate to={selection.basePath} state={navigationState} replace />
@@ -239,7 +272,7 @@ export default function VocabularyActivity() {
 
   return (
     <WordSaveProvider value={saveContext}>
-      <div className="workspace-page vocab-practice" data-mode={activity ?? 'picker'} data-accent={accent}>
+      <div ref={pageRef} className="workspace-page vocab-practice" data-mode={activity ?? 'picker'} data-accent={accent} data-library-open={libraryOpen}>
 
         <div className="vocab-practice-shell">
           {/* hero */}
@@ -284,7 +317,7 @@ export default function VocabularyActivity() {
                 <p className="vocab-reward-note">80% to earn XP · Once per activity · 120 XP daily limit</p>
               </section>
               <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} />
-              <VocabularyLibrary key={basePath} entries={entries} />
+              <VocabularyInlineLibrary key={basePath} entries={entries} accent={accent} open={libraryOpen} onToggle={() => setExpandedLibrary(libraryOpen ? null : basePath)} />
             </>
           ) : (
             <section className={`vocab-game-stage vocab-game-stage-${activity}`} aria-label={ACTIVITY_LABELS[activity]}>

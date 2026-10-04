@@ -142,7 +142,16 @@ export async function run() {
     await click(container.querySelector(`button[aria-label="Save ${selected.entries[0].term} to My Words"]`))
     assert.equal(getSavedWords(book.skill).length, 1, 'Each skill saves to its own context')
     await click(container.querySelector('a[href*="/vocabulary/ielts/"]'))
-    assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4, 'Practice library displays a bounded page of words')
+    assert.equal(container.querySelectorAll('.vocab-inline-library article').length, 0, 'Practice words start collapsed')
+    const libraryToggle = container.querySelector<HTMLButtonElement>('.vocab-inline-library .vocab-word-list')!
+    assert.equal(libraryToggle.getAttribute('aria-expanded'), 'false')
+    await click(libraryToggle)
+    assert.equal(libraryToggle.getAttribute('aria-expanded'), 'true')
+    assert.equal(container.querySelectorAll('.vocab-inline-library .ielts-vocab-word').length, selected.entries.length, 'Every word unfolds using the catalog card')
+    assert.equal(container.querySelector('dialog[open]'), null, 'Opening words stays inside the page')
+    assert.equal(container.querySelector('.vocab-practice')?.getAttribute('data-library-open'), 'true')
+    await click(libraryToggle)
+    assert.equal(container.querySelectorAll('.vocab-inline-library article').length, 0)
     await click(container.querySelector('a[href$="/flashcards"]'))
     await click(button('I know it'))
     await wait(180)
@@ -159,7 +168,7 @@ export async function run() {
   assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 0)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_full_track/reading_full_test_1/reading_full_test_1_passage_1')
   assert.match(container.textContent!, /Reading Full Test 13/)
-  assert.equal(container.querySelectorAll('button[aria-label^="Pronounce "]').length, 4)
+  assert.equal(container.querySelectorAll('.vocab-inline-library article').length, 0)
   await render(ieltsRoutes, '/vocabulary/ielts/reading_days_track/reading_day_26/reading_day_26_passage_2')
   assert.match(container.textContent!, /Reading Full Test 10 · Part 3/)
   window.localStorage.clear()
@@ -217,7 +226,9 @@ export async function run() {
     <Routes><Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} /></Routes>,
     origin.path,
   )
-  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, 4, 'Every word on the current library page must be saveable')
+  await click(container.querySelector('.vocab-inline-library .vocab-word-list'))
+  assert.equal(container.querySelectorAll('button[aria-label^="Save "]').length, entries.length, 'Every expanded SAT word must be saveable')
+  assert.equal(container.querySelectorAll('.vocab-inline-library article[data-accent="blue"]').length, entries.length, 'SAT cards keep their blue theme')
 
   await render(
     <WordSaveProvider value={{ context: 'sat', origin }}><SaveWordButton entry={entries[0]} /></WordSaveProvider>,

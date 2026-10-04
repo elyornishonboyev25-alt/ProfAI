@@ -310,6 +310,14 @@ html:has(.vocab-practice) { overflow-y: hidden; scrollbar-gutter: auto; }
 .vocab-activity-card-footer { flex: none; padding-top: 8px; }
 .vocab-word-list { display: flex; align-items: center; justify-content: space-between; flex: none; width: 100%; min-height: 42px; padding: 9px 16px; color: #52686d; font-size: 12px; font-weight: 700; }
 .vocab-word-list > span { display: flex; align-items: center; gap: 9px; }
+.vocab-inline-library { flex: none; min-width: 0; }
+.vocab-inline-library .vocab-word-list > svg { transition: transform 240ms ease; }
+.vocab-inline-library .vocab-word-list[aria-expanded='true'] > svg { transform: rotate(180deg); }
+.vocab-inline-library .vocab-word-list[aria-expanded='true'] { border-color: var(--vocab-accent); color: var(--vocab-accent); background: var(--vocab-soft); }
+.vocab-inline-library-grid { padding: 16px 0 4px; }
+.workspace-page.vocab-practice[data-library-open='true'] { overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
+.vocab-practice[data-library-open='true'] .vocab-practice-shell { flex: 0 0 auto; width: 100%; }
+.vocab-practice[data-library-open='true'] .vocab-activity-picker { flex: none; height: var(--vocab-picker-height); }
 .vocab-game-stage { min-height: 0; align-items: center; padding: 18px 24px; }
 .vocab-flashcards, .vocab-matching { height: 100%; min-height: 0; gap: 10px; }
 .vocab-session-heading { flex: none; margin-bottom: 0; }

@@ -14,7 +14,41 @@ const WebSocket = requireBackend('ws')
 
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-vocabulary-browser-'))
-  const source = "import React from 'react';import{createRoot}from'react-dom/client';import{MemoryRouter,Routes,Route}from'react-router-dom';import VocabularyActivity from'./src/pages/VocabularyActivity';import IeltsVocabularyStudio from'./src/components/vocab/IeltsVocabularyStudio';import{vocabularyCollections}from'./src/data/vocabularyCollections';const root=createRoot(document.getElementById('root'));const book=vocabularyCollections.ielts[0],test=book.tests[0],section=test.sections[0];const base='/vocabulary/ielts/'+book.id+'/'+test.id+'/'+section.id;window.show=(mode='picker')=>{const path=mode==='studio'?'/vocabulary/ielts':base+(mode==='picker'?'':'/'+mode);root.render(<MemoryRouter key={path} initialEntries={[path]}><div className=\"workspace-main\" style={{height:'100dvh',display:'flex',flexDirection:'column'}}><div className=\"workspace-toolbar\" style={{height:58,flexShrink:0}}>English</div><div className=\"arena-route\"><Routes><Route path=\"/vocabulary/ielts\" element={<IeltsVocabularyStudio/>}/><Route path=\"/vocabulary/ielts/:bookId/:testId/:sectionId/:activity?\" element={<VocabularyActivity/>}/></Routes></div></div></MemoryRouter>);};window.show();"
+  const source = `
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { MemoryRouter, Routes, Route } from 'react-router-dom';
+    import VocabularyActivity from './src/pages/VocabularyActivity';
+    import IeltsVocabularyStudio from './src/components/vocab/IeltsVocabularyStudio';
+    import { vocabularyCollections } from './src/data/vocabularyCollections';
+    import { articles } from './src/data/articles';
+    import { addSavedWord } from './src/utils/myVocabularyStore';
+    const root = createRoot(document.getElementById('root'));
+    const book = vocabularyCollections.ielts[0], test = book.tests[0], section = test.sections[0];
+    const base = '/vocabulary/ielts/' + book.id + '/' + test.id + '/' + section.id;
+    const sat = vocabularyCollections.sat[0];
+    addSavedWord({ ...section.entries[0], context: 'reading', source: 'manual' });
+    window.show = (mode = 'picker') => {
+      const path = mode === 'studio' ? '/vocabulary/ielts'
+        : mode === 'sat-picker' ? '/vocabulary/sat/' + sat.id + '/' + sat.sections[0].id
+        : mode === 'article-picker' ? '/vocabulary/articles/' + articles[0].slug
+        : mode === 'saved-picker' ? '/vocabulary/my-words/reading/practice'
+        : base + (mode === 'picker' ? '' : '/' + mode);
+      root.render(<MemoryRouter key={path} initialEntries={[path]}>
+        <div className="workspace-main" style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+          <div className="workspace-toolbar" style={{ height: 58, flexShrink: 0 }}>English</div>
+          <div className="arena-route"><Routes>
+            <Route path="/vocabulary/ielts" element={<IeltsVocabularyStudio />} />
+            <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId/:activity?" element={<VocabularyActivity />} />
+            <Route path="/vocabulary/sat/:packId/:sectionId" element={<VocabularyActivity />} />
+            <Route path="/vocabulary/articles/:articleSlug" element={<VocabularyActivity />} />
+            <Route path="/vocabulary/my-words/:wordsContext/practice" element={<VocabularyActivity />} />
+          </Routes></div>
+        </div>
+      </MemoryRouter>);
+    };
+    window.show();
+  `
   const extraFixture = `
     import { TextDetailsButton } from './src/components/vocab/VocabularyDetails';
     window.stressText = 'A longer source extract with every word retained and readable on a small screen. '.repeat(80);
@@ -84,9 +118,9 @@ async function main() {
     const viewports = JSON.parse(process.env.VOCABULARY_TEST_VIEWPORTS || '[[1366,900],[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]')
     for (const [width, height] of viewports) {
       await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 640 })
-      for (const mode of ['picker', 'flashcards', 'matching', 'quiz', 'typing', 'studio']) {
+      for (const mode of ['picker', 'sat-picker', 'article-picker', 'saved-picker', 'flashcards', 'matching', 'quiz', 'typing', 'studio']) {
         await evaluate('window.show(' + JSON.stringify(mode) + ')')
-        await until(mode === 'studio' ? `document.querySelector('nav[aria-label="IELTS vocabulary skills"]')` : `document.querySelector('.vocab-practice[data-mode="${mode}"]')`)
+        await until(mode === 'studio' ? `document.querySelector('nav[aria-label="IELTS vocabulary skills"]')` : `document.querySelector('.vocab-practice[data-mode="${mode.endsWith('picker') ? 'picker' : mode}"]')`)
         await new Promise((resolve) => setTimeout(resolve, 650))
         const layout = await evaluate(`(() => {
           const page = document.querySelector('.vocab-practice') || document.querySelector('.workspace-page');
@@ -133,28 +167,50 @@ async function main() {
           }
           assert.equal(await evaluate(`document.querySelector('.vocab-practice').scrollHeight<=document.querySelector('.vocab-practice').clientHeight+1`), true, `${width}: result screen does not scroll`)
         }
-        if (mode === 'picker') {
+        if (mode.endsWith('picker')) {
+          const pickerHeight = await evaluate(`document.querySelector('.vocab-activity-picker').getBoundingClientRect().height`)
           await evaluate(`document.querySelector('.vocab-word-list').click()`)
           await new Promise((resolve) => setTimeout(resolve, 350))
           const library = await evaluate(`(() => {
-            const dialog=document.querySelector('.vocab-library-dialog'),words=[...dialog.querySelectorAll('article')],last=words.at(-1),r=last.getBoundingClientRect();
-            return {count:words.length,bottom:r.bottom,width:dialog.scrollWidth,vertical:dialog.scrollHeight<=dialog.clientHeight+1};
+            const page=document.querySelector('.vocab-practice'), library=document.querySelector('.vocab-inline-library');
+            const words=[...library.querySelectorAll('article')],toggle=library.querySelector('.vocab-word-list');
+            words.at(-1).scrollIntoView({block:'end',behavior:'instant'});
+            const r=words.at(-1).getBoundingClientRect();
+            return {count:words.length,expected:Number(toggle.querySelector('.vocab-word-count').textContent),
+              expanded:toggle.getAttribute('aria-expanded'),modal:!!document.querySelector('dialog[open]'),
+              heights:words.map(word=>word.getBoundingClientRect().height),
+              accent:words[0].dataset.accent,pickerHeight:document.querySelector('.vocab-activity-picker').getBoundingClientRect().height,
+              horizontal:page.scrollWidth<=page.clientWidth+1,scrollable:page.scrollHeight>page.clientHeight,
+              reachable:r.bottom<=innerHeight+1 && r.top>=0,scrollTop:page.scrollTop};
           })()`)
-          assert.equal(library.count, width < 640 || height < 600 ? 1 : 4, 'Library displays a bounded page of words')
-          assert.equal(library.vertical, true, `${width}: library has no scrolling`)
-          assert.ok(library.bottom <= height + 1, `${width}: final library word reachable`)
-          assert.ok(library.width <= width, `${width}: expanded library does not overflow horizontally`)
-          let words = await evaluate(`Array.from(document.querySelectorAll('.vocab-library-dialog h3')).map(n=>n.textContent)`)
-          while (await evaluate(`!document.querySelector('button[aria-label="Next vocabulary page"]').disabled`)) {
-            await evaluate(`document.querySelector('button[aria-label="Next vocabulary page"]').click()`)
-            await new Promise((resolve) => setTimeout(resolve, 30))
-            words.push(...await evaluate(`Array.from(document.querySelectorAll('.vocab-library-dialog h3')).map(n=>n.textContent)`))
+          assert.equal(library.count, library.expected, 'Every word is present in the inline list')
+          assert.equal(library.expanded, 'true')
+          assert.equal(library.modal, false, 'Vocabulary expands inside the page')
+          assert.ok(library.heights.every(cardHeight => cardHeight === 360), 'Cards use the same height as the IELTS/SAT catalog')
+          assert.equal(library.accent, mode === 'sat-picker' ? 'blue' : 'red')
+          assert.ok(Math.abs(library.pickerHeight - pickerHeight) <= 1, `${width} ${mode}: unfolding preserves activity card sizes ${JSON.stringify(library)}`)
+          assert.ok(library.horizontal && library.scrollable && library.reachable && library.scrollTop > 0, `${width} ${mode}: words scroll down without horizontal overflow ${JSON.stringify(library)}`)
+          await evaluate(`document.querySelector('.vocab-inline-library').scrollIntoView({block:'start',behavior:'instant'})`)
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          const actions = await evaluate(`(() => {
+            const card=document.querySelector('.vocab-inline-library article'), bounds=card.getBoundingClientRect();
+            return [...card.querySelectorAll('button[aria-label]')].every(button=>{
+              const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+              return r.width>0 && r.height>0 && r.left>=bounds.left && r.right<=bounds.right && r.top>=bounds.top && r.bottom<=bounds.bottom && button.contains(hit);
+            });
+          })()`)
+          assert.equal(actions, true, `${width} ${mode}: pronunciation and save controls remain visible and interactive after scrolling`)
+          if (width === 1366 || width === 390) {
+            const shot = await send('Page.captureScreenshot', { format: 'png' })
+            await writeFile(join(screenshots, `${width}-${mode}-expanded.png`), Buffer.from(shot.data, 'base64'))
           }
-          assert.equal(new Set(words).size, 20, 'All words remain accessible through pagination')
-          await evaluate(`document.querySelector('button[aria-label="Close vocabulary"]').click()`)
+          await evaluate(`document.querySelector('.vocab-word-list').click()`)
+          await new Promise((resolve) => setTimeout(resolve, 350))
+          const collapsed = await evaluate(`(() => {const page=document.querySelector('.vocab-practice');return {fit:page.scrollHeight<=page.clientHeight+1,expanded:document.querySelector('.vocab-word-list').getAttribute('aria-expanded'),count:document.querySelectorAll('.vocab-inline-library article').length};})()`)
+          assert.deepEqual(collapsed, { fit: true, expanded: 'false', count: 0 }, 'Collapsing returns to a single fitted viewport')
         }
       }
-      console.log(`PASS: ${width}x${height} — picker, four activities, catalog, card flip and reachable controls`)
+      console.log(`PASS: ${width}x${height} — IELTS/SAT/article/saved-word inline libraries, four activities, catalog, card flip and reachable controls`)
     }
     await evaluate('window.showStress()')
     await until(`document.querySelector('button[aria-label="Read stress text"]')`)

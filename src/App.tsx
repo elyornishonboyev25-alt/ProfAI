@@ -353,7 +353,7 @@ function App() {
     !isIeltsMockMode &&
     pathname !== '/onboarding' && pathname !== '/focus' &&
     !isLiveCommunityMode
-  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic && !isLearningCenterMode
+  const showAmbientBackground = !isTestMode && !isFocusContentMode && !isLiveCommunityMode && !isGuestDiagnostic
 
   useEffect(() => {
     if (!user?.id) return

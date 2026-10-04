@@ -18,7 +18,7 @@ import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { getSATReviewTests, getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
-import { ARENA_GLASS_SURFACE, ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
+import { ARENA_GLASS_SURFACE } from '@/components/visuals/ArenaVisuals'
 
 type AttemptWithTest = {
   attempt: SATAttempt
@@ -181,7 +181,6 @@ export default function SAT() {
 
   return (
     <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
-      <ArenaBackdrop />
       <div className="relative z-10 mx-auto max-w-[112rem]">
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}

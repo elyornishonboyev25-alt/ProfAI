@@ -1,7 +1,7 @@
 /* One material system for the Classes portal, workspaces and dialogs. */
 .learning-center {
   color-scheme: light;
-  --lc-canvas: radial-gradient(ellipse at 100% 0%,rgba(185,194,208,.5),transparent 48%),radial-gradient(ellipse at 0% 35%,rgba(241,163,173,.14),transparent 42%),linear-gradient(130deg,#edf0f4,#f8f9fb 48%,#e6eaf0);
+  --lc-canvas: transparent;
   --lc-glass: linear-gradient(125deg,rgba(255,255,255,.8),rgba(255,255,255,.48) 48%,rgba(219,225,234,.6));
   --lc-glass-border: rgba(255,255,255,.94);
   --lc-glass-shadow: 0 16px 40px rgba(44,53,74,.085),inset 0 1px 0 white,inset 0 -1px 0 rgba(138,151,174,.2);
@@ -10,7 +10,7 @@
 }
 .learning-center :is(button,a,input,select,textarea):focus-visible { outline: 3px solid #ad283d; outline-offset: 4px; }
 .learning-center :is(input,select,textarea):focus-visible { outline-offset: 2px; }
-.lc-portal,.lc-workspace-shell { background: var(--lc-canvas); }
+.lc-portal,.lc-workspace-shell { background: transparent; }
 .lc-workspace-container { min-width: 0; }
 .lc-eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #b32639; font-size: 10px; font-weight: 850; letter-spacing: .16em; line-height: 1.7; }
 .lc-eyebrow-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #d42e40; box-shadow: 0 0 0 4px rgba(221,54,76,.1); }

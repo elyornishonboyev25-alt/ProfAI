@@ -21,7 +21,6 @@ import { loadActivityLog, loadOnboardingProfile, saveOnboardingProfile } from '@
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import {
   ARENA_GLASS_SURFACE,
-  ArenaBackdrop,
   StudyIllustration,
   type StudyIllustrationVariant,
 } from '@/components/visuals/ArenaVisuals'
@@ -194,7 +193,6 @@ export default function IELTS() {
 
   return (
     <main className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <ArenaBackdrop />
       <div className="relative z-10 mx-auto max-w-[112rem]">
         {fromMock ? (
           <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: entry?.from } })} className="route-back-button">

@@ -19,7 +19,6 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
-import { ArenaBackdrop } from '@/components/visuals/ArenaVisuals'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import './admission-universities.css'
 import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
@@ -337,8 +336,6 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
   return (
     <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
-      <ArenaBackdrop />
-
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
         <div className="admission-discovery-layout">
           <aside className="admission-universities-intro-column">
@@ -422,7 +419,6 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               className="admission-university-scroll"
               role="region"
               aria-label="University results"
-              tabIndex={0}
             >
               {shortlistOnly && shortlistCount === 0 ? (
                 <div className="admission-empty-state admission-shortlist-empty">

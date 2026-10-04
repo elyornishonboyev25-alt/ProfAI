@@ -1,0 +1,24 @@
+/* One entrance per mounted dashboard. Lightweight transforms keep the layout fixed. */
+.profai-dashboard[data-dashboard-motion='full'] .dashboard-entry {
+  animation: dashboardEntryReveal .7s cubic-bezier(.22, 1, .36, 1) backwards;
+}
+.profai-dashboard .dashboard-entry-header { animation-delay: 0s !important; }
+.profai-dashboard .dashboard-entry-target { animation-delay: .08s !important; }
+.profai-dashboard .dashboard-entry-practice { animation-delay: .14s !important; }
+.profai-dashboard .dashboard-entry-statistics > :nth-child(1) { animation-delay: .2s !important; }
+.profai-dashboard .dashboard-entry-statistics > :nth-child(2) { animation-delay: .27s !important; }
+.profai-dashboard .dashboard-entry-statistics > :nth-child(3) { animation-delay: .34s !important; }
+.profai-dashboard .dashboard-entry-statistics > :nth-child(4) { animation-delay: .41s !important; }
+.profai-dashboard .dashboard-entry-weekly { animation-delay: .32s !important; }
+.profai-dashboard .dashboard-entry-rail > :nth-child(1) { animation-delay: .4s !important; }
+.profai-dashboard .dashboard-entry-rail > :nth-child(2) { animation-delay: .48s !important; }
+.profai-dashboard .dashboard-entry-learning { animation-delay: .56s !important; }
+.dashboard-target-progress-number { font-variant-numeric: tabular-nums; }
+
+@keyframes dashboardEntryReveal {
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profai-dashboard .dashboard-entry { animation: none !important; }
+}

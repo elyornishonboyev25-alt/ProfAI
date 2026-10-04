@@ -399,19 +399,19 @@ export default function IELTSWritingFullTestInterface({
           <div className="grid gap-5 md:grid-cols-2">
             <ModeCard
               icon={<Timer className="h-6 w-6" />}
-              title="Timed Mode"
+              title="Simulation Mode"
               eyebrow="Full exam simulation"
               description="Use one 60-minute countdown across both writing tasks, just like the real exam."
-              buttonLabel="Start Full Test"
+              buttonLabel="Start Simulation"
               tone="red"
               onClick={() => handleStart(true)}
             />
             <ModeCard
               icon={<TimerOff className="h-6 w-6" />}
-              title="Free Mode"
+              title="Practice Mode"
               eyebrow="No time limit"
               description="Work through both tasks at your own pace while keeping the same full-test workspace."
-              buttonLabel="Practice Without Timer"
+              buttonLabel="Start Practice"
               tone="orange"
               onClick={() => handleStart(false)}
             />

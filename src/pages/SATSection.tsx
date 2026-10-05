@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, BookOpenText, Calculator, CheckCircle2, Clock3, 
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
+import './mock-ielts.css'
 
 const tabs = [
   { id: 'reading-writing', label: 'Reading & Writing', detail: 'Evidence and expression', icon: BookOpenText },
@@ -64,8 +65,7 @@ export default function SATSection() {
         </div>
 
         <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-          <section className="relative overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
+          <section className="mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <button type="button" onClick={() => navigate('/sat')} className="route-back-button mb-5"><ArrowLeft className="h-4 w-4" /> SAT Prep</button>
@@ -76,7 +76,7 @@ export default function SATSection() {
               <label className="relative block w-full sm:w-72">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search test..." aria-label="Search SAT tests"
-                  className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,64,175,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100" />
+                  className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100" />
               </label>
             </div>
 
@@ -88,29 +88,43 @@ export default function SATSection() {
                   const attempt = loadSATAttempt(test.id)
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)
+                  const expectedModules = isFullMock ? 4 : 2
+                  const readyModules = test.modules.length
+                  const durationMinutes = Math.round(test.totalDurationSeconds / 60)
+                  const duration = durationMinutes >= 60
+                    ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60 ? ` ${durationMinutes % 60}m` : ''}`
+                    : `${durationMinutes}m`
+                  const cardSections = tabs.filter((tab) => tab.id !== 'mocks' && (isFullMock || tab.id === section))
                   const destination = `/mock/sat/${test.mockId}${isFullMock ? '' : `?section=${section}`}`
                   const action = attempt?.status === 'active' ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Open'
 
                   return (
                     <button key={test.id} type="button" onClick={() => navigate(destination, { state: { from: `/sat/${section}` } })}
-                      className="ielts-catalog-card group relative flex min-h-[15rem] w-full flex-col overflow-hidden rounded-[1.75rem] border border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(239,246,255,.58))] p-6 text-left shadow-[0_12px_34px_rgba(30,64,175,.07),inset_0_1px_0_white] transition-[border-color,box-shadow] duration-150 hover:border-red-200 hover:shadow-[0_18px_42px_rgba(185,28,28,.1),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100">
+                      className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">SAT {isFullMock ? 'Full Mock' : activeTab.label} {String(test.mockId).padStart(2, '0')}</span>
-                        {attempt?.status === 'submitted' ? <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span> : attempt?.status === 'active' ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">In progress</span> : null}
+                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                          <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} ready
+                        </span>
                       </div>
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
+                      <div className="mt-4 flex flex-wrap gap-1.5" aria-label="SAT sections">
+                        {cardSections.map(({ id, label, icon: Icon }) => (
+                          <span key={id} title={label} className="inline-flex items-center gap-1 rounded-lg border border-red-100 bg-white/90 px-2 py-1 text-[11px] font-bold text-red-700">
+                            <Icon className="h-3.5 w-3.5" /> {id === 'math' ? 'Math' : 'R&W'}
+                          </span>
+                        ))}
+                        <span className="self-center text-[11px] font-bold text-slate-500">{test.modules.length} modules · {test.questionCount} questions</span>
+                      </div>
                       {note ? <p className="mt-2 text-xs font-semibold text-amber-700">{note}</p> : null}
                       {attempt ? <div className="mt-4" aria-label={`${answered} of ${test.questionCount} questions answered`}>
                         <div className="flex justify-between text-[11px] font-bold text-slate-500"><span>{attempt.status === 'submitted' ? 'Completed' : 'Saved progress'}</span><span>{answered}/{test.questionCount}</span></div>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answered / Math.max(1, test.questionCount)) * 100)}%` }} /></div>
                       </div> : null}
-                      <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">
-                          <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{Math.round(test.totalDurationSeconds / 60)} min</span>
-                          <span>{test.modules.length} modules · {test.questionCount} questions</span>
-                        </div>
-                        <span className="inline-flex items-center gap-1.5 text-sm font-black text-red-700">{action}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                      <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {duration} session</span>
+                        <span className="mock-ielts-glass-open inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black">{action}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
                       </div>
                     </button>
                   )

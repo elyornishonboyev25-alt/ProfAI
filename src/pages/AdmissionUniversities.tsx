@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
   Bookmark,
   BookmarkCheck,
   Building2,
@@ -16,6 +15,7 @@ import {
   MapPin,
   RotateCcw,
   Search,
+  SlidersHorizontal,
   Sparkles,
 } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
@@ -134,7 +134,6 @@ const UniversityCard = memo(function UniversityCard({
         </div>
         <div
           className="admission-match-ring"
-          style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
           title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Planning fit only; add your scores and check full admission requirements'}
         >
           <span><small><UiText text="Fit" /></small><strong>{fit.fitPercent}%</strong></span>
@@ -245,17 +244,9 @@ function FilterSelect({
 export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
   const navigate = useNavigate()
   const { c } = useCopy()
-  const resultsSectionRef = useRef<HTMLElement>(null)
   const all = useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
   const { scores, country: profileCountry } = useAdmissionScores()
-  const popularCountries = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const university of all) counts.set(university.country, (counts.get(university.country) ?? 0) + 1)
-    return Array.from(counts, ([name, count]) => ({ name, count }))
-      .sort((first, second) => second.count - first.count || first.name.localeCompare(second.name))
-      .slice(0, 4)
-  }, [all])
   const { shortlistedSet, shortlistCount, toggleShortlist } = useUniversityShortlist()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [query, setQuery] = useState('')
@@ -264,6 +255,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
   const [budget, setBudget] = useState<BudgetFilter>('all')
   const [ielts, setIelts] = useState<IeltsFilter>('all')
   const [rank, setRank] = useState<RankFilter>('all')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(UNIVERSITY_PAGE_SIZE)
 
   const visibleCatalog = useMemo(
@@ -326,22 +318,21 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
     setRank('all')
   }
 
-  const selectDestination = (destination: string) => {
-    setCountry(destination)
-    if (window.matchMedia('(max-width: 1199px)').matches) {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      requestAnimationFrame(() => resultsSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }))
-    }
-  }
+  const activeFilterCount = [country !== 'all', budget !== 'all', ielts !== 'all', rank !== 'all'].filter(Boolean).length
 
   return (
     <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
         <div className="admission-discovery-layout">
-          <aside className="admission-universities-intro-column">
-            <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <UiText text={shortlistOnly ? 'Back to Universities' : 'Back to Applications'} />
-            </Link>
+          <header className="admission-universities-intro-column">
+            <div className="admission-university-top-actions">
+              <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <UiText text={shortlistOnly ? 'Back to Universities' : 'Back to Applications'} />
+              </Link>
+              {!shortlistOnly && <button type="button" className="admission-university-top-shortlist" aria-label={c('My shortlist')} onClick={() => navigate('/admission/shortlist')}>
+                <BookmarkCheck size={17} /> <span className="admission-shortlist-label"><UiText text="My shortlist" /></span> <span className="admission-shortlist-count">{shortlistCount}</span> <ArrowRight size={15} className="admission-shortlist-arrow" />
+              </button>}
+            </div>
             <div className="admission-university-intro-sticky">
               {shortlistOnly ? (
                 <div className="admission-shortlist-summary">
@@ -359,33 +350,18 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                     <span className="admission-university-intro-kicker"><GraduationCap size={17} /> <UiText text="University discovery" /></span>
                     <h1><UiText text="Find your" /> <em><UiText text="next chapter." /></em></h1>
                     <p><UiText text="Explore universities, compare real details and save the places that belong on your shortlist." /></p>
-                    <div className="admission-university-intro-stats" aria-label="University catalog at a glance">
-                      <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text="Universities" /></span></div>
-                      <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text="QS ranked" /></span></div>
-                      <div><strong>{countries.length}</strong><span><UiText text="Countries" /></span></div>
-                    </div>
                   </div>
-                  <div className="admission-university-destinations">
-                    <div className="admission-university-destinations-heading"><span><UiText text="Explore by destination" /></span><MapPin size={17} /></div>
-                    <div className="admission-university-destination-list">
-                      {popularCountries.map((destination, index) => (
-                        <button key={destination.name} type="button" className={country === destination.name ? 'is-active' : ''} aria-pressed={country === destination.name} onClick={() => selectDestination(destination.name)}>
-                          <span className="admission-university-destination-index">0{index + 1}</span>
-                          <span className="admission-university-destination-name"><UiText text={destination.name} /><small>{destination.count.toLocaleString('en-US')} <UiText text="Universities" /></small></span>
-                          <ArrowUpRight size={17} />
-                        </button>
-                      ))}
-                    </div>
-                    <button type="button" className="admission-university-intro-shortlist" onClick={() => navigate('/admission/shortlist')}>
-                      <span><BookmarkCheck size={19} /> <UiText text="My shortlist" /> <small>{shortlistCount}</small></span><ArrowRight size={18} />
-                    </button>
+                  <div className="admission-university-intro-stats" aria-label="University catalog at a glance">
+                    <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text="Universities" /></span></div>
+                    <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text="QS ranked" /></span></div>
+                    <div><strong>{countries.length}</strong><span><UiText text="Countries" /></span></div>
                   </div>
                 </div>
               )}
             </div>
-          </aside>
+          </header>
 
-          <section ref={resultsSectionRef} className="admission-universities-results-column min-w-0">
+          <section className="admission-universities-results-column min-w-0">
             <div className="admission-search-panel">
               <div className="admission-catalog-heading"><div><span><Building2 size={15} /> <UiText text={shortlistOnly ? 'Saved universities' : 'University catalog'} /></span><h2><UiText text={shortlistOnly ? 'Your shortlist' : 'Explore universities'} /></h2></div><p><UiText text={shortlistOnly ? 'Keep your chosen options close while you plan your next step.' : 'Discover institutions that match your goals, location and budget.'} /></p></div>
               <div className="admission-search-box">
@@ -399,7 +375,10 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                 />
               </div>
 
-              <div className="admission-filter-row">
+              <button type="button" className="admission-filter-toggle" aria-controls="admission-university-filters" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}>
+                <SlidersHorizontal size={16} /> <UiText text="Filters" />{activeFilterCount > 0 && <span>{activeFilterCount}</span>}<ChevronDown size={16} aria-hidden="true" />
+              </button>
+              <div id="admission-university-filters" className={`admission-filter-row${filtersOpen ? ' is-expanded' : ''}`}>
                 <FilterSelect label="Country" value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
                 <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
                 <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }]} />

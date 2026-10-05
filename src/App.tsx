@@ -76,6 +76,7 @@ const IELTSSpeakingTest = lazy(() => import('@/pages/IELTSSpeakingTest'))
 const TestRunner = lazy(() => import('@/pages/TestRunner'))
 const Articles = lazy(() => import('@/pages/Articles'))
 const ArticleReader = lazy(() => import('@/pages/ArticleReader'))
+const SharedShadowing = lazy(() => import('@/pages/SharedShadowing'))
 const ShadowingLab = lazy(() => import('@/pages/ShadowingLab'))
 const Podcast = lazy(() => import('@/pages/Podcast'))
 const Admission = lazy(() => import('@/pages/Admission'))
@@ -289,7 +290,7 @@ function App() {
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
-  const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/results/')
+  const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
   const isTestMode = isCustomTestMode || isClassicTestMode
   const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
   const isCommunityPeopleMode = pathname === '/community' && (!communityMode || communityMode === 'people')
@@ -335,7 +336,7 @@ function App() {
     isGuestExperience ||
     (isLearningCenterMode && !user) ||
     pathname === '/premium' ||
-    pathname.startsWith('/shared/results/') ||
+    pathname.startsWith('/shared/') ||
     pathname.startsWith('/speaker/')
 
   // The workspace shell is route-owned, not auth-owned. This keeps its geometry
@@ -433,7 +434,7 @@ function App() {
 
   // New accounts enter onboarding once. Completing the review or skipping its
   // final step persists the flag, so learners can edit their profile later.
-  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && pathname !== '/focus' && !pathname.startsWith('/shared/results/')) {
+  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && pathname !== '/focus' && !pathname.startsWith('/shared/')) {
     return <Navigate to="/onboarding" replace />
   }
   if (user?.onboardingCompleted && pathname === '/onboarding') {
@@ -756,6 +757,7 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+                      <Route path="/shared/shadowing/:shareId" element={<AnimatedRoute><SharedShadowing /></AnimatedRoute>} />
                       <Route path="/shared/results/:shareId" element={<AnimatedRoute><SharedResult /></AnimatedRoute>} />
                       <Route
                         path="/analyze-mistakes"

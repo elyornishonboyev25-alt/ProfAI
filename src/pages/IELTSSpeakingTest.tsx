@@ -1,4 +1,6 @@
 import UiText from '@/components/common/UiText'
+import TestVocabulary from '@/components/vocab/TestVocabulary'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -148,8 +150,10 @@ export default function IELTSSpeakingTest() {
     content = (
       <FullMockRunner
         mock={mode.mock}
+        landingReady={!booting}
+        inFullMock={Boolean(mockContext?.id)}
         onExit={exitTest}
-        onSaved={(analysis, transcript) => {
+        onSaved={(analysis, transcript, launchMode) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
             userId: user?.id ?? null,
@@ -202,9 +206,8 @@ export default function IELTSSpeakingTest() {
               if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level })
             })
           }
-          // Full mock → award a Speaking band badge (with celebration). Daily
-          // practice in DayRunner intentionally does not award badges.
-          awardBadge({
+          // Simulation awards a Speaking band badge. Practice does not.
+          if (launchMode === 'simulation') awardBadge({
             userId: user?.id ?? null,
             track: 'IELTS_SPEAKING',
             band: analysis.overallBand,
@@ -810,11 +813,17 @@ function FullMockRunner({
   mock,
   onExit,
   onSaved,
+  inFullMock = false,
+  landingReady = true,
 }: {
   mock: SpeakingFullMockEntry
   onExit: () => void
-  onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[]) => void
+  inFullMock?: boolean
+  landingReady?: boolean
+  onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[], launchMode: 'practice' | 'simulation') => void
 }) {
+  const [launchMode, setLaunchMode] = useState<'practice' | 'simulation' | null>(inFullMock ? 'simulation' : null)
+  const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   // Each numbered mock has its own fixed question set (distinct across mocks).
   const seed = {
     part1: mock.parts.part1.questions.map((q) => q.q),
@@ -825,13 +834,40 @@ function FullMockRunner({
     },
     part3: mock.parts.part3.questions.map((q) => q.q),
   }
+  if (!launchMode) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-white to-rose-50 px-4 py-10 sm:px-6">
+        <div className="w-full max-w-5xl">
+          <motion.header initial={reducedMotion ? false : { opacity: 0, y: -8 }} animate={landingReady ? { opacity: 1, y: 0 } : reducedMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.4 }} className="mb-10 text-center">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-600">IELTS Speaking</p>
+            <h1 className="mt-3 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">{mock.title}</h1>
+            <p className="mt-4 text-sm text-slate-600"><UiText text="Practise with purpose. Simulate with confidence." /></p>
+          </motion.header>
+          <TestVocabulary testId={mock.id} variant="reminder" ready={landingReady} />
+          <div className="grid gap-6 md:grid-cols-2">
+            {(['practice', 'simulation'] as const).map((mode) => (
+              <motion.section key={mode} initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={landingReady ? { opacity: 1, y: 0 } : reducedMotion ? undefined : { opacity: 0, y: 18 }} transition={{ duration: 0.45, delay: mode === 'practice' ? 0.05 : 0.12 }} whileHover={allowHoverMotion ? { y: -4 } : undefined} className={`flex flex-col rounded-3xl border p-6 shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] sm:p-9 ${mode === 'practice' ? 'border-red-100 bg-white' : 'border-red-200 bg-rose-50/70'}`}>
+                <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-600 to-rose-500 text-white">{mode === 'practice' ? <Lightbulb className="h-7 w-7" /> : <Mic className="h-7 w-7" />}</span>
+                <h2 className="text-2xl font-bold text-slate-900"><UiText text={mode === 'practice' ? 'Practice Mode' : 'Simulation Mode'} /></h2>
+                <p className="mb-7 mt-3 flex-1 text-sm leading-6 text-slate-600"><UiText text={mode === 'practice' ? 'Prepare with this test’s vocabulary, then practise all three parts with the AI examiner.' : 'Complete all three parts with the AI examiner. Explore this test’s vocabulary in your review after finishing.'} /></p>
+                <button type="button" onClick={() => setLaunchMode(mode)} className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"><UiText text={mode === 'practice' ? 'Start Practice' : 'Launch Final Simulation'} /></button>
+                {mode === 'practice' ? <TestVocabulary testId={mock.id} variant="link" ready={landingReady} /> : null}
+              </motion.section>
+            ))}
+          </div>
+          <button type="button" onClick={onExit} className="premium-back-btn mx-auto mt-8"><ArrowLeft className="h-4 w-4" /><UiText text="Back to Speaking Tests" /></button>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="ielts-speaking-workspace ielts-speaking-live-workspace py-4">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
         modeLabel={mock.title}
         onExit={onExit}
-        onSaved={onSaved}
+        onSaved={(analysis, transcript) => onSaved(analysis, transcript, launchMode)}
+        hideVocabularyReview={inFullMock}
       />
     </div>
   )

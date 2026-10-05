@@ -1,8 +1,9 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import i18n from '../../src/i18n/index'
+import SharedShadowing from '../../src/pages/SharedShadowing'
 import ShadowingPlayer from '../../src/components/shadowing/ShadowingPlayer'
 import { guidedShadowing } from '../../src/data/educationalMedia'
 import { loadYouTubeApi } from '../../src/lib/youtube'
@@ -51,22 +52,23 @@ export async function run() {
   try {
     await render(<ShadowingLab />)
     assert.equal(container.querySelectorAll('.learning-card').length, 12)
-    assert.match(container.textContent!, /100 \/ 100 lessons/)
+    assert.match(container.textContent!, /22 \/ 22 lessons/)
+    assert.match(container.querySelector('.learning-card')!.textContent!, /Morgan Freeman/)
     assert.doesNotMatch(container.textContent!, /Elon Musk|WatchMojo|Steve Jobs/)
     assert.equal(container.querySelectorAll('form').length, 0, 'No unreviewed-link submission')
     await click(button('Next'))
-    assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 2 \/ 9/)
-    await click(button('Academic English'))
-    assert.equal(container.querySelector('.learning-pagination'), null)
-    assert.equal(container.querySelectorAll('.learning-card').length, SHADOWING_CATALOG.filter(item => item.category === 'Academic English').length)
-    await select(container.querySelector('select')!, 'C1')
+    assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 2 \/ 2/)
+    await click(button('Actors'))
+    assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 1 \/ 2/)
+    assert.equal(container.querySelectorAll('.learning-card').length, Math.min(12, SHADOWING_CATALOG.filter(item => item.category === 'Actors').length))
+    await select(container.querySelector('select')!, 'A2')
     assert.match(container.textContent!, /No matching lessons/)
     await click(button('Reset filters'))
     await click(container.querySelector<HTMLButtonElement>('.learning-card'))
     assert.match(container.textContent!, /Audio sections need timed English captions/)
     assert.equal(container.querySelector('button[aria-label="Play audio 1"]'), null, 'Never invent speech boundaries when captions are offline')
     assert.ok(button('Retry captions'))
-    assert.equal(button('I am ready — start practice')!.disabled, true)
+    assert.equal(button('I am ready — start practice')!.disabled, false, 'Caption download failures do not block full-video recording practice')
     assert.ok(SHADOWING_CATALOG.every(item => item.durationSec <= 120))
 
     // Independent players let full video continue across every audio boundary.
@@ -109,6 +111,12 @@ export async function run() {
     await wait(180)
     assert.equal(full.state.pauses, fullPauses, 'Full video never stops at audio-section boundaries')
     assert.match(container.textContent!, /Complete sentence 6/)
+    await wait(1550)
+    assert.equal(container.querySelector('button[aria-label="Pause video"]')!.getAttribute('data-controls-visible'), 'false', 'Center pause control auto-hides during playback')
+    await click(container.querySelector<HTMLElement>('[data-testid="shadowing-stage"]'))
+    assert.equal(container.querySelector('button[aria-label="Pause video"]')!.getAttribute('data-controls-visible'), 'true', 'Tap reveals controls without pausing')
+    await click(container.querySelector<HTMLElement>('[data-testid="shadowing-stage"]'))
+    assert.equal(container.querySelector('button[aria-label="Pause video"]')!.getAttribute('data-controls-visible'), 'false', 'Another tap dismisses the pause icon')
     await click(container.querySelector<HTMLElement>('[data-testid="shadowing-stage"]'))
     assert.equal(full.state.pauses, fullPauses, 'Clicking video outside central control does not pause')
     await click(container.querySelector<HTMLButtonElement>('button[aria-label="Pause video"]'))
@@ -138,6 +146,65 @@ export async function run() {
     assert.equal(full.state.seeks.at(-1), 0)
     full.state.time = 0.2
     await wait(100)
+    // Upload happens only after an explicit share click; local playback remains local.
+    const originalPost = apiClient.post
+    const previousRecorder = (globalThis as any).MediaRecorder
+    const previousDevices = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices')
+    const previousClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    const uploads: any[] = []
+    let copied = ''
+    let stoppedTracks = 0
+    let failUpload = false
+    const recordedBytes = new Uint8Array([0x1a,0x45,0xdf,0xa3, ...Array(40).fill(1)])
+    class FakeRecorder {
+      static isTypeSupported(type: string) { return type.startsWith('audio/webm') }
+      state = 'inactive'; mimeType = 'audio/webm'; ondataavailable: any; onstop: any
+      start() { this.state = 'recording' }
+      stop() { this.state = 'inactive'; this.ondataavailable?.({data:new Blob([recordedBytes], {type:this.mimeType})}); this.onstop?.() }
+    }
+    Object.defineProperty(globalThis, 'MediaRecorder', {value:FakeRecorder, configurable:true, writable:true})
+    Object.defineProperty(navigator, 'mediaDevices', {value:{getUserMedia:async()=>({getTracks:()=>[{stop:()=>{stoppedTracks++}}]})}, configurable:true})
+    Object.defineProperty(navigator, 'clipboard', {value:{writeText:async(value:string)=>{copied=value}}, configurable:true})
+    apiClient.post = (async (path: string, body: any) => {
+      assert.equal(path, '/shadowing-recordings')
+      uploads.push(body)
+      if (failUpload) throw new Error('Network offline')
+      return {path:'/shared/shadowing/c000000000000000000000000'}
+    }) as typeof apiClient.post
+    try {
+      await click(button('Record yourself'))
+      await click(button('Stop recording'))
+      assert.ok(stoppedTracks > 0, 'Microphone closes after stopping')
+      assert.equal(uploads.length, 0)
+      assert.ok(button('Share recording'))
+      await click(button('Share recording'))
+      assert.equal(uploads.length, 1)
+      assert.equal(uploads[0].mimeType, 'audio/webm')
+      assert.equal(uploads[0].audioBase64, btoa(String.fromCharCode(...recordedBytes)))
+      assert.ok(uploads[0].durationSec > 0 && uploads[0].durationSec <= 120)
+      assert.match(copied, /localhost:5199\/shared\/shadowing\/c/)
+      assert.match(container.textContent!, /Link copied/)
+      await click(button('Share recording'))
+      assert.equal(uploads.length, 1, 'Re-sharing an unchanged recording reuses its link')
+      const firstKey = uploads[0].recordingKey
+      await click(button('Record yourself'))
+      await click(button('Stop recording'))
+      failUpload = true
+      await click(button('Share recording'))
+      assert.match(container.textContent!, /Could not share the recording/)
+      assert.notEqual(uploads[1].recordingKey, firstKey, 'A new take never shares the old audio')
+      failUpload = false
+      await click(button('Share recording'))
+      assert.equal(uploads[2].recordingKey, uploads[1].recordingKey, 'Retry preserves upload idempotency')
+    } finally {
+      apiClient.post = originalPost
+      if (previousRecorder === undefined) delete (globalThis as any).MediaRecorder
+      else (globalThis as any).MediaRecorder = previousRecorder
+      if (previousDevices) Object.defineProperty(navigator,'mediaDevices',previousDevices)
+      else delete (navigator as any).mediaDevices
+      if (previousClipboard) Object.defineProperty(navigator,'clipboard',previousClipboard)
+      else delete (navigator as any).clipboard
+    }
     full.state.time = 120.1
     const endPauses = full.state.pauses
     await wait(180)
@@ -158,6 +225,31 @@ export async function run() {
     window.YT = savedYouTube
     window.onYouTubeIframeAPIReady!()
     await retryLoad
+
+    let publicRequest = false
+    apiClient.get = (async (path: string, options: any) => {
+      assert.equal(path, '/shadowing-recordings/c000000000000000000000000')
+      publicRequest = options.auth === false
+      return {recording:{id:'c000000000000000000000000',title:'Morgan Freeman — shadowing',youtubeId:SHADOWING_CATALOG[0].youtubeId,durationSec:30,createdAt:new Date().toISOString()}}
+    }) as typeof apiClient.get
+    await render(<Routes><Route path="/shared/shadowing/:shareId" element={<SharedShadowing />} /></Routes>, '/shared/shadowing/c000000000000000000000000')
+    assert.equal(publicRequest, true)
+    assert.ok(container.querySelector('audio[controls]'))
+    assert.match(container.querySelector('audio')!.getAttribute('src')!, /shadowing-recordings\/c.*\/audio/)
+    assert.doesNotMatch(container.textContent!, /Dashboard|Login|IELTS|SAT/)
+    let recordingPauses = 0
+    container.querySelector('audio')!.pause = () => { recordingPauses++ }
+    await click(button('Watch original video'))
+    assert.equal(recordingPauses, 1, 'Original video pauses the shared voice recording')
+    assert.match(container.querySelector('iframe')!.getAttribute('src')!, /end=120/)
+    await act(async () => container.querySelector('audio')!.dispatchEvent(new Event('play')))
+    assert.equal(container.querySelector('iframe'), null, 'Listening to the voice recording stops the original video')
+    await click(button('Watch original video'))
+    await click(button('Hide original video'))
+    assert.equal(container.querySelector('iframe'), null)
+    apiClient.get = (async () => { throw new Error('No recording') }) as typeof apiClient.get
+    await render(<Routes><Route path="/shared/shadowing/:shareId" element={<SharedShadowing />} /></Routes>, '/shared/shadowing/missing')
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /recording is unavailable/)
 
     localStorage.setItem(`smarttest-podcast:curated-${PODCAST_CATALOG[0].youtubeId}`, JSON.stringify({ position: 42, bookmarks: [12] }))
     await render(<Podcast />)
@@ -302,7 +394,7 @@ export async function run() {
     assert.match(container.textContent!, /1–10 daqiqa/)
     await render(<ShadowingLab />)
     assert.match(container.textContent!, /Inglizcha nutq ritmini toping/)
-    console.log('PASS: 100/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, independent shadowing playback, one-pass audio, caption boundaries, two-minute clips, playback errors, planned links and Uzbek UI')
+    console.log('PASS: 22/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, independent shadowing playback, one-pass audio, caption boundaries, two-minute clips, playback errors, public recording sharing, disappearing controls, planned links and Uzbek UI')
   } finally {
     apiClient.get = originalGet
     if (root) await act(async () => root!.unmount())

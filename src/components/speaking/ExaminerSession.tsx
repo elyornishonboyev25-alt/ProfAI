@@ -211,9 +211,11 @@ export default function ExaminerSession({
   modeLabel,
   onExit,
   onSaved,
+  hideVocabularyReview = false,
 }: {
   config: SessionConfig
   modeLabel: string
+  hideVocabularyReview?: boolean
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
@@ -807,6 +809,7 @@ export default function ExaminerSession({
         onRetry={retrySession}
         onRegrade={() => void runEvaluation()}
         onExit={onExit}
+        hideVocabularyReview={hideVocabularyReview}
       />
     )
   }

@@ -32,14 +32,16 @@ export async function run() {
   useAuthStore.setState({ user: { id: 'realtime-test-user', fullName: 'Test Learner', email: 'test@example.invalid', role: 'USER' } as any, accessToken: 'fake-access-token', refreshToken: 'fake-refresh-token' })
   globalThis.fetch = async (url, options) => {
     if (String(url).endsWith('/ai/voice/connect')) {
-      assert.equal(JSON.parse(String(options?.body)).context.language, 'uz')
+      const request = JSON.parse(String(options?.body))
+      assert.equal(request.context.language, 'uz')
+      assert.ok(request.history.reduce((total: number, turn: { content: string }) => total + turn.content.length, 0) <= 26000, 'Voice history stays bounded even after a long written conversation')
       return new Response(JSON.stringify({ id: 'test-session', sdp: 'v=0\r\ns=server-answer\r\n', maxMinutes: 20 }), { status: 201 })
     }
     if (String(url).endsWith('/ai/voice/end')) { ends++; return new Response(null, { status: 204 }) }
     if (String(url).endsWith('/ai/generate')) return new Response(JSON.stringify({ text: JSON.stringify({ fluencyBand: 6, lexicalBand: 7, grammarBand: 6, pronunciationBand: 8, summary: 'Text feedback.', strengths: ['Clear idea.'], weaknesses: ['Develop reasons.'], improvementPriorities: [{ area: 'Grammar', target: 7, action: 'Use a relative clause.' }] }) }))
     throw new Error(`Unexpected request ${url}`)
   }
-  const options: any = { context: { pathname: '/ai-tutor', workspace: 'ielts', language: 'uz', mode: 'coach', studyContext: '', screenContext: '', siteKnowledge: '' }, history: [{ role: 'user', content: 'Earlier question.' }],
+  const options: any = { context: { pathname: '/ai-tutor', workspace: 'ielts', language: 'uz', mode: 'coach', studyContext: '', screenContext: '', siteKnowledge: '' }, history: [...Array.from({ length: 24 }, () => ({ role: 'assistant', content: 'Long previous explanation. '.repeat(300) })), { role: 'user', content: 'Earlier question.' }],
     state: (value: string) => states.push(value), level() {}, caption: (value: string) => captions.push(value),
     message: (...args: any[]) => messages.push(args), coachResult: (...args: any[]) => results.push(args), error: (issue: Error) => assert.fail(issue.message) }
   try {

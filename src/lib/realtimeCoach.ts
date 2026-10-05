@@ -50,6 +50,13 @@ export class RealtimeCoach {
   async start() {
     this.options.state('thinking')
     try {
+      const history: VoiceOptions['history'] = []
+      let historyChars = 0
+      for (const turn of this.options.history.slice(-24).reverse()) {
+        if (historyChars + turn.content.length > 26000) break
+        historyChars += turn.content.length
+        history.unshift(turn)
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
       if (this.closed) { stream.getTracks().forEach((track) => track.stop()); return }
       this.stream = stream
@@ -83,14 +90,14 @@ export class RealtimeCoach {
       await peer.setLocalDescription(await peer.createOffer())
       if (this.closed) return
       const session = await apiClient.post<{ id: string; sdp: string; maxMinutes: number }>('/ai/voice/connect', {
-        sdp: peer.localDescription?.sdp, context: this.options.context, history: this.options.history.slice(-24),
+        sdp: peer.localDescription?.sdp, context: this.options.context, history,
       }, { signal: this.controller.signal })
       if (this.closed) { void apiClient.post('/ai/voice/end', { id: session.id }).catch(() => {}); return }
       this.sessionId = session.id
       await peer.setRemoteDescription({ type: 'answer', sdp: session.sdp })
       await opened
       if (this.closed) return
-      for (const turn of this.options.history.slice(-24)) this.send({ type: 'conversation.item.create', item: { type: 'message', role: turn.role,
+      for (const turn of history) this.send({ type: 'conversation.item.create', item: { type: 'message', role: turn.role,
         content: [{ type: turn.role === 'user' ? 'input_text' : 'output_text', text: turn.content }] } })
       this.send({ type: 'response.create', response: { instructions: this.options.context.mode === 'examiner'
         ? 'Begin the IELTS speaking mock: greet the candidate briefly and ask their full name. Ask one question only.'

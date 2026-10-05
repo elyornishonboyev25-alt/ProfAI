@@ -32,6 +32,8 @@
     "test:auth-session": "node scripts/test-auth-session.mjs",
     "test:educational-media": "node scripts/test-educational-media.mjs",
     "test:vocabulary-ui": "npm run sync:sat-vocabulary && node scripts/test-vocabulary-ui.mjs",
+    "test:ielts-vocabulary-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-test-vocabulary-ui.tsx",
+    "test:ielts-vocabulary-browser": "node scripts/test-ielts-test-vocabulary-browser.mjs",
     "sync:sat-vocabulary": "node scripts/sync-sat-vocabulary.mjs",
     "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs",
     "validate:sat-test9": "node scripts/validate-sat-test9.mjs",

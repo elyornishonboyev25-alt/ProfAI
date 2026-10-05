@@ -34,6 +34,8 @@ import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
+import TestVocabulary from './vocab/TestVocabulary'
+import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
@@ -202,6 +204,7 @@ function CompactSelect({ options, value, onChange, disabled = false }: { options
 }
 
 function PremiumCard({ children, onClick, className = "", gradient = "from-red-500 to-rose-500" }: { children: React.ReactNode, onClick?: () => void, className?: string, gradient?: string }) {
+  const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const divRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
@@ -216,8 +219,11 @@ function PremiumCard({ children, onClick, className = "", gradient = "from-red-5
       ref={divRef}
       onMouseMove={handleMouseMove}
       onClick={onClick}
-      whileHover={{ y: -5 }}
-      whileTap={{ scale: 0.98 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.06 }}
+      whileHover={allowHoverMotion ? { y: -5 } : undefined}
+      whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       className={`relative overflow-hidden rounded-3xl border border-red-100 bg-white/95 backdrop-blur-xl shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] transition-all duration-300 group cursor-pointer ${className}`}
     >
       <div
@@ -2935,10 +2941,10 @@ export default function IELTSReadingInterface({
   }
 
   const renderStartScreen = () => (
-    <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-center justify-center p-6 relative overflow-hidden w-full">
+    <div className="h-full min-h-0 bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-start justify-center p-4 sm:p-6 relative overflow-y-auto overflow-x-hidden w-full">
       <AnimatedBackground />
-      <div className="max-w-5xl w-full relative z-10">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+      <div className="my-auto max-w-5xl w-full shrink-0 relative z-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <h1 className="text-5xl lg:text-6xl font-black mb-6 tracking-tight bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-transparent">
             {isListening ? 'Academic Listening Test' : 'Academic Reading Test'}
           </h1>
@@ -2947,6 +2953,7 @@ export default function IELTSReadingInterface({
           </p>
         </motion.div>
 
+        <TestVocabulary testId={test.id} variant="reminder" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PremiumCard onClick={() => { setTestMode('practice'); setShowModeModal(true); }} gradient="from-red-600 to-rose-600" className="p-10">
             <div className="flex items-center gap-4 mb-8">
@@ -2969,9 +2976,10 @@ export default function IELTSReadingInterface({
                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Select specific parts to practice
               </div>
             </div>
-            <div className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all">
+            <button type="button" onClick={(event) => { event.stopPropagation(); setTestMode('practice'); setShowModeModal(true); }} className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all">
               Enter Practice Library
-            </div>
+            </button>
+            <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
 
           <PremiumCard onClick={() => { setTestMode('simulation'); handleStartTest(); }} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
@@ -3003,7 +3011,7 @@ export default function IELTSReadingInterface({
 
         <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
           <button type="button" onClick={onExit} className="text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2 mx-auto px-6 py-2 rounded-full border border-white/5 hover:bg-white/5">
-            <ArrowLeftIcon className="w-4 h-4" /> Return to Reading Tests
+            <ArrowLeftIcon className="w-4 h-4" /> Return to {isListening ? 'Listening' : 'Reading'} Tests
           </button>
         </motion.div>
       </div>
@@ -6299,6 +6307,7 @@ export default function IELTSReadingInterface({
               )}
             </div>
           </header>
+          {isReviewMode ? <div className="shrink-0 px-4"><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
           <div className="flex-1 relative overflow-hidden" id="test-main-container">
             {isListening ? (
               <div className="relative h-full overflow-hidden">

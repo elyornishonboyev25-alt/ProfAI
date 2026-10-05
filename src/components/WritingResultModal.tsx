@@ -20,6 +20,7 @@ import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
+import TestVocabulary from '@/components/vocab/TestVocabulary'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -145,6 +146,7 @@ export default function WritingResultModal({
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
+            {entry.fullTest ? <TestVocabulary testId={entry.fullTest.id} variant="review" /> : null}
             {/* Score hero */}
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/50 p-5">
               <div className="flex flex-col items-center">

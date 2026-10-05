@@ -17,27 +17,44 @@ async function main() {
   const source = `
     import React from 'react';
     import { createRoot } from 'react-dom/client';
-    import { MemoryRouter, Routes, Route } from 'react-router-dom';
+    import { BrowserRouter, MemoryRouter, Routes, Route } from 'react-router-dom';
     import IELTSReadingInterface from './src/components/IELTSReadingInterface';
     import IELTSWritingFullTestInterface from './src/components/IELTSWritingFullTestInterface';
     import IELTSSpeakingTest from './src/pages/IELTSSpeakingTest';
     import TestVocabulary from './src/components/vocab/TestVocabulary';
+    import IeltsVocabularyStudio from './src/components/vocab/IeltsVocabularyStudio';
+    import VocabularyActivity from './src/pages/VocabularyActivity';
     import { resolveIeltsTestById } from './src/utils/ieltsTestCatalog';
     import { getWritingFullTestCatalog } from './src/data/writingTestData';
     const root = createRoot(document.getElementById('root'));
     window.show = (skill, review = false) => {
+      const id = skill === 'listening' ? 'ielts-listening-1' : skill === 'reading' ? 'reading-roadmap-full-1' : skill + '-full-1';
+      const path = skill === 'listening' || skill === 'reading' ? '/test/' + skill + '/' + id : '/ielts/' + skill + '/test/' + id;
+      history.replaceState({}, '', path);
       const test = resolveIeltsTestById(skill === 'listening' ? 'ielts-listening-1' : 'reading-roadmap-full-1');
       const payload = review ? { result: { testId: test.id, answers: {}, score: 0, totalQuestions: 40, correctAnswers: 0, completedAt: new Date().toISOString() } } : undefined;
-      root.render(<MemoryRouter key={skill + review} initialEntries={['/speaking/speaking-full-1']}>
-        {skill === 'speaking' ? <Routes><Route path='/speaking/:id' element={<IELTSSpeakingTest />} /></Routes>
+      root.render(<MemoryRouter key={skill + review} initialEntries={[path]}>
+        {skill === 'speaking' ? <Routes><Route path='/ielts/speaking/test/:id' element={<IELTSSpeakingTest />} /></Routes>
           : skill === 'writing' ? <IELTSWritingFullTestInterface fullTest={getWritingFullTestCatalog()[0]} onExit={() => {}} />
           : <IELTSReadingInterface test={test} onComplete={() => {}} onExit={() => {}} reviewPayload={payload} />}
       </MemoryRouter>);
     };
-    window.show('listening');
+    if (location.pathname.startsWith('/vocabulary/ielts')) {
+      root.render(<BrowserRouter><Routes>
+        <Route path='/vocabulary/ielts' element={<IeltsVocabularyStudio />} />
+        <Route path='/vocabulary/ielts/:bookId/:testId/:sectionId' element={<VocabularyActivity />} />
+        <Route path='/vocabulary/ielts/:bookId/:testId/:sectionId/:activity' element={<VocabularyActivity />} />
+      </Routes></BrowserRouter>);
+    } else window.show(location.pathname.includes('/speaking/') ? 'speaking' : location.pathname.includes('/writing/') ? 'writing' : location.pathname.includes('/reading/') ? 'reading' : 'listening');
     window.showVocabularyCard = (skill, ready = true) => {
       const ids = { listening: 'ielts-listening-1', reading: 'reading-roadmap-full-1', writing: 'writing-full-1', speaking: 'speaking-full-1' };
-      root.render(<div style={{width: 300, margin: 10}}><TestVocabulary testId={ids[skill]} variant='review' ready={ready} /></div>);
+      root.render(<MemoryRouter><div style={{width: 300, margin: 10}}><TestVocabulary testId={ids[skill]} variant='review' ready={ready} /></div></MemoryRouter>);
+    };
+    window.showReturnFixture = (skill) => {
+      const ids = { listening: 'ielts-listening-1', reading: 'reading-roadmap-full-1', writing: 'writing-full-1', speaking: 'speaking-full-1' };
+      const path = (skill === 'listening' || skill === 'reading' ? '/test/' + skill + '/' : '/ielts/' + skill + '/test/') + ids[skill] + '?assignmentId=lesson-1#setup';
+      history.replaceState({}, '', path);
+      root.render(<MemoryRouter key={skill} initialEntries={[path]}><input id='draft-answer' defaultValue='Keep my answer' /><TestVocabulary testId={ids[skill]} variant='link' /></MemoryRouter>);
     };
   `
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: 'tmp/ielts-vocabulary-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
@@ -62,11 +79,11 @@ async function main() {
     await new Promise((resolve) => socket.once('open', resolve))
     let id = 0
     const pending = new Map()
-    const send = (method, params = {}) => new Promise((resolve, reject) => {
+    const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
       const requestId = ++id
       const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, 15000)
       pending.set(requestId, { resolve, reject, timeout })
-      socket.send(JSON.stringify({ id: requestId, method, params }))
+      socket.send(JSON.stringify({ id: requestId, method, params, sessionId }))
     })
     const exceptions = []
     socket.on('message', (data) => {
@@ -98,6 +115,7 @@ async function main() {
       for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
         await evaluate(`localStorage.clear();sessionStorage.clear();window.show('${skill}')`)
         await until('document.querySelector(\'[data-test-vocabulary="link"] a\')')
+        await until('document.querySelector(\'[data-test-vocabulary="reminder"] aside\')')
         await new Promise((resolve) => setTimeout(resolve, skill === 'speaking' ? 2700 : 750))
         if (skill === 'speaking') await until("!document.body.textContent.includes('Preparing your Speaking test')")
         const layout = await evaluate(`(() => {
@@ -112,7 +130,11 @@ async function main() {
         assert.equal(layout.horizontal, true, `${width} ${skill}: no horizontal overflow`)
         if (!layout.reachable) { const shot = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(join(screenshots, `${width}-${skill}-failure.png`), Buffer.from(shot.data, 'base64')) }
         assert.equal(layout.reachable, true, `${width} ${skill}: vocabulary CTA is reachable ${JSON.stringify(layout)}`)
-        assert.equal(layout.href, `/vocabulary/ielts?skill=${skill}&test=1`)
+        const vocabularyUrl = new URL(layout.href, 'http://localhost')
+        assert.equal(vocabularyUrl.pathname, '/vocabulary/ielts')
+        assert.equal(vocabularyUrl.searchParams.get('skill'), skill)
+        assert.equal(vocabularyUrl.searchParams.get('test'), '1')
+        assert.ok(vocabularyUrl.searchParams.get('returnTo').endsWith(skill === 'listening' ? 'ielts-listening-1' : skill === 'reading' ? 'reading-roadmap-full-1' : `${skill}-full-1`))
         assert.equal(layout.reminder, true)
         assert.ok(layout.cardHeight <= (width >= 768 ? 190 : 270), `${width} ${skill}: reminder stays compact (${layout.cardHeight}px)`)
         assert.equal(layout.opacity, '1', 'Entry animation finishes with a readable card')
@@ -146,10 +168,66 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 750))
       const layout = await evaluate(`(() => {const card=document.querySelector('.test-vocab-card'),r=card.getBoundingClientRect(),a=card.querySelector('a').getBoundingClientRect();return {fits:card.scrollWidth<=card.clientWidth+1 && a.left>=r.left && a.right<=r.right,rounded:parseFloat(getComputedStyle(card).borderRadius)>=28,href:card.querySelector('a').getAttribute('href')};})()`)
       assert.ok(layout.fits && layout.rounded, `${skill}: rounded review adapts to a narrow sidebar ${JSON.stringify(layout)}`)
-      assert.equal(layout.href, `/vocabulary/ielts?skill=${skill}&test=1`)
+      const vocabularyUrl = new URL(layout.href, 'http://localhost')
+      assert.equal(vocabularyUrl.searchParams.get('skill'), skill)
+      assert.equal(vocabularyUrl.searchParams.get('test'), '1')
+      assert.ok(vocabularyUrl.searchParams.get('returnTo'))
       const shot = await send('Page.captureScreenshot', { format: 'png' })
       await writeFile(join(screenshots, `sidebar-${skill}-review.png`), Buffer.from(shot.data, 'base64'))
     }
+    for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
+      await evaluate(`window.showReturnFixture('${skill}')`)
+      await until('document.querySelector(\'[data-test-vocabulary="link"] a\')')
+      const returnTo = await evaluate('location.pathname + location.search + location.hash')
+      const existing = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).map((target) => target.id)
+      await send('Runtime.evaluate', { expression: `document.querySelector('[data-test-vocabulary="link"] a').click()`, userGesture: true })
+      let popup
+      for (let n = 0; n < 100; n++) {
+        popup = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find((target) => target.type === 'page' && !existing.includes(target.id))
+        if (popup) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+      assert.ok(popup, `${skill}: vocabulary opens in a new tab`)
+      const { sessionId } = await send('Target.attachToTarget', { targetId: popup.id, flatten: true })
+      const popupEvaluate = async (expression) => {
+        const result = await send('Runtime.evaluate', { expression, returnByValue: true, userGesture: true }, sessionId)
+        assert.ok(!result.exceptionDetails, JSON.stringify(result.exceptionDetails))
+        return result.result.value
+      }
+      const popupUntil = async (expression) => {
+        for (let n = 0; n < 100; n++) {
+          if (await popupEvaluate(`Boolean(${expression})`)) return
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+        throw new Error(`${skill}: popup timed out: ${expression}`)
+      }
+      await popupUntil('document.querySelector("[data-vocabulary-test-return]")')
+      await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, sessionId)
+      await new Promise((resolve) => setTimeout(resolve, 750))
+      const returnLayout = await popupEvaluate(`(() => {const a=document.querySelector('[data-vocabulary-test-return]'),r=a.getBoundingClientRect();return {fits:document.documentElement.scrollWidth<=innerWidth+1 && r.left>=0 && r.right<=innerWidth,visible:r.top>=0 && r.bottom<=innerHeight};})()`)
+      assert.ok(returnLayout.fits && returnLayout.visible, `${skill}: return button remains visible on mobile ${JSON.stringify(returnLayout)}`)
+      const popupShot = await send('Page.captureScreenshot', { format: 'png' }, sessionId)
+      await writeFile(join(screenshots, `390-${skill}-vocabulary-return.png`), Buffer.from(popupShot.data, 'base64'))
+      assert.equal(await popupEvaluate('document.querySelector("[data-vocabulary-test-return]").getAttribute("href")'), returnTo)
+      assert.equal(await popupEvaluate('!!window.opener'), true, 'The same-origin test tab is available for return')
+      await popupEvaluate(`[...document.querySelectorAll('a')].find(a => a.textContent === 'Practise this set').click()`)
+      await popupUntil('document.querySelector(".vocab-activity-picker")')
+      await popupEvaluate(`[...document.querySelectorAll('a')].find(a => a.pathname.endsWith('/flashcards')).click()`)
+      await popupUntil('location.pathname.endsWith("/flashcards")')
+      await send('Page.reload', {}, sessionId)
+      await popupUntil('document.querySelector("[data-vocabulary-test-return]")')
+      assert.equal(await popupEvaluate('document.querySelector("[data-vocabulary-test-return]").getAttribute("href")'), returnTo, 'Return survives drill navigation and reload')
+      await popupEvaluate('document.querySelector("[data-vocabulary-test-return]").click()')
+      for (let n = 0; n < 100; n++) {
+        if (!(await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).some((target) => target.id === popup.id)) { popup = null; break }
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+      assert.equal(popup, null, `${skill}: return closes vocabulary and reuses the test tab`)
+      assert.equal(await evaluate('document.querySelector("#draft-answer").value'), 'Keep my answer', 'Return preserves the original test state')
+    }
+    console.log('PASS: all four skills return from vocabulary drills to their original tab with answers intact, including after reload')
+    await evaluate("window.showVocabularyCard('speaking')")
+    await until('document.querySelector(\'[data-test-vocabulary="review"] aside\')')
     await evaluate("document.documentElement.dataset.effects='reduced';window.dispatchEvent(new Event('profai:effects-changed'))")
     await until('!document.querySelector(\'.test-vocab-presence\')')
     assert.equal(await evaluate("getComputedStyle(document.querySelector('.test-vocab-card')).opacity"), '1', 'Reduced effects show the card immediately')

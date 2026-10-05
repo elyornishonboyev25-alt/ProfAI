@@ -1,5 +1,7 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Back to test': 'Testga qaytish',
+  'Review these words before you start the test.': 'Testni boshlashdan oldin ushbu so‘zlarni ko‘rib chiqing.',
   'Word collection': 'So‘zlar to‘plami',
   'Recall': 'Eslab qolish',
   'New perspectives': 'Yangi qarashlar',

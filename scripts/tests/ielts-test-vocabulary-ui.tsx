@@ -1,14 +1,15 @@
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import TestVocabulary from '../../src/components/vocab/TestVocabulary'
 import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
 import IELTSWritingFullTestInterface from '../../src/components/IELTSWritingFullTestInterface'
 import IELTSSpeakingTest from '../../src/pages/IELTSSpeakingTest'
 import IeltsVocabularyStudio from '../../src/components/vocab/IeltsVocabularyStudio'
+import VocabularyActivity from '../../src/pages/VocabularyActivity'
 import MockIELTSRun from '../../src/pages/MockIELTSRun'
-import { getIeltsTestVocabulary, speakingVocabularyTestId } from '../../src/utils/ieltsTestVocabulary'
+import { getIeltsTestVocabulary, getIeltsVocabularyReturnTo, getIeltsVocabularyTestPath, speakingVocabularyTestId, withVocabularyReturnTo } from '../../src/utils/ieltsTestVocabulary'
 import { getIeltsFullTestCatalog, getIeltsReadingUnifiedCatalog } from '../../src/utils/ieltsTrackCatalog'
 import { getIeltsSpeakingFullMockCatalog } from '../../src/utils/ieltsSpeakingCatalog'
 import { getWritingFullTestCatalog } from '../../src/data/writingTestData'
@@ -18,12 +19,13 @@ import { useAuthStore } from '../../src/store/authStore'
 
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot> | null = null
-async function render(node: React.ReactNode, path = '/') {
+async function render(node: React.ReactNode, path = '/', settle = true) {
   if (root) await act(async () => root!.unmount())
   root = createRoot(container)
   await act(async () => root!.render(<StrictMode><MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{node}</MemoryRouter></StrictMode>))
+  if (settle) await wait(700)
 }
-const reminder = () => container.querySelector('[data-test-vocabulary="reminder"]')
+const reminder = () => document.querySelector('[data-test-vocabulary="reminder"]')
 const link = () => container.querySelector('[data-test-vocabulary="link"] a') as HTMLAnchorElement
 const click = async (element: HTMLElement | null) => {
   assert.ok(element)
@@ -31,6 +33,10 @@ const click = async (element: HTMLElement | null) => {
 }
 const clear = () => { window.localStorage.clear(); window.sessionStorage.clear() }
 const wait = async (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)) })
+function ReturnedTest() {
+  const location = useLocation()
+  return <p data-returned-test>{location.pathname}{location.search}{location.hash}</p>
+}
 
 export async function run() {
   const catalogs = {
@@ -55,18 +61,28 @@ export async function run() {
   assert.equal(speakingVocabularyTestId('Speaking Full Test 23'), '')
   console.log('PASS: all 120 live full tests resolve their exact vocabulary')
 
+  for (const unsafe of ['https://example.com', '//example.com', '/vocabulary/ielts', '/test/listening/missing-test', '/test/listening/ielts-listening-1\\evil']) {
+    assert.equal(getIeltsVocabularyReturnTo(unsafe), null)
+  }
+
   clear()
   const cards = (testId: string) => <><TestVocabulary testId={testId} variant="reminder" /><TestVocabulary testId={testId} variant="link" /><TestVocabulary testId={testId} variant="review" /></>
+  await render(cards(catalogs.listening[0]), '/', false)
+  assert.equal(reminder(), null, 'Reminder waits until after entering the test')
+  await wait(700)
+  assert.ok(reminder())
+  await render(<TestVocabulary testId={catalogs.listening[0]} variant="reminder" ready={false} />)
+  assert.equal(reminder(), null, 'Loading screens do not show reminders')
   await render(cards(catalogs.listening[0]))
   assert.ok(reminder())
-  await click(container.querySelector('[aria-label="Dismiss for now"]'))
+  await click(document.querySelector('[aria-label="Dismiss for now"]'))
   assert.equal(reminder(), null)
   assert.ok(link())
   await render(cards(catalogs.listening[0]))
   assert.equal(reminder(), null, 'Temporary dismissal survives returning to the same test')
   await render(cards(catalogs.reading[0]))
   assert.ok(reminder(), 'Temporary dismissal does not suppress another test')
-  await click([...container.querySelectorAll('button')].find((button) => button.textContent === 'Never show reminders again')!)
+  await click([...document.querySelectorAll('button')].find((button) => button.textContent === 'Never show reminders again')!)
   for (const ids of Object.values(catalogs)) {
     await render(cards(ids[1]))
     assert.equal(reminder(), null, 'Never show covers all four skills')
@@ -84,7 +100,7 @@ export async function run() {
   try {
     storagePrototype.setItem = () => { throw new Error('Storage quota exceeded') }
     await render(cards(catalogs.listening[0]))
-    await click(container.querySelector('[aria-label="Dismiss for now"]'))
+    await click(document.querySelector('[aria-label="Dismiss for now"]'))
     assert.equal(reminder(), null, 'Dismiss works even if preferences cannot be stored')
     assert.ok(link())
   } finally { storagePrototype.setItem = setItem }
@@ -93,8 +109,8 @@ export async function run() {
   for (const skill of ['listening', 'reading'] as const) {
     const test = resolveIeltsTestById(catalogs[skill][0])!
     await render(<IELTSReadingInterface test={test} onComplete={() => {}} onExit={() => {}} />)
-    assert.ok(reminder())
-    assert.equal(link().getAttribute('href'), getIeltsTestVocabulary(test.id)!.href)
+    assert.ok(reminder(), `${skill}: reminder is visible after entering the launch screen`)
+    assert.equal(link().getAttribute('href'), withVocabularyReturnTo(getIeltsTestVocabulary(test.id)!.href, getIeltsVocabularyTestPath(test.id, skill)))
     assert.equal(link().target, '_blank')
     await act(async () => link().dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true })))
     assert.doesNotMatch(container.textContent!, /Practice Setup/, 'Vocabulary click must not launch practice')
@@ -104,12 +120,13 @@ export async function run() {
   }
   const writing = getWritingFullTestCatalog()[0]
   await render(<IELTSWritingFullTestInterface fullTest={writing} onExit={() => {}} />)
-  assert.ok(reminder())
+  assert.ok(reminder(), 'Writing reminder is visible after entering the launch screen')
   assert.ok(link())
   assert.equal(container.querySelector('button a'), null, 'Vocabulary links cannot nest inside mode buttons')
   await render(<Routes><Route path="/speaking/:id" element={<IELTSSpeakingTest />} /></Routes>, '/speaking/speaking-full-1')
-  await wait(2000)
-  assert.ok(reminder())
+  await wait(2700)
+  await wait(700)
+  assert.ok(reminder(), 'Speaking reminder appears after the preparation screen finishes')
   assert.ok(link())
   await click([...container.querySelectorAll('button')].find((button) => button.textContent === 'Launch Final Simulation')!)
   assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Simulation preflight must not show vocabulary')
@@ -124,6 +141,42 @@ export async function run() {
     assert.ok([...container.querySelectorAll('a')].some((anchor) => anchor.getAttribute('href')?.includes(`/${vocabulary.test.id}/`)), 'Activities use the selected test')
   }
   console.log('PASS: vocabulary deep links open the selected full test and activities')
+
+  for (const skill of Object.keys(catalogs) as (keyof typeof catalogs)[]) {
+    const testId = catalogs[skill][12]
+    const vocabulary = getIeltsTestVocabulary(testId)!
+    const returnTo = `${getIeltsVocabularyTestPath(testId, skill)}?assignmentId=lesson-13#setup`
+    await render(cards(testId), returnTo)
+    const href = link().getAttribute('href')!
+    assert.equal(href, withVocabularyReturnTo(vocabulary.href, returnTo))
+    await render(<Routes>
+      <Route path="/vocabulary/ielts" element={<IeltsVocabularyStudio />} />
+      <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId" element={<VocabularyActivity />} />
+      <Route path="/vocabulary/ielts/:bookId/:testId/:sectionId/:activity" element={<VocabularyActivity />} />
+      <Route path="/test/:skill/:id" element={<ReturnedTest />} />
+      <Route path="/ielts/:skill/test/:id" element={<ReturnedTest />} />
+    </Routes>, href)
+    const back = () => container.querySelector('[data-vocabulary-test-return]') as HTMLAnchorElement
+    assert.equal(back().getAttribute('href'), returnTo, `${skill}: returns to source test with query and hash`)
+    if (vocabulary.test.sections.length > 1) {
+      await click(container.querySelectorAll('[aria-label="Vocabulary sections"] button')[1] as HTMLElement)
+      assert.equal(back().getAttribute('href'), returnTo, 'Section changes retain the original test')
+    }
+    await click([...container.querySelectorAll('a')].find((anchor) => anchor.textContent === 'Practise this set')!)
+    assert.equal(back().getAttribute('href'), returnTo, 'Activity picker retains the original test')
+    const activityLinks = [...container.querySelectorAll('a')].filter((anchor) => /\/(flashcards|matching|quiz|typing)\?/.test(anchor.getAttribute('href') ?? ''))
+    assert.equal(activityLinks.length, 4)
+    for (const anchor of activityLinks) assert.ok(anchor.getAttribute('href')!.endsWith(`returnTo=${encodeURIComponent(returnTo)}`))
+    await click(activityLinks[0])
+    assert.equal(back().getAttribute('href'), returnTo, 'Study activities retain the original test')
+    await click([...container.querySelectorAll('a')].find((anchor) => anchor.textContent!.trim() === 'Activities')!)
+    assert.equal(back().getAttribute('href'), returnTo, 'Returning from an activity retains the original test')
+    await click(back())
+    assert.equal(container.querySelector('[data-returned-test]')?.textContent, returnTo, 'An unavailable original tab falls back to the exact test route')
+  }
+  await render(<IeltsVocabularyStudio />, '/vocabulary/ielts?skill=listening&test=1&returnTo=https%3A%2F%2Fexample.com')
+  assert.equal(container.querySelector('[data-vocabulary-test-return]'), null, 'External return URLs are rejected')
+  console.log('PASS: all four skills keep their exact source test across sections, activity pickers and study drills')
 
   clear()
   const mock = getFullMockById('full-mock-1')

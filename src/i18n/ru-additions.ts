@@ -1,5 +1,7 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Back to test': 'Вернуться к тесту',
+  'Review these words before you start the test.': 'Повторите эти слова перед началом теста.',
   'Word collection': 'Коллекция слов',
   'Recall': 'Запоминание',
   'New perspectives': 'Новые взгляды',

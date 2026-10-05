@@ -195,7 +195,7 @@ function ActivityPreview({ mode, entry }: { mode: ActivityMode; entry?: Vocabula
   </div>
 }
 
-export function ActivityPicker({ basePath, entriesCount, navigationState, previewEntry }: { basePath: string; entriesCount: number; navigationState?: unknown; previewEntry?: VocabularyEntry }) {
+export function ActivityPicker({ basePath, entriesCount, navigationState, previewEntry, returnTo }: { basePath: string; entriesCount: number; navigationState?: unknown; previewEntry?: VocabularyEntry; returnTo?: string | null }) {
   const { reducedMotion } = useMotionPreferences()
   return (
     <div className="vocab-activity-picker">
@@ -209,7 +209,7 @@ export function ActivityPicker({ basePath, entriesCount, navigationState, previe
             transition={{ duration: 0.36, ease: EASE, delay: i * 0.05 }}
           >
             <Link
-              to={`${basePath}/${card.mode}`}
+              to={`${basePath}/${card.mode}${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`}
               state={navigationState}
               className="vocab-activity-card group" data-activity={card.mode}
             >

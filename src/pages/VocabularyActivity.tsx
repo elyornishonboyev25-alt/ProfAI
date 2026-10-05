@@ -3,7 +3,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Trophy, X } from 'lucide-react'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import VocabularyTestReturn from '@/components/vocab/VocabularyTestReturn'
+import { getIeltsVocabularyReturnTo, withVocabularyReturnTo } from '@/utils/ieltsTestVocabulary'
 import { vocabularyCollections, type VocabularyEntry } from '@/data/vocabularyCollections'
 import { getArticleBySlug } from '@/data/articles'
 import { getSavedWords, type VocabContext } from '@/utils/myVocabularyStore'
@@ -153,6 +155,8 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
 export default function VocabularyActivity() {
   const params = useParams()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const returnTo = params.bookId ? getIeltsVocabularyReturnTo(searchParams.get('returnTo')) : null
   const navigationState = params.packId && (location.state as { from?: string } | null)?.from === '/sat'
     ? { from: '/sat' }
     : undefined
@@ -278,7 +282,7 @@ export default function VocabularyActivity() {
           {/* hero */}
           <header className="vocab-practice-header">
             <div className="premium-top-controls">
-              <Link to={activity ? basePath : trackPath} state={navigationState} className={`${backClass} group`}>
+              <Link to={withVocabularyReturnTo(activity ? basePath : trackPath, returnTo)} state={navigationState} className={`${backClass} group`}>
                 <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 {activity ? 'Activities' : 'Back'}
               </Link>
@@ -287,10 +291,11 @@ export default function VocabularyActivity() {
                 {trackLabel}
               </span>
               {activity ? (
-                <Link to={trackPath} state={navigationState} className={backClass}>
+                <Link to={withVocabularyReturnTo(trackPath, returnTo)} state={navigationState} className={backClass}>
                   <RotateCcw className="mr-1 h-4 w-4" />
                    <UiText text={"Track"} /> </Link>
               ) : null}
+              <VocabularyTestReturn returnTo={returnTo} />
             </div>
             <div className="vocab-practice-heading">
               <p className="vocab-header-eyebrow">YOUR VOCABULARY WORKSPACE</p>
@@ -316,7 +321,7 @@ export default function VocabularyActivity() {
                 </div>
                 <p className="vocab-reward-note">80% to earn XP · Once per activity · 120 XP daily limit</p>
               </section>
-              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} />
+              <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} returnTo={returnTo} />
               <VocabularyInlineLibrary key={basePath} entries={entries} accent={accent} open={libraryOpen} onToggle={() => setExpandedLibrary(libraryOpen ? null : basePath)} />
             </>
           ) : (

@@ -51,6 +51,7 @@ export type HighlightStroke = {
   width: number
   points: HighlightPoint[]
   surface?: 'passage' | 'question' | 'source'
+  textRange?: { block: string; start: number; end: number; text: string }
 }
 
 export type SATAttempt = {

@@ -167,7 +167,7 @@ export default function MockSAT() {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
-                { icon: Highlighter, title: 'Highlight & notes', copy: 'Draw directly over any passage, graph, or formula.' },
+                { icon: Highlighter, title: 'Highlight & notes', copy: 'Select text and choose a highlight color.' },
                 { icon: Focus, title: 'Focused runner', copy: 'Question-by-question flow with flags and keyboard controls.' },
                 { icon: Target, title: isSATTestComplete(test) ? 'Range scoring' : 'Accuracy feedback', copy: isSATTestComplete(test) ? 'R&W and Math performance converted into a clear SAT estimate.' : 'Review your accuracy across the available modules.' },
                 { icon: GraduationCap, title: 'Deep review', copy: 'Correct answers, explanations, filters, and section insight.' },

@@ -9,6 +9,7 @@ import { generateLeaderboard, invalidateLeaderboardCache } from '../services/lea
 import { generateSkillAnalytics } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
 import { generateAiChatResponse } from '../services/aiChat.service.js'
+import { assessSpeakingText } from '../services/speakingAssessment.service.js'
 import { env } from '../config/env.js'
 import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
 import {
@@ -288,7 +289,7 @@ function parsePreferredName(fullName?: string | null) {
   return fullName.trim().split(/\s+/)[0] ?? null
 }
 
-function buildSpeakingEvaluation(transcript: string, pronunciationSignal?: number) {
+function buildSpeakingEvaluation(transcript: string) {
   const cleaned = transcript.replace(/\s+/g, ' ').trim()
   const words = cleaned
     .split(' ')
@@ -329,14 +330,10 @@ function buildSpeakingEvaluation(transcript: string, pronunciationSignal?: numbe
   const fluencyBand = clamp(5 + words.length / 80 + avgSentenceLength / 25 - fillerRatio * 12, 4, 9)
   const grammarBand = clamp(7.8 - grammarIssueCount * 0.6 + words.length / 250, 4, 9)
   const lexicalBand = clamp(4.8 + lexicalRatio * 5.2, 4, 9)
-  const pronunciationBand = clamp(
-    pronunciationSignal !== undefined ? 4 + (pronunciationSignal / 100) * 5 : fluencyBand - 0.15,
-    4,
-    9,
-  )
+  const pronunciationBand = 0 // No audio evidence is available to this text-only endpoint.
 
   const overallBand = clamp(
-    fluencyBand * 0.3 + grammarBand * 0.25 + pronunciationBand * 0.25 + lexicalBand * 0.2,
+    (fluencyBand + grammarBand + lexicalBand) / 3,
     4,
     9,
   )
@@ -344,7 +341,6 @@ function buildSpeakingEvaluation(transcript: string, pronunciationSignal?: numbe
   const metricOrder = [
     { key: 'fluency', value: fluencyBand, advice: 'Speak in longer chunks without overusing fillers.' },
     { key: 'grammar', value: grammarBand, advice: 'Use consistent tense control and cleaner sentence structures.' },
-    { key: 'pronunciation', value: pronunciationBand, advice: 'Practice stress and connected speech for clearer delivery.' },
     { key: 'lexical', value: lexicalBand, advice: 'Expand topic vocabulary and collocation accuracy.' },
   ].sort((left, right) => left.value - right.value)
 
@@ -356,10 +352,9 @@ function buildSpeakingEvaluation(transcript: string, pronunciationSignal?: numbe
 
   const strengths: string[] = []
   if (lexicalBand >= 6.5) strengths.push('Good lexical range with topic-relevant wording.')
-  if (fluencyBand >= 6.5) strengths.push('Stable speaking rhythm and pacing.')
+  if (fluencyBand >= 6.5) strengths.push('You developed your response across several sentences.')
   if (grammarBand >= 6.5) strengths.push('Generally controlled grammar across responses.')
-  if (pronunciationBand >= 6.5) strengths.push('Pronunciation is understandable and mostly clear.')
-  if (strengths.length === 0) strengths.push('You kept speaking and maintained communication throughout.')
+  if (strengths.length === 0) strengths.push('You submitted a response that can be developed with practice.')
 
   const weaknesses: string[] = []
   if (fillerRatio > 0.05) weaknesses.push('Frequent filler usage reduced fluency precision.')
@@ -374,7 +369,8 @@ function buildSpeakingEvaluation(transcript: string, pronunciationSignal?: numbe
     pronunciationBand: Number(pronunciationBand.toFixed(1)),
     lexicalBand: Number(lexicalBand.toFixed(1)),
     feedback: {
-      summary: `Estimated IELTS Speaking band: ${overallBand.toFixed(1)}.`,
+      summary: `Offline text practice estimate: ${overallBand.toFixed(1)}. Pronunciation was not assessed.`,
+      assessmentMode: 'offline',
       strengths,
       weaknesses,
       improvementPriorities,
@@ -1256,7 +1252,12 @@ router.post(
       })
     }
 
-    const evaluation = buildSpeakingEvaluation(transcript, payload.pronunciationSignal)
+    let evaluation = buildSpeakingEvaluation(transcript)
+    try {
+      const assessed = await assessSpeakingText(userId, transcript, payload.taskLabel ?? 'IELTS Speaking practice')
+      evaluation = { ...evaluation, overallBand: assessed.overallBand, fluencyBand: assessed.fluencyBand, lexicalBand: assessed.lexicalBand, grammarBand: assessed.grammarBand, pronunciationBand: 0,
+        feedback: { ...evaluation.feedback, summary: assessed.summary, strengths: assessed.strengths, weaknesses: assessed.weaknesses, improvementPriorities: assessed.improvementPriorities, assessmentMode: assessed.assessmentMode } }
+    } catch { /* Preserve an explicitly labelled offline text estimate when the provider is unavailable. */ }
     if (!isSpeakingModelReady()) {
       return res.status(201).json({
         id: createFallbackId('spk'),

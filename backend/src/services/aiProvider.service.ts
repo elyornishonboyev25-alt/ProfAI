@@ -1,5 +1,6 @@
 import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
+import { readEventStream } from '../utils/eventStream.js'
 
 export type AiProviderName = 'gemini' | 'openai' | 'hf'
 
@@ -26,7 +27,7 @@ export type AiGenerationResult = {
 
 type ProviderResult = Omit<AiGenerationResult, 'provider' | 'fallbackUsed'>
 
-type GenerateAiTextInput = {
+export type GenerateAiTextInput = {
   userId: string
   purpose: AiGenerationPurpose
   systemPrompt: string
@@ -34,6 +35,9 @@ type GenerateAiTextInput = {
   maxOutputTokens: number
   images?: string[]
   jsonMode?: boolean
+  signal?: AbortSignal
+  onText?: (text: string) => void
+  audio?: Array<{ mimeType: string; data: string }>
 }
 
 type ProviderAvailability = {
@@ -103,8 +107,9 @@ async function fetchWithTimeout(url: string, init: RequestInit) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), env.AI_PROVIDER_TIMEOUT_MS)
   try {
-    return await fetch(url, { ...init, signal: controller.signal })
+    return await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, controller.signal]) : controller.signal })
   } catch (error) {
+    if (init.signal?.aborted) throw error
     if (error instanceof Error && error.name === 'AbortError') {
       throw new ProviderRequestError('PROVIDER_TIMEOUT', 'AI provider timed out.')
     }
@@ -116,7 +121,8 @@ async function fetchWithTimeout(url: string, init: RequestInit) {
 
 async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult> {
   const keys = getGeminiKeys()
-  const models = getGeminiModels()
+  const models = input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && (env.AI_CHAT_PROVIDER === 'gemini' || env.AI_CHAT_PROVIDER === 'auto')
+    ? [env.AI_CHAT_MODEL] : getGeminiModels()
   let lastError = new ProviderRequestError('GEMINI_UNAVAILABLE', 'Gemini is unavailable.')
 
   for (const model of models) {
@@ -125,18 +131,21 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
         const parsed = parseDataUrl(image)
         return { inlineData: parsed }
       })
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
+      const audioParts = (input.audio ?? []).map((audio) => ({ inlineData: audio }))
+      const operation = input.onText ? 'streamGenerateContent?alt=sse' : 'generateContent'
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:${operation}`
 
       let response: Response
       try {
         response = await fetchWithTimeout(url, {
+          signal: input.signal,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-goog-api-key': key,
           },
           body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: input.userMessage }, ...imageParts] }],
+            contents: [{ role: 'user', parts: [{ text: input.userMessage }, ...imageParts, ...audioParts] }],
             systemInstruction: { parts: [{ text: input.systemPrompt }] },
             generationConfig: {
               temperature: 0.45,
@@ -146,6 +155,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
           }),
         })
       } catch (error) {
+        if (input.signal?.aborted) throw error
         lastError = error instanceof ProviderRequestError
           ? error
           : new ProviderRequestError('GEMINI_NETWORK', 'Gemini request failed.')
@@ -155,6 +165,25 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
       if (!response.ok) {
         lastError = new ProviderRequestError(`GEMINI_${response.status}`, 'Gemini rejected the request.')
         continue
+      }
+
+      if (input.onText && response.body) {
+        let text = ''
+        let inputTokens: number | null = null
+        let outputTokens: number | null = null
+        for await (const data of readEventStream(response.body)) {
+          const payload = JSON.parse(data)
+          if (payload.error) throw new ProviderRequestError('GEMINI_STREAM', 'AI response was interrupted.')
+          const delta = (payload.candidates?.[0]?.content?.parts ?? [])
+            .filter((part: { text?: string; thought?: boolean }) => typeof part.text === 'string' && !part.thought)
+            .map((part: { text: string }) => part.text).join('')
+          text += delta
+          if (delta) input.onText(text)
+          inputTokens = payload.usageMetadata?.promptTokenCount ?? inputTokens
+          outputTokens = payload.usageMetadata?.candidatesTokenCount ?? outputTokens
+        }
+        if (!text.trim()) throw new ProviderRequestError('GEMINI_EMPTY', 'Gemini returned an empty response.')
+        return { text: text.trim(), model, inputTokens, outputTokens }
       }
 
       const payload = (await response.json().catch(() => null)) as {
@@ -203,6 +232,8 @@ function parseOpenAiCompatiblePayload(payload: unknown) {
 }
 
 async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult> {
+  const model = input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && env.AI_CHAT_PROVIDER === 'openai'
+    ? env.AI_CHAT_MODEL : env.OPENAI_MODEL
   const userContent = input.images?.length
     ? [
         { type: 'text', text: input.userMessage },
@@ -210,15 +241,16 @@ async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult
       ]
     : input.userMessage
   const response = await fetchWithTimeout(`${env.OPENAI_API_BASE.replace(/\/$/, '')}/chat/completions`, {
+    signal: input.signal,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: env.OPENAI_MODEL,
-      temperature: 0.45,
-      max_tokens: input.maxOutputTokens,
+      model,
+      ...(/^(?:gpt-5|gpt-6|o[1-9])/.test(model) ? { max_completion_tokens: input.maxOutputTokens } : { temperature: 0.45, max_tokens: input.maxOutputTokens }),
+      ...(input.onText ? { stream: true, stream_options: { include_usage: true } } : {}),
       ...(input.jsonMode === false ? {} : { response_format: { type: 'json_object' } }),
       messages: [
         { role: 'system', content: input.systemPrompt },
@@ -230,13 +262,30 @@ async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult
   if (!response.ok) {
     throw new ProviderRequestError(`OPENAI_${response.status}`, 'OpenAI rejected the request.')
   }
+  if (input.onText && response.body) {
+    let text = ''
+    let inputTokens: number | null = null
+    let outputTokens: number | null = null
+    for await (const data of readEventStream(response.body)) {
+      if (data === '[DONE]') break
+      const payload = JSON.parse(data)
+      if (payload.error) throw new ProviderRequestError('OPENAI_STREAM', 'AI response was interrupted.')
+      const delta = payload.choices?.[0]?.delta?.content
+      if (typeof delta === 'string') { text += delta; input.onText(text) }
+      inputTokens = payload.usage?.prompt_tokens ?? inputTokens
+      outputTokens = payload.usage?.completion_tokens ?? outputTokens
+    }
+    if (!text.trim()) throw new ProviderRequestError('OPENAI_EMPTY', 'OpenAI returned an empty response.')
+    return { text: text.trim(), model, inputTokens, outputTokens }
+  }
   const parsed = parseOpenAiCompatiblePayload(await response.json().catch(() => null))
   if (!parsed.text) throw new ProviderRequestError('OPENAI_EMPTY', 'OpenAI returned an empty response.')
-  return { ...parsed, model: env.OPENAI_MODEL }
+  return { ...parsed, model }
 }
 
 async function requestHuggingFace(input: GenerateAiTextInput): Promise<ProviderResult> {
   const response = await fetchWithTimeout(`${env.HF_API_BASE.replace(/\/$/, '')}/chat/completions`, {
+    signal: input.signal,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -282,14 +331,20 @@ async function recordUsage(data: {
 }
 
 export async function generateAiText(input: GenerateAiTextInput): Promise<AiGenerationResult> {
+  input = { ...input, signal: AbortSignal.any([AbortSignal.timeout(Math.max(60000, env.AI_PROVIDER_TIMEOUT_MS)), ...(input.signal ? [input.signal] : [])]) }
   const startedAt = Date.now()
   const requestChars = input.systemPrompt.length + input.userMessage.length
-  const order = buildAiProviderOrder({
+  let order = buildAiProviderOrder({
     gemini: getGeminiKeys().length > 0 && getGeminiModels().length > 0,
     openai: env.OPENAI_API_KEY.trim().length > 0,
     hf: env.HF_ACCESS_TOKEN.trim().length > 0,
     hasImages: Boolean(input.images?.length),
   })
+  if (input.audio?.length) order = order.filter((provider) => provider === 'gemini')
+  if (input.purpose === 'assistant_chat' && env.AI_CHAT_PROVIDER !== 'auto') {
+    const preferred = env.AI_CHAT_PROVIDER
+    order = [preferred, ...order.filter((provider) => provider !== preferred)].filter((provider) => order.includes(provider))
+  }
 
   if (order.length === 0) {
     await recordUsage({
@@ -307,13 +362,19 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
   }
 
   let lastError = new ProviderRequestError('AI_PROVIDER_FAILED', 'AI provider request failed.')
+  let emitted = false
+  let attemptedProvider: AiProviderName = order[0]
+  let attemptedIndex = 0
+  const providerInput = { ...input, onText: input.onText ? (value: string) => { emitted = true; input.onText!(value) } : undefined }
   for (const [index, provider] of order.entries()) {
+    attemptedProvider = provider; attemptedIndex = index
+    input.signal?.throwIfAborted()
     try {
       const response = provider === 'gemini'
-        ? await requestGemini(input)
+        ? await requestGemini(providerInput)
         : provider === 'openai'
-          ? await requestOpenAi(input)
-          : await requestHuggingFace(input)
+          ? await requestOpenAi(providerInput)
+          : await requestHuggingFace(providerInput)
       const result: AiGenerationResult = {
         ...response,
         provider,
@@ -334,22 +395,24 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
       })
       return result
     } catch (error) {
+      if (input.signal?.aborted) throw error
       lastError = error instanceof ProviderRequestError
         ? error
         : new ProviderRequestError('AI_PROVIDER_FAILED', 'AI provider request failed.')
+      // Never splice a second model's answer into a partially delivered reply.
+      if (emitted) break
     }
   }
 
-  const lastProvider = order.at(-1) ?? 'none'
   await recordUsage({
     userId: input.userId,
     purpose: input.purpose,
-    provider: lastProvider,
+    provider: attemptedProvider,
     model: 'unavailable',
     status: 'FAILED',
     requestChars,
     latencyMs: Date.now() - startedAt,
-    fallbackUsed: order.length > 1,
+    fallbackUsed: attemptedIndex > 0,
     errorCode: lastError.code,
   })
   throw new AiGenerationError(502, lastError.code, 'AI providers are temporarily unavailable. Please try again.')

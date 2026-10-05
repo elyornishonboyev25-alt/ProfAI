@@ -12,6 +12,7 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   auth?: boolean
   retryOnUnauthorized?: boolean
+  responseType?: 'json' | 'raw'
 }
 
 type AuthResponse = {
@@ -60,7 +61,7 @@ async function ensureRefreshed(refreshToken: string): Promise<RefreshResult> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = true, retryOnUnauthorized = true, headers, body, ...rest } = options
+  const { auth = true, retryOnUnauthorized = true, headers, body, responseType = 'json', ...rest } = options
   if (auth) syncStoredSession()
   const authState = useAuthStore.getState()
 
@@ -78,7 +79,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       headers: requestHeaders,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
-  } catch {
+  } catch (error) {
+    if (rest.signal?.aborted) throw error
     throw new Error('Unable to connect. Check your connection and try again.')
   }
 
@@ -117,6 +119,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     return {} as T
   }
 
+  if (responseType === 'raw') return response as T
+
   return response.json() as Promise<T>
 }
 
@@ -145,6 +149,8 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
 }
 
 export const apiClient = {
+  postStream: (path: string, body?: unknown, options: Omit<RequestOptions, 'method' | 'body' | 'responseType'> = {}) =>
+    request<Response>(path, { ...options, method: 'POST', body, responseType: 'raw' }),
   get: <T>(path: string, options: Omit<RequestOptions, 'method'> = {}) => request<T>(path, options),
   post: <T>(path: string, body?: unknown, options: Omit<RequestOptions, 'method' | 'body'> = {}) =>
     request<T>(path, { ...options, method: 'POST', body }),

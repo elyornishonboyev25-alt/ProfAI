@@ -10,6 +10,7 @@
     "dev:tunnel": "vite --host",
     "validate:speaking": "node scripts/validate-speaking-bank.mjs",
     "test:speaking-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/speaking-ui.tsx",
+    "test:ai-coach-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",
     "validate:reading": "node scripts/validate-reading-bank.mjs",
     "validate:listening": "node scripts/validate-listening-bank.mjs",

@@ -30,7 +30,6 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import type {
   AiChatResponse,
-  AiRealtimeSessionResponse,
   AiPreferences,
   AiReportResponse,
   ProfileOverview,
@@ -136,8 +135,6 @@ export default function AiCoach() {
   const [speakingQuestions, setSpeakingQuestions] = useState<SpeakingQuestionItem[]>([])
   const [selectedSpeakingPart, setSelectedSpeakingPart] = useState<1 | 2 | 3>(1)
   const [speakingMode, setSpeakingMode] = useState<'conversation' | 'mock'>('conversation')
-  const [realtimeSession, setRealtimeSession] = useState<AiRealtimeSessionResponse | null>(null)
-  const [isCreatingRealtimeSession, setIsCreatingRealtimeSession] = useState(false)
   const [speakingDialogue, setSpeakingDialogue] = useState<Array<{ id: string; role: 'user' | 'assistant'; text: string }>>([])
   const [isSendingSpeakingTurn, setIsSendingSpeakingTurn] = useState(false)
   const [speakingError, setSpeakingError] = useState<string | null>(null)
@@ -427,29 +424,12 @@ export default function AiCoach() {
     }
   }
 
-  const createRealtimeSession = async () => {
-    if (isCreatingRealtimeSession) return
-    setIsCreatingRealtimeSession(true)
-    setSpeakingError(null)
-    try {
-      const response = await apiClient.post<AiRealtimeSessionResponse>('/profile/ai-realtime/session', {
-        mode: speakingMode,
-        part:
-          speakingMode === 'mock'
-            ? selectedSpeakingPart === 1
-              ? 'part1'
-              : selectedSpeakingPart === 2
-                ? 'part2'
-                : 'part3'
-            : undefined,
-      })
-      setRealtimeSession(response)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Realtime session creation failed.'
-      setSpeakingError(message)
-    } finally {
-      setIsCreatingRealtimeSession(false)
-    }
+  const startNaturalVoice = () => {
+    stopAssistantVoice()
+    const assistant = useAiAssistantStore.getState()
+    assistant.setActiveWorkspace('ielts')
+    assistant.setVoiceLang('en')
+    assistant.openTalk()
   }
 
   const stopAssistantVoice = () => {
@@ -724,11 +704,10 @@ export default function AiCoach() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void createRealtimeSession()}
-                      disabled={isCreatingRealtimeSession}
+                      onClick={startNaturalVoice}
                       className="rounded-xl border border-slate-500/40 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {isCreatingRealtimeSession ? 'Creating realtime...' : 'Create realtime session'}
+                      Start voice session
                     </button>
                     <button
                       type="button"
@@ -743,16 +722,6 @@ export default function AiCoach() {
                     </button>
                   </div>
                   {speakingError ? <p className="mt-2 text-xs text-indigo-200">{speakingError}</p> : null}
-                  {realtimeSession ? (
-                    <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200">
-                      <p className="font-semibold text-slate-100">
-                        Realtime ready: {realtimeSession.model} ({realtimeSession.mode})
-                      </p>
-                      <p className="mt-1 text-slate-400">
-                        Session token returned. Connect this from frontend audio client to start instant English conversation.
-                      </p>
-                    </div>
-                  ) : null}
                   {speakingDialogue.length > 0 ? (
                     <div className="mt-3 max-h-48 space-y-2 overflow-y-auto rounded-2xl border border-slate-700 bg-slate-950/60 p-2">
                       {speakingDialogue.map((turn) => (
@@ -779,7 +748,7 @@ export default function AiCoach() {
                       <div className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                         <p>Fluency: {evaluation.fluencyBand.toFixed(1)}</p>
                         <p>Grammar: {evaluation.grammarBand.toFixed(1)}</p>
-                        <p>Pronunciation: {evaluation.pronunciationBand.toFixed(1)}</p>
+                        <p>Pronunciation: {evaluation.feedback.assessmentMode === 'audio' ? evaluation.pronunciationBand.toFixed(1) : 'Not assessed from text'}</p>
                         <p>Lexical: {evaluation.lexicalBand.toFixed(1)}</p>
                       </div>
                       <div className="space-y-2">

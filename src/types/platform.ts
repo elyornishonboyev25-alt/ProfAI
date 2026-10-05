@@ -364,6 +364,7 @@ export type SpeakingEvaluationResponse = {
   pronunciationBand: number
   lexicalBand: number
   feedback: {
+    assessmentMode?: 'audio' | 'transcript' | 'offline'
     summary: string
     strengths: string[]
     weaknesses: string[]

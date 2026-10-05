@@ -70,10 +70,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   const {
     user, hasPremium, messages, isSending, error,
     draft, setDraft, images, addImages, removeImage,
-    send, preferredName,
+    send, cancelSend, preferredName,
     workspace, pendingActions, approveAction, dismissAction,
     voiceState, voiceLevel, voiceSupported, isListening,
-    interimTranscript, startVoice, stopVoice,
+    interimTranscript, startVoice,
     voiceLang, setVoiceLang, voiceError,
     chatThreads, activeThread, activeThreadId, threadsLoading, threadsLoaded, memories,
     createNewChat, selectChat, renameChat, deleteChat, forgetMemory,
@@ -500,9 +500,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ) : null}
                 {message.role === 'assistant' ? <AiMessageContent content={message.content} /> : <p className="whitespace-pre-wrap">{message.content}</p>}
                 {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
+                {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{voiceLang === 'uz' ? 'Javob to‘xtatildi' : voiceLang === 'ru' ? 'Ответ остановлен' : 'Response stopped'}</p> : null}
               </motion.article>
             ))}
-            {isSending ? (
+            {isSending && !messages.some((message) => message.status === 'streaming' && message.content) ? (
               <div className="inline-flex items-center gap-2.5 rounded-2xl border border-red-100 bg-white px-3.5 py-2.5 text-xs text-red-600 shadow-sm">
                 <span className="flex items-center gap-1" aria-hidden>
                   {[0, 1, 2].map((dot) => (
@@ -630,7 +631,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           </div>
         ) : null}
 
-        {voiceSupported ? (
+        {(
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
               {c('Language')}
@@ -650,7 +651,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               </button>
             ))}
           </div>
-        ) : null}
+        )}
 
         <div className="flex min-w-0 items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
@@ -683,10 +684,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             disabled={isSending}
           />
 
-          {voiceSupported ? (
+          {(voiceSupported || typeof RTCPeerConnection !== 'undefined') ? (
             <button
               type="button"
-              onClick={() => (isListening ? stopVoice() : startVoice())}
+              onClick={() => { cancelSend(); openTalk() }}
               className={`relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
                 isListening
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
@@ -707,12 +708,12 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
           <button
             type="button"
-            onClick={() => doSend()}
-            disabled={isSending || (!draft.trim() && images.length === 0)}
+            onClick={() => isSending ? cancelSend() : doSend()}
+            disabled={!isSending && !draft.trim() && images.length === 0}
             className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,28,47,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
-            aria-label={c('Send')}
+            aria-label={isSending ? (voiceLang === 'uz' ? 'Javobni to‘xtatish' : voiceLang === 'ru' ? 'Остановить ответ' : 'Stop response') : c('Send')}
           >
-            <Send className="h-4 w-4" />
+            {isSending ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </button>
         </div>
 

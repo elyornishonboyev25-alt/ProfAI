@@ -25,6 +25,7 @@ const toMessage = (message: ServerMessage): AiAssistantMessage => ({
   role: message.role,
   content: message.content,
   createdAt: message.createdAt,
+  ...(message.content.endsWith('[Interrupted voice response]') ? { status: 'interrupted' as const, delivery: 'voice' as const } : {}),
 })
 
 const toThread = (thread: ServerThread): AiAssistantThread => ({

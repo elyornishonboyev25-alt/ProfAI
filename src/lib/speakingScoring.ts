@@ -116,13 +116,13 @@ export function estimateBandsFromStats(stats: SpeechStats): FallbackBands {
   if (stats.sentenceCount >= 4 && wordCount / stats.sentenceCount >= 9) grammar += 0.5
 
   // Pronunciation can't be measured from text — anchor near fluency.
-  const pronunciation = clampBand(fluency - 0.5)
+  const pronunciation = 0 // Not assessed: text statistics contain no pronunciation evidence.
 
   const fluencyBand = clampBand(fluency)
   const lexicalBand = clampBand(lexical)
   const grammarBand = clampBand(grammar)
   const pronunciationBand = pronunciation
-  const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / 4)
+  const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand) / 3)
 
   if (wordCount < 20) {
     const ceiling = wordCount < 5 ? 2 : 4.5

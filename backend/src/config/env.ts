@@ -48,6 +48,12 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().default('gpt-4.1-mini'),
   OPENAI_TRANSCRIBE_MODEL: z.string().default('whisper-1'),
   OPENAI_REALTIME_MODEL: z.string().default('gpt-4o-realtime-preview'),
+  AI_CHAT_PROVIDER: z.enum(['auto', 'gemini', 'openai', 'hf']).default('auto'),
+  AI_CHAT_MODEL: z.string().default(''),
+  AI_VOICE_MODEL: z.string().default('gpt-realtime-2.1'),
+  AI_VOICE_MAX_MINUTES: z.coerce.number().int().min(1).max(60).default(20),
+  AI_WEB_SEARCH_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
+  AI_WEB_SEARCH_MODEL: z.string().default('gpt-4.1-mini'),
 })
 
 export const env = envSchema.parse(process.env)

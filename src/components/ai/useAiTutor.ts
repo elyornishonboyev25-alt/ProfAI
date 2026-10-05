@@ -21,6 +21,7 @@ import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import { getAiWorkspace } from '@/services/ai/workspaces'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
+import { addSavedWord } from '@/utils/myVocabularyStore'
 import {
   useSpeechRecognition,
   speak,
@@ -46,6 +47,7 @@ import {
 const EMPTY_MESSAGES: AiAssistantMessage[] = []
 const EMPTY_THREADS: AiAssistantThread[] = []
 const EMPTY_MEMORIES: AiMemoryItem[] = []
+let activeChatRequest: { owner: string; controller: AbortController } | null = null
 
 function createId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
@@ -94,6 +96,7 @@ function localized(locale: PremiumLanguage, en: string, ru: string, uz: string) 
 }
 
 function describeAction(action: GeminiChatAction, locale: PremiumLanguage): string {
+  if (action.type === 'save_word') return localized(locale, `Save “${action.payload?.term ?? ''}” to My Vocabulary`, `Сохранить «${action.payload?.term ?? ''}» в словарь`, `“${action.payload?.term ?? ''}” so‘zini lug‘atga saqlash`)
   if (action.type === 'open_test') {
     const track = action.payload?.track === 'listening' ? 'Listening' : 'Reading'
     return localized(locale, `Open ${track} test`, `Открыть тест ${track}`, `${track} testini ochish`)
@@ -149,7 +152,10 @@ export function useAiTutor() {
   const [preferredLocale, setPreferredLocale] = useState<ChatLocale>('en')
   const [preferredName, setPreferredName] = useState<string | null>(null)
   const [voiceError, setVoiceError] = useState<string | null>(null)
-  const [pendingActions, setPendingActions] = useState<PendingAiAction[]>([])
+  const pendingActions = useAiAssistantStore((s) => s.pendingActions)
+  const setPendingActions = useAiAssistantStore((s) => s.setPendingActions)
+  const updateStoredMessage = useAiAssistantStore((s) => s.updateMessage)
+  const removeStoredMessage = useAiAssistantStore((s) => s.removeMessage)
   const pushMessage = useCallback(
     (threadId: string, message: AiAssistantMessage) => pushStoredMessage(ownerKey, threadId, message),
     [ownerKey, pushStoredMessage],
@@ -200,6 +206,7 @@ export function useAiTutor() {
   ])
 
   const createNewChat = useCallback(async (): Promise<string> => {
+    if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('chat_changed')
     setPendingActions([])
     setError(null)
     try {
@@ -214,6 +221,7 @@ export function useAiTutor() {
   }, [addThread, ownerKey, setError, voiceLang])
 
   const selectChat = useCallback((threadId: string) => {
+    if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('chat_changed')
     cancelSpeech()
     setPendingActions([])
     setActiveThread(ownerKey, threadId)
@@ -331,6 +339,10 @@ export function useAiTutor() {
 
   const dispatchAction = useCallback(
     (action: GeminiChatAction, snapshot?: StudySnapshot) => {
+      if (action.type === 'save_word' && action.payload?.term && action.payload.definition) {
+        addSavedWord({ term: action.payload.term, definition: action.payload.definition, example: action.payload.example ?? '', synonym: action.payload.synonym ?? '', context: action.payload.context ?? 'speaking', source: 'ai', origin: 'ProfAI Coach' })
+        return
+      }
       if (action.type === 'navigate' && action.target) {
         navigate(action.target)
         return
@@ -375,8 +387,10 @@ export function useAiTutor() {
     async (options: SendOptions = {}) => {
       const text = (options.text ?? draft).trim()
       const outImages = options.images ?? images
-      if ((!text && outImages.length === 0) || isSending) return
+      if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
+      setSending(true)
       const threadId = activeThreadId ?? await createNewChat()
+      if (useAuthStore.getState().user?.id !== user?.id) { setSending(false); return }
       const firstTurn = messages.length === 0
 
       setDraft('')
@@ -384,6 +398,9 @@ export function useAiTutor() {
       setError(null)
       setSending(true)
       setVoiceState('thinking')
+      const controller = new AbortController()
+      const timeout = window.setTimeout(() => controller.abort('timeout'), 90000)
+      activeChatRequest = { owner: ownerKey, controller }
 
       const userMessage = createMessage('user', text, outImages.length ? outImages : undefined)
       pushMessage(threadId, userMessage)
@@ -392,8 +409,8 @@ export function useAiTutor() {
         : persistAiMessage(threadId, userMessage, voiceLang).catch(() => null)
 
       const history = messages
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .slice(-10)
+        .filter((m) => !m.status && (m.role === 'user' || m.role === 'assistant'))
+        .slice(-24)
         .map((m) => ({ role: m.role, content: m.content }))
 
       const currentLocale: ChatLocale = voiceLang === 'uz' ? 'uz' : 'en'
@@ -402,6 +419,8 @@ export function useAiTutor() {
       const snapshot = buildStudySnapshot(user?.id ?? null)
       const screenContext = composeScreenContext(text, location.pathname)
       const siteKnowledge = describeRelevantSiteKnowledge(text)
+      const assistantMessage = { ...createMessage('assistant', ''), status: 'streaming' as const }
+      pushMessage(threadId, assistantMessage)
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
@@ -414,16 +433,24 @@ export function useAiTutor() {
           responseLanguage: voiceLang,
           memories: memories.map(({ key, value }) => ({ key, value })),
           generateTitle: firstTurn,
+          workspace: activeWorkspace,
+          threadId: threadId.startsWith('local-') ? undefined : threadId,
+          delivery: options.speak ? 'voice' : 'text',
+          signal: controller.signal,
+          onReply: (reply) => {
+            if (!controller.signal.aborted && useAuthStore.getState().user?.id === user?.id) updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: reply })
+          },
         })
-        const assistantMessage = createMessage('assistant', response.reply)
-        pushMessage(threadId, assistantMessage)
+        if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
+        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, status: undefined })
         await userPersistPromise
         if (!threadId.startsWith('local-')) {
-          void persistAiMessage(threadId, assistantMessage, voiceLang).catch(() => null)
+          void persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, voiceLang).catch(() => null)
         }
 
         if (firstTurn && response.title) void renameChat(threadId, response.title)
-        if (response.memoryUpdates.length > 0) {
+        if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
+        else if (response.memoryUpdates.length > 0) {
           try {
             const saved = await persistAiMemories(response.memoryUpdates)
             upsertStoredMemories(ownerKey, saved)
@@ -468,6 +495,14 @@ export function useAiTutor() {
           })),
         )
       } catch {
+        if (controller.signal.aborted && controller.signal.reason !== 'timeout') {
+          setVoiceState('idle')
+          const partial = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => thread.id === threadId)?.messages.find((message) => message.id === assistantMessage.id)?.content
+          if (partial) updateStoredMessage(ownerKey, threadId, assistantMessage.id, { status: 'interrupted' })
+          else removeStoredMessage(ownerKey, threadId, assistantMessage.id)
+          return
+        }
+        removeStoredMessage(ownerKey, threadId, assistantMessage.id)
         setError(localized(uiLocale, 'Unable to process your request. Please try again.', 'Не удалось обработать запрос. Повторите попытку.', 'So‘rovingizni bajarib bo‘lmadi. Qayta urinib ko‘ring.'))
         setVoiceState('idle')
         stopLevelPulse()
@@ -485,6 +520,8 @@ export function useAiTutor() {
           void persistAiMessage(threadId, fallbackMessage, voiceLang).catch(() => null)
         }
       } finally {
+        window.clearTimeout(timeout)
+        if (activeChatRequest?.controller === controller) activeChatRequest = null
         setSending(false)
       }
     },
@@ -492,7 +529,7 @@ export function useAiTutor() {
       activeThreadId, createNewChat, draft, images, isSending, memories, messages, ownerKey, preferredName,
       location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale,
+      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage,
     ],
   )
 
@@ -623,16 +660,33 @@ export function useAiTutor() {
   }, [createNewChat, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   const approveAction = useCallback((id: string) => {
-    setPendingActions((current) => {
-      const pending = current.find((item) => item.id === id)
-      if (pending) dispatchAction(pending.action)
-      return current.filter((item) => item.id !== id)
-    })
+    const current = useAiAssistantStore.getState().pendingActions
+    const pending = current.find((item) => item.id === id)
+    if (pending) dispatchAction(pending.action)
+    setPendingActions(current.filter((item) => item.id !== id))
   }, [dispatchAction])
 
   const dismissAction = useCallback((id: string) => {
-    setPendingActions((current) => current.filter((item) => item.id !== id))
+    setPendingActions(useAiAssistantStore.getState().pendingActions.filter((item) => item.id !== id))
   }, [])
+
+  const acceptCoachResult = useCallback((response: import('@/services/geminiAI').GeminiChatResponse) => {
+    if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
+    setPendingActions(response.actions.map((action) => ({ id: createId(), action, label: describeAction(action, uiLocale) })))
+  }, [ownerKey, setPendingActions, uiLocale, upsertStoredMemories])
+
+  const cancelSend = useCallback(() => { if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('user') }, [ownerKey])
+  const previousOwnerRef = useRef(ownerKey)
+  useEffect(() => {
+    if (previousOwnerRef.current !== ownerKey) {
+      previousOwnerRef.current = ownerKey
+      setPendingActions([])
+      setError(null)
+    }
+    if (activeChatRequest && activeChatRequest.owner !== ownerKey) {
+      activeChatRequest.controller.abort('account_changed')
+    }
+  }, [ownerKey, setPendingActions, setError])
 
   return {
     user,
@@ -652,6 +706,8 @@ export function useAiTutor() {
     addImages,
     removeImage,
     send,
+    cancelSend,
+    acceptCoachResult,
     clear,
     createNewChat,
     selectChat,

@@ -2,9 +2,24 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { generateExaminerAudio, transcribeSpeakingAudio, type VoiceAudio } from '../services/speakingAudio.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { assessSpeakingAudio, speakingAssessmentSchema } from '../services/speakingAssessment.service.js'
+import { AiGenerationError } from '../services/aiProvider.service.js'
 
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
+
+router.post('/assess', asyncHandler(async (req, res) => {
+  const payload = speakingAssessmentSchema.parse(req.body)
+  if (payload.audio.reduce((sum, clip) => sum + Buffer.from(clip.data, 'base64').length, 0) > 8000000) return res.status(413).json({ message: 'Audio samples are too large. Use shorter recordings.' })
+  const controller = new AbortController()
+  res.on('close', () => { if (!res.writableEnded) controller.abort() })
+  try { return res.json(await assessSpeakingAudio(req.user!.id, payload, controller.signal)) }
+  catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  }
+}))
 
 router.post('/voice', asyncHandler(async (req, res) => {
   const { text, voice } = z.object({

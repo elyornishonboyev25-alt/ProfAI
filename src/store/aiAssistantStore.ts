@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { AiReportResponse } from '@/types/platform'
 import type { AiWorkspaceId } from '@/services/ai/workspaces'
 import type { SpeechLang } from '@/lib/speech'
+import type { GeminiChatAction } from '@/services/geminiAI'
 
 export type AiAssistantMessageRole = 'user' | 'assistant'
 
@@ -13,6 +14,8 @@ export type AiAssistantMessage = {
   createdAt: string
   /** Optional image attachments remain local and are not uploaded to chat history. */
   images?: string[]
+  status?: 'streaming' | 'interrupted'
+  delivery?: 'text' | 'voice'
 }
 
 export type AiAssistantThread = {
@@ -53,6 +56,10 @@ type AiAssistantState = {
   voiceLang: SpeechLang
   activeWorkspace: AiWorkspaceId
   isExamModeActive: boolean
+  pendingActions: Array<{ id: string; action: GeminiChatAction; label: string }>
+  setPendingActions: (actions: Array<{ id: string; action: GeminiChatAction; label: string }>) => void
+  updateMessage: (ownerKey: string, threadId: string, id: string, patch: Partial<AiAssistantMessage>) => void
+  removeMessage: (ownerKey: string, threadId: string, id: string) => void
   open: () => void
   close: () => void
   toggle: () => void
@@ -101,6 +108,16 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       voiceLang: 'en',
       activeWorkspace: 'general',
       isExamModeActive: false,
+      pendingActions: [],
+      setPendingActions: (pendingActions) => set({ pendingActions }),
+      updateMessage: (ownerKey, threadId, id, patch) => set((state) => ({ threadsByOwner: {
+        ...state.threadsByOwner, [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) => thread.id === threadId
+          ? { ...thread, messages: thread.messages.map((message) => message.id === id ? { ...message, ...patch, id } : message) } : thread),
+      } })),
+      removeMessage: (ownerKey, threadId, id) => set((state) => ({ threadsByOwner: {
+        ...state.threadsByOwner, [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) => thread.id === threadId
+          ? { ...thread, messages: thread.messages.filter((message) => message.id !== id) } : thread),
+      } })),
       open: () => set((state) => (state.isExamModeActive ? state : { isOpen: true })),
       close: () => set({ isOpen: false }),
       toggle: () => set((state) => (state.isExamModeActive ? state : { isOpen: !state.isOpen })),
@@ -162,7 +179,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           const now = message.createdAt
           const threads = (state.threadsByOwner[ownerKey] ?? []).map((thread) =>
             thread.id === threadId
-              ? { ...thread, updatedAt: now, messages: [...thread.messages, message].slice(-100) }
+              ? { ...thread, updatedAt: now, messages: [...thread.messages.filter((item) => item.id !== message.id), message].slice(-100) }
               : thread,
           )
           return { threadsByOwner: { ...state.threadsByOwner, [ownerKey]: sortThreads(threads) } }
@@ -199,7 +216,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
             delete activeThreadIds[alias]
             delete memoriesByOwner[alias]
           }
-          return { threadsByOwner, activeThreadIds, memoriesByOwner, error: null }
+          return { threadsByOwner, activeThreadIds, memoriesByOwner, error: null, pendingActions: [] }
         }),
       setMemories: (ownerKey, memories) =>
         set((state) => ({ memoriesByOwner: { ...state.memoriesByOwner, [ownerKey]: memories } })),
@@ -259,6 +276,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         error: null,
         talkOpen: false,
         isExamModeActive: false,
+        pendingActions: [],
         voiceState: 'idle',
         voiceLevel: 0,
         threadsLoading: {},
@@ -268,7 +286,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
             owner,
             threads.map((thread) => ({
               ...thread,
-              messages: thread.messages.map(({ images: _images, ...message }) => message),
+              messages: thread.messages.filter((message) => message.status !== 'streaming').map(({ images: _images, ...message }) => message),
             })),
           ]),
         ),

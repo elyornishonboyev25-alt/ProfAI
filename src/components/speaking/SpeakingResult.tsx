@@ -73,7 +73,7 @@ export default function SpeakingResult({
       >
         <Burst count={26} play />
         <span className="soft-chip mx-auto">{modeLabel}</span>
-        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-red-600">Overall Band</p>
+        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-red-600">{evaluation.assessmentMode === 'audio' ? 'Estimated Speaking Band' : 'Text Practice Estimate'}</p>
         <div className="mt-2 flex items-center justify-center">
           <BandGauge band={evaluation.overallBand} size={150} />
         </div>
@@ -84,26 +84,27 @@ export default function SpeakingResult({
           </span>
         ) : (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
-            <Sparkles className="h-3 w-3" /> AI examiner assessment
+            <Sparkles className="h-3 w-3" /> {evaluation.assessmentMode === 'audio' ? 'AI audio assessment' : 'AI feedback on text'}
           </span>
         )}
       </motion.div>
 
-      <p className="mt-3 text-center text-xs leading-5 text-slate-500">IELTS-style practice estimate from your transcribed answers. Pronunciation needs audio or examiner review; this is not an official IELTS score.</p>
+      <p className="mt-3 text-center text-xs leading-5 text-slate-500">{evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and selected recordings. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {CRITERIA.map(({ key, label }) => (
           <div key={key} className="surface-card flex flex-col items-center p-4">
-            <BandGauge band={evaluation[key] as number} size={84} />
+            {key === 'pronunciationBand' && evaluation.assessmentMode !== 'audio' ? <span className="flex h-[84px] w-[84px] items-center justify-center text-3xl text-slate-400">—</span> : <BandGauge band={evaluation[key] as number} size={84} />}
             <p className="mt-2 text-center text-xs font-semibold text-slate-600">{label}</p>
-            {key === 'pronunciationBand' ? <p className="mt-1 text-center text-[10px] text-amber-700">Transcript estimate</p> : null}
+            {key === 'pronunciationBand' ? <p className="mt-1 text-center text-[10px] text-amber-700">{evaluation.assessmentMode === 'audio' ? 'Audio assessed' : 'Not assessed'}</p> : null}
           </div>
         ))}
       </div>
 
       {/* Summary */}
+      {evaluation.evidence?.length ? <div className="surface-card mt-5 p-5"><h3 className="text-base font-bold text-slate-900">Evidence and next practice</h3><div className="mt-3 space-y-3">{evaluation.evidence.map((item, index) => <div key={index} className="rounded-xl border border-slate-200 p-3 text-sm"><p className="font-semibold capitalize text-slate-900">{item.criterion} · Answer {item.answerIndex + 1}</p>{item.quote ? <blockquote className="mt-1 border-l-2 border-red-300 pl-3 text-slate-600">“{item.quote}”</blockquote> : null}<p className="mt-2 leading-6 text-slate-700">{item.explanation}</p><p className="mt-1 leading-6 text-red-700">Practice: {item.exercise}</p></div>)}</div></div> : null}
       <div className="surface-card mt-5 p-5">
         <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
           <Gauge className="h-4 w-4 text-red-600" /> Examiner’s Verdict

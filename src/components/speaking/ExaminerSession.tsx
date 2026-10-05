@@ -249,6 +249,7 @@ export default function ExaminerSession({
   const stageIdxRef = useRef(0)
   const moveIdxRef = useRef(0)
   const answersRef = useRef<SpeechStats[]>([])
+  const audioAnswersRef = useRef<Array<{ blob: Blob; answerIndex: number; duration: number }>>([])
   const historyRef = useRef<ExaminerTurn[]>([])
   const recordStartRef = useRef(0)
   const prepDeadlineRef = useRef(0)
@@ -361,7 +362,8 @@ export default function ExaminerSession({
     const version = sessionVersionRef.current
     const stats = mergeStats(answersRef.current, historyRef.current.filter((turn) => turn.role === 'candidate').map((turn) => turn.text).join('\n'))
     try {
-      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats })
+      const audio = [...audioAnswersRef.current].sort((a, b) => b.duration - a.duration).slice(0, 4).sort((a, b) => a.answerIndex - b.answerIndex)
+      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio })
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
@@ -691,6 +693,7 @@ export default function ExaminerSession({
       return
     }
     setAnswerError(null)
+    if (audioBlob) audioAnswersRef.current.push({ blob: audioBlob, answerIndex: answersRef.current.length, duration: durationSec })
     pendingAnswerRef.current = null
     setPendingAudioUrl(null)
     submitAnswer(text, durationSec)
@@ -711,6 +714,7 @@ export default function ExaminerSession({
       const text = await transcribeAnswer(pending.blob, controller.signal)
       if (disposedRef.current || version !== sessionVersionRef.current) return
       if (!text) { setAnswerError('No clear words were detected. Listen to your recording and record again.'); return }
+      audioAnswersRef.current.push({ blob: pending.blob, answerIndex: answersRef.current.length, duration: pending.duration })
       pendingAnswerRef.current = null
       setPendingAudioUrl(null)
       submitAnswer(text, pending.duration)
@@ -788,6 +792,7 @@ export default function ExaminerSession({
     stageIdxRef.current = 0
     moveIdxRef.current = 0
     answersRef.current = []
+    audioAnswersRef.current = []
     historyRef.current = []
     recognition.reset()
   }, [recognition, stopVoiceDetection])

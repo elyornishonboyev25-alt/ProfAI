@@ -259,17 +259,22 @@ const MATH_SCORE_RANGES: Array<[number, number]> = [
 ]
 
 function parseStudentResponse(value: string): number | null {
-  const normalized = value.trim().replace(/[−–—]/g, '-').replace(/\s+/g, '')
+  let normalized = value.trim().replace(/[−–—]/g, '-').replace(/\s+/g, '')
+  if (/^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(normalized)) {
+    normalized = normalized.replace(/,/g, '')
+  }
   if (!normalized) return null
-  if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(normalized)) {
+  if (/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalized)) {
     const parsed = Number(normalized)
     return Number.isFinite(parsed) ? parsed : null
   }
-  const fraction = normalized.match(/^(-?(?:\d+\.?\d*|\.\d+))\/(-?(?:\d+\.?\d*|\.\d+))$/)
+  const fraction = normalized.match(/^([+-]?(?:\d+\.?\d*|\.\d+))\/([+-]?(?:\d+\.?\d*|\.\d+))$/)
   if (!fraction) return null
+  const numerator = Number(fraction[1])
   const denominator = Number(fraction[2])
-  if (!denominator) return null
-  return Number(fraction[1]) / denominator
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || !denominator) return null
+  const parsed = numerator / denominator
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 export function isSATAnswerCorrect(question: SATQuestion, response?: string): boolean {
@@ -279,19 +284,27 @@ export function isSATAnswerCorrect(question: SATQuestion, response?: string): bo
   }
 
   const normalized = response.trim().replace(/[−–—]/g, '-').replace(/\s+/g, '')
-  if (question.acceptedAnswers?.some((answer) => answer.replace(/\s+/g, '') === normalized)) {
-    return true
-  }
-
   const candidate = parseStudentResponse(normalized)
   if (candidate === null) return false
+  const answers = [question.correctAnswer, ...(question.acceptedAnswers ?? [])]
   const tolerance = question.tolerance ?? 0.0000001
-  return Boolean(
-    question.acceptedAnswers?.some((answer) => {
-      const accepted = parseStudentResponse(answer)
-      return accepted !== null && Math.abs(candidate - accepted) <= tolerance
-    }),
-  )
+  return answers.some((answer) => {
+    const accepted = parseStudentResponse(answer)
+    if (accepted === null) return false
+    if (Math.abs(candidate - accepted) <= tolerance) return true
+
+    // The source keys accept both rounded and truncated decimal forms of
+    // fractions (e.g. 5/13, .3846, .384 and .385). Compare at the precision
+    // actually entered, without giving approximate fractions a wider tolerance.
+    const decimals = normalized.match(/^[+-]?\d*\.(\d{3,})$/)?.[1].length
+    if (!answer.includes('/') || !decimals || decimals > 12) return false
+    const scale = 10 ** decimals
+    const magnitude = Math.abs(accepted) * scale
+    const truncated = Math.sign(accepted) * Math.trunc(magnitude) / scale
+    const rounded = Math.sign(accepted) * Math.round(magnitude) / scale
+    const epsilon = Number.EPSILON * Math.max(1, Math.abs(candidate), Math.abs(accepted)) * 4
+    return Math.abs(candidate - truncated) <= epsilon || Math.abs(candidate - rounded) <= epsilon
+  })
 }
 
 export type SATScoreReport = {

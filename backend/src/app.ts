@@ -16,6 +16,7 @@ import testsRoutes from './routes/tests.routes.js'
 import dashboardRoutes from './routes/dashboard.routes.js'
 import profileRoutes from './routes/profile.routes.js'
 import leaderboardRoutes from './routes/leaderboard.routes.js'
+import shadowingRecordingsRoutes, { shadowingUploadLimit } from './routes/shadowingRecordings.routes.js'
 import shadowingRoutes from './routes/shadowing.routes.js'
 import podcastsRoutes from './routes/podcasts.routes.js'
 import reviewsRoutes from './routes/reviews.routes.js'
@@ -66,6 +67,9 @@ app.use(
 )
 app.use('/api/v1/ai/speaking-audio', requireAuth, aiRateLimit, express.json({ limit: '8mb' }), speakingAudioRoutes)
 
+// Authenticate and bound voice uploads before accepting the larger JSON body.
+app.post('/api/v1/shadowing-recordings', requireAuth, shadowingUploadLimit, express.json({ limit: '5mb' }))
+
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false }))
 app.use(apiRateLimit)
@@ -77,6 +81,7 @@ app.use('/api/v1/dashboard', dashboardRoutes)
 app.use('/api/v1/profile', profileRoutes)
 app.use('/api/v1/leaderboard', leaderboardRoutes)
 app.use('/api/v1/shadowing', shadowingRoutes)
+app.use('/api/v1/shadowing-recordings', shadowingRecordingsRoutes)
 app.use('/api/v1/podcasts', podcastsRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)
 app.use('/api/v1/shared-results', sharedResultsRoutes)

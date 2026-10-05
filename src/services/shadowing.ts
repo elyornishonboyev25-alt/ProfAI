@@ -58,3 +58,19 @@ export async function submitShadowingVideo(
     { auth: true },
   )
 }
+
+export type SharedShadowingRecording = {
+  id: string; title: string; youtubeId: string; durationSec: number; createdAt: string
+}
+export function getSharedShadowingRecording(id: string, signal?: AbortSignal) {
+  return apiClient.get<{ recording: SharedShadowingRecording }>(`/shadowing-recordings/${encodeURIComponent(id)}`, { auth: false, signal })
+}
+export async function shareShadowingRecording(blob: Blob, youtubeId: string, durationSec: number, recordingKey: string) {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const parts: string[] = []
+  for (let offset = 0; offset < bytes.length; offset += 32768) parts.push(String.fromCharCode(...bytes.subarray(offset, offset + 32768)))
+  const audioBase64 = btoa(parts.join(''))
+  return apiClient.post<{ path: string }>('/shadowing-recordings', {
+    recordingKey, youtubeId, durationSec, mimeType: blob.type.split(';')[0], audioBase64,
+  }, { auth: true })
+}

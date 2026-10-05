@@ -152,6 +152,7 @@ model User {
   profile                             UserProfile?
   skillBadges                         SkillBadge[]
   sharedResults                       SharedResult[]
+  shadowingRecordings                  ShadowingRecording[]
   claimedDiagnostics                  GuestDiagnostic[]
   xpEvents                            XpEvent[]
   assessmentResults                   AssessmentResult[]
@@ -538,6 +539,22 @@ model SharedResult {
 
   @@unique([userId, attemptKey])
   @@index([createdAt])
+}
+
+// Recordings become public only when the learner explicitly creates a share link.
+model ShadowingRecording {
+  id           String   @id @default(cuid())
+  userId       String
+  recordingKey String
+  youtubeId    String
+  title        String
+  mimeType     String
+  durationSec  Float
+  audio        Bytes
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recordingKey])
 }
 
 // Extended, permanently-stored profile fields (identity, targets, privacy).

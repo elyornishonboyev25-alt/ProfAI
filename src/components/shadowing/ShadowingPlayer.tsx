@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Check, Headphones, Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
+import { ArrowLeft, Check, Headphones, Loader2, Mic, Pause, Play, RotateCcw, Share2, Square } from 'lucide-react'
 import { formatClock, loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
-import type { ShadowingVideoDetail } from '@/services/shadowing'
+import { shareShadowingRecording, type ShadowingVideoDetail } from '@/services/shadowing'
 import { prepareShadowingLesson } from '../../../backend/src/services/shadowingLesson'
 import { useCopy } from '@/i18n/interface'
 import VideoPlaybackError from '@/components/learning/VideoPlaybackError'
@@ -29,8 +29,17 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   const [speed, setSpeed] = useState(1)
   const [retry, setRetry] = useState(0)
   const [recording, setRecording] = useState(false)
+  const [requestingMicrophone, setRequestingMicrophone] = useState(false)
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
+  const [controlsVisible, setControlsVisible] = useState(true)
+  const hideControlsTimer = useRef<number | null>(null)
+  const recordTimer = useRef<number | null>(null)
+  const recorded = useRef<{ blob: Blob; durationSec: number; key: string } | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareLink, setShareLink] = useState('')
+  const [shareStatus, setShareStatus] = useState('')
   const [recordError, setRecordError] = useState('')
+  const recordPlayback = useRef<HTMLAudioElement>(null)
   const recorder = useRef<MediaRecorder | null>(null)
   const stream = useRef<MediaStream | null>(null)
   const mounted = useRef(true)
@@ -130,9 +139,23 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   }, [lesson, duration, ready, errors])
 
   useEffect(() => {
+    if (hideControlsTimer.current !== null) window.clearTimeout(hideControlsTimer.current)
+    setControlsVisible(true)
+    if (playing && activeAudio === null) hideControlsTimer.current = window.setTimeout(() => setControlsVisible(false), 1500)
+    return () => { if (hideControlsTimer.current !== null) window.clearTimeout(hideControlsTimer.current) }
+  }, [playing, activeAudio])
+
+  function revealControls() {
+    if (hideControlsTimer.current !== null) window.clearTimeout(hideControlsTimer.current)
+    setControlsVisible(true)
+    if (playing && activeAudio === null) hideControlsTimer.current = window.setTimeout(() => setControlsVisible(false), 1500)
+  }
+
+  useEffect(() => {
     mounted.current = true
     return () => {
       mounted.current = false
+      if (recordTimer.current !== null) window.clearTimeout(recordTimer.current)
       if (recorder.current?.state === 'recording') recorder.current.stop()
       stream.current?.getTracks().forEach(track => track.stop())
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current)
@@ -142,6 +165,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   function toggleVideo() {
     if (!ready.video || errors.video) return
     const state = playback.current
+    recordPlayback.current?.pause()
     if (state.kind === 'video' && state.playing) {
       state.playing = false
       if (ready.video) main.current?.pauseVideo()
@@ -156,8 +180,9 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   }
 
   function playSection(index: number) {
-    if (!ready.audio || errors.audio || recording) return
+    if (!ready.audio || errors.audio || recording || requestingMicrophone) return
     const state = playback.current
+    recordPlayback.current?.pause()
     if (activeAudio === index && state.kind === 'audio' && state.playing) {
       state.playing = false
       if (ready.audio) audio.current?.pauseVideo()
@@ -176,6 +201,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   }
 
   function startPractice() {
+    recordPlayback.current?.pause()
     if (ready.audio) audio.current?.pauseVideo()
     if (ready.video) main.current?.pauseVideo()
     seekRequestedAt.current = Date.now()
@@ -190,6 +216,8 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   async function record() {
     if (recordingBusy.current) return
     recordingBusy.current = true
+    recordPlayback.current?.pause()
+    setRequestingMicrophone(true)
     setRecordError('')
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') throw new Error('unsupported')
@@ -197,25 +225,58 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
       if (!mounted.current) { input.getTracks().forEach(track => track.stop()); return }
       stream.current = input
       const chunks: BlobPart[] = []
-      const instance = new MediaRecorder(input)
+      const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus'].find(type => MediaRecorder.isTypeSupported(type))
+      const instance = new MediaRecorder(input, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 64000 })
+      const recordingStart = Date.now()
       recorder.current = instance
       instance.ondataavailable = event => { if (event.data.size) chunks.push(event.data) }
       instance.onstop = () => {
         input.getTracks().forEach(track => track.stop())
+        if (recordTimer.current !== null) window.clearTimeout(recordTimer.current)
         recordingBusy.current = false
         if (!mounted.current) return
         if (objectUrl.current) URL.revokeObjectURL(objectUrl.current)
-        objectUrl.current = URL.createObjectURL(new Blob(chunks, { type: instance.mimeType }))
+        const blob = new Blob(chunks, { type: instance.mimeType || chunks.find(chunk => chunk instanceof Blob)?.type || 'audio/webm' })
+        recorded.current = { blob, durationSec: Math.max(0.1, Math.min(120, (Date.now() - recordingStart) / 1000)), key: crypto.randomUUID() }
+        setShareLink('')
+        setShareStatus('')
+        objectUrl.current = URL.createObjectURL(blob)
         setRecordingUrl(objectUrl.current)
         setRecording(false)
       }
       instance.start()
+      recordTimer.current = window.setTimeout(() => { if (instance.state === 'recording') instance.stop() }, 120000)
       setRecording(true)
     } catch {
       recordingBusy.current = false
       stream.current?.getTracks().forEach(track => track.stop())
       setRecordError(c('Microphone unavailable. Allow microphone access and try again.'))
+    } finally {
+      if (mounted.current) setRequestingMicrophone(false)
     }
+  }
+
+  async function shareRecording() {
+    if (!recorded.current || sharing || recording) return
+    setSharing(true)
+    setShareStatus('')
+    let url = shareLink
+    try {
+      if (!url) {
+        const saved = recorded.current
+        const result = await shareShadowingRecording(saved.blob, video.youtubeId, saved.durationSec, saved.key)
+        if (!mounted.current) return
+        url = new URL(result.path, window.location.origin).href
+        setShareLink(url)
+      }
+      if (navigator.share) {
+        try { await navigator.share({ title: video.title, text: c('My shadowing practice on ProfAI'), url }); return }
+        catch (error) { if (error instanceof DOMException && error.name === 'AbortError') return }
+      }
+      try { await navigator.clipboard.writeText(url); setShareStatus(c('Link copied')) }
+      catch { setShareStatus(c('Copy this link to share your recording.')) }
+    } catch { if (mounted.current) setShareStatus(c('Could not share the recording. Please try again.')) }
+    finally { if (mounted.current) setSharing(false) }
   }
 
   const caption = lesson.captions.find(cue => position >= cue.startSec && position < cue.endSec)
@@ -226,10 +287,10 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
     <div className="grid items-start gap-5 lg:grid-cols-[1.5fr_1fr]">
       <section className="space-y-4">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="relative aspect-video bg-black" data-testid="shadowing-stage">
+          <div className="relative aspect-video bg-black" data-testid="shadowing-stage" onPointerMove={revealControls} onPointerLeave={() => { if (mainPlaying) setControlsVisible(false) }} onClick={() => { if (mainPlaying && controlsVisible) setControlsVisible(false); else revealControls() }}>
             <div ref={mainHost} className="pointer-events-none absolute inset-0 [&_iframe]:h-full [&_iframe]:w-full" />
             <div className="absolute inset-0" aria-hidden="true" />
-            {errors.video ? <VideoPlaybackError youtubeId={video.youtubeId} /> : !ready.video ? <div className="absolute inset-0 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div> : <button type="button" onClick={toggleVideo} aria-label={c(mainPlaying ? 'Pause video' : 'Play video')} className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white ring-2 ring-white/80 hover:bg-black/80 focus-visible:outline focus-visible:outline-4 focus-visible:outline-red-400">{mainPlaying ? <Pause size={24} /> : <Play size={24} />}</button>}
+            {errors.video ? <VideoPlaybackError youtubeId={video.youtubeId} /> : !ready.video ? <div className="absolute inset-0 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div> : <button type="button" onClick={event => { event.stopPropagation(); toggleVideo() }} onFocus={revealControls} data-controls-visible={controlsVisible || !mainPlaying} aria-label={c(mainPlaying ? 'Pause video' : 'Play video')} className={`transition-opacity duration-200 ${controlsVisible || !mainPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'} absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white ring-2 ring-white/80 hover:bg-black/80 focus-visible:outline focus-visible:outline-4 focus-visible:outline-red-400`}>{mainPlaying ? <Pause size={24} /> : <Play size={24} />}</button>}
           </div>
           <div className="space-y-3 p-4">
             <div className="flex items-center justify-between gap-3 text-sm"><span className="font-semibold">{c(practice ? 'Full video practice' : 'Full video')} · {formatClock(position)} / {formatClock(duration)}</span><label className="flex items-center gap-2">{c('Speed')}<select aria-label={c('Playback speed')} value={speed} disabled={!ready.video || errors.video} onChange={event => { const value = Number(event.target.value); setSpeed(value); main.current?.setPlaybackRate(value); if (ready.audio) audio.current?.setPlaybackRate(value) }} className="rounded-lg border border-slate-200 p-1">{[0.75, 1, 1.25].map(value => <option key={value} value={value}>{value}x</option>)}</select></label></div>
@@ -240,8 +301,8 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
         {(errors.video || errors.audio) && <button type="button" onClick={() => { playback.current.playing = false; setPlaying(false); setSpeed(1); setRetry(value => value + 1) }} className="learning-secondary"><RotateCcw size={16} />{c('Retry player')}</button>}
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="font-bold">{c('Ready for the whole video?')}</h2><p className="mt-2 text-sm text-slate-600">{c('Practise the audio sections at your own pace. Start the final practice when you feel ready.')}</p>
-          <button type="button" disabled={!ready.video || errors.video || !lesson.segments.length || recording} onClick={startPractice} className="learning-primary mt-4 disabled:opacity-50"><Play size={17} />{c('I am ready — start practice')}</button>
-          {practice && <div className="mt-4 space-y-3"><button type="button" onClick={() => recording ? recorder.current?.stop() : void record()} className="learning-secondary">{recording ? <Square size={16} /> : <Mic size={16} />}{c(recording ? 'Stop recording' : 'Record yourself')}</button>{recordingUrl && <audio controls src={recordingUrl} className="w-full" onPlay={() => { main.current?.pauseVideo(); audio.current?.pauseVideo() }} />}{recordError && <p role="alert" className="text-sm text-red-600">{recordError}</p>}</div>}
+          <button type="button" disabled={!ready.video || errors.video || recording || requestingMicrophone} onClick={startPractice} className="learning-primary mt-4 disabled:opacity-50"><Play size={17} />{c('I am ready — start practice')}</button>
+          {practice && <div className="mt-4 space-y-3"><button type="button" disabled={sharing || requestingMicrophone} onClick={() => recording ? recorder.current?.stop() : void record()} className="learning-secondary">{requestingMicrophone ? <Loader2 size={16} className="animate-spin" /> : recording ? <Square size={16} /> : <Mic size={16} />}{c(requestingMicrophone ? 'Opening microphone…' : recording ? 'Stop recording' : 'Record yourself')}</button>{recordingUrl && <><audio ref={recordPlayback} controls src={recordingUrl} className="w-full" onPlay={() => { if (ready.video) main.current?.pauseVideo(); if (ready.audio) audio.current?.pauseVideo() }} /><button type="button" disabled={sharing || recording || requestingMicrophone} onClick={() => void shareRecording()} className="learning-secondary disabled:opacity-50">{sharing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}{c(sharing ? 'Creating share link…' : 'Share recording')}</button><p className="text-xs text-slate-500">{c('Anyone with this link can listen.')}</p>{shareLink && <label className="block text-xs font-semibold text-slate-600">{c('Share link')}<input readOnly value={shareLink} onFocus={event => event.target.select()} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" /></label>}{shareStatus && <p role="status" className="text-sm text-slate-600">{shareStatus}</p>}</>}{recordError && <p role="alert" className="text-sm text-red-600">{recordError}</p>}</div>}
         </div>
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
@@ -256,7 +317,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
           const audioPlaying = selected && playing && playback.current.kind === 'audio'
           const progress = selected ? Math.max(0, Math.min(1, (audioPosition - section.startSec) / (section.endSec - section.startSec))) : 0
           return <article key={`${section.startSec}:${section.endSec}`} className={`rounded-xl border p-3 ${selected ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
-            <div className="mb-2 flex items-center gap-3"><button type="button" disabled={!ready.audio || errors.audio || recording} onClick={() => playSection(index)} aria-label={`${c(audioPlaying ? 'Pause audio' : 'Play audio')} ${index + 1}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 text-white disabled:opacity-40">{audioPlaying ? <Pause size={17} /> : <Play size={17} />}</button><span className="text-xs font-semibold text-slate-600">{index + 1} · {formatClock(section.startSec)} – {formatClock(section.endSec)} · {Math.round(section.endSec - section.startSec)} {c('seconds')}</span>{completed.has(index) && <Check size={17} className="ml-auto text-emerald-600" aria-label={c('Completed')} />}</div>
+            <div className="mb-2 flex items-center gap-3"><button type="button" disabled={!ready.audio || errors.audio || recording || requestingMicrophone} onClick={() => playSection(index)} aria-label={`${c(audioPlaying ? 'Pause audio' : 'Play audio')} ${index + 1}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 text-white disabled:opacity-40">{audioPlaying ? <Pause size={17} /> : <Play size={17} />}</button><span className="text-xs font-semibold text-slate-600">{index + 1} · {formatClock(section.startSec)} – {formatClock(section.endSec)} · {Math.round(section.endSec - section.startSec)} {c('seconds')}</span>{completed.has(index) && <Check size={17} className="ml-auto text-emerald-600" aria-label={c('Completed')} />}</div>
             <p className="text-sm leading-6 text-slate-800">{section.text}</p>
             {selected && <div role="progressbar" aria-label={c('Audio progress')} aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} className="mt-3 h-1 overflow-hidden rounded bg-red-100"><div className="h-full bg-red-500" style={{ width: `${progress * 100}%` }} /></div>}
           </article>

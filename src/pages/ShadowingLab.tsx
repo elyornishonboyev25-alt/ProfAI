@@ -51,15 +51,15 @@ export default function ShadowingLab() {
         <Link to="/academic-skills" className="learning-back"><ArrowLeft size={16} />{c('Academic Skills')}</Link>
         <p className="learning-eyebrow"><AudioLines size={16} />{c('Shadowing Lab')}</p>
         <h1>{c('Find your rhythm.')}<br /><span>{c('Make English your own.')}</span></h1>
-        <p className="learning-intro">{c('Short, focused lessons to train pronunciation, sentence rhythm and confident academic English.')}</p>
-        <div className="learning-hero-actions"><a href="#shadowing-library" className="learning-primary"><Mic size={17} />{c('Start shadowing')}<ArrowRight size={16} /></a><Link to="/podcast" className="learning-secondary"><Headphones size={17} />{c('Explore podcasts')}</Link></div>
-        <div className="learning-trust"><ShieldCheck size={15} />{c('Curated educational sources')}<span>•</span>100 {c('lessons')}<span>•</span>{c('Up to 2 minutes')}</div>
+        <p className="learning-intro">{c('Natural speech from actors and motivational speakers.')}</p>
+        <div className="learning-hero-actions"><a href="#shadowing-library" className="learning-primary"><Mic size={17} />{c('Start shadowing')}<ArrowRight size={16} /></a></div>
+        <div className="learning-trust"><ShieldCheck size={15} />{c('Original voices. Short clips. Real English.')}<span>•</span>{SHADOWING_CATALOG.length} {c('lessons')}<span>•</span>{c('Up to 2 minutes')}</div>
       </div>
       <div className="learning-hero-visual"><div className="learning-visual-halo" /><StudyObject kind="microphone" /><div className="learning-visual-caption"><AudioLines size={20} /><span>{c('Listen. Repeat. Record.')}</span></div><div className="learning-wave" aria-hidden="true">{[14,26,18,40,54,32,66,44,30,48,24,40,18,28,14].map((height, index) => <i key={index} style={{ height }} />)}</div></div>
     </header>
     <div className="learning-method">{[{ icon: Headphones, title: 'Listen closely', detail: 'Notice sounds, stress and pauses.' }, { icon: Repeat, title: 'Repeat in rhythm', detail: 'Prepare with short audio sections.' }, { icon: Mic, title: 'Record & compare', detail: 'Hear your progress, one phrase at a time.' }].map(({ icon: Icon, title, detail }, index) => <div key={title}><span className="learning-step-icon"><Icon size={20} /></span><div><span className="learning-step-number">0{index + 1}</span><h2>{c(title)}</h2><p>{c(detail)}</p></div></div>)}</div>
     <section id="shadowing-library" className="learning-library">
-      <div className="learning-section-heading"><div><p className="learning-eyebrow">{c('Your daily speaking practice')}</p><h2>{c('Shadowing library')}</h2></div><span className="learning-count">{filtered.length} / 100 {c('lessons')}</span></div>
+      <div className="learning-section-heading"><div><p className="learning-eyebrow">{c('Your daily speaking practice')}</p><h2>{c('Shadowing library')}</h2></div><span className="learning-count">{filtered.length} / {SHADOWING_CATALOG.length} {c('lessons')}</span></div>
       <LibraryControls query={query} onQuery={setQuery} level={level} onLevel={setLevel} category={category} onCategory={setCategory} categories={categories} />
       <div className="learning-card-grid">{filtered.slice((page - 1) * LIBRARY_PAGE_SIZE, page * LIBRARY_PAGE_SIZE).map(item => <button key={item.youtubeId} type="button" onClick={() => void openVideo(item.youtubeId)} className="learning-card">
         <div className="learning-card-image"><img src={item.thumbnailUrl} alt="" loading="lazy" onError={event => { event.currentTarget.style.visibility = 'hidden' }} /><span className="learning-card-duration"><Clock size={12} />{formatClock(item.durationSec)}</span><span className="learning-card-level">{item.cefr}</span><span className="learning-card-play"><Mic size={23} /></span></div>

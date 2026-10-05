@@ -3,41 +3,6 @@
 .test-vocab-slot--reminder, .test-vocab-slot--review { margin: 12px 0; }
 .test-vocab-slot--link { margin: 10px 0 0; }
 
-.test-vocab-notification {
-  position: fixed;
-  z-index: 90;
-  right: max(20px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
-  width: 390px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 40px);
-  overflow-y: auto;
-  border-radius: 20px;
-  box-shadow: 0 16px 48px -16px rgb(136 19 55 / 28%);
-}
-.test-vocab-notification .test-vocab-slot { margin: 0; padding: 0; }
-.test-vocab-notification .test-vocab-card--reminder {
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 10px 12px;
-  border-radius: 20px;
-  border-left: 3px solid #e11d48;
-  padding: 16px;
-  background: linear-gradient(120deg, #fff 60%, #fff1f2);
-  box-shadow: none;
-}
-.test-vocab-notification .test-vocab-icon { width: 34px; height: 34px; border-radius: 11px; }
-.test-vocab-notification .test-vocab-copy { padding-right: 20px; }
-.test-vocab-notification .test-vocab-heading { font-size: 15px; }
-.test-vocab-notification .test-vocab-description { margin-top: 4px; font-size: 11px; line-height: 1.5; }
-.test-vocab-notification .test-vocab-eyebrow { font-size: 8px; }
-.test-vocab-notification .test-vocab-meta { margin-top: 6px; font-size: 10px; }
-.test-vocab-notification .test-vocab-words { gap: 4px; margin-top: 6px; }
-.test-vocab-notification .test-vocab-word { padding: 2px 7px; font-size: 9px; }
-.test-vocab-notification .test-vocab-actions { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; gap: 8px; }
-.test-vocab-notification .test-vocab-cta { min-height: 38px; padding: 8px 12px; font-size: 11px; border-radius: 12px; }
-.test-vocab-notification .test-vocab-never { max-width: 125px; font-size: 9px; text-align: right; }
-.test-vocab-notification.test-vocab-slot { margin: 0; padding: 0; }
-
 .test-vocab-return-row { position: sticky; top: 12px; z-index: 30; display: flex; justify-content: flex-end; pointer-events: none; }
 .test-vocab-return {
   display: inline-flex;
@@ -76,6 +41,15 @@
   box-shadow: 0 8px 28px -16px rgb(159 18 57 / 18%), inset 0 1px 0 #fff;
 }
 .test-vocab-card--review { border-radius: 32px; padding-right: 24px; background: linear-gradient(115deg, #fff 25%, #fff1f3 100%); }
+.test-vocab-card--reminder { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; border-radius: 22px; padding: 14px 46px 14px 16px; background: linear-gradient(115deg, #fff 50%, #fff5f6); }
+.test-vocab-card--reminder .test-vocab-icon { width: 40px; height: 40px; border-radius: 14px; }
+.test-vocab-card--reminder .test-vocab-eyebrow { margin-bottom: 3px; }
+.test-vocab-card--reminder .test-vocab-description { margin-top: 3px; line-height: 1.5; }
+.test-vocab-card--reminder .test-vocab-meta { margin-top: 6px; }
+.test-vocab-card--reminder .test-vocab-count { padding: 2px 7px; }
+.test-vocab-card--reminder .test-vocab-words { margin-top: 6px; gap: 5px; }
+.test-vocab-card--reminder .test-vocab-word { padding: 2px 8px; }
+.test-vocab-card--reminder .test-vocab-cta { min-height: 40px; padding-block: 9px; }
 .test-vocab-card--compact { gap: 14px; padding: 12px 20px; border-radius: 28px; }
 .test-vocab-glow { position: absolute; top: -70px; right: 0; width: 240px; max-width: 100%; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgb(251 113 133 / 11%), transparent 68%); pointer-events: none; }
 .test-vocab-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; align-self: start; margin-top: 3px; border: 1px solid rgb(251 113 133 / 20%); border-radius: 16px; background: linear-gradient(145deg, #ffe4e6, #fff1f2); color: #e11d48; }
@@ -136,6 +110,8 @@
   .test-vocab-card--compact .test-vocab-eyebrow { display: none; }
   .test-vocab-card--compact .test-vocab-meta { margin-top: 4px; }
   .test-vocab-card--compact .test-vocab-cta { width: 100%; min-height: 36px; padding-block: 7px; }
+  .test-vocab-card--reminder { grid-template-columns: 34px minmax(0, 1fr); padding: 14px; gap: 10px 12px; border-radius: 20px; }
+  .test-vocab-card--reminder .test-vocab-icon { width: 34px; height: 34px; border-radius: 12px; }
 }
 @container test-vocabulary (max-width: 320px) {
   .test-vocab-card { padding: 14px; gap: 10px; }

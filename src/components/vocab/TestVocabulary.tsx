@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useIsPresent } from 'framer-motion'
 import { ArrowUpRight, BookOpen, Headphones, Mic, PenLine, Sparkles, X } from 'lucide-react'
@@ -24,11 +23,11 @@ function VocabularyPresence({ children, variant }: { children: ReactNode; varian
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => { if (ref.current) ref.current.inert = !present }, [present])
   return (
-    <motion.div ref={ref} aria-hidden={!present || undefined} data-test-vocabulary={variant} className={`test-vocab-presence ${notification ? 'test-vocab-notification' : ''}`}
-      initial={notification ? { opacity: 0, y: 20, scale: 0.96 } : { opacity: 0, height: 0 }}
-      animate={notification ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, height: 'auto' }}
-      exit={notification ? { opacity: 0, y: 12, scale: 0.97 } : { opacity: 0, height: 0 }}
-      transition={{ duration: 0.36, ease: easing }}>
+    <motion.div ref={ref} aria-hidden={!present || undefined} data-test-vocabulary={variant} className="test-vocab-presence"
+      initial={notification ? { height: 0, opacity: 0, y: -10 } : { opacity: 0, height: 0 }}
+      animate={{ height: 'auto', opacity: 1, y: 0 }}
+      exit={notification ? { height: 0, opacity: 0, y: -6 } : { opacity: 0, height: 0 }}
+      transition={{ duration: notification ? 0.52 : 0.36, ease: easing }}>
       {children}
     </motion.div>
   )
@@ -98,7 +97,7 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
     content = variant === 'link' ? link : (
       <motion.aside aria-labelledby={headingId} role={variant === 'reminder' ? 'status' : undefined}
         className={`test-vocab-card ${review ? 'test-vocab-card--review' : 'test-vocab-card--reminder'} ${compact ? 'test-vocab-card--compact' : ''} ${reducedMotion ? 'test-vocab-card--still' : ''}`}
-        initial={reducedMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
+        initial={reducedMotion || variant === 'reminder' ? false : { opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.48, delay: 0.16, ease: easing }}>
         <div aria-hidden="true" className="test-vocab-glow" />
         <div className="test-vocab-icon"><SkillIcon aria-hidden="true" className="h-5 w-5" /><span className="test-vocab-icon-badge"><Sparkles aria-hidden="true" className="h-2.5 w-2.5" /></span></div>
@@ -108,7 +107,7 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
           {!compact ? <p className="test-vocab-description"><UiText text={review ? 'Practise these words in context before your next attempt.' : 'Review these words before you start the test.'} /></p> : null}
           <div className="test-vocab-meta"><span>{vocabulary.test.title}</span><span className="test-vocab-count">{vocabulary.wordCount} <UiText text="words" /></span></div>
           {!compact ? <div className="test-vocab-words">{vocabulary.preview.slice(0, 3).map((entry, index) => (
-            <motion.span key={entry.id} className="test-vocab-word" initial={reducedMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.28 + index * 0.06, ease: easing }}>{entry.term}</motion.span>
+            <motion.span key={entry.id} className="test-vocab-word" initial={reducedMotion || variant === 'reminder' ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.28 + index * 0.06, ease: easing }}>{entry.term}</motion.span>
           ))}</div> : null}
         </div>
         <div className="test-vocab-actions">{link}{!review ? <button type="button" onClick={() => dismiss(true)} className="test-vocab-never"><UiText text="Never show reminders again" /></button> : null}</div>
@@ -116,10 +115,9 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
       </motion.aside>
     )
   }
-  const result = reducedMotion ? (visible ? <div className={`test-vocab-slot test-vocab-slot--${variant} ${variant === 'reminder' ? 'test-vocab-notification' : ''}`} data-test-vocabulary={variant}>{content}</div> : null) : (
+  return reducedMotion ? (visible ? <div className={`test-vocab-slot test-vocab-slot--${variant}`} data-test-vocabulary={variant}>{content}</div> : null) : (
     <AnimatePresence>
       {visible ? <VocabularyPresence key={`${variant}:${testId}`} variant={variant}><div className={`test-vocab-slot test-vocab-slot--${variant}`}>{content}</div></VocabularyPresence> : null}
     </AnimatePresence>
   )
-  return variant === 'reminder' ? createPortal(result, document.body) : result
 }

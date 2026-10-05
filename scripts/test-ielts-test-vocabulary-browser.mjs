@@ -113,11 +113,24 @@ async function main() {
     for (const [width, height] of [[1366, 900], [390, 844], [320, 568]]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 640 })
       for (const skill of ['listening', 'reading', 'writing', 'speaking']) {
-        await evaluate(`localStorage.clear();sessionStorage.clear();window.show('${skill}')`)
+        await evaluate(`(() => {localStorage.clear();sessionStorage.clear();window.vocabularyEntry = null;
+          const entryObserver = new MutationObserver(() => {
+            const group = document.querySelector('[data-test-vocabulary="reminder"]');
+            if (!group) return;
+            window.vocabularyEntry = {
+              opacity: Number(getComputedStyle(group).opacity),
+              together: [...group.querySelectorAll('aside, .test-vocab-word, .test-vocab-cta')].every(element => getComputedStyle(element).opacity === '1'),
+            };
+            entryObserver.disconnect();
+          });
+          entryObserver.observe(document.getElementById('root'), {childList: true, subtree: true});
+          window.show('${skill}');})()`)
         await until('document.querySelector(\'[data-test-vocabulary="link"] a\')')
         await until('document.querySelector(\'[data-test-vocabulary="reminder"] aside\')')
         await new Promise((resolve) => setTimeout(resolve, skill === 'speaking' ? 2700 : 750))
         if (skill === 'speaking') await until("!document.body.textContent.includes('Preparing your Speaking test')")
+        const entry = await evaluate('window.vocabularyEntry')
+        assert.ok(entry && entry.opacity < 1 && entry.together, `${width} ${skill}: the notification and its contents enter together ${JSON.stringify(entry)}`)
         const layout = await evaluate(`(() => {
           const anchors = [...document.querySelectorAll('[data-test-vocabulary] a')];
           const horizontal = document.documentElement.scrollWidth <= innerWidth + 1 && anchors.every(a => {const r=a.getBoundingClientRect();return r.left>=-1 && r.right<=innerWidth+1;});
@@ -125,7 +138,10 @@ async function main() {
           const r=last.getBoundingClientRect();
           const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
           const card=document.querySelector('[data-test-vocabulary="reminder"] aside');
-          return {horizontal,reachable:r.top>=-1 && r.bottom<=innerHeight+1 && last.contains(hit),href:last.getAttribute('href'),reminder:!!card,cardHeight:card.getBoundingClientRect().height,opacity:getComputedStyle(card).opacity,top:r.top,bottom:r.bottom,hit:hit?.outerHTML.slice(0,250),scroll:document.scrollingElement.scrollTop,height:document.scrollingElement.scrollHeight};
+          const banner = card.closest('[data-test-vocabulary]'), modes = banner.nextElementSibling;
+          const b=card.getBoundingClientRect(),m=modes.getBoundingClientRect();
+          const inPlace = getComputedStyle(banner).position === 'static' && b.bottom <= m.top + 1 && Math.abs(b.left - m.left) <= 5 && Math.abs(b.width - m.width) <= 9;
+          return {horizontal,inPlace,reachable:r.top>=-1 && r.bottom<=innerHeight+1 && last.contains(hit),href:last.getAttribute('href'),reminder:!!card,cardHeight:b.height,opacity:getComputedStyle(banner).opacity,top:r.top,bottom:r.bottom,hit:hit?.outerHTML.slice(0,250),scroll:document.scrollingElement.scrollTop,height:document.scrollingElement.scrollHeight};
         })()`)
         assert.equal(layout.horizontal, true, `${width} ${skill}: no horizontal overflow`)
         if (!layout.reachable) { const shot = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(join(screenshots, `${width}-${skill}-failure.png`), Buffer.from(shot.data, 'base64')) }
@@ -136,7 +152,8 @@ async function main() {
         assert.equal(vocabularyUrl.searchParams.get('test'), '1')
         assert.ok(vocabularyUrl.searchParams.get('returnTo').endsWith(skill === 'listening' ? 'ielts-listening-1' : skill === 'reading' ? 'reading-roadmap-full-1' : `${skill}-full-1`))
         assert.equal(layout.reminder, true)
-        assert.ok(layout.cardHeight <= (width >= 768 ? 190 : 270), `${width} ${skill}: reminder stays compact (${layout.cardHeight}px)`)
+        assert.equal(layout.inPlace, true, `${width} ${skill}: full-width banner stays above the mode cards`)
+        assert.ok(layout.cardHeight <= (width >= 768 ? 145 : 245), `${width} ${skill}: reminder stays slim (${layout.cardHeight}px)`)
         assert.equal(layout.opacity, '1', 'Entry animation finishes with a readable card')
         await evaluate(`document.querySelector('[data-test-vocabulary="reminder"]').scrollIntoView({block:'start',behavior:'instant'})`)
         const shot = await send('Page.captureScreenshot', { format: 'png' })
@@ -155,7 +172,7 @@ async function main() {
         const shot = await send('Page.captureScreenshot', { format: 'png' })
         await writeFile(join(screenshots, `${width}-${skill}-review.png`), Buffer.from(shot.data, 'base64'))
       }
-      console.log(`PASS: ${width}x${height}, four skill launch cards, dismissal and compact review`)
+      console.log(`PASS: ${width}x${height}, four slim inline banners, synchronized entry, dismissal and compact review`)
     }
     await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false })
     await evaluate("window.showVocabularyCard('speaking', false)")

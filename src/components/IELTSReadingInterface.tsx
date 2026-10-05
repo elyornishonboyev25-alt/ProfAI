@@ -3018,6 +3018,8 @@ export default function IELTSReadingInterface({
     </div>
   )
 
+  const selectionToolbarWidth = testMode === 'practice' ? 340 : 220
+
   const renderMarkTools = () => (
     <>
       <AnimatePresence>
@@ -3028,10 +3030,11 @@ export default function IELTSReadingInterface({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             data-reading-selection-toolbar="1"
-            className="fixed z-[100] flex w-[340px] max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
+            className="fixed z-[100] flex max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
             style={{
+              width: selectionToolbarWidth,
               top: selectionRect.top >= 64 ? selectionRect.top - 60 : selectionRect.bottom + 10,
-              left: Math.max(8, Math.min(window.innerWidth - Math.min(340, window.innerWidth - 16) - 8, selectionRect.left + selectionRect.width / 2 - Math.min(340, window.innerWidth - 16) / 2)),
+              left: Math.max(8, Math.min(window.innerWidth - Math.min(selectionToolbarWidth, window.innerWidth - 16) - 8, selectionRect.left + selectionRect.width / 2 - Math.min(selectionToolbarWidth, window.innerWidth - 16) / 2)),
             }}
           >
             <button
@@ -3053,24 +3056,26 @@ export default function IELTSReadingInterface({
               <ChatBubbleBottomCenterTextIcon className="w-4 h-4 text-red-500" />
               Note
             </button>
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                const sel = window.getSelection()
-                const word = (selectedText || sel?.toString() || '').trim()
-                if (!word) return
-                const anchor = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement
-                const sentence = (anchor?.closest('p, div, li')?.textContent ?? word).replace(/\s+/g, ' ').trim()
-                setAiLookup({ word, sentence })
-                setSelectionRect(null)
-              }}
-              className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
-              title="Ask AI to explain this word"
-            >
-              <SparklesIcon className="w-4 h-4" />
-              Ask AI
-            </button>
+            {testMode === 'practice' && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  const sel = window.getSelection()
+                  const word = (selectedText || sel?.toString() || '').trim()
+                  if (!word) return
+                  const anchor = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement
+                  const sentence = (anchor?.closest('p, div, li')?.textContent ?? word).replace(/\s+/g, ' ').trim()
+                  setAiLookup({ word, sentence })
+                  setSelectionRect(null)
+                }}
+                className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
+                title="Ask AI to explain this word"
+              >
+                <SparklesIcon className="w-4 h-4" />
+                Ask AI
+              </button>
+            )}
             <div className={`absolute left-1/2 -ml-1.5 h-3 w-3 rotate-45 border-red-200 bg-white ${selectionRect.top >= 64 ? '-bottom-1.5 border-b border-r' : '-top-1.5 border-l border-t'}`} />
           </motion.div>
         )}
@@ -6319,7 +6324,7 @@ export default function IELTSReadingInterface({
             )}
             <NotesPanel testId={test.id} isOpen={showNotes} onClose={() => setShowNotes(false)} />
             <WordLookupModal
-              open={Boolean(aiLookup)}
+              open={testMode === 'practice' && Boolean(aiLookup)}
               word={aiLookup?.word ?? ''}
               sentence={aiLookup?.sentence}
               context={isListening ? 'listening' : 'reading'}

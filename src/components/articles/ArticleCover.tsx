@@ -39,13 +39,18 @@ type ArticleCoverProps = {
   article: Article
   variant?: 'card' | 'hero'
   className?: string
+  appearance?: 'original' | 'silver'
 }
 
 // Generated, watermark-free cover art. Pure CSS + a single icon motif so it always looks
 // premium and never carries a channel handle. If `article.cover.image` is provided we use the
 // real photo instead and keep a soft gradient scrim for legibility.
-export function ArticleCover({ article, variant = 'card', className = '' }: ArticleCoverProps) {
-  const palette = coverPalettes[article.cover.theme]
+export function ArticleCover({ article, variant = 'card', className = '', appearance = 'original' }: ArticleCoverProps) {
+  const palette = appearance === 'silver' ? {
+    gradient: 'linear-gradient(125deg, #f8fafc 0%, #e3e8ef 48%, #c5ceda 100%)',
+    glow: 'radial-gradient(ellipse at 88% 18%, rgba(255,255,255,.9), transparent 55%), radial-gradient(ellipse at 10% 100%, rgba(220,38,38,.09), transparent 60%)',
+    accent: '#c52b3e', kicker: '#9f2639', ink: '#202633',
+  } : coverPalettes[article.cover.theme]
   const Icon = ICONS[article.cover.icon] ?? BookOpen
   const isHero = variant === 'hero'
 
@@ -60,7 +65,7 @@ export function ArticleCover({ article, variant = 'card', className = '' }: Arti
 
   return (
     <div
-      className={`relative isolate overflow-hidden ${className}`}
+      className={`relative isolate overflow-hidden ${appearance === 'silver' ? 'article-cover-silver' : ''} ${className}`}
       style={{ background: palette.gradient }}
       aria-hidden="true"
     >

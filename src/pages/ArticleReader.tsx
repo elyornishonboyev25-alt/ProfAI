@@ -1,4 +1,5 @@
 import UiText from '@/components/common/UiText'
+import '@/styles/articlesArena.css'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -376,11 +377,11 @@ export default function ArticleReader() {
 
   return (
     <div className="article-reader-page workspace-page relative min-h-screen overflow-hidden px-3 py-4 text-slate-950 sm:px-5 sm:py-6 lg:px-8">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_10%_12%,rgba(255,244,214,0.96),transparent_36%),radial-gradient(circle_at_88%_18%,rgba(239,229,229,0.94),transparent_38%),linear-gradient(135deg,#fffaf0_0%,#f4ebe5_52%,#eee8e8_100%)]" />
+      <div className="articles-reader-backdrop pointer-events-none fixed inset-0 -z-10" />
       <div className="pointer-events-none fixed -left-24 top-[28%] -z-10 h-80 w-80 rounded-full border border-red-200/30" />
       <div className="pointer-events-none fixed -right-28 bottom-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full border border-red-200/25" />
       <div className="pointer-events-none fixed right-[4%] top-[7%] -z-10 h-80 w-80 rounded-full bg-red-300/20 blur-[90px]" />
-      <div className="pointer-events-none fixed left-[18%] top-[-7rem] -z-10 h-64 w-[34rem] rounded-full bg-amber-200/25 blur-[100px]" />
+      <div className="pointer-events-none fixed left-[18%] top-[-7rem] -z-10 h-64 w-[34rem] rounded-full bg-slate-200/25 blur-[100px]" />
 
       {/* reading progress */}
       <div className="fixed inset-x-0 top-0 z-[60] h-1 bg-white/40">

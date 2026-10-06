@@ -411,7 +411,7 @@
   "Up to 2 minutes": "2 daqiqagacha",
   "Prepare with short audio sections.": "Qisqa audio bo‘laklar bilan tayyorlaning.",
   "This transcript has no safe 12–18 second boundaries. Choose another lesson.": "Bu subtitrda 12–18 soniyalik bo‘laklarni xavfsiz ajratib bo‘lmaydi. Boshqa darsni tanlang.",
-  "The final section may be shorter to keep the speech intact.": "Nutq bo‘linib qolmasligi uchun oxirgi bo‘lak qisqaroq bo‘lishi mumkin.",
+  "Section lengths follow the available caption boundaries to keep speech intact.": "Nutq bo‘linib qolmasligi uchun bo‘laklar uzunligi mavjud subtitr chegaralariga moslanadi.",
   "Opening shadowing recording…": "Shadowing yozuvi ochilmoqda…",
   "This recording is unavailable": "Bu ovoz yozuvi mavjud emas",
   "Check the link and try opening it again.": "Havolani tekshirib, qayta ochib ko‘ring.",

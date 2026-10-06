@@ -71,6 +71,28 @@ export async function run() {
     assert.equal(button('I am ready — start practice')!.disabled, false, 'Caption download failures do not block full-video recording practice')
     assert.ok(SHADOWING_CATALOG.every(item => item.durationSec <= 120))
 
+    // Cached phrase boundaries need not admit a complete 12–18s partition.
+    const irregularCaptions = [0, 10, 20, 30].map((startSec, index) => ({
+      id: `irregular:${index}`, orderIndex: index, startSec, endSec: startSec + 10,
+      text: `Whole cached phrase ${index + 1}.`,
+    }))
+    const irregular = prepareShadowingLesson(irregularCaptions, 40)
+    assert.equal(irregular.segments.length, 4, 'Keep shorter real boundaries when strict grouping is impossible')
+    assert.equal(irregular.segments.map(section => section.text).join(' '), irregularCaptions.map(cue => cue.text).join(' '))
+    const rolling = prepareShadowingLesson([
+      { startSec: 0, endSec: 14, text: 'First overlapping caption.' },
+      { startSec: 10, endSec: 24, text: 'Second overlapping caption.' },
+      { startSec: 24, endSec: 39, text: 'Next complete phrase.' },
+    ], 39)
+    assert.deepEqual(rolling.segments.map(({ startSec, endSec }) => [startSec, endSec]), [[0, 24], [24, 39]], 'Keep overlapping captions intact and preserve the following section')
+    assert.equal(prepareShadowingLesson([], 40).segments.length, 0, 'Missing captions still never invent speech boundaries')
+    await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 40, captions: irregularCaptions, segments: [] }} onBack={() => {}} />)
+    assert.equal(container.querySelectorAll('button[aria-label^="Play audio "]').length, 4)
+    assert.doesNotMatch(container.textContent!, /no safe 12–18 second boundaries|Choose another lesson/)
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 1"]'))
+    assert.equal(currentTime, 0, 'Fallback sections use the original caption start')
+    assert.ok(container.querySelector('button[aria-label="Pause audio 1"]'), 'Fallback section can play')
+
     // Independent players let full video continue across every audio boundary.
     const originalPlayer = window.YT.Player
     const players: any[] = []
@@ -100,7 +122,8 @@ export async function run() {
     assert.equal(prepared.segments.length, 8)
     assert.ok(prepared.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
     assert.equal(prepared.segments.map(section => section.text).join(' '), captions.slice(0, 40).map(cue => cue.text).join(' '), 'No words lost or duplicated at joins')
-    assert.equal(prepareShadowingLesson([{ startSec: 0, endSec: 22, text: 'One long cue without safe word boundaries.' }], 22).segments.length, 0, 'Do not cut speech with unknown word timestamps')
+    const longCue = { startSec: 0, endSec: 22, text: 'One long cue without safe word boundaries.' }
+    assert.deepEqual(prepareShadowingLesson([longCue], 22).segments, [{ ...longCue, orderIndex: 0 }], 'Play a long cue intact without inventing word timestamps')
     await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 135, segments: captions }} onBack={() => {}} />)
     const [full, sectionPlayer] = players
     assert.equal(full.state.rate, 1)

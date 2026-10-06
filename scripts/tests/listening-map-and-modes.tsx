@@ -48,13 +48,29 @@ export async function run() {
   window.Range.prototype.getClientRects = () => [new window.DOMRect(20, 100, 120, 20)] as unknown as DOMRectList
   window.Range.prototype.getBoundingClientRect = () => new window.DOMRect(20, 100, 120, 20)
   try {
-    for (const mode of ['simulation', 'practice'] as const) {
+    for (const { mode, savedPractice } of [
+      { mode: 'simulation', savedPractice: true },
+      { mode: 'simulation', savedPractice: false },
+      { mode: 'practice', savedPractice: false },
+    ] as const) {
       for (const test of mockListeningTests) {
         localStorage.clear()
+        const sessionKey = `ielts_test_session_${test.id}`
+        if (savedPractice) {
+          localStorage.setItem(sessionKey, JSON.stringify({
+            testMode: 'practice', selectedParts: [0], partsSelectionVersion: 2,
+          }))
+        }
         const root = createRoot(container)
-        await act(async () => root.render(<IELTSReadingInterface test={test} launchPreset={{ mode }} onComplete={() => {}} onExit={() => {}} />))
+        await act(async () => root.render(<IELTSReadingInterface test={test} launchPreset={savedPractice ? undefined : { mode }} onComplete={() => {}} onExit={() => {}} />))
+        if (savedPractice) {
+          const launch = [...container.querySelectorAll('div')].find(el => el.textContent?.trim() === 'Launch Final Simulation')
+          assert.ok(launch, `${test.id}: simulation launch card`)
+          await act(async () => launch.click())
+        }
         await delay()
         await click('Play')
+        assert.equal(JSON.parse(localStorage.getItem(sessionKey)!).testMode, mode, `${test.id}: launched mode`)
         const audio = container.querySelector('audio')!
         const controls = container.querySelector('[aria-label="Practice audio controls"]')
         assert.equal(Boolean(controls), mode === 'practice', `${test.id}: mode controls`)
@@ -86,7 +102,7 @@ export async function run() {
         await act(async () => root.unmount())
       }
     }
-    console.log('PASS: all 30 Listening tests hide Ask AI, pause and seek in Simulation; Practice retains AI, pause and +/-10s; external seeking and speed changes are blocked only in Simulation')
+    console.log('PASS: all 30 Listening tests hide Ask AI, pause and seek in Simulation, including launches after saved Practice; Practice retains AI, pause and +/-10s; external seeking and speed changes are blocked only in Simulation')
 
     localStorage.clear()
     const root = createRoot(container)

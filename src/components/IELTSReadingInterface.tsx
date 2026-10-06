@@ -3013,7 +3013,7 @@ export default function IELTSReadingInterface({
             <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
 
-          <PremiumCard onClick={() => { setTestMode('simulation'); handleStartTest(); }} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
+          <PremiumCard onClick={() => handleStartTest({ mode: 'simulation' })} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
             <div className="flex items-center gap-4 mb-8">
               <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
                 <ComputerDesktopIcon className="w-8 h-8 text-white" />

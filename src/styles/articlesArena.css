@@ -105,6 +105,11 @@
   .articles-studio-benefits { margin-top:19px; font-size:10px; }
 }
 @media(max-width:560px) {
+  .app-shell:has(.articles-studio,.article-reader-page,.articles-vocabulary-studio) .workspace-toolbar { gap:8px; flex-wrap:wrap; }
+  .app-shell:has(.articles-studio,.article-reader-page,.articles-vocabulary-studio) .workspace-toolbar-actions { flex:1; min-width:0; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  .app-shell:has(.articles-studio,.article-reader-page,.articles-vocabulary-studio) .workspace-mobile-brand { font-size:18px; }
+  .app-shell:has(.articles-studio,.article-reader-page,.articles-vocabulary-studio) .workspace-toolbar .liquid-icon-button { width:36px; min-height:36px; }
+  .app-shell:has(.articles-studio,.article-reader-page,.articles-vocabulary-studio) .liquid-mobile-tools summary { width:36px; height:36px; }
   .articles-studio-topline { gap:8px; margin-bottom:16px; }
   .articles-studio-back,.articles-studio-vocabulary { gap:6px; font-size:11px; }
   .articles-studio-vocabulary { padding:0 11px; }

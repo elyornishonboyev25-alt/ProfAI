@@ -1,584 +1,802 @@
-import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   Flame,
-  Medal,
   Minus,
-  Shield,
-  Sparkles,
+  RefreshCw,
+  Search,
+  ShieldCheck,
   Trophy,
   Users,
-  RefreshCw,
   Zap,
 } from 'lucide-react'
-import { apiClient } from '@/lib/apiClient'
-import type { LeaderboardResponse, LeaderboardRow } from '@/types/platform'
-import { Skeleton } from '@/components/common/Skeleton'
-import { useAuthStore, type AuthState } from '@/store/authStore'
-import { motion } from 'framer-motion'
-import { Burst, CountUp, Reveal, Stagger, StaggerItem, Tilt3D, XPGem } from '@/components/fx'
-import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
-import PremiumFeatureLock from '@/components/premium/PremiumFeatureLock'
-import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useNavigate } from 'react-router-dom'
-import { syncSavedSATAttemptResults } from '@/features/sat/resultSync'
+import UiText from '@/components/common/UiText'
+import { Skeleton } from '@/components/common/Skeleton'
 import LeaderboardAvatar from '@/components/leaderboard/LeaderboardAvatar'
+import { apiClient } from '@/lib/apiClient'
+import { useAuthStore } from '@/store/authStore'
+import { syncSavedSATAttemptResults } from '@/features/sat/resultSync'
+import type { LeaderboardResponse, LeaderboardRow } from '@/types/platform'
+import '@/styles/leaderboard.css'
+import { useCopy } from '@/i18n/interface'
 
-function getMovement(row: LeaderboardRow) {
-  if (row.rankTrend === 'same') {
-    return {
-      icon: Minus,
-      label: '0',
-      className: 'border-slate-200 bg-white text-slate-500',
-    }
-  }
-  const up = row.rankTrend === 'up'
-  return {
-    icon: up ? ArrowUpRight : ArrowDownRight,
-    label: `${up ? '+' : '-'}${Math.abs(row.rankDelta)}`,
-    className: up
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : 'border-red-200 bg-red-50 text-red-700',
-  }
-}
+const PERIODS = [
+  { value: 'week', label: 'Last 7 days' },
+  { value: 'month', label: 'Last 30 days' },
+  { value: 'all', label: 'All Time' },
+] as const
+const PAGE_SIZE = 20
+const number = (value: number) => value.toLocaleString('en-US')
+const resultLabel = (row: LeaderboardRow) =>
+  row.testsCompleted > 0 ? `${row.accuracy.toFixed(1)}%` : '—'
 
-/** Podium card styling per rank — gold / silver / bronze. */
-function podiumTheme(rank: number) {
-  if (rank === 1) {
-    return {
-      cardBg: 'from-white via-red-50/60 to-slate-100/75',
-      cardBorder: 'border-red-200/80',
-      cardShadow: 'shadow-[0_24px_50px_rgba(174,39,54,0.17)]',
-      ringFrom: '#d83d4b',
-      ringTo: '#9e1d2b',
-      crown: 'text-amber-500',
-      label: 'Gold',
-      labelBg: 'bg-gradient-to-r from-red-800 to-red-500',
-      barH: 'h-32',
-    }
-  }
-  if (rank === 2) {
-    return {
-      cardBg: 'from-slate-100 via-slate-50/40 to-zinc-100/60',
-      cardBorder: 'border-slate-300/80',
-      cardShadow: 'shadow-[0_22px_44px_rgba(100,116,139,0.22)]',
-      ringFrom: '#CBD5E1',
-      ringTo: '#64748B',
-      crown: 'text-slate-400',
-      label: 'Silver',
-      labelBg: 'bg-gradient-to-r from-slate-300 to-slate-500',
-      barH: 'h-24',
-    }
-  }
-  return {
-    cardBg: 'from-white via-rose-50/40 to-slate-100/75',
-    cardBorder: 'border-slate-200/80',
-    cardShadow: 'shadow-[0_22px_44px_rgba(71,80,95,0.13)]',
-    ringFrom: '#b9bdc8',
-    ringTo: '#8d6470',
-    crown: 'text-orange-600',
-    label: 'Bronze',
-    labelBg: 'bg-gradient-to-r from-slate-600 to-red-500',
-    barH: 'h-20',
-  }
+function Movement({ row }: { row: LeaderboardRow }) {
+  const { c } = useCopy()
+  const Icon =
+    row.rankTrend === 'up'
+      ? ArrowUpRight
+      : row.rankTrend === 'down'
+        ? ArrowDownRight
+        : Minus
+  return (
+    <span
+      className={`leaderboard-movement is-${row.rankTrend}`}
+      title={c('Since the previous board update')}
+      aria-label={`${c('Movement')}: ${row.rankDelta > 0 ? '+' : ''}${row.rankDelta}. ${c('Since the previous board update')}`}
+    >
+      <Icon size={14} aria-hidden="true" />
+      {row.rankDelta === 0
+        ? '—'
+        : `${row.rankDelta > 0 ? '+' : '−'}${Math.abs(row.rankDelta)}`}
+    </span>
+  )
 }
 
 export default function Leaderboard() {
+  const { c } = useCopy()
   const navigate = useNavigate()
-  const user = useAuthStore((state: AuthState) => state.user)
-  const userId = user?.id
-  const { minimalMotion } = useMotionPreferences()
-
+  const userId = useAuthStore((state) => state.user?.id)
+  const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week')
+  const [data, setData] = useState<LeaderboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<LeaderboardResponse | null>(null)
+  const [syncWarning, setSyncWarning] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
-  const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week')
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
+    const controller = new AbortController()
     let active = true
-
-    const fetchData = async () => {
+    setData(null)
+    setUpdatedAt(null)
+    setError(null)
+    setSyncWarning(false)
+    setLoading(true)
+    const load = async () => {
       if (!userId) {
-        setLoading(false)
-        setData(null)
         setError('Sign in required to view the leaderboard.')
+        setLoading(false)
         return
       }
-
-      setLoading(true)
-      setError(null)
-
       try {
-        const payload = await apiClient.get<LeaderboardResponse>(`/leaderboard?period=${period}`, { auth: true })
+        const payload = await apiClient.get<LeaderboardResponse>(
+          `/leaderboard?period=${period}`,
+          { auth: true, signal: controller.signal },
+        )
         if (!active) return
         setData(payload)
-        void syncSavedSATAttemptResults(userId).then((sync) => {
-          if (!active || sync.failed || useAuthStore.getState().user?.id !== userId) return
-          void apiClient.get<LeaderboardResponse>(`/leaderboard?period=${period}`, { auth: true })
-            .then((latest) => { if (active) setData(latest) })
-            .catch(() => {})
-        }).catch(() => {})
+        setUpdatedAt(new Date())
+        // A partial backfill can still change ranks. Refresh successful saves
+        // even if another saved attempt failed to sync.
+        void syncSavedSATAttemptResults(userId)
+          .then(async (sync) => {
+            if (!active || useAuthStore.getState().user?.id !== userId) return
+            setSyncWarning(sync.failed > 0)
+            try {
+              const latest = await apiClient.get<LeaderboardResponse>(
+                `/leaderboard?period=${period}`,
+                { auth: true, signal: controller.signal },
+              )
+              if (active) {
+                setData(latest)
+                setUpdatedAt(new Date())
+              }
+            } catch {
+              if (active) setSyncWarning(true)
+            }
+          })
+          .catch(() => {
+            if (active) setSyncWarning(true)
+          })
       } catch (fetchError) {
-        if (!active) return
-        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load leaderboard.')
+        if (active)
+          setError(
+            fetchError instanceof Error
+              ? fetchError.message
+              : 'Failed to load leaderboard.',
+          )
       } finally {
         if (active) setLoading(false)
       }
     }
-
-    void fetchData()
+    void load()
     return () => {
       active = false
+      controller.abort()
     }
-  }, [userId, reloadKey, period])
+  }, [userId, period, reloadKey])
 
-  const rows = useMemo(() => data?.rows ?? [], [data])
-  const currentUserRow = useMemo(() => rows.find((row) => row.isCurrentUser) ?? null, [rows])
-  const podiumRows = useMemo(() => {
-    if (data?.podium?.length) return data.podium.slice(0, 3)
-    return rows.slice(0, 3)
-  }, [data, rows])
-
-  const summary = useMemo(() => {
-    if (rows.length === 0) return null
-    const totalXp = rows.reduce((sum, row) => sum + row.totalXp, 0)
-    const avgAccuracy = rows.reduce((sum, row) => sum + row.accuracy, 0) / rows.length
-    return { totalXp, avgAccuracy, players: rows.length }
-  }, [rows])
-
-  const topTen = rows.slice(0, 10)
+  // Never display the previous window under the newly selected label.
+  const board = data?.period === period ? data : null
+  const rows = useMemo(() => board?.rows ?? [], [board])
+  const current = rows.find((row) => row.isCurrentUser) ?? null
   const leader = rows[0] ?? null
-  const currentXp = currentUserRow?.totalXp ?? (period === 'all' ? user?.xp ?? 0 : 0)
-  const nextRank = currentUserRow ? rows.find((row) => row.rank === currentUserRow.rank - 1) : null
-  const xpToNextRank = nextRank ? Math.max(0, nextRank.totalXp - currentXp + 1) : 0
-  const leaderProgress = leader && leader.totalXp > 0 ? Math.min(100, currentXp / leader.totalXp * 100) : 0
-  // Competition and progress visibility are core learning features. Keep the
-  // complete board free for every signed-in learner.
-  const premiumLocked = false
-
-  // Re-order podium so #1 is in the middle: [#2, #1, #3]
-  const visualPodium = useMemo(() => {
-    if (podiumRows.length < 3) return podiumRows
-    return [podiumRows[1], podiumRows[0], podiumRows[2]]
-  }, [podiumRows])
+  const next = current
+    ? rows.find((row) => row.rank === current.rank - 1)
+    : null
+  const gap =
+    next && current ? Math.max(0, next.totalXp - current.totalXp + 1) : 0
+  const progress =
+    next && current
+      ? Math.min(100, (current.totalXp / Math.max(1, next.totalXp + 1)) * 100)
+      : current?.rank === 1
+        ? 100
+        : 0
+  const podium = rows.slice(0, 3)
+  const summary = useMemo(() => {
+    const tested = rows.filter((row) => row.testsCompleted > 0)
+    return {
+      xp: rows.reduce((sum, row) => sum + row.totalXp, 0),
+      average: tested.length
+        ? tested.reduce((sum, row) => sum + row.accuracy, 0) / tested.length
+        : null,
+    }
+  }, [rows])
+  const filtered = useMemo(
+    () =>
+      rows.filter((row) =>
+        row.fullName
+          .toLocaleLowerCase()
+          .includes(query.trim().toLocaleLowerCase()),
+      ),
+    [rows, query],
+  )
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const visiblePage = Math.min(page, pageCount)
+  const visibleRows = filtered.slice(
+    (visiblePage - 1) * PAGE_SIZE,
+    visiblePage * PAGE_SIZE,
+  )
+  const currentVisible = visibleRows.some((row) => row.isCurrentUser)
+  const selectPeriod = (value: typeof period) => {
+    setPeriod(value)
+    setPage(1)
+  }
+  const refresh = () => setReloadKey((key) => key + 1)
 
   return (
-    <div className="workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <div className="relative mx-auto w-full max-w-7xl">
-      {/* ── Hero ──────────────────────────────────────────────── */}
-      <Reveal>
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/90 bg-[radial-gradient(circle_at_8%_12%,rgba(213,218,225,0.6),transparent_38%),radial-gradient(circle_at_90%_10%,rgba(251,113,133,0.2),transparent_42%),linear-gradient(150deg,#fff,#f3f4f6_62%,#fff5f5)] p-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:p-8">
-
-          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                  <Sparkles className="h-3.5 w-3.5" />
-                   <UiText text={"XP Ranking Board"} /> </p>
-              </div>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-                 <UiText text={"Global"} /> <span className="arena-title-accent-red"> <UiText text={"Leaderboard"} /> </span>
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                {period === 'all' ? 'All time profile XP across every activity.' : `Verified XP earned ${period === 'week' ? 'this week' : 'this month'}.`} See the leaders and your place on the board.
-              </p>
-              <div className="mt-5 inline-flex flex-wrap gap-1 rounded-2xl border border-white/90 bg-white/75 p-1.5 shadow-sm" role="group" aria-label="Leaderboard period">
-                {([['week', 'This Week'], ['month', 'Month'], ['all', 'All Time']] as const).map(([value, label]) => <button key={value} type="button" onClick={() => setPeriod(value)} aria-pressed={period === value} className={`rounded-xl px-4 py-2 text-sm font-black transition ${period === value ? 'bg-gradient-to-r from-red-500 to-red-700 text-white shadow-[0_9px_20px_rgba(220,38,38,.24)]' : 'text-slate-600 hover:bg-red-50 hover:text-red-700'}`}>{label}</button>)}
-              </div>
+    <div className="workspace-page leaderboard-studio">
+      <div className="leaderboard-content">
+        <header className="leaderboard-hero leaderboard-glass">
+          <div className="leaderboard-heading">
+            <p className="leaderboard-eyebrow">
+              <span className="leaderboard-brand-mark">
+                <Trophy size={15} />
+              </span>
+              <UiText text="Learning leaderboard" />
+              <span className="leaderboard-track">IELTS + SAT</span>
+            </p>
+            <h1>
+              <UiText text="Global" />{' '}
+              <span>
+                <UiText text="Leaderboard" />
+              </span>
+            </h1>
+            <p className="leaderboard-intro">
+              <UiText text="Every learning session moves you forward. See your progress, meet the leaders and find your next milestone." />
+            </p>
+            <div
+              className="leaderboard-periods"
+              role="group"
+              aria-label={c('Leaderboard period')}
+            >
+              {PERIODS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => selectPeriod(value)}
+                  aria-pressed={period === value}
+                >
+                  <UiText text={label} />
+                </button>
+              ))}
             </div>
-
-            <Tilt3D className="w-full rounded-3xl sm:w-auto" max={5}>
-              <div className="relative overflow-hidden rounded-3xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/40 to-orange-50/60 px-5 py-4 shadow-[0_18px_44px_rgba(245,158,11,0.18)] sm:min-w-[18rem]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
-                <div className="flex items-center gap-4">
-                  <XPGem size={56} />
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700"> <UiText text={"Your XP"} /> </p>
-                    <p className="text-3xl font-black tracking-tight text-slate-900">
-                      <CountUp value={currentXp} />
-                    </p>
-                    <p className="mt-0.5 text-[11px] font-semibold text-slate-600">
-                       <UiText text={"Rank"} /> {' '}
-                      <span className="text-red-700">
-                        #{data?.currentUserRank ?? '--'}
-                      </span>
-                    </p>
-                  </div>
+            <p className="leaderboard-window">
+              <ShieldCheck size={14} aria-hidden="true" />
+              <UiText
+                text={
+                  period === 'all'
+                    ? 'Profile XP · All rewarded activities'
+                    : 'Rolling window · Midnight UTC · Awarded XP'
+                }
+              />
+            </p>
+          </div>
+          <div className="leaderboard-personal-card">
+            <div className="leaderboard-personal-top">
+              <span>
+                <UiText text="Your position" />
+              </span>
+              <span className="leaderboard-personal-icon">
+                <Zap size={19} />
+              </span>
+            </div>
+            {loading ? (
+              <Skeleton className="my-4 h-20 w-full rounded-xl" />
+            ) : (
+              <>
+                <p className="leaderboard-personal-rank">
+                  {current ? `#${current.rank}` : '—'}
+                  <span>
+                    {current ? (
+                      <>
+                        <UiText text="of" /> {number(rows.length)}{' '}
+                        <UiText text="learners" />
+                      </>
+                    ) : (
+                      <UiText
+                        text={
+                          error
+                            ? 'Rankings unavailable'
+                            : 'No ranked activity yet'
+                        }
+                      />
+                    )}
+                  </span>
+                </p>
+                <div className="leaderboard-personal-bottom">
+                  <span>
+                    <strong>
+                      {board ? number(current?.totalXp ?? 0) : '—'}
+                    </strong>{' '}
+                    XP
+                  </span>
+                  {current ? (
+                    <Movement row={current} />
+                  ) : (
+                    <ShieldCheck size={18} aria-hidden="true" />
+                  )}
                 </div>
-              </div>
-            </Tilt3D>
+              </>
+            )}
           </div>
+        </header>
 
-          <p className="relative z-10 mt-6 text-xs font-semibold text-red-700">
-            {period === 'all' ? 'All time · All activities · Same XP as your profile' : `Current ${period === 'week' ? 'week' : 'month'} · Verified activity XP`}
+        <div className="leaderboard-statusbar">
+          <p aria-live="polite">
+            {loading ? (
+              <UiText text="Loading rankings…" />
+            ) : updatedAt ? (
+              <>
+                <span className="leaderboard-status-dot" />
+                <UiText text="Updated" />{' '}
+                {updatedAt.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+                <span className="leaderboard-status-note">
+                  <UiText text="Updates may take up to 45 seconds" />
+                </span>
+              </>
+            ) : (
+              <UiText text="Rankings unavailable" />
+            )}
           </p>
-        </section>
-      </Reveal>
+          <button
+            className="leaderboard-text-button"
+            type="button"
+            disabled={loading || !userId}
+            onClick={refresh}
+          >
+            <RefreshCw
+              size={14}
+              className={loading ? 'leaderboard-spin' : ''}
+            />
+            <UiText text="Refresh" />
+          </button>
+        </div>
 
-      {error ? (
-        <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-900 shadow-sm">
-          <span>{error}</span>
-          {user ? (
+        {error ? (
+          <div className="leaderboard-message is-error" role="alert">
+            <ShieldCheck size={20} />
+            <p>
+              <UiText text={error} />
+            </p>
             <button
               type="button"
-              onClick={() => setReloadKey((key) => key + 1)}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-amber-800 shadow-sm transition hover:bg-amber-100"
+              onClick={
+                userId
+                  ? refresh
+                  : () =>
+                      navigate('/login', {
+                        state: { from: { pathname: '/leaderboard' } },
+                      })
+              }
             >
-              <RefreshCw className="h-3.5 w-3.5" />  <UiText text={"Retry"} /> </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => navigate('/login', { state: { from: { pathname: '/leaderboard' } } })}
-              className="rounded-full bg-slate-950 px-4 py-2 text-xs font-black text-white transition hover:bg-red-800"
-            >
-               <UiText text={"Sign in"} /> </button>
-          )}
-        </div>
-      ) : null}
-
-      {/* ── Podium ────────────────────────────────────────────── */}
-      <Reveal delay={0.05} className="mt-8">
-        <PremiumFeatureLock
-          locked={premiumLocked}
-          title="Unlock the Live Podium"
-          description="See verified leaders, rank movement, accuracy and competitive streak intelligence."
-        >
-        <div className="mb-3 flex items-center gap-2">
-          <ArenaMetricMark icon={Trophy} tone="amber" size="sm" />
-          <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Podium · Top 3"} /> </h2>
-        </div>
-        {loading ? (
-          <div className="grid gap-3 lg:grid-cols-3">
-            <Skeleton className="h-72 w-full rounded-3xl" />
-            <Skeleton className="h-72 w-full rounded-3xl" />
-            <Skeleton className="h-72 w-full rounded-3xl" />
-          </div>
-        ) : visualPodium.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-            Earn XP from learning activities to claim the top spot.
+              <UiText text={userId ? 'Retry' : 'Sign in'} />
+            </button>
           </div>
         ) : (
-          <div className="grid items-end gap-4 lg:grid-cols-3">
-            {visualPodium.map((row, podiumIndex) => {
-              if (!row) return null
-              const theme = podiumTheme(row.rank)
-              const movement = getMovement(row)
-              const MovementIcon = movement.icon
-              const isFirst = row.rank === 1
-
-              return (
-                <motion.div
-                  key={row.userId}
-                  initial={minimalMotion ? false : { opacity: 0, y: 48 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-10% 0px' }}
-                  transition={
-                    minimalMotion
-                      ? { duration: 0.1 }
-                      : { type: 'spring', stiffness: 220, damping: 24, delay: (isFirst ? 0.2 : 0) + podiumIndex * 0.08 }
-                  }
-                >
-                <Tilt3D
-                  className={`rounded-3xl ${isFirst ? 'lg:-translate-y-3' : ''}`}
-                  max={5}
-                >
-                  <article
-                    className={`fx-medal-shine relative overflow-hidden rounded-3xl border bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} ${theme.cardShadow} p-5`}
-                  >
-                    {isFirst ? <Burst count={20} play={!minimalMotion} /> : null}
-                    {/* Rank ribbon */}
-                    <div className="flex items-center justify-between">
-                      <span className={`inline-flex items-center gap-1 rounded-full ${theme.labelBg} px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-sm`}>
-                        <Crown className="h-3 w-3" />
-                        {theme.label} · #{row.rank}
-                      </span>
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${movement.className}`}>
-                        <MovementIcon className="h-3 w-3" />
-                        {movement.label}
-                      </span>
-                    </div>
-
-                    {/* Avatar + crown */}
-                    <div className="mt-4 flex flex-col items-center text-center">
-                      <div className="relative">
-                        <LeaderboardAvatar row={row} size="lg" />
-                        {isFirst ? (
-                          <Crown
-                            className={`absolute -top-5 left-1/2 h-7 w-7 -translate-x-1/2 ${theme.crown} drop-shadow-md`}
-                          />
-                        ) : null}
-                      </div>
-                      <p className="mt-3 truncate text-base font-black text-slate-900">{row.fullName}</p>
-                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                        <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />
-                        <CountUp value={row.totalXp} /> XP
-                      </div>
-                    </div>
-
-                    {/* XP bar visual */}
-                    <div
-                      className={`mt-4 w-full rounded-t-xl ${theme.barH}`}
-                      style={{
-                        background: `linear-gradient(180deg, ${theme.ringFrom}, ${theme.ringTo})`,
-                        boxShadow: `inset 0 8px 16px rgba(255,255,255,0.35)`,
-                      }}
-                    />
-
-                    {/* Quick stats */}
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-white/50 bg-white/70 px-2.5 py-1.5 text-center backdrop-blur">
-                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500"> <UiText text={"Accuracy"} /> </p>
-                        <p className="mt-0.5 text-xs font-black text-slate-900">{row.accuracy.toFixed(1)}%</p>
-                      </div>
-                      <div className="rounded-xl border border-white/50 bg-white/70 px-2.5 py-1.5 text-center backdrop-blur">
-                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500"> <UiText text={"Tests"} /> </p>
-                        <p className="mt-0.5 text-xs font-black text-slate-900">{row.testsCompleted}</p>
-                      </div>
-                    </div>
-
-                    {row.streak > 0 ? (
-                      <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50/85 px-2.5 py-1 text-[10px] font-bold text-amber-700">
-                        <Flame className="h-3 w-3" />
-                        {row.streak}  <UiText text={"day streak"} /> </div>
-                    ) : null}
-                  </article>
-                </Tilt3D>
-                </motion.div>
-              )
-            })}
-          </div>
-        )}
-        </PremiumFeatureLock>
-      </Reveal>
-
-      {/* ── Top 10 leaderboard + side rail ────────────────────── */}
-      <section className="mt-8 grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
-        <Reveal>
-          <PremiumFeatureLock
-            locked={premiumLocked}
-            title="Unlock the Top 10 Board"
-            description="Access the live XP table, rank movement, accuracy and streak comparisons."
-          >
-          <article className="surface-card relative overflow-hidden p-5 sm:p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <ArenaMetricMark icon={Medal} tone="red" size="sm" />
-                <h3 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Top 10 · Pure XP"} /> </h3>
-              </div>
-              {summary ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                  <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />
-                   <UiText text={"Total"} /> <CountUp value={summary.totalXp} /> XP
-                </span>
-              ) : null}
-            </div>
-
-            {loading ? (
-              <div className="space-y-2.5">
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <Skeleton key={index} className="h-14 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : topTen.length > 0 ? (
-              <Stagger className="space-y-2">
-                {topTen.map((row) => {
-                  const movement = getMovement(row)
-                  const MovementIcon = movement.icon
-                  return (
-                    <StaggerItem key={row.userId}>
-                      <div
-                        className={`group grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 transition sm:grid-cols-[40px_minmax(0,1.5fr)_0.6fr_0.6fr_0.5fr] ${
-                          row.isCurrentUser
-                            ? 'border-red-300 bg-gradient-to-r from-red-50/70 to-slate-50/60 shadow-[0_8px_18px_rgba(185,28,47,0.1)]'
-                            : 'border-slate-100 bg-white hover:border-red-200 hover:bg-red-50/30'
-                        }`}
-                      >
-                        <LeaderboardAvatar row={row} showRank />
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-slate-900">
-                              {row.fullName}
-                              {row.isCurrentUser ? (
-                                <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700"> <UiText text={"YOU"} /> </span>
-                              ) : null}
-                            </p>
-                            <p className="text-[10px] font-medium text-slate-500">{row.testsCompleted}  <UiText text={"tests ·"} /> {row.accuracy.toFixed(0)} <UiText text={"% acc"} /> </p>
-                          </div>
-                        </div>
-                        <p className="inline-flex items-center gap-1 text-sm font-black text-slate-900">
-                          <Zap className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                          <CountUp value={row.totalXp} />
-                        </p>
-                        <p className="hidden text-xs font-semibold text-slate-700 sm:block">
-                          {row.streak > 0 ? (
-                            <span className="inline-flex items-center gap-0.5">
-                              <Flame className="h-3 w-3 text-amber-500" />
-                              {row.streak}d
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </p>
-                        <span
-                          className={`hidden w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold sm:inline-flex ${movement.className}`}
-                        >
-                          <MovementIcon className="h-3 w-3" />
-                          {movement.label}
-                        </span>
-                      </div>
-                    </StaggerItem>
-                  )
-                })}
-              </Stagger>
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-red-50/30 p-5 text-sm text-slate-600">
-                No rankings yet. Earn XP to start climbing!
+          <>
+            {syncWarning && (
+              <div className="leaderboard-message" role="status">
+                <p>
+                  <UiText text="Some saved results could not sync. This board shows the results already saved on the server." />
+                </p>
+                <button type="button" onClick={refresh}>
+                  <UiText text="Retry" />
+                </button>
               </div>
             )}
-            {currentUserRow && currentUserRow.rank > 10 ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-white px-4 py-3 shadow-[0_12px_25px_rgba(220,38,38,.1)]"><span className="inline-flex items-center gap-3"><b className="text-lg font-black text-red-700">#{currentUserRow.rank}</b><span><strong className="block text-sm font-black text-slate-950">You · {currentUserRow.fullName}</strong><small className="text-xs font-medium text-slate-500">{currentUserRow.testsCompleted} tests · {currentUserRow.accuracy.toFixed(0)}% accuracy</small></span></span><strong className="text-sm font-black text-red-700">{currentUserRow.totalXp.toLocaleString('en-US')} XP</strong></div> : null}
-          </article>
-          </PremiumFeatureLock>
-        </Reveal>
 
-        <div className="space-y-4">
-          <Reveal>
-            <article className="surface-card overflow-hidden border-red-100 bg-[linear-gradient(140deg,#fff,#fff3f3_55%,#edf4ff)] p-5">
-              <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><Shield size={22} /></span><div><p className="text-[10px] font-black uppercase tracking-[.15em] text-red-600">YOUR LEAGUE</p><h3 className="text-lg font-black text-slate-950">{currentUserRow?.divisionLabel ?? 'Build your ranking'}</h3></div></div>
-              <p className="mt-4 text-sm leading-6 text-slate-600">{currentUserRow ? `You are #${currentUserRow.rank} on the ${period === 'all' ? 'all time' : period === 'week' ? 'weekly' : 'monthly'} board. Keep earning XP to move up.` : 'Complete activities to appear on the leaderboard.'}</p>
-              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-700 transition-all" style={{ width: `${currentUserRow ? Math.max(8, Math.min(100, (11 - Math.min(currentUserRow.rank, 10)) * 10)) : 0}%` }} /></div>
-              <p className="mt-2 text-xs font-bold text-red-700">{currentUserRow?.rank && currentUserRow.rank <= 10 ? 'Top 10 achieved' : 'Top 10 goal'}</p>
-            </article>
-          </Reveal>
-          <Reveal>
-            <PremiumFeatureLock locked={premiumLocked} title="Unlock Your XP Progress" compact>
-            <article className="surface-card relative overflow-hidden border-amber-200 p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-              <div className="flex items-center gap-3">
-                <ArenaMetricMark icon={Crown} tone="amber" />
+            <section
+              className="leaderboard-podium-section"
+              aria-labelledby="podium-heading"
+              aria-busy={loading}
+            >
+              <div className="leaderboard-section-heading">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-600">{period === 'all' ? 'Total profile XP' : `${period === 'week' ? 'Weekly' : 'Monthly'} XP`}</p>
-                  <h3 className="text-lg font-black text-slate-900">Your XP Progress</h3>
-                </div>
-              </div>
-              <div className="mt-5 overflow-hidden rounded-full bg-amber-100">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${leaderProgress}%` }}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                  className="h-3 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 shadow-[0_0_18px_rgba(245,158,11,.48)]"
-                />
-              </div>
-              <p className="mt-4 text-center text-sm font-black text-slate-800">
-                {currentUserRow?.rank === 1
-                  ? 'You lead the leaderboard!'
-                  : nextRank
-                    ? `${xpToNextRank.toLocaleString('en-US')} XP to pass #${nextRank.rank}`
-                    : 'Earn XP to climb the leaderboard'}
-              </p>
-              <p className="mt-1 text-center text-xs font-semibold text-slate-500">
-                Your rank #{data?.currentUserRank ?? '—'} · {currentXp.toLocaleString('en-US')} XP
-              </p>
-            </article>
-            </PremiumFeatureLock>
-          </Reveal>
-
-          {/* XP formula explainer */}
-          <Reveal>
-            <article className="surface-card relative overflow-hidden p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
-              <div className="flex items-center gap-2">
-                <ArenaMetricMark icon={Zap} tone="amber" size="sm" />
-                <h3 className="text-base font-black tracking-tight text-slate-900"> <UiText text={"How XP Works"} /> </h3>
-              </div>
-              <p className="mt-3 text-xs leading-5 text-slate-600">
-                {period === 'all' ? 'Your leaderboard XP is the same total shown on your profile. Tests, vocabulary, speaking, writing and other rewarded learning activities all contribute.' : 'This period shows XP earned during the selected time window. Keep practicing to climb the board.'}
-              </p>
-              <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-900">
-                More total XP = a higher rank
-              </div>
-              <p className="mt-3 text-[11px] text-slate-500">
-                Equal XP is ranked by test accuracy, then completed tests. Learning activities
-                count even if you have not completed a test.
-              </p>
-            </article>
-          </Reveal>
-
-          {/* Overall XP leader */}
-          <Reveal delay={0.06}>
-            <PremiumFeatureLock locked={premiumLocked} title="Unlock XP Leader" compact>
-            <article className="surface-card relative overflow-hidden p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
-              <div className="flex items-center gap-2">
-                <ArenaMetricMark icon={Trophy} tone="red" size="sm" />
-                <h3 className="text-base font-black tracking-tight text-slate-900">XP Leader</h3>
-              </div>
-              {leader ? (
-                <div className="mt-3">
-                  <p className="text-lg font-black text-slate-900">{leader.fullName}</p>
-                  <p className="mt-1 text-xs font-medium text-slate-600">
-                    {leader.totalXp.toLocaleString('en-US')} total XP · Rank #1
+                  <p className="leaderboard-eyebrow">
+                    <UiText text="THE FRONT RUNNERS" />
                   </p>
+                  <h2 id="podium-heading">
+                    <UiText text="Leading the way" />
+                  </h2>
+                </div>
+                <span>
+                  <UiText text="Top 3" />
+                  <Trophy size={17} />
+                </span>
+              </div>
+              {loading ? (
+                <div className="leaderboard-podium">
+                  {[1, 2, 3].map((rank) => (
+                    <Skeleton key={rank} className="h-64 w-full rounded-3xl" />
+                  ))}
+                </div>
+              ) : podium.length ? (
+                <div className="leaderboard-podium">
+                  {podium.map((row) => (
+                    <article
+                      key={row.userId}
+                      className={`leaderboard-podium-card leaderboard-glass is-rank-${row.rank}`}
+                    >
+                      <div className="leaderboard-podium-top">
+                        <span className="leaderboard-place">
+                          <Crown size={14} />
+                          <UiText
+                            text={
+                              row.rank === 1
+                                ? 'First place'
+                                : row.rank === 2
+                                  ? 'Second place'
+                                  : 'Third place'
+                            }
+                          />
+                        </span>
+                        <Movement row={row} />
+                      </div>
+                      <div className="leaderboard-podium-person">
+                        <div className="leaderboard-podium-avatar">
+                          <LeaderboardAvatar row={row} size="lg" />
+                          <span className="leaderboard-medallion">
+                            {row.rank.toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                        <div className="leaderboard-podium-name">
+                          <h3 title={row.fullName}>{row.fullName}</h3>
+                          <span>
+                            {row.isCurrentUser ? (
+                              <UiText text="YOU" />
+                            ) : (
+                              <UiText text="Learner" />
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="leaderboard-podium-xp">
+                        {number(row.totalXp)} <span>XP</span>
+                        <Zap size={20} aria-hidden="true" />
+                      </p>
+                      <div className="leaderboard-podium-stats">
+                        <span>
+                          <UiText text="Avg. result" />
+                          <strong>{resultLabel(row)}</strong>
+                        </span>
+                        <span>
+                          <UiText text="Tests" />
+                          <strong>{number(row.testsCompleted)}</strong>
+                        </span>
+                        <span>
+                          <UiText text="Streak" />
+                          <strong>
+                            <Flame size={13} />
+                            {row.streak}d
+                          </strong>
+                        </span>
+                      </div>
+                    </article>
+                  ))}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">No XP leader yet.</p>
-              )}
-            </article>
-            </PremiumFeatureLock>
-          </Reveal>
-
-          {/* Stats snapshot */}
-          {summary ? (
-            <Reveal delay={0.1}>
-              <PremiumFeatureLock locked={premiumLocked} title="Unlock Board Snapshot" compact>
-              <article className="surface-card relative overflow-hidden p-5">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
-                <div className="flex items-center gap-2">
-                  <ArenaMetricMark icon={Users} tone="red" size="sm" />
-                  <h3 className="text-base font-black tracking-tight text-slate-900"> <UiText text={"Board Snapshot"} /> </h3>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-xl border border-slate-200 bg-red-50/40 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-red-700"> <UiText text={"Players"} /> </p>
-                    <p className="mt-1 text-lg font-black text-slate-900">
-                      <CountUp value={summary.players} />
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-red-50/40 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-red-700"> <UiText text={"Avg Accuracy"} /> </p>
-                    <p className="mt-1 text-lg font-black text-slate-900">
-                      <CountUp value={summary.avgAccuracy} decimals={1} suffix="%" />
-                    </p>
-                  </div>
-                </div>
-              </article>
-              </PremiumFeatureLock>
-            </Reveal>
-          ) : null}
-
-          {/* Anti-cheat rules */}
-          <Reveal delay={0.14}>
-            <article className="surface-card relative overflow-hidden p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/55 to-transparent" />
-              <div className="flex items-center gap-2">
-                <ArenaMetricMark icon={Shield} tone="emerald" size="sm" />
-                <h3 className="text-base font-black tracking-tight text-slate-900">Ranking Rules</h3>
-              </div>
-              <div className="mt-3 space-y-2">
-                {(data?.antiCheatRules ?? []).slice(0, 5).map((rule) => (
-                  <p key={rule} className="rounded-lg border border-emerald-100 bg-emerald-50/40 px-3 py-2 text-[11px] leading-5 text-slate-700">
-                    {rule}
+                <div className="leaderboard-empty leaderboard-glass">
+                  <Trophy size={30} />
+                  <h3>
+                    <UiText text="Your next session could put you on the board" />
+                  </h3>
+                  <p>
+                    <UiText text="Earn XP from learning activities to claim a place in this period." />
                   </p>
-                ))}
-              </div>
-            </article>
-          </Reveal>
-        </div>
-      </section>
+                  <button
+                    type="button"
+                    className="leaderboard-primary-button"
+                    onClick={() => navigate('/ielts')}
+                  >
+                    <UiText text="Start practicing" />
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              )}
+            </section>
+
+            <div className="leaderboard-main-grid">
+              <section
+                className="leaderboard-table-panel leaderboard-glass"
+                aria-labelledby="rankings-heading"
+                aria-busy={loading}
+              >
+                <div className="leaderboard-table-title">
+                  <div>
+                    <p className="leaderboard-eyebrow">
+                      <UiText text="THE FULL PICTURE" />
+                    </p>
+                    <h2 id="rankings-heading">
+                      <UiText text="Rankings" />
+                    </h2>
+                  </div>
+                  <span className="leaderboard-count">
+                    <Users size={15} />
+                    {loading ? '—' : number(rows.length)}{' '}
+                    <UiText text="learners" />
+                  </span>
+                </div>
+                <label className="leaderboard-search">
+                  <Search size={17} aria-hidden="true" />
+                  <span className="sr-only">
+                    <UiText text="Search learners" />
+                  </span>
+                  <input
+                    type="search"
+                    placeholder={c('Search learners')}
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.target.value)
+                      setPage(1)
+                    }}
+                    disabled={loading}
+                  />
+                </label>
+                {loading ? (
+                  <div className="leaderboard-table-loading">
+                    {[1, 2, 3, 4, 5].map((key) => (
+                      <Skeleton key={key} className="h-16 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : visibleRows.length ? (
+                  <>
+                    <table className="leaderboard-table">
+                      <caption className="sr-only">
+                        {PERIODS.find((item) => item.value === period)?.label}{' '}
+                        leaderboard, ordered by XP
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">
+                            <UiText text="Rank" />
+                          </th>
+                          <th scope="col">
+                            <UiText text="Learner" />
+                          </th>
+                          <th scope="col">
+                            <UiText text="Avg. result" />
+                          </th>
+                          <th scope="col">XP</th>
+                          <th scope="col">
+                            <UiText text="Movement" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visibleRows.map((row) => (
+                          <tr
+                            key={row.userId}
+                            className={row.isCurrentUser ? 'is-current' : ''}
+                          >
+                            <td>
+                              <span
+                                className={`leaderboard-rank ${row.rank <= 3 ? 'is-top' : ''}`}
+                              >
+                                {row.rank.toString().padStart(2, '0')}
+                              </span>
+                            </td>
+                            <th scope="row">
+                              <div className="leaderboard-learner">
+                                <LeaderboardAvatar row={row} />
+                                <div>
+                                  <p title={row.fullName}>
+                                    {row.fullName}
+                                    {row.isCurrentUser && (
+                                      <span className="leaderboard-you">
+                                        <UiText text="YOU" />
+                                      </span>
+                                    )}
+                                  </p>
+                                  <small>
+                                    {row.testsCompleted} <UiText text="tests" />
+                                    <span className="leaderboard-mobile-result">
+                                      {' '}
+                                      · {resultLabel(row)}
+                                    </span>
+                                  </small>
+                                </div>
+                              </div>
+                            </th>
+                            <td className="leaderboard-result">
+                              {resultLabel(row)}
+                            </td>
+                            <td className="leaderboard-table-xp">
+                              {number(row.totalXp)}
+                              <small>XP</small>
+                            </td>
+                            <td className="leaderboard-table-movement">
+                              <Movement row={row} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="leaderboard-pagination">
+                      <p>
+                        {(visiblePage - 1) * PAGE_SIZE + 1}–
+                        {Math.min(visiblePage * PAGE_SIZE, filtered.length)}{' '}
+                        <UiText text="of" /> {number(filtered.length)}
+                      </p>
+                      <div>
+                        <button
+                          type="button"
+                          aria-label={c('Previous page')}
+                          disabled={visiblePage === 1}
+                          onClick={() => setPage(visiblePage - 1)}
+                        >
+                          <ChevronLeft size={17} />
+                        </button>
+                        <span>
+                          {visiblePage} / {pageCount}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={c('Next page')}
+                          disabled={visiblePage === pageCount}
+                          onClick={() => setPage(visiblePage + 1)}
+                        >
+                          <ChevronRight size={17} />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="leaderboard-empty is-compact">
+                    <Search size={24} />
+                    <h3>
+                      <UiText
+                        text={
+                          query.trim() ? 'No learners found' : 'No rankings yet'
+                        }
+                      />
+                    </h3>
+                    <p>
+                      <UiText
+                        text={
+                          query.trim()
+                            ? 'Try another name or clear your search.'
+                            : 'Ranked learners will appear here after earning XP.'
+                        }
+                      />
+                    </p>
+                    {query.trim() && (
+                      <button
+                        type="button"
+                        className="leaderboard-text-button"
+                        onClick={() => {
+                          setQuery('')
+                          setPage(1)
+                        }}
+                      >
+                        <UiText text="Clear search" />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!loading && current && !currentVisible && (
+                  <div className="leaderboard-pinned">
+                    <span className="leaderboard-rank">#{current.rank}</span>
+                    <div>
+                      <strong>
+                        <UiText text="Your position" />
+                      </strong>
+                      <small>{current.fullName}</small>
+                    </div>
+                    <b>{number(current.totalXp)} XP</b>
+                  </div>
+                )}
+                <p className="leaderboard-table-note">
+                  <UiText text="Average result combines test percentages and normalized IELTS bands. Movement is since the previous board update." />
+                </p>
+              </section>
+
+              <aside
+                className="leaderboard-rail"
+                aria-label={c('Your progress and ranking rules')}
+              >
+                <section className="leaderboard-progress-card leaderboard-glass">
+                  <div className="leaderboard-card-heading">
+                    <span className="leaderboard-red-icon">
+                      <Zap size={19} />
+                    </span>
+                    <h2>
+                      <UiText text="Your next milestone" />
+                    </h2>
+                  </div>
+                  {loading ? (
+                    <Skeleton className="mt-5 h-32 w-full rounded-xl" />
+                  ) : (
+                    <>
+                      <p className="leaderboard-goal-number">
+                        {current?.rank === 1 ? (
+                          <Trophy size={36} />
+                        ) : next ? (
+                          number(gap)
+                        ) : (
+                          '—'
+                        )}
+                        <span>
+                          <UiText
+                            text={
+                              current?.rank === 1
+                                ? 'You lead this board'
+                                : next
+                                  ? 'XP to move ahead'
+                                  : 'Your ranking starts with XP'
+                            }
+                          />
+                        </span>
+                      </p>
+                      <div
+                        className="leaderboard-progress-track"
+                        role="progressbar"
+                        aria-label={c('XP toward the next position')}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(progress)}
+                      >
+                        <span style={{ width: `${progress}%` }} />
+                      </div>
+                      <p className="leaderboard-goal-copy">
+                        {next ? (
+                          <>
+                            <UiText text="Next position" />{' '}
+                            <strong>#{next.rank}</strong> ·{' '}
+                            {number(next.totalXp)} XP
+                          </>
+                        ) : (
+                          <UiText
+                            text={
+                              current?.rank === 1
+                                ? 'Keep learning to build on your lead.'
+                                : 'Practice IELTS or SAT to earn your first points.'
+                            }
+                          />
+                        )}
+                      </p>
+                      <button
+                        className="leaderboard-primary-button"
+                        type="button"
+                        onClick={() => navigate('/ielts')}
+                      >
+                        <UiText text="Practice IELTS" />
+                        <ArrowRight size={16} />
+                      </button>
+                      <button
+                        className="leaderboard-secondary-button"
+                        type="button"
+                        onClick={() => navigate('/sat')}
+                      >
+                        <UiText text="Practice SAT" />
+                        <ArrowRight size={16} />
+                      </button>
+                    </>
+                  )}
+                </section>
+                <section className="leaderboard-rules-card leaderboard-glass">
+                  <div className="leaderboard-card-heading">
+                    <span className="leaderboard-silver-icon">
+                      <ShieldCheck size={19} />
+                    </span>
+                    <h2>
+                      <UiText text="How rankings work" />
+                    </h2>
+                  </div>
+                  <p className="leaderboard-rule-intro">
+                    <UiText text="Clear rules. Real progress." />
+                  </p>
+                  {loading ? (
+                    <Skeleton className="mt-4 h-36 w-full rounded-xl" />
+                  ) : (
+                    <ol>
+                      {(board?.antiCheatRules ?? []).map((rule, index) => (
+                        <li key={rule}>
+                          <span>{index + 1}</span>
+                          <p>
+                            <UiText text={rule} />
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </section>
+                {board && rows.length > 0 && (
+                  <section className="leaderboard-snapshot leaderboard-glass">
+                    <p className="leaderboard-eyebrow">
+                      <UiText text="Board Snapshot" />
+                    </p>
+                    <div>
+                      <span>
+                        <UiText text="Total XP" />
+                        <strong>{number(summary.xp)}</strong>
+                      </span>
+                      <span>
+                        <UiText text="Avg. result" />
+                        <strong>
+                          {summary.average === null
+                            ? '—'
+                            : `${summary.average.toFixed(1)}%`}
+                        </strong>
+                      </span>
+                    </div>
+                    <p>
+                      <UiText text="Result average includes learners with recorded tests only." />
+                    </p>
+                    {leader && (
+                      <p className="leaderboard-snapshot-leader">
+                        <Trophy size={13} />
+                        <span>{leader.fullName}</span>
+                        <b>#1</b>
+                      </p>
+                    )}
+                  </section>
+                )}
+              </aside>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

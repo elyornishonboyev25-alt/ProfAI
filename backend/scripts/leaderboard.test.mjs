@@ -131,7 +131,7 @@ test('XP cache invalidation updates totals and rank after a new reward', async (
   assert.equal(updated.rows[0].totalXp, 500)
 })
 
-test('existing weekly and category consumers retain scoped test XP', async () => {
+test('rolling and category boards retain first-attempt test XP; category excludes assessments', async () => {
   const { assessmentQuery } = mockDatabase([learner('tests', 500), learner('activities', 1000)], [
     attempt('tests', 'test-1', 40), attempt('tests', 'test-1', 20),
   ])
@@ -140,7 +140,7 @@ test('existing weekly and category consumers retain scoped test XP', async () =>
     assert.equal(board.rows.length, 1)
     assert.equal(board.rows[0].totalXp, 40)
   }
-  assert.equal(assessmentQuery.mock.callCount(), 0)
+  assert.equal(assessmentQuery.mock.callCount(), 1)
 })
 
 test('weekly leaderboard includes learners who earned XP outside tests', async () => {
@@ -152,4 +152,54 @@ test('weekly leaderboard includes learners who earned XP outside tests', async (
     ['practice', 80], ['tests', 40],
   ])
   assert.equal(board.currentUserRank, 1)
+})
+
+test('SAT and IELTS results count in rolling windows without double-counting awarded activity XP', async () => {
+  const { assessmentQuery } = mockDatabase([learner('sat', 900), learner('ielts', 800)], [], [
+    { id: 'sat-result', userId: 'sat', examType: 'SAT', accuracy: 90, score: 1400, maxScore: 1600, durationSec: 1200, completedAt: new Date() },
+    { id: 'ielts-result', userId: 'ielts', examType: 'IELTS', accuracy: null, score: 7.5, maxScore: 9, durationSec: 1200, completedAt: new Date() },
+  ], [{ userId: 'sat', amount: 81 }, { userId: 'ielts', amount: 81 }])
+  for (const period of ['week', 'month']) {
+    const board = await generateLeaderboard({ period })
+    assert.deepEqual(board.rows.map((row) => [row.userId, row.totalXp, row.testsCompleted]), [['sat', 81, 1], ['ielts', 81, 1]])
+    assert.equal(board.rows[1].accuracy, 83.33)
+    assert.ok(board.antiCheatRules.some((rule) => rule.includes('activity XP')))
+  }
+  for (const call of assessmentQuery.mock.calls) {
+    assert.ok(call.arguments[0].where.completedAt.gte instanceof Date)
+    assert.equal(call.arguments[0].where.sourceType.in.length, 4)
+  }
+})
+
+test('rolling boards count the earliest repeat once and add other activity XP once', async () => {
+  const first = attempt('a', 'repeat', 20, 50)
+  first.completedAt = new Date(Date.now() - 60_000)
+  mockDatabase([learner('a', 999)], [attempt('a', 'repeat', 70, 100), first], [], [{ userId: 'a', amount: 30 }])
+  const board = await generateLeaderboard({ period: 'month' })
+  assert.equal(board.rows[0].totalXp, 50)
+  assert.equal(board.rows[0].testsCompleted, 1)
+  assert.equal(board.rows[0].discardedAttempts, 1)
+  assert.equal(board.rows[0].accuracy, 50)
+})
+
+test('rolling cache expires when its UTC window changes even inside the TTL', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-06T23:59:59Z').getTime() })
+  const { userQuery } = mockDatabase([learner('a', 20)], [attempt('a', 'test', 20)])
+  await generateLeaderboard({ period: 'week' })
+  t.mock.timers.tick(2_000)
+  await generateLeaderboard({ period: 'week' })
+  assert.equal(userQuery.mock.callCount(), 2)
+})
+
+test('a calculation spanning UTC midnight is not cached under the next rolling window', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-06T23:59:59Z').getTime() })
+  mockDatabase([learner('a', 20)], [attempt('a', 'test', 20)])
+  let userQueries = 0
+  mock.method(prisma.user, 'findMany', async () => {
+    if (++userQueries === 1) t.mock.timers.tick(2_000)
+    return [learner('a', 20)]
+  })
+  await generateLeaderboard({ period: 'week' })
+  await generateLeaderboard({ period: 'week' })
+  assert.equal(userQueries, 2)
 })

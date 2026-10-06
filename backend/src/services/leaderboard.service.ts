@@ -274,8 +274,9 @@ export function getDivisionLabel(division: DivisionTier) {
   return 'Elite'
 }
 
-function getCacheKey(period: PeriodInput, category?: TestCategory) {
-  return `${period}:${category ?? 'ALL'}`
+function getCacheKey(period: PeriodInput, category?: TestCategory, windowStart = getPeriodStart(period)) {
+  // Rolling windows change at midnight UTC, even while a cache entry is fresh.
+  return `${period}:${category ?? 'ALL'}:${windowStart?.toISOString() ?? 'all'}`
 }
 
 function withCurrentUserContext(
@@ -312,27 +313,37 @@ function resolveWeeklyPerformanceBoard(period: PeriodInput, rows: LeaderboardRow
     .slice(0, 5)
 }
 
-function resolveAntiCheatRules(useCanonicalXp = false) {
+function resolveAntiCheatRules(useCanonicalXp = false, category?: TestCategory) {
   if (useCanonicalXp) {
     return [
       'Rankings use the total XP shown on each learner’s profile, highest first.',
       'All awarded XP counts, including tests, vocabulary, speaking, writing and daily learning.',
       'You can join the ranking without completing a test.',
       'Test statistics include submitted SAT and IELTS results; each saved attempt counts once.',
-      'Ties are broken by test accuracy, then completed tests. Otherwise, tied learners keep a consistent order.',
+      'Equal XP is ordered by average test result, then counted tests, then a stable learner ID. IELTS bands are normalized to a percentage.',
+      'Rank movement compares the previous board update, not the start of the week or month.',
+    ]
+  }
+  if (!category) {
+    return [
+      'Rankings use awarded XP in the selected rolling window, highest first. Windows start at midnight UTC.',
+      'Test XP counts from the first saved attempt per test in this window; repeat test attempts are excluded.',
+      'Awarded activity XP also counts, including vocabulary, SAT practice, writing, speaking and daily learning. Each reward event counts once.',
+      'Test statistics include saved SAT and IELTS assessments in this window. IELTS bands are normalized to a percentage; they are not question accuracy.',
+      'Equal XP is ordered by average test result, then counted tests, then a stable learner ID. Movement compares the previous board update.',
     ]
   }
   return [
     'Ranking is the sum of XP earned across all tests — higher scores on harder tests rank higher.',
     'Only one validated attempt per test counts in each leaderboard period — repeats are discarded.',
-    'XP per attempt = max XP for the difficulty × (score%)² + small streak/perfect bonuses.',
-    'Difficulty caps: Easy 40 XP · Medium 70 XP · Hard 100 XP.',
+    'Only XP saved by the server for the matching test category contributes to this board.',
+    'Activity rewards and assessments stored outside the test-attempt ledger are excluded from category boards.',
     'Ties are broken first by average accuracy, then by attempts completed.',
   ]
 }
 
-function readCache(period: PeriodInput, category?: TestCategory) {
-  const key = getCacheKey(period, category)
+function readCache(period: PeriodInput, category: TestCategory | undefined, windowStart: Date | null) {
+  const key = getCacheKey(period, category, windowStart)
   const cached = leaderboardCache.get(key)
   if (!cached) return null
 
@@ -344,8 +355,11 @@ function readCache(period: PeriodInput, category?: TestCategory) {
   return cached.payload
 }
 
-function writeCache(period: PeriodInput, category: TestCategory | undefined, payload: LeaderboardCacheEntry['payload']) {
-  const key = getCacheKey(period, category)
+function writeCache(period: PeriodInput, category: TestCategory | undefined, payload: LeaderboardCacheEntry['payload'], windowStart: Date | null) {
+  for (const [cachedKey, entry] of leaderboardCache) {
+    if (entry.expiresAt <= Date.now()) leaderboardCache.delete(cachedKey)
+  }
+  const key = getCacheKey(period, category, windowStart)
   leaderboardCache.set(key, {
     expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS,
     payload,
@@ -520,7 +534,8 @@ export async function generateLeaderboard(params: {
   category?: TestCategory
   currentUserId?: string
 }) {
-  const cached = readCache(params.period, params.category)
+  const startDate = getPeriodStart(params.period)
+  const cached = readCache(params.period, params.category, startDate)
   if (cached) {
     const rows = withCurrentUserContext(cached.rows, params.currentUserId)
     const weeklyPerformanceBoard = withCurrentUserContext(
@@ -541,7 +556,6 @@ export async function generateLeaderboard(params: {
   }
 
   const useCanonicalXp = params.period === 'all' && !params.category
-  const startDate = getPeriodStart(params.period)
   const categoryFilter = params.category
   const xpEvents = !useCanonicalXp && !categoryFilter
     ? await prisma.xpEvent.groupBy({
@@ -581,10 +595,15 @@ export async function generateLeaderboard(params: {
 
   // SAT mocks and IELTS writing/speaking use the assessment ledger rather
   // than TestAttempt. Include their statistics without adding their XP again.
-  // Scoped competition boards keep their existing validated-test rules.
-  if (useCanonicalXp) {
+  // Activity XP already includes assessment rewards. Add only their statistics,
+  // across every unfiltered period, so SAT/IELTS learners are not missing from
+  // weekly and monthly test counts or tie-breaks.
+  if (!categoryFilter) {
     const assessments = await prisma.assessmentResult.findMany({
-      where: { sourceType: { in: ['SAT_BLUEBOOK_MOCK', 'IELTS_WRITING_AI_EVALUATION', 'IELTS_WRITING_FULL_TEST', 'IELTS_SPEAKING_MOCK'] } },
+      where: {
+        sourceType: { in: ['SAT_BLUEBOOK_MOCK', 'IELTS_WRITING_AI_EVALUATION', 'IELTS_WRITING_FULL_TEST', 'IELTS_SPEAKING_MOCK'] },
+        ...(startDate ? { completedAt: { gte: startDate } } : {}),
+      },
       select: { id: true, userId: true, examType: true, accuracy: true, score: true, maxScore: true, durationSec: true, completedAt: true },
     })
     for (const result of assessments) {
@@ -614,7 +633,7 @@ export async function generateLeaderboard(params: {
       category: params.category ?? null,
       weeklyPremiumWinner: null,
       weeklyPerformanceBoard: [],
-      antiCheatRules: resolveAntiCheatRules(),
+      antiCheatRules: resolveAntiCheatRules(false, params.category),
       rows: [],
       currentUserRank: null,
     }
@@ -763,11 +782,11 @@ export async function generateLeaderboard(params: {
     category: params.category ?? null,
     weeklyPremiumWinner: resolveWeeklyPremiumWinner(params.period, stableRows),
     weeklyPerformanceBoard: resolveWeeklyPerformanceBoard(params.period, stableRows),
-    antiCheatRules: resolveAntiCheatRules(useCanonicalXp),
+    antiCheatRules: resolveAntiCheatRules(useCanonicalXp, params.category),
     rows: stableRows,
   }
 
-  writeCache(params.period, params.category, cachePayload)
+  writeCache(params.period, params.category, cachePayload, startDate)
 
   const rows = withCurrentUserContext(stableRows, params.currentUserId)
   const currentUserEntry = rows.find((entry) => entry.userId === params.currentUserId) ?? null

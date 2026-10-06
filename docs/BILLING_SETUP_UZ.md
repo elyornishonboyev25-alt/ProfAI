@@ -4,21 +4,27 @@ Bu o‘zgarish narxlar sahifasi, boshlang‘ich tangalar, pullik mashqlar, class
 
 ## Tariflar
 
-| Tarif | Oylik UZS | Oylik USD | Bir oyga tangalar | Class yaratish |
-| --- | ---: | ---: | ---: | --- |
-| Mustaqil o‘quvchi | 49 999 | $4.49 | 600 | Yo‘q |
-| Markaz o‘quvchisi | 39 999 | $3.49 | 600 | Yo‘q |
-| O‘qituvchi Individual | 69 999 | $5.99 | 1 000 | Ha |
+| Tarif | Oylik USD | 3 oy (−10%) | Yillik (−20%) | Bir oyga tangalar | Class yaratish |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Individual | $6.00 | $16.20 | $57.60 | 1 000 | Yo‘q |
+| Classes | $4.00 | $10.80 | $38.40 | 600 | Yo‘q |
+| Teacher | $8.00 | $21.60 | $76.80 | 1 000 | Ha |
 
-39 999 so‘m — **har bir o‘quvchi uchun**, butun markaz uchun emas. Markaz narxini olish uchun akkaunt classda faol STUDENT bo‘lishi kerak. O‘qituvchi tarifi har bir class yaratuvchi o‘qituvchi uchun alohida olinadi; uning o‘quvchilari o‘z tangalari yoki tarifidan foydalanadi. Classga taklif bilan kirish bepul: bu to‘lovdan oldin markaz tarifiga moslikni tekshirishga imkon beradi.
+Classes — **har bir class o‘quvchisi uchun oyiga $4**, butun markaz uchun emas. Bu narxni olish uchun akkaunt classda faol STUDENT bo‘lishi kerak. Individual ($6) shaxsiy mashqlar uchun; Teacher ($8) shaxsiy mashqlar va class yaratish uchun alohida tarif. Har bir class yaratuvchi o‘qituvchi Teacher oladi. Uning o‘quvchilari o‘z tangalari yoki tarifidan foydalanadi. Classga taklif bilan kirish bepul. Individual va Classes class yaratish huquqini bermaydi. Avvalgi mahsulot kodlari saqlanadi; yangi xaridlarda yangi summalar qo‘llanadi.
 
-Choraklik: 3 oy, 10% chegirma. Yillik: 12 oy, 20% chegirma. Butun muddat uchun oldindan bir marta to‘lanadi; tangalar to‘liq hajmda birga beriladi. Avtomatik uzaytirish yo‘q. Tangalar muddatsiz. Tarif muddati class yaratish huquqini belgilaydi. Mavjud classlar, topshiriqlar va natijalarni ko‘rish tarif tugaganda saqlanadi; yangi class/guruh yaratish uchun tarif yangilanadi.
+Choraklik: 3 oy, 10% chegirma. Yillik: 12 oy, 20% chegirma. Butun muddat uchun oldindan bir marta to‘lanadi; tangalar to‘liq hajmda birga beriladi. Avtomatik uzaytirish yo‘q. Tangalar muddatsiz. Teacher muddati class yaratish huquqini belgilaydi. Mavjud classlar, topshiriqlar va natijalarni ko‘rish tarif tugaganda saqlanadi; yangi class/guruh yaratish uchun Teacher yangilanadi.
 
-Mustaqil o‘quvchi narxi, USD narxlari, chegirmalar va tanga hajmlari boshlang‘ich biznes taklifidir. AI sarfi va to‘lov komissiyasi bilan solishtirib, ishga tushirishdan oldin tekshiring. Barcha summalar `backend/src/utils/billingCatalog.ts` da bir joyda turadi. USD narxlari jonli kurs bo‘yicha konvertatsiya emas, alohida narxlardir.
+Barcha tariflar va qo‘shimcha tanga paketlari faqat USD narxida ko‘rsatiladi. Paketlar: 150 tanga — $1.99; 400 tanga — $3.49; 900 tanga — $6.99. USD narxi yagona asos: `backend/src/utils/billingCatalog.ts`. Click/Payme tanlanganda so‘mdagi aniq summa faqat to‘lov bo‘limida ochiladi.
+
+Server [Markaziy bankning rasmiy JSON API](https://cbu.uz/uz/arkhiv-kursov-valyut/veb-masteram/) orqali USD kursini oladi; bir soat keshlaydi. 7 kundan eski, kelajakdagi yoki noto‘g‘ri kurs bilan UZS to‘lovini ochmaydi. Jami USD narxi kursga ko‘paytirilib, bir marta butun so‘mgacha yaxlitlanadi. Masalan, **namunaviy** 13 100 so‘m kursida $6 = 78 600 so‘m. Bu misol amaldagi kurs degani emas. Kurs va uning sanasi to‘lov bo‘limida ko‘rsatiladi.
+
+`GET /billing/quote?product=...` 15 daqiqalik server imzosi bilan summa qaytaradi. UZS checkout aynan shu tasdiqlangan summani buyurtmaga yozadi; quote muddati tugasa yangilanadi. Summa yoki mahsulotni brauzerdan o‘zgartirish rad etiladi. Eski buyurtmalarning summasi yangi kurs yoki tarif bilan o‘zgarmaydi. Kurs xizmati ishlamasa UZS to‘lovi kutadi, USD to‘lovi esa ishlashi mumkin. USD buyurtmalaridagi tarixiy `amountUzs` ustuni 0; haqiqiy summa `amountMinor` (sent) va `currency` bilan saqlanadi.
 
 150 ta boshlang‘ich tanga akkaunt uchun bir marta serverda beriladi. Eski akkauntning birinchi kirishida ham hamyon yaratiladi. Eski Premium muddatigacha saqlanadi; u avtomatik class yaratish huquqini bermaydi. XP tangaga aylantirilmaydi.
 
-Test: 10 tanga, 24 soat ichida qayta ochish/davom ettirish bepul. To‘liq mock: 50 tanga, 24 soat foydalanish, bittadan Writing va Speaking AI tekshiruvi. Writing/Speaking alohida AI tekshiruvi: 20 tanga. AI Coach matn so‘rovi: 1 tanga. AI Voice sessiyasi: 20 tanga. Podcast/shadowing: 5 tanga, bir marta ochilgach takrorlash bepul. Kutubxonadagi dastlabki uchtadan dars bepul. Lug‘at, flashcard, natijalar va saqlangan tahlillar bepul qoladi. AI xatosida band qilingan tangalar qaytariladi.
+Test: 5 tanga, 7 kun ichida qayta ochish/davom ettirish bepul. To‘liq mock: 25 tanga, 7 kun foydalanish, ikkala Writing vazifasi va bitta Speaking AI tekshiruvi bilan. Writing/Speaking alohida tekshiruvi: 10 tanga. AI Coach matn so‘rovi: 1 tanga. AI Voice sessiyasi: 10 tanga. Podcast/shadowing: 2 tanga, bir marta ochilgach takrorlash doim bepul. 150 sovg‘a tanga 30 ta test yoki 6 ta mockka yetadi. Kutubxonadagi dastlabki uchtadan dars bepul. Lug‘at, flashcard, natijalar va saqlangan tahlillar bepul qoladi. AI xatosida band qilingan tangalar qaytariladi. Oldin ochilgan testlarning muddati saqlanadi; yangi ochishlarda 7 kunlik davr qo‘llanadi.
+
+Cheksiz huquqli akkauntlarda katta Unlimited kartasi ko‘rsatilmaydi; chap pastdagi Plans yonida kichik “Unlimited” yozuvi turadi. 14 kunlik bepul sinov kartasi va tugash sanasi saqlanadi. Ko‘rsatkichlar akkauntning haqiqiy server huquqiga bog‘liq.
 
 ## Click bilan ishlash
 
@@ -95,6 +101,8 @@ Owner dashboard yangi tanga/tarif mahsulotlarini qo‘lda berishi mumkin. Bular 
 npm.cmd run build
 npm.cmd --prefix backend run test:billing
 node scripts/test-listening-parts-ui.mjs scripts/tests/billing-access-ui.tsx
+node scripts/test-listening-parts-ui.mjs scripts/tests/billing-pricing-ui.tsx
+node scripts/test-listening-parts-ui.mjs scripts/tests/billing-entitlement-ui.tsx
 ```
 
 Avtomatik testlar haqiqiy kartadan pul olmaydi va production bazaga yozmaydi. Ular tarif summalari, hamyon cheklovlari, takroriy callbacklar, AI xatosida qaytarish va class ruxsatini tekshiradi. Haqiqiy merchant sandbox, database migration va jonli checkout tekshiruvi kalitlar ochilgandan keyin alohida bajariladi.

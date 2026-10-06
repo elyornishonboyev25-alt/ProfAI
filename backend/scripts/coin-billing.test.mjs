@@ -13,6 +13,7 @@ const { describeAccess, FREE_TRIAL_DAYS } = await import('../dist/utils/accessEn
 const { clickSignature, verifyStripeSignature } = await import('../dist/services/paymentProviders.service.js')
 const { paymentCallbacks, stripeCallback } = await import('../dist/routes/paymentCallbacks.routes.js')
 const { default: express } = await import('express')
+const { parseDollarRate, createPaymentQuote, verifyPaymentQuote, dollarRate } = await import('../dist/services/billingQuote.service.js')
 
 let state
 function reset() { state = { wallet: null, entries: [], access: [], subscription: null, order: null, role: 'USER', email: 'ordinary@example.com', grant: null } }
@@ -108,38 +109,94 @@ test('trial use preserves its dates and coins; expired trials restore paid acces
   assert.equal(state.wallet.balance, 0)
 })
 
-test('center and teacher prices, discounts and distinct currency amounts', () => {
-  assert.equal(billingProduct('CENTER_STUDENT_1').amountUzs, 39999)
-  assert.equal(billingProduct('TEACHER_1').amountUzs, 69999)
-  assert.equal(billingProduct('TEACHER_1').amountUsd, 599)
+test('Individual, Classes and Teacher have distinct USD prices and exact period totals', () => {
+  assert.equal(billingProduct('CENTER_STUDENT_1').amountUsd, 400)
+  assert.equal(billingProduct('LEARNER_1').amountUsd, 600)
+  assert.equal(billingProduct('TEACHER_1').amountUsd, 800)
+  assert.equal(billingProduct('LEARNER_12').amountUsd, 5760)
+  assert.equal(billingProduct('TEACHER_12').amountUsd, 7680)
+  assert.equal(billingProduct('CENTER_STUDENT_12').amountUsd, 3840)
+  assert.equal(billingProduct('LEARNER_3').amountUsd, 1620)
+  assert.equal(billingProduct('TEACHER_3').amountUsd, 2160)
+  assert.equal(billingProduct('CENTER_STUDENT_3').amountUsd, 1080)
   assert.equal(new Set(BILLING_PRODUCTS.map(p => p.code)).size, BILLING_PRODUCTS.length)
   for (const product of BILLING_PRODUCTS) {
-    assert.ok(Number.isSafeInteger(product.amountUzs) && product.amountUzs > 0)
     assert.ok(Number.isSafeInteger(product.amountUsd) && product.amountUsd > 0)
     if (product.months > 1) {
       const monthly = billingProduct(`${product.audience}_1`)
-      assert.ok(product.amountUzs / product.months < monthly.amountUzs)
+      assert.ok(product.amountUsd / product.months < monthly.amountUsd)
       assert.equal(product.coins, monthly.coins * product.months)
     }
   }
   assert.equal(extendBillingExpiry(1, null, new Date('2027-01-31T12:00:00Z')).toISOString(), '2027-02-28T12:00:00.000Z')
 })
+test('UZS checkout converts the complete USD invoice and binds the displayed amount for 15 minutes', () => {
+  const now = Date.parse('2026-10-06T09:00:00Z')
+  const rate = parseDollarRate([{ Ccy: 'USD', Nominal: '1', Rate: '13100.00', Date: '06.10.2026' }], now)
+  for (const product of BILLING_PRODUCTS) {
+    const quote = createPaymentQuote(product, rate, now)
+    assert.equal(quote.amountUzs, Math.round(product.amountUsd * 13100 / 100))
+    assert.equal(verifyPaymentQuote(quote.token, product, now + 899999).amountUzs, quote.amountUzs)
+    assert.throws(() => verifyPaymentQuote(quote.token, product, now + 900000), error => error.code === 'QUOTE_EXPIRED')
+    assert.throws(() => verifyPaymentQuote(quote.token, { ...product, amountUsd: product.amountUsd + 1 }, now), error => error.code === 'QUOTE_EXPIRED')
+    assert.throws(() => verifyPaymentQuote(quote.token + 'x', product, now), error => error.code === 'QUOTE_EXPIRED')
+  }
+  const teacher = billingProduct('TEACHER_1')
+  const quote = createPaymentQuote(teacher, rate, now)
+  assert.equal(quote.amountUzs, 104800)
+  assert.throws(() => verifyPaymentQuote(quote.token, billingProduct('CENTER_STUDENT_1'), now), error => error.code === 'QUOTE_EXPIRED')
+  const [payload, signature] = quote.token.split('.')
+  const forged = JSON.parse(Buffer.from(payload, 'base64url').toString()); forged.amountUzs = 1
+  assert.throws(() => verifyPaymentQuote(Buffer.from(JSON.stringify(forged)).toString('base64url') + '.' + signature, teacher, now), error => error.code === 'QUOTE_EXPIRED')
+  for (const change of [{ Rate: 'NaN' }, { Nominal: '0' }, { Date: '01.09.2026' }, { Date: '07.10.2026' }, { Date: '31.02.2026' }]) {
+    assert.throws(() => parseDollarRate([{ Ccy: 'USD', Nominal: '1', Rate: '13100', Date: '06.10.2026', ...change }], now))
+  }
+})
+test('rate fetches share one request, refresh after an hour and block UZS when the official source fails', async () => {
+  const originalFetch = globalThis.fetch, originalNow = Date.now
+  let now = Date.parse('2026-10-06T09:00:00Z'), calls = 0, unavailable = false
+  Date.now = () => now
+  globalThis.fetch = async url => {
+    assert.equal(url, 'https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/')
+    calls++
+    if (unavailable) throw new Error('Offline')
+    return { ok: true, json: async () => [{ Ccy: 'USD', Nominal: '1', Rate: '11778.45', Date: '06.10.2026' }] }
+  }
+  try {
+    const values = await Promise.all(Array.from({ length: 4 }, () => dollarRate()))
+    assert.ok(values.every(rate => rate.rate === 11778.45))
+    assert.equal(calls, 1)
+    await dollarRate(); assert.equal(calls, 1)
+    now += 3600001
+    await dollarRate(); assert.equal(calls, 2)
+    now += 3600001; unavailable = true
+    await assert.rejects(dollarRate(), error => error.code === 'RATE_UNAVAILABLE')
+    await assert.rejects(dollarRate(), error => error.code === 'RATE_UNAVAILABLE')
+    assert.equal(calls, 3, 'failure cooldown prevents repeat requests and stale prices')
+    now += 30001; unavailable = false
+    assert.equal((await dollarRate()).rate, 11778.45)
+    assert.equal(calls, 4)
+  } finally { globalThis.fetch = originalFetch; Date.now = originalNow }
+})
 test('welcome coins are granted once; simultaneous opens charge only once', async () => {
   reset()
   await Promise.all(Array.from({ length: 6 }, () => unlockResource('u', 'test', 'test:reading:sample')))
-  assert.equal(state.wallet.balance, 140)
+  assert.equal(state.wallet.balance, 145)
   assert.equal(state.entries.filter(e => e.reason === 'WELCOME').length, 1)
   assert.equal(state.entries.filter(e => e.amount < 0).length, 1)
-  assert.ok(state.access[0].expiresAt > new Date())
+  assert.ok(Math.abs(state.access[0].expiresAt.getTime() - Date.now() - 7 * 86400000) < 1000)
+  state.access[0].expiresAt = new Date(Date.now() - 1)
+  await unlockResource('u', 'test', 'test:reading:sample')
+  assert.equal(state.wallet.balance, 140)
 })
 test('media replay is permanent and failed AI returns its reserved coins', async () => {
   reset()
   await unlockResource('u', 'podcast', 'podcast:abcdefghijk')
   assert.equal(state.access[0].expiresAt, null)
   await unlockResource('u', 'podcast', 'podcast:abcdefghijk')
-  assert.equal(state.wallet.balance, 145)
+  assert.equal(state.wallet.balance, 148)
   await assert.rejects(withCoinCharge('u', 'writing', async () => { throw new Error('Provider unavailable') }), /Provider unavailable/)
-  assert.equal(state.wallet.balance, 145)
+  assert.equal(state.wallet.balance, 148)
   assert.equal(state.entries.reduce((sum, e) => sum + e.amount, 0), state.wallet.balance)
 })
 test('insufficient balance never invokes the provider or goes negative', async () => {
@@ -154,11 +211,11 @@ test('mock assessments consume included allowances; errors restore allowances', 
   assert.equal(state.access[0].writingLeft, 2)
   await withCoinCharge('u', 'writing', async () => 'OK')
   await withCoinCharge('u', 'speaking', async () => 'OK')
-  assert.equal(state.wallet.balance, 100)
+  assert.equal(state.wallet.balance, 125)
   await withCoinCharge('u', 'writing', async () => 'OK')
-  assert.equal(state.wallet.balance, 100)
+  assert.equal(state.wallet.balance, 125)
   await withCoinCharge('u', 'writing', async () => 'OK')
-  assert.equal(state.wallet.balance, 80)
+  assert.equal(state.wallet.balance, 115)
 })
 test('student subscriptions and expired teacher subscriptions cannot create classes', async () => {
   reset(); state.subscription = { audience: 'CENTER_STUDENT', expiresAt: new Date(Date.now() + 60000) }
@@ -167,6 +224,8 @@ test('student subscriptions and expired teacher subscriptions cannot create clas
   await assert.rejects(requireTeacherPlan('u'), error => error.code === 'TEACHER_PLAN_REQUIRED')
   state.subscription.expiresAt = new Date(Date.now() + 60000)
   await requireTeacherPlan('u')
+  state.subscription.audience = 'LEARNER'
+  await assert.rejects(requireTeacherPlan('u'), error => error.code === 'TEACHER_PLAN_REQUIRED')
 })
 test('replayed payment fulfillment credits one purchase and extends a teacher plan once', async () => {
   reset()

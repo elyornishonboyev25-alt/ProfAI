@@ -31,7 +31,7 @@ export async function run() {
     assert.ok(element.textContent?.includes('Bepul sinov muddati tugadi.'))
     assert.equal(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'), '0')
     await act(async () => root.render(<MemoryRouter><AccessStatusCard access={describeAccess({ plan: 'UNLIMITED', source: 'SELECTED_ACCESS', startsAt, expiresAt: null }, false, startsAt)} /></MemoryRouter>))
-    assert.ok(element.textContent?.includes('MUDDATSIZ KIRISH'))
+    assert.equal(element.querySelector('.billing-entitlement'), null, 'unlimited access has no large banner')
     assert.equal(element.querySelector('[role="progressbar"]'), null)
     useAuthStore.setState({ user: { id: 'trial-ui', email: 'trial@example.com', fullName: 'Trial', role: 'USER' } as NonNullable<typeof previousUser> })
     let checks = 0

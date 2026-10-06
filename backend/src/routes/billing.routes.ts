@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto'
 import { accessStatus, unlockResource, walletOverview, lockWallet, fulfillPayment, BillingError } from '../services/coinBilling.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
 import { approvedMedia, educationalCatalog } from '../services/educationalMedia.service.js'
+import { createPaymentQuote, dollarRate, verifyPaymentQuote } from '../services/billingQuote.service.js'
 
 const router = Router()
 const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED', 'TRIAL_14'].includes(value) || Boolean(billingProduct(value))) })
@@ -19,6 +20,14 @@ const pageSchema = z.coerce.number().int().min(1).max(10000).default(1)
 const PAGE_SIZE = 20
 
 router.get('/plans', (_req, res) => res.json({ plans: PREMIUM_PLANS, products: BILLING_PRODUCTS, costs: COIN_COSTS, welcomeCoins: WELCOME_COINS, providers: paymentProviders() }))
+
+router.get('/quote', requireAuth, asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store')
+  const code = z.string().max(50).parse(req.query.product)
+  const product = billingProduct(code)
+  if (!product) throw new BillingError('INVALID_PLAN', 'Choose a valid plan.', 400)
+  return res.json(createPaymentQuote(product, await dollarRate()))
+}))
 
 router.get('/wallet', requireAuth, asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store')
@@ -47,11 +56,12 @@ router.post('/access', requireAuth, asyncHandler(async (req, res) => {
   return res.json(await unlockResource(req.user!.id, payload.feature, payload.resource))
 }))
 router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
-  const payload = z.object({ product: z.string().max(50), currency: z.enum(['UZS', 'USD']), provider: z.enum(['PAYME', 'CLICK', 'STRIPE']) }).parse(req.body)
+  const payload = z.object({ product: z.string().max(50), currency: z.enum(['UZS', 'USD']), provider: z.enum(['PAYME', 'CLICK', 'STRIPE']), quote: z.string().max(2048).optional() }).parse(req.body)
   const product = billingProduct(payload.product)
   if (!product) throw new BillingError('INVALID_PLAN', 'Choose a valid plan.', 400)
   const provider = paymentProviders().find(item => item.code === payload.provider && item.currency === payload.currency)
   if (!provider?.enabled) throw new BillingError('PAYMENTS_UNAVAILABLE', 'This payment method is not available yet.', 503)
+  const amountUzs = payload.currency === 'UZS' ? verifyPaymentQuote(payload.quote, product).amountUzs : 0
   const order = await prisma.$transaction(async tx => {
     await lockWallet(tx, req.user!.id)
     if (product.audience === 'CENTER_STUDENT') {
@@ -61,8 +71,8 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
     const existing = await tx.paymentRequest.findFirst({ where: { userId: req.user!.id, status: { in: ['PENDING', 'SUBMITTED', 'PROCESSING'] } } })
     if (existing) throw new BillingError('REQUEST_OPEN', 'Finish or cancel your existing order first.', 409)
     return tx.paymentRequest.create({ data: { userId: req.user!.id, plan: product.code, audience: product.audience, months: product.months,
-      coins: product.coins, currency: payload.currency, amountUzs: product.amountUzs,
-      amountMinor: payload.currency === 'UZS' ? product.amountUzs * 100 : product.amountUsd, method: payload.provider } })
+      coins: product.coins, currency: payload.currency, amountUzs,
+      amountMinor: payload.currency === 'UZS' ? amountUzs * 100 : product.amountUsd, method: payload.provider } })
   })
   try {
     const checkout = await checkoutUrl(order)

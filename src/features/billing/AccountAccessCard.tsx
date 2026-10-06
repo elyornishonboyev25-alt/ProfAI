@@ -10,6 +10,7 @@ export function AccessStatusCard({ access }: { access: AccessEntitlement | null 
   if (!access || access.kind === 'COINS') return null
   const trial = access.kind === 'TRIAL'
   const unlimited = access.kind === 'UNLIMITED'
+  if (unlimited) return null
   const date = (value: string) => {
     const fields = new Map(new Intl.DateTimeFormat('en-GB', {
       day: 'numeric', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Tashkent',

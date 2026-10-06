@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Prisma, type PaymentRequest } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
-import { COIN_COSTS, WELCOME_COINS, extendBillingExpiry, type CoinFeature } from '../utils/billingCatalog.js'
+import { COIN_COSTS, WELCOME_COINS, PRACTICE_ACCESS_DAYS, extendBillingExpiry, type CoinFeature } from '../utils/billingCatalog.js'
 import { describeAccess, hasSelectedFullAccess } from '../utils/accessEntitlement.js'
 import { isPremiumUser } from '../utils/premium.js'
 
@@ -47,7 +47,7 @@ export async function requireTeacherPlan(userId: string) {
   if (hasSelectedFullAccess(grant)) return
   const subscription = await prisma.billingSubscription.findUnique({ where: { userId_audience: { userId, audience: 'TEACHER' } } })
   if (!subscription || subscription.expiresAt <= new Date()) {
-    throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Teacher Individual plan (69,999 UZS/month).', 403)
+    throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Teacher plan ($8/month).', 403)
   }
 }
 export function validateResource(feature: CoinFeature, resource: string) {
@@ -79,7 +79,7 @@ export async function unlockResource(userId: string, feature: CoinFeature, resou
     if (wallet.balance < cost) throw new BillingError('INSUFFICIENT_COINS', 'Your balance is too low. Add coins or continue with free activities.')
     const updated = await tx.coinWallet.update({ where: { userId }, data: { balance: { decrement: cost } } })
     await tx.coinEntry.create({ data: { userId, key: `unlock:${randomUUID()}`, amount: -cost, reason: resource } })
-    const data = { feature, expiresAt: feature === 'podcast' || feature === 'shadowing' ? null : new Date(Date.now() + 24 * 60 * 60_000),
+    const data = { feature, expiresAt: feature === 'podcast' || feature === 'shadowing' ? null : new Date(Date.now() + PRACTICE_ACCESS_DAYS * 86400000),
       writingLeft: feature === 'mock' ? 2 : 0, speakingLeft: feature === 'mock' ? 1 : 0 }
     await tx.coinAccess.upsert({ where: { userId_resource: { userId, resource } }, create: { userId, resource, ...data }, update: data })
     return { balance: updated.balance, charged: cost }

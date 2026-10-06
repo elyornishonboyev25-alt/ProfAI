@@ -4,7 +4,7 @@ export function productLabel(code: string, text: Text) {
   const product = BILLING_PRODUCTS.find(p => p.code === code)
   if (!product) return text('Previous Premium plan', 'Oldingi Premium tarifi', 'Прежний тариф Premium')
   if (product.audience === 'TOPUP') return text(`${product.coins} coins`, `${product.coins} tanga`, `${product.coins} монет`)
-  const name = product.audience === 'TEACHER' ? text('Teacher Individual', 'O‘qituvchi Individual', 'Преподаватель Individual') : product.audience === 'CENTER_STUDENT' ? text('Center student', 'Markaz o‘quvchisi', 'Ученик центра') : text('Independent learner', 'Mustaqil o‘quvchi', 'Самостоятельный ученик')
+  const name = product.audience === 'CENTER_STUDENT' ? 'Classes' : product.audience === 'TEACHER' ? 'Teacher' : 'Individual'
   return `${name} · ${text(`${product.months} months`, `${product.months} oy`, `${product.months} мес.`)}`
 }
 export function activityLabel(reason: string, text: Text) {

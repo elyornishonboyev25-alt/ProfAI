@@ -106,7 +106,7 @@ export default function WritingResultModal({
   onClose: () => void
 }) {
   const [showCorrected, setShowCorrected] = useState(false)
-  const task = getWritingTaskById(entry.testId)
+  const task = entry.taskSnapshot ?? getWritingTaskById(entry.testId)
   const bandColor = (b: number) =>
     b >= 7 ? 'from-emerald-500 to-green-600' : b >= 5.5 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-600'
 
@@ -166,6 +166,12 @@ export default function WritingResultModal({
             </div>
 
             {/* Criteria */}
+            {task ? (
+              <details className="rounded-2xl border border-slate-200 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task prompt</summary>
+                <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{task.prompt}</p>
+              </details>
+            ) : null}
             {task?.diagram ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
                 <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>

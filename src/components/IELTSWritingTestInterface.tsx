@@ -431,6 +431,8 @@ export default function IELTSWritingTestInterface({
         timerEnabled,
         answer,
         result,
+        undefined,
+        task,
       )
       if (user) {
         void learningCenterApi.syncResult({

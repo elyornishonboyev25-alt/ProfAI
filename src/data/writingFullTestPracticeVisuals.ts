@@ -11,23 +11,6 @@ export type PracticeTaskVisual = {
 
 // Original IELTS-style practice material. Every chart value is visible in its SVG.
 export const PRACTICE_TASK_VISUALS: Record<number, PracticeTaskVisual> = {
-  18: {
-    kind: 'Process diagram', chartType: 'process', title: 'Recycling used paper',
-    lead: 'The diagram shows how used paper is recycled into new paper.',
-    context: 'Six stages: used paper is collected, sorted, mixed with water to make pulp, cleaned through a screen, pressed and dried, and rolled into new paper.',
-  },
-  19: {
-    kind: 'Pie charts', chartType: 'pie', title: 'Land use in a village',
-    lead: 'The pie charts compare land use in a village in 1990 and 2020.',
-    unit: 'Percent', categories: ['Farmland', 'Housing', 'Woodland', 'Recreation'],
-    series: [{ label: '1990', values: [50, 20, 20, 10] }, { label: '2020', values: [25, 40, 15, 20] }],
-  },
-  20: {
-    kind: 'Bar chart', chartType: 'bar', title: 'Recycling rates',
-    lead: 'The bar chart compares the proportions of four materials that were recycled in 2010 and 2020.',
-    unit: 'Percent recycled', categories: ['Paper', 'Glass', 'Metal', 'Plastic'],
-    series: [{ label: '2010', values: [60, 40, 50, 15] }, { label: '2020', values: [75, 65, 70, 30] }],
-  },
   21: {
     kind: 'Line graph', chartType: 'line', title: 'Rainfall in two cities',
     lead: 'The line graph compares average monthly rainfall in two cities during a year.',

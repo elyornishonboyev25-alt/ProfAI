@@ -1,5 +1,6 @@
 import type { WritingTask } from '@/data/writingTestData'
 import { RenewableTransportChart, SmokedFishDiagram } from './LegacyWritingTaskDiagrams'
+import { MajorSportsChart, SchoolTravelChart, SuppliedBrickManufacturing } from './SuppliedWritingTaskDiagrams'
 
 type Diagram = NonNullable<WritingTask['diagram']>
 
@@ -227,6 +228,9 @@ function RiversideParkDiagram() {
 
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
   switch (diagram) {
+    case 'major-sports-1997-2017': return <MajorSportsChart />
+    case 'school-travel-1990-2010': return <SchoolTravelChart />
+    case 'supplied-brick-manufacturing': return <SuppliedBrickManufacturing />
     case 'smoked-fish': return <SmokedFishDiagram />
     case 'renewable-transport': return <RenewableTransportChart />
     case 'further-education': return <FurtherEducationChart />

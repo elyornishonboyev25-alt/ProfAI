@@ -1,11 +1,13 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
-import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
+import ListeningInterface from '../../src/components/IELTSReadingInterface'
+import { MemoryRouter } from 'react-router-dom'
 import { listeningFullTest15 } from '../../src/data/listeningFullTest15'
 import type { IELTSTest, TestResult } from '../../src/types/ieltsTypes'
 
 const container = document.getElementById('root')!
+const IELTSReadingInterface = (props: React.ComponentProps<typeof ListeningInterface>) => <MemoryRouter><ListeningInterface {...props} /></MemoryRouter>
 const delay = (ms: number) => act(async () => { await new Promise(resolve => setTimeout(resolve, ms)) })
 const base: IELTSTest = { ...listeningFullTest15, duration: 0.01 }
 

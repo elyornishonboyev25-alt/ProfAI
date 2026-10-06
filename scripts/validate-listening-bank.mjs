@@ -32,7 +32,9 @@ function controls(block) {
     case 'grid': return block.rows.map(row => row.blank)
     case 'mcq': return [block.blank]
     case 'multi-mcq': return block.blanks
-    case 'diagram': assert.equal(block.diagram, 'education-house'); return numbers(6, 21)
+    case 'diagram':
+      if (block.diagram === 'old-water-mill') return numbers(4, 27)
+      assert.equal(block.diagram, 'education-house'); return numbers(6, 21)
     default: return []
   }
 }

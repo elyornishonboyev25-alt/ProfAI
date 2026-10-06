@@ -157,13 +157,7 @@ const part3: Section = {
       range: 'Questions 27 - 30',
       instruction: 'Choose four answers from the box and write the correct letter, A-G, next to questions 27-30.',
       blocks: [
-        { kind: 'image', src: '/images/ielts-listening/test3-old-water-mill.svg', alt: 'Plan of an old water-mill with question locations 27 to 30.', caption: 'Old water-mill' },
-        { kind: 'grid', columns: mapOptions.map((option) => option.letter), rows: [
-          { blank: 27, label: 'Location 27 on the plan' },
-          { blank: 28, label: 'Location 28 on the plan' },
-          { blank: 29, label: 'Location 29 on the plan' },
-          { blank: 30, label: 'Location 30 on the plan' },
-        ], options: mapOptions },
+        { kind: 'diagram', diagram: 'old-water-mill' },
       ],
     },
   ],
@@ -174,10 +168,10 @@ const part3: Section = {
     q(24, 'matching-information', 'Hold auditions and recheck availability of the', 'A'),
     q(25, 'matching-information', 'Choose the ____ from the volunteers', 'H'),
     q(26, 'matching-information', 'Collect ____ and organise food and transport', 'B'),
-    q(27, 'matching-information', 'Location 27 on the old water-mill plan', 'B'),
-    q(28, 'matching-information', 'Location 28 on the old water-mill plan', 'A'),
-    q(29, 'matching-information', 'Location 29 on the old water-mill plan', 'E'),
-    q(30, 'matching-information', 'Location 30 on the old water-mill plan', 'G'),
+    q(27, 'matching-information', 'Location 27 on the old water-mill plan', 'B', mapOptions.map(option => `${option.letter} ${option.text}`)),
+    q(28, 'matching-information', 'Location 28 on the old water-mill plan', 'A', mapOptions.map(option => `${option.letter} ${option.text}`)),
+    q(29, 'matching-information', 'Location 29 on the old water-mill plan', 'E', mapOptions.map(option => `${option.letter} ${option.text}`)),
+    q(30, 'matching-information', 'Location 30 on the old water-mill plan', 'G', mapOptions.map(option => `${option.letter} ${option.text}`)),
   ],
 }
 

@@ -5,6 +5,7 @@ import CollegePlanDiagram from './CollegePlanDiagram'
 import PennyfieldPlanDiagram from './PennyfieldPlanDiagram'
 import RivermeadCampusDiagram from './RivermeadCampusDiagram'
 import BrightwaterAdventureParkDiagram from './BrightwaterAdventureParkDiagram'
+import OldWaterMillDiagram from './OldWaterMillDiagram'
 import educationHouse from '../assets/ielts/listening-test14-education-house.jpg?inline'
 import raceVillage from '../assets/ielts/listening-test15-race-village.png?inline'
 
@@ -75,6 +76,9 @@ function DiagramImage({ src, alt, caption }: Props) {
 
 export default function ListeningDiagram(props: Props) {
   // Stable identifier survives serialized test snapshots in Results/Analyze.
+  if (props.src.split(/[?#]/)[0].endsWith('/test3-old-water-mill.svg')) {
+    return <OldWaterMillDiagram caption={props.caption} />
+  }
   if (props.src.split('?')[0].endsWith('/ielts-listening-test21-brightwater-park.svg')) {
     return <BrightwaterAdventureParkDiagram caption={props.caption} />
   }

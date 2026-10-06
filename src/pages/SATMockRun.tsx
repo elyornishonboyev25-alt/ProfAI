@@ -53,6 +53,7 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
+import { saveSATBaseline } from '@/features/sat/baseline'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
@@ -77,7 +78,8 @@ export default function SATMockRun() {
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
   const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
-  const sectionQuery = section ? `?section=${section}` : ''
+  const diagnostic = !section && searchParams.get('diagnostic') === '1'
+  const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const backPath = section ? `/sat/${section}` : '/sat'
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
@@ -101,6 +103,8 @@ export default function SATMockRun() {
   const [zoom, setZoom] = useState(1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
+  const [baselineRetry, setBaselineRetry] = useState(0)
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>([])
   const [violationDeadline, setViolationDeadline] = useState<number | null>(null)
   const violationFrozenRef = useRef(false)
@@ -140,6 +144,18 @@ export default function SATMockRun() {
   }, [])
 
   attemptRef.current = attempt
+
+  useEffect(() => {
+    if (!diagnostic || !user || attempt?.status !== 'submitted') return
+    let cancelled = false
+    setBaselineStatus('saving')
+    void saveSATBaseline(user.id, test, attempt).then(() => {
+      if (!cancelled) setBaselineStatus('saved')
+    }).catch(() => {
+      if (!cancelled) setBaselineStatus('error')
+    })
+    return () => { cancelled = true }
+  }, [diagnostic, user?.id, test, attempt, baselineRetry])
 
   useEffect(() => {
     if (!user || !attempt || attempt.status !== 'submitted' || !attempt.submittedAt) return
@@ -408,6 +424,12 @@ export default function SATMockRun() {
 
   if (attempt.status === 'submitted') {
     return (
+      <>
+      {diagnostic && user && <div role={baselineStatus === 'error' ? 'alert' : 'status'} className="mx-auto mt-4 max-w-6xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-slate-700">
+        <UiText text={baselineStatus === 'saving' ? 'Saving your starting SAT score...' : baselineStatus === 'saved' ? 'Your starting SAT score is saved. Review your mistakes below, then practise the skills you missed.' : 'Your mock is saved, but your profile score could not sync. Please retry.'} />
+        {baselineStatus === 'error' && <button type="button" onClick={() => setBaselineRetry(value => value + 1)} className="ml-3 font-bold text-blue-700"><UiText text="Try again" /></button>}
+        <button type="button" onClick={() => navigate('/sat/question-bank?status=incorrect')} className="ml-3 font-bold text-blue-700"><UiText text="Practise my mistakes" /></button>
+      </div>}
       <SATReview
         attempt={attempt}
         test={test}
@@ -416,6 +438,7 @@ export default function SATMockRun() {
           navigate(`/mock/sat/${test.mockId}${sectionQuery}`)
         }}
       />
+      </>
     )
   }
 

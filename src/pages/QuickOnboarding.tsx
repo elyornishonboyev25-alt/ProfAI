@@ -12,12 +12,14 @@ import { useCopy } from '@/i18n/interface'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import LanguageSelector from '@/components/layout/LanguageSelector'
+import BaselineMockPrompt, { SAT_BASELINE_PATH, IELTS_BASELINE_PATH } from '@/components/dashboard/BaselineMockPrompt'
+import { SAT_CURRENT_SCORE_MIN, SAT_TARGET_SCORE_MIN, SAT_SCORE_MAX } from '@/features/sat/scoreGoals'
 
 const nicknamePattern = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
 type Exam = 'IELTS' | 'SAT'
 
 function scoreLimits(exam: Exam, target: boolean) {
-  return exam === 'IELTS' ? { min: target ? 4 : 0, max: 9, step: 0.5 } : { min: 400, max: 1600, step: 10 }
+  return exam === 'IELTS' ? { min: target ? 4 : 0, max: 9, step: 0.5 } : { min: target ? SAT_TARGET_SCORE_MIN : SAT_CURRENT_SCORE_MIN, max: SAT_SCORE_MAX, step: 10 }
 }
 
 function parseScore(draft: string, exam: Exam, target: boolean): number | null {
@@ -146,14 +148,14 @@ export default function QuickOnboarding() {
     }
   }
 
-  async function finish(skipScores = false) {
+  async function finish(skipScores = false, baselineExam?: Exam) {
     if (saving || loading || uploading) return
     const currentIeltsScore = skipScores ? null : parseScore(currentIelts, 'IELTS', false)
     const targetIeltsScore = skipScores ? null : parseScore(targetIelts, 'IELTS', true)
     const currentSatScore = skipScores ? null : parseScore(currentSat, 'SAT', false)
     const targetSatScore = skipScores ? null : parseScore(targetSat, 'SAT', true)
     if ([currentIeltsScore, targetIeltsScore, currentSatScore, targetSatScore].some(score => score !== null && Number.isNaN(score))) {
-      setError(c('Enter IELTS scores in 0.5 steps (current 0–9, target 4–9) and SAT scores from 400 to 1600.'))
+      setError(c('Enter IELTS scores in 0.5 steps (current 0–9, target 4–9). SAT current scores: 400–1600; targets: 1000–1600.'))
       return
     }
     if ((currentIeltsScore !== null && targetIeltsScore !== null && currentIeltsScore > targetIeltsScore)
@@ -165,7 +167,7 @@ export default function QuickOnboarding() {
     setError('')
     const ieltsGoal = targetIeltsScore
     const satGoal = targetSatScore
-    const targetExam = ieltsGoal !== null && satGoal !== null ? 'BOTH' : ieltsGoal !== null ? 'IELTS' : satGoal !== null ? 'SAT' : null
+    const targetExam = ieltsGoal !== null && satGoal !== null ? 'BOTH' : ieltsGoal !== null ? 'IELTS' : satGoal !== null ? 'SAT' : baselineExam ?? null
     try {
       const savedNickname = nickname.trim()
       if (savedNickname !== user?.nickname) {
@@ -175,7 +177,7 @@ export default function QuickOnboarding() {
       await updateAccount({
         onboardingCompletedAt: new Date().toISOString(),
         targetExam,
-        targetScore: targetExam === 'IELTS' ? `IELTS ${ieltsGoal}` : targetExam === 'SAT' ? `SAT ${satGoal}` : null,
+        targetScore: targetExam === 'IELTS' && ieltsGoal !== null ? `IELTS ${ieltsGoal}` : targetExam === 'SAT' && satGoal !== null ? `SAT ${satGoal}` : null,
         currentIeltsScore,
         targetIeltsScore: ieltsGoal,
         currentSatScore,
@@ -198,7 +200,8 @@ export default function QuickOnboarding() {
       complete(true)
       clearGuestDiagnosticHandoff()
       captureAnalyticsEvent('onboarding_completed', { completion_method: skipScores ? 'skip_scores' : 'score_goals', target_exam: targetExam ?? 'none' })
-      navigate(takeGuestDiagnosticDestination('/dashboard'), { replace: true })
+      const destination = takeGuestDiagnosticDestination('/dashboard')
+      navigate(baselineExam === 'SAT' ? SAT_BASELINE_PATH : baselineExam === 'IELTS' ? IELTS_BASELINE_PATH : destination, { replace: true })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : c('We could not save your profile. Please try again.'))
       setSaving(false)
@@ -212,6 +215,7 @@ export default function QuickOnboarding() {
         <ScoreInput exam={exam} target={false} label={c('Current score')} placeholder={c('Not sure yet')} value={current} onChange={value => { setCurrent(value); setError('') }} />
         <ScoreInput exam={exam} target label={c('Target score')} placeholder={c('Set later')} value={target} onChange={value => { setTarget(value); setError('') }} />
       </div>
+      {exam === 'SAT' && <p className="mt-2 text-xs leading-5 text-slate-500">{c('SAT targets start at 1000. Your current score can be 400–1600.')}</p>}
     </section>
   }
 
@@ -234,6 +238,7 @@ export default function QuickOnboarding() {
         </div> : <div className="liquid-score-grid">
           {scoreCard('IELTS', currentIelts, targetIelts, setCurrentIelts, setTargetIelts)}
           {scoreCard('SAT', currentSat, targetSat, setCurrentSat, setTargetSat)}
+          <BaselineMockPrompt sat={!currentSat.trim()} ielts={!currentIelts.trim()} disabled={loading || loadFailed || saving || uploading} onStart={exam => void finish(false, exam)} />
           <p className="liquid-score-note">{c('You can leave either exam blank and update your scores later.')}</p>
         </div>}
       </fieldset>

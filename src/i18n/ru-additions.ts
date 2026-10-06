@@ -1,5 +1,15 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Not sure of your current score?': 'Не знаете свой текущий результат?',
+  'Take a full mock to estimate your level, review explanations and focus on the questions you missed. You can also start later.': 'Пройдите полный пробный экзамен, чтобы оценить уровень, разобрать объяснения и потренировать вопросы с ошибками. Можно начать позже.',
+  'Take a full SAT mock': 'Пройти полный пробный SAT',
+  'Take a full IELTS mock': 'Пройти полный пробный IELTS',
+  'SAT targets start at 1000. Your current score can be 400–1600.': 'Целевой результат SAT — от 1000. Текущий результат может быть от 400 до 1600.',
+  'Enter IELTS scores in 0.5 steps (current 0–9, target 4–9). SAT current scores: 400–1600; targets: 1000–1600.': 'Введите баллы IELTS с шагом 0,5 (текущий 0–9, целевой 4–9). SAT: текущий 400–1600, целевой 1000–1600.',
+  'Saving your starting SAT score...': 'Сохраняем начальный результат SAT...',
+  'Your starting SAT score is saved. Review your mistakes below, then practise the skills you missed.': 'Начальный результат SAT сохранён. Разберите ошибки ниже и потренируйте нужные навыки.',
+  'Your mock is saved, but your profile score could not sync. Please retry.': 'Пробный экзамен сохранён, но результат в профиле не удалось обновить. Повторите попытку.',
+  'Practise my mistakes': 'Тренировать вопросы с ошибками',
   'Total XP': 'Общий XP',
   "Learning leaderboard": "Рейтинг учащихся",
   "Every learning session moves you forward. See your progress, meet the leaders and find your next milestone.": "Каждое занятие помогает двигаться вперёд. Следите за прогрессом, знакомьтесь с лидерами и ставьте следующую цель.",

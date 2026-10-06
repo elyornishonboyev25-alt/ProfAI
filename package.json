@@ -38,6 +38,7 @@
     "sync:sat-vocabulary": "node scripts/sync-sat-vocabulary.mjs",
     "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs",
     "test:sat-question-bank-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-question-bank-ui.tsx",
+    "test:sat-baseline-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-baseline-ui.tsx",
     "validate:sat-test9": "node scripts/validate-sat-test9.mjs",
     "validate:sat-questionbank": "node scripts/validate-sat-questionbank.mjs",
     "validate:sat-math-answers": "node scripts/validate-sat-math-answers.mjs"

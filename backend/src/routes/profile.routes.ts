@@ -1673,7 +1673,7 @@ const accountUpdateSchema = z.object({
   currentIeltsScore: z.coerce.number().min(0).max(9).nullable().optional(),
   targetIeltsScore: z.coerce.number().min(0).max(9).nullable().optional(),
   currentSatScore: z.coerce.number().int().min(400).max(1600).nullable().optional(),
-  targetSatScore: z.coerce.number().int().min(400).max(1600).nullable().optional(),
+  targetSatScore: z.coerce.number().int().min(1000).max(1600).nullable().optional(),
   dailyStudyHours: z.coerce.number().int().min(1).max(12).nullable().optional(),
   onboardingCompletedAt: z.string().datetime().nullable().optional(),
   bio: z.string().trim().max(600).nullable().optional(),

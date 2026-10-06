@@ -1,3 +1,4 @@
+import { SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
@@ -199,7 +200,7 @@ export default function GuestDiagnostic() {
       if (answers.currentIeltsScore !== null && (answers.currentIeltsScore < 0 || answers.currentIeltsScore > 9 || answers.currentIeltsScore * 2 % 1 !== 0)) return 'Current IELTS band must be between 0 and 9 in 0.5 steps.'
       if (answers.targetIeltsScore !== null && (answers.targetIeltsScore < 4 || answers.targetIeltsScore > 9 || answers.targetIeltsScore * 2 % 1 !== 0)) return 'Target IELTS band must be between 4 and 9 in 0.5 steps.'
       if (answers.currentSatScore !== null && (answers.currentSatScore < 400 || answers.currentSatScore > 1600)) return 'Current SAT score must be between 400 and 1600.'
-      if (answers.targetSatScore !== null && (answers.targetSatScore < 400 || answers.targetSatScore > 1600)) return 'Target SAT score must be between 400 and 1600.'
+      if (answers.targetSatScore !== null && (answers.targetSatScore < SAT_TARGET_SCORE_MIN || answers.targetSatScore > 1600)) return 'Target SAT score must be between 1000 and 1600.'
       if (answers.currentIeltsScore !== null && answers.targetIeltsScore !== null && answers.currentIeltsScore > answers.targetIeltsScore) return 'IELTS target should be at least your current score.'
       if (answers.currentSatScore !== null && answers.targetSatScore !== null && answers.currentSatScore > answers.targetSatScore) return 'SAT target should be at least your current score.'
     }
@@ -355,7 +356,7 @@ function ChoiceGrid<T extends string>({ items, value, onChange, legend }: { item
 function TestStep({ answers, set }: { answers: Answers; set: <K extends keyof Answers>(key: K, value: Answers[K]) => void }) {
   const showIelts = ['IELTS', 'BOTH'].includes(answers.testPlan)
   const showSat = ['SAT', 'BOTH'].includes(answers.testPlan)
-  return <><ChoiceGrid items={TEST_PLANS} value={answers.testPlan} onChange={(value) => set('testPlan', value)} legend="Exam plan" />{showIelts || showSat ? <div className="mt-7 grid gap-5 rounded-[1.5rem] border border-white bg-white/42 p-4 sm:grid-cols-2 sm:p-5">{showIelts ? <><ScoreField label="Current IELTS band" optional value={answers.currentIeltsScore} onChange={(value) => set('currentIeltsScore', value)} min={0} max={9} step={0.5} /><ScoreField label="Target IELTS band" value={answers.targetIeltsScore} onChange={(value) => set('targetIeltsScore', value)} min={4} max={9} step={0.5} /></> : null}{showSat ? <><ScoreField label="Current SAT score" optional value={answers.currentSatScore} onChange={(value) => set('currentSatScore', value)} min={400} max={1600} step={10} /><ScoreField label="Target SAT score" value={answers.targetSatScore} onChange={(value) => set('targetSatScore', value)} min={400} max={1600} step={10} /></> : null}</div> : null}</>
+  return <><ChoiceGrid items={TEST_PLANS} value={answers.testPlan} onChange={(value) => set('testPlan', value)} legend="Exam plan" />{showIelts || showSat ? <div className="mt-7 grid gap-5 rounded-[1.5rem] border border-white bg-white/42 p-4 sm:grid-cols-2 sm:p-5">{showIelts ? <><ScoreField label="Current IELTS band" optional value={answers.currentIeltsScore} onChange={(value) => set('currentIeltsScore', value)} min={0} max={9} step={0.5} /><ScoreField label="Target IELTS band" value={answers.targetIeltsScore} onChange={(value) => set('targetIeltsScore', value)} min={4} max={9} step={0.5} /></> : null}{showSat ? <><ScoreField label="Current SAT score" optional value={answers.currentSatScore} onChange={(value) => set('currentSatScore', value)} min={400} max={1600} step={10} /><ScoreField label="Target SAT score" value={answers.targetSatScore} onChange={(value) => set('targetSatScore', value)} min={SAT_TARGET_SCORE_MIN} max={1600} step={10} /></> : null}</div> : null}</>
 }
 
 function TimelineStep({ answers, set }: { answers: Answers; set: <K extends keyof Answers>(key: K, value: Answers[K]) => void }) {

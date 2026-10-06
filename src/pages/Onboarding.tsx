@@ -1,3 +1,4 @@
+import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -96,9 +97,6 @@ const EXAM_CARDS = [
 
 const HOURS_OPTIONS = [3, 4, 5, 6]
 
-function normalizeSatScore(score: number) {
-  return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
-}
 // College Board weekend dates for the 2026–27 international testing year.
 // Keeping the ISO value makes countdowns timezone-safe and easy to update.
 const SAT_TEST_DATES = [
@@ -222,7 +220,7 @@ export default function Onboarding() {
       setCurrentIeltsScore(existing.currentIeltsScore ?? null)
       setTargetIeltsScore(existing.targetIeltsScore ?? 7.5)
       setCurrentSatScore(existing.currentSatScore ?? null)
-      setTargetSatScore(existing.targetSatScore ?? 1450)
+      setTargetSatScore(Math.max(SAT_TARGET_SCORE_MIN, existing.targetSatScore ?? 1450))
       return
     }
     const parts = (user?.fullName ?? '').trim().split(/\s+/)
@@ -239,7 +237,7 @@ export default function Onboarding() {
       setCurrentIeltsScore(diagnostic.currentIeltsScore)
       setTargetIeltsScore(diagnostic.targetIeltsScore ?? 7.5)
       setCurrentSatScore(diagnostic.currentSatScore)
-      setTargetSatScore(diagnostic.targetSatScore ?? 1450)
+      setTargetSatScore(Math.max(SAT_TARGET_SCORE_MIN, diagnostic.targetSatScore ?? 1450))
       setDailyHours(Math.max(3, Math.min(6, Math.round(diagnostic.weeklyHours / 5))))
     }
   }, [user?.id, user?.fullName])
@@ -290,10 +288,10 @@ export default function Onboarding() {
     targetExam === 'IELTS'
       ? Boolean(ieltsExamDate) && (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore)
       : targetExam === 'SAT'
-        ? Boolean(satExamDate) && (currentSatScore === null || targetSatScore >= currentSatScore)
+        ? Boolean(satExamDate) && targetSatScore >= SAT_TARGET_SCORE_MIN && targetSatScore <= 1600 && (currentSatScore === null || targetSatScore >= currentSatScore)
         : Boolean(ieltsExamDate && satExamDate) &&
           (currentIeltsScore === null || targetIeltsScore >= currentIeltsScore) &&
-          (currentSatScore === null || targetSatScore >= currentSatScore)
+          targetSatScore >= SAT_TARGET_SCORE_MIN && targetSatScore <= 1600 && (currentSatScore === null || targetSatScore >= currentSatScore)
   const backgroundReady = country.trim().length >= 2 && gradeLevel.trim().length > 0
   const destinationReady = targetCountries.length > 0 && fieldOfStudy.trim().length >= 2
   const canContinue =
@@ -791,7 +789,7 @@ export default function Onboarding() {
                                   type="number"
                                   min={400}
                                   max={1600}
-                                  step={50}
+                                  step={10}
                                   value={currentSatScore ?? ''}
                                   onChange={(event) => setCurrentSatScore(event.target.value === '' ? null : Number(event.target.value))}
                                   onBlur={() => currentSatScore !== null && setCurrentSatScore(normalizeSatScore(currentSatScore))}
@@ -803,12 +801,12 @@ export default function Onboarding() {
                                 <span className="mb-1 block text-[10px] font-bold text-slate-400"> <UiText text={"Target score"} /> </span>
                                 <input
                                   type="number"
-                                  min={400}
+                                  min={SAT_TARGET_SCORE_MIN}
                                   max={1600}
-                                  step={50}
+                                  step={10}
                                   value={targetSatScore}
                                   onChange={(event) => setTargetSatScore(Number(event.target.value))}
-                                  onBlur={() => setTargetSatScore(normalizeSatScore(targetSatScore))}
+                                  onBlur={() => setTargetSatScore(normalizeSatScore(targetSatScore, true))}
                                   className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300"
                                 />
                               </label>

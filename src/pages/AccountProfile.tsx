@@ -1,3 +1,4 @@
+import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
@@ -57,10 +58,6 @@ const PROFILE_SECTIONS = [
 
 function parseTargetCountries(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5)
-}
-
-function normalizeSatScore(score: number) {
-  return Math.max(400, Math.min(1600, Math.round(score / 50) * 50))
 }
 
 const EMPTY_PROFILE: AccountProfileFields = {
@@ -785,10 +782,10 @@ export default function AccountProfile() {
                    <UiText text={"Target IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.targetIeltsScore ?? ''} onChange={(e) => updateField('targetIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="7.5" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Current SAT"} /> <input type="number" min={400} max={1600} step={50} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
+                   <UiText text={"Current SAT"} /> <input type="number" min={400} max={1600} step={10} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Target SAT"} /> <input type="number" min={400} max={1600} step={50} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore))} className="input mt-1" placeholder="1450" />
+                   <UiText text={"Target SAT"} /> <input type="number" min={SAT_TARGET_SCORE_MIN} max={1600} step={10} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore, true))} className="input mt-1" placeholder="1450" />
                 </label>
                 <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                    <UiText text={"Target countries"} /> <input

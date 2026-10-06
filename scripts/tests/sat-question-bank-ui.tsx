@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import SATQuestionBank from '../../src/pages/SATQuestionBank'
-import { SAT_TEST_CATALOG } from '../../src/features/sat/catalog'
+import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../src/features/sat/catalog'
+import { createSATAttempt } from '../../src/features/sat/practiceTest4'
+import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
 
 const container = document.getElementById('root')!
@@ -63,9 +65,10 @@ async function change(label: string, value: string) {
   })
 }
 const path = () => container.querySelector('[data-location]')!.textContent!
+const matching = () => Number(container.querySelector('.sat-bank-panel-title span')!.textContent!.split(' ')[0])
 export async function run() {
   localStorage.clear()
-  useAuthStore.setState({ user: null })
+  await act(async () => useAuthStore.setState({ user: null }))
   const key = 'profai:sat:question-bank:guest:v1'
   await render()
   await click(
@@ -196,6 +199,70 @@ export async function run() {
   )
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 0)
   assert.match(text(), /Your next result starts here/)
+  // Progress includes answered questions in unfinished mocks and old slots.
+  localStorage.clear()
+  await act(async () => useAuthStore.setState({ user: null }))
+  await render()
+  const total = matching()
+  const firstTest = SAT_TEST_CATALOG[1]
+  const secondTest = SAT_TEST_CATALOG[2]
+  const first = firstTest.modules[0].questions[0]
+  const second = secondTest.modules[0].questions[0]
+  assert.equal(first.id, second.id, 'Different tests reuse module-position IDs')
+  const active = createSATAttempt(firstTest.id, firstTest.modules, 'practice')
+  active.answers[first.id] = first.correctAnswer
+  saveSATAttempt(active)
+  await act(async () => window.dispatchEvent(new Event('focus')))
+  await change('Progress', 'unanswered')
+  assert.equal(matching(), total - 1, 'Unfinished answered question is attempted')
+  const other = createSATAttempt(secondTest.id, secondTest.modules, 'practice')
+  other.answers[second.id] = second.choices.find(choice => choice.key !== second.correctAnswer)!.key
+  saveSATAttemptToHistory(other, 'exit')
+  await render('/sat/question-bank?status=unanswered')
+  assert.equal(matching(), total - 2, 'Same position in another test has separate progress')
+  await change('Progress', 'incorrect')
+  assert.equal(matching(), 1)
+  await change('Progress', 'all')
+  assert.equal(matching(), total, 'All questions includes attempted questions')
+
+  // Submitted attempts may exist only in the old per-test storage slot.
+  localStorage.clear()
+  const submitted = { ...active, status: 'submitted', submittedAt: Date.now() }
+  localStorage.setItem(`profai:sat:${firstTest.id}:attempt:v1`, JSON.stringify(submitted))
+  await render('/sat/question-bank?status=unanswered')
+  assert.equal(matching(), total - firstTest.questionCount)
+  assert.equal(JSON.parse(localStorage.getItem('profai:sat:attempt-history:v1')!).length, 1)
+
+  // Section and retired allocations match the same source question in today's bank.
+  localStorage.clear()
+  const retired = getSATReviewTests().find(test => /^question-bank-2026-09-20-\d+$/.test(test.id))!
+  const legacyQuestion = retired.modules.find(module => module.section === 'math')!.questions[0]
+  const currentTest = Object.values(SAT_TEST_CATALOG).find(test => test.modules
+    .some(module => module.questions.some(question => question.sourceQuestionId === legacyQuestion.sourceQuestionId)))!
+  const sectionTest = getSATSectionTest(currentTest.mockId, 'math')
+  const shared = sectionTest.modules.flatMap(module => module.questions)
+    .find(question => question.sourceQuestionId === legacyQuestion.sourceQuestionId)!
+  assert.ok(shared)
+  const legacyAttempt = createSATAttempt(retired.id, retired.modules, 'practice')
+  legacyAttempt.answers[legacyQuestion.id] = legacyQuestion.correctAnswer
+  saveSATAttemptToHistory(legacyAttempt, 'exit')
+  await render('/sat/question-bank?status=unanswered')
+  assert.equal(matching(), total - 1)
+  const sectionAttempt = createSATAttempt(sectionTest.id, sectionTest.modules, 'practice')
+  sectionAttempt.answers[shared.id] = shared.choices.find(choice => choice.key !== shared.correctAnswer)!.key
+  sectionAttempt.updatedAt = legacyAttempt.updatedAt + 1000
+  saveSATAttemptToHistory(sectionAttempt, 'exit')
+  await render('/sat/question-bank?status=incorrect')
+  assert.equal(matching(), 1, 'Newest answer across allocations determines mistakes')
+
+  // Previous bank results used a shorter positional key. Keep their review and progress.
+  localStorage.clear()
+  localStorage.setItem(key, JSON.stringify([{ ...saved[0], key: `${first.section}:${first.id}` }]))
+  await render('/sat/question-bank?status=unanswered')
+  assert.equal(matching(), total - 1)
+  await render('/sat/question-bank?view=history')
+  await click(container.querySelector('.sat-bank-history-card'))
+  assert.equal(container.querySelector('.sat-bank-answer-summary strong')!.textContent, first.correctAnswer)
   await act(async () => root.unmount())
   console.log(
     'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results and account isolation passed.',

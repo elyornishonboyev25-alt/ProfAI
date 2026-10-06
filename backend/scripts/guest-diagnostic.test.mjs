@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   guestDiagnosticAnswersSchema,
+  guestDiagnosticDraftSchema,
   scoreGuestDiagnostic,
 } from '../dist/services/guestDiagnostic.service.js'
 
@@ -49,4 +50,13 @@ test('a closer verified test baseline improves exam readiness', () => {
 test('required test targets are enforced', () => {
   const parsed = guestDiagnosticAnswersSchema.safeParse({ ...baseline, targetIeltsScore: null })
   assert.equal(parsed.success, false)
+})
+
+test('SAT targets start at 1000 while a current score of 400 remains valid', () => {
+  assert.equal(guestDiagnosticAnswersSchema.safeParse({ ...baseline, currentSatScore: 400, targetSatScore: 1000 }).success, true)
+  for (const targetSatScore of [400, 900, 999, 1601]) {
+    assert.equal(guestDiagnosticAnswersSchema.safeParse({ ...baseline, currentSatScore: null, targetSatScore }).success, false)
+    assert.equal(guestDiagnosticDraftSchema.safeParse({ targetSatScore }).success, false)
+  }
+  assert.equal(guestDiagnosticDraftSchema.safeParse({ currentSatScore: 400, targetSatScore: null }).success, true)
 })

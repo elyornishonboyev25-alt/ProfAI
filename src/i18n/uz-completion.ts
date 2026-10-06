@@ -1,5 +1,15 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Not sure of your current score?': 'Joriy ballingizni bilmaysizmi?',
+  'Take a full mock to estimate your level, review explanations and focus on the questions you missed. You can also start later.': 'Darajangizni taxminan aniqlash, izohlarni ko‘rish va xato qilgan savollarni mashq qilish uchun to‘liq sinov ishlang. Keyinroq boshlashingiz ham mumkin.',
+  'Take a full SAT mock': 'To‘liq SAT sinovini ishlash',
+  'Take a full IELTS mock': 'To‘liq IELTS sinovini ishlash',
+  'SAT targets start at 1000. Your current score can be 400–1600.': 'SAT maqsad balli 1000 dan boshlanadi. Joriy ballingiz 400–1600 bo‘lishi mumkin.',
+  'Enter IELTS scores in 0.5 steps (current 0–9, target 4–9). SAT current scores: 400–1600; targets: 1000–1600.': 'IELTS ballarini 0,5 qadam bilan kiriting (joriy 0–9, maqsad 4–9). SAT joriy balli: 400–1600; maqsad: 1000–1600.',
+  'Saving your starting SAT score...': 'Boshlang‘ich SAT ballingiz saqlanmoqda...',
+  'Your starting SAT score is saved. Review your mistakes below, then practise the skills you missed.': 'Boshlang‘ich SAT ballingiz saqlandi. Quyida xatolaringizni ko‘rib chiqing va tegishli ko‘nikmalarni mashq qiling.',
+  'Your mock is saved, but your profile score could not sync. Please retry.': 'Sinov saqlandi, lekin profil balli yangilanmadi. Qayta urinib ko‘ring.',
+  'Practise my mistakes': 'Xato qilgan savollarimni mashq qilish',
   'Total XP': 'Jami XP',
   "Learning leaderboard": "O‘quvchilar reytingi",
   "Every learning session moves you forward. See your progress, meet the leaders and find your next milestone.": "Har bir mashg‘ulot sizni oldinga olib boradi. Natijalaringizni kuzating, yetakchilarni ko‘ring va keyingi maqsadingizni belgilang.",

@@ -62,12 +62,13 @@ export default function MockSAT() {
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
   const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
-  const sectionQuery = section ? `?section=${section}` : ''
+  const diagnostic = !section && searchParams.get('diagnostic') === '1'
+  const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const fromMockCatalog = (location.state as { from?: string } | null)?.from === '/sat/mocks'
   const backPath = section ? `/sat/${section}` : fromMockCatalog ? '/sat/mocks' : '/sat'
   const isSectionPractice = Boolean(section)
   const { supported: fullscreenSupported, enter } = useFullscreen()
-  const [selectedMode, setSelectedMode] = useState<SATMode>('practice')
+  const [selectedMode, setSelectedMode] = useState<SATMode>(diagnostic ? 'exam' : 'practice')
   const [existingAttempt, setExistingAttempt] = useState(() => loadSATAttempt(test.id))
   const [fullscreenError, setFullscreenError] = useState('')
 

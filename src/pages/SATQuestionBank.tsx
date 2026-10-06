@@ -13,7 +13,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATRichText from '@/components/sat/SATRichText'
 import { getSATReviewTests, SAT_TEST_CATALOG } from '@/features/sat/catalog'
-import { loadSATAttemptHistory } from '@/features/sat/attemptStorage'
+import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import {
   isSATAnswerCorrect,
   type SATQuestion,
@@ -55,14 +55,14 @@ function readHistory(userId: string): Result[] {
             (row.answer === undefined || typeof row.answer === 'string') &&
             (row.setId === undefined || typeof row.setId === 'string'),
           ),
-        )
+        ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key }))
       : []
   } catch {
     return []
   }
 }
-const questionKey = (question: SATQuestion) =>
-  `${question.section}:${question.sourceQuestionId ?? question.id}`
+const questionKey = (question: SATQuestion, testId: string) =>
+  `${question.section}:${question.sourceQuestionId ?? `${testId.replace(/-(math|reading-writing)$/, '')}:${question.id}`}`
 const allQuestions: QuestionRow[] = (() => {
   const used = new Set<string>()
   return Object.values(SAT_TEST_CATALOG)
@@ -70,7 +70,7 @@ const allQuestions: QuestionRow[] = (() => {
     .flatMap((test) =>
       test.modules.flatMap((module) =>
         module.questions.flatMap((question) => {
-          const key = questionKey(question)
+          const key = questionKey(question, test.id)
           if (used.has(key)) return []
           used.add(key)
           return [{ key, question, testNumber: test.mockId }]
@@ -85,14 +85,20 @@ const reviewQuestions = new Map(
       module.questions.map(
         (question) =>
           [
-            questionKey(question),
-            { key: questionKey(question), question, testNumber: test.mockId },
+            questionKey(question, test.id),
+            { key: questionKey(question, test.id), question, testNumber: test.mockId },
           ] as const,
       ),
     ),
   ),
 )
 allQuestions.forEach((row) => reviewQuestions.set(row.key, row))
+// Older bank sets used module positions as keys. They selected the first
+// catalog occurrence, so preserve that exact question when reopening them.
+allQuestions.forEach((row) => {
+  const legacyKey = `${row.question.section}:${row.question.sourceQuestionId ?? row.question.id}`
+  if (!reviewQuestions.has(legacyKey)) reviewQuestions.set(legacyKey, row)
+})
 const outcome = (result: Result): Exclude<ReviewFilter, 'all'> =>
   result.correct ? 'correct' : result.answer === '' ? 'skipped' : 'incorrect'
 const outcomeLabel = {
@@ -110,21 +116,38 @@ const dateLabel = (at: string) =>
   })
 
 function mockResults(): Result[] {
-  const tests = new Map(getSATReviewTests().map((test) => [test.id, test]))
-  return loadSATAttemptHistory().flatMap(({ attempt }) => {
-    if (attempt.status !== 'submitted') return []
+  const definitions = getSATReviewTests()
+  const tests = new Map(definitions.map((test) => [test.id, test]))
+  // Include old per-test slots and answers in mocks that were saved on exit.
+  const slots = definitions.flatMap((test) => {
+    const attempt = loadSATAttempt(test.id)
+    return attempt ? [attempt] : []
+  })
+  const attempts = new Map(
+    [...loadSATAttemptHistory().map((entry) => entry.attempt), ...slots]
+      .sort((left, right) => (left.submittedAt ?? left.updatedAt) - (right.submittedAt ?? right.updatedAt))
+      .map((attempt) => [attempt.attemptId, attempt] as const),
+  )
+  return [...attempts.values()].flatMap((attempt) => {
     const test = tests.get(attempt.testId)
     if (!test) return []
-    const at = new Date(attempt.submittedAt ?? attempt.updatedAt).toISOString()
+    const timestamp = attempt.submittedAt ?? attempt.updatedAt
+    if (!Number.isFinite(timestamp)) return []
+    const at = new Date(timestamp).toISOString()
     return test.modules.flatMap((module) =>
-      module.questions.map((question) => ({
-        key: questionKey(question),
-        section: question.section,
-        domain: question.domain,
-        skill: question.skill,
-        correct: isSATAnswerCorrect(question, attempt.answers[question.id]),
-        at,
-      })),
+      module.questions.flatMap((question) => {
+        const answer = attempt.answers?.[question.id]?.trim() ?? ''
+        if (attempt.status !== 'submitted' && !answer) return []
+        return [{
+          key: questionKey(question, test.id),
+          section: question.section,
+          domain: question.domain,
+          skill: question.skill,
+          correct: isSATAnswerCorrect(question, answer),
+          answer,
+          at,
+        }]
+      }),
     )
   })
 }
@@ -145,7 +168,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [domain, setDomain] = useState('all')
   const [skill, setSkill] = useState(params.get('skill') ?? 'all')
   const [level, setLevel] = useState('all')
-  const [status, setStatus] = useState('all')
+  const [status, setStatus] = useState(
+    ['unanswered', 'incorrect'].includes(params.get('status') ?? '') ? params.get('status')! : 'all',
+  )
   const [count, setCount] = useState(
     [4, 6, 10, 15, 20, 30].includes(Number(params.get('count')))
       ? Number(params.get('count'))
@@ -161,7 +186,19 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [reviewIndex, setReviewIndex] = useState(0)
   const reviewId = params.get('review')
   const historyView = params.get('view') === 'history' || Boolean(reviewId)
-  const mockHistory = useMemo(mockResults, [])
+  const [mockHistory, setMockHistory] = useState(mockResults)
+  useEffect(() => {
+    const refresh = () => {
+      setHistory(readHistory(userId))
+      setMockHistory(mockResults())
+    }
+    window.addEventListener('focus', refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [userId])
   const latest = useMemo(() => {
     const result = new Map<string, Result>()
     for (const row of [...mockHistory, ...history].sort((a, b) =>

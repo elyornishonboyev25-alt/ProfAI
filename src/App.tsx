@@ -63,6 +63,7 @@ const Results = lazy(() => import('@/pages/Results'))
 const ResultsReview = lazy(() => import('@/pages/ResultsReview'))
 const SharedResult = lazy(() => import('@/pages/SharedResult'))
 const Profile = lazy(() => import('@/pages/Profile'))
+const ReviewMistakes = lazy(() => import('@/pages/ReviewMistakes'))
 const AnalyzeMistakes = lazy(() => import('@/pages/AnalyzeMistakes'))
 const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -759,6 +760,7 @@ function App() {
                       />
                       <Route path="/shared/shadowing/:shareId" element={<AnimatedRoute><SharedShadowing /></AnimatedRoute>} />
                       <Route path="/shared/results/:shareId" element={<AnimatedRoute><SharedResult /></AnimatedRoute>} />
+                      <Route path="/review-mistakes" element={<AnimatedRoute><ReviewMistakes /></AnimatedRoute>} />
                       <Route
                         path="/analyze-mistakes"
                         element={

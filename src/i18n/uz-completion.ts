@@ -1,5 +1,12 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  "Choose IELTS or SAT to review your saved attempts.": "Saqlangan urinishlaringizni ko‘rish uchun IELTS yoki SATni tanlang.",
+  "IELTS Mistake Lab": "IELTS xatolar tahlili",
+  "SAT Mistake Lab": "SAT xatolar tahlili",
+  "Review Listening, Reading, Writing and Speaking feedback.": "Listening, Reading, Writing va Speaking natijalaridagi fikr-mulohazalarni ko‘rib chiqing.",
+  "Review full mocks, Math and Reading & Writing attempts.": "To‘liq sinovlar, Math va Reading & Writing urinishlarini ko‘rib chiqing.",
+  "Your IELTS review queue": "IELTS tahlil uchun urinishlaringiz",
+
   'Back to test': 'Testga qaytish',
   'Review these words before you start the test.': 'Testni boshlashdan oldin ushbu so‘zlarni ko‘rib chiqing.',
   'Word collection': 'So‘zlar to‘plami',

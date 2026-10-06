@@ -1,5 +1,12 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  "Choose IELTS or SAT to review your saved attempts.": "Выберите IELTS или SAT для просмотра сохранённых попыток.",
+  "IELTS Mistake Lab": "Разбор ошибок IELTS",
+  "SAT Mistake Lab": "Разбор ошибок SAT",
+  "Review Listening, Reading, Writing and Speaking feedback.": "Просмотрите отзывы по Listening, Reading, Writing и Speaking.",
+  "Review full mocks, Math and Reading & Writing attempts.": "Просмотрите полные пробные тесты и попытки по Math и Reading & Writing.",
+  "Your IELTS review queue": "Ваши попытки IELTS для разбора",
+
   'Back to test': 'Вернуться к тесту',
   'Review these words before you start the test.': 'Повторите эти слова перед началом теста.',
   'Word collection': 'Коллекция слов',

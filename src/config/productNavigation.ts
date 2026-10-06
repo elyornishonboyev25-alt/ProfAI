@@ -46,6 +46,7 @@ export const PRODUCT_NAVIGATION: ProductNavigationItem[] = [
       '/test',
       '/results',
       '/analyze-mistakes',
+      '/review-mistakes',
     ].some((prefix) => matchesPrefix(pathname, prefix)),
   },
   {

@@ -24,7 +24,7 @@ Server [Markaziy bankning rasmiy JSON API](https://cbu.uz/uz/arkhiv-kursov-valyu
 
 Test: 5 tanga, 7 kun ichida qayta ochish/davom ettirish bepul. To‘liq mock: 25 tanga, 7 kun foydalanish, ikkala Writing vazifasi va bitta Speaking AI tekshiruvi bilan. Writing/Speaking alohida tekshiruvi: 10 tanga. AI Coach matn so‘rovi: 1 tanga. AI Voice sessiyasi: 10 tanga. Podcast/shadowing: 2 tanga, bir marta ochilgach takrorlash doim bepul. 150 sovg‘a tanga 30 ta test yoki 6 ta mockka yetadi. Kutubxonadagi dastlabki uchtadan dars bepul. Lug‘at, flashcard, natijalar va saqlangan tahlillar bepul qoladi. AI xatosida band qilingan tangalar qaytariladi. Oldin ochilgan testlarning muddati saqlanadi; yangi ochishlarda 7 kunlik davr qo‘llanadi.
 
-Cheksiz huquqli akkauntlarda katta Unlimited kartasi ko‘rsatilmaydi; chap pastdagi Plans yonida kichik “Unlimited” yozuvi turadi. 14 kunlik bepul sinov kartasi va tugash sanasi saqlanadi. Ko‘rsatkichlar akkauntning haqiqiy server huquqiga bog‘liq.
+Cheksiz huquqli akkauntlarda katta Unlimited kartasi ko‘rsatilmaydi; chap pastdagi tariflar tugmasida faqat “Unlimited” yozuvi turadi. Tugma oldingi ko‘rinishini saqlaydi va tariflar sahifasini ochadi. 14 kunlik bepul sinov kartasi va tugash sanasi saqlanadi. Ko‘rsatkichlar akkauntning haqiqiy server huquqiga bog‘liq.
 
 ## Click bilan ishlash
 

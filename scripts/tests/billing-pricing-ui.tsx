@@ -66,10 +66,12 @@ export async function run() {
     wallet.access = { kind: 'UNLIMITED', active: true, startsAt: null, expiresAt: null, trialDays: null, daysRemaining: null }
     await act(async () => { useBillingStore.setState({ wallet: { ...wallet } }) })
     assert.equal(element.querySelector('.billing-entitlement'), null)
-    assert.equal(element.querySelector('.liquid-upgrade-link .billing-sidebar-unlimited')?.textContent, 'Unlimited')
+    assert.equal(element.querySelector('.liquid-upgrade-link')?.textContent, 'Unlimited')
+    assert.equal(element.querySelector('.liquid-upgrade-link')?.getAttribute('aria-label'), 'Unlimited')
+    assert.equal(element.querySelector('.liquid-upgrade-link small'), null)
     wallet.access = { ...wallet.access, active: false }
     await act(async () => { useBillingStore.setState({ wallet: { ...wallet } }) })
-    assert.equal(element.querySelector('.billing-sidebar-unlimited'), null, 'ended access cannot show an unlimited badge')
+    assert.equal(element.querySelector('.liquid-upgrade-link')?.textContent, 'Plans', 'ended access restores the plans label')
     console.log('PASS: USD-only pricing, full annual totals, checkout conversion and signed quote, USD payment, failed rate retry, compact entitlement')
   } finally {
     await act(async () => root.unmount())

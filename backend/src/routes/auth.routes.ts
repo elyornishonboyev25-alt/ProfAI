@@ -152,6 +152,7 @@ async function sanitizeUser(user: {
 
   const wallet = await walletOverview(user.id)
   return {
+    access: wallet.access,
     coinBalance: wallet.balance,
     canCreateClass: wallet.canCreateClass,
     id: user.id,

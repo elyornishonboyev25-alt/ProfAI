@@ -23,7 +23,7 @@ type Overview = {
 }
 
 const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
-const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely' }
+const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely', TRIAL_14: '14-day free trial' }
 
 function Pagination({ page, total, pageSize, onChange, language }: { page: number; total: number; pageSize: number; onChange: (page: number) => void; language: OwnerLanguage }) {
   const maxPage = Math.max(1, Math.ceil(total / pageSize))
@@ -200,7 +200,7 @@ export default function OwnerDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <select aria-label={t('Premium duration for {email}', { email: person.email })} value={grantPlans[person.id] ?? 'MONTHLY'} onChange={event => setGrantPlans(value => ({ ...value, [person.id]: event.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
                 {BILLING_PRODUCTS.map(product => <option key={product.code} value={product.code}>{product.code} · {product.coins} coins</option>)}
-                <option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
+                <option value="TRIAL_14">{t('14-day free trial')}</option><option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
               </select>
               <button type="button" disabled={updatingId === person.id} onClick={() => void grantPremium(person)} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Grant Premium')}</button>
               {(grant || person.billingSubscriptions?.length) && !person.fixedPremium && <button type="button" disabled={updatingId === person.id} onClick={() => void revokePremium(person)} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Revoke')}</button>}

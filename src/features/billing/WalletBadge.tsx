@@ -1,14 +1,16 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Coins } from 'lucide-react'
+import { Coins, Clock3, Infinity as InfinityIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
 import './billing.css'
+import { useAccountAccess } from './useAccountAccess'
 export default function WalletBadge() {
   const user = useAuthStore(s => s.user)
   const { wallet, userId, refresh, error } = useBillingStore()
   const text = useBillingText()
+  const access = useAccountAccess()
   useEffect(() => {
     void refresh()
     const update = () => void refresh()
@@ -17,5 +19,6 @@ export default function WalletBadge() {
     return () => { window.removeEventListener('profai:billing-updated', update); window.removeEventListener('focus', update) }
   }, [user?.id, refresh])
   if (!user) return <Link to="/premium" className="billing-wallet-badge"><Coins size={17} />{text('Plans', 'Tariflar', 'Тарифы')}</Link>
+  if (access?.active && access.kind !== 'COINS') return <Link to="/premium" className={`billing-wallet-badge billing-access-badge ${access.kind === 'TRIAL' ? 'is-trial' : ''}`} title={access.kind === 'TRIAL' ? text('14-day free trial', '14 kunlik bepul sinov muddati', '14-дневный бесплатный пробный период') : text('Full access without coin charges', 'Tangalar sarflanmaydigan to‘liq kirish', 'Полный доступ без расхода монет')}>{access.kind === 'TRIAL' ? <Clock3 size={17} /> : <InfinityIcon size={19} />}<strong>{access.kind === 'TRIAL' ? text(`${access.daysRemaining}d free`, `${access.daysRemaining} kun bepul`, `${access.daysRemaining} дн. бесплатно`) : access.kind === 'UNLIMITED' ? text('Unlimited', 'Muddatsiz', 'Безлимит') : 'Premium'}</strong></Link>
   return <Link to="/premium" className="billing-wallet-badge" title={text('Your coin balance and plans', 'Tanga balansingiz va tariflar', 'Ваш баланс и тарифы')}><Coins size={17} /><strong>{userId === user.id && wallet ? wallet.balance.toLocaleString() : error ? '—' : '…'}</strong><span>{text('coins', 'tanga', 'монет')}</span></Link>
 }

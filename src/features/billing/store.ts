@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 
 export type BillingOrder = { id: string; plan: string; currency: 'UZS' | 'USD'; amountMinor: number; coins: number; status: string; method: string; checkoutUrl: string | null; createdAt: string }
 export type WalletOverview = { balance: number; canCreateClass: boolean; centerEligible: boolean; legacyAccess: boolean;
+  access?: import('../../../backend/src/utils/accessEntitlement').AccessEntitlement;
   subscriptions: Array<{ audience: string; plan: string; expiresAt: string }>; entries: Array<{ id: string; amount: number; reason: string; createdAt: string }>; orders: BillingOrder[] }
 type BillingState = { userId: string | null; wallet: WalletOverview | null; loading: boolean; error: string; refresh: () => Promise<void> }
 let pending: { userId: string; promise: Promise<void> } | null = null

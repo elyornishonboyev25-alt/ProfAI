@@ -7,6 +7,7 @@ export type AuthUser = {
   role: UserRole
   premium: boolean
   premiumExpiresAt?: string | null
+  access?: import('../../backend/src/utils/accessEntitlement').AccessEntitlement
   coinBalance?: number
   canCreateClass?: boolean
   xp: number

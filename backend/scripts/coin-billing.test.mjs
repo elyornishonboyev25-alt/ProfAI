@@ -8,19 +8,20 @@ process.env.ACCESS_TOKEN_SECRET ||= 'billing-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET ||= 'billing-test-refresh-secret-only'
 const { prisma } = await import('../dist/lib/prisma.js')
 const { env } = await import('../dist/config/env.js')
-const { unlockResource, withCoinCharge, fulfillPayment, requireTeacherPlan } = await import('../dist/services/coinBilling.service.js')
+const { unlockResource, accessStatus, withCoinCharge, fulfillPayment, requireTeacherPlan } = await import('../dist/services/coinBilling.service.js')
+const { describeAccess, FREE_TRIAL_DAYS } = await import('../dist/utils/accessEntitlement.js')
 const { clickSignature, verifyStripeSignature } = await import('../dist/services/paymentProviders.service.js')
 const { paymentCallbacks, stripeCallback } = await import('../dist/routes/paymentCallbacks.routes.js')
 const { default: express } = await import('express')
 
 let state
-function reset() { state = { wallet: null, entries: [], access: [], subscription: null, order: null, role: 'USER' } }
+function reset() { state = { wallet: null, entries: [], access: [], subscription: null, order: null, role: 'USER', email: 'ordinary@example.com', grant: null } }
 reset()
 const active = access => !access.expiresAt || access.expiresAt > new Date()
 const tx = {
   $queryRaw: async () => [],
-  user: { findUniqueOrThrow: async () => ({ role: state.role }) },
-  premiumGrant: { findUnique: async () => null },
+  user: { findUniqueOrThrow: async () => ({ role: state.role, email: state.email, nickname: null }) },
+  premiumGrant: { findUnique: async () => state.grant },
   coinWallet: {
     findUnique: async () => state.wallet,
     create: async ({ data }) => state.wallet = { ...data },
@@ -55,7 +56,57 @@ prisma.$transaction = work => {
   queue = result.catch(() => {}); return result
 }
 prisma.user.findUniqueOrThrow = tx.user.findUniqueOrThrow
+prisma.premiumGrant.findUnique = tx.premiumGrant.findUnique
 prisma.billingSubscription.findUnique = tx.billingSubscription.findUnique
+
+test('selected unlimited grants keep test, media and AI access free with a zero balance', async () => {
+  for (const email of ['aysunabbaszad0@gmail.com', 'oguzmemmedli123@gmail.com', 'wiynsara@gmail.com', 'bahadyrazat@gmail.com']) {
+    reset(); state.email = email; state.wallet = { userId: 'u', balance: 0 }
+    state.grant = { plan: 'UNLIMITED', source: 'SELECTED_ACCESS', startsAt: new Date(Date.now() - 1000), expiresAt: null }
+    for (const [feature, resource] of [['test', 'test:reading:sample'], ['mock', 'mock:ielts:1'], ['podcast', 'podcast:abcdefghijk'], ['shadowing', 'shadowing:abcdefghijk']]) {
+      assert.equal((await accessStatus('u', feature, resource)).unlocked, true)
+      assert.equal((await unlockResource('u', feature, resource)).charged, 0)
+    }
+    for (const feature of ['writing', 'speaking', 'voice', 'ai']) assert.equal(await withCoinCharge('u', feature, async () => 'included'), 'included')
+    await requireTeacherPlan('u')
+    assert.equal(state.wallet.balance, 0)
+    assert.equal(state.entries.length, 0)
+    assert.equal(state.role, 'USER')
+  }
+})
+
+test('14-day trial ends exactly at expiry and cannot inherit permanent nickname access', () => {
+  const startsAt = new Date('2026-10-06T09:00:00Z')
+  const expiresAt = new Date(startsAt.getTime() + FREE_TRIAL_DAYS * 86400000)
+  const grant = { plan: 'TRIAL_14', source: 'SELECTED_ACCESS', startsAt, expiresAt }
+  assert.equal(describeAccess(grant, false, startsAt).daysRemaining, 14)
+  assert.equal(describeAccess(grant, false, new Date(expiresAt.getTime() - 1)).active, true)
+  assert.deepEqual(describeAccess(grant, true, expiresAt), { kind: 'TRIAL', active: false, startsAt: startsAt.toISOString(), expiresAt: expiresAt.toISOString(), trialDays: 14, daysRemaining: 0 })
+  assert.equal(describeAccess(grant, false, new Date(startsAt.getTime() - 1)).active, false)
+  assert.equal(grant.expiresAt.toISOString(), '2026-10-20T09:00:00.000Z')
+})
+
+test('trial use preserves its dates and coins; expired trials restore paid access checks', async () => {
+  reset(); state.email = 'usarovajasmin@gmail.com'; state.wallet = { userId: 'u', balance: 0 }
+  state.grant = { plan: 'TRIAL_14', source: 'SELECTED_ACCESS', startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + 86400000) }
+  const initialDates = [state.grant.startsAt.toISOString(), state.grant.expiresAt.toISOString()]
+  for (let i = 0; i < 3; i++) {
+    const status = await accessStatus('u', 'mock', 'mock:ielts:1')
+    assert.equal(status.unlocked, true)
+    assert.equal(status.expiresAt, state.grant.expiresAt.toISOString())
+    await withCoinCharge('u', 'writing', async () => 'included')
+  }
+  await requireTeacherPlan('u')
+  assert.deepEqual([state.grant.startsAt.toISOString(), state.grant.expiresAt.toISOString()], initialDates)
+  assert.equal(state.wallet.balance, 0)
+  state.grant.expiresAt = new Date(Date.now() - 1)
+  assert.equal((await accessStatus('u', 'mock', 'mock:ielts:1')).unlocked, false)
+  let called = false
+  await assert.rejects(withCoinCharge('u', 'speaking', async () => { called = true }), error => error.code === 'INSUFFICIENT_COINS')
+  assert.equal(called, false)
+  await assert.rejects(requireTeacherPlan('u'), error => error.code === 'TEACHER_PLAN_REQUIRED')
+  assert.equal(state.wallet.balance, 0)
+})
 
 test('center and teacher prices, discounts and distinct currency amounts', () => {
   assert.equal(billingProduct('CENTER_STUDENT_1').amountUzs, 39999)

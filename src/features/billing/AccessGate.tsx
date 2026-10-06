@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useBillingText } from './copy'
 import type { CoinFeature } from './catalog'
 import './billing.css'
-type Status = { unlocked: boolean; cost: number; balance: number }
+type Status = { unlocked: boolean; cost: number; balance: number; expiresAt?: string | null }
 export default function AccessGate({ feature, resource, children, onCancel, onUnlocked }: {
   feature: CoinFeature; resource: string; children?: ReactNode; onCancel?: () => void; onUnlocked?: () => void
 }) {
@@ -18,6 +18,13 @@ export default function AccessGate({ feature, resource, children, onCancel, onUn
   const [reload, setReload] = useState(0)
   const continuation = useRef(onUnlocked)
   continuation.current = onUnlocked
+  useEffect(() => {
+    if (!status?.unlocked || !status.expiresAt) return
+    const remaining = new Date(status.expiresAt).getTime() - Date.now()
+    if (!Number.isFinite(remaining)) return
+    const timer = window.setTimeout(() => setReload(n => n + 1), Math.max(0, Math.min(remaining + 50, 2147483647)))
+    return () => window.clearTimeout(timer)
+  }, [status])
   useEffect(() => {
     let canceled = false
     setStatus(null); setError('')

@@ -7,13 +7,14 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { extendPremiumExpiry, PREMIUM_PLANS, type PaidPlan } from '../utils/premiumPlans.js'
 import { BILLING_PRODUCTS, COIN_COSTS, WELCOME_COINS, billingProduct, extendBillingExpiry } from '../utils/billingCatalog.js'
+import { FREE_TRIAL_DAYS, describeAccess } from '../utils/accessEntitlement.js'
 import { randomUUID } from 'node:crypto'
 import { accessStatus, unlockResource, walletOverview, lockWallet, fulfillPayment, BillingError } from '../services/coinBilling.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
 import { approvedMedia, educationalCatalog } from '../services/educationalMedia.service.js'
 
 const router = Router()
-const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED'].includes(value) || Boolean(billingProduct(value))) })
+const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED', 'TRIAL_14'].includes(value) || Boolean(billingProduct(value))) })
 const pageSchema = z.coerce.number().int().min(1).max(10000).default(1)
 const PAGE_SIZE = 20
 
@@ -125,7 +126,10 @@ router.get('/owner/users', requireAuth, requireOwner, asyncHandler(async (req, r
         coinWallet: { select: { balance: true } }, billingSubscriptions: { select: { audience: true, plan: true, expiresAt: true } },
         premiumGrant: { select: { plan: true, source: true, expiresAt: true, startsAt: true } } } }),
   ])
-  return res.json({ items: users.map(user => ({ ...user, fixedPremium: isPremiumUser(user) })), total, page, pageSize: PAGE_SIZE })
+  return res.json({ items: users.map(user => {
+    const access = describeAccess(user.premiumGrant, isPremiumUser(user))
+    return { ...user, fixedPremium: isPremiumUser(user) && access.kind === 'UNLIMITED', access }
+  }), total, page, pageSize: PAGE_SIZE })
 }))
 
 router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(async (req, res) => {
@@ -148,13 +152,14 @@ router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(asy
     })
     return res.json({ status: 'GRANTED' })
   }
-  const existing = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true } })
+  const existing = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true, source: true } })
   const now = new Date()
-  const expiresAt = parsed.data.plan === 'UNLIMITED' ? null : extendPremiumExpiry(parsed.data.plan as PaidPlan, existing?.expiresAt, now)
+  const source = existing?.source === 'SELECTED_ACCESS' && ['UNLIMITED', 'TRIAL_14'].includes(parsed.data.plan) ? 'SELECTED_ACCESS' : 'OWNER'
+  const expiresAt = parsed.data.plan === 'UNLIMITED' ? null : parsed.data.plan === 'TRIAL_14' ? new Date(now.getTime() + FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000) : extendPremiumExpiry(parsed.data.plan as PaidPlan, existing?.expiresAt, now)
   const grant = await prisma.premiumGrant.upsert({
     where: { userId: user.id },
-    create: { userId: user.id, plan: parsed.data.plan, source: 'OWNER', startsAt: now, expiresAt, grantedBy: req.user!.id },
-    update: { plan: parsed.data.plan, source: 'OWNER', startsAt: now, expiresAt, grantedBy: req.user!.id },
+    create: { userId: user.id, plan: parsed.data.plan, source, startsAt: now, expiresAt, grantedBy: req.user!.id },
+    update: { plan: parsed.data.plan, source, startsAt: now, expiresAt, grantedBy: req.user!.id },
     select: { plan: true, source: true, startsAt: true, expiresAt: true },
   })
   return res.json({ grant })

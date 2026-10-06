@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { Prisma, type PaymentRequest } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { COIN_COSTS, WELCOME_COINS, extendBillingExpiry, type CoinFeature } from '../utils/billingCatalog.js'
+import { describeAccess, hasSelectedFullAccess } from '../utils/accessEntitlement.js'
+import { isPremiumUser } from '../utils/premium.js'
 
 type Tx = Prisma.TransactionClient
 export class BillingError extends Error {
@@ -22,24 +24,27 @@ export async function walletOverview(userId: string) {
       tx.billingSubscription.findMany({ where: { userId, expiresAt: { gt: new Date() } } }),
       tx.coinEntry.findMany({ where: { userId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 30 }),
       tx.learningCenterMember.findFirst({ where: { userId, role: 'STUDENT', status: 'ACTIVE' }, select: { id: true } }),
-      tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } }),
+      tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true, email: true, nickname: true } }),
       tx.premiumGrant.findUnique({ where: { userId } }),
     ])
-    return { balance: wallet.balance, subscriptions, entries, centerEligible: Boolean(member),
-      canCreateClass: user.role === 'ADMIN' || subscriptions.some(s => s.audience === 'TEACHER'),
-      legacyAccess: Boolean(legacy && (!legacy.expiresAt || legacy.expiresAt > new Date())) }
+    const access = describeAccess(legacy, isPremiumUser(user))
+    return { balance: wallet.balance, subscriptions, entries, centerEligible: Boolean(member), access,
+      canCreateClass: user.role === 'ADMIN' || hasSelectedFullAccess(legacy) || subscriptions.some(s => s.audience === 'TEACHER'),
+      legacyAccess: access.active }
   })
 }
-async function hasLegacyAccess(tx: Tx, userId: string) {
+async function fullAccessStatus(tx: Tx, userId: string) {
   const [user, grant] = await Promise.all([
-    tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } }),
+    tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true, email: true, nickname: true } }),
     tx.premiumGrant.findUnique({ where: { userId } }),
   ])
-  return user.role === 'ADMIN' || Boolean(grant && (!grant.expiresAt || grant.expiresAt > new Date()))
+  return describeAccess(grant, isPremiumUser(user))
 }
 export async function requireTeacherPlan(userId: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } })
   if (user.role === 'ADMIN') return
+  const grant = await prisma.premiumGrant.findUnique({ where: { userId } })
+  if (hasSelectedFullAccess(grant)) return
   const subscription = await prisma.billingSubscription.findUnique({ where: { userId_audience: { userId, audience: 'TEACHER' } } })
   if (!subscription || subscription.expiresAt <= new Date()) {
     throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Teacher Individual plan (69,999 UZS/month).', 403)
@@ -58,10 +63,10 @@ export async function accessStatus(userId: string, feature: CoinFeature, resourc
   return prisma.$transaction(async tx => {
     const wallet = await lockWallet(tx, userId)
     const [access, legacy] = await Promise.all([
-      tx.coinAccess.findUnique({ where: { userId_resource: { userId, resource } } }), hasLegacyAccess(tx, userId),
+      tx.coinAccess.findUnique({ where: { userId_resource: { userId, resource } } }), fullAccessStatus(tx, userId),
     ])
-    return { unlocked: legacy || Boolean(access && (!access.expiresAt || access.expiresAt > new Date())),
-      balance: wallet.balance, cost: COIN_COSTS[feature], expiresAt: access?.expiresAt ?? null }
+    return { unlocked: legacy.active || Boolean(access && (!access.expiresAt || access.expiresAt > new Date())),
+      balance: wallet.balance, cost: COIN_COSTS[feature], expiresAt: legacy.active ? legacy.expiresAt : access?.expiresAt ?? null }
   })
 }
 export async function unlockResource(userId: string, feature: CoinFeature, resource: string) {
@@ -69,7 +74,7 @@ export async function unlockResource(userId: string, feature: CoinFeature, resou
   return prisma.$transaction(async tx => {
     const wallet = await lockWallet(tx, userId)
     const access = await tx.coinAccess.findUnique({ where: { userId_resource: { userId, resource } } })
-    if (await hasLegacyAccess(tx, userId) || (access && (!access.expiresAt || access.expiresAt > new Date()))) return { balance: wallet.balance, charged: 0 }
+    if ((await fullAccessStatus(tx, userId)).active || (access && (!access.expiresAt || access.expiresAt > new Date()))) return { balance: wallet.balance, charged: 0 }
     const cost = COIN_COSTS[feature]
     if (wallet.balance < cost) throw new BillingError('INSUFFICIENT_COINS', 'Your balance is too low. Add coins or continue with free activities.')
     const updated = await tx.coinWallet.update({ where: { userId }, data: { balance: { decrement: cost } } })
@@ -86,7 +91,7 @@ export async function withCoinCharge<T>(userId: string, feature: CoinFeature, op
   const key = `usage:${randomUUID()}`
   const reservation = await prisma.$transaction(async tx => {
     const wallet = await lockWallet(tx, userId)
-    if (await hasLegacyAccess(tx, userId)) return { charged: 0, allowanceId: null as string | null }
+    if ((await fullAccessStatus(tx, userId)).active) return { charged: 0, allowanceId: null as string | null }
     if (feature === 'writing' || feature === 'speaking') {
       const field = feature === 'writing' ? 'writingLeft' : 'speakingLeft'
       const allowance = await tx.coinAccess.findFirst({ where: { userId, feature: 'mock', expiresAt: { gt: new Date() }, [field]: { gt: 0 } }, orderBy: { createdAt: 'asc' } })

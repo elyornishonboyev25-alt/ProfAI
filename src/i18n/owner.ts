@@ -1,5 +1,6 @@
 /** Owner dashboard interface labels. User-entered report content is never translated. */
 const labels: Record<string, { ru: string; uz: string }> = {
+  '14-day free trial': { ru: '14 дней бесплатного пробного периода', uz: '14 kunlik bepul sinov muddati' },
   'SUPPORT CENTER': { ru: 'ЦЕНТР ПОДДЕРЖКИ', uz: 'YORDAM MARKAZI' },
   'Read reports, reply directly, and keep your users informed.': { ru: 'Читайте обращения, отвечайте напрямую и сообщайте пользователям о ходе решения.', uz: 'Murojaatlarni o‘qing, javob bering va foydalanuvchilarni xabardor qiling.' },
   '{count} reports': { ru: 'Обращений: {count}', uz: '{count} ta murojaat' },

@@ -17,14 +17,14 @@ export function isPremiumUser(input: { role: 'USER' | 'ADMIN'; email: string; ni
   )
 }
 import { prisma } from '../lib/prisma.js'
+import { describeAccess } from './accessEntitlement.js'
 
 
 export async function hasPremiumAccess(input: { id: string; role: 'USER' | 'ADMIN'; email: string; nickname?: string | null }) {
-  if (isPremiumUser(input)) return true
   const grant = await prisma.premiumGrant.findUnique({
     where: { userId: input.id },
-    select: { expiresAt: true },
+    select: { plan: true, source: true, startsAt: true, expiresAt: true },
   })
-  if (grant && (grant.expiresAt === null || grant.expiresAt > new Date())) return true
+  if (describeAccess(grant, isPremiumUser(input)).active) return true
   return Boolean(await prisma.billingSubscription.findFirst({ where: { userId: input.id, expiresAt: { gt: new Date() } } }))
 }

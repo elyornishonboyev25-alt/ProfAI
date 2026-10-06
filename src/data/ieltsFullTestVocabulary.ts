@@ -1,5 +1,7 @@
 import content from './ieltsFullTestVocabulary.json'
 import type { IeltsBook, VocabularyEntry } from './vocabularyCollections'
+import { getWritingFullTestById } from './writingTestData'
+import { WRITING_SUPPLIED_VOCABULARY, RECYCLING_VOCABULARY } from './writingSuppliedVocabulary'
 
 export type IeltsVocabularySkill = 'listening' | 'reading' | 'writing' | 'speaking'
 
@@ -35,3 +37,25 @@ export const ieltsFullTestVocabulary: IeltsBook[] = content.books.map((book) => 
     })),
   })),
 }))
+
+// Replace vocabulary alongside the active question so the old practice topic
+// cannot surface through the test's vocabulary drawer or vocabulary collection.
+const writingBook = ieltsFullTestVocabulary.find(book => book.skill === 'writing')!
+for (const test of writingBook.tests) {
+  const source = getWritingFullTestById(test.sourceTestId!)
+  const examples = source && WRITING_SUPPLIED_VOCABULARY[source.index]
+  if (!source || !examples) continue
+  const task = source.tasks[0]
+  const section = test.sections[0]
+  section.topic = task.subtitle
+  section.prompt = task.promptLead
+  section.entries = examples.map(([term, example], index) => ({
+    ...(RECYCLING_VOCABULARY[term] ?? lexicon[term]),
+    id: `${section.id}_entry_${index + 1}`,
+    example,
+    sourceExcerpt: task.visualContext!,
+    sourceSectionId: task.id,
+    sourceTitle: task.subtitle,
+    sourceKind: 'topic',
+  }))
+}

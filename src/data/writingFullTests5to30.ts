@@ -15,6 +15,7 @@ export const WRITING_TESTS_5_TO_30: WritingFullTest[] = Array.from({ length: 26 
   const practiceVisual = PRACTICE_TASK_VISUALS[index]
   const suppliedVisual = SUPPLIED_TASK_VISUALS[index]
   const visual = suppliedVisual ?? sourceVisual ?? practiceVisual
+  const task1Instructions = suppliedVisual?.instructions ?? TASK_1_INSTRUCTIONS
   const imageUrl = sourceVisual
     ? `/images/ielts-writing/full-writing-test-${index}-source.${sourceVisual.extension}`
     : `/images/ielts-writing/full-writing-test-${index}-practice.svg`
@@ -26,9 +27,9 @@ export const WRITING_TESTS_5_TO_30: WritingFullTest[] = Array.from({ length: 26 
     id: 'writing-full-' + index + '-task-1', day: null, fullTestIndex: index, taskType: 'task1',
     title: 'Full Writing Test ' + index,
     subtitle: 'Task 1 · ' + visual.kind + ' · ' + visual.title,
-    prompt: visual.lead + '\n\n' + TASK_1_INSTRUCTIONS,
+    prompt: visual.lead + '\n\n' + task1Instructions,
     promptLead: visual.lead,
-    instructions: TASK_1_INSTRUCTIONS,
+    instructions: task1Instructions,
     suggestedWordCount: { min: 150, max: 180 }, maxWordCount: 500, durationMinutes: 20,
     ...(suppliedVisual ? { diagram: suppliedVisual.diagram } : { imageUrl }),
     imageAlt: visual.kind + ': ' + visual.title,

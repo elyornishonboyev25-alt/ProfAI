@@ -26,8 +26,12 @@ const catalog = loadData('writingTestData').getWritingFullTestCatalog()
 assert.equal(catalog.length, 30)
 // Check the complete live catalog, including the first four full tests.
 const essayPrompts = new Set()
+const task1Prompts = new Set()
 const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 for (const test of catalog) {
+  const task1Text = normalize(test.tasks.find(task => task.taskType === 'task1').promptLead)
+  assert.ok(!task1Prompts.has(task1Text), `Duplicate Task 1 in full catalog: ${test.id}`)
+  task1Prompts.add(task1Text)
   const essay = test.tasks.find(task => task.taskType === 'task2')
   const text = normalize(essay.promptLead + ' ' + essay.promptQuestion)
   assert.ok(!essayPrompts.has(text), `Duplicate Task 2 in full catalog: ${test.id}`)
@@ -124,16 +128,23 @@ for (let offset = 0; offset < tests.length; offset++) {
   else if (sourceVisual.extension === 'jpg') assert.equal(bytes.subarray(0, 3).toString('hex'), 'ffd8ff')
   else assert.equal(bytes.subarray(0, 4).toString('utf8'), 'RIFF')
 }
-for (const kind of ['Bar chart', 'Line graph', 'Pie charts', 'Maps', 'Process diagram', 'Table', 'Charts']) {
+for (const kind of ['Bar chart', 'Line graph', 'Maps', 'Process diagram', 'Table', 'Charts']) {
   assert.ok(visualKinds.has(kind), `Missing Task 1 diagram variety: ${kind}`)
 }
 assert.equal(Object.keys(supplied.SOURCE_TASK_VISUALS).length, 13)
 assert.equal(Object.keys(practice.PRACTICE_TASK_VISUALS).length, 10)
-assert.equal(Object.keys(native.SUPPLIED_TASK_VISUALS).length, 3)
+assert.equal(Object.keys(native.SUPPLIED_TASK_VISUALS).length, 13)
 assert.equal(tests[13].tasks[0].diagram, 'major-sports-1997-2017')
 assert.equal(tests[14].tasks[0].diagram, 'school-travel-1990-2010')
 assert.equal(tests[15].tasks[0].diagram, 'supplied-brick-manufacturing')
+const suppliedOrder = [
+  'museum-1957-2007', 'usa-fast-food-2003-2013', 'police-budget-2017-2018',
+  'canada-teenage-leisure', 'university-sports-centre', 'uk-economic-sectors',
+  'co2-emissions-1967-2007', 'aluminium-can-recycling', 'bicycle-riding-2012',
+  'australian-physical-activity-2010',
+]
+assert.deepEqual(Array.from(tests.filter(test => test.index >= 21), test => test.tasks[0].diagram), suppliedOrder, 'Tests 21–30 must follow supplied image order')
 assert.ok(kindCounts.get('Maps') >= 2)
 assert.ok(kindCounts.get('Process diagram') >= 2)
 execFileSync(process.execPath, [fileURLToPath(new URL('./generate-writing-practice-images.mjs', import.meta.url)), '--check'])
-console.log('Writing bank valid: 30 full tests, 30 unique essays, 21 official Task 2 replacements, 3 supplied native SVG diagrams.')
+console.log('Writing bank valid: 30 full tests, unique Task 1 and Task 2 prompts, 21 official Task 2 replacements, 13 supplied native SVG diagrams.')

@@ -1,6 +1,9 @@
 import type { WritingTask } from '@/data/writingTestData'
 import { RenewableTransportChart, SmokedFishDiagram } from './LegacyWritingTaskDiagrams'
 import { MajorSportsChart, SchoolTravelChart, SuppliedBrickManufacturing } from './SuppliedWritingTaskDiagrams'
+import { FastFoodChart, PoliceBudgetChart, CanadianLeisureChart, UKEconomicSectorsChart, CO2EmissionsChart, BicycleRidingTable, AustralianActivityChart } from './SuppliedWritingCharts21to30'
+import { MuseumMaps, UniversitySportsPlans } from './SuppliedWritingMaps21to30'
+import AluminiumRecyclingDiagram from './SuppliedAluminiumRecycling'
 
 type Diagram = NonNullable<WritingTask['diagram']>
 
@@ -228,6 +231,16 @@ function RiversideParkDiagram() {
 
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
   switch (diagram) {
+    case 'museum-1957-2007': return <MuseumMaps />
+    case 'usa-fast-food-2003-2013': return <FastFoodChart />
+    case 'police-budget-2017-2018': return <PoliceBudgetChart />
+    case 'canada-teenage-leisure': return <CanadianLeisureChart />
+    case 'university-sports-centre': return <UniversitySportsPlans />
+    case 'uk-economic-sectors': return <UKEconomicSectorsChart />
+    case 'co2-emissions-1967-2007': return <CO2EmissionsChart />
+    case 'aluminium-can-recycling': return <AluminiumRecyclingDiagram />
+    case 'bicycle-riding-2012': return <BicycleRidingTable />
+    case 'australian-physical-activity-2010': return <AustralianActivityChart />
     case 'major-sports-1997-2017': return <MajorSportsChart />
     case 'school-travel-1990-2010': return <SchoolTravelChart />
     case 'supplied-brick-manufacturing': return <SuppliedBrickManufacturing />

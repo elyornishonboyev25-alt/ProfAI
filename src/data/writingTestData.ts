@@ -48,6 +48,10 @@ export type WritingTask = {
   visual?: WritingDataVisual
   visualContext?: string
   diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making' | 'riverside-park' | 'major-sports-1997-2017' | 'school-travel-1990-2010' | 'supplied-brick-manufacturing'
+    | 'museum-1957-2007' | 'usa-fast-food-2003-2013' | 'police-budget-2017-2018'
+    | 'canada-teenage-leisure' | 'university-sports-centre' | 'uk-economic-sectors'
+    | 'co2-emissions-1967-2007' | 'aluminium-can-recycling' | 'bicycle-riding-2012'
+    | 'australian-physical-activity-2010'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string

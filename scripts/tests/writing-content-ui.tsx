@@ -25,7 +25,19 @@ const evaluation: WritingEvaluation = {
 }
 
 export async function run() {
-  for (const index of [18, 19, 20]) {
+  const suppliedDetails: Record<number, string[]> = {
+    21: ['Museum 1957', 'Museum 2007', 'national history', 'exhibition', 'store-', 'education', 'centre', 'car park', 'Road'],
+    22: ['2003', '2006', '2013', 'Every', 'Never', '40%'],
+    23: ['175.5m', '177.8m', '91.2m', '102.3m', '304.7m', '318.6m', '75%', '69%', '8%', '14%', '17%'],
+    24: ['Favourite leisure activities of teenagers in Canada', 'Sports', 'Computer Games', 'Music', 'Shopping', 'Boys', 'Girls'],
+    25: ['UNIVERSITY SPORTS CENTRE (present)', 'UNIVERSITY SPORTS CENTRE (future plans)', 'Leisure', '25m', 'Changing room', 'Dance', 'studio', 'Café'],
+    26: ['1900', '1950', '1975', '2000', 'Agriculture', 'Manufacturing', 'Business and Financial'],
+    27: ['1967', '1977', '1987', '1997', '2007', 'United Kingdom', 'Sweden', 'Italy', 'Portugal'],
+    28: ['74% recycled (UK)', 'COLLECTION', 'CLEANING, SORTING,', 'SHREDDING AND', 'COMPRESSING', 'HEATING AND MELTING', '2.5mm - 6mm thick', 'RECYCLING', 'REUSING'],
+    29: ['0-9', '10-19', '20-39', '40-59', '60+', '52.5', '51.2', '43.6', '25.1', '18.2', '10.8', '13.7', '9.3', '19.8', '14.6'],
+    30: ['52.8', '47.7', '42.2', '48.9', '39.5', '52.5', '43.1', '53.3', '45.1', '53', '46.7', '47.1', '65 and over'],
+  }
+  for (const index of Array.from({ length: 13 }, (_, i) => i + 18)) {
     window.localStorage.clear()
     const test = getWritingFullTestById(`writing-full-${index}`)!
     // Exercise the same saved-session entry path used when a test is reopened.
@@ -35,6 +47,9 @@ export async function run() {
     assert.ok(visual, `Test ${index} must show its supplied drawing`)
     assert.equal(visual.querySelector('image, img'), null, 'SVG cannot embed or decode a raster')
     assert.ok(visual.getAttribute('viewBox'))
+    for (const detail of suppliedDetails[index] ?? []) assert.ok(visual.textContent?.includes(detail), `Test ${index} source detail: ${detail}`)
+    if ([22, 26, 30].includes(index)) assert.ok(visual.querySelector('pattern'), `Test ${index} retains source bar patterns`)
+    if (index >= 21) assert.equal(test.tasks[0].imageUrl, undefined, 'Replacement cannot use the old practice image')
     if (index === 19) assert.ok(visual.querySelector('pattern'), '2010 bars retain diagonal hatching')
     if (index === 20) {
       for (const label of ['wire cutter', 'mould', 'or', '24 - 48 hrs', '48 - 72 hrs', '200°C - 980°C', '870°C - 1300°C', 'packaging', 'delivery']) {
@@ -57,6 +72,7 @@ export async function run() {
     // A changed catalog ID must not change the saved question or drawing.
     await render(<WritingResultModal entry={{ ...saved, testId: 'writing-full-21-task-1' }} onClose={() => {}} />)
     assert.ok(document.querySelector('svg[data-supplied-writing-diagram]'))
+    for (const detail of suppliedDetails[index] ?? []) assert.ok(document.querySelector('svg[data-supplied-writing-diagram]')?.textContent?.includes(detail), `Saved review ${index} source detail: ${detail}`)
     assert.ok(document.body.textContent?.includes(task.promptLead!))
     assert.ok(document.body.textContent?.includes('My saved response'))
     console.log(`PASS: Full Test ${index}: resumed test, SVG details, enlargement, Task 2 navigation, saved Analyze review`)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, BookOpen, Building2, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users, X } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
@@ -10,6 +10,9 @@ import { useAuthStore } from '@/store/authStore'
 import ClassCoverEditor from '@/features/learningCenter/ClassCoverEditor'
 import '@/features/learningCenter/learning-center.css'
 import '@/features/learningCenter/portal.css'
+import { useBillingStore } from '@/features/billing/store'
+import { useBillingText } from '@/features/billing/copy'
+import '@/features/billing/billing.css'
 
 type ClassView = 'all' | 'teaching' | 'learning'
 const roleLabels = { OWNER: 'Owner', ADMIN: 'Administrator', TEACHER: 'Teacher', STUDENT: 'Student' }
@@ -17,6 +20,9 @@ const roleLabels = { OWNER: 'Owner', ADMIN: 'Administrator', TEACHER: 'Teacher',
 export default function LearningCenterPortal() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
+  const { wallet, refresh } = useBillingStore()
+  useEffect(() => { void refresh() }, [user?.id, refresh])
+  const text = useBillingText()
   const [open, setOpen] = useState(false)
   const [joinOpen, setJoinOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -32,7 +38,7 @@ export default function LearningCenterPortal() {
   ))
   const memberCount = workspaces.reduce((total, workspace) => total + workspace.memberCount, 0)
   const groupCount = workspaces.reduce((total, workspace) => total + workspace.groupCount, 0)
-  const create = () => user ? setOpen(true) : navigate('/login', { state: { from: { pathname: '/learning-center' } } })
+  const create = () => !user ? navigate('/login', { state: { from: { pathname: '/learning-center' } } }) : wallet?.canCreateClass || user.canCreateClass ? setOpen(true) : navigate('/premium')
   const clearFilters = () => { setSearch(''); setView('all') }
 
   return (
@@ -56,6 +62,7 @@ export default function LearningCenterPortal() {
           </div>
         </header>
 
+        {user && !wallet?.canCreateClass && !user.canCreateClass && <section className="billing-glass billing-teacher-banner"><GraduationCap size={25} /><div><strong>{text('Your own class starts with Teacher Individual', 'Class yaratish — O‘qituvchi Individual tarifida', 'Создание классов — с Teacher Individual')}</strong><p>{text('69,999 UZS/month per teacher. Students in your class can choose their own 39,999 UZS/month center plan.', 'Har bir o‘qituvchi uchun oyiga 69 999 so‘m. Class o‘quvchilari oyiga 39 999 so‘mlik markaz tarifini tanlashi mumkin.', '69 999 UZS/мес. за преподавателя. Ученики могут выбрать тариф центра за 39 999 UZS/мес.')}</p></div><Link className="billing-primary" to="/premium">{text('View teacher plans', 'O‘qituvchi tariflarini ko‘rish', 'Тарифы преподавателя')}<ArrowRight size={16} /></Link></section>}
         <section aria-labelledby="classes-list-title" className="lc-portal-section">
           <h2 id="classes-list-title" className="sr-only">Your classrooms</h2>
           {workspaces.length > 0 && <div className="lc-portal-toolbar">

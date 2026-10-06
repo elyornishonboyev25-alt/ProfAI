@@ -41,8 +41,8 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
     </nav>
     <div className="liquid-sidebar-footer">
       <button type="button" className="liquid-support-link" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} title={collapsed ? c('Report an issue') : undefined} aria-label={c('Report an issue')}><CircleHelp size={19} aria-hidden="true" /><span>{c('Report an issue')}</span></button>
-      <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c('Unlimited')} title={collapsed ? c('Unlimited') : undefined}>
-        <Crown size={19} aria-hidden="true" /><span>{c('Unlimited')}</span>
+      <NavLink to="/premium" className="liquid-upgrade-link" aria-label={c('Plans')} title={collapsed ? c('Plans') : undefined}>
+        <Crown size={19} aria-hidden="true" /><span>{c('Plans')}</span>
       </NavLink>
       <LanguageSelector />
       <NavLink to="/account" className="liquid-account">

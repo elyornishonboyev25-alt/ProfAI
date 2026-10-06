@@ -4,6 +4,7 @@ import { env } from '../config/env.js'
 import { assistantContextSchema, endVoiceCall, startVoiceCall, updateVoiceContext } from '../services/realtimeCoach.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { withCoinCharge } from '../services/coinBilling.service.js'
 const router = Router()
 router.get('/capabilities', (_req, res) => res.json({ naturalVoice: Boolean(env.OPENAI_API_KEY), currentResearch: Boolean(env.OPENAI_API_KEY && env.AI_WEB_SEARCH_ENABLED), audioAssessment: Boolean(env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), maxMinutes: env.AI_VOICE_MAX_MINUTES }))
 router.post('/connect', asyncHandler(async (req, res) => {
@@ -12,7 +13,7 @@ router.post('/connect', asyncHandler(async (req, res) => {
   const controller = new AbortController()
   res.on('close', () => { if (!res.writableEnded) controller.abort() })
   try {
-    const call = await startVoiceCall(req.user!.id, payload.sdp, payload.context, payload.history, controller.signal)
+    const call = await withCoinCharge(req.user!.id, 'voice', () => startVoiceCall(req.user!.id, payload.sdp, payload.context, payload.history, controller.signal))
     if (controller.signal.aborted) { await endVoiceCall(req.user!.id, call.id); return }
     return res.status(201).json(call)
   }

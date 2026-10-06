@@ -30,6 +30,7 @@ import guestDiagnosticRoutes from './routes/guestDiagnostic.routes.js'
 import learningCentersRoutes from './routes/learningCenters.routes.js'
 import supportRoutes from './routes/support.routes.js'
 import billingRoutes from './routes/billing.routes.js'
+import { paymentCallbacks, stripeCallback } from './routes/paymentCallbacks.routes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -56,6 +57,7 @@ app.use(
   }),
 )
 app.use(cookieParser())
+app.post('/api/v1/billing/callbacks/stripe', express.raw({ type: 'application/json', limit: '256kb' }), stripeCallback)
 app.use(morgan(isProduction ? 'combined' : 'dev'))
 
 // Authenticate and throttle large multimodal AI payloads before parsing them.
@@ -94,6 +96,7 @@ app.use('/api/v1/guest-diagnostic', guestDiagnosticRoutes)
 app.use('/api/v1/learning-centers', learningCentersRoutes)
 app.use('/api/v1/support', supportRoutes)
 app.use('/api/v1/billing', billingRoutes)
+app.use('/api/v1/billing/callbacks', paymentCallbacks)
 
 app.get('/googleea0efe504503609e.html', (_req, res) => {
   res.type('html').send('google-site-verification: googleea0efe504503609e.html')

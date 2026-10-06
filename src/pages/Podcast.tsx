@@ -57,6 +57,8 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { PODCAST_EPISODES, getPodcastEpisode, type PodcastEpisode } from '@/data/podcasts'
 import { getCommunityPodcast } from '@/services/podcasts'
+import { apiClient } from '@/lib/apiClient'
+import AccessGate from '@/features/billing/AccessGate'
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function formatTime(seconds: number) {
@@ -237,6 +239,7 @@ export default function Podcast() {
   const prefs0 = useRef<Prefs>(initialPrefs)
 
   const [selectedEpisode, setSelectedEpisode] = useState<PodcastEpisode | null>(null)
+  const [pendingEpisode, setPendingEpisode] = useState<PodcastEpisode | null>(null)
   const [activeLevel, setActiveLevel] = useState<string>('All')
   const [libraryQuery, setLibraryQuery] = useState('')
   const [activeDuration, setActiveDuration] = useState<MediaDuration>('All')
@@ -320,8 +323,15 @@ export default function Podcast() {
   }, [])
 
   const captionRequest = useRef(0)
-  const openEpisode = useCallback(async (item: PodcastEpisode) => {
+  const openEpisode = useCallback(async (item: PodcastEpisode, unlocked = false) => {
     const request = ++captionRequest.current
+    if (!unlocked && !PODCAST_EPISODES.slice(0, 3).some(free => free.youtubeId === item.youtubeId)) {
+      try {
+        const access = await apiClient.get<{ unlocked: boolean }>(`/billing/access?${new URLSearchParams({ feature: 'podcast', resource: `podcast:${item.youtubeId}` })}`)
+        if (request !== captionRequest.current) return
+        if (!access.unlocked) { playerRef.current?.pauseVideo(); setPendingEpisode(item); return }
+      } catch { playerRef.current?.pauseVideo(); setPendingEpisode(item); return }
+    }
     setSelectedEpisode(item)
     try {
       const video = await getCommunityPodcast(item.youtubeId)
@@ -1387,6 +1397,7 @@ export default function Podcast() {
 
   return (
     <div className="podcast-library educational-podcast min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
+      {pendingEpisode && <div className="billing-lesson-dialog" role="dialog" aria-modal="true" aria-label="Podcast access"><AccessGate key={pendingEpisode.youtubeId} feature="podcast" resource={`podcast:${pendingEpisode.youtubeId}`} onCancel={() => setPendingEpisode(null)} onUnlocked={() => { const item = pendingEpisode; setPendingEpisode(null); void openEpisode(item, true) }} /></div>}
       <div className="podcast-aurora podcast-aurora-one" />
       <div className="podcast-aurora podcast-aurora-two" />
       <div className="podcast-aurora podcast-aurora-three" />

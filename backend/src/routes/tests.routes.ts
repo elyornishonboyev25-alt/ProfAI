@@ -3,6 +3,7 @@ import { type Response, Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
+import { accessStatus, BillingError } from '../services/coinBilling.service.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { calculateAttemptScore } from '../services/scoring.service.js'
@@ -864,6 +865,7 @@ router.get(
       return res.status(404).json({ message: 'Test not found.' })
     }
 
+    if (!(await accessStatus(req.user!.id, 'test', `test:database:${test.id}`)).unlocked) throw new BillingError('COIN_ACCESS_REQUIRED', 'Open this test with coins first.')
     return res.json({ test })
   }),
 )
@@ -875,6 +877,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const testId = req.params.id
+    if (!(await accessStatus(userId, 'test', `test:database:${testId}`)).unlocked) throw new BillingError('COIN_ACCESS_REQUIRED', 'Open this test with coins first.')
     const { answers, timeSpentSec, assignmentId } = req.body
 
     const test = await prisma.test.findUnique({

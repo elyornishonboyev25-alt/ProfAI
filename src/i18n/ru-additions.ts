@@ -1,5 +1,8 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  "New accounts receive 150 welcome coins. Vocabulary, saved results and selected lessons remain free. Paid practice uses coins.": "Новые аккаунты получают 150 монет. Словарь, результаты и выбранные уроки остаются бесплатными. Платная практика использует монеты.",
+  "150 welcome coins": "150 приветственных монет",
+  "Free activities stay available": "Бесплатные занятия всегда доступны",
   'Word collection': 'Коллекция слов',
   'Recall': 'Запоминание',
   'New perspectives': 'Новые взгляды',

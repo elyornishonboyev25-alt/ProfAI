@@ -11,6 +11,8 @@ import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import PremiumRoute from '@/components/auth/PremiumRoute'
+import BillingBoundary from '@/features/billing/BillingBoundary'
+import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
@@ -445,6 +447,7 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
+      <BillingNotice />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
@@ -474,7 +477,7 @@ function App() {
             >
               <ErrorBoundary key={location.key}>
                 <Suspense fallback={<RouteLoader />}>
-                    <Routes location={location}>
+                    <BillingBoundary><Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={<Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
@@ -860,7 +863,7 @@ function App() {
                       <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><QuickOnboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Onboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
-                    </Routes>
+                    </Routes></BillingBoundary>
                 </Suspense>
               </ErrorBoundary>
 

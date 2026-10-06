@@ -5,16 +5,19 @@ import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from './api'
 import { Avatar, CenterPageHeading, CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from './components'
 import type { CenterExamTrack } from './types'
+import { useBillingStore } from '@/features/billing/store'
 
 export default function GroupsView({ slug, canManage }: { slug: string; canManage: boolean }) {
   const navigate = useNavigate()
+  const { wallet } = useBillingStore()
+  const openCreate = () => wallet?.canCreateClass ? setCreateOpen(true) : navigate('/premium')
   const [createOpen, setCreateOpen] = useState(false)
   const { data, loading, error, refetch } = useAsyncData(() => learningCenterApi.groups(slug), [slug])
   const team = useAsyncData(() => canManage ? learningCenterApi.team(slug) : Promise.resolve({ team: [] }), [slug, canManage])
 
   return (
     <div className="space-y-6">
-      <CenterPageHeading eyebrow="Class cohorts" title="Groups" description="Find your group, teacher, schedule and progress." action={canManage ? <button type="button" onClick={() => setCreateOpen(true)} className={primaryButton}><Plus className="h-4 w-4" /> Create group</button> : undefined} />
+      <CenterPageHeading eyebrow="Class cohorts" title="Groups" description="Find your group, teacher, schedule and progress." action={canManage ? <button type="button" onClick={openCreate} className={primaryButton}><Plus className="h-4 w-4" /> Create group</button> : undefined} />
       {loading && !data ? <CenterSkeleton blocks={6} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : data?.groups.length ? (
         <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
           {data.groups.map((group) => (
@@ -38,7 +41,7 @@ export default function GroupsView({ slug, canManage }: { slug: string; canManag
             </CenterPanel>
           ))}
         </div>
-      ) : <CenterPanel><EmptyState title="Create your first cohort" description="Groups connect teachers, students, targets, assignments and analytics into one operational view." action={canManage ? <button type="button" onClick={() => setCreateOpen(true)} className={primaryButton}>Create a group</button> : undefined} /></CenterPanel>}
+      ) : <CenterPanel><EmptyState title="Create your first cohort" description="Groups connect teachers, students, targets, assignments and analytics into one operational view." action={canManage ? <button type="button" onClick={openCreate} className={primaryButton}>Create a group</button> : undefined} /></CenterPanel>}
 
       {createOpen && <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} slug={slug} teachers={team.data?.team.filter((member) => ['OWNER', 'ADMIN', 'TEACHER'].includes(member.role)) ?? []} onDone={() => { setCreateOpen(false); void refetch() }} />}
     </div>

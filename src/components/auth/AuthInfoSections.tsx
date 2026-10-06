@@ -5,7 +5,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is ProfAI free to use?', answer: 'Yes. All practice, results, AI tools and university planning are currently free for everyone.' },
+  { question: 'Is ProfAI free to use?', answer: 'New accounts receive 150 welcome coins. Vocabulary, saved results and selected lessons remain free. Paid practice uses coins.' },
   { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
   { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]

@@ -25,5 +25,6 @@ export async function hasPremiumAccess(input: { id: string; role: 'USER' | 'ADMI
     where: { userId: input.id },
     select: { expiresAt: true },
   })
-  return Boolean(grant && (grant.expiresAt === null || grant.expiresAt > new Date()))
+  if (grant && (grant.expiresAt === null || grant.expiresAt > new Date())) return true
+  return Boolean(await prisma.billingSubscription.findFirst({ where: { userId: input.id, expiresAt: { gt: new Date() } } }))
 }

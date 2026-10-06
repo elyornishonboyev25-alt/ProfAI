@@ -13,6 +13,7 @@ import { Router, type Response } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
+import { requireTeacherPlan } from '../services/coinBilling.service.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { generateAiText } from '../services/aiProvider.service.js'
@@ -453,6 +454,7 @@ router.post(
   validateBody(createWorkspaceSchema),
   asyncHandler(async (req, res) => {
     const payload = req.body as z.infer<typeof createWorkspaceSchema>
+    await requireTeacherPlan(req.user!.id)
     if (!validCover(payload.coverUrl)) return res.status(400).json({ message: 'Choose a PNG, JPEG or WEBP class photo.' })
     const center = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(776391)`
@@ -863,6 +865,7 @@ router.post(
     const access = await requireCenterAccess(res, req.params.slug, req.user!.id, MANAGER_ROLES)
     if (!access) return
     const payload = req.body as z.infer<typeof createGroupSchema>
+    await requireTeacherPlan(req.user!.id)
     if (payload.teacherId) {
       const teacher = await prisma.learningCenterMember.findFirst({
         where: { centerId: access.centerId, userId: payload.teacherId, role: { in: STAFF_ROLES }, status: LearningCenterMemberStatus.ACTIVE },

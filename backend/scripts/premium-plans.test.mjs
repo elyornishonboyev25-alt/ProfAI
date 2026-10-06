@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { extendPremiumExpiry, PREMIUM_PLANS } from '../dist/utils/premiumPlans.js'
 
 test('premium prices stay positive and longer plans cost less per month', () => {
-  assert.equal(PREMIUM_PLANS.MONTHLY.amountUzs, 79000)
+  assert.equal(PREMIUM_PLANS.MONTHLY.amountUzs, 39000)
   assert.ok(PREMIUM_PLANS.QUARTERLY.amountUzs / 3 < PREMIUM_PLANS.MONTHLY.amountUzs)
   assert.ok(PREMIUM_PLANS.YEARLY.amountUzs / 12 < PREMIUM_PLANS.QUARTERLY.amountUzs / 3)
 })

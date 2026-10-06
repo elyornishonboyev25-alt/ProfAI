@@ -6,6 +6,7 @@ import { requireVideoSubmissionAccess } from '../middleware/videoSubmissionAcces
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { extractYouTubeId } from '../services/shadowing.service.js'
+import { accessStatus, BillingError } from '../services/coinBilling.service.js'
 import { approvedMedia, educationalCatalog, educationalDetail, educationalSummary, type MediaKind } from '../services/educationalMedia.service.js'
 
 const schema = z.object({ url: z.string().min(5).max(400) })
@@ -16,6 +17,10 @@ export function educationalMediaRouter(kind: MediaKind) {
   router.get('/:youtubeId', requireAuth, captionLimit, asyncHandler(async (req, res) => {
     const item = approvedMedia(kind, req.params.youtubeId)
     if (!item) return res.status(404).json({ message: 'This video is not in the curated educational library.' })
+    if (!educationalCatalog(kind).slice(0, 3).some(free => free.youtubeId === item.youtubeId)) {
+      const feature = kind === 'podcasts' ? 'podcast' : 'shadowing'
+      if (!(await accessStatus(req.user!.id, feature, `${feature}:${item.youtubeId}`)).unlocked) throw new BillingError('COIN_ACCESS_REQUIRED', 'Open this lesson with coins first.')
+    }
     return res.json({ video: await educationalDetail(kind, item) })
   }))
   // Retain the API contract for existing clients, while preventing unreviewed videos from entering either library.
@@ -23,6 +28,10 @@ export function educationalMediaRouter(kind: MediaKind) {
     const id = extractYouTubeId(req.body.url)
     const item = id ? approvedMedia(kind, id) : undefined
     if (!item) return res.status(422).json({ message: 'Choose a lesson from the curated educational library. Unreviewed videos cannot be added.' })
+    if (!educationalCatalog(kind).slice(0, 3).some(free => free.youtubeId === item.youtubeId)) {
+      const feature = kind === 'podcasts' ? 'podcast' : 'shadowing'
+      if (!(await accessStatus(req.user!.id, feature, `${feature}:${item.youtubeId}`)).unlocked) throw new BillingError('COIN_ACCESS_REQUIRED', 'Open this lesson with coins first.')
+    }
     return res.json({ video: await educationalDetail(kind, item), created: false })
   }))
   return router

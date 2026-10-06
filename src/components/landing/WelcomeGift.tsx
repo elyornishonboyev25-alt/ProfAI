@@ -4,9 +4,27 @@ import { useTranslation } from 'react-i18next'
 import { ArrowRight, Gift, Sparkles } from 'lucide-react'
 
 const copy = {
-  en: { label: 'A welcome gift for you', title: 'Your first month of Premium is free', open: 'Open your gift', detail: 'Create a new account to unlock full Premium automatically for one month. No card and no automatic renewal.', action: 'Claim your free month' },
-  uz: { label: 'Siz uchun sovg‘a', title: 'Premiumning birinchi oyi bepul', open: 'Sovg‘ani ochish', detail: 'Yangi hisob oching va bir oylik to‘liq Premium avtomatik faollashadi. Karta va avtomatik yangilanish yo‘q.', action: 'Bepul oyni olish' },
-  ru: { label: 'Подарок для вас', title: 'Первый месяц Premium бесплатно', open: 'Открыть подарок', detail: 'Создайте аккаунт, чтобы автоматически получить полный Premium на месяц. Карта не нужна, автоматического продления нет.', action: 'Получить бесплатный месяц' },
+  "en": {
+    "label": "A welcome gift for you",
+    "title": "150 welcome coins to get started",
+    "open": "Open your gift",
+    "detail": "Create an account and receive 150 coins. Try IELTS, SAT, podcast and shadowing. Your saved results and free activities stay available.",
+    "action": "Claim 150 coins"
+  },
+  "uz": {
+    "label": "Siz uchun sovg‘a",
+    "title": "Boshlash uchun 150 sovg‘a tanga",
+    "open": "Sovg‘ani ochish",
+    "detail": "Akkaunt oching va 150 tanga oling. IELTS, SAT, podcast va shadowingni sinang. Natijalar va bepul mashqlar doim ochiq qoladi.",
+    "action": "150 tangani olish"
+  },
+  "ru": {
+    "label": "Подарок для вас",
+    "title": "150 приветственных монет",
+    "open": "Открыть подарок",
+    "detail": "Создайте аккаунт и получите 150 монет. Попробуйте IELTS, SAT, подкасты и шэдоуинг. Результаты и бесплатные занятия всегда доступны.",
+    "action": "Получить 150 монет"
+  }
 } as const
 
 export default function WelcomeGift({ onClaim }: { onClaim: () => void }) {

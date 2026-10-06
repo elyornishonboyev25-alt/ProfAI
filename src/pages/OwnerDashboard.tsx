@@ -9,13 +9,14 @@ import { useAuthStore } from '@/store/authStore'
 import ReviewModeration from '@/components/landing/ReviewModeration'
 import OwnerReportInbox from '@/components/support/OwnerReportInbox'
 import './OwnerDashboard.css'
+import { BILLING_PRODUCTS } from '@/features/billing/catalog'
 
 const OWNER_EMAIL = 'elyornishonboyev000@gmail.com'
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
 type NewUser = { id: string; fullName: string; email: string; createdAt: string }
 type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
-type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null }
-type PaymentRequest = { id: string; plan: string; amountUzs: number; status: string; createdAt: string; user: NewUser }
+type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null; coinWallet?: { balance: number } | null; billingSubscriptions?: Array<{ plan: string; expiresAt: string }> }
+type PaymentRequest = { id: string; plan: string; amountUzs: number; currency?: string; amountMinor?: number; method?: string; status: string; createdAt: string; user: NewUser }
 type Overview = {
   metrics: { totalUsers: number; todayUsers: number; weekUsers: number; totalReports: number; openReports: number }
   users: Page<NewUser>
@@ -176,8 +177,8 @@ export default function OwnerDashboard() {
 
       </div>
     </>}
-
     <ReviewModeration language={language} reload={reload} />
+
 
     <section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="premium-users-title">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -195,12 +196,14 @@ export default function OwnerDashboard() {
             <div className="min-w-0"><p className="font-bold text-slate-900">{person.fullName} {person.nickname && <span className="text-sm font-normal text-slate-500">@{person.nickname}</span>}</p><p className="break-all text-sm text-slate-600">{person.email}</p><p className="mt-1 text-xs text-slate-500">{t('Joined:')} {dateFormat.format(new Date(person.createdAt))}</p>
               <p className={`mt-1 text-xs font-bold ${person.fixedPremium || grantActive ? 'text-emerald-700' : 'text-slate-500'}`}>{person.fixedPremium ? t('Permanent Premium') : grantActive ? `${t(planLabels[grant?.plan ?? ''] ?? grant?.plan ?? '')} · ${grant?.expiresAt ? t('until {date}', { date: dateFormat.format(new Date(grant.expiresAt)) }) : t('Indefinitely')}` : t('No Premium')}</p>
             </div>
+            <p className="text-xs text-slate-500">{person.coinWallet?.balance ?? 0} coins · {person.billingSubscriptions?.map(plan => `${plan.plan} (${dateFormat.format(new Date(plan.expiresAt))})`).join(', ')}</p>
             <div className="flex flex-wrap items-center gap-2">
               <select aria-label={t('Premium duration for {email}', { email: person.email })} value={grantPlans[person.id] ?? 'MONTHLY'} onChange={event => setGrantPlans(value => ({ ...value, [person.id]: event.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+                {BILLING_PRODUCTS.map(product => <option key={product.code} value={product.code}>{product.code} · {product.coins} coins</option>)}
                 <option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
               </select>
               <button type="button" disabled={updatingId === person.id} onClick={() => void grantPremium(person)} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Grant Premium')}</button>
-              {grant && !person.fixedPremium && <button type="button" disabled={updatingId === person.id} onClick={() => void revokePremium(person)} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Revoke')}</button>}
+              {(grant || person.billingSubscriptions?.length) && !person.fixedPremium && <button type="button" disabled={updatingId === person.id} onClick={() => void revokePremium(person)} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Revoke')}</button>}
             </div>
           </div>
         })}
@@ -214,7 +217,7 @@ export default function OwnerDashboard() {
         <select aria-label={t('Payment request status')} value={paymentStatus} onChange={event => { setPaymentStatus(event.target.value); setPaymentPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="SUBMITTED">{t('Needs review')}</option><option value="PENDING">{t('Pending')}</option><option value="APPROVED">{t('Approved')}</option><option value="REJECTED">{t('Rejected')}</option><option value="CANCELED">{t('Canceled')}</option><option value="ALL">{t('All')}</option></select>
       </div>
       <div className="mt-5 divide-y divide-slate-100">
-        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {amount(request.amountUzs)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p><p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {t(planLabels[request.plan] ?? request.plan)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span></div>
+        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {request.currency === 'USD' ? `USD ${((request.amountMinor ?? 0) / 100).toFixed(2)}` : amount(request.amountUzs)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p><p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {t(planLabels[request.plan] ?? request.plan)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span></div>
           {request.status === 'SUBMITTED' && <div className="flex gap-2"><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'APPROVE')} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Approve payment')}</button><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'REJECT')} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Reject')}</button></div>}
         </div>)}
         {payments?.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No requests with this status.')}</p>}

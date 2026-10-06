@@ -3,6 +3,7 @@ import { Settings, Menu, CircleHelp, ShieldCheck } from 'lucide-react'
 import LanguageSelector from './LanguageSelector'
 import { useCopy } from '@/i18n/interface'
 import { useAuthStore } from '@/store/authStore'
+import WalletBadge from '@/features/billing/WalletBadge'
 export default function WorkspaceToolbar() {
   const { c } = useCopy()
   const owner = useAuthStore(state => state.user?.email.trim().toLowerCase() === 'elyornishonboyev000@gmail.com')
@@ -13,6 +14,6 @@ export default function WorkspaceToolbar() {
     </nav></details>
     <button type="button" className="liquid-icon-button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))} aria-label={c('Report an issue')} title={c('Report an issue')}><CircleHelp size={18} /></button>
     {owner && <Link to="/owner" className="liquid-icon-button" aria-label={c('Owner dashboard')} title={c('Owner dashboard')}><ShieldCheck size={18} /></Link>}
-    <LanguageSelector />{pathname !== '/dashboard' && pathname !== '/' ? <Link to="/account" className="liquid-icon-button" aria-label={c('Account settings')}><Settings size={18} /></Link> : null}
+    <WalletBadge /><LanguageSelector />{pathname !== '/dashboard' && pathname !== '/' ? <Link to="/account" className="liquid-icon-button" aria-label={c('Account settings')}><Settings size={18} /></Link> : null}
   </div></div>
 }

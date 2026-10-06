@@ -18,15 +18,10 @@ import {
 import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { hasPremiumAccess } from '../utils/premium.js'
-import { extendPremiumExpiry } from '../utils/premiumPlans.js'
+import { walletOverview } from '../services/coinBilling.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 
 const router = Router()
-
-function welcomePremiumGrant() {
-  const startsAt = new Date()
-  return { create: { plan: 'MONTHLY', source: 'WELCOME', startsAt, expiresAt: extendPremiumExpiry('MONTHLY', null, startsAt) } }
-}
 
 const registerSchema = z.object({
   email: z.string().email().refine((value) => value.toLowerCase().endsWith('@gmail.com'), {
@@ -155,7 +150,10 @@ async function sanitizeUser(user: {
   })
   const grant = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true } })
 
+  const wallet = await walletOverview(user.id)
   return {
+    coinBalance: wallet.balance,
+    canCreateClass: wallet.canCreateClass,
     id: user.id,
     email: user.email,
     fullName: user.fullName,
@@ -356,7 +354,6 @@ router.post(
         fullName,
         email: normalizedEmail,
         passwordHash,
-        premiumGrant: welcomePremiumGrant(),
       },
       select: {
         id: true,
@@ -471,7 +468,6 @@ router.post(
           email,
           fullName: deriveFullNameFromEmail(email),
           passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
-          premiumGrant: welcomePremiumGrant(),
         },
         include: { profile: { select: { onboardingCompletedAt: true } } },
       })
@@ -623,7 +619,6 @@ router.post(
           avatarUrl: identity.googleAvatarUrl,
           // Keep password auth path consistent while creating OAuth-first accounts.
           passwordHash: await hashPassword(`google-oauth-${crypto.randomUUID()}`),
-          premiumGrant: welcomePremiumGrant(),
         },
         select: {
           id: true,

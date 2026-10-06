@@ -1,15 +1,14 @@
+import LandingPlans from '@/features/billing/LandingPlans'
 import { type ReactNode, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, BookOpen, Calculator, Check, ChevronDown, CirclePlay, Crown, GraduationCap, Headphones, Menu, Mic2, PenLine, ShieldCheck, Sparkles, Star, Target, TrendingUp, X, Zap } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, Calculator, Check, ChevronDown, CirclePlay, GraduationCap, Headphones, Menu, Mic2, PenLine, ShieldCheck, Sparkles, Star, Target, TrendingUp, X, Zap } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import LanguageSelector from '@/components/layout/LanguageSelector'
 import { StudyIllustration } from '@/components/visuals/ArenaVisuals'
 import WelcomeGift from '@/components/landing/WelcomeGift'
 import Testimonials from '@/components/landing/Testimonials'
-import { apiClient } from '@/lib/apiClient'
 import { useCopy } from '@/i18n/interface'
-import { premiumLanguage } from '@/i18n/premium'
 import '@/styles/landing-arena.css'
 
 const SUPPORT_EMAIL = 'support@profai.uz'
@@ -22,8 +21,7 @@ const navItems = [
 ] as const
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is there a free plan?', answer: 'Yes. Every new account receives one month of full Premium access for free. No card is required. After that, you can choose a plan.' },
-  { question: 'What happens after the free month?', answer: 'Your welcome Premium access ends after one month. There is no automatic charge or renewal. Choose a plan whenever you want to continue.' },
+  { question: 'Is ProfAI free to use?', answer: 'New accounts receive 150 welcome coins. Vocabulary, saved results and selected lessons remain free. Paid practice uses coins.' },
   { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
   { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]
@@ -33,9 +31,6 @@ const ieltsSkills = [
   { label: 'Writing', icon: PenLine, variant: 'ielts-writing' as const },
   { label: 'Speaking', icon: Mic2, variant: 'ielts-speaking' as const },
 ]
-type Plans = Record<'MONTHLY' | 'QUARTERLY' | 'YEARLY', { amountUzs: number }>
-const currentPlanPrices: Plans = { MONTHLY: { amountUzs: 39000 }, QUARTERLY: { amountUzs: 89000 }, YEARLY: { amountUzs: 299000 } }
-
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const reducedMotion = useReducedMotion()
   return <motion.div className={className} initial={reducedMotion ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .1, margin: '0px 0px -32px 0px' }} transition={{ duration: reducedMotion ? 0 : .62, delay: reducedMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] }}>{children}</motion.div>
@@ -72,16 +67,12 @@ function ArenaPreview() {
 }
 
 export default function Landing() {
-  const { c, language } = useCopy()
-  const uiLanguage = premiumLanguage(language)
-  const locale = uiLanguage === 'uz' ? 'uz-UZ' : uiLanguage === 'ru' ? 'ru-RU' : 'en-US'
+  const { c } = useCopy()
   const navigate = useNavigate()
   const reducedMotion = useReducedMotion()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [scrolled, setScrolled] = useState(false)
-  const [plans, setPlans] = useState<Plans>(currentPlanPrices)
-  const [plansLive, setPlansLive] = useState(false)
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 16)
@@ -89,12 +80,6 @@ export default function Landing() {
     window.addEventListener('scroll', update, { passive: true })
     return () => window.removeEventListener('scroll', update)
   }, [])
-  useEffect(() => {
-    let active = true
-    void apiClient.get<{ plans: Plans }>('/billing/plans', { auth: false }).then(data => { if (active) { setPlans(data.plans); setPlansLive(true) } }).catch(() => { /* Display the current published prices and link to the plans page. */ })
-    return () => { active = false }
-  }, [])
-
   const start = () => navigate('/register')
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false)
@@ -115,7 +100,7 @@ export default function Landing() {
         <div className="landing-arena-hero-copy"><motion.span initial={reducedMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="landing-section-kicker"><span className="landing-arena-pulse" /> {c('YOUR NEXT SCORE STARTS HERE')}</motion.span>
           <motion.h1 id="landing-hero-title" initial={reducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}>{c('Prepare for IELTS and SAT.')} <span>{c('Move toward your university goals.')}</span></motion.h1>
           <motion.p initial={reducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .08, duration: .5 }} className="landing-arena-hero-description">{c('Focused practice, full mock tests, useful review and university planning in one clear workspace.')}</motion.p>
-          <div className="landing-arena-hero-actions"><button type="button" className="landing-button landing-button-primary" onClick={start}>{c('Start with 1 month free')} <ArrowRight size={18} /></button><button type="button" className="landing-button landing-button-secondary" onClick={() => scrollTo('exams')}><CirclePlay size={18} /> {c('Explore the platform')}</button></div>
+          <div className="landing-arena-hero-actions"><button type="button" className="landing-button landing-button-primary" onClick={start}>{c('Start free')} <ArrowRight size={18} /></button><button type="button" className="landing-button landing-button-secondary" onClick={() => scrollTo('exams')}><CirclePlay size={18} /> {c('Explore the platform')}</button></div>
           <div className="landing-arena-hero-trust"><span><Check size={15} /> {c('IELTS Academic & General')}</span><span><Check size={15} /> Digital SAT</span><span><Check size={15} /> {c('Your progress in one place')}</span></div>
           <WelcomeGift onClaim={() => navigate('/register')} />
         </div>
@@ -124,7 +109,7 @@ export default function Landing() {
 
       <Reveal><Testimonials /></Reveal>
 
-      <Reveal><section className="landing-arena-proof" aria-label={c('Platform highlights')}><div><Star size={21} /><span><strong>{c('One workspace')}</strong><small>{c('Everything in its place')}</small></span></div><div><Zap size={21} /><span><strong>{c('Practice with purpose')}</strong><small>{c('IELTS and Digital SAT')}</small></span></div><div><TrendingUp size={21} /><span><strong>{c('See your progress')}</strong><small>{c('From every attempt')}</small></span></div><div><Crown size={21} /><span><strong>{c('Premium from day one')}</strong><small>{c('Your first month is free')}</small></span></div></section></Reveal>
+      <Reveal><section className="landing-arena-proof" aria-label={c('Platform highlights')}><div><Star size={21} /><span><strong>{c('One workspace')}</strong><small>{c('Everything in its place')}</small></span></div><div><Zap size={21} /><span><strong>{c('Practice with purpose')}</strong><small>{c('IELTS and Digital SAT')}</small></span></div><div><TrendingUp size={21} /><span><strong>{c('See your progress')}</strong><small>{c('From every attempt')}</small></span></div><div><Check size={21} /><span><strong>{c('150 welcome coins')}</strong><small>{c('Free activities stay available')}</small></span></div></section></Reveal>
 
       <section id="exams" className="landing-arena-section landing-arena-exams"><SectionIntro eyebrow="CHOOSE YOUR ARENA" title="Serious preparation, built around your exam." description="Focused spaces for the two exams that shape your next step. Each one brings practice, tests and review into a clear flow." />
         <Reveal className="landing-arena-exam-grid"><article className="landing-arena-exam-card landing-arena-exam-card-red"><div className="landing-arena-exam-head"><span>{c('01 / ENGLISH PROFICIENCY')}</span><span className="landing-arena-exam-icon"><Headphones size={23} /></span></div><h3>IELTS <em>{c('Arena')}</em></h3><p>{c('One place for all four skills. Prepare with focused practice and full mock tests for Academic or General Training.')}</p><div className="landing-arena-exam-chips">{['Listening', 'Reading', 'Writing', 'Speaking'].map(item => <span key={item}>{c(item)}</span>)}</div><div className="landing-arena-exam-visual"><StudyIllustration variant="ielts-listening" /><div><strong>{c('Four skills')}</strong><small>{c('Practice → test → review')}</small></div></div><button type="button" onClick={() => navigate('/ielts')} className="landing-arena-exam-link">{c('Explore IELTS')} <ArrowUpRight size={19} /></button></article>
@@ -136,7 +121,7 @@ export default function Landing() {
         <Reveal delay={.1}><div className="landing-arena-beyond"><div className="landing-arena-beyond-icon"><GraduationCap size={26} /></div><div><span>{c('BEYOND TEST DAY')}</span><h3>{c('Keep your university plan connected.')}</h3><p>{c('Bring preparation, academic skills and university research together in one account.')}</p></div><button type="button" onClick={start}>{c('Build your journey')} <ArrowRight size={18} /></button></div></Reveal>
       </section>
 
-      <section id="plans" className="landing-arena-section landing-arena-plans"><Reveal className="landing-arena-plans-panel"><div><span className="landing-section-kicker"><Sparkles size={15} /> {c('YOUR FIRST MONTH IS ON US')}</span><h2>{c('Start with everything. Stay on your terms.')}</h2><p>{c('New members receive one month of full Premium access automatically. After your gift month, keep going with a plan that works for you. No automatic renewal.')}</p><div className="landing-arena-plans-actions"><button type="button" onClick={() => navigate('/register')} className="landing-button landing-button-primary">{c('Claim free month')} <ArrowRight size={18} /></button></div></div><div className="landing-arena-plans-list"><span>{c('ONE PREMIUM EXPERIENCE · THREE OPTIONS')}</span>{(['MONTHLY', 'QUARTERLY', 'YEARLY'] as const).map((code, index) => <div className="landing-arena-plan-line" key={code}><span>{c(['1 month', '3 months', '12 months'][index])}</span><strong>{new Intl.NumberFormat(locale).format(plans[code].amountUzs)} <small>{c('UZS')}</small></strong></div>)}<p><Check size={17} /> {c('Full access in every plan')}</p>{!plansLive && <button type="button" onClick={() => navigate('/premium')} className="landing-plans-fallback">{c('See current prices')} <ArrowUpRight size={16} /></button>}</div></Reveal></section>
+      <section id="plans" className="landing-arena-section"><LandingPlans /></section>
 
       <Reveal><section id="faq" className="landing-arena-section landing-arena-faq"><div><span className="landing-section-kicker"><ShieldCheck size={15} /> {c('GOOD TO KNOW')}</span><h2>{c('Questions before you begin?')}</h2><p>{c('Get a clear picture of what ProfAI offers, then take your first step.')}</p><a href={`mailto:${SUPPORT_EMAIL}`} className="landing-arena-support">{c('Contact support')} <ArrowUpRight size={16} /></a></div><div className="landing-arena-faq-list">{faqs.map(({ question, answer }, index) => <div className={`landing-arena-faq-item${openFaq === index ? ' is-open' : ''}`} key={question}><h3><button id={`landing-faq-question-${index}`} type="button" aria-expanded={openFaq === index} aria-controls={`landing-faq-${index}`} onClick={() => setOpenFaq(openFaq === index ? null : index)}><span>{c(question)}</span><ChevronDown size={19} className={openFaq === index ? 'is-open' : ''} /></button></h3><motion.div id={`landing-faq-${index}`} role="region" aria-labelledby={`landing-faq-question-${index}`} aria-hidden={openFaq !== index} initial={false} animate={{ height: openFaq === index ? 'auto' : 0, opacity: openFaq === index ? 1 : 0 }} transition={{ duration: reducedMotion ? 0 : .3, ease: [.22, 1, .36, 1] }} className="landing-arena-faq-answer"><p>{c(answer)}</p></motion.div></div>)}</div></section></Reveal>
 

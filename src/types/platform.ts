@@ -7,6 +7,8 @@ export type AuthUser = {
   role: UserRole
   premium: boolean
   premiumExpiresAt?: string | null
+  coinBalance?: number
+  canCreateClass?: boolean
   xp: number
   level: number
   currentStreak: number

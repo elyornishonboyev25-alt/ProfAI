@@ -112,6 +112,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({ message: 'Unexpected API error.' }))
+    if (payload.code === 'INSUFFICIENT_COINS') window.dispatchEvent(new CustomEvent('profai:coins-required', { detail: payload.message }))
     throw new ApiError(payload.message ?? 'API request failed.', response.status, payload.code)
   }
 
@@ -121,6 +122,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (responseType === 'raw') return response as T
 
+  if ((path.startsWith('/ai/') || path.startsWith('/billing/')) && rest.method === 'POST') window.dispatchEvent(new Event('profai:billing-updated'))
   return response.json() as Promise<T>
 }
 

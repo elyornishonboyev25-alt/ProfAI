@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { AiGenerationError, generateAiText } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { withCoinCharge } from '../services/coinBilling.service.js'
 
 const router = Router()
 
@@ -34,14 +35,14 @@ router.post(
     const payload = generateBodySchema.parse(req.body ?? {})
     let result
     try {
-      result = await generateAiText({
+      result = await withCoinCharge(req.user!.id, payload.purpose === 'writing_evaluation' ? 'writing' : ['speaking_evaluation', 'speaking_response_analysis'].includes(payload.purpose) ? 'speaking' : 'ai', () => generateAiText({
         userId: req.user!.id,
         purpose: payload.purpose,
         systemPrompt: payload.systemPrompt,
         userMessage: payload.userMessage,
         maxOutputTokens: payload.maxOutputTokens,
         images: payload.images,
-      })
+      }))
     } catch (error) {
       if (error instanceof AiGenerationError) {
         return res.status(error.statusCode).json({ message: error.message, code: error.code })

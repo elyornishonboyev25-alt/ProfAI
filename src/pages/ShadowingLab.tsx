@@ -9,6 +9,7 @@ import { filterMedia, guidedShadowing, SHADOWING_CATALOG } from '@/data/educatio
 import { getShadowingVideo, type ShadowingVideoDetail } from '@/services/shadowing'
 import { formatClock } from '@/lib/youtube'
 import '@/styles/educational-library.css'
+import AccessGate from '@/features/billing/AccessGate'
 
 const categories = [...new Set(SHADOWING_CATALOG.map(item => item.category))]
 export default function ShadowingLab() {
@@ -43,7 +44,7 @@ export default function ShadowingLab() {
   if (active) return <div className="workspace-page learning-page shadowing-studio">
     {loadingCaptions && <p className="learning-caption-status" role="status">{c('Checking for a synced transcript')}</p>}
     {!loadingCaptions && !active.captions?.length && !active.segments.length && <div className="mb-4"><button type="button" className="learning-secondary" onClick={() => void openVideo(active.youtubeId)}>{c('Retry captions')}</button></div>}
-    <ShadowingPlayer key={active.youtubeId} video={active} onBack={() => { requestRef.current?.abort(); setLoadingCaptions(false); setActive(null); if (plannedVideo) setParams({}, { replace: true }) }} />
+    <AccessGate key={active.youtubeId} feature="shadowing" resource={`shadowing:${active.youtubeId}`} onCancel={() => setActive(null)} onUnlocked={() => void openVideo(active.youtubeId)}><ShadowingPlayer key={active.youtubeId} video={active} onBack={() => { requestRef.current?.abort(); setLoadingCaptions(false); setActive(null); if (plannedVideo) setParams({}, { replace: true }) }} /></AccessGate>
   </div>
   return <div className="workspace-page learning-page"><div className="learning-frame">
     <header className="learning-hero">

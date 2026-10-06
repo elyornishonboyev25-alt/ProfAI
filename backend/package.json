@@ -17,6 +17,7 @@
     "test:ai-coach": "npm run build && node --test scripts/assistant-coach.test.mjs scripts/ai-provider.test.mjs scripts/speaking-audio.test.mjs",
     "test:speaking-audio": "node --test scripts/speaking-audio.test.mjs",
     "test:legacy-removal": "node --test scripts/legacy-removal.test.mjs",
+    "test:billing": "npm run build && node --test scripts/coin-billing.test.mjs",
     "test:guest-diagnostic": "npm run build && node --test scripts/guest-diagnostic.test.mjs"
   },
   "dependencies": {

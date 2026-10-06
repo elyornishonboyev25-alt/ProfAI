@@ -1,5 +1,8 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  "New accounts receive 150 welcome coins. Vocabulary, saved results and selected lessons remain free. Paid practice uses coins.": "Yangi akkauntlarga 150 sovg‘a tanga beriladi. Lug‘at, saqlangan natijalar va tanlangan darslar bepul qoladi. Pullik mashqlar tangalar bilan ochiladi.",
+  "150 welcome coins": "150 sovg‘a tanga",
+  "Free activities stay available": "Bepul mashqlar doim ochiq",
   'Word collection': 'So‘zlar to‘plami',
   'Recall': 'Eslab qolish',
   'New perspectives': 'Yangi qarashlar',

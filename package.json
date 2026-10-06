@@ -20,7 +20,7 @@
     "validate:sat-test8": "node scripts/validate-sat-test8.mjs",
     "validate:articles": "node scripts/validate-articles.mjs",
     "test:articles-ui": "node scripts/test-articles-ui.mjs",
-    "build": "npm run check:i18n && npm run validate:articles && npm run validate:writing && npm run validate:speaking && npm run validate:reading && npm run validate:listening && npm run validate:sat-assets && npm run validate:sat-test8 && npm run validate:sat-test9 && npm run validate:sat-questionbank && npm run validate:vocabulary && tsc && vite build",
+    "build": "npm run check:i18n && npm run validate:articles && npm run validate:writing && npm run validate:speaking && npm run validate:reading && npm run validate:listening && npm run validate:sat-assets && npm run validate:sat-test8 && npm run validate:sat-test9 && npm run validate:sat-questionbank && npm run validate:sat-math-answers && npm run validate:vocabulary && tsc && vite build",
     "validate:writing": "node scripts/validate-writing-bank.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "check:i18n": "node scripts/check-interface-translations.mjs",
@@ -36,8 +36,10 @@
     "test:ielts-vocabulary-browser": "node scripts/test-ielts-test-vocabulary-browser.mjs",
     "sync:sat-vocabulary": "node scripts/sync-sat-vocabulary.mjs",
     "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs",
+    "test:sat-question-bank-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-question-bank-ui.tsx",
     "validate:sat-test9": "node scripts/validate-sat-test9.mjs",
-    "validate:sat-questionbank": "node scripts/validate-sat-questionbank.mjs"
+    "validate:sat-questionbank": "node scripts/validate-sat-questionbank.mjs",
+    "validate:sat-math-answers": "node scripts/validate-sat-math-answers.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

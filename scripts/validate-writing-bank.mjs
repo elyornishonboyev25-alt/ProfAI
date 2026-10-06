@@ -5,23 +5,34 @@ import { fileURLToPath } from 'node:url'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
 
-const source = readFileSync(new URL('../src/data/writingFullTests5to30.ts', import.meta.url), 'utf8')
-const practiceSource = readFileSync(new URL('../src/data/writingFullTestPracticeVisuals.ts', import.meta.url), 'utf8')
-const sourceVisualsSource = readFileSync(new URL('../src/data/writingFullTestSourceVisuals.ts', import.meta.url), 'utf8')
 const options = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
-const practice = {}
-runInNewContext(ts.transpileModule(practiceSource, { compilerOptions: options }).outputText, { exports: practice })
-const supplied = {}
-runInNewContext(ts.transpileModule(sourceVisualsSource, { compilerOptions: options }).outputText, { exports: supplied })
-const compiled = ts.transpileModule(source, {
-  compilerOptions: options,
-}).outputText
-const exports = {}
-runInNewContext(compiled, {
-  exports,
-  require: (moduleName) => moduleName === './writingFullTestSourceVisuals' ? supplied : practice,
-})
-const tests = exports.WRITING_TESTS_5_TO_30
+const modules = new Map()
+function loadData(name) {
+  if (modules.has(name)) return modules.get(name)
+  assert.match(name, /^writing\w+$/)
+  const exports = {}
+  modules.set(name, exports)
+  const source = readFileSync(new URL(`../src/data/${name}.ts`, import.meta.url), 'utf8')
+  runInNewContext(ts.transpileModule(source, { compilerOptions: options }).outputText, {
+    exports, require: (moduleName) => loadData(moduleName.replace('./', '')),
+  })
+  return exports
+}
+const practice = loadData('writingFullTestPracticeVisuals')
+const supplied = loadData('writingFullTestSourceVisuals')
+const native = loadData('writingSuppliedTaskVisuals')
+const tests = loadData('writingFullTests5to30').WRITING_TESTS_5_TO_30
+const catalog = loadData('writingTestData').getWritingFullTestCatalog()
+assert.equal(catalog.length, 30)
+// Check the complete live catalog, including the first four full tests.
+const essayPrompts = new Set()
+const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+for (const test of catalog) {
+  const essay = test.tasks.find(task => task.taskType === 'task2')
+  const text = normalize(essay.promptLead + ' ' + essay.promptQuestion)
+  assert.ok(!essayPrompts.has(text), `Duplicate Task 2 in full catalog: ${test.id}`)
+  essayPrompts.add(text)
+}
 
 assert.equal(tests.length, 26)
 const ids = new Set()
@@ -47,9 +58,28 @@ for (let offset = 0; offset < tests.length; offset++) {
     prompts.add(task.promptLead)
   }
   const visualTask = test.tasks[0]
-  assert.ok(visualTask.imageUrl, `Missing Task 1 image: ${test.id}`)
   assert.ok(visualTask.visualContext, `Missing evaluation context: ${test.id}`)
   assert.equal(visualTask.visual, undefined)
+  const essay = test.tasks[1]
+  if (index >= 10) {
+    assert.ok(essay.source, `Missing official Task 2 source: ${test.id}`)
+    const host = new URL(essay.source.url).hostname
+    assert.ok(['www.britishcouncil.sg', 'takeielts.britishcouncil.org', 'ielts.idp.com', 'info.ielts.idp.com', 'ielts.org'].includes(host), `Unofficial source: ${test.id}`)
+    assert.ok(essay.source.material)
+    assert.equal(essay.source.checkedOn, '2026-10-06')
+    assert.ok(essay.promptQuestion)
+  }
+  const nativeVisual = native.SUPPLIED_TASK_VISUALS[index]
+  if (nativeVisual) {
+    assert.equal(visualTask.imageUrl, undefined, `Supplied diagram must use native SVG: ${test.id}`)
+    assert.equal(visualTask.diagram, nativeVisual.diagram)
+    assert.equal(visualTask.promptLead, nativeVisual.lead)
+    assert.equal(visualTask.visualContext, nativeVisual.context)
+    visualKinds.add(nativeVisual.kind)
+    kindCounts.set(nativeVisual.kind, (kindCounts.get(nativeVisual.kind) ?? 0) + 1)
+    continue
+  }
+  assert.ok(visualTask.imageUrl, `Missing Task 1 image: ${test.id}`)
   assert.equal(visualTask.diagram, undefined)
   assert.ok(!images.has(visualTask.imageUrl), `Repeated image: ${visualTask.imageUrl}`)
   images.add(visualTask.imageUrl)
@@ -98,8 +128,12 @@ for (const kind of ['Bar chart', 'Line graph', 'Pie charts', 'Maps', 'Process di
   assert.ok(visualKinds.has(kind), `Missing Task 1 diagram variety: ${kind}`)
 }
 assert.equal(Object.keys(supplied.SOURCE_TASK_VISUALS).length, 13)
-assert.equal(Object.keys(practice.PRACTICE_TASK_VISUALS).length, 13)
+assert.equal(Object.keys(practice.PRACTICE_TASK_VISUALS).length, 10)
+assert.equal(Object.keys(native.SUPPLIED_TASK_VISUALS).length, 3)
+assert.equal(tests[13].tasks[0].diagram, 'major-sports-1997-2017')
+assert.equal(tests[14].tasks[0].diagram, 'school-travel-1990-2010')
+assert.equal(tests[15].tasks[0].diagram, 'supplied-brick-manufacturing')
 assert.ok(kindCounts.get('Maps') >= 2)
 assert.ok(kindCounts.get('Process diagram') >= 2)
 execFileSync(process.execPath, [fileURLToPath(new URL('./generate-writing-practice-images.mjs', import.meta.url)), '--check'])
-console.log('Writing bank valid: 26 full tests, 52 unique tasks, 26 Task 1 visuals.')
+console.log('Writing bank valid: 30 full tests, 30 unique essays, 21 official Task 2 replacements, 3 supplied native SVG diagrams.')

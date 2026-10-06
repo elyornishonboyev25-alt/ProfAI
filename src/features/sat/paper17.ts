@@ -50,8 +50,13 @@ function sectionFor(moduleId: SATModuleId): SATSection {
 const questions = paper17QuestionsData as Paper17Question[]
 
 function buildQuestion(question: Paper17Question): SATQuestion {
+  // The imported key truncated the solution and omitted its exact fraction.
+  const answerCorrection = question.id === 'math1-22'
+    ? { correctAnswer: '18/17', acceptedAnswers: ['18/17', '1.058', '1.059'], tolerance: 0.0000001 }
+    : {}
   return {
     ...question,
+    ...answerCorrection,
     section: sectionFor(question.moduleId),
     skill: DOMAIN_SKILLS[question.domain] ?? question.domain,
     difficulty: difficulty(question.moduleId, question.number),

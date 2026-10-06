@@ -47,12 +47,13 @@ export type WritingTask = {
   chart?: WritingChartData
   visual?: WritingDataVisual
   visualContext?: string
-  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making' | 'riverside-park'
+  diagram?: 'smoked-fish' | 'renewable-transport' | 'further-education' | 'radio-tv-audiences' | 'brick-making' | 'riverside-park' | 'major-sports-1997-2017' | 'school-travel-1990-2010' | 'supplied-brick-manufacturing'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string
   promptQuestion?: string
   instructions?: string
+  source?: { publisher: 'British Council' | 'IDP IELTS' | 'IELTS'; url: string; material: string; checkedOn: string }
   available: boolean
 }
 

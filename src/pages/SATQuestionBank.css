@@ -1,2 +1,807 @@
-.sat-bank-page{min-height:100vh;padding:20px 16px 90px;background:linear-gradient(145deg,#eef3fa,#f8fafc 48%,#fff0f1);color:#171a28}.sat-bank-wrap{max-width:1390px;margin:0 auto}.sat-bank-back{display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:8px 0;color:#647084;font-size:12px;font-weight:900;cursor:pointer}.sat-bank-hero{margin:13px 0 20px;overflow:hidden;border:1px solid #fff;border-radius:30px;background:radial-gradient(circle at 85% 15%,#fce2e7,transparent 30%),linear-gradient(125deg,#fff,#f7f9fd);padding:clamp(23px,4vw,48px);box-shadow:0 20px 60px #33415516}.sat-bank-hero>span{display:inline-flex;align-items:center;gap:8px;color:#d12c3d;font-size:10px;font-weight:900;letter-spacing:.16em}.sat-bank-hero h1{margin:11px 0 7px;font-size:clamp(42px,6vw,77px);font-weight:950;letter-spacing:-.075em;line-height:1}.sat-bank-hero h1 span{color:#e63345}.sat-bank-hero p{max-width:690px;color:#68748a;font-size:14px;line-height:1.6}.sat-bank-hero>div{display:flex;gap:8px;align-items:center;margin-top:20px;color:#728098;font-size:11px;font-weight:750}.sat-bank-hero>div strong{margin-left:8px;color:#bd2637;font-size:17px}.sat-bank-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.7fr);gap:17px}.sat-bank-panel,.sat-bank-session{border:1px solid #fff;border-radius:27px;background:#ffffffc7;padding:clamp(19px,3vw,30px);box-shadow:0 20px 55px #33415516;backdrop-filter:blur(20px)}.sat-bank-panel-title,.sat-bank-session-top,.sat-bank-session-footer{display:flex;align-items:center;justify-content:space-between;gap:13px}.sat-bank-panel-title h2,.sat-bank-session-top h2{margin:0;font-size:23px;font-weight:900;letter-spacing:-.04em}.sat-bank-panel-title span{font-size:11px;color:#728197;font-weight:850}.sat-bank-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}.sat-bank-filters label{display:flex;flex-direction:column;gap:7px;color:#47546a;font-size:11px;font-weight:850}.sat-bank-filters select{min-height:45px;border:1px solid #e0e7f0;border-radius:12px;background:#fff;padding:0 11px;color:#20283a;font:inherit}.sat-bank-primary{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:14px;background:linear-gradient(110deg,#e53343,#bd1f32);padding:12px 17px;color:#fff;font-size:12px;font-weight:900;box-shadow:0 12px 25px #d4293c35;cursor:pointer}.sat-bank-primary:disabled{opacity:.45;cursor:not-allowed}.sat-bank-skills{display:grid;gap:9px;margin-top:23px}.sat-bank-skills button{display:flex;justify-content:space-between;gap:12px;border:1px solid #e5eaf1;border-radius:12px;background:#fff;padding:12px;text-align:left;cursor:pointer}.sat-bank-skills button span{font-size:11px;font-weight:800}.sat-bank-skills button strong{flex:none;color:#c22737;font-size:10px}.sat-bank-muted{margin:19px 0 0;color:#8090a3;font-size:11px;line-height:1.6}.sat-bank-session-top{margin-bottom:18px}.sat-bank-session-top span{color:#d12c3c;font-size:10px;font-weight:900;letter-spacing:.14em}.sat-bank-session-top button,.sat-bank-session-footer button:not(.sat-bank-primary),.sat-bank-finish>button:not(.sat-bank-primary){display:inline-flex;align-items:center;gap:7px;border:1px solid #e1e8f0;border-radius:12px;background:#fff;padding:10px 12px;color:#56657c;font-size:11px;font-weight:850;cursor:pointer}.sat-bank-question{min-height:430px;overflow:hidden;border:1px solid #dce3eb;border-radius:17px}.sat-bank-session-footer{justify-content:flex-end;margin-top:15px}.sat-bank-session-footer span{margin-right:auto;color:#8490a1;font-size:11px;font-weight:800}.sat-bank-finish{display:flex;flex-direction:column;align-items:flex-start;gap:13px;padding:20px;color:#149864}.sat-bank-finish p{max-width:580px;color:#66758b;font-size:13px;line-height:1.6}.sat-bank-finish .sat-bank-error{color:#c32637}@media(max-width:800px){.sat-bank-grid{grid-template-columns:1fr}.sat-bank-filters{grid-template-columns:1fr}.sat-bank-session-top{align-items:flex-start}.sat-bank-session-top h2{font-size:18px}}
-.sat-bank-review{display:grid;gap:10px;width:100%;margin-top:10px}.sat-bank-review article{border:1px solid #e5eaf1;border-radius:14px;background:#fff;padding:15px;color:#293245}.sat-bank-review article strong{font-size:12px}.sat-bank-review article p{margin:6px 0;color:#69778d;font-size:11px}.sat-bank-review article>div{font-size:12px;line-height:1.6;color:#344157}
+.sat-bank-page {
+  min-height: 100vh;
+  padding: 20px 16px 90px;
+  background: linear-gradient(145deg, #eef3fa, #f8fafc 48%, #fff0f1);
+  color: #171a28;
+}
+.sat-bank-wrap {
+  max-width: 1390px;
+  margin: 0 auto;
+}
+.sat-bank-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  color: #647084;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.sat-bank-hero {
+  margin: 13px 0 20px;
+  overflow: hidden;
+  border: 1px solid #fff;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 85% 15%, #fce2e7, transparent 30%),
+    linear-gradient(125deg, #fff, #f7f9fd);
+  padding: clamp(23px, 4vw, 48px);
+  box-shadow: 0 20px 60px #33415516;
+}
+.sat-bank-hero > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d12c3d;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+.sat-bank-hero h1 {
+  margin: 11px 0 7px;
+  font-size: clamp(42px, 6vw, 77px);
+  font-weight: 950;
+  letter-spacing: -0.075em;
+  line-height: 1;
+}
+.sat-bank-hero h1 span {
+  color: #e63345;
+}
+.sat-bank-hero p {
+  max-width: 690px;
+  color: #68748a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.sat-bank-hero > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 20px;
+  color: #728098;
+  font-size: 11px;
+  font-weight: 750;
+}
+.sat-bank-hero > div strong {
+  margin-left: 8px;
+  color: #bd2637;
+  font-size: 17px;
+}
+.sat-bank-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+  gap: 17px;
+}
+.sat-bank-panel,
+.sat-bank-session {
+  border: 1px solid #fff;
+  border-radius: 27px;
+  background: #ffffffc7;
+  padding: clamp(19px, 3vw, 30px);
+  box-shadow: 0 20px 55px #33415516;
+  backdrop-filter: blur(20px);
+}
+.sat-bank-panel-title,
+.sat-bank-session-top,
+.sat-bank-session-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+}
+.sat-bank-panel-title h2,
+.sat-bank-session-top h2 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+.sat-bank-panel-title span {
+  font-size: 11px;
+  color: #728197;
+  font-weight: 850;
+}
+.sat-bank-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+}
+.sat-bank-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #47546a;
+  font-size: 11px;
+  font-weight: 850;
+}
+.sat-bank-filters select {
+  min-height: 45px;
+  border: 1px solid #e0e7f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 11px;
+  color: #20283a;
+  font: inherit;
+}
+.sat-bank-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #e53343, #bd1f32);
+  padding: 12px 17px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 12px 25px #d4293c35;
+  cursor: pointer;
+}
+.sat-bank-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sat-bank-skills {
+  display: grid;
+  gap: 9px;
+  margin-top: 23px;
+}
+.sat-bank-skills button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5eaf1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.sat-bank-skills button span {
+  font-size: 11px;
+  font-weight: 800;
+}
+.sat-bank-skills button strong {
+  flex: none;
+  color: #c22737;
+  font-size: 10px;
+}
+.sat-bank-muted {
+  margin: 19px 0 0;
+  color: #8090a3;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.sat-bank-session-top {
+  margin-bottom: 18px;
+}
+.sat-bank-session-top span {
+  color: #d12c3c;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+.sat-bank-session-top button,
+.sat-bank-session-footer button:not(.sat-bank-primary),
+.sat-bank-finish > button:not(.sat-bank-primary) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e1e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #56657c;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.sat-bank-question {
+  min-height: 430px;
+  overflow: hidden;
+  border: 1px solid #dce3eb;
+  border-radius: 17px;
+}
+.sat-bank-session-footer {
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+.sat-bank-session-footer span {
+  margin-right: auto;
+  color: #8490a1;
+  font-size: 11px;
+  font-weight: 800;
+}
+.sat-bank-finish {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 20px;
+  color: #149864;
+}
+.sat-bank-finish p {
+  max-width: 580px;
+  color: #66758b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.sat-bank-finish .sat-bank-error {
+  color: #c32637;
+}
+@media (max-width: 800px) {
+  .sat-bank-grid {
+    grid-template-columns: 1fr;
+  }
+  .sat-bank-filters {
+    grid-template-columns: 1fr;
+  }
+  .sat-bank-session-top {
+    align-items: flex-start;
+  }
+  .sat-bank-session-top h2 {
+    font-size: 18px;
+  }
+}
+.sat-bank-review {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+.sat-bank-review article {
+  border: 1px solid #e5eaf1;
+  border-radius: 14px;
+  background: #fff;
+  padding: 15px;
+  color: #293245;
+}
+.sat-bank-review article strong {
+  font-size: 12px;
+}
+.sat-bank-review article p {
+  margin: 6px 0;
+  color: #69778d;
+  font-size: 11px;
+}
+.sat-bank-review article > div {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #344157;
+}
+
+/* Practice history and a focused, responsive question review. */
+.sat-bank-wrap {
+  max-width: 1180px;
+}
+.sat-bank-page {
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+}
+.sat-bank-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #e1e7ef;
+  border-radius: 18px;
+  background: #ffffffb5;
+  width: fit-content;
+  max-width: 100%;
+}
+.sat-bank-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #5d6b80;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sat-bank-tabs button[aria-current='page'] {
+  background: #fff;
+  color: #c5273b;
+  box-shadow: 0 3px 12px #33415512;
+}
+.sat-bank-tabs button > span {
+  padding: 2px 7px;
+  border-radius: 7px;
+  background: #fcecef;
+  font-size: 11px;
+}
+.sat-bank-page button:focus-visible,
+.sat-bank-page select:focus-visible {
+  outline: 3px solid #d12c3d;
+  outline-offset: 3px;
+}
+.sat-bank-page button:disabled {
+  cursor: default;
+}
+.sat-bank-filters select {
+  width: 100%;
+  min-width: 0;
+  font-size: 13px;
+}
+.sat-bank-muted {
+  font-size: 13px;
+  color: #65748b;
+}
+.sat-bank-history {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.sat-bank-history-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  border: 1px solid #e0e6ef;
+  border-radius: 19px;
+  background: #fff;
+  padding: 20px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.sat-bank-history-card:hover {
+  border-color: #e8a4ae;
+  box-shadow: 0 8px 24px #3341550c;
+}
+.sat-bank-history-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: #fff0f2;
+  color: #cf2940;
+}
+.sat-bank-history-info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.sat-bank-history-info > strong {
+  font-size: 16px;
+  color: #1d293d;
+}
+.sat-bank-history-info > small,
+.sat-bank-history-info > span {
+  font-size: 12px;
+  color: #65748b;
+  line-height: 1.6;
+}
+.sat-bank-history-action {
+  display: grid;
+  gap: 7px;
+  text-align: right;
+  color: #c5273b;
+}
+.sat-bank-history-action > strong {
+  font-size: 25px;
+  letter-spacing: -0.05em;
+}
+.sat-bank-history-action > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.sat-bank-mock-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 23px;
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  color: #b62539;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+.sat-bank-mock-link svg {
+  flex-shrink: 0;
+}
+.sat-bank-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 45px 20px;
+  color: #c5273b;
+  border: 1px dashed #e3ccd2;
+  border-radius: 20px;
+  background: #fff8fa;
+}
+.sat-bank-empty h3 {
+  margin: 0;
+  color: #263247;
+  font-size: 19px;
+}
+.sat-bank-empty p {
+  margin: 0;
+  max-width: 400px;
+  color: #65748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.sat-bank-empty .sat-bank-primary {
+  margin-top: 8px;
+}
+.sat-bank-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0;
+}
+.sat-bank-review-heading h2 {
+  margin: 7px 0;
+  font-size: clamp(24px, 4vw, 35px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #172337;
+}
+.sat-bank-eyebrow {
+  margin: 0;
+  color: #737f92;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+.sat-bank-review-heading .sat-bank-muted {
+  margin-top: 8px;
+}
+.sat-bank-score {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  min-width: 78px;
+  min-height: 78px;
+  border-radius: 22px;
+  background: #ecf8f2;
+  color: #147c55;
+  font-size: 28px;
+}
+.sat-bank-review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.sat-bank-review-filters button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid #e2e7ef;
+  border-radius: 12px;
+  background: #fff;
+  padding: 9px 13px;
+  color: #5b6880;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sat-bank-review-filters button[aria-pressed='true'] {
+  border-color: #c5273b;
+  background: #fff0f2;
+  color: #b62539;
+}
+.sat-bank-review-filters span {
+  border-radius: 6px;
+  background: #eef1f6;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+.sat-bank-review-layout {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.sat-bank-navigator {
+  padding: 16px;
+  border: 1px solid #e3e8f0;
+  border-radius: 17px;
+  background: #f8fafc;
+}
+.sat-bank-navigator p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 850;
+  color: #5d6b80;
+}
+.sat-bank-navigator > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.sat-bank-number {
+  width: 36px;
+  min-height: 40px;
+  border: 1px solid #dce4ef;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.sat-bank-number.correct,
+.sat-bank-outcome.correct {
+  background: #eaf8f0;
+  color: #14764f;
+  border-color: #c5e8d6;
+}
+.sat-bank-number.incorrect,
+.sat-bank-outcome.incorrect {
+  background: #fff0f1;
+  color: #be2e42;
+  border-color: #f3c7ce;
+}
+.sat-bank-number.skipped,
+.sat-bank-outcome.skipped {
+  background: #f0f3f8;
+  color: #617188;
+  border-color: #dce4ef;
+}
+.sat-bank-number[aria-current='step'] {
+  outline: 2px solid #253550;
+  outline-offset: 2px;
+}
+.sat-bank-review-detail {
+  min-width: 0;
+}
+.sat-bank-detail-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sat-bank-detail-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #1d293d;
+}
+.sat-bank-outcome {
+  border: 1px solid;
+  border-radius: 99px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 850;
+}
+.sat-bank-question-meta {
+  margin: 10px 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #65748b;
+  overflow-wrap: anywhere;
+}
+.sat-bank-answer-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.sat-bank-answer-summary > div {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 16px;
+}
+.sat-bank-answer-summary > div:last-child {
+  background: #f0faf5;
+  border-color: #cfeadb;
+}
+.sat-bank-answer-summary span {
+  font-size: 11px;
+  font-weight: 750;
+  color: #65748b;
+}
+.sat-bank-answer-summary strong {
+  font-size: 15px;
+  color: #29364b;
+  overflow-wrap: anywhere;
+}
+.sat-bank-explanation {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #e2e7ef;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #344157;
+  overflow-wrap: anywhere;
+}
+.sat-bank-explanation h4 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #243148;
+}
+.sat-bank-review-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 22px;
+}
+.sat-bank-review-pagination button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #dce4ee;
+  border-radius: 12px;
+  background: #fff;
+  color: #344157;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sat-bank-review-pagination button:disabled {
+  opacity: 0.4;
+}
+.sat-bank-review-pagination > span {
+  font-size: 12px;
+  color: #65748b;
+}
+.sat-bank-progress {
+  height: 5px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: #e7ecf3;
+  overflow: hidden;
+}
+.sat-bank-progress > span {
+  display: block;
+  height: 100%;
+  background: #d52b40;
+  transition: width 0.2s;
+}
+.sat-bank-alert {
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff3df;
+  color: #905c11;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.sat-bank-alert button {
+  border: 0;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sat-bank-question button:disabled {
+  opacity: 1;
+}
+.sat-bank-question button:disabled:hover {
+  background: inherit;
+}
+@media (max-width: 800px) {
+  .sat-bank-review-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .sat-bank-navigator {
+    padding: 13px;
+  }
+  .sat-bank-hero h1 {
+    font-size: clamp(36px, 9vw, 58px);
+  }
+  .sat-bank-hero {
+    border-radius: 23px;
+  }
+  .sat-bank-panel,
+  .sat-bank-session {
+    border-radius: 22px;
+  }
+  .sat-bank-session-footer {
+    flex-wrap: wrap;
+  }
+  .sat-bank-session-footer > span {
+    flex-basis: 100%;
+  }
+  .sat-bank-review-heading {
+    align-items: flex-start;
+  }
+  .sat-bank-score {
+    min-width: 64px;
+    min-height: 64px;
+    font-size: 24px;
+  }
+  .sat-bank-tabs {
+    width: 100%;
+  }
+  .sat-bank-tabs button {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+  .sat-bank-history-card {
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 12px;
+  }
+  .sat-bank-history-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-basis: 100%;
+    border-top: 1px solid #edf0f5;
+    padding-top: 12px;
+  }
+  .sat-bank-history-action > strong {
+    font-size: 20px;
+  }
+  .sat-bank-history-info > strong {
+    font-size: 14px;
+  }
+  .sat-bank-answer-summary {
+    gap: 8px;
+  }
+  .sat-bank-answer-summary > div {
+    padding: 12px;
+  }
+  .sat-bank-explanation {
+    padding: 16px;
+  }
+  .sat-bank-session-top > div {
+    min-width: 0;
+  }
+  .sat-bank-session-top h2 {
+    overflow-wrap: anywhere;
+  }
+  .sat-bank-session-top button {
+    flex-shrink: 0;
+  }
+  .sat-bank-question {
+    min-height: 0;
+  }
+  .sat-bank-review-filters button {
+    flex: 1 1 calc(50% - 8px);
+  }
+  .sat-bank-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .sat-bank-panel-title h2 {
+    font-size: 20px;
+  }
+  .sat-bank-hero > div {
+    flex-wrap: wrap;
+  }
+}
+/* Bank questions grow with their text instead of inheriting exam-screen height. */
+.sat-bank-question > div,
+.sat-bank-question .sat-exam-canvas {
+  min-height: 0;
+}

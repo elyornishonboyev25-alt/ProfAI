@@ -1,4 +1,5 @@
 import type { WritingEvaluation, WritingError } from '@/services/geminiAI'
+import type { WritingTask } from '@/data/writingTestData'
 
 const HISTORY_VERSION = 'v1'
 const ENTRY_LIMIT = 30
@@ -26,6 +27,7 @@ export interface WritingAnalysisEntry {
   correctedVersion: string
   xpAwarded: number
   fullTest?: { id: string; overallBand: number }
+  taskSnapshot?: WritingTask
 }
 
 function getStorageKey(userId?: string): string {
@@ -66,6 +68,7 @@ export function saveWritingAnalysis(
   studentResponse: string,
   evaluation: WritingEvaluation,
   fullTest?: { id: string; overallBand: number },
+  taskSnapshot?: WritingTask,
 ): WritingAnalysisEntry {
   const entry: WritingAnalysisEntry = {
     attemptKey: `writing-${testId}-${Date.now()}`,
@@ -89,6 +92,7 @@ export function saveWritingAnalysis(
     correctedVersion: evaluation.correctedVersion,
     xpAwarded: evaluation.xpAwarded,
     fullTest,
+    taskSnapshot,
   }
 
   if (typeof window === 'undefined') return entry

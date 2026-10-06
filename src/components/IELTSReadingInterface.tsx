@@ -38,6 +38,7 @@ import TestVocabulary from './vocab/TestVocabulary'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
+import OldWaterMillDiagram from './OldWaterMillDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
 import { optionDisplayText, readingQuestionGroups } from '../utils/readingPresentation'
 
@@ -258,6 +259,7 @@ export default function IELTSReadingInterface({
   const [audioDuration, setAudioDuration] = useState(0)
   const [audioError, setAudioError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const lastAudioTimeRef = useRef(0)
   const submissionStartedRef = useRef(false)
   // True while a clip is meant to be playing. Simulation blocks external pauses;
   // practice and review can clear this for an intentional pause.
@@ -506,6 +508,13 @@ export default function IELTSReadingInterface({
   }, [isListening, test.sections])
 
   useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (!isReviewMode && testMode === 'simulation') audio.setAttribute('disableremoteplayback', '')
+    else audio.removeAttribute('disableremoteplayback')
+  }, [isTestActive, isReviewMode, testMode])
+
+  useEffect(() => {
     if (!isListening || !audioStarted || audioDone) return
     const audio = audioRef.current
     if (!audio) return
@@ -519,6 +528,7 @@ export default function IELTSReadingInterface({
     const audio = audioRef.current
     if (audio) {
       audio.pause()
+      lastAudioTimeRef.current = 0
       try { audio.currentTime = 0 } catch { /* ignore */ }
     }
     setIsAudioPlaying(false)
@@ -547,6 +557,7 @@ export default function IELTSReadingInterface({
     setAudioError(null)
     const audio = audioRef.current
     if (audio) {
+      if (!isReviewMode && testMode === 'simulation') audio.playbackRate = 1
       audio.play().then(() => setIsAudioPlaying(true)).catch(() => {
         setIsAudioPlaying(false)
         setAudioError('Audio could not start. Please check your connection and try again.')
@@ -604,6 +615,7 @@ export default function IELTSReadingInterface({
   const handleAudioLoadedMetadata = () => {
     const audio = audioRef.current
     if (!audio) return
+    lastAudioTimeRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0
     setAudioDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
     setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
     setAudioError(null)
@@ -612,7 +624,25 @@ export default function IELTSReadingInterface({
   const handleAudioTimeUpdate = () => {
     const audio = audioRef.current
     if (!audio) return
+    // A seeking event must not replace the last permitted playback position.
+    if (!audio.seeking) lastAudioTimeRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0
     setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
+  }
+
+  const handleAudioSeeking = () => {
+    const audio = audioRef.current
+    if (!audio || isReviewMode || testMode !== 'simulation' || !shouldPlayRef.current) return
+    if (Math.abs(audio.currentTime - lastAudioTimeRef.current) > 0.1) {
+      audio.currentTime = lastAudioTimeRef.current
+      setAudioCurrentTime(lastAudioTimeRef.current)
+    }
+  }
+
+  const handleAudioRateChange = () => {
+    const audio = audioRef.current
+    if (!audio || isReviewMode || testMode !== 'simulation') return
+    if (audio.playbackRate !== 1) audio.playbackRate = 1
+    if (audio.defaultPlaybackRate !== 1) audio.defaultPlaybackRate = 1
   }
 
   const handleAudioLoadError = () => {
@@ -638,6 +668,7 @@ export default function IELTSReadingInterface({
         handleAudioLoadError()
         return
       }
+      lastAudioTimeRef.current = 0
       setCurrentAudioIndex(next)
     } else {
       shouldPlayRef.current = false
@@ -2982,7 +3013,7 @@ export default function IELTSReadingInterface({
             <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
 
-          <PremiumCard onClick={() => { setTestMode('simulation'); handleStartTest(); }} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
+          <PremiumCard onClick={() => handleStartTest({ mode: 'simulation' })} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
             <div className="flex items-center gap-4 mb-8">
               <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
                 <ComputerDesktopIcon className="w-8 h-8 text-white" />
@@ -3018,6 +3049,8 @@ export default function IELTSReadingInterface({
     </div>
   )
 
+  const selectionToolbarWidth = testMode === 'practice' ? 340 : 220
+
   const renderMarkTools = () => (
     <>
       <AnimatePresence>
@@ -3028,10 +3061,11 @@ export default function IELTSReadingInterface({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             data-reading-selection-toolbar="1"
-            className="fixed z-[100] flex w-[340px] max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
+            className="fixed z-[100] flex max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-2xl border border-red-100 bg-white/95 p-2 shadow-[0_20px_40px_rgba(220,38,38,0.2)] backdrop-blur-md"
             style={{
+              width: selectionToolbarWidth,
               top: selectionRect.top >= 64 ? selectionRect.top - 60 : selectionRect.bottom + 10,
-              left: Math.max(8, Math.min(window.innerWidth - Math.min(340, window.innerWidth - 16) - 8, selectionRect.left + selectionRect.width / 2 - Math.min(340, window.innerWidth - 16) / 2)),
+              left: Math.max(8, Math.min(window.innerWidth - Math.min(selectionToolbarWidth, window.innerWidth - 16) - 8, selectionRect.left + selectionRect.width / 2 - Math.min(selectionToolbarWidth, window.innerWidth - 16) / 2)),
             }}
           >
             <button
@@ -3053,24 +3087,26 @@ export default function IELTSReadingInterface({
               <ChatBubbleBottomCenterTextIcon className="w-4 h-4 text-red-500" />
               Note
             </button>
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                const sel = window.getSelection()
-                const word = (selectedText || sel?.toString() || '').trim()
-                if (!word) return
-                const anchor = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement
-                const sentence = (anchor?.closest('p, div, li')?.textContent ?? word).replace(/\s+/g, ' ').trim()
-                setAiLookup({ word, sentence })
-                setSelectionRect(null)
-              }}
-              className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
-              title="Ask AI to explain this word"
-            >
-              <SparklesIcon className="w-4 h-4" />
-              Ask AI
-            </button>
+            {testMode === 'practice' && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  const sel = window.getSelection()
+                  const word = (selectedText || sel?.toString() || '').trim()
+                  if (!word) return
+                  const anchor = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement
+                  const sentence = (anchor?.closest('p, div, li')?.textContent ?? word).replace(/\s+/g, ' ').trim()
+                  setAiLookup({ word, sentence })
+                  setSelectionRect(null)
+                }}
+                className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
+                title="Ask AI to explain this word"
+              >
+                <SparklesIcon className="w-4 h-4" />
+                Ask AI
+              </button>
+            )}
             <div className={`absolute left-1/2 -ml-1.5 h-3 w-3 rotate-45 border-red-200 bg-white ${selectionRect.top >= 64 ? '-bottom-1.5 border-b border-r' : '-top-1.5 border-l border-t'}`} />
           </motion.div>
         )}
@@ -3162,7 +3198,7 @@ export default function IELTSReadingInterface({
   // Renders the listening rich-layout blocks (notes / flow / grid / mcq / table)
   // using the exact same visual language as the Reading question panel.
   const renderListeningGroup = (group: ListeningGroup, groupKey: number) => {
-    const blankInput = (number: number, width: 'sm' | 'md' | 'lg' | 'xl' = 'md', onDiagram = false) => {
+    const blankInput = (number: number, width: 'sm' | 'md' | 'lg' | 'xl' = 'md', onDiagram = false, letters?: RegExp) => {
       const question = listeningQuestionByNumber.get(number)
       if (!question) return null
       const meta = getQuestionReviewMeta(question)
@@ -3193,7 +3229,7 @@ export default function IELTSReadingInterface({
             autoCapitalize={onDiagram ? 'characters' : undefined}
             spellCheck={false}
             value={inputValue}
-            onChange={(event) => handleAnswerChange(question.id, onDiagram ? event.target.value.toUpperCase() : event.target.value)}
+            onChange={(event) => handleAnswerChange(question.id, letters ? event.target.value.toUpperCase().replace(letters, '').slice(0, 1) : onDiagram ? event.target.value.toUpperCase() : event.target.value)}
             onFocus={(event) => {
               setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(question.id))
               if (onDiagram) event.currentTarget.select()
@@ -3605,6 +3641,7 @@ export default function IELTSReadingInterface({
         case 'image':
           return <ListeningDiagram key={key} src={block.src} alt={block.alt} caption={block.caption} />
         case 'diagram':
+          if (block.diagram === 'old-water-mill') return <OldWaterMillDiagram key={key} renderAnswer={number => blankInput(number, 'sm', true, /[^A-G]/g)} />
           return <EducationHouseDiagram key={key} renderAnswer={number => blankInput(number, 'sm', true)} />
         case 'space':
           return <div key={key} className="h-2" />
@@ -3615,7 +3652,14 @@ export default function IELTSReadingInterface({
 
     // Saved attempts can contain the former image + separate answer rows. Upgrade
     // only their layout; keep the saved questions, keys and answers untouched.
-    const blocks = currentSection.id === 'lt14-part3' && group.blocks.some(block => block.kind === 'image')
+    const hasOldWaterMill = group.blocks.some(block => block.kind === 'image' && block.src.split(/[?#]/)[0].endsWith('/test3-old-water-mill.svg'))
+    const blocks = hasOldWaterMill
+      ? group.blocks.flatMap((block): ListeningBlock[] => {
+          if (block.kind === 'image' && block.src.split(/[?#]/)[0].endsWith('/test3-old-water-mill.svg')) return [{ kind: 'diagram', diagram: 'old-water-mill' }]
+          if (block.kind === 'grid' && block.rows.length && block.rows.every(row => row.blank >= 27 && row.blank <= 30)) return []
+          return [block]
+        })
+      : currentSection.id === 'lt14-part3' && group.blocks.some(block => block.kind === 'image')
       ? group.blocks.flatMap((block): ListeningBlock[] => {
           if (block.kind === 'image') return [{ kind: 'diagram', diagram: 'education-house' }]
           if (block.kind === 'grid' && block.rows.length && block.rows.every(row => row.blank >= 21 && row.blank <= 26)) return []
@@ -6319,7 +6363,7 @@ export default function IELTSReadingInterface({
             )}
             <NotesPanel testId={test.id} isOpen={showNotes} onClose={() => setShowNotes(false)} />
             <WordLookupModal
-              open={Boolean(aiLookup)}
+              open={testMode === 'practice' && Boolean(aiLookup)}
               word={aiLookup?.word ?? ''}
               sentence={aiLookup?.sentence}
               context={isListening ? 'listening' : 'reading'}
@@ -6344,6 +6388,8 @@ export default function IELTSReadingInterface({
           onPause={handleAudioPause}
           onLoadedMetadata={handleAudioLoadedMetadata}
           onTimeUpdate={handleAudioTimeUpdate}
+          onSeeking={handleAudioSeeking}
+          onRateChange={handleAudioRateChange}
           onCanPlay={() => setAudioError(null)}
           onError={handleAudioLoadError}
         />

@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useIsPresent } from 'framer-motion'
 import { ArrowUpRight, BookOpen, Headphones, Mic, PenLine, Sparkles, X } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
-import { getIeltsTestVocabulary } from '@/utils/ieltsTestVocabulary'
+import { getIeltsTestVocabulary, getIeltsVocabularyReturnTo, getIeltsVocabularyTestPath, withVocabularyReturnTo } from '@/utils/ieltsTestVocabulary'
 import type { IeltsVocabularySkill } from '@/data/ieltsFullTestVocabulary'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/test-vocabulary.css'
@@ -15,15 +16,18 @@ const skillIcons = { listening: Headphones, reading: BookOpen, writing: PenLine,
 const easing = [0.22, 1, 0.36, 1] as const
 type Props = { testId: string; skill?: IeltsVocabularySkill; variant: 'reminder' | 'link' | 'review'; compact?: boolean; ready?: boolean }
 
-/** Exiting controls leave keyboard navigation while the card folds away. */
+/** Exiting controls leave keyboard navigation while the card animates away. */
 function VocabularyPresence({ children, variant }: { children: ReactNode; variant: Props['variant'] }) {
   const present = useIsPresent()
+  const notification = variant === 'reminder'
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => { if (ref.current) ref.current.inert = !present }, [present])
   return (
     <motion.div ref={ref} aria-hidden={!present || undefined} data-test-vocabulary={variant} className="test-vocab-presence"
-      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-      transition={{ height: { duration: 0.36, ease: easing }, opacity: { duration: 0.22 } }}>
+      initial={notification ? { height: 0, opacity: 0, y: -10 } : { opacity: 0, height: 0 }}
+      animate={{ height: 'auto', opacity: 1, y: 0 }}
+      exit={notification ? { height: 0, opacity: 0, y: -6 } : { opacity: 0, height: 0 }}
+      transition={{ duration: notification ? 0.52 : 0.36, ease: easing }}>
       {children}
     </motion.div>
   )
@@ -31,6 +35,7 @@ function VocabularyPresence({ children, variant }: { children: ReactNode; varian
 
 export default function TestVocabulary({ testId, skill, variant, compact = false, ready = true }: Props) {
   const { c } = useCopy()
+  const location = useLocation()
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   const userId = useAuthStore((state) => state.user?.id) ?? 'guest'
   const preferenceKey = `profai:ielts:vocabulary-reminders:${userId}`
@@ -40,6 +45,13 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
     catch { return false }
   })
   const headingId = useId()
+  const [enteredTest, setEnteredTest] = useState<string | null>(null)
+  useEffect(() => {
+    setEnteredTest(null)
+    if (variant !== 'reminder' || !ready) return
+    const timer = window.setTimeout(() => setEnteredTest(testId), 650)
+    return () => window.clearTimeout(timer)
+  }, [ready, testId, variant])
   useEffect(() => {
     const update = () => {
       try {
@@ -57,7 +69,7 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
   }, [preferenceKey, visitKey])
 
   const vocabulary = getIeltsTestVocabulary(testId, skill)
-  const visible = ready && Boolean(vocabulary) && (variant !== 'reminder' || !hidden)
+  const visible = ready && Boolean(vocabulary) && (variant !== 'reminder' || (!hidden && enteredTest === testId))
   const dismiss = (forever: boolean) => {
     setHidden(true)
     try {
@@ -70,8 +82,11 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
   let content: ReactNode = null
   if (vocabulary) {
     const SkillIcon = skillIcons[vocabulary.skill]
+    const currentPath = `${location.pathname}${location.search}${location.hash}`
+    const returnTo = getIeltsVocabularyReturnTo(currentPath)
+      ?? getIeltsVocabularyTestPath(vocabulary.test.sourceTestId ?? testId, vocabulary.skill)
     const link = (
-      <motion.a href={vocabulary.href} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}
+      <motion.a href={withVocabularyReturnTo(vocabulary.href, returnTo)} target="_blank" rel="opener" onClick={(event) => event.stopPropagation()}
         title={c('Opens in a new tab')} aria-label={`${c("Practise this test's vocabulary")}: ${vocabulary.test.title}`}
         className={`test-vocab-cta ${variant === 'link' ? 'test-vocab-cta--secondary' : ''}`}
         whileHover={allowHoverMotion ? { y: -2 } : undefined} whileTap={reducedMotion ? undefined : { scale: 0.98 }}>
@@ -80,19 +95,19 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
       </motion.a>
     )
     content = variant === 'link' ? link : (
-      <motion.aside aria-labelledby={headingId}
+      <motion.aside aria-labelledby={headingId} role={variant === 'reminder' ? 'status' : undefined}
         className={`test-vocab-card ${review ? 'test-vocab-card--review' : 'test-vocab-card--reminder'} ${compact ? 'test-vocab-card--compact' : ''} ${reducedMotion ? 'test-vocab-card--still' : ''}`}
-        initial={reducedMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
+        initial={reducedMotion || variant === 'reminder' ? false : { opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.48, delay: 0.16, ease: easing }}>
         <div aria-hidden="true" className="test-vocab-glow" />
         <div className="test-vocab-icon"><SkillIcon aria-hidden="true" className="h-5 w-5" /><span className="test-vocab-icon-badge"><Sparkles aria-hidden="true" className="h-2.5 w-2.5" /></span></div>
         <div className="test-vocab-copy">
           <p className="test-vocab-eyebrow"><UiText text={review ? 'Your next step' : 'Before you practise'} /></p>
           <h2 id={headingId} className="test-vocab-heading"><UiText text={review ? 'Build on what you learned' : 'Meet the words in this test'} /></h2>
-          {!compact ? <p className="test-vocab-description"><UiText text={review ? 'Practise these words in context before your next attempt.' : 'A quick vocabulary warm-up for this exact test.'} /></p> : null}
+          {!compact ? <p className="test-vocab-description"><UiText text={review ? 'Practise these words in context before your next attempt.' : 'Review these words before you start the test.'} /></p> : null}
           <div className="test-vocab-meta"><span>{vocabulary.test.title}</span><span className="test-vocab-count">{vocabulary.wordCount} <UiText text="words" /></span></div>
           {!compact ? <div className="test-vocab-words">{vocabulary.preview.slice(0, 3).map((entry, index) => (
-            <motion.span key={entry.id} className="test-vocab-word" initial={reducedMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.28 + index * 0.06, ease: easing }}>{entry.term}</motion.span>
+            <motion.span key={entry.id} className="test-vocab-word" initial={reducedMotion || variant === 'reminder' ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.28 + index * 0.06, ease: easing }}>{entry.term}</motion.span>
           ))}</div> : null}
         </div>
         <div className="test-vocab-actions">{link}{!review ? <button type="button" onClick={() => dismiss(true)} className="test-vocab-never"><UiText text="Never show reminders again" /></button> : null}</div>
@@ -100,8 +115,7 @@ export default function TestVocabulary({ testId, skill, variant, compact = false
       </motion.aside>
     )
   }
-  if (reducedMotion) return visible ? <div className={`test-vocab-slot test-vocab-slot--${variant}`} data-test-vocabulary={variant}>{content}</div> : null
-  return (
+  return reducedMotion ? (visible ? <div className={`test-vocab-slot test-vocab-slot--${variant}`} data-test-vocabulary={variant}>{content}</div> : null) : (
     <AnimatePresence>
       {visible ? <VocabularyPresence key={`${variant}:${testId}`} variant={variant}><div className={`test-vocab-slot test-vocab-slot--${variant}`}>{content}</div></VocabularyPresence> : null}
     </AnimatePresence>

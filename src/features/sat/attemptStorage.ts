@@ -53,9 +53,10 @@ export function saveSATAttemptToHistory(
 ) {
   const normalizedAttempt = withAttemptId(attempt)
   const savedAt = normalizedAttempt.submittedAt ?? normalizedAttempt.updatedAt ?? Date.now()
-  // A result only needs answer/review data. Excluding freehand stroke points keeps
-  // repeated full mocks small enough to preserve a long, uncapped history.
-  const historyAttempt: SATAttempt = { ...normalizedAttempt, highlights: {} }
+  // Keep compact text highlights for review; omit legacy freehand point arrays.
+  const historyAttempt: SATAttempt = { ...normalizedAttempt, highlights: Object.fromEntries(
+    Object.entries(normalizedAttempt.highlights).map(([id, strokes]) => [id, strokes.filter(stroke => stroke.textRange)]),
+  ) }
   const entry: SATAttemptHistoryEntry = {
     id: normalizedAttempt.attemptId,
     attempt: historyAttempt,

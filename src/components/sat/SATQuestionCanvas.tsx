@@ -1,116 +1,32 @@
-import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { Bookmark, FileImage, SpellCheck2 } from 'lucide-react'
-import type { HighlightPoint, HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
+import type { HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
+import SATTextHighlights from './SATTextHighlights'
 
 type Props = {
   question: SATQuestion
   answer: string
   onAnswer: (answer: string) => void
   strokes: HighlightStroke[]
-  highlightEnabled: boolean
-  highlightColor: string
+  highlightAvailable?: boolean
   onChange: (strokes: HighlightStroke[]) => void
   flagged: boolean
   onToggleFlag: () => void
+  readOnly?: boolean
   answerState?: 'correct' | 'incorrect'
   practicePanel?: ReactNode
 }
 
-function toPoint(event: ReactPointerEvent<SVGSVGElement>): HighlightPoint {
-  const bounds = event.currentTarget.getBoundingClientRect()
-  return {
-    x: Math.max(0, Math.min(1000, ((event.clientX - bounds.left) / bounds.width) * 1000)),
-    y: Math.max(0, Math.min(1000, ((event.clientY - bounds.top) / bounds.height) * 1000)),
-  }
-}
-
-type HighlightSurface = NonNullable<HighlightStroke['surface']>
-
-function HighlightLayer({
-  enabled,
-  surface,
-  color,
-  strokes,
-  onChange,
-}: {
-  enabled: boolean
-  surface: HighlightSurface
-  color: string
-  strokes: HighlightStroke[]
-  onChange: (strokes: HighlightStroke[]) => void
-}) {
-  const activeId = useRef<string | null>(null)
-  const draftRef = useRef<HighlightStroke | null>(null)
-  const [draft, setDraft] = useState<HighlightStroke | null>(null)
-  const surfaceStrokes = useMemo(
-    () => strokes.filter((stroke) => (stroke.surface ?? 'source') === surface),
-    [strokes, surface],
-  )
-  const displayedStrokes = draft ? [...surfaceStrokes, draft] : surfaceStrokes
-
-  const startStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!enabled) return
-    event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    const next: HighlightStroke = {
-      id: crypto.randomUUID(),
-      color,
-      width: 28,
-      points: [toPoint(event)],
-      surface,
-    }
-    activeId.current = next.id
-    draftRef.current = next
-    setDraft(next)
-  }
-
-  const extendStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!enabled || !activeId.current || !draftRef.current) return
-    const next = { ...draftRef.current, points: [...draftRef.current.points, toPoint(event)] }
-    draftRef.current = next
-    setDraft(next)
-  }
-
-  const finishStroke = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeId.current) return
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-    if (draftRef.current?.points.length) onChange([...strokes, draftRef.current])
-    activeId.current = null
-    draftRef.current = null
-    setDraft(null)
-  }
-
-  return (
-    <svg
-      viewBox="0 0 1000 1000"
-      preserveAspectRatio="none"
-      aria-label={enabled ? 'Highlight drawing surface' : undefined}
-      className={`absolute inset-0 z-30 h-full w-full touch-none ${enabled ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'}`}
-      onPointerDown={startStroke}
-      onPointerMove={extendStroke}
-      onPointerUp={finishStroke}
-      onPointerCancel={finishStroke}
-    >
-      {displayedStrokes.map((stroke) => (
-        <polyline
-          key={stroke.id}
-          points={stroke.points.map((point) => `${point.x},${point.y}`).join(' ')}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.38"
-        />
-      ))}
-    </svg>
-  )
+// Preserve drawings in existing in-progress attempts; new highlights use text ranges.
+function HighlightLayer({ surface, strokes }: { surface: 'passage' | 'question'; strokes: HighlightStroke[] }) {
+  return <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 z-30 h-full w-full">
+    {strokes.filter(stroke => !stroke.textRange && (stroke.surface ?? 'source') === surface).map(stroke =>
+      <polyline key={stroke.id} points={stroke.points.map(point => `${point.x},${point.y}`).join(' ')} fill="none" stroke={stroke.color} strokeWidth={stroke.width} strokeLinecap="round" strokeLinejoin="round" opacity="0.38" />)}
+  </svg>
 }
 
 export default function SATQuestionCanvas({
@@ -118,26 +34,24 @@ export default function SATQuestionCanvas({
   answer,
   onAnswer,
   strokes,
-  highlightEnabled,
-  highlightColor,
+  highlightAvailable = true,
   onChange,
   flagged,
   onToggleFlag,
   answerState,
+  readOnly = false,
   practicePanel,
 }: Props) {
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
   const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
 
   return (
+    <SATTextHighlights key={question.id} strokes={strokes} onChange={onChange} enabled={highlightAvailable}>
     <div className={`sat-exam-canvas grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {hasSeparateSource ? <section className="relative min-w-0 border-b border-slate-300 px-5 py-5 md:border-b-0 md:border-r md:px-8 xl:px-10">
         <HighlightLayer
-          enabled={highlightEnabled}
           surface="passage"
-          color={highlightColor}
           strokes={strokes}
-          onChange={onChange}
         />
         <div className="mx-auto max-w-[42rem]">
           {question.visual ? (
@@ -154,22 +68,21 @@ export default function SATQuestionCanvas({
             </figure>
           ) : null}
 
+          <div data-sat-highlight-block="context">
           {question.sourceContent?.context ? (
             <SATSourceContent html={question.sourceContent.context} className="font-serif text-[17px] font-medium leading-[1.5] text-[#171717] sm:text-[18px]" />
           ) : !question.sourceContent && context ? (
             <SATRichText text={context} className="break-words font-serif text-[17px] font-medium leading-[1.5] text-[#171717] sm:text-[18px]" />
           ) : null}
+          </div>
 
         </div>
       </section> : null}
 
       <section className="relative min-w-0 bg-[#f7f8fa]">
         <HighlightLayer
-          enabled={highlightEnabled}
           surface="question"
-          color={highlightColor}
           strokes={strokes}
-          onChange={onChange}
         />
         <div className="flex min-h-[3.6rem] items-stretch bg-[#ededed]">
           <span className="flex w-12 shrink-0 items-center justify-center bg-black font-serif text-xl font-bold text-white sm:w-14">
@@ -178,10 +91,11 @@ export default function SATQuestionCanvas({
           <button
             type="button"
             onClick={onToggleFlag}
+            disabled={readOnly}
             className={`flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
           >
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
-            {flagged ? 'Marked for Review' : 'Mark for Review'}
+            {readOnly ? 'Answer review' : flagged ? 'Marked for Review' : 'Mark for Review'}
           </button>
           <span className="m-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-[#f4f4f4] text-slate-600">
             <SpellCheck2 className="h-5 w-5" />
@@ -191,10 +105,10 @@ export default function SATQuestionCanvas({
 
         <div className={`mx-auto px-5 py-4 sm:px-8 ${hasSeparateSource ? 'max-w-[42rem]' : 'max-w-[44rem]'}`}>
           {!hasSeparateSource && question.visual ? <figure className="mx-auto mb-4 w-fit max-w-full rounded-xl border border-slate-300 bg-white p-2.5"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain" /></figure> : null}
-          {!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : !question.sourceContent && context ? <SATRichText text={context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : null)}
-          {question.sourceContent ? (
+          <div data-sat-highlight-block={hasSeparateSource ? undefined : "context"}>{!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : !question.sourceContent && context ? <SATRichText text={context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : null)}</div>
+          <div data-sat-highlight-block="task">{question.sourceContent ? (
             <SATSourceContent html={question.sourceContent.task} className="font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />
-          ) : <SATRichText text={task} className="break-words font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />}
+          ) : <SATRichText text={task} className="break-words font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />}</div>
 
           {question.kind === 'multiple-choice' ? (
             <div className="mt-4 space-y-2" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
@@ -206,7 +120,8 @@ export default function SATQuestionCanvas({
                     role="radio"
                     aria-checked={selected}
                     key={choice.key}
-                    onClick={() => onAnswer(choice.key)}
+                    disabled={readOnly}
+                    onClick={() => { if (!readOnly && !window.getSelection()?.toString()) onAnswer(choice.key) }}
                     className={`group flex w-full items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${
                       selected
                         ? answerState === 'correct'
@@ -228,7 +143,7 @@ export default function SATQuestionCanvas({
                     }`}>
                       {choice.key}
                     </span>
-                    <span className="min-w-0 flex-1 pt-0.5 text-[16px] font-semibold leading-6 sm:text-[17px]">
+                    <span data-sat-highlight-block={`choice-${choice.key}`} className="select-text min-w-0 flex-1 pt-0.5 text-[16px] font-semibold leading-6 sm:text-[17px]">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-48 max-w-full rounded-lg object-contain" /> : null}
                       {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
                     </span>
@@ -241,6 +156,7 @@ export default function SATQuestionCanvas({
               <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800">Enter your answer</label>
               <input
                 id="student-response"
+                readOnly={readOnly}
                 value={answer}
                 onChange={(event) => onAnswer(event.target.value)}
                 inputMode="decimal"
@@ -261,5 +177,6 @@ export default function SATQuestionCanvas({
         </div>
       </section>
     </div>
+    </SATTextHighlights>
   )
 }

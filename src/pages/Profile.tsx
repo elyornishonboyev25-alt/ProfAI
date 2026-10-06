@@ -336,7 +336,7 @@ export default function Profile() {
                 </h1>
                 <p className="premium-section-subtitle">
                    <UiText text={"Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher."} /> </p>
-                <div className="results-actions"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}> <UiText text={"Start practicing"} /> <ArrowUpRight size={16} /></button><button className="liquid-button secondary" onClick={() => navigate('/analyze-mistakes')}> <UiText text={"Review mistakes"} /> <BrainCircuit size={16} /></button></div>
+                <div className="results-actions"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}> <UiText text={"Start practicing"} /> <ArrowUpRight size={16} /></button><button className="liquid-button secondary" onClick={() => navigate('/review-mistakes')}> <UiText text={"Review mistakes"} /> <BrainCircuit size={16} /></button></div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button type="button" onClick={() => navigate('/leaderboard')} className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-bold text-red-700 transition hover:bg-red-100"><Trophy className="h-4 w-4" /> View leaderboard <ArrowUpRight className="h-3.5 w-3.5" /></button>
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5">

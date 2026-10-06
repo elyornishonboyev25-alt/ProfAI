@@ -12,5 +12,5 @@ export const WORKSPACE_NAVIGATION = [
   { label: 'University Applications', mobile: 'Apply', path: '/admission', icon: Building2,
     matches: (p: string) => p.startsWith('/admission') },
   { label: 'My Results', mobile: 'Results', path: '/profile', icon: ChartNoAxesCombined,
-    matches: (p: string) => /^\/(profile|results|analyze-mistakes)(\/|$)/.test(p) },
+    matches: (p: string) => /^\/(profile|results|review-mistakes|analyze-mistakes)(\/|$)/.test(p) },
 ]

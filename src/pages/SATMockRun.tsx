@@ -15,7 +15,6 @@ import {
   EyeOff,
   Flag,
   FileText,
-  Highlighter,
   Lightbulb,
   ListChecks,
   NotebookPen,
@@ -57,7 +56,6 @@ import { syncSATAttemptResult } from '@/features/sat/resultSync'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
-const HIGHLIGHT_COLORS = ['#fde047', '#86efac', '#7dd3fc', '#f9a8d4']
 const FULLSCREEN_RECOVERY_SECONDS = 30
 const FULLSCREEN_RECOVERY_MS = FULLSCREEN_RECOVERY_SECONDS * 1000
 
@@ -100,8 +98,6 @@ export default function SATMockRun() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
-  const [highlightEnabled, setHighlightEnabled] = useState(false)
-  const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_COLORS[0])
   const [zoom, setZoom] = useState(1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
@@ -239,7 +235,6 @@ export default function SATMockRun() {
     setNavigatorOpen(false)
     setNotesOpen(false)
     setZoom(1)
-    setHighlightEnabled(false)
   }, [attempt, modules, persistUpdate, submitAttempt])
 
   const endCurrentModule = useCallback(() => {
@@ -373,12 +368,10 @@ export default function SATMockRun() {
         }))
       } else if (key === 'h') {
         event.preventDefault()
-        setHighlightEnabled((value) => !value)
+        setToolsOpen((value) => !value)
       } else if (key === 'n') {
         event.preventDefault()
         openNotes()
-      } else if (event.key === 'Escape' && highlightEnabled) {
-        setHighlightEnabled(false)
       }
     }
     window.addEventListener('keydown', handleKey)
@@ -392,7 +385,6 @@ export default function SATMockRun() {
     currentQuestion.kind,
     navigatorOpen,
     notesOpen,
-    highlightEnabled,
     openNotes,
     persistUpdate,
     questionIndex,
@@ -572,23 +564,8 @@ export default function SATMockRun() {
                 <p className="text-sm font-black">Highlights & Notes</p>
                 <button type="button" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
               </div>
-              <button
-                type="button"
-                aria-pressed={highlightEnabled}
-                onClick={() => {
-                  setHighlightEnabled((value) => {
-                    if (!value) setToolsOpen(false)
-                    return !value
-                  })
-                }}
-                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-xs font-black ${highlightEnabled ? 'border-amber-500 bg-amber-100 text-amber-900' : 'border-black bg-white text-black'}`}
-              >
-                <Highlighter className="h-4 w-4" /> {highlightEnabled ? 'Highlight mode on' : 'Turn on highlight mode'}
-              </button>
+              <p className="mt-4 text-xs font-medium text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p>
               <div className="mt-3 flex items-center gap-2">
-                {HIGHLIGHT_COLORS.map((color) => (
-                  <button type="button" key={color} aria-label={`Use ${color} highlighter`} onClick={() => setHighlightColor(color)} className={`h-7 w-7 rounded-full border-2 ${highlightColor === color ? 'border-black' : 'border-white ring-1 ring-slate-300'}`} style={{ backgroundColor: color }} />
-                ))}
                 <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
                 <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
               </div>
@@ -613,26 +590,6 @@ export default function SATMockRun() {
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
       </header>
 
-      {highlightEnabled ? (
-        <div
-          role="status"
-          className="fixed right-4 top-28 z-[65] flex items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50/95 px-4 py-3 text-amber-950 shadow-xl backdrop-blur sm:right-6"
-        >
-          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: highlightColor }} />
-          <div>
-            <p className="text-xs font-black">Highlighter active</p>
-            <p className="text-[9px] font-bold text-amber-700">Draw anywhere on the question · Esc to stop</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setHighlightEnabled(false)}
-            className="rounded-lg bg-amber-900 px-3 py-1.5 text-[10px] font-black text-white"
-          >
-            Done
-          </button>
-        </div>
-      ) : null}
-
       <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[calc(min(44vw,46rem)+0.75rem)]' : ''}`}>
         <div
           className="origin-top-left"
@@ -643,8 +600,6 @@ export default function SATMockRun() {
           answer={currentAnswer}
           onAnswer={updateAnswer}
           strokes={currentStrokes}
-          highlightEnabled={highlightEnabled}
-          highlightColor={highlightColor}
           onChange={changeHighlights}
           flagged={isFlagged}
           answerState={practiceChecked ? (practiceCorrect ? 'correct' : 'incorrect') : undefined}

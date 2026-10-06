@@ -603,7 +603,7 @@
   "Up to 2 minutes": "До 2 минут",
   "Prepare with short audio sections.": "Подготовьтесь с короткими аудиофрагментами.",
   "This transcript has no safe 12–18 second boundaries. Choose another lesson.": "В этих субтитрах нет безопасных границ для фрагментов по 12–18 секунд. Выберите другой урок.",
-  "The final section may be shorter to keep the speech intact.": "Последний фрагмент может быть короче, чтобы сохранить речь целой.",
+  "Section lengths follow the available caption boundaries to keep speech intact.": "Длина фрагментов следует доступным границам субтитров, чтобы сохранить речь целой.",
   "Opening shadowing recording…": "Открываем запись шэдоуинга…",
   "This recording is unavailable": "Эта запись недоступна",
   "Check the link and try opening it again.": "Проверьте ссылку и откройте её ещё раз.",

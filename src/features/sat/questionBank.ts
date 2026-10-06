@@ -11,7 +11,21 @@ const metadata: Array<Omit<SATModule, 'questions'>> = [
 ]
 
 function moduleFrom(id: SATModuleId, questions: SATQuestion[]): SATModule {
-  return { ...metadata.find((module) => module.id === id)!, questions }
+  return {
+    ...metadata.find((module) => module.id === id)!,
+    questions: questions.map((question) => {
+      // The source's decimal example transposed the digits of 7/24.
+      if (question.sourceQuestionId !== 'c6e85cd7') return question
+      return {
+        ...question,
+        explanation: question.explanation.replace(/0\.219/g, '0.291'),
+        sourceContent: question.sourceContent ? {
+          ...question.sourceContent,
+          explanation: question.sourceContent.explanation.replace(/0\.219/g, '0.291'),
+        } : undefined,
+      }
+    }),
+  }
 }
 
 export const SAT_TEST_9_MATH_2 = moduleFrom('math2', data.test9Math2 as SATQuestion[])

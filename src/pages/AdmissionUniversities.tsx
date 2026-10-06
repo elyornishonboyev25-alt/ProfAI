@@ -3,23 +3,25 @@ import { memo, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef,
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   Bookmark,
   BookmarkCheck,
+  Building2,
   Check,
   ChevronDown,
+  Compass,
   GraduationCap,
   Heart,
   MapPin,
   RotateCcw,
   Search,
-  SlidersHorizontal,
   Sparkles,
 } from 'lucide-react'
-import { useCopy } from '@/i18n/interface'
+import { BrandMark } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import './admission-universities.css'
-import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT } from '@/data/admission'
+import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
 import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
 import type { University } from '@/data/admission'
 import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
@@ -32,9 +34,9 @@ type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
 type RankFilter = 'all' | 'top-10' | 'top-25' | 'top-50' | 'unranked'
 const UNIVERSITY_PAGE_SIZE = 12
 
-function yearlyCostLabel(university: University, c: (text: string) => string) {
+function yearlyCostLabel(university: University) {
   const cost = university.costOfLiving
-  if (!cost) return c('Budget not published')
+  if (!cost) return 'Budget not published'
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -44,15 +46,15 @@ function yearlyCostLabel(university: University, c: (text: string) => string) {
   })
   const min = formatter.format(cost.amount)
   const max = cost.maxAmount ? formatter.format(cost.maxAmount) : null
-  const period = cost.period === 'month' ? c('/ month') : cost.period === 'academic-year' ? c('/ academic year') : c('/ year')
-  return `${min}${max ? `–${max}` : ''} ${period}`
+  const period = cost.period === 'month' ? '/mo' : '/yr'
+  return `${min}${max ? `–${max}` : ''}${period}`
 }
 
 function ieltsLabel(university: University) {
   const requirements = university.admission?.bachelor ?? []
   const requirement = requirements.find((item) => item.comparison === 'ieltsOverall')
     ?? requirements.find((item) => item.label === 'IELTS')
-  return requirement?.value ?? null
+  return requirement?.value ?? 'No IELTS cutoff'
 }
 
 const UniversityCard = memo(function UniversityCard({
@@ -72,56 +74,75 @@ const UniversityCard = memo(function UniversityCard({
   onToggleShortlist: (university: University) => void
   returnTo: '/admission/universities' | '/admission/shortlist'
 }) {
-  const { c } = useCopy()
   const fit = scoreUniversity(university, { ...scores, preferredCountry })
   const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
 
   return (
     <article
-      className="uni-directory-card"
+      className="admission-university-card"
       onPointerEnter={() => prefetchUniversityCampusImage(university.name)}
       onPointerDown={() => prefetchUniversityCampusImage(university.name)}
     >
-      <div className="uni-directory-card-top">
-        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={62} rounded=".95rem" priority={priority} />
-        <div className="uni-directory-card-actions">
-          <span className="uni-directory-rank"><UiText text="QS rank" /> <strong>{formatUniversityRank(university)}</strong></span>
+      <Link
+        className="admission-university-card-link"
+        to={`/admission/universities/${university.slug}`}
+        state={{ admissionReturnTo: returnTo }}
+        aria-label={`Explore ${university.name}`}
+        onFocus={() => prefetchUniversityCampusImage(university.name)}
+      />
+      <div
+        className="admission-card-glow"
+        style={{ '--university-accent': university.brand.accent } as React.CSSProperties}
+        aria-hidden="true"
+      />
+      <div className="admission-card-topline">
+        <UniversityLogo id={university.id} name={university.name} brand={university.brand} website={university.website} size={68} rounded="1rem" priority={priority} />
+        <div className="admission-card-rank-actions">
+          <span className="admission-rank-badge" style={{ '--university-accent': university.brand.accent } as React.CSSProperties}>
+            <small> <UiText text={"QS rank"} /> </small>
+            <strong>{formatUniversityRank(university)}</strong>
+          </span>
           <button
             type="button"
-            className={`uni-directory-save${shortlisted ? ' is-saved' : ''}`}
-            aria-label={`${c(shortlisted ? 'Remove from shortlist' : 'Add to shortlist')}: ${university.name}`}
+            className={`admission-card-shortlist${shortlisted ? ' is-shortlisted' : ''}`}
+            aria-label={shortlisted ? `Remove ${university.name} from shortlist` : `Add ${university.name} to shortlist`}
             aria-pressed={shortlisted}
-            title={c(shortlisted ? 'Remove from shortlist' : 'Add to shortlist')}
+            title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
             onClick={() => onToggleShortlist(university)}
           >
-            <Heart size={18} fill={shortlisted ? 'currentColor' : 'none'} />
+            <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
           </button>
         </div>
       </div>
-      <div className="uni-directory-card-identity">
-        <p className="uni-directory-card-shortname">{university.shortName}</p>
-        <h3>{university.name}</h3>
-        <p className="uni-directory-card-location"><MapPin size={14} /> {university.city}, {university.country}</p>
+
+      <div className="admission-card-copy">
+        <p className="admission-card-kicker">{university.shortName}</p>
+        <h2>{university.name}</h2>
+        <p className="admission-card-location"><MapPin className="h-3.5 w-3.5" /> {university.city}, {university.country}</p>
       </div>
-      <div className="uni-directory-card-facts">
-        <div><small>IELTS</small><strong>{ieltsLabel(university) ?? c('No numeric cutoff')}</strong></div>
-        <div><small><UiText text="Living costs" /></small><strong>{yearlyCostLabel(university, c)}</strong></div>
+
+      <div className="admission-card-tags">
+        <span>IELTS {ieltsLabel(university)}</span>
+        {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
       </div>
-      <div className="uni-directory-card-bottom">
-        <span className="uni-directory-fit" title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Add IELTS or SAT scores to see a personal planning fit'}>
-          {hasProfileScores ? <><UiText text="Fit" /> <strong>{fit.fitPercent}%</strong></> : <UiText text="Add scores for fit" />}
-        </span>
-        {university.groups?.includes('ivy-league') && <span className="uni-directory-ivy">Ivy League</span>}
-        <Link
-          className="uni-directory-open"
-          to={`/admission/universities/${university.slug}`}
-          state={{ admissionReturnTo: returnTo }}
-          aria-label={`${c('Explore')} ${university.name}`}
-          onFocus={() => prefetchUniversityCampusImage(university.name)}
+
+      <div className="admission-card-footer">
+        <div>
+          <small>Living budget</small>
+          <strong>{yearlyCostLabel(university)}</strong>
+        </div>
+        <div
+          className="admission-match-ring"
+          style={{ '--match-value': `${fit.fitPercent * 3.6}deg`, '--university-accent': university.brand.accent } as React.CSSProperties}
+          title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Planning fit only; add your scores and check full admission requirements'}
         >
-          <UiText text="Explore" /> <ArrowUpRight size={17} />
-        </Link>
+          <span><small>Fit</small><strong>{fit.fitPercent}%</strong></span>
+        </div>
       </div>
+
+      <span className="admission-card-open" aria-label={`Explore ${university.name}`}>
+         <UiText text={"Explore"} /> <ArrowRight className="h-3.5 w-3.5" />
+      </span>
     </article>
   )
 })
@@ -141,31 +162,9 @@ function FilterSelect({
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const optionsRef = useRef<HTMLUListElement>(null)
-  const { c } = useCopy()
   const listId = useId()
   const selected = options.find((option) => option.value === value) ?? options[0]
-  const visible = options.filter((option) => c(option.label).toLowerCase().includes(query.trim().toLowerCase()))
-  const activeOptionId = open && visible[activeIndex] ? `${listId}-${activeIndex}` : undefined
-
-  useEffect(() => {
-    if (!open) { setQuery(''); return }
-    const list = optionsRef.current
-    const option = list?.children[activeIndex] as HTMLElement | undefined
-    if (list && option) {
-      const listBounds = list.getBoundingClientRect()
-      const optionBounds = option.getBoundingClientRect()
-      if (optionBounds.top < listBounds.top) list.scrollTop += optionBounds.top - listBounds.top
-      else if (optionBounds.bottom > listBounds.bottom) list.scrollTop += optionBounds.bottom - listBounds.bottom
-    }
-  }, [activeIndex, open, query])
-
-  const showOptions = () => {
-    setQuery('')
-    setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value)))
-    setOpen(true)
-  }
+  const visible = options.filter((option) => option.label.toLowerCase().includes(query.trim().toLowerCase()))
 
   useEffect(() => {
     const close = (event: PointerEvent) => {
@@ -179,42 +178,37 @@ function FilterSelect({
     onChange(nextValue)
     setOpen(false)
     setQuery('')
-    triggerRef.current?.focus()
   }
 
   const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); triggerRef.current?.focus(); return }
-    if (event.key === 'Tab') { setOpen(false); return }
-    const inSearch = (event.target as HTMLElement).tagName === 'INPUT'
+    if (event.key === 'Escape') { setOpen(false); return }
+    if ((event.target as HTMLElement).tagName === 'INPUT' && event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
-      if (!open) { showOptions(); return }
+      if (!open) { setOpen(true); return }
       const delta = event.key === 'ArrowDown' ? 1 : -1
       setActiveIndex((index) => Math.max(0, Math.min(visible.length - 1, index + delta)))
     }
-    if (open && !inSearch && (event.key === 'Home' || event.key === 'End')) {
+    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      setActiveIndex(event.key === 'Home' ? 0 : Math.max(0, visible.length - 1))
-    }
-    if (event.key === 'Enter' || (event.key === ' ' && !inSearch)) {
-      event.preventDefault()
-      if (!open) showOptions()
+      if (!open) setOpen(true)
       else if (visible[activeIndex]) choose(visible[activeIndex].value)
     }
   }
 
   return (
     <div ref={rootRef} className={`admission-filter-control admission-listbox${open ? ' is-open' : ''}`} onKeyDown={onKeyDown}>
-      <span className="admission-filter-label">{c(label)}</span>
-      <button ref={triggerRef} type="button" role="combobox" aria-label={c(label)} aria-controls={open ? listId : undefined} aria-activedescendant={activeOptionId} aria-haspopup="listbox" aria-expanded={open} onClick={() => open ? setOpen(false) : showOptions()}>
-        <span>{c(selected?.label ?? '')}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      <span className="admission-filter-dot" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
+      <button type="button" role="combobox" aria-label={label} aria-controls={listId} aria-expanded={open} onClick={() => { setOpen((current) => !current); setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value))) }}>
+        <span>{selected?.label}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? <div className="admission-listbox-popover">
-        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus aria-label={c(label)} aria-controls={listId} aria-activedescendant={activeOptionId} value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={c('Search countries')} /></label> : null}
-        <ul ref={optionsRef} id={listId} role="listbox" aria-label={c(label)}>
-          {visible.map((option, index) => <li id={`${listId}-${index}`} key={option.value} role="option" aria-selected={option.value === value} onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{c(option.label)}{option.value === value ? <Check className="h-4 w-4" /> : null}</li>)}
+        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
+        <ul id={listId} role="listbox" aria-label={label}>
+          {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{option.label}{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
+          {!visible.length ? <li className="admission-listbox-empty">No options found</li> : null}
         </ul>
-        {!visible.length ? <p className="admission-listbox-empty" role="status"><UiText text="No options found" /></p> : null}
       </div> : null}
     </div>
   )
@@ -222,10 +216,17 @@ function FilterSelect({
 
 export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
   const navigate = useNavigate()
-  const { c } = useCopy()
+  const resultsSectionRef = useRef<HTMLElement>(null)
   const all = useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
   const { scores, country: profileCountry } = useAdmissionScores()
+  const popularCountries = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const university of all) counts.set(university.country, (counts.get(university.country) ?? 0) + 1)
+    return Array.from(counts, ([name, count]) => ({ name, count }))
+      .sort((first, second) => second.count - first.count || first.name.localeCompare(second.name))
+      .slice(0, 4)
+  }, [all])
   const { shortlistedSet, shortlistCount, toggleShortlist } = useUniversityShortlist()
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const [query, setQuery] = useState('')
@@ -234,7 +235,6 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
   const [budget, setBudget] = useState<BudgetFilter>('all')
   const [ielts, setIelts] = useState<IeltsFilter>('all')
   const [rank, setRank] = useState<RankFilter>('all')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(UNIVERSITY_PAGE_SIZE)
 
   const visibleCatalog = useMemo(
@@ -283,7 +283,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
       type: added ? 'success' : 'info',
       title: added ? 'Added to shortlist' : 'Removed from shortlist',
       message: added
-        ? `${university.shortName} is saved in your shortlist.`
+        ? `${university.shortName} is saved in your Admission Hub shortlist.`
         : `${university.shortName} was removed from your shortlist.`,
     })
   }, [pushToast, toggleShortlist])
@@ -297,106 +297,180 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
     setRank('all')
   }
 
-  const activeFilterCount = [country !== 'all', budget !== 'all', ielts !== 'all', rank !== 'all'].filter(Boolean).length
+  const selectDestination = (destination: string) => {
+    setCountry(destination)
+    if (window.matchMedia('(max-width: 1199px)').matches) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      requestAnimationFrame(() => resultsSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }))
+    }
+  }
 
   return (
-    <main className="workspace-page uni-directory-page px-3 py-4 sm:px-5 lg:px-7">
-      <div className="uni-directory-shell mx-auto w-full max-w-[104rem]">
-        <header className="uni-directory-header">
-          <div className="uni-directory-topline">
-            <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="uni-directory-back">
-              <ArrowLeft size={16} aria-hidden="true" /> <UiText text={shortlistOnly ? 'Back to Universities' : 'Back to Applications'} />
-            </Link>
-            {!shortlistOnly && <Link to="/admission/shortlist" className="uni-directory-shortlist">
-              <BookmarkCheck size={17} aria-hidden="true" /> <UiText text="My shortlist" /> <span>{shortlistCount}</span>
-            </Link>}
-          </div>
-          <div className="uni-directory-heading">
-            <div>
-              <span className="uni-directory-eyebrow"><GraduationCap size={16} aria-hidden="true" /> <UiText text={shortlistOnly ? 'Saved universities' : 'University discovery'} /></span>
-              <h1><UiText text={shortlistOnly ? 'Your shortlist' : 'Explore universities'} /></h1>
-              <p><UiText text={shortlistOnly ? 'Keep your chosen options close while you plan your next step.' : 'Discover institutions that match your goals, location and budget.'} /></p>
-            </div>
-            <div className="uni-directory-edition" aria-label={`QS ${QS_EDITION}: ${QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ${c('QS ranked')}`}>
-              <span>QS {QS_EDITION}</span><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><small><UiText text="QS ranked" /></small>
-            </div>
-          </div>
+    <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
+      <div className="admission-universities-blur-field" aria-hidden="true">
+        <span className="admission-blur-glow admission-blur-glow-left" />
+        <span className="admission-blur-glow admission-blur-glow-right" />
+        <span className="admission-blur-glow admission-blur-glow-center" />
+      </div>
+
+      <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
+        <header className="admission-hub-nav">
+          <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
+            <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
+            <span className="admission-hub-wordmark">Prof<span>AI</span></span>
+            <span className="admission-hub-divider" aria-hidden="true" />
+            <span className="admission-hub-title">Admission Hub</span>
+          </button>
+
+          <nav className="admission-journey" aria-label="Admission journey">
+            <button className={shortlistOnly ? '' : 'is-active'} onClick={() => navigate('/admission/universities')}> <UiText text={"Choose"} /> </button>
+            <ArrowRight aria-hidden="true" />
+            <button className={shortlistOnly ? 'is-active' : ''} onClick={() => navigate('/admission/shortlist')}>
+              Shortlist <span className="admission-shortlist-count">{shortlistCount}</span>
+            </button>
+            <ArrowRight aria-hidden="true" />
+            <button type="button" onClick={() => navigate('/admission/lessons')}> <UiText text={"Prepare"} /> </button>
+            <ArrowRight aria-hidden="true" />
+            <button type="button" onClick={() => navigate('/admission/lessons')}> <UiText text={"Apply"} /> </button>
+            <ArrowRight aria-hidden="true" />
+            <button type="button" onClick={() => navigate('/admission')}>Admitted</button>
+          </nav>
         </header>
 
-        <section className="uni-directory-content" aria-labelledby="university-results-heading">
-          <div className="uni-directory-controls">
-            <div className="uni-directory-search-row">
-              <div className="uni-directory-search">
-                <Search size={21} aria-hidden="true" />
+        <main className="admission-discovery-layout">
+          <aside className="admission-universities-intro-column">
+            <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
+              <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? 'Back to Universities' : 'Applications'}</span>
+            </Link>
+            <div className="admission-university-intro-sticky">
+              {shortlistOnly ? (
+                <div className="admission-shortlist-summary">
+                  <span className="admission-shortlist-summary-icon"><BookmarkCheck /></span>
+                  <p className="admission-shortlist-summary-kicker">Your university plan</p>
+                  <h1>{shortlistCount} {shortlistCount === 1 ? 'university' : 'universities'} shortlisted</h1>
+                  <p>Keep your strongest options together, open their profiles and remove choices as your plan becomes clearer.</p>
+                  <button onClick={() => navigate('/admission/universities')}>
+                    <Compass className="h-4 w-4" /> Browse universities
+                  </button>
+                </div>
+              ) : (
+                <div className="admission-university-intro">
+                  <div className="admission-university-intro-main">
+                    <span className="admission-university-intro-kicker"><GraduationCap size={17} /> UNIVERSITY DISCOVERY</span>
+                    <h1>Find your next <em>chapter.</em></h1>
+                    <p>Explore universities, compare real details and save the places that belong on your shortlist.</p>
+                    <div className="admission-university-intro-stats" aria-label="University catalog at a glance">
+                      <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>Universities</span></div>
+                      <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>QS ranked</span></div>
+                      <div><strong>{countries.length}</strong><span>Countries</span></div>
+                    </div>
+                  </div>
+                  <div className="admission-university-destinations">
+                    <div className="admission-university-destinations-heading"><span>EXPLORE BY DESTINATION</span><MapPin size={17} /></div>
+                    <div className="admission-university-destination-list">
+                      {popularCountries.map((destination, index) => (
+                        <button key={destination.name} type="button" className={country === destination.name ? 'is-active' : ''} aria-pressed={country === destination.name} onClick={() => selectDestination(destination.name)}>
+                          <span className="admission-university-destination-index">0{index + 1}</span>
+                          <span className="admission-university-destination-name">{destination.name}<small>{destination.count.toLocaleString('en-US')} universities</small></span>
+                          <ArrowUpRight size={17} />
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="admission-university-intro-shortlist" onClick={() => navigate('/admission/shortlist')}>
+                      <span><BookmarkCheck size={19} /> My shortlist <small>{shortlistCount} saved</small></span><ArrowRight size={18} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          <section ref={resultsSectionRef} className="admission-universities-results-column min-w-0">
+            <div className="admission-search-panel">
+              <div className="admission-catalog-heading"><div><span><Building2 size={15} /> {shortlistOnly ? 'YOUR SAVED UNIVERSITIES' : 'THE UNIVERSITY CATALOG'}</span><h2>{shortlistOnly ? 'Your shortlist' : 'Explore universities'}</h2></div><p>{shortlistOnly ? 'Keep your chosen options close while you plan your next step.' : 'Discover institutions that match your goals, location and budget.'}</p></div>
+              <div className="admission-search-box">
+                <Search aria-hidden="true" />
                 <input
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={c(shortlistOnly ? 'Search your shortlist' : 'Find your university')}
-                  aria-label={c(shortlistOnly ? 'Search shortlisted universities' : 'Search universities')}
+                  placeholder={shortlistOnly ? 'Search your shortlist' : 'Find your university'}
+                  aria-label={shortlistOnly ? 'Search shortlisted universities' : 'Search universities'}
                 />
               </div>
-              <button type="button" className="uni-directory-filter-toggle" aria-controls="university-filters" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}>
-                <SlidersHorizontal size={17} aria-hidden="true" /> <UiText text="Filters" />{activeFilterCount > 0 && <span>{activeFilterCount}</span>}<ChevronDown size={16} aria-hidden="true" />
-              </button>
-            </div>
-            <div id="university-filters" className={`uni-directory-filters${filtersOpen ? ' is-expanded' : ''}`}>
-              <FilterSelect label="Country" value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
-              <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
-              <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }]} />
-              <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
-            </div>
-          </div>
 
-          <div className="uni-directory-results-heading">
-            <div>
-              <span className="uni-directory-results-label"><UiText text={shortlistOnly ? 'Saved universities' : 'University catalog'} /></span>
-              <h2 id="university-results-heading" role="status" aria-live="polite">{filtered.length.toLocaleString('en-US')} <UiText text={shortlistOnly ? 'Shortlisted' : 'universities found'} /></h2>
-            </div>
-            {hasFilters && <button type="button" className="uni-directory-reset" onClick={clearFilters}><RotateCcw size={15} /> <UiText text="Reset filters" /></button>}
-          </div>
+              <div className="admission-filter-row">
+                <FilterSelect label="Country" value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
+                <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
+                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }]} />
+                <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
+              </div>
 
-          {shortlistOnly && shortlistCount === 0 ? (
-            <div className="uni-directory-empty">
-              <Bookmark size={28} />
-              <h2><UiText text="Your shortlist is empty" /></h2>
-              <p><UiText text="Save universities you want to compare and revisit." /></p>
-              <button onClick={() => navigate('/admission/universities')}><UiText text="Browse universities" /></button>
+              <div className="admission-results-meta">
+                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} {shortlistOnly ? 'shortlisted' : 'universities found'}</span>
+                <span className="hidden sm:inline">{shortlistOnly ? 'Saved on this device' : `Complete QS 2027 ranking · ${QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}`}</span>
+                {hasFilters && (
+                  <button type="button" onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" />  <UiText text={"Reset filters"} /> </button>
+                )}
+              </div>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="uni-directory-empty">
-              <Search size={28} />
-              <h2><UiText text="No universities found" /></h2>
-              <p><UiText text="Try a wider country, score, budget or ranking filter." /></p>
-              <button type="button" onClick={clearFilters}><UiText text="Clear all filters" /></button>
-            </div>
-          ) : (
-            <div className="uni-directory-grid">
-              {displayedUniversities.map((university, index) => (
-                <UniversityCard
-                  key={university.id}
-                  university={university}
-                  scores={scores}
-                  preferredCountry={profileCountry}
-                  priority={index < 4}
-                  shortlisted={shortlistedSet.has(university.slug)}
-                  onToggleShortlist={handleToggleShortlist}
-                  returnTo={shortlistOnly ? '/admission/shortlist' : '/admission/universities'}
-                />
-              ))}
-            </div>
-          )}
 
-          {!shortlistOnly && displayedUniversities.length < filtered.length && (
-            <div className="uni-directory-more-wrap">
-              <button type="button" onClick={() => setVisibleCount((count) => Math.min(filtered.length, count + UNIVERSITY_PAGE_SIZE))} className="uni-directory-more">
-                <UiText text="Show more universities" /> <span>{filtered.length - displayedUniversities.length}</span>
-              </button>
+            <div
+              className="admission-university-scroll"
+              role="region"
+              aria-label="University results"
+              tabIndex={0}
+            >
+              {shortlistOnly && shortlistCount === 0 ? (
+                <div className="admission-empty-state admission-shortlist-empty">
+                  <Bookmark className="h-7 w-7" />
+                  <h2> <UiText text={"Your shortlist is empty"} /> </h2>
+                  <p> <UiText text={"Save universities you want to compare and revisit."} /> </p>
+                  <button onClick={() => navigate('/admission/universities')}>Browse universities</button>
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="admission-empty-state">
+                  <Search className="h-7 w-7" />
+                  <h2> <UiText text={"No universities found"} /> </h2>
+                  <p> <UiText text={"Try a wider country, score, budget or ranking filter."} /> </p>
+                  <button type="button" onClick={clearFilters}>Clear all filters</button>
+                </div>
+              ) : (
+                <div className="admission-university-grid">
+                  {displayedUniversities.map((university, index) => (
+                    <UniversityCard
+                      key={university.id}
+                      university={university}
+                      scores={scores}
+                      preferredCountry={profileCountry}
+                      priority={index < 4}
+                      shortlisted={shortlistedSet.has(university.slug)}
+                      onToggleShortlist={handleToggleShortlist}
+                      returnTo={shortlistOnly ? '/admission/shortlist' : '/admission/universities'}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {!shortlistOnly && displayedUniversities.length < filtered.length ? (
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((count) => Math.min(filtered.length, count + UNIVERSITY_PAGE_SIZE))}
+                    className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 text-sm font-black text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50"
+                  >
+                     <UiText text={"Show more universities"} /> <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs">{filtered.length - displayedUniversities.length}</span>
+                  </button>
+                </div>
+              ) : null}
+
+              <p className="admission-catalog-note">
+                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}, published 18 June 2026. Admission and cost details appear only where they have been independently verified.
+              </p>
             </div>
-          )}
-          <p className="uni-directory-note"><Sparkles size={15} aria-hidden="true" /> Rankings: {QS_EDITION}, published 18 June 2026. Admission and cost details appear only where they have been independently verified.</p>
-        </section>
+          </section>
+        </main>
       </div>
-    </main>
+    </div>
   )
 }

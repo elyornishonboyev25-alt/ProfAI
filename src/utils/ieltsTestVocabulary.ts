@@ -25,3 +25,23 @@ export function speakingVocabularyTestId(modeLabel: string) {
   const match = /^Speaking Full Mock (\d+)$/.exec(modeLabel)
   return match ? `speaking-full-${match[1]}` : ''
 }
+
+/** Only live IELTS test routes can be used as vocabulary return destinations. */
+export function getIeltsVocabularyReturnTo(value: string | null | undefined) {
+  if (!value || /[\\\s]/.test(value)) return null
+  const path = value.split(/[?#]/, 1)[0]
+  const match = /^(?:\/test\/(listening|reading)|\/ielts\/(writing|speaking)\/test)\/([a-zA-Z0-9_-]+)$/.exec(path)
+  if (!match || !getIeltsTestVocabulary(match[3], (match[1] || match[2]) as IeltsVocabularySkill)) return null
+  return value
+}
+
+export function getIeltsVocabularyTestPath(testId: string, skill: IeltsVocabularySkill) {
+  return skill === 'listening' || skill === 'reading'
+    ? `/test/${skill}/${testId}`
+    : `/ielts/${skill}/test/${testId}`
+}
+
+export function withVocabularyReturnTo(path: string, returnTo: string | null) {
+  if (!returnTo) return path
+  return `${path}${path.includes('?') ? '&' : '?'}returnTo=${encodeURIComponent(returnTo)}`
+}

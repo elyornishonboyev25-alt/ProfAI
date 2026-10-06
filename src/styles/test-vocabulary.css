@@ -3,6 +3,30 @@
 .test-vocab-slot--reminder, .test-vocab-slot--review { margin: 12px 0; }
 .test-vocab-slot--link { margin: 10px 0 0; }
 
+.test-vocab-return-row { position: sticky; top: 12px; z-index: 30; display: flex; justify-content: flex-end; pointer-events: none; }
+.test-vocab-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 44px;
+  border: 1px solid #fecdd3;
+  border-radius: 14px;
+  background: #fff;
+  padding: 9px 14px;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+  box-shadow: 0 6px 20px -10px rgb(159 18 57 / 25%);
+  pointer-events: auto;
+}
+.test-vocab-return:hover { background: #fff1f2; }
+.test-vocab-return:focus-visible { outline: 2px solid #fb7185; outline-offset: 3px; }
+.test-vocab-return > span { min-width: 0; }
+.test-vocab-return-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #64748b; font-size: 10px; font-weight: 500; }
+
 .test-vocab-card {
   position: relative;
   display: grid;
@@ -17,6 +41,15 @@
   box-shadow: 0 8px 28px -16px rgb(159 18 57 / 18%), inset 0 1px 0 #fff;
 }
 .test-vocab-card--review { border-radius: 32px; padding-right: 24px; background: linear-gradient(115deg, #fff 25%, #fff1f3 100%); }
+.test-vocab-card--reminder { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; border-radius: 22px; padding: 14px 46px 14px 16px; background: linear-gradient(115deg, #fff 50%, #fff5f6); }
+.test-vocab-card--reminder .test-vocab-icon { width: 40px; height: 40px; border-radius: 14px; }
+.test-vocab-card--reminder .test-vocab-eyebrow { margin-bottom: 3px; }
+.test-vocab-card--reminder .test-vocab-description { margin-top: 3px; line-height: 1.5; }
+.test-vocab-card--reminder .test-vocab-meta { margin-top: 6px; }
+.test-vocab-card--reminder .test-vocab-count { padding: 2px 7px; }
+.test-vocab-card--reminder .test-vocab-words { margin-top: 6px; gap: 5px; }
+.test-vocab-card--reminder .test-vocab-word { padding: 2px 8px; }
+.test-vocab-card--reminder .test-vocab-cta { min-height: 40px; padding-block: 9px; }
 .test-vocab-card--compact { gap: 14px; padding: 12px 20px; border-radius: 28px; }
 .test-vocab-glow { position: absolute; top: -70px; right: 0; width: 240px; max-width: 100%; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgb(251 113 133 / 11%), transparent 68%); pointer-events: none; }
 .test-vocab-icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; align-self: start; margin-top: 3px; border: 1px solid rgb(251 113 133 / 20%); border-radius: 16px; background: linear-gradient(145deg, #ffe4e6, #fff1f2); color: #e11d48; }
@@ -77,6 +110,8 @@
   .test-vocab-card--compact .test-vocab-eyebrow { display: none; }
   .test-vocab-card--compact .test-vocab-meta { margin-top: 4px; }
   .test-vocab-card--compact .test-vocab-cta { width: 100%; min-height: 36px; padding-block: 7px; }
+  .test-vocab-card--reminder { grid-template-columns: 34px minmax(0, 1fr); padding: 14px; gap: 10px 12px; border-radius: 20px; }
+  .test-vocab-card--reminder .test-vocab-icon { width: 34px; height: 34px; border-radius: 12px; }
 }
 @container test-vocabulary (max-width: 320px) {
   .test-vocab-card { padding: 14px; gap: 10px; }

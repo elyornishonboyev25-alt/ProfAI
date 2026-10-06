@@ -11,6 +11,8 @@ import { usePronunciation } from './activities'
 import VocabularyExample from './VocabularyExample'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/ielts-vocabulary.css'
+import VocabularyTestReturn from './VocabularyTestReturn'
+import { getIeltsVocabularyReturnTo, withVocabularyReturnTo } from '@/utils/ieltsTestVocabulary'
 
 const skills = [
   { id: 'listening', label: 'Listening', icon: Headphones, description: '20 words · 1-4 parts' },
@@ -91,6 +93,7 @@ export default function IeltsVocabularyStudio() {
   const { c } = useCopy()
   const { reducedMotion } = useMotionPreferences()
   const [params, setParams] = useSearchParams()
+  const returnTo = getIeltsVocabularyReturnTo(params.get('returnTo'))
   const [query, setQuery] = useState('')
   const [expandedTests, setExpandedTests] = useState<Partial<Record<IeltsVocabularySkill, string | null>>>({})
   const sectionRef = useRef<HTMLElement>(null)
@@ -107,12 +110,13 @@ export default function IeltsVocabularyStudio() {
   const words = book.tests.reduce((sum, test) => sum + test.sections.reduce((n, section) => n + section.entries.length, 0), 0)
   const search = query.trim().toLowerCase()
   const visible = book.tests.filter((test) => `${test.title} ${test.sections.map((section) => `${section.topic} ${section.entries.map((entry) => entry.term).join(' ')}`).join(' ')}`.toLowerCase().includes(search))
-  const update = (next: Record<string, string>) => { setParams(next); setQuery('') }
+  const update = (next: Record<string, string>) => { setParams(returnTo ? { ...next, returnTo } : next); setQuery('') }
   const originPath = selected && selectedPart ? `/vocabulary/ielts/${book.id}/${selected.id}/${selectedPart.id}` : ''
 
   return (
     <div className={`ielts-vocab-studio workspace-page min-h-screen px-4 py-8 sm:px-6 lg:px-10 ${reducedMotion ? 'ielts-vocab-reduced-motion' : ''}`}>
       <div className="mx-auto max-w-[1440px] space-y-6">
+        {returnTo ? <div className="test-vocab-return-row"><VocabularyTestReturn returnTo={returnTo} /></div> : null}
         <header className="flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
           <div>
             <Link to="/vocabulary" className="premium-back-btn"><ArrowLeft className="h-4 w-4" /><UiText text="Back to Vocabulary" /></Link>
@@ -153,7 +157,7 @@ export default function IeltsVocabularyStudio() {
                 <div className="min-w-0 flex-1"><h3 className="text-lg font-extrabold text-slate-900">{selectedPart.topic}</h3><p className="mt-2 text-sm text-slate-500">{selectedPart.entries.length} <UiText text="terms" /></p>
                   {selectedPart.prompt ? <details className="mt-3 text-sm text-slate-600"><summary className="cursor-pointer font-semibold"><UiText text="Test prompt" /></summary><p className="mt-2 whitespace-pre-line leading-6">{selectedPart.prompt}</p></details> : null}
                 </div>
-                <Link to={originPath} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-[0_8px_22px_rgba(220,38,38,0.18)] transition hover:bg-red-700"><UiText text="Practise this set" /><ArrowRight className="h-4 w-4" /></Link>
+                <Link to={withVocabularyReturnTo(originPath, returnTo)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-[0_8px_22px_rgba(220,38,38,0.18)] transition hover:bg-red-700"><UiText text="Practise this set" /><ArrowRight className="h-4 w-4" /></Link>
               </div>
               <WordSaveProvider value={{ context: skill, origin: { label: `${selected.title} · ${selectedPart.title}`, path: originPath } }}>
                 <div key={selectedPart.id} className="ielts-vocab-enter grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">{selectedPart.entries.map((entry) => <IeltsVocabularyWord key={entry.id} entry={entry} />)}</div>

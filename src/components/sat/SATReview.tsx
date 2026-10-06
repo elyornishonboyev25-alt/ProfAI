@@ -22,6 +22,7 @@ import {
   isSATAnswerCorrect,
   scoreSATModules,
   type SATAttempt,
+  type HighlightStroke,
   type SATModuleId,
   type SATQuestion,
 } from '@/features/sat/practiceTest4'
@@ -30,6 +31,7 @@ import { isSATTestComplete, satAvailabilityNote, type SATTestDefinition } from '
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
+import SATTextHighlights from './SATTextHighlights'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 
@@ -78,10 +80,11 @@ function statusMeta(question: SATQuestion, attempt: SATAttempt) {
   return { label: 'Incorrect', className: 'bg-red-50 text-red-700', icon: XCircle }
 }
 
-function ReviewQuestion({ question, response, note }: { question: SATQuestion; response?: string; note?: string }) {
+function ReviewQuestion({ question, response, note, strokes }: { question: SATQuestion; response?: string; note?: string; strokes: HighlightStroke[] }) {
   const { context, task } = splitSATPrompt(question.prompt)
   const correct = isSATAnswerCorrect(question, response)
   return (
+    <SATTextHighlights key={question.id} strokes={strokes} enabled={false}>
     <div className="space-y-4">
       <section className="overflow-hidden rounded-[1.7rem] border border-slate-200/80 bg-white shadow-[0_12px_34px_rgba(32,55,99,.05)]">
         <div className="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-[linear-gradient(90deg,#f5f9ff,#fff9f9)] px-5 py-4 sm:px-7">
@@ -99,11 +102,13 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
             />
           ) : null}
           {question.sourceContent ? <>
+            <div data-sat-highlight-block="context">
             {question.sourceContent.context && <SATSourceContent html={question.sourceContent.context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" />}
-            <SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-lg font-semibold leading-7 text-slate-950" />
+            </div><div data-sat-highlight-block="task"><SATSourceContent html={question.sourceContent.task} className="mt-5 font-serif text-lg font-semibold leading-7 text-slate-950" /></div>
           </> : <>
+            <div data-sat-highlight-block="context">
             {context ? <SATRichText text={context} className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800" /> : null}
-            <SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-lg font-semibold leading-7 text-slate-950`} />
+            </div><div data-sat-highlight-block="task"><SATRichText text={task} className={`${context ? 'mt-5' : ''} font-serif text-lg font-semibold leading-7 text-slate-950`} /></div>
           </>}
 
           {question.kind === 'multiple-choice' ? (
@@ -118,7 +123,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
                       isCorrectChoice ? 'bg-emerald-600 text-white' : isUserChoice ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
                     }`}>{choice.key}</span>
-                    <span className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800">
+                    <span data-sat-highlight-block={`choice-${choice.key}`} className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
                       {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
                     </span>
@@ -158,6 +163,7 @@ function ReviewQuestion({ question, response, note }: { question: SATQuestion; r
 
       {note ? <section className="rounded-2xl border border-violet-100 bg-violet-50 p-4"><p className="text-[9px] font-black uppercase tracking-[0.12em] text-violet-700">Your test-day note</p><p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-700">{note}</p></section> : null}
     </div>
+    </SATTextHighlights>
   )
 }
 
@@ -323,7 +329,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
 
           <article className="min-w-0 rounded-[2rem] border border-white bg-white/90 p-4 shadow-[0_24px_64px_rgba(33,52,96,.1)] sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-5"><div><p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">{selectedModule?.title}</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Question {selectedQuestion.number}</h2></div><div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black ${selectedStatus.className}`}><StatusIcon className="h-4 w-4" />{selectedStatus.label}</div></div>
-            {filteredQuestions.length ? <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} /> : <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-20 text-center text-sm font-semibold text-slate-500">No questions match this filter. Choose another status or module to continue reviewing.</div>}
+            {filteredQuestions.length ? <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} strokes={attempt.highlights[selectedQuestion.id] ?? []} /> : <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-20 text-center text-sm font-semibold text-slate-500">No questions match this filter. Choose another status or module to continue reviewing.</div>}
             <div className="mt-4 flex items-center justify-between gap-2">
               <button type="button" disabled={visibleIndex <= 0} onClick={() => setSelectedId(filteredQuestions[visibleIndex - 1].id)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-blue-300 disabled:opacity-30"><ArrowLeft className="h-4 w-4" /> Previous</button>
               <span className="text-xs font-black text-slate-500">{visibleIndex < 0 ? 0 : visibleIndex + 1} / {filteredQuestions.length}</span>

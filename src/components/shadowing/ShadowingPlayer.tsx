@@ -310,8 +310,8 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
         <p className="mb-4 mt-2 text-sm text-slate-600">{c('Each section plays once. Replay whenever you need.')}</p>
         <div ref={audioHost} className={`pointer-events-none relative ml-auto aspect-video w-40 overflow-hidden rounded-lg bg-black [&_iframe]:h-full [&_iframe]:w-full ${activeAudio === null ? 'sr-only' : 'mb-4'}`} />
         {errors.audio && <p role="alert" className="mb-3 text-sm text-red-600">{c('Audio playback could not load. Retry the player.')}</p>}
-        {!lesson.segments.length && <p role="status" className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">{c(lesson.captions.length ? 'This transcript has no safe 12–18 second boundaries. Choose another lesson.' : 'Audio sections need timed English captions. Retry captions if they are unavailable; the video preview still works.')}</p>}
-        {lesson.segments.some(section => section.endSec - section.startSec < 12) && <p className="mb-3 text-xs text-slate-500">{c('The final section may be shorter to keep the speech intact.')}</p>}
+        {!lesson.segments.length && <p role="status" className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">{c('Audio sections need timed English captions. Retry captions if they are unavailable; the video preview still works.')}</p>}
+        {lesson.segments.some(section => section.endSec - section.startSec < 12 || section.endSec - section.startSec > 18) && <p className="mb-3 text-xs text-slate-500">{c('Section lengths follow the available caption boundaries to keep speech intact.')}</p>}
         <div className="space-y-3">{lesson.segments.map((section, index) => {
           const selected = activeAudio === index
           const audioPlaying = selected && playing && playback.current.kind === 'audio'

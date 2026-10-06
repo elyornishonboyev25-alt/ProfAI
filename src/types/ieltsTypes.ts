@@ -49,7 +49,7 @@ export type ListeningBlock =
     | { kind: 'multi-mcq'; blanks: number[]; prompt: string; options: string[]; selectionLimit: number }
     | { kind: 'table'; columns: string[]; rows: { segments: ListeningSegment[] }[][] }
     | { kind: 'image'; src: string; alt: string; caption?: string }
-    | { kind: 'diagram'; diagram: 'education-house' }
+    | { kind: 'diagram'; diagram: 'education-house' | 'old-water-mill' }
     | { kind: 'space' }
 
 export interface ListeningGroup {

@@ -128,11 +128,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     if (window.confirm(prompt)) void forgetMemory(memoryId)
   }
 
-  const [hero, setHero] = useState(true)
-  useEffect(() => {
-    if (messages.length > 0) setHero(false)
-  }, [messages.length])
-
   const statusText = c(STATUS_TEXT[voiceState] ?? STATUS_TEXT.idle)
   const quickChips = workspace.starters[uiLanguage]
 
@@ -213,7 +208,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     )
   }
 
-  const showHero = hero && messages.length === 0
+  const showHero = messages.length === 0
 
   return (
     <section

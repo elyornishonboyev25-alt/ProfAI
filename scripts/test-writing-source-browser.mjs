@@ -16,7 +16,7 @@ const bundle = await build({
     import Diagram from './src/components/writing/WritingTaskDiagram';
     import { getWritingFullTestCatalog } from './src/data/writingTestData';
     createRoot(document.getElementById('root')).render(<>
-      {getWritingFullTestCatalog().filter(t => t.index >= 21).map(t => <section key={t.id}>
+      {getWritingFullTestCatalog().filter(t => [6, 8, 11, 12, 13, 14].includes(t.index) || t.index >= 21).map(t => <section key={t.id}>
         <h2>Writing Full Test {t.index}</h2><Diagram diagram={t.tasks[0].diagram} />
       </section>)}
     </>);
@@ -26,7 +26,7 @@ const bundle = await build({
 })
 const server = createServer((req, res) => {
   if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text); return }
-  res.setHeader('Content-Security-Policy', "img-src 'none'")
+  res.setHeader('Content-Security-Policy', req.url === '/pixels' ? 'img-src blob:' : "img-src 'none'")
   res.setHeader('Content-Type', 'text/html')
   res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#eee;font-family:Arial}#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px}section{background:white;padding:12px}h2{font-size:16px}svg{display:block;width:100%;height:auto}@media(max-width:600px){#root{grid-template-columns:1fr}}</style><div id="root"></div><script src="/fixture.js"></script>')
 })
@@ -65,11 +65,32 @@ try {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width === 390 })
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
     for (let i = 0; i < 100; i++) {
-      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 10')) break
+      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 16')) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    assert.equal(await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length'), 10)
+    assert.equal(await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length'), 16)
     assert.equal(await evaluate('document.querySelectorAll("img, image").length'), 0)
+    // The page above is verified with all image loading blocked. A separate
+    // test-only page permits a blob to compare serialized SVG pixels.
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/pixels` })
+    for (let i = 0; i < 100; i++) {
+      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 16')) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    const sourceHash = await evaluate(`(async () => {
+      const svg = document.querySelector('svg[data-supplied-writing-diagram="aluminium-recycling"]').cloneNode(true);
+      svg.setAttribute('width', '422'); svg.setAttribute('height', '452'); svg.removeAttribute('class');
+      const vector = new Image();
+      const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
+      vector.src = url; await vector.decode();
+      const canvas = document.createElement('canvas'); canvas.width = 422; canvas.height = 452;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(vector, 0, 0);
+      const rgba = ctx.getImageData(0, 0, 422, 452).data, rgb = new Uint8Array(422 * 452 * 3);
+      for (let i = 0; i < 422 * 452; i++) { rgb[i * 3] = rgba[i * 4]; rgb[i * 3 + 1] = rgba[i * 4 + 1]; rgb[i * 3 + 2] = rgba[i * 4 + 2]; }
+      const hash = await crypto.subtle.digest('SHA-256', rgb); URL.revokeObjectURL(url);
+      return Array.from(new Uint8Array(hash), n => n.toString(16).padStart(2, '0')).join('');
+    })()`)
+    assert.equal(sourceHash, '5748a60ccb5d24e5479e1d083d6301b00985393003d6127cf3207680dfdc2f79', 'Aluminium artwork must match the supplied source exactly')
     assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, 'No page overflow')
     const clipped = await evaluate(`Array.from(document.querySelectorAll('svg')).flatMap(svg => {
       const b = svg.viewBox.baseVal;
@@ -85,9 +106,9 @@ try {
     assert.deepEqual(clipped, [], 'Every source label stays inside its drawing')
     const height = await evaluate('document.documentElement.scrollHeight')
     const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 } })
-    const path = join(tmpdir(), `profai-writing-21-30-${width}.png`)
+    const path = join(tmpdir(), `profai-writing-supplied-${width}.png`)
     await writeFile(path, Buffer.from(screenshot.data, 'base64'))
-    console.log(`PASS: ${width}px: all ten native drawings, image loading blocked, no clipped labels or page overflow; preview ${path}`)
+    console.log(`PASS: ${width}px: all sixteen native drawings, image loading blocked, no clipped labels or page overflow; preview ${path}`)
   }
 } finally {
   socket?.close(); browser.kill(); await exited

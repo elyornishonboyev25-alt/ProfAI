@@ -1,7 +1,7 @@
 import content from './ieltsFullTestVocabulary.json'
 import type { IeltsBook, VocabularyEntry } from './vocabularyCollections'
 import { getWritingFullTestById } from './writingTestData'
-import { WRITING_SUPPLIED_VOCABULARY, RECYCLING_VOCABULARY } from './writingSuppliedVocabulary'
+import { WRITING_SUPPLIED_VOCABULARY, SUPPLIED_VOCABULARY_DEFINITIONS } from './writingSuppliedVocabulary'
 
 export type IeltsVocabularySkill = 'listening' | 'reading' | 'writing' | 'speaking'
 
@@ -50,7 +50,7 @@ for (const test of writingBook.tests) {
   section.topic = task.subtitle
   section.prompt = task.promptLead
   section.entries = examples.map(([term, example], index) => ({
-    ...(RECYCLING_VOCABULARY[term] ?? lexicon[term]),
+    ...(SUPPLIED_VOCABULARY_DEFINITIONS[term] ?? lexicon[term]),
     id: `${section.id}_entry_${index + 1}`,
     example,
     sourceExcerpt: task.visualContext!,

@@ -26,6 +26,12 @@ const evaluation: WritingEvaluation = {
 
 export async function run() {
   const suppliedDetails: Record<number, string[]> = {
+    6: ['International students at a UK university', '1995', '2000', '2005', '2010', '2015', 'Students', 'Year', 'Asia', 'Africa', 'Europe', 'North America', '140'],
+    8: ['Comparison of Energy Production', '1995', '2005', 'Coal', 'Gas', 'Petro', 'Nuclear', 'Other', '29.80%', '29.63%', '29.27%', '6.40%', '4.90%', '30.93%', '30.31%', '19.55%', '10.10%', '9.10%'],
+    11: ['Average minutes spent on reading for pleasure', 'Average minutes spent on listening to music', 'Minutes per day', 'Age groups', '15-24', '25-34', '35-44', '45-54', '55+', '90', 'Hanexenglish.edu.vn'],
+    12: ['Number of patients to four clinics in one hospital', '2010', '2012', '2014', '2016', 'Birth control', 'Eye', 'Diabetic', 'Dental', '400'],
+    13: ['Geothermal power plant', 'Cold', 'Hot', 'water', 'pumped', 'down', 'up', '4.5 km', 'injection', 'production', 'well', 'Condenser', 'Steam', 'Turbine', 'Generator', 'Geothermal zone (hot rocks)', '(powered by', 'electricity)', '1', '2', '3', '4', '5'],
+    14: ['IELTS Task 1: Tourist Office', 'in person', 'by letter/email', 'by telephone', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', '2000'],
     21: ['Museum 1957', 'Museum 2007', 'national history', 'exhibition', 'store-', 'education', 'centre', 'car park', 'Road'],
     22: ['2003', '2006', '2013', 'Every', 'Never', '40%'],
     23: ['175.5m', '177.8m', '91.2m', '102.3m', '304.7m', '318.6m', '75%', '69%', '8%', '14%', '17%'],
@@ -37,7 +43,7 @@ export async function run() {
     29: ['0-9', '10-19', '20-39', '40-59', '60+', '52.5', '51.2', '43.6', '25.1', '18.2', '10.8', '13.7', '9.3', '19.8', '14.6'],
     30: ['52.8', '47.7', '42.2', '48.9', '39.5', '52.5', '43.1', '53.3', '45.1', '53', '46.7', '47.1', '65 and over'],
   }
-  for (const index of Array.from({ length: 13 }, (_, i) => i + 18)) {
+  for (const index of [6, 8, 11, 12, 13, 14, ...Array.from({ length: 13 }, (_, i) => i + 18)]) {
     window.localStorage.clear()
     const test = getWritingFullTestById(`writing-full-${index}`)!
     // Exercise the same saved-session entry path used when a test is reopened.

@@ -4,6 +4,8 @@ import { MajorSportsChart, SchoolTravelChart, SuppliedBrickManufacturing } from 
 import { FastFoodChart, PoliceBudgetChart, CanadianLeisureChart, UKEconomicSectorsChart, CO2EmissionsChart, BicycleRidingTable, AustralianActivityChart } from './SuppliedWritingCharts21to30'
 import { MuseumMaps, UniversitySportsPlans } from './SuppliedWritingMaps21to30'
 import AluminiumRecyclingDiagram from './SuppliedAluminiumRecycling'
+import { InternationalStudentsChart, EnergyProductionPies, HospitalClinicsChart, NewZealandLeisureCharts, TouristOfficeChart } from './SuppliedWritingCharts6to14'
+import GeothermalPowerPlant from './SuppliedGeothermalDiagram'
 
 type Diagram = NonNullable<WritingTask['diagram']>
 
@@ -231,6 +233,12 @@ function RiversideParkDiagram() {
 
 export default function WritingTaskDiagram({ diagram }: { diagram: Diagram }) {
   switch (diagram) {
+    case 'international-students-1995-2015': return <InternationalStudentsChart />
+    case 'energy-production-1995-2005': return <EnergyProductionPies />
+    case 'hospital-clinics-2010-2016': return <HospitalClinicsChart />
+    case 'geothermal-power-plant': return <GeothermalPowerPlant />
+    case 'new-zealand-leisure-time': return <NewZealandLeisureCharts />
+    case 'tourist-office-enquiries': return <TouristOfficeChart />
     case 'museum-1957-2007': return <MuseumMaps />
     case 'usa-fast-food-2003-2013': return <FastFoodChart />
     case 'police-budget-2017-2018': return <PoliceBudgetChart />

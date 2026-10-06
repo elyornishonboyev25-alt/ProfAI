@@ -6,6 +6,44 @@ export const SUPPLIED_TASK_VISUALS: Record<number, {
   kind: string; title: string; lead: string; context: string; instructions?: string
   diagram: NonNullable<WritingTask['diagram']>
 }> = {
+  6: {
+    kind: 'Line graph', title: 'International students at a UK university',
+    lead: 'The chart shows the number of international students studying at a UK university between 1995 and 2015.',
+    instructions: 'Summarise the information by selecting and reporting the main features and make comparisons where relevant. You should spend about 20 minutes on this task.',
+    diagram: 'international-students-1995-2015',
+    context: 'International students at a UK university. Students, not percentages. Years 1995, 2000, 2005, 2010, 2015. Approximate point heights: Asia 60, 70, 90, 110, 120 (solid line, diamond markers); Africa 20, 19, 20, 30, 20 (dashed line, square markers); Europe 50, 55, 50, 55, 50 (dotted line, triangle markers); North America 40, 40, 35, 40, 70 (solid line without markers). Vertical scale 0–140 in increments of 20; horizontal axis Year; vertical axis Students. Accept reasonable estimates because individual figures are not printed on the source.',
+  },
+  8: {
+    kind: 'Pie charts', title: 'Comparison of Energy Production',
+    lead: 'The pie charts above show a comparison of kinds of energy production in a European country in 1995 and 2005.',
+    diagram: 'energy-production-1995-2005',
+    context: 'Comparison of Energy Production, 1995 and 2005. Percentages exactly as printed. 1995: Coal 29.80%, Gas 29.63%, Petro 29.27%, Nuclear 6.40%, Other 4.90%. 2005: Coal 30.93%, Gas 30.31%, Petro 19.55%, Nuclear 10.10%, Other 9.10%. Coal black, Gas grey, Petro orange, Nuclear red, Other green. Both pies start with Coal in the upper-right sector, Other at the right, Nuclear at the lower-right, Petro at the bottom and Gas at the left. The printed 2005 percentages total 99.99% due to rounding; preserve all printed values.',
+  },
+  11: {
+    kind: 'Bar chart', title: 'Popular leisure activities in New Zealand',
+    lead: 'The graphs illustrate the average amount of time per day spent on popular leisure activities of different age groups in New Zealand.',
+    instructions: 'Provide an overview of the information by identifying and describing the key details, and include comparisons where appropriate. Your report should comprise a minimum of 150 words.',
+    diagram: 'new-zealand-leisure-time',
+    context: 'Two grey bar charts. Average minutes spent on reading for pleasure and Average minutes spent on listening to music. Age groups 15-24, 25-34, 35-44, 45-54, 55+. Approximate reading values in minutes per day: 20, 35, 45, 50, 70. Approximate listening to music values: 80, 60, 45, 60, 75. Both vertical scales 0–90 in increments of 10; vertical axis Minutes per day, horizontal axis Age groups. No individual values printed on the bars; accept reasonable estimates. The original page footer is Hanexenglish.edu.vn, page 1.',
+  },
+  12: {
+    kind: 'Line graph', title: 'Number of patients to four clinics in one hospital',
+    lead: 'The line graph shows the average number of weekly patients visiting four clinics of a hospital from 2010 to 2016.',
+    diagram: 'hospital-clinics-2010-2016',
+    context: 'Number of patients to four clinics in one hospital. Average weekly patients, 2010, 2012, 2014, 2016 respectively, approximate graph heights: Birth control 240, 280, 180, 240 (solid); Eye 125, 150, 250, 350 (dashed); Diabetic 65, 80, 100, 175 (dotted); Dental 100, 60, 125, 130 (dash-dot). Vertical scale 0–400 in increments of 50. Preserve the source series names Birth control, Eye, Diabetic, Dental. Values are not printed at the points; accept reasonable estimates.',
+  },
+  13: {
+    kind: 'Process diagram', title: 'Geothermal power plant',
+    lead: 'The diagram below shows how geothermal energy is used to produce electricity.',
+    diagram: 'geothermal-power-plant',
+    context: 'Geothermal power plant. Five numbered stages: 1 Cold water; 2 The injection well; 3 The production well; 4 Condenser; 5 Generator / Turbine. Cold water pumped down 4.5 km in the injection well, flows through the Geothermal zone (hot rocks), and Hot water pumped up through the production well to the Condenser. Steam flows left from the Condenser to the Turbine (powered by steam), which powers the Generator (powered by turbine and produces electricity). Electricity is transmitted to the pylon on the left. Preserve underground U-shaped pipes, down/up arrows, the steam arrow, machinery, tower, depth marker, all source labels, and the numbered circles.',
+  },
+  14: {
+    kind: 'Line graph', title: 'IELTS Task 1: Tourist Office',
+    lead: 'The chart shows requests for information at a tourist office in the United Kingdom from January to June.',
+    diagram: 'tourist-office-enquiries',
+    context: 'Requests for information at a tourist office in the United Kingdom, January to June. Months Jan, Feb, Mar, Apr, May, Jun. Approximate graph heights: in person 450, 600, 800, 1250, 1550, 1900 (blue diamond markers); by letter/email 750, 700, 700, 550, 350, 350 (red square markers); by telephone 900, 800, 1000, 1000, 1400, 1600 (green triangle markers). All three connecting lines are black and solid. Vertical scale 0–2000 in increments of 200; no individual figures printed on the lines, so accept reasonable estimates. Preserve the legend wording and placement at the right.',
+  },
   18: {
     kind: 'Bar chart', title: 'Adults participating in major sports',
     lead: 'The chart below shows the number of adults participating in different major sports in one area, in 1997 and 2017.',

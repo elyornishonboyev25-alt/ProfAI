@@ -52,6 +52,9 @@ export type WritingTask = {
     | 'canada-teenage-leisure' | 'university-sports-centre' | 'uk-economic-sectors'
     | 'co2-emissions-1967-2007' | 'aluminium-can-recycling' | 'bicycle-riding-2012'
     | 'australian-physical-activity-2010'
+    | 'international-students-1995-2015' | 'energy-production-1995-2005'
+    | 'hospital-clinics-2010-2016' | 'geothermal-power-plant'
+    | 'new-zealand-leisure-time' | 'tourist-office-enquiries'
   imageUrl?: string
   imageAlt?: string
   promptLead?: string

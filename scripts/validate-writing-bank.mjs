@@ -128,12 +128,15 @@ for (let offset = 0; offset < tests.length; offset++) {
   else if (sourceVisual.extension === 'jpg') assert.equal(bytes.subarray(0, 3).toString('hex'), 'ffd8ff')
   else assert.equal(bytes.subarray(0, 4).toString('utf8'), 'RIFF')
 }
-for (const kind of ['Bar chart', 'Line graph', 'Maps', 'Process diagram', 'Table', 'Charts']) {
+for (const kind of ['Bar chart', 'Line graph', 'Pie charts', 'Maps', 'Process diagram', 'Table', 'Charts']) {
   assert.ok(visualKinds.has(kind), `Missing Task 1 diagram variety: ${kind}`)
 }
 assert.equal(Object.keys(supplied.SOURCE_TASK_VISUALS).length, 13)
 assert.equal(Object.keys(practice.PRACTICE_TASK_VISUALS).length, 10)
-assert.equal(Object.keys(native.SUPPLIED_TASK_VISUALS).length, 13)
+assert.equal(Object.keys(native.SUPPLIED_TASK_VISUALS).length, 19)
+for (const [index, diagram] of [[6, 'international-students-1995-2015'], [8, 'energy-production-1995-2005'], [11, 'new-zealand-leisure-time'], [12, 'hospital-clinics-2010-2016'], [13, 'geothermal-power-plant'], [14, 'tourist-office-enquiries']]) {
+  assert.equal(catalog.find(test => test.index === index).tasks[0].diagram, diagram)
+}
 assert.equal(tests[13].tasks[0].diagram, 'major-sports-1997-2017')
 assert.equal(tests[14].tasks[0].diagram, 'school-travel-1990-2010')
 assert.equal(tests[15].tasks[0].diagram, 'supplied-brick-manufacturing')
@@ -147,4 +150,4 @@ assert.deepEqual(Array.from(tests.filter(test => test.index >= 21), test => test
 assert.ok(kindCounts.get('Maps') >= 2)
 assert.ok(kindCounts.get('Process diagram') >= 2)
 execFileSync(process.execPath, [fileURLToPath(new URL('./generate-writing-practice-images.mjs', import.meta.url)), '--check'])
-console.log('Writing bank valid: 30 full tests, unique Task 1 and Task 2 prompts, 21 official Task 2 replacements, 13 supplied native SVG diagrams.')
+console.log('Writing bank valid: 30 full tests, unique Task 1 and Task 2 prompts, 21 official Task 2 replacements, 19 supplied native SVG diagrams.')

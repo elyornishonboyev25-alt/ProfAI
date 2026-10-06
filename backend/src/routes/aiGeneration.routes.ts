@@ -3,8 +3,22 @@ import { z } from 'zod'
 import { AiGenerationError, generateAiText } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { withCoinCharge } from '../services/coinBilling.service.js'
+import { assessWriting, writingRequestSchema } from '../services/writingAssessment.service.js'
 
 const router = Router()
+
+router.post('/writing/evaluate', asyncHandler(async (req, res) => {
+  const payload = writingRequestSchema.parse(req.body)
+  const controller = new AbortController()
+  const close = () => { if (!res.writableEnded) controller.abort() }
+  res.on('close', close)
+  try { return res.json(await withCoinCharge(req.user!.id, 'writing', () => assessWriting(req.user!.id, payload, controller.signal))) }
+  catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  } finally { res.off('close', close) }
+}))
 
 const imageDataUrlSchema = z
   .string()

@@ -18,6 +18,14 @@ const { voiceInstructions } = await import('../dist/services/realtimeCoach.servi
 const { generateAiText } = await import('../dist/services/aiProvider.service.js')
 const { readEventStream } = await import('../dist/utils/eventStream.js')
 
+// These integration tests exercise AI routes with a full-access test account.
+// Billing itself is covered by coin-billing.test.mjs; never use a live database.
+prisma.$transaction = async (operation) => operation({
+  $queryRaw: async () => [], coinWallet: { findUnique: async () => ({ balance: 1000 }) },
+  user: { findUniqueOrThrow: async () => ({ role: 'ADMIN', email: 'test@example.invalid', nickname: null }) },
+  premiumGrant: { findUnique: async () => null },
+})
+
 test('stream decoding preserves split Unicode and incomplete JSON escapes', async () => {
   const value = JSON.stringify({ reply: 'Salom! O‘zbekcha 😊\n“Misol”', actions: [] })
   let previous = ''

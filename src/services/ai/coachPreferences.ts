@@ -1,0 +1,60 @@
+export type CoachStyle = 'adaptive' | 'gentle' | 'strict' | 'playful'
+export type LessonMode = 'teach' | 'practice' | 'review' | 'plan'
+export type CoachPreferences = { style: CoachStyle; lessonMode: LessonMode; playfulLanguage: boolean }
+export const DEFAULT_COACH_PREFERENCES: CoachPreferences = { style: 'adaptive', lessonMode: 'teach', playfulLanguage: false }
+
+const copy = {
+  en: {
+    studio: 'YOUR PERSONAL LEARNING STUDIO', title: 'A sharper mind. A brighter future.',
+    subtitle: 'Learn with a coach that adapts to you.', voice: 'Talk with Nova', focus: 'Choose your focus',
+    companion: 'Meet Nova', companionDetail: 'Your curious little study companion. A warm welcome, an honest correction, and one more try.',
+    ready: 'Ready when you are', listening: 'All ears', thinking: 'Connecting the dots', speaking: 'Let’s work through it',
+    style: 'Your coach, your style', adaptive: 'Adaptive', gentle: 'Gentle', strict: 'Focused', playful: 'Playful',
+    adaptiveDetail: 'Warm when you need support. Direct when you need a push.', gentleDetail: 'Patient explanations and encouragement, one step at a time.',
+    strictDetail: 'Clear standards, honest feedback, and a concrete next step.', playfulDetail: 'A little wit, memorable examples, and serious learning.',
+    playfulLanguage: 'Allow mild banter', banterDetail: 'Occasional mild swearing about the task. Never personal insults. Off in exam mode.',
+    lesson: 'How shall we learn?', teach: 'Teach me', practice: 'Challenge me', review: 'Review my work', plan: 'Make a plan',
+    preferences: 'Coach settings', private: 'Your conversations stay in your account', name: 'Nova · ProfAI companion',
+    welcome: 'What are we learning today?', welcomeDetail: 'Bring a tricky question, an essay, or a screenshot. We’ll make sense of it together.',
+    lessonDetail: 'Explain → try → improve', settingsNote: 'Applies to text and voice. You can change it anytime.',
+    ielts: 'IELTS', sat: 'SAT & Math', english: 'English', general: 'All subjects', admission: 'Admissions',
+    ieltsDetail: 'Band feedback & exam strategy', satDetail: 'Reasoning & checked solutions', englishDetail: 'Grammar, words & real conversation',
+    generalDetail: 'One question. A clear way forward.', admissionDetail: 'Applications & verified guidance',
+    nextStep: 'Pick a focus, then bring your first question.',
+  },
+  uz: {
+    studio: 'SHAXSIY O‘QUV STUDIYANGIZ', title: 'Teran fikr. Yorqin kelajak.', subtitle: 'Sizga moslashadigan murabbiy bilan o‘rganing.',
+    voice: 'Nova bilan gaplashing', focus: 'Yo‘nalishni tanlang', companion: 'Bu — Nova',
+    companionDetail: 'Qiziquvchan o‘quv hamrohingiz. Iliq qo‘llab-quvvatlash, aniq tuzatish va yana bir urinish.',
+    ready: 'Boshlashga tayyorman', listening: 'Diqqat bilan tinglayapman', thinking: 'Yechimni o‘ylayapman', speaking: 'Birga tushunib olamiz',
+    style: 'Murabbiy uslubini tanlang', adaptive: 'Moslashuvchan', gentle: 'Mehribon', strict: 'Talabchan', playful: 'Hazilkash',
+    adaptiveDetail: 'Kerak bo‘lsa dalda, kerak bo‘lsa qat’iy turtki.', gentleDetail: 'Sabrli tushuntirish va dalda, qadamma-qadam.',
+    strictDetail: 'Aniq talab, rost fikr va bajariladigan keyingi qadam.', playfulDetail: 'O‘rnida hazil, esda qoladigan misol va jiddiy o‘rganish.',
+    playfulLanguage: 'Yengil achchiq hazilga ruxsat', banterDetail: 'Topshiriq haqida ba’zan yengil so‘kinish. Shaxsiy haqorat yo‘q. Imtihonda o‘chadi.',
+    lesson: 'Qanday o‘rganamiz?', teach: 'Tushuntir', practice: 'Mashq qildir', review: 'Ishimni tekshir', plan: 'Reja tuz',
+    preferences: 'Murabbiy sozlamalari', private: 'Suhbatlaringiz o‘z hisobingizda saqlanadi', name: 'Nova · ProfAI hamrohi',
+    welcome: 'Bugun nimani o‘rganamiz?', welcomeDetail: 'Qiyin savol, insho yoki skrinshot yuboring. Birga tushunib olamiz.',
+    lessonDetail: 'Tushunish → urinish → rivojlanish', settingsNote: 'Matn va ovozga qo‘llanadi. Istalgan payt o‘zgartiring.',
+    ielts: 'IELTS', sat: 'SAT va matematika', english: 'Ingliz tili', general: 'Barcha fanlar', admission: 'Universitetga kirish',
+    ieltsDetail: 'Band tahlili va imtihon strategiyasi', satDetail: 'Mantiq va tekshirilgan yechim', englishDetail: 'Grammatika, so‘zlar va suhbat',
+    generalDetail: 'Savolingizga tushunarli yechim', admissionDetail: 'Arizalar va tasdiqlangan ma’lumot', nextStep: 'Yo‘nalishni tanlang va birinchi savolni yuboring.',
+  },
+  ru: {
+    studio: 'ВАША ЛИЧНАЯ УЧЕБНАЯ СТУДИЯ', title: 'Ясные мысли. Новые возможности.', subtitle: 'Учитесь с наставником, который подстраивается под вас.',
+    voice: 'Поговорить с Новой', focus: 'Выберите направление', companion: 'Знакомьтесь: Нова',
+    companionDetail: 'Ваш любознательный учебный спутник. Поддержка, честное исправление и ещё одна попытка.',
+    ready: 'Готова начать', listening: 'Внимательно слушаю', thinking: 'Ищу решение', speaking: 'Разберёмся вместе',
+    style: 'Ваш наставник, ваш стиль', adaptive: 'Гибкий', gentle: 'Мягкий', strict: 'Требовательный', playful: 'С юмором',
+    adaptiveDetail: 'Поддержка, когда она нужна. Прямота, когда пора действовать.', gentleDetail: 'Терпеливые объяснения и поддержка, шаг за шагом.',
+    strictDetail: 'Чёткие требования, честная обратная связь и следующий шаг.', playfulDetail: 'Уместный юмор, яркие примеры и серьёзная учёба.',
+    playfulLanguage: 'Разрешить лёгкое подшучивание', banterDetail: 'Иногда мягкая брань о задаче. Без личных оскорблений. Выключено на экзамене.',
+    lesson: 'Как будем учиться?', teach: 'Объясни', practice: 'Дай задание', review: 'Проверь работу', plan: 'Составь план',
+    preferences: 'Настройки наставника', private: 'Разговоры сохраняются в вашем аккаунте', name: 'Нова · спутник ProfAI',
+    welcome: 'Что изучаем сегодня?', welcomeDetail: 'Пришлите сложный вопрос, эссе или скриншот. Разберёмся вместе.',
+    lessonDetail: 'Понять → попробовать → улучшить', settingsNote: 'Для текста и голоса. Можно изменить в любой момент.',
+    ielts: 'IELTS', sat: 'SAT и математика', english: 'Английский', general: 'Все предметы', admission: 'Поступление',
+    ieltsDetail: 'Разбор баллов и стратегия экзамена', satDetail: 'Рассуждение и проверка решений', englishDetail: 'Грамматика, слова и общение',
+    generalDetail: 'Понятный путь к решению', admissionDetail: 'Заявки и проверенные сведения', nextStep: 'Выберите направление и задайте первый вопрос.',
+  },
+}
+export function coachCopy(language = 'en') { return copy[language.startsWith('uz') ? 'uz' : language.startsWith('ru') ? 'ru' : 'en'] }

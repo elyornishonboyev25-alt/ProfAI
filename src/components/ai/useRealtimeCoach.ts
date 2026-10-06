@@ -40,6 +40,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
       const voice = new RealtimeCoach({
         context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: locale, mode,
+          coachPreferences: tutor.coachPreferences,
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
           screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000),
@@ -56,7 +57,9 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       })
       connection.current = voice
       await voice.start()
-      if (!disposed && currentPath.current !== location.pathname) await voice.updateContext({ pathname: currentPath.current, workspace: tutor.activeWorkspace, language: locale, mode, studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) })
+      if (!disposed) await voice.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: locale, mode,
+        coachPreferences: latest.current.coachPreferences,
+        studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) })
     }
     void connect().catch((issue) => { if (!disposed) setError(issue instanceof Error ? issue.message : 'Voice could not connect.') })
     return () => { disposed = true; connection.current?.stop(); connection.current = null }
@@ -68,10 +71,11 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
       void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: tutor.voiceLang, mode,
+        coachPreferences: tutor.coachPreferences,
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.voiceLang, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.voiceLang, tutor.coachPreferences, mode])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])

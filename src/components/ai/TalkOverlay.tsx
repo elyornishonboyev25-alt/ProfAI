@@ -6,6 +6,7 @@ import { useAiTutor, type AiTutorController } from '@/components/ai/useAiTutor'
 import { useRealtimeCoach } from './useRealtimeCoach'
 import { apiClient } from '@/lib/apiClient'
 import VoiceOrb from '@/components/ai/VoiceOrb'
+import CoachControls from './CoachControls'
 import { useCopy } from '@/i18n/interface'
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -122,7 +123,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[200] flex flex-col items-center justify-center px-6"
+        className="coach-voice-stage fixed inset-0 z-[200] flex flex-col items-center justify-center px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -270,7 +271,7 @@ export function TalkOverlay() {
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setDocked(true)
       if (event.key === 'Tab') {
-        const buttons = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]')
+        const buttons = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), summary, a[href], [tabindex="0"]')
         if (!buttons?.length) return
         const first = buttons[0], last = buttons[buttons.length - 1]
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
@@ -296,7 +297,7 @@ export function TalkOverlay() {
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
-  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="ProfAI voice" className="fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
+  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="ProfAI voice" className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,18,57,.28),transparent_65%)]" />
     <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 pb-10 pt-5 text-center">
       <div className="flex w-full items-center justify-between gap-3">
@@ -306,7 +307,8 @@ export function TalkOverlay() {
       <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>
         {(['coach', 'examiner'] as const).map((choice) => <button key={choice} onClick={() => setMode(choice)} aria-pressed={mode === choice} className={`min-h-11 rounded-full border px-5 text-sm font-semibold ${mode === choice ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300 hover:bg-white/10'}`}>{choice === 'coach' ? t('Personal coach', 'Shaxsiy murabbiy', 'Личный наставник') : t('IELTS examiner', 'IELTS imtihon oluvchi', 'Экзаменатор IELTS')}</button>)}
       </div>
-      <VoiceOrb state={tutor.voiceState} level={tutor.voiceLevel} size={180} />
+      <VoiceOrb state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
+      {mode === 'coach' ? <CoachControls compact /> : null}
       <h2 className="mt-6 text-2xl font-bold" aria-live="polite">{status}</h2>
       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">{mode === 'coach' ? t('Speak naturally. You can interrupt me. Your conversation stays in your chat.', 'Bemalol gapiring. Gapimni bo‘lishingiz mumkin. Suhbat chat tarixida saqlanadi.', 'Говорите свободно. Вы можете перебить меня. Разговор сохраняется в чате.') : t('English speaking practice with feedback at the end. Open Speaking tests for a timed full mock.', 'Inglizcha Speaking mashqi; fikr-mulohaza yakunda beriladi. Vaqtli to‘liq mock uchun Speaking testlarini oching.', 'Практика Speaking на английском с обратной связью в конце. Полный тест с таймером доступен в Speaking tests.')}</p>
       <div className="mt-5 min-h-20 w-full max-w-xl" aria-live="polite" aria-atomic="true">

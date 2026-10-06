@@ -4,6 +4,7 @@ import type { AiReportResponse } from '@/types/platform'
 import type { AiWorkspaceId } from '@/services/ai/workspaces'
 import type { SpeechLang } from '@/lib/speech'
 import type { GeminiChatAction } from '@/services/geminiAI'
+import { DEFAULT_COACH_PREFERENCES, type CoachPreferences } from '@/services/ai/coachPreferences'
 
 export type AiAssistantMessageRole = 'user' | 'assistant'
 
@@ -55,6 +56,8 @@ type AiAssistantState = {
   voiceLevel: number
   voiceLang: SpeechLang
   activeWorkspace: AiWorkspaceId
+  coachPreferencesByOwner: Record<string, CoachPreferences>
+  setCoachPreferences: (owner: string, preferences: Partial<CoachPreferences>) => void
   isExamModeActive: boolean
   pendingActions: Array<{ id: string; action: GeminiChatAction; label: string }>
   setPendingActions: (actions: Array<{ id: string; action: GeminiChatAction; label: string }>) => void
@@ -107,6 +110,11 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       voiceLevel: 0,
       voiceLang: 'en',
       activeWorkspace: 'general',
+      coachPreferencesByOwner: {},
+      setCoachPreferences: (owner, preferences) => set((state) => ({ coachPreferencesByOwner: {
+        ...state.coachPreferencesByOwner,
+        [owner]: { ...DEFAULT_COACH_PREFERENCES, ...state.coachPreferencesByOwner[owner], ...preferences },
+      } })),
       isExamModeActive: false,
       pendingActions: [],
       setPendingActions: (pendingActions) => set({ pendingActions }),

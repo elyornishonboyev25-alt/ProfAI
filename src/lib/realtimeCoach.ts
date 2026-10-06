@@ -5,6 +5,7 @@ import type { GeminiChatResponse } from '@/services/geminiAI'
 export type VoiceContext = {
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'en' | 'uz' | 'ru'
   mode: 'coach' | 'examiner'; threadId?: string; studyContext: string; screenContext: string; siteKnowledge: string
+  coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
 type VoiceOptions = {
   context: VoiceContext
@@ -25,6 +26,9 @@ export class RealtimeCoach {
   private stream: MediaStream | null = null
   private audio: HTMLAudioElement | null = null
   private audioContext: AudioContext | null = null
+  private inputAnalyser: AnalyserNode | null = null
+  private outputAnalyser: AnalyserNode | null = null
+  private meterSources: MediaStreamAudioSourceNode[] = []
   private controller = new AbortController()
   private raf = 0
   private timer = 0
@@ -68,6 +72,7 @@ export class RealtimeCoach {
       peer.ontrack = (event) => {
         if (this.closed || !this.audio) return
         this.audio.srcObject = event.streams[0] ?? new MediaStream([event.track])
+        this.attachOutputMeter(this.audio.srcObject as MediaStream)
         void this.audio.play().catch(() => this.fail(new Error('Tap Retry to allow voice playback.')))
       }
       stream.getTracks().forEach((track) => {
@@ -111,23 +116,47 @@ export class RealtimeCoach {
 
   private meter(stream: MediaStream) {
     try {
-      this.audioContext = new AudioContext()
-      const analyser = this.audioContext.createAnalyser()
-      analyser.fftSize = 512
-      this.audioContext.createMediaStreamSource(stream).connect(analyser)
-      const bytes = new Uint8Array(analyser.fftSize)
+      this.audioContext ??= new AudioContext()
+      void this.audioContext.resume().catch(() => {})
+      this.inputAnalyser = this.audioContext.createAnalyser()
+      this.inputAnalyser.fftSize = 512
+      const source = this.audioContext.createMediaStreamSource(stream)
+      source.connect(this.inputAnalyser)
+      this.meterSources.push(source)
+      const bytes = new Uint8Array(512)
+      let smoothed = 0
       const tick = () => {
         if (this.closed) return
+        const analyser = this.speaking ? this.outputAnalyser : this.inputAnalyser
+        if (!analyser || (!this.speaking && this.muted)) {
+          smoothed = 0; this.options.level(0); this.raf = requestAnimationFrame(tick); return
+        }
         analyser.getByteTimeDomainData(bytes)
         const rms = Math.sqrt(bytes.reduce((sum, byte) => sum + ((byte - 128) / 128) ** 2, 0) / bytes.length)
-        this.options.level(this.muted ? 0 : Math.min(1, rms * 4))
+        const target = Math.min(1, Math.max(0, (rms - .008) * 6))
+        smoothed += (target - smoothed) * (target > smoothed ? .7 : .4)
+        this.options.level(smoothed)
         this.raf = requestAnimationFrame(tick)
       }
       tick()
     } catch { this.options.level(0) }
   }
 
+  private attachOutputMeter(stream: MediaStream) {
+    try {
+      this.audioContext ??= new AudioContext()
+      void this.audioContext.resume().catch(() => {})
+      this.outputAnalyser = this.audioContext.createAnalyser()
+      this.outputAnalyser.fftSize = 512
+      const source = this.audioContext.createMediaStreamSource(stream)
+      source.connect(this.outputAnalyser)
+      this.meterSources.push(source)
+      // HTMLAudioElement handles playback; the analyser never duplicates it.
+    } catch { this.outputAnalyser = null }
+  }
+
   private flush(responseId: string, interrupted = false) {
+    // Transcript is committed only after playback finishes or is interrupted.
     for (const [key, value] of this.pending) {
       if (responseId && value.responseId !== responseId) continue
       if (value.text.trim()) this.options.message('assistant', value.text.trim(), value.id, interrupted || value.interrupted)
@@ -220,6 +249,8 @@ export class RealtimeCoach {
     this.channel?.close(); this.peer?.close()
     this.stream?.getTracks().forEach((track) => { track.onended = null; track.stop() })
     this.audio?.pause(); if (this.audio) this.audio.srcObject = null
+    this.meterSources.forEach((source) => source.disconnect()); this.meterSources = []
+    this.inputAnalyser?.disconnect(); this.outputAnalyser?.disconnect()
     void this.audioContext?.close().catch(() => {})
     if (this.sessionId) void apiClient.post('/ai/voice/end', { id: this.sessionId }, { keepalive: true }).catch(() => {})
     this.options.state('idle'); this.options.level(0)

@@ -1,5 +1,19 @@
 # ProfAI Coach: sozlash va tekshirish
 
+## Nova Studio
+
+AI Tutor sahifasi silver/glass va qizil aksentlar bilan yangilandi. Nova — tashqi rasm xizmatiga bog'liq bo'lmagan inline SVG maskot. Tinglash, o'ylash, gapirish va kutish holatlari bor; ko'zlari kursorni kuzatadi, reduced-motion sozlamasi dekorativ harakatlarni o'chiradi.
+
+Tabiiy WebRTC suhbatida og'iz AI ning haqiqiy chiqayotgan audio amplitudasiga mos ochiladi. Mikrofonni mute qilish bu animatsiyani to'xtatmaydi. Standart browser speechSynthesis ovozi PCM bermaydi: undagi animatsiya taxminiy, fonema bo'yicha aniq lip-sync emas.
+
+Foydalanuvchi Adaptive / Gentle / Focused / Playful uslubini va Teach / Practice / Review / Plan o'rganish usulini tanlaydi. Sozlamalar shu qurilmada har bir account uchun alohida saqlanadi; matn va natural voice uchun bir xil server siyosatiga uzatiladi. Faol ovozli sessiyada sozlamalar context update orqali o'zgaradi. Uslub boshqa qurilmalarga avtomatik sinxronlanmaydi.
+
+Mild banter sukut bo'yicha o'chirilgan. Yoqilsa faqat topshiriq haqida yengil, o'rinli so'kinish mumkin; shaxsiy haqorat yoki kamsitish emas. Examiner rejimi barcha uslub/banter tanlovlarini bekor qilib, neytral imtihon xulqini saqlaydi. So'nggi 24 ta assessment natijasi serverdan aynan shu account uchun olinadi; tutor ularni shaxsiy reja uchun ishlatadi.
+
+Writing interfeyslari `/api/v1/ai/generate/writing/evaluate` orqali serverdagi IELTS rubrikasini ishlatadi. So'zlar soni, to'rtta mezonning o'rtachasi va XP serverda hisoblanadi. Tuzatishdagi `original` javobdagi aynan o'sha matn bo'lishi kerak; uydirma iqtibos va o'zgarmagan tuzatishlar chiqarib tashlanadi. Frontend va backendni birga yangilang.
+
+`/ai/voice/capabilities` kalitlarning o'zini oshkor qilmasdan xizmatlar sozlanganini qaytaradi. Bu provayder akkaunti ishlashi, quota yoki model mavjudligini kafolatlamaydi. Studio ulanmagan xizmatni tayyor/online deb ko'rsatmaydi.
+
 ## Ishga tushirish
 
 Kalitlarni backend hosting xizmatining maxfiy environment sozlamalariga yoki faqat mahalliy `backend/.env` fayliga kiriting. Kalitlarni `VITE_*`, frontend kodi, Git yoki chatga joylamang. Backend va frontendni yangilang; backendni qayta ishga tushiring. Mavjud foydalanuvchi bazasi va chat/memory jadvallari ishlatiladi; yangi migratsiya kerak emas.
@@ -42,6 +56,7 @@ WebRTC uchun HTTPS yoki localhost, mikrofon ruxsati va backenddan OpenAI WebSock
 
 ```powershell
 npm run test:ai-coach-ui
+npm run test:coach-studio
 npm run test:speaking-ui
 npm --prefix backend run test:ai-coach
 npm run build

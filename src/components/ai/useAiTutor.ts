@@ -20,6 +20,7 @@ import {
 import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import { getAiWorkspace } from '@/services/ai/workspaces'
+import { DEFAULT_COACH_PREFERENCES } from '@/services/ai/coachPreferences'
 import { compressImageToDataUrl } from '@/utils/imageCompress'
 import { addSavedWord } from '@/utils/myVocabularyStore'
 import {
@@ -117,6 +118,7 @@ export function useAiTutor() {
   const user = useAuthStore((state: AuthState) => state.user)
   const hasPremium = hasPremiumAccess(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
+  const coachPreferences = useAiAssistantStore((state) => state.coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES)
 
   const chatThreads = useAiAssistantStore((s) => s.threadsByOwner[ownerKey] ?? EMPTY_THREADS)
   const activeThreadId = useAiAssistantStore((s) => s.activeThreadIds[ownerKey] ?? null)
@@ -424,6 +426,7 @@ export function useAiTutor() {
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
+          coachPreferences: useAiAssistantStore.getState().coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES,
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
           screenContext,
@@ -718,6 +721,7 @@ export function useAiTutor() {
     preferredName,
     activeWorkspace,
     workspace,
+    coachPreferences,
     pendingActions,
     approveAction,
     dismissAction,

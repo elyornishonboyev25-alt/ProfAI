@@ -24,6 +24,8 @@ import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import AiMessageContent from '@/components/ai/AiMessageContent'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
+import CoachControls from './CoachControls'
+import { coachCopy } from '@/services/ai/coachPreferences'
 import { useCopy } from '@/i18n/interface'
 import { premiumLanguage } from '@/i18n/premium'
 
@@ -60,6 +62,7 @@ const STATUS_TEXT: Record<string, string> = { idle: 'Ready to help', listening: 
 export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProps) {
   const { c, language } = useCopy()
   const uiLanguage = premiumLanguage(language)
+  const studioText = coachCopy(language)
   const navigate = useNavigate()
   const openTalk = useAiAssistantStore((s) => s.openTalk)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -130,7 +133,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     if (messages.length > 0) setHero(false)
   }, [messages.length])
 
-  const welcomeMessage = `${c('Hi')}${preferredName ? `, ${preferredName}` : ''}! ${c("I'm ProfAI — your personal tutor. I use the learning context from your current page, open timed tests, understand screenshots, and talk with you by voice. I reply in the language you use.")}`
   const statusText = c(STATUS_TEXT[voiceState] ?? STATUS_TEXT.idle)
   const quickChips = workspace.starters[uiLanguage]
 
@@ -223,7 +225,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         if (event.currentTarget === event.target) setDragging(false)
       }}
       onDrop={onDrop}
-      className={`relative flex min-w-0 max-w-full flex-col overflow-hidden border bg-white text-slate-900 ${
+      className={`ai-chat-window relative flex min-w-0 max-w-full flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
           ? 'h-full rounded-[1.4rem] border-white/90 bg-white/85 shadow-[0_18px_46px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl'
           : 'rounded-[1.4rem] border-slate-200 shadow-xl'
@@ -455,6 +457,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           ) : null}
         </div>
       </header>
+      <CoachControls compact />
 
       {/* Messages */}
       <div
@@ -468,9 +471,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             <span className="mb-5 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-red-700 shadow-sm">{c('Your study companion')}</span>
             <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 112 : 80} className="ai-chat-hero-orb" />
             <h3 className="mt-5 text-xl font-black text-slate-900 sm:text-2xl">
-              {preferredName ? `${preferredName}, ` : ''}{c('how can I help?')}
+              {preferredName ? `${preferredName}, ` : ''}{studioText.welcome}
             </h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{welcomeMessage}</p>
+            <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{studioText.welcomeDetail}</p>
+            <span className="mt-4 text-[10px] font-semibold tracking-wide text-slate-400">{studioText.lessonDetail}</span>
           </div>
         ) : (
           <div className="mx-auto max-w-4xl space-y-4">

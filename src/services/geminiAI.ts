@@ -77,73 +77,6 @@ export interface WordExplanation {
   language: string
 }
 
-const WRITING_EVALUATION_PROMPT = `You are an IELTS Writing practice evaluator. Apply the public IELTS band descriptors carefully to provide an estimated band and specific feedback.
-
-TASK: Evaluate the student's IELTS writing response. Return a SINGLE valid JSON object and NOTHING else — no markdown fences, no text outside the JSON.
-
-SCORE EACH OF THE 4 CRITERIA (0.0–9.0, in 0.5 steps), then the overall band.
-
-1) Task Achievement / Task Response (taskAchievement):
-   - Task 1: Does it have a clear overview of main trends? Are key features and accurate data selected? The minimum is 150 words; a shorter answer may provide less evidence for the descriptors.
-   - Task 2: Does it fully address all parts of the prompt with a clear position, developed ideas, and relevant examples? The minimum is 250 words; a shorter answer may provide less evidence for the descriptors.
-
-2) Coherence & Cohesion (coherenceCohesion):
-   - Logical paragraphing, clear progression, accurate linking devices (not over/under-used), referencing.
-
-3) Lexical Resource (lexicalResource):
-   - Range and precision of vocabulary, collocation, word formation, appropriacy. Penalise repetition and misused words.
-
-4) Grammatical Range & Accuracy (grammaticalRange):
-   - Range of structures (simple vs complex), accuracy, punctuation, error density and how much errors impede communication.
-
-SCORING DISCIPLINE:
-- Base every criterion on evidence in this response. Award high bands only where the public descriptors are clearly met.
-- overallBand = average of the 4 criteria, rounded to the nearest 0.5 (IELTS rounding).
-- Score each criterion INDEPENDENTLY based on evidence in the text.
-
-ERROR ANALYSIS — THE MOST IMPORTANT PART (read carefully):
-- List ONLY genuine errors. For EVERY item, "corrected" MUST be meaningfully DIFFERENT from "original".
-- ❌ ABSOLUTELY FORBIDDEN: listing a sentence whose corrected version is identical (or near-identical) to the original. NEVER mark correct text as an error. If a sentence is already correct, DO NOT include it at all.
-- ❌ Do NOT include items where the explanation says the text "is accurate / is correct / is fine". Those are not errors — omit them.
-- "original" = the exact erroneous fragment copied from the student (keep it short — just the part that is wrong, not the whole sentence when possible).
-- "corrected" = the minimally-fixed version of that same fragment.
-- "explanation" = WHY it is wrong and the rule, in one or two clear sentences a learner understands.
-- Categorise precisely: "grammar", "vocabulary", "spelling", "punctuation", "coherence", or "task".
-- Order errors by importance (most impactful first). Include every real error, up to ~15. If the writing is genuinely error-free, return an empty errors array.
-
-CORRECTED VERSION RULES:
-- If there is enough content, rewrite the FULL response at a clean Band 7–7.5 level: fix errors while keeping the student's ideas and meaning. If there is too little content to rewrite, return an empty string.
-
-STRENGTHS / IMPROVEMENTS:
-- "strengths": up to 3 specific things the student did well. Use an empty array if there is too little evidence.
-- "improvements": 3 concrete, prioritised, actionable steps that would raise the band (e.g. "Add a one-sentence overview before details", not "improve grammar").
-
-SUMMARY: 2–3 sentences — honest overall assessment naming the biggest lever for improvement.
-
-XP CALCULATION: the application calculates XP deterministically from the final band. Set xpAwarded to 0.
-
-RESPONSE FORMAT (strict JSON, no markdown):
-{
-  "overallBand": <number>,
-  "taskAchievement": <number>,
-  "coherenceCohesion": <number>,
-  "lexicalResource": <number>,
-  "grammaticalRange": <number>,
-  "summary": "<2-3 sentence overall assessment>",
-  "strengths": ["<specific strength>", "<specific strength>", "<specific strength>"],
-  "improvements": ["<actionable step>", "<actionable step>", "<actionable step>"],
-  "errors": [
-    {
-      "original": "<exact erroneous fragment from the student>",
-      "corrected": "<fixed version — MUST differ from original>",
-      "explanation": "<why it is wrong + the rule>",
-      "category": "<grammar|vocabulary|spelling|punctuation|coherence|task>"
-    }
-  ],
-  "correctedVersion": "<full corrected essay at band 7+>",
-  "xpAwarded": <number>
-}`
-
 export async function callGeminiAPI(
   systemPrompt: string,
   userMessage: string,
@@ -174,88 +107,18 @@ export function extractJSON(raw: string): string {
 }
 
 export async function evaluateWriting(
-  taskType: 'task1' | 'task2',
-  prompt: string,
-  studentResponse: string,
-  wordCount: number,
-  visualContext?: string,
+  taskType: 'task1' | 'task2', prompt: string, studentResponse: string, _wordCount: number, visualContext?: string,
 ): Promise<WritingEvaluation> {
-  if (!studentResponse.trim()) {
-    return {
-      overallBand: 0,
-      taskAchievement: 0,
-      coherenceCohesion: 0,
-      lexicalResource: 0,
-      grammaticalRange: 0,
-      summary: 'No response was submitted for this task, so there is no writing to assess.',
-      strengths: [],
-      improvements: [`Write a ${taskType === 'task1' ? '150' : '250'}-word response that addresses every part of the task prompt.`, 'Review the task instructions and plan your main ideas before writing.'],
-      errors: [],
-      correctedVersion: '',
-      xpAwarded: 0,
-    }
+  if (!studentResponse.trim()) return {
+    overallBand: 0, taskAchievement: 0, coherenceCohesion: 0, lexicalResource: 0, grammaticalRange: 0,
+    summary: 'No response was submitted for this task, so there is no writing to assess.', strengths: [],
+    improvements: ['Write a response that addresses every part of the task prompt.'], errors: [], correctedVersion: '', xpAwarded: 0,
   }
-  const userMessage = `TASK TYPE: IELTS Writing ${taskType === 'task1' ? 'Task 1' : 'Task 2'}
-
-QUESTION/PROMPT:
-${prompt}
-
-${visualContext ? `VISUAL DATA FOR TASK 1 (use this to check factual accuracy):\n${visualContext}\n` : ''}
-
-STUDENT'S RESPONSE (${wordCount} words):
-${studentResponse}
-
-Evaluate this response now. Return ONLY valid JSON.`
-
-  const raw = await callGeminiAPI(WRITING_EVALUATION_PROMPT, userMessage, 8192, [], 'writing_evaluation')
-  const jsonStr = extractJSON(raw)
-
-  try {
-    const parsed = JSON.parse(jsonStr) as WritingEvaluation
-    if (![parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].every((band) => Number.isFinite(band)) ||
-      !parsed.summary?.trim() || !Array.isArray(parsed.strengths) ||
-      !Array.isArray(parsed.improvements)) {
-      throw new Error('Incomplete AI evaluation')
-    }
-    const criteria = [parsed.taskAchievement, parsed.coherenceCohesion, parsed.lexicalResource, parsed.grammaticalRange].map(clampBand)
-    const overallBand = clampBand(criteria.reduce((sum, band) => sum + band, 0) / criteria.length)
-    return {
-      overallBand,
-      taskAchievement: criteria[0],
-      coherenceCohesion: criteria[1],
-      lexicalResource: criteria[2],
-      grammaticalRange: criteria[3],
-      summary: parsed.summary || 'Evaluation completed.',
-      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 5) : [],
-      improvements: Array.isArray(parsed.improvements) ? parsed.improvements.slice(0, 5) : [],
-      errors: Array.isArray(parsed.errors)
-        ? parsed.errors
-            .map((e) => ({
-              original: (e.original || '').trim(),
-              corrected: (e.corrected || '').trim(),
-              explanation: (e.explanation || '').trim(),
-              category: validateCategory(e.category),
-            }))
-            // Defensive: drop false positives where the model flagged correct text
-            // (original identical to correction, or an empty/“is accurate” note).
-            .filter((e) => {
-              if (!e.original || !e.corrected) return false
-              const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').replace(/[.,;:!?]+$/g, '').trim()
-              if (norm(e.original) === norm(e.corrected)) return false
-              if (!studentResponse.toLowerCase().includes(e.original.toLowerCase())) return false
-              if (/\b(is|are|looks?|seems?)\s+(accurate|correct|fine|good|appropriate)\b/i.test(e.explanation)) return false
-              return true
-            })
-        : [],
-      correctedVersion: parsed.correctedVersion || '',
-      xpAwarded: calculateXP(overallBand),
-    }
-  } catch {
-    throw new Error('AI feedback was incomplete. Please retry the evaluation.')
-  }
+  // The backend owns the rubric, word count, score calculation and evidence checks.
+  return apiClient.post<WritingEvaluation>('/ai/generate/writing/evaluate', { taskType, prompt, response: studentResponse, visualContext })
 }
-
 export type ChatAssistantOptions = {
+  coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
   workspace?: import('@/services/ai/workspaces').AiWorkspaceId
   threadId?: string
   delivery?: 'text' | 'voice'
@@ -282,6 +145,7 @@ export async function chatWithAssistant(
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
   const payload = {
+    coachPreferences: options.coachPreferences,
     message, history: history.slice(-24), pathname, workspace: options.workspace ?? 'general',
     language: options.responseLanguage ?? 'en', mode: options.mode ?? 'coach', threadId: options.threadId,
     studyContext: (options.studyContext ?? '').slice(0, 16000), screenContext: (options.screenContext ?? '').slice(0, 12000),
@@ -317,20 +181,6 @@ export async function chatWithAssistant(
     return final
   } finally { await reader.cancel().catch(() => {}); reader.releaseLock() }
 
-}
-
-function clampBand(value: unknown): number {
-  const num = typeof value === 'number' ? value : 0
-  return Math.round(Math.max(0, Math.min(9, num)) * 2) / 2
-}
-
-function validateCategory(cat: string): WritingError['category'] {
-  const valid = ['grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task'] as const
-  return valid.includes(cat as typeof valid[number]) ? (cat as WritingError['category']) : 'grammar'
-}
-
-function calculateXP(band: number): number {
-  return 20 + Math.round((Math.max(0, Math.min(9, band)) / 9) * 60)
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {

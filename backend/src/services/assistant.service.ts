@@ -5,7 +5,9 @@ import { researchForAssistant } from './assistantResearch.service.js'
 
 export async function loadAssistantRecords(userId: string, threadId?: string) {
   const [user, memories] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true, profile: { select: { targetExam: true, targetScore: true, examDate: true, currentIeltsScore: true, targetIeltsScore: true, dailyStudyHours: true } }, aiPreference: { select: { preferredName: true } } } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true, profile: { select: { targetExam: true, targetScore: true, examDate: true, currentIeltsScore: true, targetIeltsScore: true, dailyStudyHours: true } }, aiPreference: { select: { preferredName: true } },
+      assessmentResults: { orderBy: { completedAt: 'desc' }, take: 24, select: { examType: true, skill: true, title: true, score: true, maxScore: true, accuracy: true, durationSec: true, completedAt: true } },
+    } }),
     prisma.aiMemory.findMany({ where: { userId, key: { not: 'last_locale' } }, orderBy: { updatedAt: 'desc' }, take: 40, select: { key: true, value: true } }),
   ])
   if (!user) throw new AiGenerationError(404, 'USER_NOT_FOUND', 'User not found.')
@@ -17,7 +19,7 @@ export async function loadAssistantRecords(userId: string, threadId?: string) {
 }
 
 export function assistantData(context: AssistantContext, records: Awaited<ReturnType<typeof loadAssistantRecords>>) {
-  return { ...records, currentPage: context.pathname, workspace: context.workspace, studyProgress: context.studyContext, onScreen: context.screenContext, siteKnowledge: context.siteKnowledge }
+  return { ...records, verifiedRecentResults: records.learner.assessmentResults ?? [], currentPage: context.pathname, workspace: context.workspace, studyProgress: context.studyContext, onScreen: context.screenContext, siteKnowledge: context.siteKnowledge }
 }
 
 export async function answerAssistant(userId: string, request: AssistantRequest, signal?: AbortSignal, onReply?: (reply: string) => void) {

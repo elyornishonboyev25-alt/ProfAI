@@ -14,7 +14,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "test:realtime": "npm run build && node scripts/smoke-speaking-rooms.mjs",
     "test:ai-security": "node --test scripts/ai-provider.test.mjs",
-    "test:ai-coach": "npm run build && node --test scripts/assistant-coach.test.mjs scripts/ai-provider.test.mjs scripts/speaking-audio.test.mjs",
+    "test:ai-coach": "npm run build && node --test scripts/assistant-coach.test.mjs scripts/ai-provider.test.mjs scripts/speaking-audio.test.mjs scripts/writing-assessment.test.mjs",
     "test:speaking-audio": "node --test scripts/speaking-audio.test.mjs",
     "test:legacy-removal": "node --test scripts/legacy-removal.test.mjs",
     "test:billing": "npm run build && node --test scripts/coin-billing.test.mjs",

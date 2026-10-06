@@ -9,8 +9,21 @@ export async function run() {
   const states: string[] = [], messages: any[] = [], captions: string[] = [], results: any[] = [], sent: any[] = []
   let micStops = 0, peerCloses = 0, ends = 0
   let currentPeer: FakePeer
+  const levels: number[] = []
+  let nextFrame: FrameRequestCallback | null = null
+  const originalFrame = globalThis.requestAnimationFrame
+  const originalCancelFrame = globalThis.cancelAnimationFrame
+  const originalAudioContext = globalThis.AudioContext
+  globalThis.requestAnimationFrame = (callback) => { nextFrame = callback; return 1 }
+  globalThis.cancelAnimationFrame = () => { nextFrame = null }
   const track = { enabled: true, onended: null, stop() { micStops++ } }
   const stream = { getTracks: () => [track], getAudioTracks: () => [track] }
+  class FakeAudioContext {
+    async resume() {} async close() {}
+    createAnalyser() { return { fftSize: 512, remote: false, getByteTimeDomainData(bytes: Uint8Array) { bytes.fill(this.remote ? 170 : 128) }, disconnect() {} } }
+    createMediaStreamSource(input: unknown) { return { connect(analyser: any) { analyser.remote = input !== stream }, disconnect() {} } }
+  }
+  Object.defineProperty(globalThis, 'AudioContext', { value: FakeAudioContext, configurable: true })
   const channel: any = { readyState: 'connecting', onopen: null, onmessage: null, onclose: null, send: (value: string) => sent.push(JSON.parse(value)), close() { this.readyState = 'closed'; this.onclose?.() } }
   class FakePeer {
     localDescription: any = null
@@ -42,7 +55,7 @@ export async function run() {
     throw new Error(`Unexpected request ${url}`)
   }
   const options: any = { context: { pathname: '/ai-tutor', workspace: 'ielts', language: 'uz', mode: 'coach', studyContext: '', screenContext: '', siteKnowledge: '' }, history: [...Array.from({ length: 24 }, () => ({ role: 'assistant', content: 'Long previous explanation. '.repeat(300) })), { role: 'user', content: 'Earlier question.' }],
-    state: (value: string) => states.push(value), level() {}, caption: (value: string) => captions.push(value),
+    state: (value: string) => states.push(value), level: (value: number) => levels.push(value), caption: (value: string) => captions.push(value),
     message: (...args: any[]) => messages.push(args), coachResult: (...args: any[]) => results.push(args), error: (issue: Error) => assert.fail(issue.message) }
   try {
     const voice = new RealtimeCoach(options)
@@ -54,6 +67,13 @@ export async function run() {
     assert.equal(messages.length, 1, 'Duplicate transcript events are saved only once')
     emit({ type: 'response.created', response: { id: 'r1' } })
     emit({ type: 'output_audio_buffer.started', response_id: 'r1' })
+    currentPeer!.ontrack?.({ streams: [{ getTracks: () => [] }] })
+    ;(nextFrame as FrameRequestCallback | null)?.(0)
+    assert.ok(levels.at(-1)! > .1, 'Speaking animation follows remote output, even when the microphone is silent')
+    voice.mute(true)
+    ;(nextFrame as FrameRequestCallback | null)?.(16)
+    assert.ok(levels.at(-1)! > .1, 'Muting the microphone never freezes the tutor speaking mouth')
+    voice.mute(false)
     emit({ type: 'response.output_audio_transcript.delta', item_id: 'a1', response_id: 'r1', delta: 'Salom, ' })
     emit({ type: 'response.output_audio_transcript.done', item_id: 'a1', response_id: 'r1', transcript: 'Salom, boshlaymiz.' })
     assert.equal(messages.length, 1, 'Generated speech is not marked heard before playback finishes')
@@ -93,5 +113,9 @@ export async function run() {
     assert.equal(textEvaluation.pronunciationBand, 0, 'Text feedback never imports the model’s invented pronunciation band')
     assert.equal(textEvaluation.overallBand, 6.5)
     console.log('PASS: cancellation releases late microphone access; transcript scoring withholds pronunciation')
-  } finally { globalThis.fetch = originalFetch }
+  } finally {
+    globalThis.fetch = originalFetch
+    globalThis.requestAnimationFrame = originalFrame; globalThis.cancelAnimationFrame = originalCancelFrame
+    Object.defineProperty(globalThis, 'AudioContext', { value: originalAudioContext, configurable: true })
+  }
 }

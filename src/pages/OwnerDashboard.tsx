@@ -1,29 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
-import { AlertCircle, CheckCircle2, Crown, RefreshCw, Search, ShieldCheck, Users, Wallet } from 'lucide-react'
+import { AlertCircle, Crown, RefreshCw, Search, ShieldCheck, Users, Wallet } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { ownerText, type OwnerLanguage } from '@/i18n/owner'
 import { premiumLanguage } from '@/i18n/premium'
 import { useAuthStore } from '@/store/authStore'
 import ReviewModeration from '@/components/landing/ReviewModeration'
+import OwnerReportInbox from '@/components/support/OwnerReportInbox'
+import './OwnerDashboard.css'
 
 const OWNER_EMAIL = 'elyornishonboyev000@gmail.com'
-type ReportStatus = 'OPEN' | 'RESOLVED'
-type ReportFilter = 'ALL' | ReportStatus
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
 type NewUser = { id: string; fullName: string; email: string; createdAt: string }
 type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
 type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null }
 type PaymentRequest = { id: string; plan: string; amountUzs: number; status: string; createdAt: string; user: NewUser }
-type IssueReport = { id: string; name: string; email: string; category: string; description: string; pagePath: string | null; status: ReportStatus; createdAt: string }
 type Overview = {
   metrics: { totalUsers: number; todayUsers: number; weekUsers: number; totalReports: number; openReports: number }
   users: Page<NewUser>
-  reports: Page<IssueReport>
 }
 
-const categoryLabels: Record<string, string> = { BUG: 'Technical issue', BILLING: 'Billing issue', FEATURE: 'Suggestion', OTHER: 'Other' }
 const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
 const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely' }
 
@@ -48,8 +45,6 @@ export default function OwnerDashboard() {
   const isOwner = user?.email.trim().toLowerCase() === OWNER_EMAIL
   const [overview, setOverview] = useState<Overview | null>(null)
   const [userPage, setUserPage] = useState(1)
-  const [reportPage, setReportPage] = useState(1)
-  const [filter, setFilter] = useState<ReportFilter>('ALL')
   const [reload, setReload] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -68,7 +63,7 @@ export default function OwnerDashboard() {
     let active = true
     setLoading(true)
     setError('')
-    const query = new URLSearchParams({ userPage: String(userPage), reportPage: String(reportPage), status: filter })
+    const query = new URLSearchParams({ userPage: String(userPage) })
     void apiClient.get<Overview>(`/support/owner/overview?${query}`).then(data => {
       if (active) setOverview(data)
     }).catch(() => {
@@ -77,7 +72,7 @@ export default function OwnerDashboard() {
       if (active) setLoading(false)
     })
     return () => { active = false }
-  }, [isOwner, userPage, reportPage, filter, reload, language])
+  }, [isOwner, userPage, reload, language])
 
   useEffect(() => {
     if (!isOwner) return
@@ -134,19 +129,6 @@ export default function OwnerDashboard() {
     } finally { setUpdatingId(null) }
   }
 
-  async function changeStatus(report: IssueReport) {
-    setUpdatingId(report.id)
-    setError('')
-    try {
-      await apiClient.patch(`/support/owner/reports/${report.id}`, { status: report.status === 'OPEN' ? 'RESOLVED' : 'OPEN' })
-      setReload(value => value + 1)
-    } catch {
-      setError(t('Could not change the status.'))
-    } finally {
-      setUpdatingId(null)
-    }
-  }
-
   if (!isOwner) return <Navigate to="/dashboard" replace />
 
   const metrics = overview?.metrics
@@ -157,8 +139,8 @@ export default function OwnerDashboard() {
     { label: t('Open reports'), value: metrics?.openReports, icon: AlertCircle },
   ]
 
-  return <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
-    <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+  return <div className="owner-dashboard mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+    <div className="owner-hero mb-7 flex flex-wrap items-start justify-between gap-4">
       <div>
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-700"><ShieldCheck size={15} /> {t('Owner dashboard')}</div>
         <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{t('Site activity')}</h1>
@@ -168,21 +150,21 @@ export default function OwnerDashboard() {
     </div>
 
     {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
-    <ReviewModeration language={language} reload={reload} />
     {loading && !overview && <p role="status" className="rounded-2xl bg-white p-6 text-slate-600">{t('Loading data…')}</p>}
     {overview && <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(card => <div key={card.label} className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+        {cards.map(card => <div key={card.label} className="owner-metric rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
           <div className="flex items-center justify-between text-sm font-semibold text-slate-600"><span>{card.label}</span><card.icon size={19} className="text-red-600" /></div>
           <div className="mt-3 text-3xl font-black text-slate-950">{card.value ?? '—'}</div>
         </div>)}
       </div>
 
-      <div className="mt-7 grid items-start gap-6 xl:grid-cols-2">
+      <OwnerReportInbox language={language} reload={reload} onChanged={() => setReload(value => value + 1)} />
+      <div className="mt-7 grid items-start gap-6">
         <section className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{t('Users')}</h2><p className="mt-1 text-sm text-slate-500">{t('New registrations · total {count}', { count: overview.users.total })}</p></div></div>
-          <div className="divide-y divide-slate-100">
-            {overview.users.items.map(person => <div key={person.id} className="py-4 first:pt-0">
+          <div className="owner-users-list grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {overview.users.items.map(person => <div key={person.id} className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/50 p-4">
               <div className="font-bold text-slate-900">{person.fullName}</div>
               <div className="break-all text-sm text-slate-600">{person.email}</div>
               <div className="mt-1 text-xs text-slate-500">{dateFormat.format(new Date(person.createdAt))}</div>
@@ -192,27 +174,10 @@ export default function OwnerDashboard() {
           <Pagination page={userPage} total={overview.users.total} pageSize={overview.users.pageSize} onChange={setUserPage} language={language} />
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-xl font-black text-slate-900">{t('Issue reports')}</h2><p className="mt-1 text-sm text-slate-500">{t('Total reports: {count}', { count: overview.metrics.totalReports })}</p></div>
-            <select aria-label={t('Report status')} value={filter} onChange={event => { setFilter(event.target.value as ReportFilter); setReportPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-              <option value="ALL">{t('All')}</option><option value="OPEN">{t('Open')}</option><option value="RESOLVED">{t('Resolved')}</option>
-            </select>
-          </div>
-          <div className="space-y-3">
-            {overview.reports.items.map(report => <article key={report.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2"><div><div className="font-bold text-slate-900">{report.name}</div><div className="break-all text-sm text-slate-600">{report.email}</div></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${report.status === 'OPEN' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>{t(report.status === 'OPEN' ? 'Open' : 'Resolved')}</span></div>
-              <div className="mt-3 text-xs font-semibold text-slate-500">{t(categoryLabels[report.category] ?? report.category)} · {dateFormat.format(new Date(report.createdAt))}</div>
-              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">{report.description}</p>
-              {report.pagePath && <div className="mt-2 break-all text-xs text-slate-500">{t('Page:')} {report.pagePath}</div>}
-              <button type="button" disabled={updatingId === report.id} onClick={() => void changeStatus(report)} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"><CheckCircle2 size={15} /> {t(report.status === 'OPEN' ? 'Mark resolved' : 'Reopen')}</button>
-            </article>)}
-            {overview.reports.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No reports with this status.')}</p>}
-          </div>
-          <div className="mt-4"><Pagination page={reportPage} total={overview.reports.total} pageSize={overview.reports.pageSize} onChange={setReportPage} language={language} /></div>
-        </section>
       </div>
     </>}
+
+    <ReviewModeration language={language} reload={reload} />
 
     <section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="premium-users-title">
       <div className="flex flex-wrap items-center justify-between gap-4">

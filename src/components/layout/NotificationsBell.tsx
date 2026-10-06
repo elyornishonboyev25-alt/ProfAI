@@ -2,14 +2,17 @@ import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Award, Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Sparkles, X } from 'lucide-react'
+import { Award, Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, MessageSquareText, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fetchBadges, type SkillBadgeRecord } from '@/lib/profileApi'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import type { DashboardOverview } from '@/types/platform'
 import './notifications.css'
+import { ownerText } from '@/i18n/owner'
+import { premiumLanguage } from '@/i18n/premium'
 
 const TRACK_LABELS: Record<string, string> = {
   IELTS_LISTENING: 'Listening',
@@ -43,6 +46,9 @@ function relativeTime(value: string) {
 
 /** Bell button and notification panel with class assignments and activity. */
 export default function NotificationsBell() {
+  const { i18n } = useTranslation()
+  const language = premiumLanguage(i18n.resolvedLanguage ?? i18n.language)
+  const supportLabel = ownerText('Support team', language)
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const userId = user?.id
@@ -51,6 +57,7 @@ export default function NotificationsBell() {
   const [week, setWeek] = useState<DashboardOverview['weeklyProgress']>([])
   const [badges, setBadges] = useState<SkillBadgeRecord[]>([])
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [expandedReply, setExpandedReply] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
 
@@ -139,6 +146,9 @@ export default function NotificationsBell() {
 
   const openNotification = (notification: NotificationItem) => {
     void markRead(notification.id)
+    if (notification.metadata?.kind === 'ISSUE_REPORT_REPLY') {
+      setExpandedReply(current => current === notification.id ? null : notification.id)
+    }
     const slug = notification.metadata?.centerSlug
     if (notification.metadata?.kind === 'CLASS_ASSIGNMENT' && typeof slug === 'string') {
       setOpen(false)
@@ -252,6 +262,7 @@ export default function NotificationsBell() {
                     {notifications.map((notification) => (
                       <button
                         key={notification.id}
+                        aria-expanded={notification.metadata?.kind === 'ISSUE_REPORT_REPLY' ? expandedReply === notification.id : undefined}
                         onClick={() => void openNotification(notification)}
                         className={`profai-notification-row relative flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
                           notification.readAt
@@ -260,12 +271,14 @@ export default function NotificationsBell() {
                         }`}
                       >
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-red-50 text-red-600 shadow-[0_6px_14px_rgba(190,35,52,.12)]">
-                          {notification.metadata?.kind === 'CLASS_ASSIGNMENT' ? <ClipboardCheck className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                          {notification.metadata?.kind === 'CLASS_ASSIGNMENT' ? <ClipboardCheck className="h-4 w-4" /> : notification.metadata?.kind === 'ISSUE_REPORT_REPLY' ? <MessageSquareText className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-black text-slate-900">{notification.title}</span>
-                          <span className="mt-0.5 line-clamp-2 block text-[11px] leading-4 text-slate-500">{notification.message}</span>
+                          {notification.metadata?.kind === 'ISSUE_REPORT_REPLY' && <span className="mb-1 block text-[9px] font-bold uppercase tracking-wide text-red-700">{supportLabel}</span>}
+                          <span className={`block text-[13px] font-black text-slate-900 ${expandedReply === notification.id ? 'break-words' : 'truncate'}`}>{notification.title}</span>
+                          <span className={`mt-0.5 block text-[11px] leading-5 text-slate-600 ${expandedReply === notification.id ? 'whitespace-pre-wrap break-words' : 'line-clamp-2'}`}>{notification.message}</span>
                           <span className="mt-1 block text-[9px] font-bold uppercase tracking-wide text-slate-400">{relativeTime(notification.createdAt)}</span>
+                          {notification.metadata?.kind === 'ISSUE_REPORT_REPLY' && <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-red-700">{ownerText(expandedReply === notification.id ? 'Collapse message' : 'Read full message', language)}<ChevronRight className={`h-3 w-3 ${expandedReply === notification.id ? '-rotate-90' : 'rotate-90'}`} /></span>}
                         </span>
                         {!notification.readAt ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-red-500" /> : null}
                       </button>

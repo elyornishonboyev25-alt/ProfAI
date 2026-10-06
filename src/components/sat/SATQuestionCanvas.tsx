@@ -16,6 +16,7 @@ type Props = {
   onChange: (strokes: HighlightStroke[]) => void
   flagged: boolean
   onToggleFlag: () => void
+  readOnly?: boolean
   answerState?: 'correct' | 'incorrect'
   practicePanel?: ReactNode
 }
@@ -38,6 +39,7 @@ export default function SATQuestionCanvas({
   flagged,
   onToggleFlag,
   answerState,
+  readOnly = false,
   practicePanel,
 }: Props) {
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
@@ -89,10 +91,11 @@ export default function SATQuestionCanvas({
           <button
             type="button"
             onClick={onToggleFlag}
+            disabled={readOnly}
             className={`flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
           >
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
-            {flagged ? 'Marked for Review' : 'Mark for Review'}
+            {readOnly ? 'Answer review' : flagged ? 'Marked for Review' : 'Mark for Review'}
           </button>
           <span className="m-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-[#f4f4f4] text-slate-600">
             <SpellCheck2 className="h-5 w-5" />
@@ -117,7 +120,8 @@ export default function SATQuestionCanvas({
                     role="radio"
                     aria-checked={selected}
                     key={choice.key}
-                    onClick={() => { if (!window.getSelection()?.toString()) onAnswer(choice.key) }}
+                    disabled={readOnly}
+                    onClick={() => { if (!readOnly && !window.getSelection()?.toString()) onAnswer(choice.key) }}
                     className={`group flex w-full items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${
                       selected
                         ? answerState === 'correct'
@@ -152,6 +156,7 @@ export default function SATQuestionCanvas({
               <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800">Enter your answer</label>
               <input
                 id="student-response"
+                readOnly={readOnly}
                 value={answer}
                 onChange={(event) => onAnswer(event.target.value)}
                 inputMode="decimal"

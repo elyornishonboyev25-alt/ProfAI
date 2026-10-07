@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, Check, ChevronDown, FileText, Maximize2, Minimize2, X } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -112,7 +113,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     })
     try {
       const history = readHistory(userId).filter((row) => row.setId !== session.id)
-      window.localStorage.setItem(historyKey(userId), JSON.stringify([...history, ...results]))
+      accountStorageFor(userId ?? 'guest').setItem(historyKey(userId), JSON.stringify([...history, ...results]))
     } catch {
       setError('Your results could not be saved. Free up browser storage and try Finish set again. Your answers are still here.')
       return

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { accountStorage } from '../../src/utils/accountStorage'
 import { syncSavedSATAttemptResults, syncSATAttemptResult } from '../../src/features/sat/resultSync'
 import { learningCenterApi } from '../../src/features/learningCenter/api'
 import { useAuthStore } from '../../src/store/authStore'
@@ -22,7 +23,7 @@ export async function run() {
   saveSATAttemptToHistory({ ...old, attemptId: 'section', testId: section.id }, 'submitted')
   const partial = getSATReviewTests().find((entry) => entry.id === 'may-2026-us-v1')!
   saveSATAttemptToHistory({ ...old, attemptId: 'partial', testId: partial.id }, 'submitted')
-  const slotBefore = localStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
+  const slotBefore = accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
   const calls: ResultInput[] = []
   let failures = 1
   learningCenterApi.syncResult = async (input) => {
@@ -46,7 +47,7 @@ export async function run() {
   assert.equal(calls.length, 5, 'Only the failed sync is retried')
   await syncSavedSATAttemptResults('learner')
   assert.equal(calls.length, 5, 'Successful backfills are remembered per account')
-  assert.equal(localStorage.getItem(`profai:sat:${test.id}:attempt:v1`), slotBefore)
+  assert.equal(accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`), slotBefore)
   assert.equal(useAuthStore.getState().user?.xp, 324, 'Backfills never award or modify XP')
 
   // A later submission and StrictMode effects share the same in-flight request.
@@ -66,7 +67,10 @@ export async function run() {
   useAuthStore.setState({ user: { id: 'learner', xp: 324 } as AuthUser })
   localStorage.setItem(`profai:sat:${test.id}:attempt:v1`, JSON.stringify({ ...old, attemptId: undefined }))
   await syncSavedSATAttemptResults('learner')
-  assert.equal(calls.length, 8)
+  assert.equal(calls.length, 7, 'Unowned legacy device attempts must never be backfilled into a login')
+  accountStorage.setItem(`profai:sat:${test.id}:attempt:v1`, JSON.stringify({ ...old, attemptId: undefined }))
+  await syncSavedSATAttemptResults('learner')
+  assert.equal(calls.length, 8, 'Owned per-test slots can still be backfilled')
   assert.equal(calls[7].sourceKey, `sat-${test.id}-1000`)
   console.log('SAT result sync: history, legacy slots, retries, deduplication, incomplete attempts, account guards and unchanged XP passed.')
 }

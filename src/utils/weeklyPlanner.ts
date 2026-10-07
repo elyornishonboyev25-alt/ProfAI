@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 export type ExamTarget = 'IELTS' | 'SAT' | 'BOTH'
 
 export type OnboardingProfile = {
@@ -377,7 +378,7 @@ export function ensureRollingWeek(profile: OnboardingProfile, plan: WeeklyPlan |
 
 export function loadOnboardingProfile(userId?: string, fullName?: string): OnboardingProfile | null {
   if (typeof window === 'undefined') return null
-  const profile = safeParse<OnboardingProfile>(window.localStorage.getItem(withOwner(ONBOARDING_KEY_PREFIX, userId)))
+  const profile = safeParse<OnboardingProfile>(accountStorageFor(userId ?? 'guest').getItem(withOwner(ONBOARDING_KEY_PREFIX, userId)))
   // The account owns identity; saved profile snapshots only own study settings.
   if (!profile || !fullName?.trim()) return profile
   const [firstName, ...lastName] = fullName.trim().split(/\s+/)
@@ -386,17 +387,17 @@ export function loadOnboardingProfile(userId?: string, fullName?: string): Onboa
 
 export function saveOnboardingProfile(profile: OnboardingProfile, userId?: string) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(withOwner(ONBOARDING_KEY_PREFIX, userId), JSON.stringify(profile))
+  accountStorageFor(userId ?? 'guest').setItem(withOwner(ONBOARDING_KEY_PREFIX, userId), JSON.stringify(profile))
 }
 
 export function loadWeeklyPlan(userId?: string): WeeklyPlan | null {
   if (typeof window === 'undefined') return null
-  return safeParse<WeeklyPlan>(window.localStorage.getItem(withOwner(WEEKLY_PLAN_KEY_PREFIX, userId)))
+  return safeParse<WeeklyPlan>(accountStorageFor(userId ?? 'guest').getItem(withOwner(WEEKLY_PLAN_KEY_PREFIX, userId)))
 }
 
 export function saveWeeklyPlan(plan: WeeklyPlan, userId?: string) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(withOwner(WEEKLY_PLAN_KEY_PREFIX, userId), JSON.stringify(plan))
+  accountStorageFor(userId ?? 'guest').setItem(withOwner(WEEKLY_PLAN_KEY_PREFIX, userId), JSON.stringify(plan))
 }
 
 export function addCustomTaskToDay(
@@ -448,12 +449,12 @@ export function toggleCustomTask(plan: WeeklyPlan, dayId: string, taskId: string
 
 export function loadActivityLog(userId?: string): ActivityLog {
   if (typeof window === 'undefined') return {}
-  return safeParse<ActivityLog>(window.localStorage.getItem(withOwner(ACTIVITY_LOG_KEY_PREFIX, userId))) ?? {}
+  return safeParse<ActivityLog>(accountStorageFor(userId ?? 'guest').getItem(withOwner(ACTIVITY_LOG_KEY_PREFIX, userId))) ?? {}
 }
 
 function saveActivityLog(log: ActivityLog, userId?: string) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(withOwner(ACTIVITY_LOG_KEY_PREFIX, userId), JSON.stringify(log))
+  accountStorageFor(userId ?? 'guest').setItem(withOwner(ACTIVITY_LOG_KEY_PREFIX, userId), JSON.stringify(log))
 }
 
 export function addTrackedMinutes(userId: string | undefined, dateISO: string, key: ActivityKey, minutes: number) {

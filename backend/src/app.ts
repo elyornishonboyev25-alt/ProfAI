@@ -12,6 +12,7 @@ import { requireAuth } from './middleware/auth.js'
 import { errorHandler, notFoundHandler } from './middleware/error.js'
 import healthRoutes from './routes/health.routes.js'
 import authRoutes from './routes/auth.routes.js'
+import accountDataRoutes from './routes/accountData.routes.js'
 import testsRoutes from './routes/tests.routes.js'
 import dashboardRoutes from './routes/dashboard.routes.js'
 import profileRoutes from './routes/profile.routes.js'
@@ -75,6 +76,8 @@ app.use('/api/v1/ai/voice', requireAuth, aiRateLimit, express.json({ limit: '384
 
 // Authenticate and bound voice uploads before accepting the larger JSON body.
 app.post('/api/v1/shadowing-recordings', requireAuth, shadowingUploadLimit, express.json({ limit: '5mb' }))
+
+app.use('/api/v1/account-data', requireAuth, apiRateLimit, express.json({ limit: '6mb' }), accountDataRoutes)
 
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false }))

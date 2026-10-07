@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 // Full Mock catalog. Each Full Mock N bundles the four IELTS sections —
 // Listening N, Reading N, Writing N, Speaking N — into one exam package, in the
 // official exam order (Listening → Reading → Writing → Speaking).
@@ -153,7 +154,7 @@ function isMockSectionKey(value: unknown): value is MockSectionKey {
 function readProgressStore(): FullMockProgressStore {
   if (typeof window === 'undefined') return {}
   try {
-    const cached = window.localStorage.getItem(FULL_MOCK_PROGRESS_STORAGE_KEY)
+    const cached = accountStorage.getItem(FULL_MOCK_PROGRESS_STORAGE_KEY)
     const parsed = cached ? (JSON.parse(cached) as unknown) : null
     if (!parsed || typeof parsed !== 'object') return {}
     return parsed as FullMockProgressStore
@@ -164,7 +165,7 @@ function readProgressStore(): FullMockProgressStore {
 
 function writeProgressStore(store: FullMockProgressStore): void {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(FULL_MOCK_PROGRESS_STORAGE_KEY, JSON.stringify(store))
+  accountStorage.setItem(FULL_MOCK_PROGRESS_STORAGE_KEY, JSON.stringify(store))
   window.dispatchEvent(new CustomEvent(FULL_MOCK_PROGRESS_EVENT))
 }
 
@@ -197,7 +198,7 @@ type FullMockResults = Record<string, Partial<Record<MockSectionKey, FullMockSec
 function readResults(): FullMockResults {
   if (typeof window === 'undefined') return {}
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(RESULT_STORAGE_KEY) ?? '{}')
+    const parsed = JSON.parse(accountStorage.getItem(RESULT_STORAGE_KEY) ?? '{}')
     return parsed && typeof parsed === 'object' ? parsed as FullMockResults : {}
   } catch { return {} }
 }
@@ -210,7 +211,7 @@ export function saveFullMockSectionResult(mockId: string, section: MockSectionKe
   if (!getFullMockById(mockId) || !Number.isFinite(result.band) || result.band < 0 || result.band > 9) return
   const store = readResults()
   try {
-    window.localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify({
+    accountStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify({
       ...store,
       [mockId]: { ...store[mockId], [section]: result },
     }))

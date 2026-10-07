@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -329,11 +330,11 @@ export default function IELTSWritingTestInterface({
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(draftKey)
+      const saved = accountStorageFor(user?.id ?? 'guest').getItem(draftKey)
       if (saved !== null) setAnswer(saved)
     } catch { /* Storage can be unavailable. */ }
     try {
-      const session = window.localStorage.getItem(sessionKey)
+      const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
         const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
         autoStartHandled.current = true
@@ -349,7 +350,7 @@ export default function IELTSWritingTestInterface({
 
   useEffect(() => {
     if (phase !== 'writing') return
-    try { window.localStorage.setItem(draftKey, answer) } catch { /* Keep in-memory answer. */ }
+    try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, answer) } catch { /* Keep in-memory answer. */ }
   }, [answer, draftKey, phase])
 
   useEffect(() => {
@@ -373,7 +374,7 @@ export default function IELTSWritingTestInterface({
         setTimerEnabled(withTimer)
         setTimeRemaining(effectiveDuration * 60)
         deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
-        try { window.localStorage.setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
         autoSubmittedRef.current = false
         setIsTimerRunning(withTimer)
         setPhase('writing')
@@ -416,8 +417,8 @@ export default function IELTSWritingTestInterface({
     try {
       const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, task.visualContext)
       setAiEvaluation(result)
-      try { window.localStorage.removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
-      try { window.localStorage.removeItem(sessionKey) } catch { /* Evaluation still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* Evaluation still succeeds. */ }
       if (answer.trim()) writingTrial.consume()
 
       const timeSpent = timerEnabled ? effectiveDuration * 60 - timeRemaining : 0
@@ -467,6 +468,7 @@ export default function IELTSWritingTestInterface({
             wordCount,
           },
         }).then((reward) => {
+          if (useAuthStore.getState().user?.id !== user.id) return
           markXpActivitySynced(user.id, savedEntry.attemptKey)
           updateUserProgress({ xp: reward.totalXp, level: reward.level })
         }).catch(() => {})

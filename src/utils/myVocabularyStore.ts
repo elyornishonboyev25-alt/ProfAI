@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 
 export type VocabContext = 'reading' | 'listening' | 'writing' | 'speaking' | 'article' | 'sat'
@@ -19,7 +20,7 @@ const CHANGE_EVENT = 'myvocab:changed'
 function read(): SavedWord[] {
   if (typeof window === 'undefined') return []
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = accountStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as SavedWord[]
     return Array.isArray(parsed) ? parsed : []
@@ -30,7 +31,7 @@ function read(): SavedWord[] {
 
 function write(words: SavedWord[]) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(words))
+  accountStorage.setItem(STORAGE_KEY, JSON.stringify(words))
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT))
 }
 

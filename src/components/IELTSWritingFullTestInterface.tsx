@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -143,14 +144,14 @@ export default function IELTSWritingFullTestInterface({
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(draftKey)
+      const saved = accountStorageFor(user?.id ?? 'guest').getItem(draftKey)
       if (saved) {
         const parsed = JSON.parse(saved) as Record<string, unknown>
         setAnswers(Object.fromEntries(tasks.map((task) => [task.id, typeof parsed[task.id] === 'string' ? parsed[task.id] : ''])) as Record<string, string>)
       }
     } catch { /* Storage can be unavailable in private browsing. */ }
     try {
-      const session = window.localStorage.getItem(sessionKey)
+      const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
         const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
         autoStartHandled.current = true
@@ -166,7 +167,7 @@ export default function IELTSWritingFullTestInterface({
 
   useEffect(() => {
     if (phase !== 'writing') return
-    try { window.localStorage.setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
+    try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
   }, [answers, draftKey, phase])
 
   useEffect(() => {
@@ -196,7 +197,7 @@ export default function IELTSWritingFullTestInterface({
         setTimerEnabled(withTimer)
         setTimeRemaining(effectiveDuration * 60)
         deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
-        try { window.localStorage.setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
         autoSubmittedRef.current = false
         setIsTimerRunning(withTimer)
         setPhase('writing')
@@ -224,8 +225,8 @@ export default function IELTSWritingFullTestInterface({
     setIsTimerRunning(false)
     setPhase('landing')
     autoSubmittedRef.current = false
-    try { window.localStorage.removeItem(draftKey) } catch { /* No persisted draft. */ }
-    try { window.localStorage.removeItem(sessionKey) } catch { /* No persisted session. */ }
+    try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* No persisted draft. */ }
+    try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* No persisted session. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
 
   const handleSubmit = useCallback(async () => {
@@ -250,8 +251,8 @@ export default function IELTSWritingFullTestInterface({
       }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
-      try { window.localStorage.removeItem(draftKey) } catch { /* Submission still succeeds. */ }
-      try { window.localStorage.removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Submission still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
@@ -317,6 +318,7 @@ export default function IELTSWritingFullTestInterface({
           },
         })
           .then((reward) => {
+            if (useAuthStore.getState().user?.id !== user.id) return
             markXpActivitySynced(user.id, savedEntries[0].attemptKey)
             updateUserProgress({ xp: reward.totalXp, level: reward.level })
           })

@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import { SaveWordButton } from './SaveWordButton'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -131,12 +132,12 @@ export function usePronunciation() {
 
 // ---------------------------------------------------------------- mastery store
 function getMastery(key: string): Record<string, boolean> {
-  return safeParse<Record<string, Record<string, boolean>>>(localStorage.getItem(MASTERY_STORAGE_KEY), {})[key] ?? {}
+  return safeParse<Record<string, Record<string, boolean>>>(accountStorage.getItem(MASTERY_STORAGE_KEY), {})[key] ?? {}
 }
 function setMastery(key: string, map: Record<string, boolean>) {
-  const all = safeParse<Record<string, Record<string, boolean>>>(localStorage.getItem(MASTERY_STORAGE_KEY), {})
+  const all = safeParse<Record<string, Record<string, boolean>>>(accountStorage.getItem(MASTERY_STORAGE_KEY), {})
   all[key] = map
-  localStorage.setItem(MASTERY_STORAGE_KEY, JSON.stringify(all))
+  accountStorage.setItem(MASTERY_STORAGE_KEY, JSON.stringify(all))
 }
 
 // ---------------------------------------------------------------- reward store
@@ -150,12 +151,12 @@ type MatchingRewardState = {
 type MatchingCelebration = { amount: number; reason: string; total: number }
 
 function getAllMatchingRewardStates(): Record<string, MatchingRewardState> {
-  return safeParse<Record<string, MatchingRewardState>>(localStorage.getItem(MATCHING_REWARDS_STORAGE_KEY), {})
+  return safeParse<Record<string, MatchingRewardState>>(accountStorage.getItem(MATCHING_REWARDS_STORAGE_KEY), {})
 }
 function saveMatchingRewardState(key: string, state: MatchingRewardState) {
   const all = getAllMatchingRewardStates()
   all[key] = state
-  localStorage.setItem(MATCHING_REWARDS_STORAGE_KEY, JSON.stringify(all))
+  accountStorage.setItem(MATCHING_REWARDS_STORAGE_KEY, JSON.stringify(all))
 }
 function getSectionRewardState(key: string, totalGroups: number): MatchingRewardState {
   const stored = getAllMatchingRewardStates()[key]
@@ -170,12 +171,12 @@ function getSectionRewardState(key: string, totalGroups: number): MatchingReward
   return { awardedGroups, bonusAwarded, completed, totalDiamonds: Math.max(baseDiamonds, stored.totalDiamonds ?? 0), completedAt: stored.completedAt }
 }
 function getDiamondBank() {
-  const raw = Number(localStorage.getItem(VOCAB_DIAMOND_BANK_STORAGE_KEY))
+  const raw = Number(accountStorage.getItem(VOCAB_DIAMOND_BANK_STORAGE_KEY))
   return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 0
 }
 function addToDiamondBank(amount: number) {
   const next = getDiamondBank() + Math.max(0, Math.floor(amount))
-  localStorage.setItem(VOCAB_DIAMOND_BANK_STORAGE_KEY, String(next))
+  accountStorage.setItem(VOCAB_DIAMOND_BANK_STORAGE_KEY, String(next))
   return next
 }
 

@@ -130,6 +130,8 @@ async function main() {
   const store = await load('src/utils/myVocabularyStore.ts')
   const legacy = { id: 'legacy', term: 'legacy', definition: 'Inherited from the past.', example: '', synonym: '', context: 'reading', source: 'manual', createdAt: '2025-01-01' }
   memory.set('smarttest_my_vocabulary_v1', JSON.stringify([legacy]))
+  assert.deepEqual(store.getSavedWords('reading'), [], 'Unowned device words must not leak into account vocabulary')
+  memory.set('profai:account-data:v1:guest:smarttest_my_vocabulary_v1', JSON.stringify([legacy]))
   let changes = 0
   const unsubscribe = store.subscribeSavedWords(() => changes++)
   const entry = vocabularyCollections.sat[0].sections[0].entries[0]

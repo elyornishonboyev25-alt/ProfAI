@@ -118,6 +118,25 @@ async function main() {
     assert.equal(a.useAuthStore.getState().refreshToken, 'refresh-other')
   }
 
+  seed()
+  const lateResult = deferred()
+  fetchHandler = () => lateResult.promise
+  const oldResult = a.apiClient.get('/account-results')
+  a.useAuthStore.getState().setSession({ ...session('other'), user: { id: 'other', role: 'USER' } })
+  lateResult.resolve(json(200, { privateResult: 'learner-only' }))
+  await assert.rejects(oldResult, /Account changed/, 'A successful old response must not reach the new account')
+  seed()
+  const crossTabResult = deferred()
+  fetchHandler = () => crossTabResult.promise
+  const previousTabRequest = a.apiClient.get('/old-tab-results')
+  b.useAuthStore.getState().setSession({ ...session('other'), user: { id: 'other', role: 'USER' } })
+  crossTabResult.resolve(json(200, { privateResult: 'learner-only' }))
+  await assert.rejects(previousTabRequest, /Account changed/, 'Another tab login invalidates old successful responses before storage events arrive')
+  let sent = false
+  fetchHandler = async () => { sent = true; return json(200) }
+  await assert.rejects(a.apiClient.post('/results', { result: 'old' }, { expectedUserId: 'learner' }), /Account changed/)
+  assert.equal(sent, false, 'A delayed mutation may not be sent using the next account token')
+
   // Worker activation must clean stale assets without navigating any open page.
   let activate
   let navigated = false

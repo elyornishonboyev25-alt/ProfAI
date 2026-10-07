@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { apiClient } from '@/lib/apiClient'
 
 export type XpActivitySource =
@@ -40,7 +41,7 @@ function syncKey(userId: string, sourceKey: string) {
 
 export function markXpActivitySynced(userId: string, sourceKey: string) {
   try {
-    window.localStorage.setItem(syncKey(userId, sourceKey), 'ok')
+    accountStorageFor(userId ?? 'guest').setItem(syncKey(userId, sourceKey), 'ok')
   } catch {
     // Server already owns the award; a storage failure must not break the UI.
   }
@@ -48,7 +49,7 @@ export function markXpActivitySynced(userId: string, sourceKey: string) {
 
 export function isXpActivitySynced(userId: string, sourceKey: string) {
   try {
-    return typeof window !== 'undefined' && window.localStorage.getItem(syncKey(userId, sourceKey)) === 'ok'
+    return typeof window !== 'undefined' && accountStorageFor(userId ?? 'guest').getItem(syncKey(userId, sourceKey)) === 'ok'
   } catch {
     return false
   }

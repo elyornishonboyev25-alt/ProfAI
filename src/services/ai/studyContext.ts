@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 // Builds a compact snapshot of the learner's study state so the AI assistant can act
 // like a real teacher: it knows which Reading/Listening tests are LIVE, which ones the
 // learner has already finished, and therefore which test is "one they haven't done yet".
@@ -55,7 +56,7 @@ function readStringArray(value: unknown): string[] {
 function readEngagement(track: IeltsTrackType): StoredTrackEngagement {
   if (typeof window === 'undefined') return {}
   try {
-    const raw = window.localStorage.getItem(TRACK_ENGAGEMENT_STORAGE_KEY)
+    const raw = accountStorage.getItem(TRACK_ENGAGEMENT_STORAGE_KEY)
     if (!raw) return {}
     const parsed = JSON.parse(raw) as Record<string, StoredTrackEngagement> | null
     return (parsed?.[track] as StoredTrackEngagement) ?? {}

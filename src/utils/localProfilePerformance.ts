@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { getSATReviewTests, isSATTestComplete } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { scoreSATModules } from '@/features/sat/practiceTest4'
@@ -118,8 +119,7 @@ function mergeActivityLogs(...logs: ActivityLog[]): ActivityLog {
 
 export function getCombinedActivityLog(userId: string): ActivityLog {
   const accountLog = safeRead(() => [loadActivityLog(userId)])[0] ?? {}
-  const deviceLog = safeRead(() => [loadActivityLog(undefined)])[0] ?? {}
-  return mergeActivityLogs(accountLog, deviceLog)
+  return accountLog
 }
 
 function trackedMinutes(activity: ActivityLog[string], keys?: Set<ActivityKey>) {
@@ -151,7 +151,7 @@ function resolveLocalLevelProgress(xp: number) {
 function isReadingAttemptSynced(userId: string, scope: 'reading' | 'listening', sourceKey: string) {
   if (typeof window === 'undefined') return false
   try {
-    return window.localStorage.getItem(`smarttest-${scope}-sync:${userId}:${sourceKey}`) === 'ok'
+    return accountStorageFor(userId ?? 'guest').getItem(`smarttest-${scope}-sync:${userId}:${sourceKey}`) === 'ok'
   } catch {
     return false
   }
@@ -162,7 +162,6 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
 
   const readingHistory = uniqueBy([
     ...safeRead(() => getReadingAnalysisHistory(userId)),
-    ...safeRead(() => getReadingAnalysisHistory()),
   ], (entry) => entry.attemptKey)
   const readingAttempts: LocalDashboardAttempt[] = readingHistory
     .filter((entry) => entry.totalQuestions > 0)
@@ -185,14 +184,13 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
         timeSpentSec: Math.max(1, entry.timeSpent),
         totalQuestions: entry.totalQuestions,
         tracks: [isListening ? 'IELTS_LISTENING' : 'IELTS_READING'],
-        synced: isReadingAttemptSynced(userId, scope, entry.attemptKey) || isReadingAttemptSynced('guest', scope, entry.attemptKey),
+        synced: isReadingAttemptSynced(userId, scope, entry.attemptKey),
         examScore: entry.bandScore,
       }
     })
 
   const writingHistory = uniqueBy([
     ...safeRead(() => getWritingAnalysisHistory(userId)),
-    ...safeRead(() => getWritingAnalysisHistory()),
   ], (entry) => entry.attemptKey)
   const writingAttempts: LocalDashboardAttempt[] = writingHistory.map((entry) => {
     const accuracy = clamp((entry.overallBand / 9) * 100)
@@ -218,7 +216,7 @@ export function getLocalDashboardAttempts(userId: string): LocalDashboardAttempt
   })
 
   const speakingAttempts: LocalDashboardAttempt[] = safeRead(() => useSpeakingStore.getState().sessions)
-    .filter((session) => session.userId === userId || session.userId === null)
+    .filter((session) => session.userId === userId)
     .map((session) => {
       const accuracy = clamp((session.overallBand / 9) * 100)
       return {
@@ -632,7 +630,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
             id: 'local-history-restored',
             type: 'success',
             title: 'Saved activity restored',
-            message: 'Your account, device and older guest learning history are included together.',
+            message: 'Your saved learning history for this account is included.',
           }, ...overview.skillAnalytics.insights.filter((insight) => insight.id !== 'guest-tip-register')]
         : overview.skillAnalytics.insights,
     },

@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { moduleTimes, totalTime } from './timing'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { useAuthStore } from '@/store/authStore'
@@ -37,7 +38,7 @@ export async function syncSATAttemptResult(
     }
   }
   try {
-    if (!assignmentId && window.localStorage.getItem(syncKey) === 'ok') return
+    if (!assignmentId && accountStorageFor(userId ?? 'guest').getItem(syncKey) === 'ok') return
   } catch { /* The server upsert still makes retries safe without local storage. */ }
   const pendingKey = `${syncKey}:${assignmentId ?? ''}`
   const existing = pending.get(pendingKey)
@@ -81,7 +82,7 @@ export async function syncSATAttemptResult(
       skills: [...skillStats].map(([skill, stats]) => ({ skill, ...stats })),
     },
   }).then(() => {
-    try { window.localStorage.setItem(syncKey, 'ok') } catch { /* Already persisted on the server. */ }
+    try { accountStorageFor(userId ?? 'guest').setItem(syncKey, 'ok') } catch { /* Already persisted on the server. */ }
   }).finally(() => { pending.delete(pendingKey) })
   pending.set(pendingKey, request)
   return request

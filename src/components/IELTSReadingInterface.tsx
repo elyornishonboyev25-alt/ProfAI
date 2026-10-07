@@ -1,4 +1,5 @@
-﻿import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeftIcon,
@@ -350,6 +351,7 @@ export default function IELTSReadingInterface({
           : 'reading-contrast-default'
 
   // --- Session Persistence ---
+  const personalStorage = accountStorageFor(badgeUserId ?? 'guest')
   const sessionKey = `ielts_test_session_${test.id}`
 
   useEffect(() => {
@@ -372,7 +374,7 @@ export default function IELTSReadingInterface({
   // Load session on mount
   useEffect(() => {
     if (isReviewMode) return
-    const savedSession = localStorage.getItem(sessionKey)
+    const savedSession = personalStorage.getItem(sessionKey)
     if (savedSession) {
       try {
         const data = JSON.parse(savedSession)
@@ -386,7 +388,7 @@ export default function IELTSReadingInterface({
         const restoredParts = hasLegacyListeningDefault
           ? sanitizeSelectedParts(undefined, test.sections.length)
           : savedParts
-        localStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
+        personalStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
         setCurrentSectionIndex(data.currentSectionIndex ?? 0)
         setAnswers(data.answers ?? {})
         setTimeRemaining(data.timeRemaining ?? test.duration * 60)
@@ -445,7 +447,7 @@ export default function IELTSReadingInterface({
       startedAt: startedAtRef.current,
       timestamp: Date.now()
     }
-    localStorage.setItem(sessionKey, JSON.stringify(sessionData))
+    personalStorage.setItem(sessionKey, JSON.stringify(sessionData))
   }, [
     currentSectionIndex,
     answers,
@@ -462,7 +464,7 @@ export default function IELTSReadingInterface({
 
   // Clear session helper
   const clearSession = () => {
-    localStorage.removeItem(sessionKey)
+    personalStorage.removeItem(sessionKey)
     startedAtRef.current = null
   }
 

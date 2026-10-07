@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
@@ -36,7 +37,7 @@ type SpeakingState = {
 
 export const useSpeakingStore = create<SpeakingState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       sessions: [],
       addSession: (record) => {
         const full: SpeakingSessionRecord = {
@@ -45,15 +46,42 @@ export const useSpeakingStore = create<SpeakingState>()(
           date: record.date ?? new Date().toISOString(),
         }
         set((state) => ({ sessions: [full, ...state.sessions].slice(0, 200) }))
+        saveSpeakingAccount(full.userId, get().sessions)
         return full
       },
-      removeSession: (id) => set((state) => ({ sessions: state.sessions.filter((s) => s.id !== id) })),
-      clearForUser: (userId) =>
-        set((state) => ({ sessions: state.sessions.filter((s) => s.userId !== userId) })),
+      removeSession: (id) => {
+        const owner = get().sessions.find((session) => session.id === id)?.userId
+        set((state) => ({ sessions: state.sessions.filter((s) => s.id !== id) }))
+        if (owner !== undefined) saveSpeakingAccount(owner, get().sessions)
+      },
+      clearForUser: (userId) => {
+        set((state) => ({ sessions: state.sessions.filter((s) => s.userId !== userId) }))
+        saveSpeakingAccount(userId, get().sessions)
+      },
     }),
     { name: 'smarttest-speaking-history-v1' },
   ),
 )
+
+const SPEAKING_KEY = 'speaking-sessions'
+function saveSpeakingAccount(owner: string | null, sessions: SpeakingSessionRecord[]) {
+  try { accountStorageFor(owner ?? 'guest').setItem(SPEAKING_KEY, JSON.stringify(sessions.filter((session) => session.userId === owner))) } catch { /* Keep in-memory results. */ }
+}
+export function restoreSpeakingAccount(owner: string) {
+  const storage = accountStorageFor(owner)
+  const raw = storage.getItem(SPEAKING_KEY)
+  if (raw === null) {
+    const existing = useSpeakingStore.getState().sessions.filter((session) => session.userId === owner)
+    if (existing.length) saveSpeakingAccount(owner, existing)
+    return
+  }
+  try {
+    const records = JSON.parse(raw)
+    if (!Array.isArray(records)) return
+    const sessions = records.filter((session) => session.userId === owner)
+    useSpeakingStore.setState((state) => ({ sessions: [...state.sessions.filter((session) => session.userId !== owner), ...sessions] }))
+  } catch { /* Ignore malformed cached records. */ }
+}
 
 // ── Derived analytics (pure helpers) ────────────────────────────────────────
 

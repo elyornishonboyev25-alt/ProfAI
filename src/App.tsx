@@ -1,3 +1,4 @@
+import { useAccountDataSync } from '@/hooks/useAccountDataSync'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import ClassAssignmentContext from '@/features/learningCenter/ClassAssignmentContext'
@@ -251,6 +252,7 @@ function App() {
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
+  const accountData = useAccountDataSync(user?.id)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
@@ -480,9 +482,9 @@ function App() {
                   : 'min-h-full min-h-screen'
               }`}
             >
-              <ErrorBoundary key={location.key}>
+              <ErrorBoundary key={`${user?.id ?? 'guest'}:${location.key}:${isTestMode || isExamModeActive ? 0 : accountData.revision}`}>
                 <Suspense fallback={<RouteLoader />}>
-                    <BillingBoundary><Routes location={location}>
+                    <BillingBoundary>{!accountData.ready ? <RouteLoader /> : <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={<Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
@@ -870,7 +872,7 @@ function App() {
                       <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><QuickOnboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Onboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
-                    </Routes></BillingBoundary>
+                    </Routes>}</BillingBoundary>
                 </Suspense>
               </ErrorBoundary>
 

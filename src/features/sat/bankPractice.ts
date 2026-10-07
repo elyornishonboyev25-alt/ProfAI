@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { getSATReviewTests, SAT_TEST_CATALOG } from './catalog'
 import type { SATQuestion } from './practiceTest4'
 
@@ -19,7 +20,7 @@ export const historyKey = (userId: string) => `profai:sat:question-bank:${userId
 export function readHistory(userId: string): Result[] {
   try {
     const data: unknown = JSON.parse(
-      window.localStorage.getItem(historyKey(userId)) ?? '[]',
+      accountStorageFor(userId ?? 'guest').getItem(historyKey(userId)) ?? '[]',
     )
     return Array.isArray(data)
       ? data.filter((row): row is Result =>
@@ -92,7 +93,7 @@ export type BankSession = {
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`
 export function loadBankSession(userId: string): BankSession | null {
   try {
-    const data = JSON.parse(window.localStorage.getItem(sessionKey(userId)) ?? 'null')
+    const data = JSON.parse(accountStorageFor(userId ?? 'guest').getItem(sessionKey(userId)) ?? 'null')
     if (!data || typeof data.id !== 'string' || !data.id ||
       typeof data.createdAt !== 'string' || !Number.isFinite(Date.parse(data.createdAt)) ||
       !Array.isArray(data.keys) || !data.keys.length || data.keys.length > 30 ||
@@ -109,8 +110,8 @@ export function loadBankSession(userId: string): BankSession | null {
   }
 }
 export function saveBankSession(userId: string, session: BankSession) {
-  window.localStorage.setItem(sessionKey(userId), JSON.stringify(session))
+  accountStorageFor(userId ?? 'guest').setItem(sessionKey(userId), JSON.stringify(session))
 }
 export function clearBankSession(userId: string, id: string) {
-  if (loadBankSession(userId)?.id === id) window.localStorage.removeItem(sessionKey(userId))
+  if (loadBankSession(userId)?.id === id) accountStorageFor(userId ?? 'guest').removeItem(sessionKey(userId))
 }

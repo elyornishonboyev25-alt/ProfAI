@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
 import UiText from '@/components/common/UiText'
 import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
@@ -216,12 +217,13 @@ export default function Results() {
     const isListeningModule = moduleLabel.includes('listening')
     const syncScope = isListeningModule ? 'listening' : 'reading'
     const syncKey = `smarttest-${syncScope}-sync:${authUser?.id ?? 'guest'}:${attemptKey}`
-    if (window.localStorage.getItem(syncKey) === 'ok') return
+    if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
 
     const syncAttempt = async () => {
       try {
         await waitForIeltsClassSync(result.testId, result.date)
-        if (window.localStorage.getItem(syncKey) === 'ok') return
+        if (useAuthStore.getState().user?.id !== authUser?.id) return
+        if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
         await apiClient.post(isListeningModule ? '/tests/listening-sync' : '/tests/reading-sync', {
           externalAttemptKey: attemptKey,
           externalTestId: result.testId,
@@ -238,8 +240,8 @@ export default function Results() {
           subjects: isListeningModule
             ? ['IELTS Listening', 'Listening', 'Audio', 'Comprehension']
             : ['IELTS Reading', 'Reading', 'Passage', 'Comprehension'],
-        })
-        window.localStorage.setItem(syncKey, 'ok')
+        }, { expectedUserId: authUser?.id })
+        accountStorageFor(authUser?.id ?? 'guest').setItem(syncKey, 'ok')
         window.dispatchEvent(new CustomEvent('smarttest:attempt-submitted'))
       } catch {
         // silent fallback: local review remains available even if backend sync is unavailable

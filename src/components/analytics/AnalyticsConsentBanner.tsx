@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, ShieldCheck, X } from 'lucide-react'
+import { BarChart3, X } from 'lucide-react'
 import {
   analyticsPreferenceEvents,
   getAnalyticsConsent,
@@ -26,19 +26,7 @@ export default function AnalyticsConsentBanner() {
     setOpen(false)
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-3 left-3 z-[190] inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/72 text-slate-500 shadow-[0_10px_28px_rgba(15,23,42,.12)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200/70"
-        aria-label="Open analytics privacy preferences"
-        title="Privacy preferences"
-      >
-        <ShieldCheck className="h-4 w-4" />
-      </button>
-    )
-  }
+  if (!open) return null
 
   return (
     <section

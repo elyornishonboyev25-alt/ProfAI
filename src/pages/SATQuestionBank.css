@@ -578,6 +578,9 @@
   justify-content: space-between;
   gap: 12px;
 }
+.sat-bank-detail-title {
+  flex-wrap: wrap;
+}
 .sat-bank-detail-title h3 {
   margin: 0;
   font-size: 20px;
@@ -804,4 +807,61 @@
 .sat-bank-question > div,
 .sat-bank-question .sat-exam-canvas {
   min-height: 0;
+}
+
+.sat-bank-practice-navigator {
+  margin-bottom: 18px;
+}
+.sat-bank-number {
+  position: relative;
+}
+.sat-bank-number.answered {
+  background: #edf2ff;
+  color: #3d4fd2;
+}
+.sat-bank-mark-icon {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  fill: #3d4fd2;
+  color: #3d4fd2;
+}
+.sat-bank-calculator,
+.sat-bank-session-top .sat-bank-calculator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  border: 1px solid #b6ddc8;
+  border-radius: 12px;
+  background: #f0faf4;
+  padding: 10px 12px;
+  color: #21794d;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.sat-bank-calculator[aria-expanded='true'] {
+  background: #21794d;
+  color: white;
+}
+.sat-bank-session-top > div:first-child {
+  margin-right: auto;
+}
+@media (min-width: 1024px) {
+  .sat-bank-wrap.sat-bank-calculator-docked {
+    margin-right: calc(min(44vw, 46rem) + 12px);
+  }
+  .sat-bank-calculator-docked .sat-bank-review-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .sat-bank-session-top {
+    flex-wrap: wrap;
+  }
+  .sat-bank-session-top > div:first-child {
+    flex-basis: 100%;
+  }
 }

@@ -3,6 +3,8 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenCheck,
+  Bookmark,
+  Calculator,
   CheckCircle2,
   Filter,
   History,
@@ -10,6 +12,7 @@ import {
   Target,
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATRichText from '@/components/sat/SATRichText'
 import { getSATReviewTests, SAT_TEST_CATALOG } from '@/features/sat/catalog'
@@ -31,8 +34,9 @@ type Result = {
   at: string
   answer?: string
   setId?: string
+  flagged?: boolean
 }
-type ReviewFilter = 'all' | 'incorrect' | 'correct' | 'skipped'
+type ReviewFilter = 'all' | 'incorrect' | 'correct' | 'skipped' | 'marked'
 const difficulty = (value: SATQuestion['difficulty']) =>
   value === 'Foundation' ? 'Easy' : value === 'Advanced' ? 'Hard' : value
 const historyKey = (userId: string) => `profai:sat:question-bank:${userId}:v1`
@@ -53,7 +57,8 @@ function readHistory(userId: string): Result[] {
             typeof row.at === 'string' &&
             Number.isFinite(Date.parse(row.at)) &&
             (row.answer === undefined || typeof row.answer === 'string') &&
-            (row.setId === undefined || typeof row.setId === 'string'),
+            (row.setId === undefined || typeof row.setId === 'string') &&
+            (row.flagged === undefined || typeof row.flagged === 'boolean'),
           ),
         ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key }))
       : []
@@ -99,12 +104,13 @@ allQuestions.forEach((row) => {
   const legacyKey = `${row.question.section}:${row.question.sourceQuestionId ?? row.question.id}`
   if (!reviewQuestions.has(legacyKey)) reviewQuestions.set(legacyKey, row)
 })
-const outcome = (result: Result): Exclude<ReviewFilter, 'all'> =>
+const outcome = (result: Result): Exclude<ReviewFilter, 'all' | 'marked'> =>
   result.correct ? 'correct' : result.answer === '' ? 'skipped' : 'incorrect'
 const outcomeLabel = {
   correct: 'Correct',
   incorrect: 'Incorrect',
   skipped: 'Skipped',
+  marked: 'Marked for Review',
 }
 const dateLabel = (at: string) =>
   new Date(at).toLocaleString('en-GB', {
@@ -181,6 +187,8 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [flagged, setFlagged] = useState<string[]>([])
+  const [calculatorOpen, setCalculatorOpen] = useState(false)
+  const [calculatorDocked, setCalculatorDocked] = useState(false)
   const [error, setError] = useState('')
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all')
   const [reviewIndex, setReviewIndex] = useState(0)
@@ -207,6 +215,13 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       result.set(row.key, row)
     return result
   }, [history, mockHistory])
+  const markedKeys = useMemo(() => {
+    const marks = new Map<string, boolean>()
+    for (const row of [...history].sort((a, b) => a.at.localeCompare(b.at))) {
+      marks.set(row.key, row.flagged === true)
+    }
+    return new Set([...marks].filter(([, marked]) => marked).map(([key]) => key))
+  }, [history])
   const sets = useMemo(() => {
     const grouped = new Map<string, Result[]>()
     history.forEach((row) => {
@@ -232,7 +247,10 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       }))
       .filter(
         (item) =>
-          reviewFilter === 'all' || outcome(item.result) === reviewFilter,
+          reviewFilter === 'all' ||
+          (reviewFilter === 'marked'
+            ? item.result.flagged
+            : outcome(item.result) === reviewFilter),
       ) ?? []
   const review =
     reviewRows[Math.min(reviewIndex, Math.max(0, reviewRows.length - 1))]
@@ -293,10 +311,11 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
           (level === 'all' || difficulty(question.difficulty) === level) &&
           (status === 'all' ||
             (status === 'unanswered' && !prior) ||
-            (status === 'incorrect' && prior?.correct === false))
+            (status === 'incorrect' && prior?.correct === false) ||
+            (status === 'marked' && markedKeys.has(row.key)))
         )
       }),
-    [section, domain, skill, level, status, latest],
+    [section, domain, skill, level, status, latest, markedKeys],
   )
   const skillStats = useMemo(() => {
     const stats = new Map<string, { correct: number; total: number }>()
@@ -320,7 +339,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     )
     setIndex(0)
     setAnswers({})
-    setFlagged([])
+    setFlagged(
+      filtered.filter((row) => markedKeys.has(row.key)).map((row) => row.key),
+    )
     setError('')
   }
   const complete = () => {
@@ -335,6 +356,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       answer: answers[row.key]?.trim() ?? '',
       at,
       setId,
+      flagged: flagged.includes(row.key),
     }))
     const next = [...history, ...results]
     try {
@@ -350,6 +372,22 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     }
   }
   const current = quiz[index]
+  const mathVisible =
+    (historyView ? review?.row?.question.section : current?.question.section) === 'math'
+  useEffect(() => {
+    setCalculatorOpen(false)
+  }, [mathVisible, historyView, reviewId])
+  const calculatorButton = mathVisible ? (
+    <button
+      type="button"
+      className="sat-bank-calculator"
+      aria-expanded={calculatorOpen}
+      aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
+      onClick={() => setCalculatorOpen((value) => !value)}
+    >
+      <Calculator size={18} /> Desmos
+    </button>
+  ) : null
   const reset = () => {
     setSection('all')
     setDomain('all')
@@ -359,7 +397,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   }
   return (
     <main className="sat-bank-page">
-      <div className="sat-bank-wrap">
+      <div className={`sat-bank-wrap ${mathVisible && calculatorOpen && calculatorDocked ? 'sat-bank-calculator-docked' : ''}`}>
         <button
           type="button"
           className="sat-bank-back"
@@ -433,7 +471,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 className="sat-bank-review-filters"
                 aria-label="Filter reviewed questions"
               >
-                {(['all', 'incorrect', 'correct', 'skipped'] as const).map(
+                {(['all', 'incorrect', 'correct', 'skipped', 'marked'] as const).map(
                   (value) => (
                     <button
                       type="button"
@@ -448,7 +486,8 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                       <span>
                         {
                           reviewSet.results.filter(
-                            (row) => value === 'all' || outcome(row) === value,
+                            (row) => value === 'all' ||
+                              (value === 'marked' ? row.flagged : outcome(row) === value),
                           ).length
                         }
                       </span>
@@ -469,11 +508,12 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                           type="button"
                           key={`${item.result.key}-${item.number}`}
                           className={`sat-bank-number ${outcome(item.result)}`}
-                          aria-label={`Review question ${item.number}: ${outcomeLabel[outcome(item.result)]}`}
+                          aria-label={`Review question ${item.number}: ${outcomeLabel[outcome(item.result)]}${item.result.flagged ? ', Marked for Review' : ''}`}
                           aria-current={review === item ? 'step' : undefined}
                           onClick={() => setReviewIndex(position)}
                         >
                           {item.number}
+                          {item.result.flagged ? <Bookmark size={12} className="sat-bank-mark-icon" aria-hidden="true" /> : null}
                         </button>
                       ))}
                     </div>
@@ -481,6 +521,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                   <article className="sat-bank-review-detail">
                     <div className="sat-bank-detail-title">
                       <h3>Question {review.number}</h3>
+                      {calculatorButton}
                       <span
                         className={`sat-bank-outcome ${outcome(review.result)}`}
                       >
@@ -502,7 +543,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                             strokes={[]}
                             highlightAvailable={false}
                             onChange={() => {}}
-                            flagged={false}
+                            flagged={review.result.flagged ?? false}
                             onToggleFlag={() => {}}
                             readOnly
                             answerState={
@@ -728,6 +769,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                     <option value="all">All questions</option>
                     <option value="unanswered">Not attempted</option>
                     <option value="incorrect">Previously incorrect</option>
+                    <option value="marked">Marked for Review</option>
                   </select>
                 </label>
                 <label>
@@ -816,6 +858,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 </span>
                 <h2>{current.question.skill}</h2>
               </div>
+              {calculatorButton}
               <button
                 type="button"
                 onClick={() => {
@@ -848,6 +891,24 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 }}
               />
             </div>
+            <nav className="sat-bank-practice-navigator sat-bank-navigator" aria-label="Practice question navigator">
+              <p>Questions · {quiz.filter((row) => flagged.includes(row.key)).length} marked for review</p>
+              <div>
+                {quiz.map((row, position) => (
+                  <button
+                    type="button"
+                    key={row.key}
+                    className={`sat-bank-number ${answers[row.key]?.trim() ? 'answered' : ''}`}
+                    aria-label={`Go to question ${position + 1}${flagged.includes(row.key) ? ', Marked for Review' : ''}${answers[row.key]?.trim() ? ', Answered' : ', Unanswered'}`}
+                    aria-current={index === position ? 'step' : undefined}
+                    onClick={() => setIndex(position)}
+                  >
+                    {position + 1}
+                    {flagged.includes(row.key) ? <Bookmark size={12} className="sat-bank-mark-icon" aria-hidden="true" /> : null}
+                  </button>
+                ))}
+              </div>
+            </nav>
             <div className="sat-bank-question">
               <SATQuestionCanvas
                 question={current.question}
@@ -912,6 +973,13 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
           </section>
         )}
       </div>
+      <DesmosDrawer
+        open={mathVisible && calculatorOpen}
+        preload={mathVisible}
+        docked={calculatorDocked}
+        onDockedChange={setCalculatorDocked}
+        onClose={() => setCalculatorOpen(false)}
+      />
     </main>
   )
 }

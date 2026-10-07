@@ -85,7 +85,7 @@ export default function Results() {
   const authUser = useAuthStore((state) => state.user)
   const { result, test: storedTest, mock, from } = (location.state as ResultLocationState) || {}
   const test = storedTest?.module === 'Listening'
-    ? resolveIeltsTestById(storedTest.id) ?? storedTest
+    ? resolveIeltsTestById(storedTest.id, result) ?? storedTest
     : storedTest
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)

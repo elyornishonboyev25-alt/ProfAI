@@ -275,6 +275,8 @@ export const russianAdditions: Record<string, string> = {
   'Rename chat': 'Переименовать чат',
   'Delete chat': 'Удалить чат',
   'Chat history': 'История чатов',
+  'Chat menu': 'Меню чата',
+  'No saved conversations yet.': 'Пока нет сохранённых разговоров.',
   'History': 'История',
   'Talk to ProfAI': 'Поговорить с ProfAI',
   'Open full page': 'Открыть на всю страницу',

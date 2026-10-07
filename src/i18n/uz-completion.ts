@@ -627,6 +627,8 @@ export const uzbekCompletion: Record<string, string> = {
   'Rename chat': 'Chat nomini o‘zgartirish',
   'Delete chat': 'Chatni o‘chirish',
   'Chat history': 'Chatlar tarixi',
+  'Chat menu': 'Chat menyusi',
+  'No saved conversations yet.': 'Hozircha saqlangan suhbatlar yo‘q.',
   'History': 'Tarix',
   'Talk to ProfAI': 'ProfAI bilan gaplashish',
   'Open full page': 'To‘liq sahifada ochish',

@@ -1,20 +1,26 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
   AudioLines,
+  BookOpen,
   BrainCircuit,
   Check,
   Copy,
+  GraduationCap,
   History,
   ImagePlus,
+  Menu,
   Maximize2,
   Mic,
   Pencil,
+  PenLine,
   Plus,
   Send,
+  Settings2,
   ShieldCheck,
+  Sigma,
   Sparkles,
   Square,
   Trash2,
@@ -28,6 +34,8 @@ import CoachControls from './CoachControls'
 import { coachCopy } from '@/services/ai/coachPreferences'
 import { useCopy } from '@/i18n/interface'
 import { premiumLanguage } from '@/i18n/premium'
+import { AI_WORKSPACES, type AiWorkspaceId } from '@/services/ai/workspaces'
+import './coach-studio.css'
 
 type ChatWindowVariant = 'floating' | 'page' | 'analysis'
 
@@ -58,13 +66,18 @@ function CopyButton({ text }: { text: string }) {
 }
 
 const STATUS_TEXT: Record<string, string> = { idle: 'Ready to help', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…' }
+const WORKSPACE_ICONS: Record<AiWorkspaceId, typeof BrainCircuit> = {
+  general: BrainCircuit, ielts: PenLine, sat: Sigma, english: BookOpen, admission: GraduationCap,
+}
 
 export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProps) {
   const { c, language } = useCopy()
   const uiLanguage = premiumLanguage(language)
   const studioText = coachCopy(language)
   const navigate = useNavigate()
+  const reducedMotion = useReducedMotion()
   const openTalk = useAiAssistantStore((s) => s.openTalk)
+  const setWorkspace = useAiAssistantStore((s) => s.setActiveWorkspace)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const messagesViewportRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -95,7 +108,24 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     openedPageChat.current = true
     void createNewChat()
   }, [createNewChat, hasPremium, isPage, threadsLoaded, user])
-  const [panel, setPanel] = useState<'chats' | 'memory' | null>(null)
+  const [panel, setPanel] = useState<'chats' | 'memory' | 'settings' | null>(null)
+  const panelId = useId()
+  const panelRef = useRef<HTMLElement | null>(null)
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null)
+  const chatContentRef = useRef<HTMLDivElement | null>(null)
+  const panelOpen = panel !== null
+  useEffect(() => {
+    if (!panelOpen) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const content = chatContentRef.current
+    content?.setAttribute('inert', '')
+    panelRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    return () => {
+      content?.removeAttribute('inert')
+      const restoreFocus = menuButtonRef.current ?? previousFocus
+      restoreFocus?.focus()
+    }
+  }, [panelOpen])
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
 
@@ -130,6 +160,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
   const statusText = c(STATUS_TEXT[voiceState] ?? STATUS_TEXT.idle)
   const quickChips = workspace.starters[uiLanguage]
+  const languagePicker = <div className="coach-language-picker" role="group" aria-label={c('Language')}>
+    <span>{c('Language')}</span>
+    {VOICE_LANGS.map((lang) => <button key={lang.id} type="button" onClick={() => setVoiceLang(lang.id)} aria-pressed={voiceLang === lang.id}>{lang.label}</button>)}
+  </div>
 
   useEffect(() => {
     const viewport = messagesViewportRef.current
@@ -153,18 +187,31 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter sends; Shift+Enter inserts a newline (professional chat behaviour).
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault()
       doSend()
     }
   }
 
-  const autoGrow = () => {
+  useEffect(() => {
     const el = textareaRef.current
     if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
-  }
+    const resize = () => {
+      el.style.height = 'auto'
+      const height = el.scrollHeight + el.offsetHeight - el.clientHeight
+      el.style.height = `${isPage ? height : Math.min(height, 140)}px`
+    }
+    resize()
+    if (typeof ResizeObserver === 'undefined') return
+    let width = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (width === el.clientWidth) return
+      width = el.clientWidth
+      resize()
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [draft, isPage])
 
   const onPaste = (event: React.ClipboardEvent) => {
     const files = Array.from(event.clipboardData?.items ?? [])
@@ -222,7 +269,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       onDrop={onDrop}
       className={`ai-chat-window relative flex min-w-0 max-w-full flex-col overflow-hidden border bg-white text-slate-900 ${
         isPage
-          ? 'h-full rounded-[1.4rem] border-white/90 bg-white/85 shadow-[0_18px_46px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl'
+          ? 'ai-chat-window--studio h-full rounded-[1.4rem] border-white/90 bg-white/85 shadow-[0_18px_46px_rgba(73,43,52,.07),inset_0_1px_0_white] backdrop-blur-2xl'
           : 'rounded-[1.4rem] border-slate-200 shadow-xl'
       }`}
     >
@@ -255,25 +302,48 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               onClick={() => setPanel(null)}
             />
             <motion.aside
-              initial={{ x: '-100%' }}
+              initial={{ x: reducedMotion ? 0 : '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 left-0 z-40 flex w-[min(88%,20rem)] flex-col border-r border-zinc-200 bg-[linear-gradient(145deg,#fff,#f7f4f5)] shadow-2xl"
+              exit={{ x: reducedMotion ? 0 : '-100%' }}
+              transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+              ref={panelRef}
+              id={panelId}
+              role="dialog"
+              aria-modal="true"
+              aria-label={c(panel === 'chats' ? 'Chat history' : panel === 'memory' ? 'Memory' : studioText.preferences)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') { event.stopPropagation(); setPanel(null) }
+                if (event.key !== 'Tab') return
+                const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), [tabindex="0"]')]
+                const first = controls[0], last = controls[controls.length - 1]
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+              }}
+              className="coach-drawer absolute inset-y-0 left-0 z-40 flex w-[min(92%,24rem)] flex-col border-r shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <div>
                   <p className="text-sm font-black text-slate-950">
-                    {c(panel === 'chats' ? 'Chats' : 'Memory')}
+                    ProfAI
                   </p>
                   <p className="text-[10px] font-semibold text-slate-500">
-                    {c(panel === 'chats' ? 'Your saved conversations' : 'Available across every chat')}
+                    {studioText.studio}
                   </p>
                 </div>
-                <button type="button" onClick={() => setPanel(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <button type="button" onClick={() => setPanel(null)} aria-label={c('Close panel')} className="coach-icon-button">
                   <X className="h-4 w-4" />
                 </button>
               </div>
+
+              <nav className="coach-drawer-nav" aria-label={c('Chat menu')}>
+                {([
+                  { id: 'chats', label: c('History'), icon: History },
+                  { id: 'memory', label: c('Memory'), icon: BrainCircuit },
+                  { id: 'settings', label: studioText.preferences, icon: Settings2 },
+                ] as const).map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-current={panel === id ? 'page' : undefined} onClick={() => setPanel(id)}><Icon size={17}/><span>{label}</span>{id === 'memory' && memories.length > 0 ? <b>{memories.length}</b> : null}</button>)}
+              </nav>
+
+              <h2 className="coach-drawer-title">{panel === 'chats' ? c('Your saved conversations') : panel === 'memory' ? c('Available across every chat') : studioText.preferences}</h2>
 
               {panel === 'chats' ? (
                 <>
@@ -288,6 +358,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     </button>
                   </div>
                   <div className="flex-1 space-y-1 overflow-y-auto px-2 pb-3">
+                    {!threadsLoading && chatThreads.length === 0 ? <p className="px-3 py-6 text-center text-xs text-slate-500">{c('No saved conversations yet.')}</p> : null}
                     {threadsLoading ? <p className="px-3 py-4 text-xs text-slate-500">{c('Loading chats…')}</p> : null}
                     {chatThreads.map((thread) => {
                       const selected = thread.id === activeThreadId
@@ -331,7 +402,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     })}
                   </div>
                 </>
-              ) : (
+              ) : panel === 'memory' ? (
                 <div className="flex-1 overflow-y-auto p-3">
                   <div className="mb-3 rounded-xl border border-red-100 bg-red-50/70 p-3 text-[11px] leading-5 text-red-900">
                     {uiLanguage === 'uz'
@@ -362,12 +433,35 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     </div>
                   )}
                 </div>
+              ) : (
+                <div className="coach-drawer-settings min-h-0 flex-1 overflow-y-auto p-4">
+                  <section className="coach-glass coach-focus-card">
+                    <h2><AudioLines size={15}/>{studioText.focus}</h2>
+                    <div className="coach-focus-list">{AI_WORKSPACES.map(({ id }) => {
+                      const Icon = WORKSPACE_ICONS[id]
+                      return <button key={id} type="button" className="coach-focus-button" aria-pressed={workspace.id === id} onClick={() => setWorkspace(id)}>
+                        <span className="coach-focus-icon"><Icon size={16}/></span>
+                        <span className="min-w-0 flex-1"><b>{studioText[id]}</b><small>{studioText[`${id}Detail`]}</small></span>
+                        {workspace.id === id ? <Check size={15}/> : null}
+                      </button>
+                    })}</div>
+                  </section>
+                  <CoachControls/>
+                </div>
               )}
             </motion.aside>
           </>
         ) : null}
       </AnimatePresence>
 
+      <div ref={chatContentRef} className="coach-chat-content flex min-h-0 flex-1 flex-col">
+      {isPage ? <header className="coach-chat-toolbar">
+        <div className="flex min-w-0 items-center gap-3">
+          <button ref={menuButtonRef} type="button" className="coach-icon-button" aria-label={c('Chat menu')} aria-haspopup="dialog" aria-expanded={panelOpen} aria-controls={panelId} onClick={() => setPanel('chats')}><Menu size={21}/></button>
+          <span className="coach-workspace-label">{studioText[workspace.id]}</span>
+        </div>
+        {languagePicker}
+      </header> : <>
       {/* Header with the live orb */}
       <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(249,246,247,.89))] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
         <div className="flex items-center gap-2.5">
@@ -453,23 +547,25 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         </div>
       </header>
       <CoachControls compact />
+      </>}
 
       {/* Messages */}
       <div
         ref={messagesViewportRef}
         className={`min-h-0 flex-1 overscroll-contain bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,.95),transparent_45%),linear-gradient(145deg,rgba(249,247,248,.92),rgba(235,233,236,.64),rgba(255,240,242,.55))] px-3 py-4 sm:px-5 ${
-          isPage ? (showHero ? 'overflow-hidden' : 'overflow-y-auto') : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
+          isPage ? 'coach-messages-viewport overflow-y-auto' : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
         }`}
       >
         {showHero ? (
           <div className="ai-chat-hero flex min-h-full flex-col items-center justify-center px-2 py-6 text-center">
+            {isPage ? <div className="coach-welcome-mark" aria-hidden="true"><Sparkles size={30}/></div> : <>
             <span className="mb-5 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-red-700 shadow-sm">{c('Your study companion')}</span>
-            <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 112 : 80} className="ai-chat-hero-orb" />
+            <VoiceOrb state={voiceState} level={voiceLevel} size={80} className="ai-chat-hero-orb" />
+            </>}
             <h3 className="mt-5 text-xl font-black text-slate-900 sm:text-2xl">
               {preferredName ? `${preferredName}, ` : ''}{studioText.welcome}
             </h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{studioText.welcomeDetail}</p>
-            <span className="mt-4 text-[10px] font-semibold tracking-wide text-slate-400">{studioText.lessonDetail}</span>
+            {!isPage ? <><p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{studioText.welcomeDetail}</p><span className="mt-4 text-[10px] font-semibold tracking-wide text-slate-400">{studioText.lessonDetail}</span></> : null}
           </div>
         ) : (
           <div className="mx-auto max-w-4xl space-y-4">
@@ -563,9 +659,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 border-t border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(250,246,247,.91))] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
+      <div className={`shrink-0 border-t border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(250,246,247,.91))] px-3 py-2.5 backdrop-blur-2xl sm:px-4 ${isPage ? 'coach-composer' : ''}`}>
         {/* Quick chips */}
-        <div className="no-scrollbar mb-2 flex max-w-full flex-nowrap gap-1.5 overflow-x-auto pb-0.5">
+        {!isPage ? <div className="no-scrollbar mb-2 flex max-w-full flex-nowrap gap-1.5 overflow-x-auto pb-0.5">
           {quickChips.map((chip) => (
             <button
               key={chip}
@@ -577,7 +673,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               {chip}
             </button>
           ))}
-        </div>
+        </div> : null}
 
         {/* Image previews */}
         {images.length > 0 ? (
@@ -630,7 +726,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           </div>
         ) : null}
 
-        {(
+        {!isPage ? (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
               {c('Language')}
@@ -650,11 +746,11 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               </button>
             ))}
           </div>
-        )}
+        ) : null}
 
         <div className="flex min-w-0 items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
-          <button
+          {!isPage ? <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
@@ -662,15 +758,15 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             aria-label={c('Attach image')}
           >
             <ImagePlus className="h-4 w-4" />
-          </button>
+          </button> : null}
 
           <textarea
             ref={textareaRef}
+            aria-label={c('Ask ProfAI...')}
             value={draft}
             rows={1}
             onChange={(event) => {
               setDraft(event.target.value)
-              autoGrow()
             }}
             onKeyDown={onKeyDown}
             onPaste={onPaste}
@@ -679,7 +775,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ? c('Ask ProfAI...')
                 : c('Type, paste an image, or tap the mic…')
             }
-            className="max-h-[120px] min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-white/90 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-300 focus:ring-4 focus:ring-red-50"
+            className={`${isPage ? 'coach-composer-input' : 'max-h-[140px]'} min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-white/90 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-300 focus:ring-4 focus:ring-red-50`}
             disabled={isSending}
           />
 
@@ -721,6 +817,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             {error}
           </p>
         ) : null}
+      </div>
       </div>
     </section>
   )

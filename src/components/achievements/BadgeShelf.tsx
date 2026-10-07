@@ -114,7 +114,7 @@ export default function BadgeShelf() {
         <p className="mt-1 text-xs leading-5 text-slate-600">Each medal marks a complete section or full mock. All badges appear on your public profile. Pin your favorites to highlight them.</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[...badges].sort((a, b) => TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier).map((badge) => (
+        {[...badges].sort((a, b) => Number(b.pinned) - Number(a.pinned) || TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier).map((badge) => (
           <motion.div
             key={badge.id}
             layout

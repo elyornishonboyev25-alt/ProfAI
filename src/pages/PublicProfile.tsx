@@ -113,7 +113,7 @@ export default function PublicProfile() {
 
   const showcaseBadges = useMemo(() => {
     if (!data?.badges?.length) return []
-    return [...data.badges].sort((a, b) => TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier)
+    return [...data.badges].sort((a, b) => Number(b.pinned) - Number(a.pinned) || TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier)
   }, [data?.badges])
 
   const xpBreakdown = useMemo(() => {

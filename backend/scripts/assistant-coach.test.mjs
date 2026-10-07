@@ -68,6 +68,40 @@ test('voice and text share grounding, language and honest assessment rules', () 
   assert.ok(boundedHistory(history)[0].content.startsWith('76'))
 })
 
+test('automatic reply language follows every new question while exam English remains fixed', () => {
+  const automatic = assistantContextSchema.parse({ workspace: 'ielts' })
+  assert.equal(automatic.language, 'auto')
+  const prompt = buildCoachPrompt(automatic)
+  assert.match(prompt, /on every turn/)
+  assert.match(prompt, /Uzbek.*English.*Russian/)
+  assert.match(prompt, /not a quoted passage, essay, code, screenshot or English exam example/)
+  assert.match(prompt, /explicit request for a different response/)
+  assert.match(prompt, /Never ask the learner to select a language/)
+  assert.match(buildCoachPrompt({ ...automatic, mode: 'examiner' }), /Reply in English for the speaking examination/)
+  for (const language of ['en', 'uz', 'ru']) {
+    assert.equal(parseAssistantReply(JSON.stringify({ reply: 'Example', language })).replyLanguage, language)
+  }
+  assert.equal(parseAssistantReply(JSON.stringify({ reply: 'Legacy reply' })).replyLanguage, undefined)
+  assert.throws(() => parseAssistantReply(JSON.stringify({ reply: 'Invalid reply', language: 'invalid' })))
+})
+
+test('history queries skip empty conversations before applying the account limit', async (t) => {
+  const original = prisma.aiConversationThread.findMany
+  const userId = 'history-owner'
+  prisma.aiConversationThread.findMany = async (query) => {
+    assert.deepEqual(query.where, { userId, messages: { some: {} } })
+    assert.equal(query.take, 50)
+    return [{ id: 'meaningful', title: 'Original title', messages: [{ role: 'user', content: 'Original test question remains unchanged.' }] }]
+  }
+  const server = app.listen(0)
+  t.after(() => { prisma.aiConversationThread.findMany = original; server.closeAllConnections(); server.close() })
+  const token = signAccessToken({ sub: userId, role: 'USER' })
+  const response = await fetch(`http://127.0.0.1:${server.address().port}/api/v1/ai-workspace/threads`, { headers: { Authorization: `Bearer ${token}` } })
+  assert.equal(response.status, 200)
+  const result = await response.json()
+  assert.equal(result.items[0].messages[0].content, 'Original test question remains unchanged.')
+})
+
 test('audio grades use equal weights and reject invented answer evidence', () => {
   const history = [{ role: 'candidate', text: 'I enjoy reading books.' }]
   const result = { fluencyBand: 6, lexicalBand: 7, grammarBand: 6, pronunciationBand: 7, summary: 'Practice estimate.', strengths: ['Clear idea'], weaknesses: ['Develop the reason'], improvementPriorities: [{ area: 'Grammar', target: 7, action: 'Extend the answer.' }], evidence: [{ criterion: 'pronunciation', answerIndex: 0, quote: 'reading books', explanation: 'Stress was clear in this sample.', exercise: 'Repeat with natural rhythm.' }] }

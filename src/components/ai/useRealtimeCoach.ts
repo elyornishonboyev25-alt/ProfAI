@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { RealtimeCoach } from '@/lib/realtimeCoach'
 import { useAiAssistantStore, type AiAssistantMessage } from '@/store/aiAssistantStore'
 import { useAuthStore } from '@/store/authStore'
-import { persistAiMessage } from '@/services/aiWorkspacePersistence'
+import { createAiThread, persistAiMessage } from '@/services/aiWorkspacePersistence'
 import { buildStudySnapshot, describeStudySnapshot } from '@/services/ai/studyContext'
 import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
@@ -19,6 +19,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const [retry, setRetry] = useState(0)
   const currentPath = useRef(location.pathname); currentPath.current = location.pathname
   const supported = typeof RTCPeerConnection !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
+  const conversationKey = tutor.activeThread?.clientId ?? tutor.activeThreadId
 
   useEffect(() => {
     if (!enabled || !supported || !tutor.hasPremium || !tutor.user || !tutor.threadsLoaded) return
@@ -29,13 +30,33 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     const connect = async () => {
       latest.current.cancelVoice(); latest.current.cancelSend()
       setError(null); setCaption(''); setMuted(false)
-      const threadId = latest.current.activeThreadId ?? await latest.current.createNewChat()
+      let threadId = latest.current.activeThreadId ?? await latest.current.createNewChat()
       if (disposed) return
+      let savingThread: Promise<boolean> | null = null
+      let savingMessages = Promise.resolve()
       const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false) => {
         if (useAuthStore.getState().user?.id !== userId) return
         const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(interrupted ? { status: 'interrupted' } : {}) }
         useAiAssistantStore.getState().pushMessage(ownerKey, threadId, message)
-        if (!threadId.startsWith('local-')) void persistAiMessage(threadId, { ...message, content: interrupted ? `${text}\n\n[Interrupted voice response]` : text }, locale).catch(() => {})
+        // Opening a microphone does not create history. Save once an actual
+        // transcript arrives, retaining the live connection and queued turns.
+        if (threadId.startsWith('local-') && !savingThread) {
+          const draftId = threadId
+          savingThread = createAiThread(locale).then((saved) => {
+            if (useAuthStore.getState().user?.id !== userId) return false
+            threadId = saved.id
+            useAiAssistantStore.getState().syncThread(ownerKey, draftId, saved)
+            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: locale, mode,
+              threadId: saved.id, coachPreferences: latest.current.coachPreferences,
+              studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
+            return true
+          }).catch(() => { savingThread = null; return false })
+        }
+        savingMessages = savingMessages.then(async () => {
+          if (savingThread && !await savingThread) return
+          if (useAuthStore.getState().user?.id !== userId || threadId.startsWith('local-')) return
+          await persistAiMessage(threadId, { ...message, content: interrupted ? `${text}\n\n[Interrupted voice response]` : text }, locale)
+        }).catch(() => {})
       }
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
       const voice = new RealtimeCoach({
@@ -65,7 +86,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     return () => { disposed = true; connection.current?.stop(); connection.current = null }
     // The session survives route changes and docking. Language, mode and account
     // changes deliberately create a new session with matching instructions.
-  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, tutor.voiceLang, tutor.activeWorkspace, tutor.activeThreadId, tutor.threadsLoaded, mode, retry])
+  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, tutor.voiceLang, tutor.activeWorkspace, conversationKey, tutor.threadsLoaded, mode, retry])
 
   useEffect(() => {
     if (!enabled || !tutor.user) return

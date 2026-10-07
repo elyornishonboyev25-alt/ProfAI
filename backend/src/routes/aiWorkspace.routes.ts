@@ -39,7 +39,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const threads = await prisma.aiConversationThread.findMany({
-      where: { userId },
+      where: { userId, messages: { some: {} } },
       orderBy: { updatedAt: 'desc' },
       take: 50,
       include: {

@@ -25,13 +25,12 @@ import { compressImageToDataUrl } from '@/utils/imageCompress'
 import { addSavedWord } from '@/utils/myVocabularyStore'
 import {
   useSpeechRecognition,
-  speak,
   cancelSpeech,
-  isSpeechSynthesisSupported,
   speechLangToBcp47,
   type SpeechLang,
 } from '@/lib/speech'
 import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
+import { canRetryCoachAudio, cancelCoachAudio, retryCoachAudio, speakCoachAudio, unlockCoachAudio } from '@/lib/coachAudio'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
 import { premiumLanguage, type PremiumLanguage } from '@/i18n/premium'
 import {
@@ -63,11 +62,11 @@ function createMessage(
   return { id: createId(), role, content, createdAt: new Date().toISOString(), images }
 }
 
-function createOfflineThread(language: SpeechLang): AiAssistantThread {
+function createOfflineThread(): AiAssistantThread {
   const now = new Date().toISOString()
   return {
     id: `local-${createId()}`,
-    title: language === 'uz' ? 'Yangi chat' : language === 'ru' ? 'Новый чат' : 'New chat',
+    title: 'New chat',
     createdAt: now,
     updatedAt: now,
     messages: [],
@@ -92,7 +91,11 @@ export type PendingAiAction = {
   label: string
 }
 
+const localizedNotices = new Map<string, Record<PremiumLanguage, string>>()
+
 function localized(locale: PremiumLanguage, en: string, ru: string, uz: string) {
+  const variants = { en, ru, uz }
+  for (const text of Object.values(variants)) localizedNotices.set(text, variants)
   return locale === 'ru' ? ru : locale === 'uz' ? uz : en
 }
 
@@ -154,7 +157,8 @@ export function useAiTutor() {
   const [preferredLocale, setPreferredLocale] = useState<ChatLocale>('en')
   const [preferredName, setPreferredName] = useState<string | null>(null)
   const [voiceError, setVoiceError] = useState<string | null>(null)
-  const pendingActions = useAiAssistantStore((s) => s.pendingActions)
+  const storedPendingActions = useAiAssistantStore((s) => s.pendingActions)
+  const pendingActions = storedPendingActions.map((item) => ({ ...item, label: describeAction(item.action, uiLocale) }))
   const setPendingActions = useAiAssistantStore((s) => s.setPendingActions)
   const updateStoredMessage = useAiAssistantStore((s) => s.updateMessage)
   const removeStoredMessage = useAiAssistantStore((s) => s.removeMessage)
@@ -163,7 +167,7 @@ export function useAiTutor() {
     [ownerKey, pushStoredMessage],
   )
 
-  const ttsSupported = isSpeechSynthesisSupported()
+  const ttsSupported = typeof Audio !== 'undefined'
   const recognition = useSpeechRecognition(speechLangToBcp47(voiceLang))
   // When true, the final transcript is auto-sent + spoken when listening stops.
   const voiceTurnRef = useRef(false)
@@ -183,14 +187,13 @@ export function useAiTutor() {
     setThreadLoading(ownerKey, true)
 
     void Promise.all([fetchAiThreads(), fetchAiMemories()])
-      .then(async ([loadedThreads, loadedMemories]) => {
-        let nextThreads = loadedThreads
-        if (nextThreads.length === 0) nextThreads = [await createAiThread(voiceLang)]
-        setThreads(ownerKey, nextThreads)
+      .then(([loadedThreads, loadedMemories]) => {
+        setThreads(ownerKey, loadedThreads)
+        if (!useAiAssistantStore.getState().activeThreadIds[ownerKey]) addThread(ownerKey, createOfflineThread())
         setStoredMemories(ownerKey, loadedMemories)
       })
       .catch(() => {
-        if (chatThreads.length === 0) addThread(ownerKey, createOfflineThread(voiceLang))
+        if (chatThreads.length === 0) addThread(ownerKey, createOfflineThread())
         setThreadLoading(ownerKey, false)
       })
   }, [
@@ -204,27 +207,25 @@ export function useAiTutor() {
     threadsLoaded,
     threadsLoading,
     user,
-    voiceLang,
   ])
 
   const createNewChat = useCallback(async (): Promise<string> => {
     if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('chat_changed')
+    cancelCoachAudio()
     setPendingActions([])
     setError(null)
-    try {
-      const thread = await createAiThread(voiceLang)
-      addThread(ownerKey, thread)
-      return thread.id
-    } catch {
-      const thread = createOfflineThread(voiceLang)
-      addThread(ownerKey, thread)
-      return thread.id
-    }
-  }, [addThread, ownerKey, setError, voiceLang])
+    setDraft('')
+    setImages([])
+    const existingDraft = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => !thread.synced && thread.messages.length === 0)
+    const thread = existingDraft ?? createOfflineThread()
+    addThread(ownerKey, thread)
+    return thread.id
+  }, [addThread, ownerKey, setError, setPendingActions])
 
   const selectChat = useCallback((threadId: string) => {
     if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('chat_changed')
     cancelSpeech()
+    cancelCoachAudio()
     setPendingActions([])
     setActiveThread(ownerKey, threadId)
   }, [ownerKey, setActiveThread])
@@ -233,9 +234,9 @@ export function useAiTutor() {
     const normalized = title.replace(/\s+/g, ' ').trim().slice(0, 80)
     if (!normalized) return
     renameStoredThread(ownerKey, threadId, normalized)
-    const thread = chatThreads.find((item) => item.id === threadId)
+    const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
     if (thread?.synced) await renameAiThread(threadId, normalized).catch(() => null)
-  }, [chatThreads, ownerKey, renameStoredThread])
+  }, [ownerKey, renameStoredThread])
 
   const deleteChat = useCallback(async (threadId: string) => {
     const thread = chatThreads.find((item) => item.id === threadId)
@@ -391,7 +392,18 @@ export function useAiTutor() {
       const outImages = options.images ?? images
       if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
       setSending(true)
-      const threadId = activeThreadId ?? await createNewChat()
+      let threadId = activeThreadId ?? await createNewChat()
+      const draftThread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => thread.id === threadId)
+      // A blank draft lives only in memory. Create its server record once the
+      // learner actually sends a message, keeping existing offline messages safe.
+      if (draftThread && !draftThread.synced && draftThread.messages.length === 0) {
+        try {
+          const savedThread = await createAiThread(uiLocale)
+          if (useAuthStore.getState().user?.id !== user?.id) { setSending(false); return }
+          addThread(ownerKey, savedThread)
+          threadId = savedThread.id
+        } catch { /* Keep this conversation locally if persistence is unavailable. */ }
+      }
       if (useAuthStore.getState().user?.id !== user?.id) { setSending(false); return }
       const firstTurn = messages.length === 0
 
@@ -433,7 +445,7 @@ export function useAiTutor() {
           workspaceContext: `${workspace.title}: ${workspace.prompt}`,
           siteKnowledge,
           images: outImages,
-          responseLanguage: voiceLang,
+          responseLanguage: options.speak ? voiceLang : 'auto',
           memories: memories.map(({ key, value }) => ({ key, value })),
           generateTitle: firstTurn,
           workspace: activeWorkspace,
@@ -448,7 +460,7 @@ export function useAiTutor() {
         updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, status: undefined })
         await userPersistPromise
         if (!threadId.startsWith('local-')) {
-          void persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, voiceLang).catch(() => null)
+          void persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, response.replyLanguage ?? voiceLang).catch(() => null)
         }
 
         if (firstTurn && response.title) void renameChat(threadId, response.title)
@@ -471,17 +483,19 @@ export function useAiTutor() {
           }
         }
 
-        // The selected language controls the reply, microphone, and TTS together.
-        // Do not auto-switch it after a response: EN / UZ / RU is an explicit choice.
+        // Text matches each new message; voice retains its microphone/TTS language.
         if (options.speak && ttsSupported && response.reply.trim()) {
-          setVoiceState('speaking')
-          startLevelPulse()
-          speak(cleanForSpeech(response.reply), {
-            lang: voiceLang,
-            rate: voiceLang === 'en' ? 1 : 0.96,
-            onEnd: () => {
+          speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
+            loading: (loading) => { if (loading) { stopLevelPulse(); setVoiceState('thinking') } },
+            started: () => { setVoiceError(null); setVoiceState('speaking'); startLevelPulse() },
+            ended: () => {
               stopLevelPulse()
               setVoiceState('idle')
+            },
+            failed: () => {
+              stopLevelPulse()
+              setVoiceState('idle')
+              setVoiceError(localized(uiLocale, 'Nova’s natural voice could not play. Retry audio to continue.', 'Не удалось воспроизвести естественный голос Новы. Повторите аудио, чтобы продолжить.', 'Novaning tabiiy ovozini eshittirib bo‘lmadi. Davom etish uchun audioni qayta yoqing.'))
             },
           })
         } else {
@@ -509,19 +523,7 @@ export function useAiTutor() {
         setError(localized(uiLocale, 'Unable to process your request. Please try again.', 'Не удалось обработать запрос. Повторите попытку.', 'So‘rovingizni bajarib bo‘lmadi. Qayta urinib ko‘ring.'))
         setVoiceState('idle')
         stopLevelPulse()
-        const fallbackMessage = createMessage(
-          'assistant',
-          voiceLang === 'uz'
-            ? "Kechirasiz, hozir ulanishda muammo bo'ldi. Iltimos, qayta urinib ko'ring."
-            : voiceLang === 'ru'
-              ? 'Извините, сейчас возникла проблема с подключением. Пожалуйста, попробуйте ещё раз.'
-              : 'Sorry, I had a connection issue just now. Please try again.',
-        )
-        pushMessage(threadId, fallbackMessage)
         await userPersistPromise
-        if (!threadId.startsWith('local-')) {
-          void persistAiMessage(threadId, fallbackMessage, voiceLang).catch(() => null)
-        }
       } finally {
         window.clearTimeout(timeout)
         if (activeChatRequest?.controller === controller) activeChatRequest = null
@@ -532,12 +534,13 @@ export function useAiTutor() {
       activeThreadId, createNewChat, draft, images, isSending, memories, messages, ownerKey, preferredName,
       location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage,
+      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage, addThread,
     ],
   )
 
   const setVoiceLang = useCallback((language: SpeechLang) => {
     cancelSpeech()
+    cancelCoachAudio()
     stopLevelPulse()
     setVoiceState('idle')
     setVoiceError(null)
@@ -548,6 +551,8 @@ export function useAiTutor() {
   // ── Voice control ──────────────────────────────────────────────────────────
   const startVoice = useCallback(async () => {
     cancelSpeech()
+    cancelCoachAudio()
+    unlockCoachAudio()
     stopLevelPulse()
     stopListeningMeter()
     recognition.reset()
@@ -619,6 +624,7 @@ export function useAiTutor() {
 
   const stopSpeaking = useCallback(() => {
     cancelSpeech()
+    cancelCoachAudio()
     stopLevelPulse()
     setVoiceState('idle')
   }, [setVoiceState, stopLevelPulse])
@@ -627,6 +633,7 @@ export function useAiTutor() {
     voiceTurnRef.current = false
     stoppingVoiceRef.current = true
     cancelSpeech()
+    cancelCoachAudio()
     stopListeningMeter()
     stopLevelPulse()
     void recognition.stop().catch(() => '')
@@ -642,10 +649,10 @@ export function useAiTutor() {
         const dataUrl = await compressImageToDataUrl(file, { size: 1024, quality: 0.8 })
         setImages((prev) => [...prev, dataUrl].slice(0, 4))
       } catch {
-        setError('That image could not be read. Try a different one.')
+        setError(localized(uiLocale, 'That image could not be read. Try a different one.', 'Не удалось прочитать изображение. Попробуйте другое.', 'Rasmni o‘qib bo‘lmadi. Boshqa rasmni sinab ko‘ring.'))
       }
     }
-  }, [setError])
+  }, [setError, uiLocale])
 
   const removeImage = useCallback((index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index))
@@ -682,6 +689,7 @@ export function useAiTutor() {
   const previousOwnerRef = useRef(ownerKey)
   useEffect(() => {
     if (previousOwnerRef.current !== ownerKey) {
+      cancelCoachAudio()
       previousOwnerRef.current = ownerKey
       setPendingActions([])
       setError(null)
@@ -702,7 +710,7 @@ export function useAiTutor() {
     memories,
     messages,
     isSending,
-    error,
+    error: error ? localizedNotices.get(error)?.[uiLocale] ?? error : null,
     draft,
     setDraft,
     images,
@@ -731,7 +739,9 @@ export function useAiTutor() {
     voiceLang,
     setVoiceLang,
     voiceSupported: recognition.supported,
-    voiceError,
+    voiceError: voiceError ? localizedNotices.get(voiceError)?.[uiLocale] ?? voiceError : null,
+    canReplayVoice: canRetryCoachAudio(),
+    retryVoiceReply: () => { setVoiceError(null); retryCoachAudio() },
     ttsSupported,
     isListening: recognition.listening,
     interimTranscript: recognition.interimTranscript,

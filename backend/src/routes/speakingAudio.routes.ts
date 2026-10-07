@@ -23,14 +23,15 @@ router.post('/assess', asyncHandler(async (req, res) => {
 }))
 
 router.post('/voice', asyncHandler(async (req, res) => {
-  const { text, voice } = z.object({
+  const { text, voice, language } = z.object({
     text: z.string().trim().min(1).max(1500),
     voice: z.enum(['marin', 'cedar']).default('marin'),
+    language: z.enum(['en', 'uz', 'ru']).default('en'),
   }).strict().parse(req.body)
-  const cacheKey = JSON.stringify([req.user!.id, voice, text])
+  const cacheKey = JSON.stringify([req.user!.id, voice, language, text])
   const cached = voiceCache.get(cacheKey)
   if (cached && cached.expires > Date.now()) return res.json(cached.audio)
-  const audio = await generateExaminerAudio(text, voice)
+  const audio = await generateExaminerAudio(text, voice, language)
   if (!audio) return res.status(503).json({ message: 'Examiner voice is temporarily unavailable.' })
   if (voiceCache.size >= 24) voiceCache.delete(voiceCache.keys().next().value!)
   voiceCache.set(cacheKey, { audio, expires: Date.now() + 10 * 60_000 })

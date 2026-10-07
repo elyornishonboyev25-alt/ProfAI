@@ -1,5 +1,11 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Previous conversation': 'Предыдущий разговор',
+  'message': 'сообщение',
+  'Retry audio': 'Повторить аудио',
+  'Meaning / translation': 'Значение / перевод',
+  'Uzbek': 'Узбекский',
+  'Russian': 'Русский',
   'Not sure of your current score?': 'Не знаете свой текущий результат?',
   'Take a full mock to estimate your level, review explanations and focus on the questions you missed. You can also start later.': 'Пройдите полный пробный экзамен, чтобы оценить уровень, разобрать объяснения и потренировать вопросы с ошибками. Можно начать позже.',
   'Take a full SAT mock': 'Пройти полный пробный SAT',
@@ -276,6 +282,7 @@ export const russianAdditions: Record<string, string> = {
   'Delete chat': 'Удалить чат',
   'Chat history': 'История чатов',
   'Chat menu': 'Меню чата',
+  'Jump to latest': 'К последнему сообщению',
   'No saved conversations yet.': 'Пока нет сохранённых разговоров.',
   'History': 'История',
   'Talk to ProfAI': 'Поговорить с ProfAI',

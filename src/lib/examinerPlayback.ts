@@ -7,6 +7,7 @@ type Callbacks = {
   ended: () => void
   failed: (message: string) => void
 }
+type PlaybackOptions = { language?: 'en' | 'uz' | 'ru'; deviceFallback?: boolean }
 
 // Keep one media element for the entire session. A new Audio() for each async
 // response loses the user's playback permission on mobile browsers.
@@ -38,7 +39,7 @@ export class ExaminerPlayback {
 
   resume(): void { this.retry?.() }
 
-  ask(text: string, voice: ExaminerVoice, gender: 'male' | 'female', callbacks: Callbacks, device = false): void {
+  ask(text: string, voice: ExaminerVoice, gender: 'male' | 'female', callbacks: Callbacks, device = false, options: PlaybackOptions = {}): void {
     this.cancel()
     const sequence = this.sequence
     const current = () => sequence === this.sequence
@@ -61,10 +62,11 @@ export class ExaminerPlayback {
     }
     callbacks.loading(true)
     const playDevice = async () => {
+      if (options.deviceFallback === false) { fail('Natural voice could not play. Please retry audio.'); return }
       const installedVoice = getExaminerVoice(gender) ?? await waitForExaminerVoice(gender, controller.signal)
       if (!current() || completed) return
       if (!installedVoice) { fail('Examiner audio is unavailable and a matching English voice is not installed. Check your connection and retry audio.'); return }
-      this.retry = () => this.ask(text, voice, gender, callbacks, true)
+      this.retry = () => this.ask(text, voice, gender, callbacks, true, options)
       this.stopSpeech = speak(text, {
         lang: 'en', voice: installedVoice, rate: 0.98,
         onStart: () => { if (current()) { callbacks.loading(false); callbacks.started('device') } },
@@ -72,7 +74,7 @@ export class ExaminerPlayback {
       })
     }
     if (device) { void playDevice(); return }
-    void examinerAudio(text, voice, controller.signal).then((url) => {
+    void examinerAudio(text, voice, controller.signal, options.language).then((url) => {
       if (!current()) { URL.revokeObjectURL(url); return }
       this.url = url
       this.player.src = url

@@ -3,9 +3,15 @@ import { createPortal } from 'react-dom'
 import { Check, ChevronDown, Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const languages = [{ code: 'en', label: 'English' }, { code: 'ru', label: 'Русский' }, { code: 'uz', label: 'O‘zbekcha' }]
+const languageNames = {
+  en: ['English', 'Russian', 'Uzbek'],
+  ru: ['Английский', 'Русский', 'Узбекский'],
+  uz: ['Inglizcha', 'Ruscha', 'O‘zbekcha'],
+}
 export default function LanguageSelector() {
   const { i18n } = useTranslation()
+  const locale = i18n.resolvedLanguage === 'ru' ? 'ru' : i18n.resolvedLanguage === 'uz' ? 'uz' : 'en'
+  const languages = ['en', 'ru', 'uz'].map((code, index) => ({ code, label: languageNames[locale][index] }))
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)

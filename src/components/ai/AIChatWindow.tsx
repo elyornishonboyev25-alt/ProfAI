@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
+  ArrowDown,
   AudioLines,
   BookOpen,
   BrainCircuit,
   Check,
+  ChevronDown,
   Copy,
   GraduationCap,
   History,
@@ -31,6 +33,7 @@ import AiMessageContent from '@/components/ai/AiMessageContent'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
 import CoachControls from './CoachControls'
+import NovaWelcome from './NovaWelcome'
 import { coachCopy } from '@/services/ai/coachPreferences'
 import { useCopy } from '@/i18n/interface'
 import { premiumLanguage } from '@/i18n/premium'
@@ -90,24 +93,17 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     workspace, pendingActions, approveAction, dismissAction,
     voiceState, voiceLevel, voiceSupported, isListening,
     interimTranscript, startVoice,
-    voiceLang, setVoiceLang, voiceError,
-    chatThreads, activeThread, activeThreadId, threadsLoading, threadsLoaded, memories,
+    voiceError,
+    chatThreads, activeThread, activeThreadId, threadsLoading, memories,
     createNewChat, selectChat, renameChat, deleteChat, forgetMemory,
   } = tutor
 
-  const VOICE_LANGS = [
-    { id: 'en', label: 'EN' },
-    { id: 'uz', label: 'UZ' },
-    { id: 'ru', label: 'RU' },
-  ] as const
-
   const isPage = variant === 'page'
-  const openedPageChat = useRef(false)
-  useEffect(() => {
-    if (!isPage || !user || openedPageChat.current || (hasPremium && !threadsLoaded)) return
-    openedPageChat.current = true
-    void createNewChat()
-  }, [createNewChat, hasPremium, isPage, threadsLoaded, user])
+  const savedChats = chatThreads.filter((thread) => thread.messages.length > 0)
+  const chatTitle = (title: string) => ['New chat', 'Yangi chat', 'Новый чат', 'Previous conversation'].includes(title) ? c(title === 'Previous conversation' ? 'Previous conversation' : 'New chat') : title
+  const followLatestRef = useRef(true)
+  const [showJump, setShowJump] = useState(false)
+  const [creatingChat, setCreatingChat] = useState(false)
   const [panel, setPanel] = useState<'chats' | 'memory' | 'settings' | null>(null)
   const panelId = useId()
   const panelRef = useRef<HTMLElement | null>(null)
@@ -160,17 +156,20 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
   const statusText = c(STATUS_TEXT[voiceState] ?? STATUS_TEXT.idle)
   const quickChips = workspace.starters[uiLanguage]
-  const languagePicker = <div className="coach-language-picker" role="group" aria-label={c('Language')}>
-    <span>{c('Language')}</span>
-    {VOICE_LANGS.map((lang) => <button key={lang.id} type="button" onClick={() => setVoiceLang(lang.id)} aria-pressed={voiceLang === lang.id}>{lang.label}</button>)}
-  </div>
+  const WorkspaceIcon = WORKSPACE_ICONS[workspace.id]
+
+  useEffect(() => {
+    followLatestRef.current = true
+    setShowJump(false)
+  }, [activeThreadId])
 
   useEffect(() => {
     const viewport = messagesViewportRef.current
-    if (!viewport) return
-    window.requestAnimationFrame(() => {
-      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' })
+    if (!viewport || !followLatestRef.current) return
+    const frame = window.requestAnimationFrame(() => {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' })
     })
+    return () => window.cancelAnimationFrame(frame)
   }, [messages, isSending])
 
   const [dragging, setDragging] = useState(false)
@@ -181,8 +180,22 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   }
 
   const doSend = (text?: string) => {
+    followLatestRef.current = true
+    setShowJump(false)
     void send(text ? { text } : undefined)
     resetTextareaHeight()
+  }
+
+  const startNewChat = async () => {
+    if (creatingChat || threadsLoading) return
+    setCreatingChat(true)
+    try {
+      await createNewChat()
+      setPanel(null)
+      window.requestAnimationFrame(() => textareaRef.current?.focus())
+    } finally {
+      setCreatingChat(false)
+    }
   }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -322,13 +335,16 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
               className="coach-drawer absolute inset-y-0 left-0 z-40 flex w-[min(92%,24rem)] flex-col border-r shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                <div>
+                <div className="coach-drawer-brand">
+                  <VoiceOrb state={voiceState} level={voiceLevel} size={48}/>
+                  <div>
                   <p className="text-sm font-black text-slate-950">
                     ProfAI
                   </p>
                   <p className="text-[10px] font-semibold text-slate-500">
                     {studioText.studio}
                   </p>
+                  </div>
                 </div>
                 <button type="button" onClick={() => setPanel(null)} aria-label={c('Close panel')} className="coach-icon-button">
                   <X className="h-4 w-4" />
@@ -350,7 +366,8 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                   <div className="p-3">
                     <button
                       type="button"
-                      onClick={() => { void createNewChat(); setPanel(null) }}
+                      onClick={() => void startNewChat()}
+                      disabled={creatingChat || threadsLoading}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-3 py-2.5 text-xs font-bold text-white shadow-[0_8px_18px_rgba(185,28,47,.17)] hover:brightness-105"
                     >
                       <Plus className="h-4 w-4" />
@@ -358,9 +375,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     </button>
                   </div>
                   <div className="flex-1 space-y-1 overflow-y-auto px-2 pb-3">
-                    {!threadsLoading && chatThreads.length === 0 ? <p className="px-3 py-6 text-center text-xs text-slate-500">{c('No saved conversations yet.')}</p> : null}
+                    {!threadsLoading && savedChats.length === 0 ? <p className="px-3 py-6 text-center text-xs text-slate-500">{c('No saved conversations yet.')}</p> : null}
                     {threadsLoading ? <p className="px-3 py-4 text-xs text-slate-500">{c('Loading chats…')}</p> : null}
-                    {chatThreads.map((thread) => {
+                    {savedChats.map((thread) => {
                       const selected = thread.id === activeThreadId
                       const editing = thread.id === editingThreadId
                       return (
@@ -384,15 +401,15 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                                 onClick={() => { selectChat(thread.id); setPanel(null) }}
                                 className="min-w-0 flex-1 px-1 py-0.5 text-left"
                               >
-                                <span className="block truncate text-xs font-bold text-slate-800">{thread.title}</span>
+                                <span className="block truncate text-xs font-bold text-slate-800">{chatTitle(thread.title)}</span>
                                 <span className="mt-0.5 block text-[9px] font-semibold text-slate-400">
-                                  {new Date(thread.updatedAt).toLocaleDateString(uiLanguage === 'uz' ? 'uz-UZ' : uiLanguage === 'ru' ? 'ru-RU' : 'en-US')} · {thread.messages.length} {c('messages')}
+                                  {new Date(thread.updatedAt).toLocaleDateString(uiLanguage === 'uz' ? 'uz-UZ' : uiLanguage === 'ru' ? 'ru-RU' : 'en-US')} · {thread.messages.length} {thread.messages.length === 1 ? c('message') : c('messages')}
                                 </span>
                               </button>
-                              <button type="button" onClick={() => beginRename(thread.id, thread.title)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-slate-700 group-hover:opacity-100" aria-label={c('Rename chat')}>
+                              <button type="button" onClick={() => beginRename(thread.id, chatTitle(thread.title))} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-slate-700 group-hover:opacity-100 focus:opacity-100" aria-label={c('Rename chat')}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </button>
-                              <button type="button" onClick={() => confirmDeleteChat(thread.id, thread.title)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-red-600 group-hover:opacity-100" aria-label={c('Delete chat')}>
+                              <button type="button" onClick={() => confirmDeleteChat(thread.id, chatTitle(thread.title))} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-white hover:text-red-600 group-hover:opacity-100 focus:opacity-100" aria-label={c('Delete chat')}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             </div>
@@ -458,9 +475,15 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       {isPage ? <header className="coach-chat-toolbar">
         <div className="flex min-w-0 items-center gap-3">
           <button ref={menuButtonRef} type="button" className="coach-icon-button" aria-label={c('Chat menu')} aria-haspopup="dialog" aria-expanded={panelOpen} aria-controls={panelId} onClick={() => setPanel('chats')}><Menu size={21}/></button>
-          <span className="coach-workspace-label">{studioText[workspace.id]}</span>
+          <div className="coach-workspace-picker">
+            <WorkspaceIcon size={16} aria-hidden="true"/>
+            <select aria-label={studioText.focus} value={workspace.id} onChange={(event) => setWorkspace(event.target.value as AiWorkspaceId)}>
+              {AI_WORKSPACES.map(({ id }) => <option key={id} value={id}>{studioText[id]}</option>)}
+            </select>
+            <ChevronDown size={13} aria-hidden="true"/>
+          </div>
         </div>
-        {languagePicker}
+        <button type="button" className="coach-icon-button coach-new-chat" onClick={() => void startNewChat()} disabled={creatingChat || threadsLoading} aria-label={c('New chat')} title={c('New chat')}><Plus size={19}/><span>{c('New chat')}</span></button>
       </header> : <>
       {/* Header with the live orb */}
       <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200/70 bg-[linear-gradient(115deg,rgba(255,255,255,.96),rgba(249,246,247,.89))] px-3 py-2.5 backdrop-blur-2xl sm:px-4">
@@ -549,19 +572,27 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
       <CoachControls compact />
       </>}
 
+      <div className={`relative ${isPage ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
       {/* Messages */}
       <div
         ref={messagesViewportRef}
+        onScroll={() => {
+          const viewport = messagesViewportRef.current
+          if (!viewport) return
+          const following = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 72
+          followLatestRef.current = following
+          setShowJump(!following)
+        }}
         className={`min-h-0 flex-1 overscroll-contain bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,.95),transparent_45%),linear-gradient(145deg,rgba(249,247,248,.92),rgba(235,233,236,.64),rgba(255,240,242,.55))] px-3 py-4 sm:px-5 ${
           isPage ? 'coach-messages-viewport overflow-y-auto' : 'max-h-[22rem] min-h-[14rem] overflow-y-auto'
         }`}
       >
-        {showHero ? (
+        {showHero && isPage ? <NovaWelcome preferredName={preferredName}/> : showHero ? (
           <div className="ai-chat-hero flex min-h-full flex-col items-center justify-center px-2 py-6 text-center">
-            {isPage ? <div className="coach-welcome-mark" aria-hidden="true"><Sparkles size={30}/></div> : <>
+            <>
             <span className="mb-5 rounded-full border border-red-100 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-red-700 shadow-sm">{c('Your study companion')}</span>
             <VoiceOrb state={voiceState} level={voiceLevel} size={80} className="ai-chat-hero-orb" />
-            </>}
+            </>
             <h3 className="mt-5 text-xl font-black text-slate-900 sm:text-2xl">
               {preferredName ? `${preferredName}, ` : ''}{studioText.welcome}
             </h3>
@@ -572,6 +603,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             {messages.map((message) => (
               <motion.article
                 key={message.id}
+                data-role={message.role}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
@@ -593,9 +625,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     ))}
                   </div>
                 ) : null}
-                {message.role === 'assistant' ? <AiMessageContent content={message.content} /> : <p className="whitespace-pre-wrap">{message.content}</p>}
+                {message.role === 'assistant' ? <><span className="coach-answer-author">Nova</span><AiMessageContent content={message.content} /></> : <p className="whitespace-pre-wrap">{message.content}</p>}
                 {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
-                {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{voiceLang === 'uz' ? 'Javob to‘xtatildi' : voiceLang === 'ru' ? 'Ответ остановлен' : 'Response stopped'}</p> : null}
+                {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{uiLanguage === 'uz' ? 'Javob to‘xtatildi' : uiLanguage === 'ru' ? 'Ответ остановлен' : 'Response stopped'}</p> : null}
               </motion.article>
             ))}
             {isSending && !messages.some((message) => message.status === 'streaming' && message.content) ? (
@@ -656,6 +688,13 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             <div ref={messagesEndRef} />
           </div>
         )}
+      </div>
+      {isPage && showJump ? <button type="button" className="coach-jump-latest" onClick={() => {
+        followLatestRef.current = true
+        setShowJump(false)
+        const viewport = messagesViewportRef.current
+        viewport?.scrollTo({ top: viewport.scrollHeight, behavior: reducedMotion ? 'auto' : 'smooth' })
+      }} aria-label={c('Jump to latest')}><ArrowDown size={16}/>{c('Jump to latest')}</button> : null}
       </div>
 
       {/* Composer */}
@@ -726,28 +765,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           </div>
         ) : null}
 
-        {!isPage ? (
-          <div className="mb-2 flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              {c('Language')}
-            </span>
-            {VOICE_LANGS.map((lang) => (
-              <button
-                key={lang.id}
-                type="button"
-                onClick={() => setVoiceLang(lang.id)}
-                className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${
-                  voiceLang === lang.id
-                    ? 'bg-red-700 text-white'
-                    : 'border border-slate-200 bg-white text-slate-500 hover:border-slate-300'
-                }`}
-              >
-                {lang.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
         <div className="flex min-w-0 items-end gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={onPickImages} />
           {!isPage ? <button
@@ -776,7 +793,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 : c('Type, paste an image, or tap the mic…')
             }
             className={`${isPage ? 'coach-composer-input' : 'max-h-[140px]'} min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-white/90 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-300 focus:ring-4 focus:ring-red-50`}
-            disabled={isSending}
+            disabled={isSending || threadsLoading}
           />
 
           {(voiceSupported || typeof RTCPeerConnection !== 'undefined') ? (
@@ -804,9 +821,9 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <button
             type="button"
             onClick={() => isSending ? cancelSend() : doSend()}
-            disabled={!isSending && !draft.trim() && images.length === 0}
+            disabled={!isSending && (threadsLoading || (!draft.trim() && images.length === 0))}
             className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,28,47,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
-            aria-label={isSending ? (voiceLang === 'uz' ? 'Javobni to‘xtatish' : voiceLang === 'ru' ? 'Остановить ответ' : 'Stop response') : c('Send')}
+            aria-label={isSending ? (uiLanguage === 'uz' ? 'Javobni to‘xtatish' : uiLanguage === 'ru' ? 'Остановить ответ' : 'Stop response') : c('Send')}
           >
             {isSending ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </button>

@@ -56,6 +56,7 @@ export interface GeminiChatAction {
 
 export interface GeminiChatResponse {
   reply: string
+  replyLanguage?: 'en' | 'uz' | 'ru'
   actions: GeminiChatAction[]
   title: string | null
   memoryUpdates: Array<{ key: string; value: string }>
@@ -132,8 +133,8 @@ export type ChatAssistantOptions = {
   siteKnowledge?: string
   /** Image attachments (data URLs) the learner sent — e.g. a screenshot. */
   images?: string[]
-  /** Explicit EN / UZ / RU selector; overrides automatic reply-language detection. */
-  responseLanguage?: 'en' | 'uz' | 'ru'
+  /** Text follows the current message by default; voice can specify its transcription language. */
+  responseLanguage?: 'auto' | 'en' | 'uz' | 'ru'
   memories?: Array<{ key: string; value: string }>
   generateTitle?: boolean
 }
@@ -147,7 +148,7 @@ export async function chatWithAssistant(
   const payload = {
     coachPreferences: options.coachPreferences,
     message, history: history.slice(-24), pathname, workspace: options.workspace ?? 'general',
-    language: options.responseLanguage ?? 'en', mode: options.mode ?? 'coach', threadId: options.threadId,
+    language: options.responseLanguage ?? 'auto', mode: options.mode ?? 'coach', threadId: options.threadId,
     studyContext: (options.studyContext ?? '').slice(0, 16000), screenContext: (options.screenContext ?? '').slice(0, 12000),
     siteKnowledge: (options.siteKnowledge ?? '').slice(0, 16000), images: options.images ?? [],
     delivery: options.delivery ?? 'text', generateTitle: options.generateTitle ?? false,

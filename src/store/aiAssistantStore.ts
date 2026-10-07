@@ -5,6 +5,7 @@ import type { AiWorkspaceId } from '@/services/ai/workspaces'
 import type { SpeechLang } from '@/lib/speech'
 import type { GeminiChatAction } from '@/services/geminiAI'
 import { DEFAULT_COACH_PREFERENCES, type CoachPreferences } from '@/services/ai/coachPreferences'
+import { cancelCoachAudio, unlockCoachAudio } from '@/lib/coachAudio'
 
 export type AiAssistantMessageRole = 'user' | 'assistant'
 
@@ -21,6 +22,8 @@ export type AiAssistantMessage = {
 
 export type AiAssistantThread = {
   id: string
+  /** Keeps an ongoing voice session stable when its draft gains a server ID. */
+  clientId?: string
   title: string
   createdAt: string
   updatedAt: string
@@ -78,6 +81,7 @@ type AiAssistantState = {
   setThreadLoading: (ownerKey: string, loading: boolean) => void
   setThreads: (ownerKey: string, threads: AiAssistantThread[]) => void
   addThread: (ownerKey: string, thread: AiAssistantThread) => void
+  syncThread: (ownerKey: string, draftId: string, thread: AiAssistantThread) => void
   setActiveThread: (ownerKey: string, threadId: string) => void
   pushMessage: (ownerKey: string, threadId: string, message: AiAssistantMessage) => void
   renameThread: (ownerKey: string, threadId: string, title: string) => void
@@ -129,14 +133,18 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       open: () => set((state) => (state.isExamModeActive ? state : { isOpen: true })),
       close: () => set({ isOpen: false }),
       toggle: () => set((state) => (state.isExamModeActive ? state : { isOpen: !state.isOpen })),
-      openTalk: () =>
-        set((state) => (state.isExamModeActive ? state : { talkOpen: true, isOpen: false })),
-      closeTalk: () => set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }),
+      openTalk: () => set((state) => {
+        if (state.isExamModeActive) return state
+        unlockCoachAudio()
+        return { talkOpen: true, isOpen: false }
+      }),
+      closeTalk: () => { cancelCoachAudio(); set({ talkOpen: false, voiceState: 'idle', voiceLevel: 0 }) },
       setVoiceState: (voiceState) => set({ voiceState }),
       setVoiceLevel: (voiceLevel) => set({ voiceLevel: Math.max(0, Math.min(1, voiceLevel)) }),
       setVoiceLang: (voiceLang) => set({ voiceLang }),
       setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace }),
-      setExamModeActive: (isExamModeActive) =>
+      setExamModeActive: (isExamModeActive) => {
+        if (isExamModeActive) cancelCoachAudio()
         set(
           isExamModeActive
             ? {
@@ -147,7 +155,8 @@ export const useAiAssistantStore = create<AiAssistantState>()(
                 voiceLevel: 0,
               }
             : { isExamModeActive: false },
-        ),
+        )
+      },
       setSending: (isSending) => set({ isSending }),
       setError: (error) => set({ error }),
       setThreadLoading: (ownerKey, loading) =>
@@ -158,9 +167,9 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       setThreads: (ownerKey, serverThreads) =>
         set((state) => {
           const localOnly = (state.threadsByOwner[ownerKey] ?? []).filter(
-            (thread) => !thread.synced && !serverThreads.some((server) => server.id === thread.id),
+            (thread) => !thread.synced && (thread.messages.length > 0 || thread.id === state.activeThreadIds[ownerKey]) && !serverThreads.some((server) => server.id === thread.id),
           )
-          const threads = sortThreads([...localOnly, ...serverThreads])
+          const threads = sortThreads([...localOnly, ...serverThreads.filter((thread) => thread.messages.length > 0)])
           const currentActive = state.activeThreadIds[ownerKey]
           const activeThreadId = threads.some((thread) => thread.id === currentActive)
             ? currentActive ?? null
@@ -176,12 +185,21 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         set((state) => ({
           threadsByOwner: {
             ...state.threadsByOwner,
-            [ownerKey]: sortThreads([thread, ...(state.threadsByOwner[ownerKey] ?? []).filter((item) => item.id !== thread.id)]),
+            [ownerKey]: sortThreads([thread, ...(state.threadsByOwner[ownerKey] ?? []).filter((item) => item.id !== thread.id && item.messages.length > 0)]),
           },
           activeThreadIds: { ...state.activeThreadIds, [ownerKey]: thread.id },
         })),
       setActiveThread: (ownerKey, threadId) =>
         set((state) => ({ activeThreadIds: { ...state.activeThreadIds, [ownerKey]: threadId } })),
+      syncThread: (ownerKey, draftId, savedThread) => set((state) => ({
+        threadsByOwner: {
+          ...state.threadsByOwner,
+          [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) => thread.id === draftId
+            ? { ...savedThread, clientId: thread.clientId ?? draftId, messages: thread.messages, title: thread.title, updatedAt: thread.updatedAt }
+            : thread),
+        },
+        activeThreadIds: { ...state.activeThreadIds, [ownerKey]: state.activeThreadIds[ownerKey] === draftId ? savedThread.id : state.activeThreadIds[ownerKey] ?? null },
+      })),
       pushMessage: (ownerKey, threadId, message) =>
         set((state) => {
           const now = message.createdAt
@@ -252,12 +270,16 @@ export const useAiAssistantStore = create<AiAssistantState>()(
     }),
     {
       name: 'profai-ai-chat',
-      version: 4,
+      version: 5,
       migrate: (persistedState, version) => {
         const old = persistedState as Partial<AiAssistantState> & {
           conversations?: Record<string, AiAssistantMessage[]>
         }
-        if (version >= 4 || !old.conversations) return old as AiAssistantState
+        if (version >= 4 || !old.conversations) {
+          const threadsByOwner = Object.fromEntries(Object.entries(old.threadsByOwner ?? {}).map(([owner, threads]) => [owner, threads.filter((thread) => thread.messages.length > 0)]))
+          const activeThreadIds = Object.fromEntries(Object.entries(old.activeThreadIds ?? {}).map(([owner, id]) => [owner, threadsByOwner[owner]?.some((thread) => thread.id === id) ? id : null]))
+          return { ...old, threadsByOwner, activeThreadIds } as AiAssistantState
+        }
 
         const now = new Date().toISOString()
         const threadsByOwner: Record<string, AiAssistantThread[]> = {}
@@ -289,10 +311,11 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         voiceLevel: 0,
         threadsLoading: {},
         threadsLoaded: {},
+        activeThreadIds: Object.fromEntries(Object.entries(state.activeThreadIds).map(([owner, id]) => [owner, state.threadsByOwner[owner]?.some((thread) => thread.id === id && thread.messages.length > 0) ? id : null])),
         threadsByOwner: Object.fromEntries(
           Object.entries(state.threadsByOwner).map(([owner, threads]) => [
             owner,
-            threads.map((thread) => ({
+            threads.filter((thread) => thread.messages.some((message) => message.status !== 'streaming')).map((thread) => ({
               ...thread,
               messages: thread.messages.filter((message) => message.status !== 'streaming').map(({ images: _images, ...message }) => message),
             })),

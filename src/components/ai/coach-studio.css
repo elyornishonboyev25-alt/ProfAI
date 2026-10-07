@@ -123,17 +123,8 @@
 .coach-chat-toolbar { display:flex; flex:none; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-bottom:1px solid #c7cbd54d; background:linear-gradient(115deg,#ffffffb8,#f2f3f8a3); }
 .coach-icon-button { display:inline-flex; flex:none; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid #d4d7e2; border-radius:14px; color:#454b5e; background:linear-gradient(135deg,#fffffff2,#e7e9f1b8); box-shadow:inset 0 1px white,0 3px 8px #272c3e06; transition:border-color .2s,color .2s; }
 .coach-icon-button:hover { color:#b51c37; border-color:#d69ba8; }
-.coach-workspace-label { min-width:0; font-size:12px; font-weight:700; color:#60677a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.coach-language-picker { display:flex; flex:none; align-items:center; gap:4px; padding:4px; border:1px solid #d9dce5; border-radius:15px; background:#ffffff8c; box-shadow:inset 0 1px #fff; }
-.coach-language-picker>span { color:#636b7c; font-size:10px; font-weight:700; margin:0 9px; }
-.coach-language-picker>button { min-width:40px; height:36px; border:1px solid transparent; border-radius:11px; font-size:11px; font-weight:800; color:#5b6274; transition:background .2s,color .2s; }
-.coach-language-picker>button:hover { background:#e6e8ef; }
-.coach-language-picker>button[aria-pressed=true] { color:#fff; border-color:#b71d35; background:linear-gradient(135deg,#e93646,#b71935); box-shadow:0 4px 10px #bf243b24,inset 0 1px #ffffff45; }
 .ai-chat-window--studio .coach-messages-viewport { background:radial-gradient(ellipse at 50% 35%,#ffffffb8,transparent 65%),linear-gradient(150deg,#f6f7fab3,#e9ecf28a); }
 .ai-chat-window--studio article { overflow-wrap:anywhere; }
-.ai-chat-window--studio .ai-chat-hero { padding:32px 16px; }
-.ai-chat-window--studio .ai-chat-hero h3 { max-width:560px; font-size:clamp(24px,3vw,38px); font-weight:750; letter-spacing:-.04em; line-height:1.25; color:#242737; }
-.coach-welcome-mark { display:flex; align-items:center; justify-content:center; width:78px; height:78px; border:1px solid #ffffffe6; border-radius:24px; color:#ba213d; background:linear-gradient(135deg,#fff,#e2e5ee); box-shadow:0 12px 24px #42495812,inset 0 1px 0 #fff,inset 0 -1px 0 #c2c7d86e; }
 .ai-chat-window--studio .coach-composer { max-height:60%; overflow-y:auto; padding:16px 20px; background:linear-gradient(120deg,#ffffffcf,#eef0f6c4); border-color:#c8cdda80; }
 .ai-chat-window--studio .coach-composer-input { height:48px; max-height:none; overflow:hidden; border-radius:16px; border-color:#d0d5e0; background:#ffffffc7; padding:12px 16px; box-shadow:inset 0 1px 3px #33394a05; }
 .ai-chat-window--studio .coach-composer-input:focus { border-color:#cf8b9b; box-shadow:0 0 0 3px #c7193809; }
@@ -167,12 +158,81 @@
   .coach-studio--minimal .coach-chat-shell { padding:3px; border-radius:22px; }
   .coach-chat-toolbar { padding:10px; gap:8px; }
   .coach-chat-toolbar>div:first-child { gap:8px; }
-  .coach-language-picker { padding:3px; border-radius:13px; gap:2px; }
-  .coach-language-picker>span { display:none; }
-  .coach-language-picker>button { min-width:36px; height:36px; }
-  .coach-workspace-label { max-width:90px; font-size:11px; }
   .ai-chat-window--studio .coach-composer { padding:12px 10px; }
   .ai-chat-window--studio .coach-composer>div:last-of-type { gap:6px; }
   .ai-chat-window--studio .coach-composer>div:last-of-type>button { width:42px; padding:0; }
-  .ai-chat-window--studio .ai-chat-hero h3 { font-size:26px; }
+}
+
+/* Nova stays present in the welcome screen and throughout an active conversation. */
+.nova-studio-brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.nova-header-avatar { display:flex; align-items:center; justify-content:center; flex:none; width:62px; height:62px; border:1px solid #ffffffeb; border-radius:20px; background:linear-gradient(145deg,#ffffffe3,#dbe0ebac); box-shadow:inset 0 1px #fff,0 6px 18px #46516b0b; }
+.coach-studio--minimal .coach-studio-header h1 { font-size:28px; letter-spacing:-.04em; }
+.coach-studio--minimal .coach-studio-header h1>span { margin-left:10px; font-size:12px; font-weight:600; letter-spacing:0; color:#616b80; }
+.coach-studio--minimal .coach-studio-eyebrow { margin-bottom:4px; }
+.coach-workspace-picker { display:flex; align-items:center; gap:8px; min-width:0; padding:0 10px; border:1px solid #d6dae4; border-radius:13px; color:#aa2440; background:linear-gradient(135deg,#ffffffca,#ebedf5a8); box-shadow:inset 0 1px #fff; }
+.coach-workspace-picker>svg { flex:none; pointer-events:none; }
+.coach-workspace-picker select { min-width:0; max-width:180px; height:42px; border:0; background:transparent; appearance:none; color:#414a60; font-size:12px; font-weight:700; padding-right:2px; outline:none; cursor:pointer; }
+.coach-workspace-picker:focus-within { outline:3px solid #c719384a; outline-offset:3px; }
+.coach-new-chat { width:auto; padding:0 12px; gap:7px; color:#a7223c; border-color:#dbb3be; font-size:11px; font-weight:700; }
+.coach-new-chat:disabled { opacity:.45; cursor:wait; }
+.nova-welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; padding:24px 16px 32px; text-align:center; }
+.nova-showcase { position:relative; display:flex; align-items:center; justify-content:center; flex:none; width:240px; height:240px; margin-bottom:10px; border-radius:50%; background:radial-gradient(ellipse at 50% 58%,#fff 0,#f4f5f9a3 47%,transparent 70%); }
+.nova-showcase>.coach-mascot { position:relative; z-index:2; width:100% !important; height:100% !important; }
+.nova-showcase-orbit { position:absolute; inset:9%; border:1px solid #fff; border-radius:50%; box-shadow:inset 0 0 30px #c0c6d22b,0 10px 36px #a4adbf12; background:linear-gradient(145deg,#ffffff52,#dce1ec45); }
+.nova-showcase-platform { position:absolute; bottom:6%; width:66%; height:16%; border:1px solid #ffffffed; border-radius:50%; background:linear-gradient(170deg,#fff,#d1d7e4); box-shadow:0 10px 16px #5d667e18,inset 0 -3px 5px #8994ac1f; }
+.nova-showcase-voice { position:absolute; z-index:3; right:7%; bottom:15%; display:flex; align-items:center; justify-content:center; gap:3px; width:42px; height:42px; border:1px solid #ffffffed; border-radius:14px; background:linear-gradient(135deg,#e33149,#b51534); box-shadow:0 6px 16px #ab254b27,inset 0 1px #ffffff45; transition:transform .2s; }
+.nova-showcase-voice>span { width:3px; height:10px; border-radius:2px; background:white; }
+.nova-showcase-voice>span:nth-child(2n) { height:17px; }
+.nova-showcase-voice>span:nth-child(3) { height:23px; }
+.nova-showcase:hover .nova-showcase-voice { transform:translateY(-3px); }
+.nova-showcase:hover .nova-arm-right { animation:nova-wave .7s ease-in-out 2; }
+.nova-showcase[data-state=speaking] .nova-showcase-voice>span,.nova-showcase[data-state=listening] .nova-showcase-voice>span { animation:nova-bars .8s ease-in-out infinite alternate; }
+.nova-showcase-voice>span:nth-child(2n) { animation-delay:.2s !important; }
+.nova-welcome-name { font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#b71f3c; }
+.nova-welcome-name>span { color:#68748a; font-weight:600; }
+.nova-welcome h2 { max-width:600px; margin:12px 0 0; font-size:clamp(25px,3vw,38px); line-height:1.2; font-weight:750; letter-spacing:-.045em; color:#222b3e; }
+.nova-live-state { margin-top:10px; font-size:12px; color:#a9203c; font-weight:600; }
+.nova-subjects { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; width:100%; max-width:540px; margin-top:30px; }
+.nova-subjects>button { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-width:0; min-height:105px; padding:16px 12px; border:1px solid #ffffffed; border-radius:21px; background:linear-gradient(145deg,#ffffffe0,#e0e5efa1); color:#475269; font-size:12px; line-height:1.35; font-weight:700; box-shadow:0 8px 22px #53617c0a,inset 0 1px #fff,inset 0 -1px #b6bece30; transition:transform .2s,border-color .2s,box-shadow .2s; }
+.nova-subjects>button:hover { transform:translateY(-3px); border-color:#d8a8b6; box-shadow:0 12px 24px #67394c12,inset 0 1px #fff; }
+.nova-subjects>button[aria-pressed=true] { color:#a71936; border-color:#d894a7; background:linear-gradient(140deg,#fff9fa,#f3e0e69c); box-shadow:0 8px 24px #bb26491a,inset 0 1px #fff; }
+.nova-subject-icon { display:flex; align-items:center; justify-content:center; width:37px; height:37px; border:1px solid #fff; border-radius:12px; color:#67718a; background:linear-gradient(135deg,#fff,#d7ddeb); box-shadow:0 3px 8px #4d5b780b; }
+.nova-subjects>button[aria-pressed=true] .nova-subject-icon { color:#fff; border-color:#ffffff50; background:linear-gradient(135deg,#e73a53,#b81636); box-shadow:0 5px 12px #b3294c27; }
+.nova-subject-check { position:absolute; right:11px; top:11px; }
+.coach-answer-author { display:block; margin-bottom:8px; color:#aa2440; font-size:10px; font-weight:800; letter-spacing:.06em; }
+.coach-jump-latest { position:absolute; bottom:15px; right:20px; z-index:10; display:flex; align-items:center; gap:7px; min-height:38px; padding:9px 13px; border:1px solid #d4b0bd; border-radius:12px; background:#fffafbeF; color:#a61f3e; box-shadow:0 6px 20px #79374f19; font-size:11px; font-weight:700; }
+.coach-drawer-brand { display:flex; align-items:center; gap:8px; }
+.coach-studio--minimal :is(.nova-showcase,.nova-header-avatar):focus-visible { outline:3px solid #c7193880; outline-offset:4px; }
+@keyframes nova-bars { from { transform:scaleY(.6); } to { transform:scaleY(1); } }
+@media (max-width:639px) {
+  .nova-studio-brand { gap:9px; }
+  .nova-header-avatar { width:48px; height:48px; border-radius:16px; }
+  .nova-header-avatar .coach-mascot { width:52px !important; height:52px !important; }
+  .coach-studio--minimal .coach-studio-header h1 { font-size:23px; }
+  .coach-studio--minimal .coach-studio-header h1>span { display:block; margin:2px 0 0; font-size:10px; }
+  .coach-studio--minimal .coach-studio-eyebrow { font-size:7px; }
+  .coach-workspace-picker { gap:6px; padding:0 8px; }
+  .coach-workspace-picker select { max-width:140px; font-size:11px; }
+  .coach-new-chat { width:44px; padding:0; }
+  .coach-new-chat>span { display:none; }
+  .nova-welcome { padding:14px 4px 20px; }
+  .nova-showcase { width:190px; height:190px; margin-bottom:8px; }
+  .nova-showcase-voice { width:35px; height:35px; border-radius:12px; }
+  .nova-welcome h2 { max-width:340px; font-size:27px; margin-top:10px; }
+  .nova-subjects { gap:8px; margin-top:24px; }
+  .nova-subjects>button { min-height:88px; padding:12px 6px; gap:8px; border-radius:17px; font-size:11px; }
+  .nova-subject-icon { width:32px; height:32px; border-radius:10px; }
+  .nova-subject-check { right:6px; top:6px; width:11px; }
+}
+@media (max-height:760px) {
+  .nova-showcase { width:165px; height:165px; margin-bottom:5px; }
+  .nova-welcome { padding-top:10px; padding-bottom:14px; }
+  .nova-welcome h2 { font-size:26px; }
+  .nova-subjects { margin-top:18px; }
+  .nova-subjects>button { min-height:80px; padding:10px 6px; gap:7px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .nova-showcase * { animation:none !important; transition:none !important; }
+  .nova-subjects>button { transition:none; }
+  .nova-subjects>button:hover { transform:none; }
 }

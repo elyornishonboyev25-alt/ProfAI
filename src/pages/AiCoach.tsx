@@ -1,4 +1,5 @@
 import UiText from '@/components/common/UiText'
+import { useCopy } from '@/i18n/interface'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -110,6 +111,7 @@ const routeTargetMap = {
 } as const
 
 export default function AiCoach() {
+  const { c } = useCopy()
   const { minimalMotion } = useMotionPreferences()
   const navigate = useNavigate()
   const location = useLocation()
@@ -902,7 +904,7 @@ export default function AiCoach() {
                   <input
                     value={itemMeaning}
                     onChange={(event) => setItemMeaning(event.target.value)}
-                    placeholder={preferences?.preferredLocale?.startsWith('uz') ? "O'zbek ma'nosi" : 'Meaning / translation'}
+                    placeholder={c('Meaning / translation')}
                     className="h-10 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none focus:border-indigo-400/70 focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <input

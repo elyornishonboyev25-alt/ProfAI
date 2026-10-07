@@ -47,6 +47,21 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
     assert.equal((await request('/voice', body)).status, 200)
     assert.equal(calls.length, count, 'Retry reuses a cached voice without a second generation')
   }
+  for (const [language, name] of [['uz', 'Uzbek'], ['ru', 'Russian']]) {
+    const body = { text: 'Same cached text', voice: 'marin', language }
+    const before = calls.length
+    assert.equal((await request('/voice', body)).status, 200)
+    assert.equal(calls.length, before + 1, 'Voice caches are isolated by language')
+    const payload = JSON.parse(calls.at(-1).options.body)
+    assert.equal(payload.voice, 'marin', 'Nova shares the Speaking mock female voice')
+    assert.equal(payload.model, 'gpt-4o-mini-tts')
+    assert.match(payload.instructions, new RegExp(`natural ${name} with native pronunciation`))
+    assert.match(payload.instructions, /do not translate or add words/)
+    assert.equal(payload.input, body.text)
+    assert.equal((await request('/voice', body)).status, 200)
+    assert.equal(calls.length, before + 1)
+  }
+  assert.equal((await request('/voice', { text: 'Question?', language: 'invalid' })).status, 400)
   provider = async () => { throw new Error('provider timeout') }
   assert.equal((await request('/voice', { text: 'A different question?', voice: 'cedar' })).status, 503)
   provider = async () => new Response('')

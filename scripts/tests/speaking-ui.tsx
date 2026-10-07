@@ -1,7 +1,8 @@
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
-import ExaminerSession from '../../src/components/speaking/ExaminerSession'
+import SpeakingExaminerSession from '../../src/components/speaking/ExaminerSession'
+import '@/i18n'
 import IELTSSpeakingTest from '../../src/pages/IELTSSpeakingTest'
 import IeltsSpeaking from '../../src/components/speaking/sections/IeltsSpeaking'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -13,6 +14,10 @@ import { analyseTranscript, mergeStats } from '../../src/lib/speakingScoring'
 import { evaluateSpeaking } from '../../src/services/speakingAI'
 import { getIeltsSpeakingFullMockCatalog } from '../../src/utils/ieltsSpeakingCatalog'
 import { saveSpeakingSession } from '../../src/lib/speakingApi'
+
+function ExaminerSession(props: React.ComponentProps<typeof SpeakingExaminerSession>) {
+  return <MemoryRouter><SpeakingExaminerSession {...props}/></MemoryRouter>
+}
 
 const container = document.getElementById('root')!
 const players: FakeAudio[] = []

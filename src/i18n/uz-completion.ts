@@ -1,5 +1,11 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Previous conversation': 'Avvalgi suhbat',
+  'message': 'xabar',
+  'Retry audio': 'Audioni qayta yoqish',
+  'Meaning / translation': 'Ma’nosi / tarjimasi',
+  'Uzbek': 'O‘zbekcha',
+  'Russian': 'Ruscha',
   'Not sure of your current score?': 'Joriy ballingizni bilmaysizmi?',
   'Take a full mock to estimate your level, review explanations and focus on the questions you missed. You can also start later.': 'Darajangizni taxminan aniqlash, izohlarni ko‘rish va xato qilgan savollarni mashq qilish uchun to‘liq sinov ishlang. Keyinroq boshlashingiz ham mumkin.',
   'Take a full SAT mock': 'To‘liq SAT sinovini ishlash',
@@ -628,6 +634,7 @@ export const uzbekCompletion: Record<string, string> = {
   'Delete chat': 'Chatni o‘chirish',
   'Chat history': 'Chatlar tarixi',
   'Chat menu': 'Chat menyusi',
+  'Jump to latest': 'Oxirgi xabarga o‘tish',
   'No saved conversations yet.': 'Hozircha saqlangan suhbatlar yo‘q.',
   'History': 'Tarix',
   'Talk to ProfAI': 'ProfAI bilan gaplashish',

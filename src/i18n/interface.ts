@@ -173,7 +173,31 @@ export const russianInterface: Record<string, string> = {
   'Reduce effects': 'Уменьшить эффекты', 'Enable effects': 'Включить эффекты',
 }
 
+const canonicalInterfaceKeys = new WeakMap<object, Map<string, string>>()
+
+function canonicalInterfaceText(text: string, resources: object[]) {
+  for (const resource of resources) {
+    if (Object.prototype.hasOwnProperty.call(resource, text)) return text
+  }
+  for (const resource of resources) {
+    let keys = canonicalInterfaceKeys.get(resource)
+    if (!keys) {
+      keys = new Map(Object.entries(resource).filter(([, value]) => typeof value === 'string').map(([key, value]) => [value as string, key]))
+      canonicalInterfaceKeys.set(resource, keys)
+    }
+    const key = keys.get(text)
+    if (key) return key
+  }
+  return text
+}
+
+/** Translate only explicitly marked interface copy, including cached UI labels.
+ * User conversations, essays and test materials never pass through this helper. */
 export function useCopy() {
   const { t, i18n } = useTranslation('interface')
-  return { c: (text: string) => t(text, { defaultValue: text }), language: i18n.language }
+  const resources = [i18n.getResourceBundle?.('uz', 'interface'), i18n.getResourceBundle?.('ru', 'interface')].filter(Boolean) as object[]
+  return { c: (text: string) => {
+    const key = canonicalInterfaceText(text, resources)
+    return t(key, { defaultValue: key })
+  }, language: i18n.resolvedLanguage ?? i18n.language ?? 'en' }
 }

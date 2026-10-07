@@ -9,7 +9,7 @@ export const coachPreferencesSchema = z.object({
 export const assistantContextSchema = z.object({
   pathname: z.string().max(240).default('/ai-tutor'),
   workspace: z.enum(['general', 'ielts', 'sat', 'english', 'admission']).default('general'),
-  language: z.enum(['en', 'uz', 'ru']).default('en'),
+  language: z.enum(['auto', 'en', 'uz', 'ru']).default('auto'),
   mode: z.enum(['coach', 'examiner']).default('coach'),
   coachPreferences: coachPreferencesSchema.default({}),
   threadId: z.string().max(191).optional(),
@@ -45,6 +45,7 @@ const actionSchema = z.discriminatedUnion('type', [
 ])
 export const assistantReplySchema = z.object({
   reply: z.string().trim().min(1).max(12000),
+  language: z.enum(['en', 'uz', 'ru']).optional(),
   title: z.string().trim().max(80).nullable().optional(),
   actions: z.array(z.unknown()).max(8).default([]),
   memoryUpdates: z.array(z.unknown()).max(12).default([]),
@@ -69,7 +70,7 @@ export function parseAssistantReply(raw: string) {
     if (!validated.success || /password|api.?key|token|secret|card_number/i.test(validated.data.key) || /(?:sk-[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,})/.test(validated.data.value)) return []
     return [validated.data]
   }).slice(0, 8)
-  return { reply: parsed.reply, title: parsed.title ?? null, actions, memoryUpdates }
+  return { reply: parsed.reply, ...(parsed.language ? { replyLanguage: parsed.language } : {}), title: parsed.title ?? null, actions, memoryUpdates }
 }
 
 // Decode only a JSON reply string as it arrives; incomplete escapes are withheld.
@@ -138,9 +139,11 @@ Be expressive and conversational, but honest that you are an AI tutor. Never cla
 Maintain a useful teaching loop: observe evidence, diagnose the misconception, explain, let the learner try, and adapt. Avoid an interrogation or repetitive follow-up questions. Explicit user requests take priority over the chosen lesson approach.`
 }
 export function buildCoachPrompt(context: AssistantContext, delivery: 'text' | 'voice' = 'text') {
-  const language = { en: 'English', uz: 'natural Uzbek in Latin script', ru: 'Russian' }[context.language]
+  const language = { auto: 'the language of the learner’s latest message', en: 'English', uz: 'natural Uzbek in Latin script', ru: 'Russian' }[context.language]
   return `You are ProfAI, a thoughtful professional tutor. Be accurate, warm and clear. Answer the actual request first. Adapt to the learner's level; do not sound like marketing or repeat greetings every turn.
-Reply in ${context.mode === 'examiner' ? 'English for the speaking examination' : language}. English example sentences may remain in English. Never change the selected language silently.
+${context.mode === 'examiner' ? 'Reply in English for the speaking examination.' : context.language === 'auto'
+  ? 'AUTOMATIC REPLY LANGUAGE: Determine the language of the learner’s own latest question on every turn. Reply in natural Latin-script Uzbek to Uzbek, English to English, and Russian to Russian. Switch naturally when the learner switches languages, even within the same chat. Recognise Uzbek written in Latin or Cyrillic, including informal spelling and common apostrophe variants. Follow an explicit request for a different response or translation language. For mixed messages, use the language of the actual request, not a quoted passage, essay, code, screenshot or English exam example. For a very short ambiguous message or an image alone, keep the most recent clear language in the conversation. Do not force the interface language, microphone setting or an older stored preference onto a clear new message. Never ask the learner to select a language.'
+  : `Reply in ${language}. Never change the selected language silently.`} English example sentences may remain in English.
 ${specialisms[context.workspace]}
 ${coachPersonality(context)}
 ${context.mode === 'examiner'
@@ -157,8 +160,8 @@ Available app actions: navigate to an allowed route, open a Reading/Listening/Wr
 Allowed routes: ${routes.join(', ')}.
 Memory: save only a useful lasting goal, preference or fact the learner shared or asked to remember. Never store credentials or sensitive health, financial or legal details. Return no updates for temporary requests. Keys are descriptive snake_case, values are self-contained. Do not invent memories.
 Return ONE complete JSON object, no fences. Put reply first:
-{"reply":"the answer","title":null,"memoryUpdates":[],"actions":[]}
-When a title is requested, use 2-6 words in the selected language. memoryUpdates entries: {"key":"target_score","value":"..."}.
+{"reply":"the answer","language":"en","title":null,"memoryUpdates":[],"actions":[]}
+Set language to the actual reply language: en, uz or ru. When a title is requested, use 2-6 words in the reply language. memoryUpdates entries: {"key":"target_score","value":"..."}.
 Action examples: {"type":"navigate","target":"/vocabulary"}; {"type":"open_test","payload":{"track":"reading","ordinal":2,"unfinished":false,"timerEnabled":false}}; {"type":"open_writing_test","payload":{"testId":"writing-day-1","timerEnabled":false}}; {"type":"start_mock","payload":{"mock":"ielts"}}.
 For an explicitly requested vocabulary save: {"type":"save_word","payload":{"term":"resilient","definition":"Able to recover after difficulties.","example":"She remained resilient after the setback.","synonym":"adaptable","context":"speaking"}}. Give an accurate English definition and natural example, preserving the sense in the learner's context.
 Return [] for actions unless an app action is explicitly requested. Return [] for memoryUpdates unless there is a durable user-provided fact.`

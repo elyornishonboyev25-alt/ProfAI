@@ -9,9 +9,9 @@ type LanguageChip = { code: string; label: string }
 
 const LANGUAGE_CHIPS: LanguageChip[] = [
   { code: 'en', label: 'English' },
-  { code: 'uz', label: "O'zbekcha" },
-  { code: 'ru', label: 'Русский' },
-  { code: 'tr', label: 'Türkçe' },
+  { code: 'uz', label: 'Uzbek' },
+  { code: 'ru', label: 'Russian' },
+  { code: 'tr', label: 'Turkish' },
 ]
 
 export type WordLookupRequest = {

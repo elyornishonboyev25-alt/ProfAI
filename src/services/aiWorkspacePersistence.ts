@@ -39,12 +39,12 @@ const toThread = (thread: ServerThread): AiAssistantThread => ({
 
 export async function fetchAiThreads(): Promise<AiAssistantThread[]> {
   const response = await apiClient.get<{ items: ServerThread[] }>('/ai-workspace/threads')
-  return response.items.map(toThread)
+  return response.items.filter((thread) => thread.messages.length > 0).map(toThread)
 }
 
 export async function createAiThread(language: SpeechLang): Promise<AiAssistantThread> {
   const thread = await apiClient.post<ServerThread>('/ai-workspace/threads', {
-    title: language === 'uz' ? 'Yangi chat' : language === 'ru' ? 'Новый чат' : 'New chat',
+    title: 'New chat',
     locale: language,
     contextMode: 'general',
   })

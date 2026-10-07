@@ -30,10 +30,12 @@ function pcmWave(bytes: Buffer, rate: number): Buffer {
   return Buffer.concat([header, bytes])
 }
 
-export async function generateExaminerAudio(text: string, voice: 'marin' | 'cedar'): Promise<VoiceAudio | null> {
+export async function generateExaminerAudio(text: string, voice: 'marin' | 'cedar', language: 'en' | 'uz' | 'ru' = 'en'): Promise<VoiceAudio | null> {
   const budget = AbortSignal.timeout(38_000)
   const gender = voice === 'cedar' ? 'masculine adult male' : 'feminine adult female'
-  const style = `Clear, natural British English; ${gender} voice; calm, professional IELTS Speaking examiner; conversational pace; short pauses; consistent accent; no added words.`
+  const style = language === 'en'
+    ? `Clear, natural British English; ${gender} voice; calm, professional IELTS Speaking examiner; conversational pace; short pauses; consistent accent; no added words.`
+    : `Clear, natural ${language === 'uz' ? 'Uzbek' : 'Russian'} with native pronunciation and intonation; ${gender} voice; calm, professional tutor; conversational pace; short pauses; consistent accent; read the supplied text verbatim, do not translate or add words. Pronounce English examples accurately in English.`
   if (env.OPENAI_API_KEY.trim()) {
     const audio = await request(`${origin}/audio/speech`, {
       method: 'POST', headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },

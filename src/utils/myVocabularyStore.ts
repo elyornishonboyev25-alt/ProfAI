@@ -67,6 +67,7 @@ type AddInput = {
   origin?: string
   origins?: WordOrigin[]
   uzbek?: string
+  russian?: string
   exampleUzbek?: string
   sourceQuestionId?: string
 }
@@ -96,6 +97,7 @@ export function addSavedWord(input: AddInput): SavedWord {
     origin: input.origin ?? existing?.origin,
     origins,
     uzbek: input.uzbek?.trim() ?? existing?.uzbek,
+    russian: input.russian?.trim() ?? existing?.russian,
     exampleUzbek: input.exampleUzbek?.trim() ?? existing?.exampleUzbek,
     sourceQuestionId: input.sourceQuestionId ?? existing?.sourceQuestionId,
     createdAt: existingIndex >= 0 ? words[existingIndex].createdAt : new Date().toISOString(),

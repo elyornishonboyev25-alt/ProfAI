@@ -4,6 +4,8 @@ import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { isSourceExample } from './VocabularyExample'
 import { SaveWordButton } from './SaveWordButton'
 import { usePronunciation } from './activities'
+import { useVocabularyLanguage, VocabularyTranslation, VocabularyLanguageToggle } from './VocabularyLanguage'
+import { getVocabularyTranslation } from '@/utils/vocabularyTranslation'
 
 /** Measure text against the available space, keeping every character accessible. */
 function PagedText({ text, label }: { text: string; label: string }) {
@@ -69,12 +71,14 @@ export function TextDetailsButton({ text, label = 'Read full meaning' }: { text:
 }
 
 export function WordDetailsButton({ entry, label = 'Details' }: { entry: VocabularyEntry; label?: string }) {
+  const language = useVocabularyLanguage()
+  const translation = getVocabularyTranslation(entry, language)
   const dialog = useRef<HTMLDialogElement>(null)
   const headingId = useId()
   const [section, setSection] = useState(0)
   const sections = [
     { label: 'Meaning (EN)', text: entry.definition },
-    ...(entry.uzbek ? [{ label: 'Uzbek', text: entry.uzbek }] : []),
+    ...(translation ? [{ label: language === 'ru' ? 'Русский' : 'O‘zbekcha', text: translation }] : []),
     ...(entry.example ? [{ label: isSourceExample(entry) ? 'From the test' : 'Example', text: entry.example }] : []),
     ...(entry.exampleUzbek ? [{ label: 'Example (UZ)', text: entry.exampleUzbek }] : []),
     ...(entry.synonym ? [{ label: 'Synonym', text: entry.synonym }] : []),
@@ -108,8 +112,8 @@ export function VocabularyLibrary({ entries, label = 'Vocabulary' }: { entries: 
     <button type="button" className="vocab-word-list" onClick={() => dialog.current?.showModal()}><span><BookOpen size={17} />{label}<span className="vocab-word-count">{entries.length}</span></span><ArrowRight size={16} /></button>
     <dialog ref={dialog} aria-labelledby={headingId} className="vocab-library-dialog">
       <div className="vocab-dialog-shell">
-        <header><div><p className="vocab-content-label">YOUR STUDY SET</p><h2 id={headingId}>Vocabulary · {entries.length} terms</h2></div><button type="button" aria-label="Close vocabulary" onClick={() => dialog.current?.close()}><X size={18} /></button></header>
-        <div className="vocab-library-grid" data-size={size}>{entries.slice(page * size, (page + 1) * size).map((entry) => <article key={entry.id}><div className="vocab-library-term"><h3 title={entry.term}>{entry.term}</h3><button type="button" className="vocab-details-button" aria-label={`Pronounce ${entry.term}`} onClick={() => speak(entry.term)}><Volume2 size={14} /></button><SaveWordButton entry={entry} iconOnly /></div>{entry.uzbek ? <p className="vocab-library-translation" lang="uz">{entry.uzbek}</p> : null}<div className="vocab-library-definition"><PagedText text={entry.definition} label={entry.term} /></div><WordDetailsButton entry={entry} label="Meaning, examples & source" /></article>)}</div>
+        <header><div><p className="vocab-content-label">YOUR STUDY SET</p><h2 id={headingId}>Vocabulary · {entries.length} terms</h2></div><VocabularyLanguageToggle /><button type="button" aria-label="Close vocabulary" onClick={() => dialog.current?.close()}><X size={18} /></button></header>
+        <div className="vocab-library-grid" data-size={size}>{entries.slice(page * size, (page + 1) * size).map((entry) => <article key={entry.id}><div className="vocab-library-term"><h3 title={entry.term}>{entry.term}</h3><button type="button" className="vocab-details-button" aria-label={`Pronounce ${entry.term}`} onClick={() => speak(entry.term)}><Volume2 size={14} /></button><SaveWordButton entry={entry} iconOnly /></div><VocabularyTranslation entry={entry} className="vocab-library-translation" /><div className="vocab-library-definition"><PagedText text={entry.definition} label={entry.term} /></div><WordDetailsButton entry={entry} label="Meaning, examples & source" /></article>)}</div>
         <footer><button type="button" aria-label="Previous vocabulary page" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ArrowLeft size={16} />Previous</button><span>{page + 1} / {pages}</span><button type="button" aria-label="Next vocabulary page" disabled={page >= pages - 1} onClick={() => setPage((value) => value + 1)}>Next<ArrowRight size={16} /></button></footer>
       </div>
     </dialog>

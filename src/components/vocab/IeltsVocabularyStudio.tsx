@@ -9,6 +9,7 @@ import type { IeltsVocabularySkill } from '@/data/ieltsFullTestVocabulary'
 import { SaveWordButton, WordSaveProvider } from './SaveWordButton'
 import { usePronunciation } from './activities'
 import VocabularyExample from './VocabularyExample'
+import { VocabularyLanguageToggle, VocabularyTranslation } from './VocabularyLanguage'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/ielts-vocabulary.css'
 import VocabularyTestReturn from './VocabularyTestReturn'
@@ -54,7 +55,7 @@ export function IeltsVocabularyWord({ entry, accent = 'red' }: { entry: Vocabula
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 pt-1">
           <h3 className="break-words text-base font-semibold leading-6 text-slate-900">{entry.term}</h3>
-          {entry.uzbek ? <p className="mt-1 break-words text-xs font-medium leading-5 text-red-600">{entry.uzbek}</p> : null}
+          <VocabularyTranslation entry={entry} className="mt-1 break-words text-xs font-medium leading-5 text-red-600" />
         </div>
         <div className="flex shrink-0 items-center">
           <button type="button" onClick={() => speak(entry.term)} aria-label={`Pronounce ${entry.term}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
@@ -119,7 +120,10 @@ export default function IeltsVocabularyStudio() {
         {returnTo ? <div className="test-vocab-return-row"><VocabularyTestReturn returnTo={returnTo} /></div> : null}
         <header className="flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
           <div>
-            <Link to="/vocabulary" className="premium-back-btn"><ArrowLeft className="h-4 w-4" /><UiText text="Back to Vocabulary" /></Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link to="/vocabulary" className="premium-back-btn"><ArrowLeft className="h-4 w-4" /><UiText text="Back to Vocabulary" /></Link>
+              <VocabularyLanguageToggle />
+            </div>
             <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.22em] text-red-600">IELTS ACADEMIC</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"><UiText text="IELTS Vocabulary" /></h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500"><UiText text="Vocabulary matched to every Full Test, passage and topic." /></p>

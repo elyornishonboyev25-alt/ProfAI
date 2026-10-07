@@ -11,8 +11,23 @@ async function load(entryPoint) {
 async function main() {
   const { SAT_TEST_CATALOG } = await load('src/features/sat/catalog.ts')
   const { vocabularyCollections } = await load('src/data/vocabularyCollections.ts')
+  const { getVocabularyTranslation } = await load('src/utils/vocabularyTranslation.ts')
+  const { articles } = await load('src/data/articles/index.ts')
+  for (const entry of [
+    ...vocabularyCollections.ielts.flatMap((book) => book.tests.flatMap((test) => test.sections.flatMap((section) => section.entries))),
+    ...vocabularyCollections.sat.flatMap((pack) => pack.sections.flatMap((section) => section.entries)),
+    ...articles.flatMap((article) => article.vocabulary),
+  ]) {
+    const russian = getVocabularyTranslation(entry, 'ru')
+    assert.match(russian ?? '', /[\u0400-\u04FF]/, `${entry.term}: missing Russian translation`)
+    assert.doesNotMatch(russian, /[?\uFFFD]/, `${entry.term}: corrupted Russian translation`)
+    assert.ok(getVocabularyTranslation(entry, 'uz')?.trim(), `${entry.term}: missing Uzbek translation`)
+    if (entry.uzbek) assert.equal(getVocabularyTranslation(entry, 'uz'), entry.uzbek, `${entry.term}: preserve existing Uzbek translation`)
+  }
+  console.log('Validated Uzbek and Russian translation coverage for IELTS, SAT and Articles.')
   const tracks = await load('src/utils/ieltsTrackCatalog.ts')
   const { resolveIeltsTestById } = await load('src/utils/ieltsTestCatalog.ts')
+  const { getIeltsVocabularySourceLines } = await load('src/utils/ieltsVocabularySource.ts')
   const { getWritingFullTestCatalog } = await load('src/data/writingTestData.ts')
   const { getIeltsSpeakingFullMockCatalog } = await load('src/utils/ieltsSpeakingCatalog.ts')
   const canonical = {
@@ -56,7 +71,7 @@ async function main() {
           const part = sourceParts.find((item) => item.id === entry.sourceSectionId)
           assert.ok(part, `${label}: missing source part`)
           if (book.skill !== 'listening') assert.equal(part.id, sourceParts[partIndex].id, `${label}: wrong part`)
-          const body = normalize(book.skill === 'reading' ? part.content || part.paragraphs?.map((p) => p.content).join(' ') || '' : JSON.stringify(part))
+          const body = normalize(book.skill === 'reading' || book.skill === 'listening' ? getIeltsVocabularySourceLines(part).join(' ') : JSON.stringify(part))
           if (book.skill === 'listening' || book.skill === 'reading' || entry.sourceKind === 'text') {
             assert.match(body, wordPattern(entry.term), `${label}: word must occur in the actual source`)
           }

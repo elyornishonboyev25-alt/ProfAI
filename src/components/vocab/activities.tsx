@@ -29,6 +29,8 @@ import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { isSpeechSynthesisSupported, speak as speakText } from '@/lib/speech'
 import '@/styles/vocabulary-practice.css'
+import { useVocabularyLanguage } from './VocabularyLanguage'
+import { getVocabularyTranslation } from '@/utils/vocabularyTranslation'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
 
@@ -236,6 +238,7 @@ export function ActivityPicker({ basePath, entriesCount, navigationState, previe
 
 // ================================================================ Flashcards
 export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entries: VocabularyEntry[]; masteryKey: string; onComplete?: (accuracy: number) => void }) {
+  const language = useVocabularyLanguage()
   const { reducedMotion } = useMotionPreferences()
   const meaningId = useId()
   const advanceTimer = useRef<ReturnType<typeof setTimeout>>()
@@ -250,6 +253,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
   const { isSupported, speakingText, speak, stop } = usePronunciation()
 
   const current = deck[index]
+  const translation = current && getVocabularyTranslation(current, language)
   const progress = ((index + 1) / deck.length) * 100
   const masteredCount = deck.filter((c) => known[c.id]).length
   const speakingCurrent = speakingText === current?.term
@@ -352,11 +356,11 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
             <div id={meaningId} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} aria-hidden={!flipped} className="vocab-flash-face vocab-flash-back">
               <span className="vocab-flash-label">Meaning & translation</span>
               <p className="vocab-flash-back-term" lang="en">{current.term}</p>
-              <div className="vocab-flash-meaning" data-bilingual={Boolean(current.uzbek)}>
-              {current.uzbek ? (
+              <div className="vocab-flash-meaning" data-bilingual={Boolean(translation)}>
+              {translation ? (
                 <div className="vocab-flash-translation">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">Uzbek</p>
-                  <p className="vocab-flash-definition">{current.uzbek}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">{language === 'ru' ? 'Русский' : 'O‘zbekcha'}</p>
+                  <p lang={language} className="vocab-flash-definition">{translation}</p>
                 </div>
               ) : null}
               <div>

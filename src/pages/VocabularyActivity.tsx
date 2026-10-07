@@ -19,6 +19,7 @@ import {
 } from '@/components/vocab/activities'
 import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
 import VocabularyInlineLibrary from '@/components/vocab/VocabularyInlineLibrary'
+import { VocabularyLanguageToggle } from '@/components/vocab/VocabularyLanguage'
 import { useAuthStore } from '@/store/authStore'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { READING_ROADMAP_FULL_TEST_DAYS } from '@/utils/ieltsTrackCatalog'
@@ -296,6 +297,7 @@ export default function VocabularyActivity() {
                    <UiText text={"Track"} /> </Link>
               ) : null}
               <VocabularyTestReturn returnTo={returnTo} />
+              <VocabularyLanguageToggle accent={accent} />
             </div>
             <div className="vocab-practice-heading">
               <p className="vocab-header-eyebrow">YOUR VOCABULARY WORKSPACE</p>

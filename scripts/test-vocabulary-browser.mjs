@@ -122,6 +122,8 @@ async function main() {
         await evaluate('window.show(' + JSON.stringify(mode) + ')')
         await until(mode === 'studio' ? `document.querySelector('nav[aria-label="IELTS vocabulary skills"]')` : `document.querySelector('.vocab-practice[data-mode="${mode.endsWith('picker') ? 'picker' : mode}"]')`)
         await new Promise((resolve) => setTimeout(resolve, 650))
+        await evaluate(`document.querySelector('[aria-label="Vocabulary translation language"] button[lang="ru"]').click()`)
+        await until(`document.querySelector('[aria-label="Vocabulary translation language"] button[lang="ru"]').getAttribute('aria-pressed') === 'true'`)
         const layout = await evaluate(`(() => {
           const page = document.querySelector('.vocab-practice') || document.querySelector('.workspace-page');
           const nodes = [...page.querySelectorAll('a,button,input,summary')].filter(n => n.checkVisibility() && !n.closest('[aria-hidden="true"]'));
@@ -140,6 +142,7 @@ async function main() {
           await writeFile(join(screenshots, `${width}-${mode}.png`), Buffer.from(shot.data, 'base64'))
         }
         if (mode === 'flashcards') {
+          assert.equal(await evaluate(`Boolean(document.querySelector('.vocab-flash-definition[lang="ru"]')?.textContent.match(/[\u0400-\u04FF]/))`), true, 'Russian flashcard translation is available')
           await evaluate("document.querySelector('.vocab-flash-card').click()")
           await new Promise((resolve) => setTimeout(resolve, 650))
           assert.equal(await evaluate("document.querySelector('.vocab-flash-back').getAttribute('aria-hidden')"), 'false')
@@ -171,6 +174,7 @@ async function main() {
           const pickerHeight = await evaluate(`document.querySelector('.vocab-activity-picker').getBoundingClientRect().height`)
           await evaluate(`document.querySelector('.vocab-word-list').click()`)
           await new Promise((resolve) => setTimeout(resolve, 350))
+          assert.equal(await evaluate(`Array.from(document.querySelectorAll('.vocab-inline-library article')).every(card => /[\u0400-\u04FF]/.test(card.querySelector('p[lang="ru"]')?.textContent ?? ''))`), true, `${mode}: every card has a Russian translation`)
           const library = await evaluate(`(() => {
             const page=document.querySelector('.vocab-practice'), library=document.querySelector('.vocab-inline-library');
             const words=[...library.querySelectorAll('article')],toggle=library.querySelector('.vocab-word-list');

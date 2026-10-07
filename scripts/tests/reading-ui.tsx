@@ -1,8 +1,9 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useInRouterContext } from 'react-router-dom'
 import assert from 'node:assert/strict'
-import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
+import ReadingInterface from '../../src/components/IELTSReadingInterface'
+import '@/i18n'
 import { readingTests, answerKey } from './reading-bank'
 import { optionDisplayText } from '../../src/utils/readingPresentation'
 import { saveReviewState, loadReviewState } from '../../src/utils/resultsReviewState'
@@ -13,6 +14,10 @@ import { evaluateReadingAnswers } from '../../src/utils/ieltsUtils'
 import type { TestResult } from '../../src/types/ieltsTypes'
 
 const container = document.getElementById('root')!
+function IELTSReadingInterface(props: React.ComponentProps<typeof ReadingInterface>) {
+  const inRouter = useInRouterContext()
+  return inRouter ? <ReadingInterface {...props} /> : <MemoryRouter><ReadingInterface {...props} /></MemoryRouter>
+}
 const compact = (text: string) => text.replace(/\s+/g, ' ').trim()
 export async function run() {
   const seen = new Set<string>()

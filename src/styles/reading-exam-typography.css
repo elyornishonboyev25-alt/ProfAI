@@ -1,0 +1,63 @@
+/* Reading text only: keep the exam layout, controls and Listening styles intact. */
+.reading-shell.reading-exam-typography {
+  --reading-text-size: 16px;
+  --reading-text-font: Arial, Helvetica, sans-serif;
+}
+.reading-shell.reading-exam-typography.reading-size-large { --reading-text-size: 18px; }
+.reading-shell.reading-exam-typography.reading-size-xlarge { --reading-text-size: 20px; }
+.reading-shell.reading-exam-typography.reading-font-serif { --reading-text-font: Georgia, 'Times New Roman', serif; }
+
+.reading-shell.reading-exam-typography :is(#reading-passage-pane, #reading-questions-pane) {
+  font-family: var(--reading-text-font);
+  font-size: var(--reading-text-size);
+  font-weight: 400;
+  letter-spacing: normal;
+}
+.reading-shell.reading-exam-typography #reading-passage-pane .ielts-reading-prose,
+.reading-shell.reading-exam-typography #reading-passage-pane .ielts-reading-prose p {
+  max-width: 76ch;
+  font-family: var(--reading-text-font) !important;
+  font-size: var(--reading-text-size) !important;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: left;
+  text-wrap: wrap;
+}
+.reading-shell.reading-exam-typography #reading-passage-pane .ielts-reading-prose > div + div {
+  margin-top: 1em;
+}
+.reading-shell.reading-exam-typography #reading-passage-pane h2 {
+  font-family: var(--reading-text-font) !important;
+  font-size: calc(var(--reading-text-size) + 4px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: normal;
+}
+.reading-shell.reading-exam-typography #reading-passage-pane .text-base {
+  font-size: calc(var(--reading-text-size) + 2px) !important;
+  line-height: 1.4;
+}
+.reading-shell.reading-exam-typography #reading-questions-pane :is(section > p, article p, td p, li, [class*='text-[15px]']) {
+  font-size: var(--reading-text-size) !important;
+  font-weight: 400 !important;
+  line-height: 1.55 !important;
+  letter-spacing: normal;
+}
+.reading-shell.reading-exam-typography #reading-questions-pane h4 {
+  font-size: calc(var(--reading-text-size) + 2px) !important;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+.reading-shell.reading-exam-typography #reading-questions-pane :is(button, input, select, textarea) {
+  font-family: var(--reading-text-font) !important;
+  font-size: var(--reading-text-size) !important;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+.reading-shell.reading-exam-typography #reading-questions-pane :is(article p, td p) span:first-child {
+  font-weight: 700 !important;
+}

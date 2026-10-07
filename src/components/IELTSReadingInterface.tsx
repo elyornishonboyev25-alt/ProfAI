@@ -54,6 +54,7 @@ import { isCompleteIeltsObjectiveSection } from '@/components/achievements/badge
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useBillingText } from '@/features/billing/copy'
 import { LISTENING_TEST_COST } from '@/features/billing/catalog'
+import '@/styles/reading-exam-typography.css'
 
 interface IELTSReadingInterfaceProps {
   startAccess?: { cost: number; busy: boolean; ready?: boolean; error: string; unlock: () => Promise<boolean> }
@@ -6275,7 +6276,7 @@ export default function IELTSReadingInterface({
   return (
     <div
       ref={testShellRef}
-      className={`reading-shell ielts-exam-workspace reading-scale-120 ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
+      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
     >
       <AnimatePresence>
         {isLaunching ? (

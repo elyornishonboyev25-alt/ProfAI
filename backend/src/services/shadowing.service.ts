@@ -714,7 +714,13 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   const fullText = cues.map((c) => c.text).join(' ')
   screenContent(title, fullText)
 
-  let segments = segmentCues(cues)
+  // Keep original caption starts for shadowing; pre-grouping rolling captions
+  // erases the boundaries needed by the 12–18 second lesson clips.
+  let segments = mode === 'shadowing'
+    ? cues.filter(cue => cue.text.trim() && cue.end > cue.start).map((cue, orderIndex) => ({
+      orderIndex, startSec: cue.start, endSec: cue.end, text: cue.text.trim(),
+    }))
+    : segmentCues(cues)
   if (mode === 'podcast' && segments.length === 0 && cues.length > 0) {
     // Very short or sparse podcasts can legitimately produce a single cue;
     // preserve readable cues instead of rejecting the whole episode.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Check, Headphones, Loader2, Mic, Pause, Play, RotateCcw, Share2, Square } from 'lucide-react'
 import { formatClock, loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { shareShadowingRecording, type ShadowingVideoDetail } from '@/services/shadowing'
@@ -14,6 +14,9 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   const lesson = useMemo(() => prepareShadowingLesson(video.captions ?? video.segments, video.durationSec), [video])
   const mainHost = useRef<HTMLDivElement>(null)
   const audioHost = useRef<HTMLDivElement>(null)
+  const sectionHosts = useRef<Array<HTMLDivElement | null>>([])
+  const sectionsPanel = useRef<HTMLElement>(null)
+  const [sectionVideoBox, setSectionVideoBox] = useState({ top: 0, left: 0, width: 0, height: 0 })
   const main = useRef<YTPlayer | null>(null)
   const audio = useRef<YTPlayer | null>(null)
   const seekRequestedAt = useRef(0)
@@ -46,6 +49,25 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   const recordingBusy = useRef(false)
   const objectUrl = useRef<string | null>(null)
   const duration = Math.min(120, lesson.durationSec || video.durationSec)
+
+  // Position the persistent player over the selected card's video slot.
+  // Moving an iframe between parents reloads it in Safari, so keep it mounted.
+  useLayoutEffect(() => {
+    const panel = sectionsPanel.current
+    const target = activeAudio === null ? null : sectionHosts.current[activeAudio]
+    if (!panel || !target) return
+    const measure = () => {
+      const origin = panel.getBoundingClientRect()
+      const box = target.getBoundingClientRect()
+      setSectionVideoBox({ top: box.top - origin.top, left: box.left - origin.left, width: box.width, height: box.height })
+    }
+    measure()
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    observer?.observe(panel)
+    observer?.observe(target)
+    window.addEventListener('resize', measure)
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  }, [activeAudio])
 
   useEffect(() => {
     let cancelled = false
@@ -305,20 +327,27 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
           {practice && <div className="mt-4 space-y-3"><button type="button" disabled={sharing || requestingMicrophone} onClick={() => recording ? recorder.current?.stop() : void record()} className="learning-secondary">{requestingMicrophone ? <Loader2 size={16} className="animate-spin" /> : recording ? <Square size={16} /> : <Mic size={16} />}{c(requestingMicrophone ? 'Opening microphone…' : recording ? 'Stop recording' : 'Record yourself')}</button>{recordingUrl && <><audio ref={recordPlayback} controls src={recordingUrl} className="w-full" onPlay={() => { if (ready.video) main.current?.pauseVideo(); if (ready.audio) audio.current?.pauseVideo() }} /><button type="button" disabled={sharing || recording || requestingMicrophone} onClick={() => void shareRecording()} className="learning-secondary disabled:opacity-50">{sharing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}{c(sharing ? 'Creating share link…' : 'Share recording')}</button><p className="text-xs text-slate-500">{c('Anyone with this link can listen.')}</p>{shareLink && <label className="block text-xs font-semibold text-slate-600">{c('Share link')}<input readOnly value={shareLink} onFocus={event => event.target.select()} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" /></label>}{shareStatus && <p role="status" className="text-sm text-slate-600">{shareStatus}</p>}</>}{recordError && <p role="alert" className="text-sm text-red-600">{recordError}</p>}</div>}
         </div>
       </section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-bold"><Headphones size={19} />{c('Audio sections')}</h2><span className="text-xs text-slate-500">{completed.size}/{lesson.segments.length}</span></div>
+      <section ref={sectionsPanel} className="relative rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-bold"><Headphones size={19} />{c('Video sections')}</h2><span className="text-xs text-slate-500">{completed.size}/{lesson.segments.length}</span></div>
         <p className="mb-4 mt-2 text-sm text-slate-600">{c('Each section plays once. Replay whenever you need.')}</p>
-        <div ref={audioHost} className={`pointer-events-none relative ml-auto aspect-video w-40 overflow-hidden rounded-lg bg-black [&_iframe]:h-full [&_iframe]:w-full ${activeAudio === null ? 'sr-only' : 'mb-4'}`} />
+        <div ref={audioHost} data-testid="shadowing-section-video" data-section-index={activeAudio} style={activeAudio === null ? undefined : sectionVideoBox} className={`pointer-events-none overflow-hidden rounded-lg bg-black [&_iframe]:h-full [&_iframe]:w-full ${activeAudio === null ? 'sr-only' : 'absolute z-10'}`} />
         {errors.audio && <p role="alert" className="mb-3 text-sm text-red-600">{c('Audio playback could not load. Retry the player.')}</p>}
         {!lesson.segments.length && <p role="status" className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">{c('Audio sections need timed English captions. Retry captions if they are unavailable; the video preview still works.')}</p>}
-        {lesson.segments.some(section => section.endSec - section.startSec < 12 || section.endSec - section.startSec > 18) && <p className="mb-3 text-xs text-slate-500">{c('Section lengths follow the available caption boundaries to keep speech intact.')}</p>}
+        {lesson.segments.some(section => section.endSec - section.startSec < 12) && <p className="mb-3 text-xs text-slate-500">{c('The final section may be shorter to keep the speech intact.')}</p>}
         <div className="space-y-3">{lesson.segments.map((section, index) => {
           const selected = activeAudio === index
           const audioPlaying = selected && playing && playback.current.kind === 'audio'
           const progress = selected ? Math.max(0, Math.min(1, (audioPosition - section.startSec) / (section.endSec - section.startSec))) : 0
-          return <article key={`${section.startSec}:${section.endSec}`} className={`rounded-xl border p-3 ${selected ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
+          return <article data-testid="shadowing-section" key={`${section.startSec}:${section.endSec}`} className={`rounded-xl border p-3 ${selected ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
+            <div ref={node => { sectionHosts.current[index] = node }} className="relative mb-3 aspect-video overflow-hidden rounded-lg bg-black">
+              <img src={video.thumbnailUrl || `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`} alt="" className="h-full w-full object-cover" />
+              <button type="button" aria-label={`${c('Play video')} ${index + 1}`} disabled={!ready.audio || errors.audio || recording || requestingMicrophone} onClick={() => playSection(index)} className="absolute inset-0 z-20 flex items-center justify-center text-white disabled:opacity-40">
+                <span className={`rounded-full bg-black/60 p-3 ${audioPlaying ? 'opacity-0 hover:opacity-100 focus-visible:opacity-100' : ''}`}>{audioPlaying ? <Pause size={24} /> : <Play size={24} />}</span>
+              </button>
+            </div>
             <div className="mb-2 flex items-center gap-3"><button type="button" disabled={!ready.audio || errors.audio || recording || requestingMicrophone} onClick={() => playSection(index)} aria-label={`${c(audioPlaying ? 'Pause audio' : 'Play audio')} ${index + 1}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 text-white disabled:opacity-40">{audioPlaying ? <Pause size={17} /> : <Play size={17} />}</button><span className="text-xs font-semibold text-slate-600">{index + 1} · {formatClock(section.startSec)} – {formatClock(section.endSec)} · {Math.round(section.endSec - section.startSec)} {c('seconds')}</span>{completed.has(index) && <Check size={17} className="ml-auto text-emerald-600" aria-label={c('Completed')} />}</div>
             <p className="text-sm leading-6 text-slate-800">{section.text}</p>
+            {section.textTimingEstimated && <p className="mt-2 text-xs text-slate-500">{c('Subtitle timing is approximate for this section.')}</p>}
             {selected && <div role="progressbar" aria-label={c('Audio progress')} aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} className="mt-3 h-1 overflow-hidden rounded bg-red-100"><div className="h-full bg-red-500" style={{ width: `${progress * 100}%` }} /></div>}
           </article>
         })}</div>

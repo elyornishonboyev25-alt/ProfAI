@@ -63,7 +63,11 @@ async function main() {
     dom.window.HTMLElement.prototype.scrollIntoView = () => {}
     dom.window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} })
     const outfile = join(directory, 'suite.cjs')
-    await build({ entryPoints: ['scripts/tests/educational-media-ui.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'], sourcemap: 'inline', loader: { '.css': 'empty' } })
+    await build({ entryPoints: ['scripts/tests/educational-media-ui.tsx'], bundle: true, platform: 'node', format: 'cjs', outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'], sourcemap: 'inline', loader: { '.css': 'empty' }, plugins: [{ name: 'isolated-media-access', setup(build) {
+      // Billing has its own access tests. These fixtures exercise opened lessons.
+      build.onResolve({ filter: /\/billing\/AccessGate$/ }, () => ({ path: 'access', namespace: 'media-access-test' }))
+      build.onLoad({ filter: /.*/, namespace: 'media-access-test' }, () => ({ contents: 'import {useEffect} from "react"; export default function AccessGate({children,onUnlocked,resource}) { useEffect(() => { onUnlocked?.() }, [resource]); return children }', loader: 'js', resolveDir: process.cwd() }))
+    } }] })
     await createRequire(import.meta.url)(outfile).run()
   } finally { dom.window.close(); await rm(directory, { recursive: true, force: true }) }
 }

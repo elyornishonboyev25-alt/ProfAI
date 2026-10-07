@@ -257,3 +257,17 @@ html:has(.app-shell-ai-tutor) { overflow-y:hidden; scrollbar-gutter:auto; }
 @media(min-width:640px) and (max-width:767px) {
   .app-shell-ai-tutor .workspace-page { padding-bottom:1rem; }
 }
+/* Workspace pages share the viewport canvas, including their decorative layers. */
+.app-shell .workspace-page {
+  background: transparent !important;
+}
+
+.app-shell .workspace-page:is(.community-page, .podcast-library, .leaderboard-studio)::before,
+.app-shell .workspace-page.podcast-library::after {
+  content: none;
+}
+
+.app-shell .workspace-page .articles-reader-backdrop,
+.app-shell .workspace-page.podcast-library > .podcast-aurora {
+  display: none;
+}

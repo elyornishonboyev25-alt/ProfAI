@@ -206,7 +206,7 @@ export default function Community() {
   }
 
   return (
-    <main className="community-page min-h-screen">
+    <main className="workspace-page community-page min-h-screen">
       <div className="community-shell">
         <header className="community-header">
           <div className="community-brand-row">

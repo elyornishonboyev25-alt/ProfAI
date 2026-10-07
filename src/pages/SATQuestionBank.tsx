@@ -400,7 +400,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     setStatus('all')
   }
   return (
-    <main className="sat-bank-page">
+    <main className="workspace-page sat-bank-page">
       <div className={`sat-bank-wrap ${mathVisible && calculatorOpen && calculatorDocked ? 'sat-bank-calculator-docked' : ''}`}>
         <button
           type="button"

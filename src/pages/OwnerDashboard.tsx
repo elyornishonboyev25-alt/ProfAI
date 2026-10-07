@@ -10,8 +10,8 @@ import ReviewModeration from '@/components/landing/ReviewModeration'
 import OwnerReportInbox from '@/components/support/OwnerReportInbox'
 import './OwnerDashboard.css'
 import { BILLING_PRODUCTS } from '@/features/billing/catalog'
+import { hasOwnerAccess } from '@/utils/ownerAccess'
 
-const OWNER_EMAIL = 'elyornishonboyev000@gmail.com'
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
 type NewUser = { id: string; fullName: string; email: string; createdAt: string }
 type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
@@ -43,7 +43,7 @@ export default function OwnerDashboard() {
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
   const amount = (value: number) => `${new Intl.NumberFormat(locale).format(value)} ${t('UZS')}`
   const user = useAuthStore(state => state.user)
-  const isOwner = user?.email.trim().toLowerCase() === OWNER_EMAIL
+  const isOwner = hasOwnerAccess(user?.email)
   const [overview, setOverview] = useState<Overview | null>(null)
   const [userPage, setUserPage] = useState(1)
   const [reload, setReload] = useState(0)

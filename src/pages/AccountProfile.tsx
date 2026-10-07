@@ -23,7 +23,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import {
@@ -45,6 +45,7 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 import { POPULAR_STUDY_FIELDS, WORLD_COUNTRIES } from '@/data/countries'
+import { hasOwnerAccess } from '@/utils/ownerAccess'
 import '@/styles/account-profile.css'
 
 const NICKNAME_RE = /^[A-Za-z][A-Za-z0-9_]{2,19}$/
@@ -662,6 +663,11 @@ export default function AccountProfile() {
 
             {/* Quick actions */}
             <div className="account-profile-quick-actions flex flex-col gap-2">
+              {hasOwnerAccess(user?.email) && (
+                <Link to="/owner" className="arena-primary-btn justify-center">
+                  <ShieldCheck className="mr-2 h-4 w-4" /> <UiText text="Owner dashboard" />
+                </Link>
+              )}
               <button
                 onClick={() => navigate(savedNickname ? `/u/${savedNickname}` : '/account', { state: { from: '/account' } })}
                 disabled={!savedNickname}

@@ -71,6 +71,16 @@ export async function run() {
   await act(async () => useAuthStore.setState({ user: null }))
   const key = 'profai:sat:question-bank:guest:v1'
   await render()
+  // Desmos is discoverable from the bank setup before a Math set starts.
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
+  await change('Section', 'reading-writing')
+  assert.equal(container.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
+  await change('Section', 'math')
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  await click(container.querySelector('[aria-label="Close Desmos"]'))
+  await change('Section', 'all')
   await click(
     [...container.querySelectorAll('button')].find((node) =>
       node.textContent?.trim().startsWith('History & review'),

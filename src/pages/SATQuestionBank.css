@@ -865,3 +865,10 @@
     flex-basis: 100%;
   }
 }
+
+.sat-bank-panel-title:has(.sat-bank-calculator) {
+  flex-wrap: wrap;
+}
+.sat-bank-panel-title .sat-bank-calculator {
+  margin-left: auto;
+}

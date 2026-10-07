@@ -373,7 +373,11 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   }
   const current = quiz[index]
   const mathVisible =
-    (historyView ? review?.row?.question.section : current?.question.section) === 'math'
+    historyView
+      ? review?.row?.question.section === 'math'
+      : current
+        ? current.question.section === 'math'
+        : section !== 'reading-writing'
   useEffect(() => {
     setCalculatorOpen(false)
   }, [mathVisible, historyView, reviewId])
@@ -700,6 +704,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               <div className="sat-bank-panel-title">
                 <h2>Build a question set</h2>
                 <span>{filtered.length} matching</span>
+                {calculatorButton}
               </div>
               <div className="sat-bank-filters">
                 <label>

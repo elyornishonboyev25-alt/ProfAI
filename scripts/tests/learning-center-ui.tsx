@@ -12,8 +12,11 @@ import { useAsyncData } from '../../src/hooks/useAsyncData'
 import ClassAssignmentContext from '../../src/features/learningCenter/ClassAssignmentContext'
 import { syncIeltsClassResult } from '../../src/features/learningCenter/ieltsResultSync'
 import { apiClient } from '../../src/lib/apiClient'
+import NotificationsBell from '../../src/components/layout/NotificationsBell'
+import { useBillingStore } from '../../src/features/billing/store'
 
 const test = window as any
+const wallet = { balance: 0, canCreateClass: true, centerEligible: true, legacyAccess: false, subscriptions: [], entries: [], orders: [] }
 const workspace = { id: 'center', name: 'Oxford Learning Center', slug: 'oxford', city: 'Tashkent', logoUrl: null, coverUrl: null, role: 'OWNER' as const, memberCount: 24, groupCount: 3 }
 test.calls = []
 test.failWorkspaces = false
@@ -23,6 +26,17 @@ test.teamRows = []
 test.studentRows = []
 test.leaderboardRows = []
 test.failAction = false
+test.notifications = [
+  { id: 'teacher-note', type: 'SYSTEM', title: 'New teacher note: Oxford Learning Center', message: 'Finish Full Mock Test 1 for Exam Mode!\nReview your Listening answers and write down three things to improve before our next lesson.', metadata: { kind: 'TEACHER_NOTE', authorName: 'Alex Teacher', centerSlug: 'oxford' }, readAt: null, createdAt: new Date().toISOString() },
+  { id: 'assignment-update', type: 'SYSTEM', title: 'New class assignment: IELTS Full Mock', message: 'Your next IELTS assignment is ready. Complete the full mock before the next lesson.', metadata: { kind: 'CLASS_ASSIGNMENT', centerSlug: 'oxford', examTrack: 'IELTS' }, readAt: null, createdAt: new Date().toISOString() },
+]
+;(apiClient as any).get = async (path: string) => {
+  if (path === '/billing/wallet') return wallet
+  if (path === '/dashboard/notifications') return { notifications: test.notifications, unreadCount: test.notifications.filter((item: any) => !item.readAt).length }
+  if (path === '/profile/badges') return { badges: [] }
+  return { weeklyProgress: [] }
+}
+;(apiClient as any).patch = async (path: string) => { test.notifications.forEach((item: any) => { if (path.endsWith('/read-all') || path.includes(`/${item.id}/read`)) item.readAt = new Date().toISOString() }); return {} }
 const learner = { id: 'owner', fullName: 'Learner With A Long Name', nickname: 'learner', avatarUrl: null, targetExam: 'SAT' as const, targetScore: null, currentStreak: 3, currentSat: 1300, highestSat: 1400, targetSat: 1500, currentIelts: null, highestIelts: null, targetIelts: null, attempts: 2, averageScore: 81.3, improvement: 12.5, completionRate: 50, lastActiveAt: new Date().toISOString(), status: 'ON_TRACK' as const, skills: [{ key: 'SAT_MATH', label: 'Math', score: 650, maxScore: 800, attempts: 2, change: 50 }] }
 test.learner = learner
 test.studentAssignments = []
@@ -33,7 +47,8 @@ learningCenterApi.syncResult = async input => { test.action('result', input); re
 ;(apiClient as any).post = async (path: string, input: unknown) => { test.action('objective-result', { path, ...(input as object) }); return {} }
 test.workspace = workspace
 test.guest = () => useAuthStore.setState({ user: null })
-useAuthStore.setState({ user: { id: 'owner', fullName: 'Alex Teacher', onboardingCompleted: true } as any, hydrated: true })
+useAuthStore.setState({ user: { id: 'owner', fullName: 'Alex Teacher', onboardingCompleted: true, canCreateClass: true } as any, hydrated: true })
+useBillingStore.setState({ wallet, userId: 'owner' })
 learningCenterApi.workspaces = async () => { if (test.failWorkspaces) throw new Error('Workspace service unavailable'); return { workspaces: [workspace] } }
 learningCenterApi.createWorkspace = async (input) => { test.calls.push({ action: 'create', input }); return { workspace } }
 learningCenterApi.groups = async () => ({ groups: test.groupRows })
@@ -76,6 +91,7 @@ createRoot(document.getElementById('root')!).render(<StrictMode><MemoryRouter in
   <Route path="/learning-center/:workspaceSlug/*" element={<LearningCenterWorkspace />} />
   <Route path="/copy" element={<InvitationLink link="http://localhost/learning-center/join/ABC123" />} />
   <Route path="/race" element={<Race />} />
+  <Route path="/notifications" element={<div className="min-h-screen bg-slate-200 p-8"><NotificationsBell /></div>} />
   <Route path="/login" element={<p>Sign in</p>} />
   <Route path="/sat" element={<p>SAT destination</p>} />
   <Route path="/sat/mocks" element={<p>SAT mock catalog</p>} />

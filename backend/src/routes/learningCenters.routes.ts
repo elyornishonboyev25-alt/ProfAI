@@ -756,9 +756,24 @@ router.post(
     if (!access) return
     const allowed = await studentScope(access)
     if (!allowed.includes(req.params.studentId)) return res.status(404).json({ message: 'Student not found in your accessible groups.' })
-    const note = await prisma.learningCenterTeacherNote.create({
-      data: { centerId: access.centerId, studentId: req.params.studentId, authorId: req.user!.id, note: req.body.note },
-      include: { author: { select: { id: true, fullName: true, avatarUrl: true } } },
+    const note = await prisma.$transaction(async (tx) => {
+      const created = await tx.learningCenterTeacherNote.create({
+        data: { centerId: access.centerId, studentId: req.params.studentId, authorId: req.user!.id, note: req.body.note },
+        include: { author: { select: { id: true, fullName: true, avatarUrl: true } } },
+      })
+      await tx.notification.create({
+        data: {
+          userId: req.params.studentId,
+          type: NotificationType.SYSTEM,
+          title: `New teacher note: ${access.center.name}`,
+          message: created.note,
+          metadata: {
+            kind: 'TEACHER_NOTE', noteId: created.id, centerSlug: access.center.slug,
+            centerName: access.center.name, authorName: created.author.fullName,
+          },
+        },
+      })
+      return created
     })
     return res.status(201).json({ note })
   }),
@@ -1138,7 +1153,10 @@ router.post(
           type: NotificationType.SYSTEM,
           title: `New class assignment: ${payload.title}`,
           message: `${access.center.name} assigned you new ${payload.examTrack} work. Due ${new Date(payload.dueAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}.`,
-          metadata: { kind: 'CLASS_ASSIGNMENT', assignmentId: created.id, centerSlug: access.center.slug },
+          metadata: {
+            kind: 'CLASS_ASSIGNMENT', assignmentId: created.id, centerSlug: access.center.slug,
+            centerName: access.center.name, examTrack: payload.examTrack, dueAt: payload.dueAt,
+          },
         })),
       })
       return created

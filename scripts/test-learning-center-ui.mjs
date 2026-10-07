@@ -12,6 +12,7 @@ import tailwind from 'tailwindcss'
 // Real Chromium, real components and CSS; API fixtures never touch live accounts.
 const requireBackend = createRequire(new URL('../backend/package.json', import.meta.url))
 const WebSocket = requireBackend('ws')
+const notificationsOnly = process.argv.includes('--notifications-only')
 const directory = await mkdtemp(join(tmpdir(), 'profai-center-browser-'))
 const bundle = await build({ entryPoints: ['scripts/tests/learning-center-ui.tsx'], bundle: true, write: false, outdir: directory, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl' }, define: { 'process.env.NODE_ENV': '"development"', 'import.meta.env': '{}' }, plugins: [{ name: 'test-copy', setup(builder) {
   builder.onResolve({ filter: /^@\/i18n\/interface$/ }, () => ({ path: 'copy', namespace: 'test-copy' }))
@@ -50,7 +51,7 @@ try {
   })
   socket.on('message', data => {
     const message = JSON.parse(data)
-    if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text)
+    if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text)
     const call = pending.get(message.id)
     if (!call) return
     clearTimeout(call.timeout); pending.delete(message.id)
@@ -63,7 +64,7 @@ try {
   }
   const until = async expression => {
     for (let n = 0; n < 100; n++) { if (await evaluate(`Boolean(${expression})`)) return; await new Promise(resolve => setTimeout(resolve, 50)) }
-    throw new Error('Timed out: ' + expression)
+    throw new Error('Timed out: ' + expression + '\nBrowser errors: ' + JSON.stringify(errors) + '\nPage: ' + await evaluate('document.body.textContent.slice(0, 700)'))
   }
   const click = async text => {
     await until(`[...document.querySelectorAll('button')].some(b => b.textContent.trim() === ${JSON.stringify(text)} && !b.disabled)`)
@@ -81,6 +82,7 @@ try {
   await resize(1440, 1100)
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
   await until(`document.querySelector('.lc-portal-class-card')`)
+  if (!notificationsOnly) {
   await screenshot('portal-desktop')
   await input('[aria-label="Search classes"]', 'missing')
   await until(`document.body.textContent.includes('No matching classes')`)
@@ -282,6 +284,30 @@ try {
   await click('Delete class'); await click('Yes, delete class')
   await until(`window.route === '/learning-center'`)
   assert.equal(await evaluate(`window.calls.filter(c => c.action === 'delete').length`), 1)
+  }
+  await go('/notifications')
+  await until(`document.querySelector('.profai-notifications-count')?.textContent === '2'`)
+  for (const width of [320, 390, 768, 1440]) {
+    await resize(width, 1000)
+    await evaluate(`document.querySelector('[aria-label="Notifications"]').click()`)
+    await until(`document.querySelector('.profai-notifications-panel')`)
+    const bounds = await evaluate(`(() => { const rect = document.querySelector('.profai-notifications-panel').getBoundingClientRect(); return { left: rect.left, right: rect.right, width: innerWidth }; })()`)
+    if ([320,390,1440].includes(width)) await screenshot(`notifications-${width}`)
+    assert.ok(bounds.left >= 0 && bounds.right <= bounds.width, `Notification panel fits ${width}px`)
+    assert.equal(await evaluate(`document.querySelector('.profai-notifications-panel').scrollWidth <= document.querySelector('.profai-notifications-panel').clientWidth`), true)
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' })
+    await until(`!document.querySelector('.profai-notifications-panel')`)
+  }
+  await evaluate(`document.querySelector('[aria-label="Notifications"]').click()`)
+  await until(`document.querySelector('.profai-notifications-panel')`)
+  await evaluate(`[...document.querySelectorAll('.profai-notification-row')].find(item => item.textContent.includes('Read full message')).click()`)
+  await until(`document.querySelector('[aria-expanded="true"].profai-notification-row')`)
+  assert.equal(await evaluate(`document.querySelector('[aria-expanded="true"].profai-notification-row').textContent.includes('three things to improve')`), true)
+  await screenshot('notification-note-expanded')
+  await evaluate(`[...document.querySelectorAll('.profai-notification-row')].find(item => item.textContent.includes('Open assignment')).click()`)
+  await until(`window.route === '/learning-center/oxford/assignments'`)
+  if (!notificationsOnly) {
+  await go('/learning-center')
   await evaluate(`window.guest()`)
   await click('Create class')
   await until(`window.route === '/login'`)
@@ -290,8 +316,9 @@ try {
   await click('Sign In')
   await until(`window.route === '/login'`)
   assert.equal(await evaluate('window.routeState.from.pathname'), '/learning-center/join/ABC123')
+  }
   assert.deepEqual(errors, [], 'No uncaught browser errors')
-  console.log('PASS: all Classes sections at 320/390/768/1440px; owner/admin/teacher/student permissions; class/group/settings forms; members/roles; search/filter URLs; notes/AI; assignments/start/retry/preview/catalog continuity; leaderboard; modal focus/Escape; invitation/clipboard; request races; safe deletion and sign-in return paths.')
+  console.log(notificationsOnly ? 'PASS: notification inbox at 320/390/768/1440px; full teacher notes, unread badge, assignment navigation and Escape.' : 'PASS: all Classes sections and notification inbox at 320/390/768/1440px; owner/admin/teacher/student permissions; class/group/settings forms; members/roles; search/filter URLs; notes/AI; assignments/start/retry/preview/catalog continuity; leaderboard; modal focus/Escape; invitation/clipboard; request races; safe deletion and sign-in return paths.')
   await send('Browser.close').catch(() => {})
 } finally {
   socket?.close(); browser.kill(); await exited

@@ -11,6 +11,7 @@ for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GE
 const { default: express } = await import('express')
 const { default: router } = await import('../dist/routes/learningCenters.routes.js')
 const { default: testsRouter } = await import('../dist/routes/tests.routes.js')
+const { default: dashboardRouter } = await import('../dist/routes/dashboard.routes.js')
 const { prisma } = await import('../dist/lib/prisma.js')
 const { signAccessToken } = await import('../dist/utils/jwt.js')
 const { summarizeStudent, normalizeTestAttempt } = await import('../dist/services/learningCenterAnalytics.service.js')
@@ -56,9 +57,10 @@ const defaults = {
   'learningCenterAssignmentSubmission.update': ({ data }) => ({ id: 'submission', ...data }),
   'learningCenterAssignmentSubmission.updateMany': () => ({ count: 1 }),
   'learningCenterTeacherNote.findMany': () => [],
-  'learningCenterTeacherNote.create': ({ data }) => ({ id: 'note', ...data }),
+  'learningCenterTeacherNote.create': ({ data }) => ({ id: 'note', ...data, author: { id: data.authorId, fullName: 'Alex Teacher', avatarUrl: null } }),
   'user.findUnique': ({ where }) => where.email ? { id: 'new-user' } : { email: where.id + '@example.test' },
   'user.findFirst': () => ({ id: 'new-user' }),
+  'user.findUniqueOrThrow': () => ({ role: 'ADMIN' }),
   'user.findMany': ({ where }) => where.id.in.includes('learner') ? [identity] : [],
   'testAttempt.findMany': () => [],
   'testAttempt.findFirst': () => ({ id: 'existing-attempt' }),
@@ -68,11 +70,14 @@ const defaults = {
   'speakingSession.findMany': () => [],
   'xpEvent.findMany': () => [],
   'notification.createMany': () => ({ count: 1 }),
+  'notification.create': ({ data }) => ({ id: 'notice', ...data, readAt: null, createdAt: new Date() }),
+  'notification.findMany': () => [],
+  'notification.count': () => 0,
 }
 before(async () => {
   for (const [model, delegate] of Object.entries(prisma)) {
     if (!delegate || typeof delegate !== 'object' || !('findMany' in delegate)) continue
-    for (const method of ['findFirst', 'findUnique', 'findMany', 'count', 'create', 'createMany', 'update', 'updateMany', 'delete', 'deleteMany', 'upsert', 'groupBy']) {
+    for (const method of ['findFirst', 'findUnique', 'findUniqueOrThrow', 'findMany', 'count', 'create', 'createMany', 'update', 'updateMany', 'delete', 'deleteMany', 'upsert', 'groupBy']) {
       originals.push([delegate, method, delegate[method]])
       delegate[method] = async args => {
         const key = `${model}.${method}`
@@ -90,6 +95,7 @@ before(async () => {
   app.use(express.json({ limit: '1mb' }))
   app.use('/centers', router)
   app.use('/tests', testsRouter)
+  app.use('/dashboard', dashboardRouter)
   app.use((error, _req, res, _next) => res.status(500).json({ message: error.message }))
   server = await new Promise(resolve => { const listening = app.listen(0, '127.0.0.1', () => resolve(listening)) })
   base = `http://127.0.0.1:${server.address().port}/centers`
@@ -152,9 +158,53 @@ test('student scope, notes and AI cannot access another learner', async () => {
   assert.equal((await request('/academy/students/other/notes', 'POST', { note: 'Valid note' }, 'teacher')).status, 404)
   assert.equal((await request('/academy/students/learner/ai-analysis', 'POST', {}, 'learner')).status, 403)
   assert.equal((await request('/academy/students/learner/notes', 'POST', { note: '  Coaching note  ' }, 'teacher')).status, 201)
-  assert.equal(calls.at(-1).args.data.note, 'Coaching note')
+  assert.equal(calls.find(c => c.key === 'learningCenterTeacherNote.create').args.data.note, 'Coaching note')
   const detail = await request('/academy/students/learner', 'GET', undefined, 'learner')
   assert.equal(detail.status, 200); assert.deepEqual((await detail.json()).notes, [])
+})
+
+test('new notes are persisted for only their recipient and readable after sign-in', async () => {
+  const inbox = []
+  overrides.set('notification.create', ({ data }) => { const item = { id: 'notice', ...data, readAt: null, createdAt: new Date() }; inbox.push(item); return item })
+  overrides.set('notification.findMany', ({ where }) => inbox.filter(item => item.userId === where.userId))
+  overrides.set('notification.count', ({ where }) => inbox.filter(item => item.userId === where.userId && !item.readAt).length)
+  const sent = await request('/academy/students/learner/notes', 'POST', { note: '  Finish Full Mock Test 1.\nReview your mistakes.  ' }, 'teacher')
+  assert.equal(sent.status, 201)
+  assert.equal(inbox.length, 1)
+  assert.equal(inbox[0].message, 'Finish Full Mock Test 1.\nReview your mistakes.')
+  assert.deepEqual(inbox[0].metadata, { kind: 'TEACHER_NOTE', noteId: 'note', centerSlug: 'academy', centerName: 'Academy', authorName: 'Alex Teacher' })
+  const inboxRequest = async (user, path = '', method = 'GET') => fetch(base.replace('/centers', '/dashboard/notifications') + path, { method, headers: { Authorization: 'Bearer ' + signAccessToken({ sub: user, role: 'USER' }) } })
+  assert.deepEqual((await (await inboxRequest('stranger')).json()).notifications, [])
+  const received = await (await inboxRequest('learner')).json()
+  assert.equal(received.notifications[0].message, inbox[0].message)
+  assert.equal(received.unreadCount, 1)
+  overrides.set('notification.findFirst', ({ where }) => inbox.find(item => item.id === where.id && item.userId === where.userId) ?? null)
+  overrides.set('notification.update', ({ where, data }) => Object.assign(inbox.find(item => item.id === where.id), data))
+  assert.equal((await inboxRequest('stranger', '/notice/read', 'PATCH')).status, 404)
+  assert.equal((await inboxRequest('learner', '/notice/read', 'PATCH')).status, 200)
+  assert.equal((await (await inboxRequest('learner')).json()).unreadCount, 0)
+  assert.ok((await (await inboxRequest('learner')).json()).notifications[0].readAt)
+})
+
+test('note delivery failures fail the transaction; invalid notes create no messages', async () => {
+  const transaction = prisma.$transaction
+  let failed = false
+  prisma.$transaction = async callback => { try { return await callback(prisma) } catch (error) { failed = true; throw error } }
+  overrides.set('notification.create', () => { throw new Error('Delivery unavailable') })
+  try {
+    assert.equal((await request('/academy/students/learner/notes', 'POST', { note: 'Valid note' }, 'teacher')).status, 500)
+    assert.equal(failed, true)
+  } finally { prisma.$transaction = transaction }
+  calls.length = 0
+  for (const note of [' ', 'a', 'x'.repeat(2001)]) assert.equal((await request('/academy/students/learner/notes', 'POST', { note }, 'teacher')).status, 400)
+  assert.equal(calls.filter(c => c.key === 'notification.create').length, 0)
+})
+
+test('unread count includes messages outside the latest thirty notifications', async () => {
+  overrides.set('notification.count', () => 41)
+  const response = await fetch(base.replace('/centers', '/dashboard/notifications'), { headers: { Authorization: 'Bearer ' + signAccessToken({ sub: 'learner', role: 'USER' }) } })
+  assert.equal((await response.json()).unreadCount, 41)
+  assert.deepEqual(calls.find(c => c.key === 'notification.count').args.where, { userId: 'learner', readAt: null })
 })
 test('member emails are visible to managers; students only see public identity', async () => {
   const learner = await (await request('/academy/team', 'GET', undefined, 'learner')).json()

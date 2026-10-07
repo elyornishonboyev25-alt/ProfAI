@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, BookOpenCheck, BrainCircuit, CalendarClock, CheckCircle2, Clock3, Flame, RefreshCw, Send, Sparkles, Target, TrendingUp } from 'lucide-react'
+import { ArrowLeft, BookOpenCheck, BrainCircuit, CalendarClock, CheckCircle2, Clock3, Flame, RefreshCw, Sparkles, Target, TrendingUp } from 'lucide-react'
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from './api'
 import { assignmentDestination, startAssignment } from './assignmentNavigation'
-import { Avatar, CenterPanel, CenterSkeleton, ErrorState, inputClass, MetricCard, primaryButton, secondaryButton, StatusBadge, Trend } from './components'
+import { Avatar, CenterPanel, CenterSkeleton, ErrorState, inputClass, MetricCard, secondaryButton, StatusBadge, Trend } from './components'
 import type { LearningResult, PerformanceInsight } from './types'
+import TeacherNotesPanel from './TeacherNotesPanel'
 
 export default function StudentDetailView({ slug, studentId, canManage }: { slug: string; studentId: string; canManage: boolean }) {
   const navigate = useNavigate()
@@ -14,8 +15,6 @@ export default function StudentDetailView({ slug, studentId, canManage }: { slug
   const [insight, setInsight] = useState<PerformanceInsight | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisNote, setAnalysisNote] = useState('Based on recorded results')
-  const [note, setNote] = useState('')
-  const [savingNote, setSavingNote] = useState(false)
   const [actionError, setActionError] = useState('')
   const [opening, setOpening] = useState(false)
 
@@ -48,23 +47,13 @@ export default function StudentDetailView({ slug, studentId, canManage }: { slug
     finally { setOpening(false) }
   }
 
-  async function saveNote(event: React.FormEvent) {
-    event.preventDefault()
-    if (savingNote) return
-    if (note.trim().length < 2) { setActionError('Write a note with at least 2 characters.'); return }
-    setSavingNote(true); setActionError('')
-    try { await learningCenterApi.addNote(slug, studentId, note.trim()); setNote(''); await refetch() }
-    catch (failure) { setActionError(failure instanceof Error ? failure.message : 'Could not save your note. Please try again.') }
-    finally { setSavingNote(false) }
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="lc-student-detail space-y-6">
       {actionError && <p role="alert" className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{actionError}</p>}
       <button type="button" onClick={() => navigate(`/learning-center/${slug}/students`)} className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-red-700"><ArrowLeft className="h-4 w-4" /> Back to students</button>
 
       <CenterPanel className="overflow-hidden">
-        <div className="relative bg-[radial-gradient(circle_at_95%_0%,rgba(219,224,230,.75),transparent_42%),linear-gradient(135deg,#fff,#f1f3f5_65%,#fff0f1)] px-5 py-7 text-slate-950 sm:px-7">
+        <div className="lc-student-hero relative px-5 py-7 text-slate-950 sm:px-7">
           <div className="pointer-events-none absolute -right-12 -top-24 h-72 w-72 rounded-full border border-white/10 bg-red-300/10" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-4"><Avatar name={student.fullName} url={student.avatarUrl} size="lg" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="break-words text-2xl font-bold tracking-[-.04em] sm:text-3xl">{student.fullName}</h2><StatusBadge status={student.status} /></div><p className="mt-1 text-sm font-semibold text-slate-600">{data.groups.map((group) => group.name).join(' · ') || 'Not assigned to a group'} · {student.targetExam} track</p></div></div>
@@ -99,11 +88,7 @@ export default function StudentDetailView({ slug, studentId, canManage }: { slug
 
       <div className={`grid gap-5 ${canManage ? 'xl:grid-cols-[1.15fr_.85fr]' : ''}`}>
         <RecentResults results={data.results} />
-        {canManage && <CenterPanel className="p-5 sm:p-6">
-          <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700">Private coaching log</p><h2 className="mt-1 text-xl font-bold text-slate-950">Teacher notes</h2></div>
-          {canManage ? <form onSubmit={saveNote} className="mt-4"><textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} className={`${inputClass} h-auto py-3`} placeholder="Record an observation, follow-up or coaching decision..." /><div className="mt-2 flex justify-end"><button disabled={savingNote || !note.trim()} className={primaryButton}><Send className="h-4 w-4" />{savingNote ? 'Saving...' : 'Save note'}</button></div></form> : null}
-          <div className="mt-4 space-y-3">{data.notes.length ? data.notes.map((entry) => <article key={entry.id} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><p className="text-sm font-medium leading-6 text-slate-700">{entry.note}</p><div className="mt-3 flex items-center justify-between text-[10px] font-bold text-slate-400"><span>{entry.author.fullName}</span><span>{new Date(entry.createdAt).toLocaleDateString()}</span></div></article>) : <p className="py-8 text-center text-sm font-semibold text-slate-400">No coaching notes yet.</p>}</div>
-        </CenterPanel>}
+        {canManage && <TeacherNotesPanel key={`${slug}:${studentId}`} slug={slug} studentId={studentId} notes={data.notes} onSent={refetch} />}
       </div>
     </div>
   )

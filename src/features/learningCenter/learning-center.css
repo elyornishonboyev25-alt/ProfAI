@@ -87,6 +87,22 @@
 .lc-section-content .lc-primary-button,.lc-section-content .lc-secondary-button { min-height: 44px; }
 .lc-section-content .lc-input:disabled { cursor: not-allowed; opacity: .65; }
 .lc-section-content .lc-chart-filter { width: auto; max-width: 100%; }
+.lc-student-hero { background: radial-gradient(ellipse at 95% 0%,rgba(162,174,192,.3),transparent 52%),linear-gradient(125deg,rgba(255,255,255,.58),rgba(232,236,243,.3) 60%,rgba(242,214,219,.4)); }
+.learning-center .lc-coaching-panel { background: radial-gradient(ellipse at 100% 0%,rgba(197,206,221,.26),transparent 55%),var(--lc-glass); }
+.lc-coaching-panel::before { content: ''; position: absolute; inset: 0 28px auto; height: 2px; background: linear-gradient(90deg,#b62d43,rgba(169,181,200,.75),transparent); pointer-events: none; }
+.lc-coaching-icon { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.95); border-radius: 14px; color: #b0263a; background: linear-gradient(145deg,#fff,rgba(218,224,234,.75)); box-shadow: 0 6px 16px rgba(53,62,80,.08),inset 0 1px 0 white; }
+.learning-center .lc-note-input { min-height: 132px; resize: vertical; line-height: 1.75; font-weight: 500; background: linear-gradient(145deg,rgba(255,255,255,.8),rgba(243,245,249,.55)); }
+.lc-note-history { padding-top: 20px; border-top: 1px solid rgba(153,167,187,.25); }
+.lc-note-card,.lc-note-empty { border: 1px solid rgba(255,255,255,.92); border-radius: 18px; background: linear-gradient(135deg,rgba(255,255,255,.76),rgba(219,225,235,.38)); box-shadow: 0 5px 16px rgba(50,61,82,.035),inset 0 1px 0 white; }
+.lc-note-card { position: relative; }
+.lc-note-card::before { content: ''; position: absolute; left: 0; top: 20px; bottom: 20px; width: 2px; border-radius: 2px; background: linear-gradient(#c4334b,#c5ccd7); }
+.lc-note-success { border: 1px solid rgba(159,176,193,.45); border-radius: 13px; color: #415669; background: linear-gradient(125deg,rgba(255,255,255,.8),rgba(222,232,239,.7)); }
+.lc-student-detail .lc-panel { box-shadow: 0 18px 46px rgba(52,61,82,.08),inset 0 1px 0 white,inset 0 -1px 0 rgba(138,151,174,.18); }
+.lc-student-detail .lc-panel article { overflow-wrap: anywhere; }
+.lc-assignment-card { background: radial-gradient(ellipse at 100% 0%,rgba(199,208,220,.3),transparent 60%),var(--lc-glass) !important; }
+.lc-assignment-card::before { inset-inline: 26px; background: linear-gradient(90deg,#b52c42,rgba(160,174,194,.7),transparent); }
+.lc-assignment-card h2 { letter-spacing: -.025em; }
+.lc-assignment-card > div:first-child > span { border: 1px solid rgba(255,255,255,.9); background: linear-gradient(145deg,rgba(255,255,255,.9),rgba(204,212,225,.6)); color: #ad293e; box-shadow: 0 6px 16px rgba(50,61,82,.08),inset 0 1px 0 white; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .learning-center { --lc-glass: linear-gradient(135deg,#fafbfc,#edf0f5); }
 }

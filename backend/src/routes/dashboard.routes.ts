@@ -253,7 +253,7 @@ router.get(
   '/notifications',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const notifications = await prisma.notification.findMany({
+    const [notifications, unreadCount] = await Promise.all([prisma.notification.findMany({
       where: { userId: req.user!.id },
       orderBy: { createdAt: 'desc' },
       take: 30,
@@ -266,11 +266,11 @@ router.get(
         readAt: true,
         createdAt: true,
       },
-    })
+    }), prisma.notification.count({ where: { userId: req.user!.id, readAt: null } })])
 
     return res.json({
       notifications,
-      unreadCount: notifications.filter((notification) => !notification.readAt).length,
+      unreadCount,
     })
   }),
 )

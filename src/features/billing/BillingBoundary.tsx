@@ -38,6 +38,8 @@ function SATSavedReview({ mockId, search, access, children }: { mockId: string; 
 export default function BillingBoundary({ children }: { children: ReactNode }) {
   const { pathname, search } = useLocation()
   const access = routeCoinResource(pathname, search)
+  // Listening authorizes access from its own Start action, keeping mode selection visible.
+  if (access?.resource.startsWith('test:listening:')) return <>{children}</>
   const sat = pathname.match(/^\/(?:mock\/sat|sat\/mock)\/([A-Za-z0-9_-]+)(?:\/run)?$/)
   if (sat && access) return <SATSavedReview key={`${pathname}:${search}`} mockId={sat[1]} search={search} access={access}>{children}</SATSavedReview>
   return access ? <AccessGate key={access.resource} {...access}>{children}</AccessGate> : <>{children}</>

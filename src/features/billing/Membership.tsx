@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import PricingCards, { formatBillingMoney } from './PricingCards'
 import PlanDuration from './PlanDuration'
-import { BILLING_PRODUCTS, COIN_COSTS, WELCOME_COINS, PRACTICE_ACCESS_DAYS, type BillingProduct } from './catalog'
+import { BILLING_PRODUCTS, COIN_COSTS, LISTENING_TEST_COST, WELCOME_COINS, PRACTICE_ACCESS_DAYS, type BillingProduct } from './catalog'
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
 import { activityLabel, orderStatusLabel, productLabel } from './labels'
@@ -94,7 +94,8 @@ export default function Membership() {
     finally { setBusy(false) }
   }
   const costs = [
-    { title: 'Reading · Listening · SAT', value: COIN_COSTS.test, note: text(`${PRACTICE_ACCESS_DAYS} days of access; reopening is free`, `${PRACTICE_ACCESS_DAYS} kun foydalanish; qayta ochish bepul`, `${PRACTICE_ACCESS_DAYS} дней доступа; повторное открытие бесплатно`) },
+    { title: 'Reading · SAT', value: COIN_COSTS.test, note: text(`${PRACTICE_ACCESS_DAYS} days of access; reopening is free`, `${PRACTICE_ACCESS_DAYS} kun foydalanish; qayta ochish bepul`, `${PRACTICE_ACCESS_DAYS} дней доступа; повторное открытие бесплатно`) },
+    { title: 'Listening', value: LISTENING_TEST_COST, note: text(`${PRACTICE_ACCESS_DAYS} days of access; reopening is free`, `${PRACTICE_ACCESS_DAYS} kun foydalanish; qayta ochish bepul`, `${PRACTICE_ACCESS_DAYS} дней доступа; повторное открытие бесплатно`) },
     { title: text('Full mock', 'To‘liq mock', 'Полный mock'), value: COIN_COSTS.mock, note: text('7 days + both Writing tasks and one Speaking assessment', '7 kun + ikkala Writing vazifasi va bitta Speaking tekshiruvi', '7 дней + обе задачи Writing и одна проверка Speaking') },
     { title: 'Writing AI · Speaking AI', value: COIN_COSTS.writing, note: text('Per assessment', 'Har bir tekshiruv uchun', 'За каждую проверку') },
     { title: 'Shadowing · Podcast', value: COIN_COSTS.podcast, note: text('Pay once; unlimited free replays', 'Bir marta ochiladi; takrorlash doim bepul', 'Одна оплата; повторы всегда бесплатны') },

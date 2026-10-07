@@ -1,6 +1,7 @@
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
+import { useListeningStartAccess } from '@/features/billing/useListeningStartAccess'
 import { syncIeltsClassResult } from '@/features/learningCenter/ieltsResultSync'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
@@ -61,6 +62,12 @@ export default function TestInterface() {
   const reviewFromResults = Boolean(routeState?.fromResults && reviewPayload?.result)
   const isReviewLaunch = Boolean(reviewPayload?.result)
   const fromMockFlow = routeState?.entry === 'mock-ielts'
+  const listeningAccess = useListeningStartAccess(
+    type === 'listening' && id && !isReviewLaunch
+      ? mockContext?.id ? `mock:ielts:${mockContext.id}` : `test:listening:${id}`
+      : null,
+    mockContext?.id ? 'mock' : 'test',
+  )
   const mockFrom = routeState?.from ?? 'tests'
   const [testData, setTestData] = useState<IELTSTest | null>(null)
   const [loading, setLoading] = useState(true)
@@ -303,6 +310,7 @@ export default function TestInterface() {
     return (
       <IELTSReadingInterface
         test={testData}
+        startAccess={isReviewLaunch ? undefined : listeningAccess}
         onComplete={handleComplete}
         onExit={handleExit}
         reviewPayload={reviewPayload}

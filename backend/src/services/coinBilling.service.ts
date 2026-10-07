@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Prisma, type PaymentRequest } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
-import { COIN_COSTS, WELCOME_COINS, PRACTICE_ACCESS_DAYS, extendBillingExpiry, type CoinFeature } from '../utils/billingCatalog.js'
+import { COIN_COSTS, WELCOME_COINS, PRACTICE_ACCESS_DAYS, extendBillingExpiry, resourceCoinCost, type CoinFeature } from '../utils/billingCatalog.js'
 import { describeAccess, hasSelectedFullAccess } from '../utils/accessEntitlement.js'
 import { isPremiumUser } from '../utils/premium.js'
 
@@ -66,7 +66,7 @@ export async function accessStatus(userId: string, feature: CoinFeature, resourc
       tx.coinAccess.findUnique({ where: { userId_resource: { userId, resource } } }), fullAccessStatus(tx, userId),
     ])
     return { unlocked: legacy.active || Boolean(access && (!access.expiresAt || access.expiresAt > new Date())),
-      balance: wallet.balance, cost: COIN_COSTS[feature], expiresAt: legacy.active ? legacy.expiresAt : access?.expiresAt ?? null }
+      balance: wallet.balance, cost: resourceCoinCost(feature, resource), expiresAt: legacy.active ? legacy.expiresAt : access?.expiresAt ?? null }
   })
 }
 export async function unlockResource(userId: string, feature: CoinFeature, resource: string) {
@@ -75,7 +75,7 @@ export async function unlockResource(userId: string, feature: CoinFeature, resou
     const wallet = await lockWallet(tx, userId)
     const access = await tx.coinAccess.findUnique({ where: { userId_resource: { userId, resource } } })
     if ((await fullAccessStatus(tx, userId)).active || (access && (!access.expiresAt || access.expiresAt > new Date()))) return { balance: wallet.balance, charged: 0 }
-    const cost = COIN_COSTS[feature]
+    const cost = resourceCoinCost(feature, resource)
     if (wallet.balance < cost) throw new BillingError('INSUFFICIENT_COINS', 'Your balance is too low. Add coins or continue with free activities.')
     const updated = await tx.coinWallet.update({ where: { userId }, data: { balance: { decrement: cost } } })
     await tx.coinEntry.create({ data: { userId, key: `unlock:${randomUUID()}`, amount: -cost, reason: resource } })

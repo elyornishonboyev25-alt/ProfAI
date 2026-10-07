@@ -52,8 +52,11 @@ import { AnimatedBackground } from './AnimatedBackground'
 import { useBadgeStore } from '@/store/badgeStore'
 import { isCompleteIeltsObjectiveSection } from '@/components/achievements/badgeMeta'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { useBillingText } from '@/features/billing/copy'
+import { LISTENING_TEST_COST } from '@/features/billing/catalog'
 
 interface IELTSReadingInterfaceProps {
+  startAccess?: { cost: number; busy: boolean; ready?: boolean; error: string; unlock: () => Promise<boolean> }
   test: IELTSTest
   onComplete: (results: TestResult) => void
   onExit: () => void
@@ -245,9 +248,14 @@ export default function IELTSReadingInterface({
   onExit,
   reviewPayload,
   launchPreset,
+  startAccess,
 }: IELTSReadingInterfaceProps) {
   const isReviewMode = Boolean(reviewPayload?.result)
   const isListening = test.module === 'Listening'
+  const billingText = useBillingText()
+  const startRequestRef = useRef(false)
+  const listeningCost = startAccess?.cost ?? LISTENING_TEST_COST
+  const listeningPrice = isListening ? <span className="shrink-0 text-sm font-semibold text-slate-600">{billingText(`${listeningCost} coins`, `${listeningCost} tanga`, `${listeningCost} монет`)}</span> : null
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
   const badgeUserId = useAuthStore((s: AuthState) => s.user?.id ?? null)
   // Listening audio state (playlist with controls in practice and review)
@@ -1317,11 +1325,18 @@ export default function IELTSReadingInterface({
     return getQuestionGlobalIndex(currentSectionIndex, localIndex)
   }
 
-  const handleStartTest = (preset?: {
+  const handleStartTest = async (preset?: {
     mode?: 'practice' | 'simulation'
     selectedParts?: number[]
     customTime?: number
   }) => {
+    if (startRequestRef.current || isLaunching) return
+    startRequestRef.current = true
+    try {
+      if (!isReviewMode && startAccess && !await startAccess.unlock()) return
+    } finally {
+      startRequestRef.current = false
+    }
     submissionStartedRef.current = false
     if (isListening) {
       stopListeningAudio()
@@ -1374,7 +1389,7 @@ export default function IELTSReadingInterface({
   }, [])
 
   useEffect(() => {
-    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || !launchPreset) return
+    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || !launchPreset || startAccess?.ready === false) return
 
     const desiredMode = launchPreset.mode === 'practice' ? 'practice' : 'simulation'
     const desiredPart =
@@ -1394,7 +1409,7 @@ export default function IELTSReadingInterface({
         : sanitizeSelectedParts(undefined, test.sections.length),
       customTime: desiredMode === 'practice' && desiredDuration ? desiredDuration : undefined,
     })
-  }, [isReviewMode, isTestActive, launchPreset, test.sections.length])
+  }, [isReviewMode, isTestActive, launchPreset, test.sections.length, startAccess?.ready])
 
   const getCurrentTimeSpent = () => {
     const elapsedByClock = Math.max(0, (testMode === 'practice' && customTime !== -1 ? customTime : test.duration) * 60 - Math.max(0, timeRemaining))
@@ -3007,9 +3022,12 @@ export default function IELTSReadingInterface({
                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Select specific parts to practice
               </div>
             </div>
-            <button type="button" onClick={(event) => { event.stopPropagation(); setTestMode('practice'); setShowModeModal(true); }} className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all">
-              Enter Practice Library
-            </button>
+            <div className="flex items-center gap-3">
+              <button type="button" disabled={startAccess?.busy} onClick={(event) => { event.stopPropagation(); setTestMode('practice'); setShowModeModal(true); }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all disabled:opacity-50">
+                Enter Practice Library
+              </button>
+              {listeningPrice}
+            </div>
             <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
 
@@ -3034,11 +3052,15 @@ export default function IELTSReadingInterface({
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Official scoring algorithms
               </div>
             </div>
-            <div className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/20 transform group-hover:scale-[1.02] transition-all">
-              Launch Final Simulation
+            <div className="flex items-center gap-3">
+              <button type="button" disabled={startAccess?.busy} aria-busy={startAccess?.busy} onClick={event => { event.stopPropagation(); void handleStartTest({ mode: 'simulation' }) }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/20 transform group-hover:scale-[1.02] transition-all disabled:opacity-50">
+                Launch Final Simulation
+              </button>
+              {listeningPrice}
             </div>
           </PremiumCard>
         </div>
+        {startAccess?.error && <p role="alert" className="mt-4 text-sm text-red-600">{startAccess.error}</p>}
 
         <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
           <button type="button" onClick={onExit} className="text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2 mx-auto px-6 py-2 rounded-full border border-white/5 hover:bg-white/5">
@@ -6601,11 +6623,15 @@ export default function IELTSReadingInterface({
 
                   <button type="button"
                     onClick={() => handleStartTest()}
+                    disabled={startAccess?.busy}
+                    aria-busy={startAccess?.busy}
                     className="flex w-full items-center justify-center gap-3 rounded-3xl border border-red-700/20 bg-gradient-to-r from-red-600 via-rose-600 to-red-500 py-5 text-lg font-black text-white shadow-2xl shadow-red-500/30 transition-all hover:scale-[1.01] hover:from-red-500 hover:via-rose-500 hover:to-red-400 active:scale-[0.98]"
                   >
                     Start Training Session
                     <CheckIcon className="w-6 h-6" />
                   </button>
+                  {listeningPrice && <div className="mt-3 text-center">{listeningPrice}</div>}
+                  {startAccess?.error && <p role="alert" className="mt-3 text-sm text-red-600">{startAccess.error}</p>}
                 </div>
               </div>
             </motion.div>

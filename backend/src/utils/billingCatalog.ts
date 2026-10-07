@@ -5,7 +5,11 @@ export const WELCOME_COINS = 150
 export const BILLING_PERIODS = [1, 3, 12] as const
 export const PRACTICE_ACCESS_DAYS = 7
 export const COIN_COSTS = { test: 5, mock: 25, writing: 10, speaking: 10, voice: 10, shadowing: 2, podcast: 2, ai: 1 } as const
+export const LISTENING_TEST_COST = 10
 export type CoinFeature = keyof typeof COIN_COSTS
+export function resourceCoinCost(feature: CoinFeature, resource: string) {
+  return feature === 'test' && resource.startsWith('test:listening:') ? LISTENING_TEST_COST : COIN_COSTS[feature]
+}
 export type BillingProduct = { code: string; audience: BillingAudience; months: number; coins: number; amountUsd: number; discount: number }
 const tiers = [
   { audience: 'LEARNER', usd: 600, coins: 1000 },

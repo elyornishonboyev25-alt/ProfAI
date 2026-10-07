@@ -189,6 +189,20 @@ test('welcome coins are granted once; simultaneous opens charge only once', asyn
   await unlockResource('u', 'test', 'test:reading:sample')
   assert.equal(state.wallet.balance, 140)
 })
+test('Listening advertises and charges 10 coins once; other tests retain their price', async () => {
+  reset()
+  assert.equal((await accessStatus('u', 'test', 'test:listening:full-test-1')).cost, 10)
+  assert.equal((await accessStatus('u', 'test', 'test:reading:sample')).cost, 5)
+  await Promise.all(Array.from({ length: 3 }, () => unlockResource('u', 'test', 'test:listening:full-test-1')))
+  assert.equal(state.wallet.balance, 140)
+  assert.equal(state.entries.filter(entry => entry.amount < 0).length, 1)
+  assert.equal((await unlockResource('u', 'test', 'test:listening:full-test-1')).charged, 0)
+  reset(); state.wallet = { userId: 'u', balance: 9 }
+  await assert.rejects(unlockResource('u', 'test', 'test:listening:full-test-1'), error => error.code === 'INSUFFICIENT_COINS')
+  assert.equal(state.wallet.balance, 9)
+  assert.equal(state.access.length, 0)
+})
+
 test('media replay is permanent and failed AI returns its reserved coins', async () => {
   reset()
   await unlockResource('u', 'podcast', 'podcast:abcdefghijk')

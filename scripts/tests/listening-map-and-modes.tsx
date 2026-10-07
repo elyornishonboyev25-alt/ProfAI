@@ -64,7 +64,7 @@ export async function run() {
         const root = createRoot(container)
         await act(async () => root.render(<IELTSReadingInterface test={test} launchPreset={savedPractice ? undefined : { mode }} onComplete={() => {}} onExit={() => {}} />))
         if (savedPractice) {
-          const launch = [...container.querySelectorAll('div')].find(el => el.textContent?.trim() === 'Launch Final Simulation')
+          const launch = [...container.querySelectorAll('button')].find(el => el.textContent?.trim() === 'Launch Final Simulation')
           assert.ok(launch, `${test.id}: simulation launch card`)
           await act(async () => launch.click())
         }

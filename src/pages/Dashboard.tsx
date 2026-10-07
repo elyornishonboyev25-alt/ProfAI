@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import NotificationsBell from '@/components/layout/NotificationsBell'
-import AccountAccessCard from '@/features/billing/AccountAccessCard'
 import BaselineMockPrompt, { SAT_BASELINE_PATH, IELTS_BASELINE_PATH } from '@/components/dashboard/BaselineMockPrompt'
 import { Skeleton } from '@/components/common/Skeleton'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
@@ -210,7 +209,6 @@ export default function Dashboard() {
   return (
     <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
       <div className="dashboard-main-shell mx-auto max-w-[98rem]">
-        <AccountAccessCard />
         {error ? (
           <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
             <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> Dashboard data could not refresh. The values below may be out of date.</span>

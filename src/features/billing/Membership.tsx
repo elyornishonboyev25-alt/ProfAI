@@ -9,7 +9,6 @@ import { BILLING_PRODUCTS, COIN_COSTS, WELCOME_COINS, PRACTICE_ACCESS_DAYS, type
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
 import { activityLabel, orderStatusLabel, productLabel } from './labels'
-import AccountAccessCard from './AccountAccessCard'
 import { useAccountAccess } from './useAccountAccess'
 import './billing.css'
 
@@ -109,7 +108,6 @@ export default function Membership() {
       <h1>{text('More practice. Clear prices.', 'Ko‘proq mashq. Aniq narxlar.', 'Больше практики. Понятные цены.')}</h1>
       <p>{text('Choose your plan. All prices are in USD; your local payment amount appears at checkout.', 'Mos tarifni tanlang. Narxlar dollarda; so‘mdagi to‘lov summasi faqat to‘lov bo‘limida ko‘rinadi.', 'Выберите тариф. Цены в USD; сумма местной оплаты появится при оформлении.')}</p>
     </header>
-    <AccountAccessCard />
     {!fullAccess && <div className="billing-glass billing-simple-balance"><Gift size={22} /><div><strong>{user ? text('Your balance', 'Balansingiz', 'Ваш баланс') : text('Start free', 'Bepul boshlang', 'Начните бесплатно')}: {user ? wallet?.balance.toLocaleString('en-US') ?? '…' : WELCOME_COINS} {text('coins', 'tanga', 'монет')}</strong><p>{text(`${WELCOME_COINS} welcome coins cover ${WELCOME_COINS / COIN_COSTS.test} practice tests or ${WELCOME_COINS / COIN_COSTS.mock} full mocks.`, `${WELCOME_COINS} sovg‘a tanga ${WELCOME_COINS / COIN_COSTS.test} ta test yoki ${WELCOME_COINS / COIN_COSTS.mock} ta to‘liq mockka yetadi.`, `${WELCOME_COINS} приветственных монет хватит на ${WELCOME_COINS / COIN_COSTS.test} тестов или ${WELCOME_COINS / COIN_COSTS.mock} полных mock.`)}</p></div><a href="#coin-packs" className="billing-text-button">{text('Add coins', 'Tanga olish', 'Купить монеты')}<ArrowRight size={15} /></a></div>}
     {walletError && <div className="billing-error" role="alert">{walletError}<button onClick={() => void refresh()}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></div>}
     {returnedOrder && <div className={`billing-status ${returnedOrder.status === 'APPROVED' ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{returnedOrder.status === 'APPROVED' ? text('Payment confirmed. Your plan and coins are ready.', 'To‘lov tasdiqlandi. Tarif va tangalaringiz tayyor.', 'Оплата подтверждена. Тариф и монеты готовы.') : text('Payment status', 'To‘lov holati', 'Статус оплаты') + ': ' + orderStatusLabel(returnedOrder.status, text)}<button className="billing-text-button" onClick={() => void refresh()}>{text('Refresh', 'Yangilash', 'Обновить')}</button></div>}

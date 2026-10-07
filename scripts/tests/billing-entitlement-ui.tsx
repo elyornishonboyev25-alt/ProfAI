@@ -2,12 +2,9 @@ import assert from 'node:assert/strict'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
-import { AccessStatusCard } from '@/features/billing/AccountAccessCard'
 import AccessGate from '@/features/billing/AccessGate'
-import { currentAccess } from '@/features/billing/useAccountAccess'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
-import { describeAccess } from '../../backend/src/utils/accessEntitlement'
 import i18n from '@/i18n'
 
 export async function run() {
@@ -16,23 +13,7 @@ export async function run() {
   const root = createRoot(element)
   const previousUser = useAuthStore.getState().user
   const previousGet = apiClient.get
-  const startsAt = new Date('2026-10-06T09:00:00Z')
-  const expiresAt = new Date('2026-10-20T09:00:00Z')
-  const trial = describeAccess({ plan: 'TRIAL_14', source: 'SELECTED_ACCESS', startsAt, expiresAt }, false, startsAt)
   try {
-    await act(async () => root.render(<MemoryRouter><AccessStatusCard access={trial} /></MemoryRouter>))
-    assert.ok(element.textContent?.includes('14 KUN BEPUL'))
-    assert.ok(element.textContent?.includes('Siz hozir sinov muddatidasiz.'))
-    assert.equal(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'), '14')
-    assert.equal(element.querySelector('time[datetime="2026-10-20T09:00:00.000Z"]')?.textContent?.includes('14:00'), true, 'expiry is shown in Tashkent time')
-    assert.ok(element.querySelector('time[datetime="2026-10-20T09:00:00.000Z"]')?.textContent?.includes('oktabr'), 'Uzbek month names do not depend on browser locale support')
-    const expired = currentAccess(trial, expiresAt.getTime())!
-    await act(async () => root.render(<MemoryRouter><AccessStatusCard access={expired} /></MemoryRouter>))
-    assert.ok(element.textContent?.includes('Bepul sinov muddati tugadi.'))
-    assert.equal(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'), '0')
-    await act(async () => root.render(<MemoryRouter><AccessStatusCard access={describeAccess({ plan: 'UNLIMITED', source: 'SELECTED_ACCESS', startsAt, expiresAt: null }, false, startsAt)} /></MemoryRouter>))
-    assert.equal(element.querySelector('.billing-entitlement'), null, 'unlimited access has no large banner')
-    assert.equal(element.querySelector('[role="progressbar"]'), null)
     useAuthStore.setState({ user: { id: 'trial-ui', email: 'trial@example.com', fullName: 'Trial', role: 'USER' } as NonNullable<typeof previousUser> })
     let checks = 0
     let expiry = 0
@@ -52,7 +33,7 @@ export async function run() {
     assert.ok(checks >= 2, 'an open test rechecks access when its trial ends')
     assert.equal(element.textContent?.includes('Included trial test'), false)
     assert.ok(element.querySelector('a[href="/premium"]'))
-    console.log('PASS: Uzbek trial/unlimited cards, Tashkent expiry, expired state and open-test access recheck')
+    console.log('PASS: open-test access recheck after trial expiry')
   } finally {
     await act(async () => root.unmount())
     apiClient.get = previousGet

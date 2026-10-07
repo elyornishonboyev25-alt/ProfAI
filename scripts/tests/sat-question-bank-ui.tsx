@@ -71,6 +71,16 @@ export async function run() {
   await act(async () => useAuthStore.setState({ user: null }))
   const key = 'profai:sat:question-bank:guest:v1'
   await render()
+  // Desmos is discoverable from the bank setup before a Math set starts.
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
+  await change('Section', 'reading-writing')
+  assert.equal(container.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
+  await change('Section', 'math')
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  await click(container.querySelector('[aria-label="Close Desmos"]'))
+  await change('Section', 'all')
   await click(
     [...container.querySelectorAll('button')].find((node) =>
       node.textContent?.trim().startsWith('History & review'),
@@ -88,6 +98,10 @@ export async function run() {
   )
   await click(button('Mark for Review'))
   assert.ok(button('Marked for Review'))
+  assert.equal(button('Marked for Review')?.getAttribute('aria-pressed'), 'true')
+  assert.match(container.querySelector('.sat-bank-practice-navigator')!.textContent!, /1 marked for review/)
+  assert.match(container.querySelector('.sat-bank-number')!.getAttribute('aria-label')!, /Marked for Review/)
+  assert.equal(container.querySelector('[aria-label="Open Desmos calculator"]'), null)
   await click(button('Next'))
   const wrong = questions[1].choices.find(
     (choice) => choice.key !== questions[1].correctAnswer,
@@ -97,7 +111,7 @@ export async function run() {
       (node) => node.textContent?.trim().startsWith(wrong),
     ),
   )
-  await click(button('Previous'))
+  await click(container.querySelector('[aria-label="Go to question 1, Marked for Review, Answered"]'))
   assert.ok(button('Marked for Review'))
   assert.equal(
     container
@@ -128,6 +142,8 @@ export async function run() {
   const saved = JSON.parse(localStorage.getItem(key)!)
   assert.equal(saved.length, 4)
   assert.equal(saved[0].answer, questions[0].correctAnswer)
+  assert.equal(saved[0].flagged, true)
+  assert.equal(saved[1].flagged, false)
   assert.equal(saved[1].answer, wrong)
   assert.equal(saved[2].answer, '')
   const reviewPath = path()
@@ -135,6 +151,10 @@ export async function run() {
   assert.match(text(), /1 of 4 correct/)
   assert.match(text(), /Explanation/)
   const beforeReview = localStorage.getItem(key)
+  await click(button('Marked for Review 1'))
+  assert.equal(container.querySelectorAll('.sat-bank-number').length, 1)
+  assert.match(container.querySelector('.sat-bank-number')!.getAttribute('aria-label')!, /Marked for Review/)
+  assert.match(container.querySelector('.sat-bank-detail-title')!.textContent!, /Question 1/)
   await click(
     [...container.querySelectorAll('button')].find((node) =>
       node.textContent?.trim().startsWith('Incorrect '),
@@ -167,6 +187,18 @@ export async function run() {
     beforeReview,
     'Review must never overwrite saved answers',
   )
+
+  // Saved marks can build another practice set and be removed.
+  await render()
+  await change('Progress', 'marked')
+  await click(button('Start 1 questions'))
+  assert.ok(button('Marked for Review'))
+  await click(button('Marked for Review'))
+  assert.equal(button('Mark for Review')?.getAttribute('aria-pressed'), 'false')
+  assert.equal(container.querySelectorAll('.sat-bank-mark-icon').length, 0)
+  await click(button('Finish set'))
+  await click(button('Practice'))
+  assert.match(text(), /No questions match these filters/)
 
   // Legacy records retain review access without inventing the missing answer.
   const legacy = { ...saved[1], at: '2026-08-01T12:00:00.000Z' }
@@ -263,8 +295,44 @@ export async function run() {
   await render('/sat/question-bank?view=history')
   await click(container.querySelector('.sat-bank-history-card'))
   assert.equal(container.querySelector('.sat-bank-answer-summary strong')!.textContent, first.correctAnswer)
+  // Math practice and saved review share the embedded calculator. Closing it
+  // must preserve its iframe and answers, while Reading & Writing hides it.
+  await render('/sat/question-bank?section=math&count=4')
+  await click(button('Start 4 questions'))
+  await click(container.querySelector('[role="radio"]'))
+  const selectedAnswer = container.querySelector('[role="radio"][aria-checked="true"]')!.textContent
+  await click(button('Mark for Review'))
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  const calculator = container.querySelector('[role="dialog"][aria-label="Desmos Graphing Calculator"]')!
+  assert.equal(calculator.getAttribute('aria-hidden'), 'false')
+  const iframe = calculator.querySelector('iframe')!
+  assert.equal(iframe.getAttribute('src'), 'https://www.desmos.com/calculator')
+  await click(container.querySelector('[aria-label="Dock Desmos on the right"]'))
+  assert.ok(container.querySelector('.sat-bank-calculator-docked'))
+  await click(container.querySelector('[aria-label="Close Desmos"]'))
+  assert.equal(calculator.getAttribute('aria-hidden'), 'true')
+  assert.equal(calculator.querySelector('iframe'), iframe)
+  assert.equal(container.querySelector('[role="radio"][aria-checked="true"]')!.textContent, selectedAnswer)
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  await click(button('Next'))
+  assert.equal(calculator.getAttribute('aria-hidden'), 'false')
+  assert.equal(calculator.querySelector('iframe'), iframe)
+  await click(button('Next'))
+  await click(button('Next'))
+  await click(button('Finish set'))
+  assert.equal(calculator.getAttribute('aria-hidden'), 'true')
+  assert.ok(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  await render(path())
+  await click(button('Marked for Review 1'))
+  await click(container.querySelector('[aria-label="Open Desmos calculator"]'))
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
+  await click(button('Practice'))
+  await change('Section', 'reading-writing')
+  await click(button('Start 4 questions'))
+  assert.equal(container.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  assert.equal(container.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
   await act(async () => root.unmount())
   console.log(
-    'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results and account isolation passed.',
+    'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, question navigation and Math Desmos passed.',
   )
 }

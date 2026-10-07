@@ -91,6 +91,7 @@ export default function SATQuestionCanvas({
           <button
             type="button"
             onClick={onToggleFlag}
+            aria-pressed={flagged}
             disabled={readOnly}
             className={`flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
           >

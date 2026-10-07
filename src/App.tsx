@@ -41,6 +41,7 @@ const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
+const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
@@ -289,7 +290,10 @@ function App() {
     pathname.startsWith('/admission') ||
     pathname === '/ai-tutor' ||
     isLeaderboardMode
-  const isSatTestRoute = /^\/mock\/sat(?:\/\d+)?$/.test(pathname) || /^\/sat\/mock\/\d+\/run$/.test(pathname)
+  const isSatTestRoute =
+    /^\/sat\/question-bank\/run\/[^/]+$/.test(pathname) ||
+    /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
+    /^\/sat\/mock\/\d+\/run$/.test(pathname)
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
@@ -547,6 +551,7 @@ function App() {
                         }
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
+                      <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route

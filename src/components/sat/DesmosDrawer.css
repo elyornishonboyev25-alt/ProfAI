@@ -1,0 +1,35 @@
+.desmos-panel { z-index: 170 !important; }
+.desmos-panel.desmos-expanded { inset: 8px !important; width: auto !important; height: auto !important; max-width: none !important; max-height: none !important; resize: none; }
+.desmos-control { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; color: #555; background: transparent; }
+.desmos-control:hover { background: #e7e7e7; }
+.desmos-controls > button { min-width: 44px; min-height: 44px; }
+.desmos-panel > header { height: 56px; }
+.desmos-panel button:focus-visible, .desmos-panel a:focus-visible { outline: 3px solid #21794d; outline-offset: 2px; }
+@media (min-width: 1024px) {
+  .desmos-panel.desmos-bank.desmos-docked:not(.desmos-expanded) { top: 103px; bottom: calc(92px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 1023px) {
+  .desmos-panel:not(.desmos-expanded) { left: 8px !important; right: 8px !important; top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important; width: auto !important; height: min(46dvh, 480px) !important; max-height: calc(100dvh - 110px) !important; min-width: 0 !important; min-height: 0 !important; resize: none; }
+  .desmos-panel.desmos-bank:not(.desmos-expanded) { bottom: var(--sat-bank-desmos-bottom, calc(104px + env(safe-area-inset-bottom))) !important; }
+  .desmos-desktop { display: none !important; }
+  .desmos-panel > header { cursor: default !important; }
+}
+@media (prefers-reduced-motion: reduce) { .desmos-panel { transition: none !important; } }
+
+@media (min-width: 900px) {
+  .desmos-panel.desmos-bank.desmos-docked:not(.desmos-expanded) {
+    left: auto !important;
+    right: 12px !important;
+    top: 103px !important;
+    bottom: var(--sat-bank-desmos-bottom, 92px) !important;
+    width: clamp(320px, var(--sat-bank-desmos-width, min(44vw, 46rem)), calc(100vw - 380px)) !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  .desmos-bank .desmos-dock-control { display: flex !important; }
+}
+
+.desmos-resize-handle { position: absolute; left: 0; top: 56px; bottom: 0; width: 10px; z-index: 20; cursor: col-resize; touch-action: none; display: flex; align-items: center; justify-content: center; }
+.desmos-resize-handle span { width: 3px; height: 40px; border-radius: 4px; background: #b6c2d2; }
+.desmos-resize-handle:hover, .desmos-resize-handle:focus-visible { background: #21794d22; outline: 2px solid #21794d; outline-offset: -2px; }
+@media (max-width: 899px) { .desmos-resize-handle { display: none; } }

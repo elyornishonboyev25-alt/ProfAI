@@ -1,8 +1,6 @@
 import UiText from '@/components/common/UiText'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, Trophy, X } from 'lucide-react'
-import { useMotionPreferences } from '@/hooks/useMotionPreferences'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, X } from 'lucide-react'
 import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import VocabularyTestReturn from '@/components/vocab/VocabularyTestReturn'
 import { getIeltsVocabularyReturnTo, withVocabularyReturnTo } from '@/utils/ieltsTestVocabulary'
@@ -168,13 +166,6 @@ export default function VocabularyActivity() {
   const [expandedLibrary, setExpandedLibrary] = useState<string | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const pendingXp = useRef(new Set<string>())
-  const { reducedMotion } = useMotionPreferences()
-  const [celebration, setCelebration] = useState<{ key: string; amount: number; mode: ActivityMode } | null>(null)
-  useEffect(() => {
-    if (!celebration) return
-    const timer = window.setTimeout(() => setCelebration(null), 3200)
-    return () => window.clearTimeout(timer)
-  }, [celebration])
   const selection = useMemo(() => findSelection(params), [params])
   const libraryOpen = !activity && expandedLibrary === selection?.basePath
 
@@ -217,7 +208,6 @@ export default function VocabularyActivity() {
   const chipClass = isBlue ? 'premium-top-chip-blue' : 'premium-top-chip'
   const awardVocabulary = (mode: ActivityMode, accuracy: number) => {
     if (useAuthStore.getState().user?.id !== user?.id) return
-    setCelebration(null)
     if (accuracy < 80) {
       setXpStatus({ key: rewardKey, message: 'Reach at least 80% to earn XP. Try again!' })
       return
@@ -244,9 +234,6 @@ export default function VocabularyActivity() {
     }).then((reward) => {
       if (useAuthStore.getState().user?.id !== user.id) return
       updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
-      if (!reward.duplicate && reward.xpEarned > 0) {
-        setCelebration({ key: eventKey, amount: reward.xpEarned, mode })
-      }
       setXpStatus({ key: rewardKey, message: reward.duplicate
         ? 'XP for this activity has already been collected.'
         : reward.xpEarned > 0 ? `+${reward.xpEarned} XP earned!` : 'Daily vocabulary XP limit reached (120 XP).' })
@@ -335,21 +322,6 @@ export default function VocabularyActivity() {
             </section>
           )}
         </div>
-        <AnimatePresence>
-          {celebration && celebration.key === `${rewardKey}:${activity}` ? (
-            <motion.div key={celebration.key} role="status" aria-label={`+${celebration.amount} XP earned`} className="pointer-events-none fixed inset-0 z-[130] flex items-center justify-center px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" />
-              <motion.div initial={reducedMotion ? false : { scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="relative rounded-[2rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-orange-100 px-12 py-10 text-center shadow-2xl">
-                <Trophy className="mx-auto h-12 w-12 text-amber-500" />
-                <p className="mt-4 text-5xl font-black text-slate-900">+{celebration.amount} XP</p>
-                <p className="mt-3 font-bold text-amber-700">{ACTIVITY_LABELS[celebration.mode]} complete!</p>
-                {!reducedMotion ? Array.from({ length: 8 }, (_, i) => (
-                  <motion.span key={i} aria-hidden="true" className="absolute text-amber-400" style={{ left: `${10 + (i % 4) * 25}%`, top: i < 4 ? '15%' : '80%' }} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [0, 1.3, 0.5], y: [0, -45, -90], rotate: [0, 90] }} transition={{ duration: 2, delay: i * 0.1 }}><Sparkles className="h-6 w-6" /></motion.span>
-                )) : null}
-              </motion.div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
       </div>
     </WordSaveProvider>
   )

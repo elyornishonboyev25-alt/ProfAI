@@ -16,6 +16,7 @@ import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
+import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
@@ -454,6 +455,7 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
+      <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}

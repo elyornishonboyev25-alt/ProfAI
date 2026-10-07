@@ -1,5 +1,6 @@
 import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
+import { notifyXpAward } from '@/store/xpNotificationStore'
 
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
 const API_BASE_URL = configuredApiUrl?.replace(/\/$/, '') ?? '/api/v1'
@@ -135,6 +136,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const payload = await response.json() as T
   if (auth) syncStoredSession()
   if (auth && useAuthStore.getState().user?.id !== owner) throw new ApiError('Account changed.', 409)
+  if (auth && owner && rest.method === 'POST') notifyXpAward(owner, payload, path, body)
   return payload
 }
 

@@ -14,6 +14,7 @@ import {
   MapPin,
   Pencil,
   Trophy,
+  Star,
   Zap,
 } from 'lucide-react'
 import { ApiError } from '@/lib/apiClient'
@@ -21,7 +22,9 @@ import { fetchPublicProfile, type PublicProfilePayload } from '@/lib/profileApi'
 import { formatUniversityRank, getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 import SkillBadge from '@/components/achievements/SkillBadge'
-import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
+import { TRACK_META, TRACK_ORDER, formatAchievementScore } from '@/components/achievements/badgeMeta'
+import { useBadgeStore } from '@/store/badgeStore'
+import { mergeProfileBadges } from '@/utils/profileBadges'
 import { useAuthStore } from '@/store/authStore'
 import { mergeLocalPublicProfilePerformance } from '@/utils/localProfilePerformance'
 
@@ -56,32 +59,52 @@ export default function PublicProfile() {
   const backPath = returnTo === '/community' || returnTo === '/account' ? returnTo : null
   const shellBack = { onBack: backPath ? () => navigate(backPath) : undefined, backLabel: backPath === '/community' ? 'Back to Community' : 'Back to Account' }
   const user = useAuthStore((state) => state.user)
+  const localBadges = useBadgeStore((state) => state.records)
   const [serverData, setServerData] = useState<PublicProfilePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<{ status: number; message: string } | null>(null)
 
   useEffect(() => {
     let active = true
+    let requestVersion = 0
     setLoading(true)
     setError(null)
     setServerData(null)
-    fetchPublicProfile(nickname)
-      .then((payload) => active && setServerData(payload))
-      .catch((e) => {
-        if (!active) return
-        const status = e instanceof ApiError ? e.status : 0
-        setError({ status, message: e instanceof Error ? e.message : 'Could not load this profile.' })
-      })
-      .finally(() => active && setLoading(false))
+    const refresh = () => {
+      const version = ++requestVersion
+      return fetchPublicProfile(nickname)
+        .then((payload) => {
+          if (!active || version !== requestVersion) return
+          setServerData(payload)
+          setError(null)
+        })
+        .catch((e) => {
+          if (!active || version !== requestVersion) return
+          const status = e instanceof ApiError ? e.status : 0
+          setError({ status, message: e instanceof Error ? e.message : 'Could not load this profile.' })
+        })
+        .finally(() => active && version === requestVersion && setLoading(false))
+    }
+    const onRefresh = () => { void refresh() }
+    void refresh()
+    window.addEventListener('focus', onRefresh)
+    window.addEventListener('smarttest:profile-updated', onRefresh)
+    window.addEventListener('smarttest:badges-synced', onRefresh)
     return () => {
       active = false
+      window.removeEventListener('focus', onRefresh)
+      window.removeEventListener('smarttest:profile-updated', onRefresh)
+      window.removeEventListener('smarttest:badges-synced', onRefresh)
     }
-  }, [nickname])
+  }, [nickname, user?.id])
 
-  const data = useMemo(
-    () => (serverData && user ? mergeLocalPublicProfilePerformance(serverData, user.id) : serverData),
-    [serverData, user],
-  )
+  const data = useMemo(() => {
+    if (!serverData || !user) return serverData
+    const merged = mergeLocalPublicProfilePerformance(serverData, user.id)
+    return merged.profile.isSelf && merged.visibility.showBadges
+      ? { ...merged, badges: mergeProfileBadges(merged.badges, localBadges, user.id) }
+      : merged
+  }, [serverData, user, localBadges])
 
   const targetUniversity = useMemo(
     () => (data?.university?.slug ? getUniversityBySlug(data.university.slug) : undefined),
@@ -90,9 +113,7 @@ export default function PublicProfile() {
 
   const showcaseBadges = useMemo(() => {
     if (!data?.badges?.length) return []
-    const pinned = data.badges.filter((b) => b.pinned)
-    const source = pinned.length ? pinned : data.badges
-    return [...source].sort((a, b) => b.tier - a.tier).slice(0, 8)
+    return [...data.badges].sort((a, b) => TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier)
   }, [data?.badges])
 
   const xpBreakdown = useMemo(() => {
@@ -170,6 +191,7 @@ export default function PublicProfile() {
                 {p.online ? <span className="text-emerald-600">● Online now</span> : 'Offline'}
                 {' · '}Member since {new Date(p.memberSince).toLocaleDateString()}
               </p>
+              {p.fieldOfStudy ? <p className="mt-2 text-sm font-semibold text-slate-600">{p.fieldOfStudy}</p> : null}
               {p.bio ? <p className="mt-2 max-w-xl text-sm text-slate-600">{p.bio}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" />  <UiText text={"Level"} /> {p.level}</span>
@@ -321,9 +343,10 @@ export default function PublicProfile() {
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {showcaseBadges.map((b) => (
                 <div key={b.id} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-3">
+                  {b.pinned ? <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700"><Star className="h-3 w-3 fill-amber-400" /> Pinned</span> : null}
                   <SkillBadge track={b.track} band={b.band} size={104} showBand />
-                  <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[b.track]?.short}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{TIER_NAME[b.tier]} · {formatAchievementScore(b.track, b.band)}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[b.track]?.title}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Tier {b.tier} · {TRACK_META[b.track]?.group === 'SAT' ? 'Score' : 'Band'} {formatAchievementScore(b.track, b.band)}</p>
                 </div>
               ))}
             </div>

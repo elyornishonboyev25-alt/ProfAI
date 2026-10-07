@@ -94,7 +94,7 @@ const PRIVACY_TOGGLES: { key: keyof AccountProfileFields; label: string; detail:
   { key: 'showResults', label: 'Show results & skill chart', detail: 'Display your skill averages and accuracy on your public profile.' },
   { key: 'showLeaderboard', label: 'Show leaderboard rank', detail: 'Reveal your competitive rank and division to visitors.' },
   { key: 'showUniversity', label: 'Show target university', detail: 'Show the university you are aiming for.' },
-  { key: 'showBadges', label: 'Show badges', detail: 'Display your pinned achievement badges.' },
+  { key: 'showBadges', label: 'Show badges', detail: 'Display all your earned achievement badges.' },
 ]
 
 function PrivacyToggle({
@@ -340,6 +340,7 @@ export default function AccountProfile() {
         setTargetCountriesDraft((data.profile.targetCountries ?? []).join(', '))
         setAvatarUrl(data.avatarUrl)
         setGoogleAvatarUrl(data.googleAvatarUrl)
+        useAuthStore.getState().updateUserProgress({ xp: data.xp, level: data.level })
         setUserAvatar(data.avatarUrl)
         setUserFullName(data.fullName)
         if (data.nickname) {

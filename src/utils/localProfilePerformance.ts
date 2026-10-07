@@ -382,7 +382,7 @@ export function mergeLocalDashboardPerformance(overview: DashboardOverview, user
   }
 }
 
-function isRepresentedByBackend(attempt: LocalDashboardAttempt, overview: ProfileOverview) {
+function isRepresentedByBackend(attempt: LocalDashboardAttempt, overview: { recentAttempts: NonNullable<PublicProfilePayload['recentAttempts']> }) {
   return overview.recentAttempts.some((serverAttempt) => (
     serverAttempt.test.category === attempt.category &&
     serverAttempt.test.title.trim().toLowerCase() === attempt.title.trim().toLowerCase() &&
@@ -652,14 +652,17 @@ export function mergeLocalPublicProfilePerformance(
 ): PublicProfilePayload {
   if (!payload.profile.isSelf) return payload
 
-  const localAttempts = getLocalDashboardAttempts(userId).filter((attempt) => !attempt.synced)
+  const allLocalAttempts = getLocalDashboardAttempts(userId)
+  const localAttempts = allLocalAttempts.filter((attempt) => (
+    !payload.stats?.totalAttempts || (!attempt.synced && !isRepresentedByBackend(attempt, { recentAttempts: payload.recentAttempts ?? [] }))
+  ))
   const activityLog = getCombinedActivityLog(userId)
-  const localXp = unsyncedLocalXp(localAttempts)
+  const localXp = unsyncedLocalXp(allLocalAttempts)
   const totalXp = payload.profile.xp + localXp
   const levelProgress = resolveLocalLevelProgress(totalXp)
 
   const activeDates = new Set<string>()
-  localAttempts.forEach((attempt) => {
+  allLocalAttempts.forEach((attempt) => {
     const key = localDateKey(attempt.completedAt)
     if (key) activeDates.add(key)
   })
@@ -678,10 +681,10 @@ export function mergeLocalPublicProfilePerformance(
         return {
           totalAttempts,
           averageScore: totalAttempts
-            ? Number(((payload.stats!.averageScore * serverCount + localScore) / totalAttempts).toFixed(1))
+            ? Number(((payload.stats!.averageScore * serverCount + localScore) / totalAttempts).toFixed(2))
             : 0,
           averageAccuracy: totalAttempts
-            ? Number(((payload.stats!.averageAccuracy * serverCount + localAccuracy) / totalAttempts).toFixed(1))
+            ? Number(((payload.stats!.averageAccuracy * serverCount + localAccuracy) / totalAttempts).toFixed(2))
             : 0,
         }
       })()

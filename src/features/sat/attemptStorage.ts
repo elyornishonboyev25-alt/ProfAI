@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import type { SATAttempt } from './practiceTest4'
 
 const LEGACY_PRACTICE_4_KEY = 'profai:sat:practice-test-4:attempt:v1'
@@ -26,7 +27,7 @@ function withAttemptId(attempt: SATAttempt): SATAttempt {
 
 function readHistory(): SATAttemptHistoryEntry[] {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(HISTORY_KEY) ?? '[]') as SATAttemptHistoryEntry[]
+    const parsed = JSON.parse(accountStorage.getItem(HISTORY_KEY) ?? '[]') as SATAttemptHistoryEntry[]
     if (!Array.isArray(parsed)) return []
     return parsed
       .filter((entry) => entry?.attempt?.testId && Number.isFinite(entry.savedAt))
@@ -44,7 +45,7 @@ function readHistory(): SATAttemptHistoryEntry[] {
 }
 
 function writeHistory(entries: SATAttemptHistoryEntry[]) {
-  window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries))
+  accountStorage.setItem(HISTORY_KEY, JSON.stringify(entries))
 }
 
 export function saveSATAttemptToHistory(
@@ -81,13 +82,13 @@ export function deleteSATAttemptHistoryEntry(id: string) {
 export function loadSATAttempt(testId: string): SATAttempt | null {
   try {
     const key = storageKey(testId)
-    const raw = window.localStorage.getItem(key)
-      ?? (testId === 'practice-test-4' ? window.localStorage.getItem(LEGACY_PRACTICE_4_KEY) : null)
+    const raw = accountStorage.getItem(key)
+      ?? (testId === 'practice-test-4' ? accountStorage.getItem(LEGACY_PRACTICE_4_KEY) : null)
     if (!raw) return null
     const parsed = withAttemptId(JSON.parse(raw) as SATAttempt)
     if (parsed.version !== 1 || parsed.testId !== testId) return null
-    if (!window.localStorage.getItem(key) || !JSON.parse(raw).attemptId) {
-      window.localStorage.setItem(key, JSON.stringify(parsed))
+    if (!accountStorage.getItem(key) || !JSON.parse(raw).attemptId) {
+      accountStorage.setItem(key, JSON.stringify(parsed))
     }
     if (parsed.status === 'submitted') saveSATAttemptToHistory(parsed, 'submitted')
     return parsed
@@ -99,7 +100,7 @@ export function loadSATAttempt(testId: string): SATAttempt | null {
 export function saveSATAttempt(attempt: SATAttempt) {
   const normalizedAttempt = withAttemptId(attempt)
   const storedAttempt = { ...normalizedAttempt, updatedAt: Date.now() }
-  window.localStorage.setItem(
+  accountStorage.setItem(
     storageKey(normalizedAttempt.testId),
     JSON.stringify(storedAttempt),
   )
@@ -109,6 +110,6 @@ export function saveSATAttempt(attempt: SATAttempt) {
 }
 
 export function clearSATAttempt(testId: string) {
-  window.localStorage.removeItem(storageKey(testId))
-  if (testId === 'practice-test-4') window.localStorage.removeItem(LEGACY_PRACTICE_4_KEY)
+  accountStorage.removeItem(storageKey(testId))
+  if (testId === 'practice-test-4') accountStorage.removeItem(LEGACY_PRACTICE_4_KEY)
 }

@@ -7,6 +7,7 @@ export type VocabularyEntry = {
   id: string
   term: string
   uzbek?: string
+  russian?: string
   definition: string
   example: string
   exampleUzbek?: string

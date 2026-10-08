@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } 
 import { vocabularyCollections, type VocabularyTrack } from '@/data/vocabularyCollections'
 import IeltsVocabularyStudio, { IeltsVocabularyWord, VocabularyPanel } from '@/components/vocab/IeltsVocabularyStudio'
 import { WordSaveProvider } from '@/components/vocab/SaveWordButton'
+import { VocabularyLanguageToggle } from '@/components/vocab/VocabularyLanguage'
 import { useCopy } from '@/i18n/interface'
 import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
@@ -102,6 +103,7 @@ export default function Vocabulary() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <div className="premium-top-controls">
+                    <VocabularyLanguageToggle accent="blue" />
                     <motion.button
                       onClick={goBack}
                       whileHover={allowHoverMotion ? { y: -2, x: -1 } : undefined}
@@ -239,10 +241,13 @@ export default function Vocabulary() {
       <div className="mx-auto max-w-[1440px] space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
           <div>
-            <button type="button" onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')} className="premium-back-btn">
-              <ArrowLeft className="h-4 w-4" />
-              <UiText text={fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'} />
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="button" onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')} className="premium-back-btn">
+                <ArrowLeft className="h-4 w-4" />
+                <UiText text={fromSatArena ? 'Back to SAT Arena' : 'Back to Vocabulary'} />
+              </button>
+              <VocabularyLanguageToggle accent="blue" />
+            </div>
             <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.22em] text-blue-600"><UiText text="SAT Vocabulary Track" /></p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"><UiText text="SAT Vocabulary" /></h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">

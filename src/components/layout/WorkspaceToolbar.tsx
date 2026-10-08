@@ -4,9 +4,10 @@ import LanguageSelector from './LanguageSelector'
 import { useCopy } from '@/i18n/interface'
 import { useAuthStore } from '@/store/authStore'
 import WalletBadge from '@/features/billing/WalletBadge'
+import { hasOwnerAccess } from '@/utils/ownerAccess'
 export default function WorkspaceToolbar() {
   const { c } = useCopy()
-  const owner = useAuthStore(state => state.user?.email.trim().toLowerCase() === 'elyornishonboyev000@gmail.com')
+  const owner = useAuthStore(state => hasOwnerAccess(state.user?.email))
   const { pathname } = useLocation()
   return <div className="workspace-toolbar"><Link to="/dashboard" className="workspace-mobile-brand">Prof<span>AI</span></Link><div className="workspace-toolbar-actions">
     <details className="liquid-mobile-tools"><summary aria-label={c('Study tools')}><Menu size={19} /></summary><nav className="glass-control" aria-label={c('Study tools')} onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')}>

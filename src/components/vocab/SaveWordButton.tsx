@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Bookmark, BookmarkCheck, Heart } from 'lucide-react'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
+import { getVocabularyTranslation } from '@/utils/vocabularyTranslation'
 import { addSavedWord, getSavedWords, subscribeSavedWords, type VocabContext, type WordOrigin } from '@/utils/myVocabularyStore'
 
 type SaveContext = { context: VocabContext; origin: WordOrigin }
@@ -33,7 +34,7 @@ export function SaveWordButton({ entry, iconOnly = false, accent = 'red' }: { en
         onClick={(event) => {
           event.stopPropagation()
           try {
-            addSavedWord({ ...entry, source: 'studio', context: config.context, origins: [{ ...config.origin, questionId: entry.sourceQuestionId }] })
+            addSavedWord({ ...entry, russian: getVocabularyTranslation(entry, 'ru'), source: 'studio', context: config.context, origins: [{ ...config.origin, questionId: entry.sourceQuestionId }] })
             setError(false)
           } catch {
             setError(true)

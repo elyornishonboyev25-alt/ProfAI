@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 // Study-Abroad lesson completion (concept 23: path nodes with checkmarks).
 // Dedicated key — never touches existing smarttest-* stores.
 
@@ -7,7 +8,7 @@ const EVENT = 'profai:admission-lessons'
 function read(): string[] {
   if (typeof window === 'undefined') return []
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? '[]') as unknown
+    const parsed = JSON.parse(accountStorage.getItem(STORAGE_KEY) ?? '[]') as unknown
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
   } catch {
     return []
@@ -28,7 +29,7 @@ export function toggleLessonCompleted(slug: string): boolean {
   if (nowCompleted) set.add(slug)
   else set.delete(slug)
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)))
+    accountStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)))
     window.dispatchEvent(new CustomEvent(EVENT))
   } catch {
     /* storage blocked — completion simply won't persist */

@@ -1,4 +1,5 @@
-import type { IELTSTest } from '../types/ieltsTypes'
+import type { IELTSTest, TestResult } from '../types/ieltsTypes'
+import { archivedListeningFullTest3 } from '../data/listeningFullTest1'
 import { fullReadingTest } from '../data/fullReadingTest'
 import { fullReadingTest2 } from '../data/fullReadingTest2'
 import { fullReadingTest3 } from '../data/fullReadingTest3'
@@ -30,9 +31,14 @@ const CATALOG: IELTSTest[] = [
   ...mockListeningTests,
 ]
 
-export function resolveIeltsTestById(testId: string): IELTSTest | null {
+export function resolveIeltsTestById(testId: string, result?: Pick<TestResult, 'answers' | 'detailedBreakdown'>): IELTSTest | null {
   if (!testId) return null
   const normalized = testId.trim()
+  if (normalized === 'ielts-listening-3' && result && (
+    Object.keys(result.answers ?? {}).some(id => /^lt3-q\d+$/.test(id))
+    || result.detailedBreakdown?.activeSectionIds?.some(id => /^lt3-part[1-4]$/.test(id))
+    || result.detailedBreakdown?.readingAnalysis?.sectionSummaries.some(section => /^lt3-part[1-4]$/.test(section.sectionId))
+  )) return archivedListeningFullTest3
   const known = CATALOG.find((test) => test.id === normalized)
   if (known) return known
   return resolveGeneratedTestById(normalized)

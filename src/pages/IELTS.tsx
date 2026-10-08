@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -61,18 +62,18 @@ function examTimeKey(userId?: string) { return `smarttest:ielts-exam-time:${user
 
 function loadExamDate(userId?: string) {
   if (typeof window === 'undefined') return ''
-  const value = window.localStorage.getItem(examDateKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
+  const value = accountStorageFor(userId ?? 'guest').getItem(examDateKey(userId)) ?? loadOnboardingProfile(userId)?.ieltsExamDate ?? ''
   return value >= localToday() ? value : ''
 }
 
 function loadExamTime(userId?: string) {
   if (typeof window === 'undefined') return '08:00'
-  return window.localStorage.getItem(examTimeKey(userId)) || '08:00'
+  return accountStorageFor(userId ?? 'guest').getItem(examTimeKey(userId)) || '08:00'
 }
 
 function saveExam(date: string, time: string, userId?: string) {
-  window.localStorage.setItem(examDateKey(userId), date)
-  window.localStorage.setItem(examTimeKey(userId), time)
+  accountStorageFor(userId ?? 'guest').setItem(examDateKey(userId), date)
+  accountStorageFor(userId ?? 'guest').setItem(examTimeKey(userId), time)
   const profile = loadOnboardingProfile(userId)
   if (!profile) return
   const distance = new Date(`${date}T${time}:00`).getTime() - Date.now()

@@ -13,7 +13,7 @@ try {
     removeItem: (key) => values.delete(key),
     clear: () => values.clear(),
   }
-  globalThis.window = { localStorage }
+  globalThis.window = { localStorage, dispatchEvent() {} }
   const outfile = join(directory, 'suite.cjs')
   await build({
     entryPoints: ['scripts/tests/sat-result-sync.ts'], bundle: true, platform: 'node', format: 'cjs',

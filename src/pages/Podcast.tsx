@@ -1396,7 +1396,7 @@ export default function Podcast() {
   )
 
   return (
-    <div className="podcast-library educational-podcast min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
+    <div className="workspace-page podcast-library educational-podcast min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
       {pendingEpisode && <div className="billing-lesson-dialog" role="dialog" aria-modal="true" aria-label="Podcast access"><AccessGate key={pendingEpisode.youtubeId} feature="podcast" resource={`podcast:${pendingEpisode.youtubeId}`} onCancel={() => setPendingEpisode(null)} onUnlocked={() => { const item = pendingEpisode; setPendingEpisode(null); void openEpisode(item, true) }} /></div>}
       <div className="podcast-aurora podcast-aurora-one" />
       <div className="podcast-aurora podcast-aurora-two" />

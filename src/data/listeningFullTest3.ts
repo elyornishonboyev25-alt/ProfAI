@@ -1,221 +1,180 @@
-import type { IELTSTest, Question, Section } from '../types/ieltsTypes'
+import type { IELTSTest, ListeningBlock, Question, Section } from '../types/ieltsTypes'
 
-// IELTS Listening Full Test 3 — user-supplied questions, answer key and full recording.
+// User screenshots: IELTS Mock Test 2026 January, Listening Practice Test 1.
+// Source recording and solution evidence: docs/LISTENING_FULL_TEST_3_SOURCE.md.
 const AUDIO_URL = '/audio/ielts-listening/listening-full-test-3.mp3'
 
-function q(
-  number: number,
-  type: Question['type'],
-  text: string,
-  correctAnswer: string | string[],
-  options?: string[],
-): Question {
-  return { id: `lt3-q${number}`, number, type, text, correctAnswer, options }
+function q(number: number, text: string, correctAnswer: string, explanation: string, options?: string[]): Question {
+  return {
+    // Distinct IDs prevent answers from the replaced paper entering this paper.
+    id: `lt3-jan2026-q${number}`, number,
+    type: options ? 'multiple-choice' : 'note-completion', text, correctAnswer,
+    ...(options ? { options } : { strictAnswerMatch: true }), explanation,
+    location: `Part ${Math.ceil(number / 10)}, Question ${number}`,
+  }
 }
+
+function mcqs(questions: Question[]): ListeningBlock[] {
+  return questions.map(question => ({ kind: 'mcq', blank: question.number, prompt: question.text, options: question.options! }))
+}
+
+const part1Questions = [
+  q(1, 'The centre has enough accommodation for', 'C', 'The centre accommodates 38 people in total. The smaller numbers concern the room arrangements.', ['18 people.', '20 people.', '38 people.']),
+  q(2, 'The meeting room is currently', 'A', 'The meeting room is unavailable following flood damage. Its present availability is the question.', ['unavailable', 'flooded', 'booked']),
+  q(3, 'Visitors must tell the centre in advance if they want to', 'B', 'Advance notice is required when the centre is to prepare meals for visitors.', ["use the centre\'s kitchen.", 'have meals cooked for them.', 'eat at restaurants outside']),
+  q(4, 'All visitors on the tour of the farm can', 'B', 'Helping to feed the animals is available to all visitors on the farm tour.', ['get information about organic farming', 'help to feed the animals', 'watch a tractor demonstration']),
+  q(5, 'On the survival course people have to', 'B', 'Finding their own food is a requirement of the survival course.', ['learn to use a map', 'find their own food.', 'run through woodland']),
+  q(6, 'From the centre it is easy to walk to', 'C', 'The cycling route is easily reached on foot from the centre.', ['Exmoor National Park.', 'the beach', 'a cycling route']),
+  q(7, 'If the weather is bad visitors can go to a', 'C', 'The museum is the suggested activity for bad weather.', ['cinema', 'theatre', 'museum']),
+  q(8, 'Groups who wish to stay at the centre must pay', 'A', 'Groups pay part of the cost in advance.', ['part of the cost in advance', 'all of the cost in advance.', 'all of the cost on arrival.']),
+  q(9, 'Winsham Farm: road name', 'COTEHELE', 'The road name is Cotehele. Rd is already printed after the blank.'),
+  q(10, 'Winsham Farm: postcode near Sherborne', 'SH12 1LQ / SH121LQ', 'The postcode is SH12 1LQ. Keep every letter and digit, including the final Q.'),
+]
 
 const part1: Section = {
-  id: 'lt3-part1',
-  title: 'Cycling Holiday in Austria',
-  partLabel: 'Part 1',
+  id: 'lt3-jan2026-part1', title: 'Winsham Farm', partLabel: 'Part 1',
   partInstruction: 'Listen and answer questions 1 - 10.',
-  groups: [{
-    range: 'Questions 1 - 10',
-    instruction: 'Complete the notes below. Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.',
-    blocks: [
-      { kind: 'title', text: 'Cycling holiday in Austria' },
-      { kind: 'example', segments: ['Most suitable holiday lasts ', '10 days'] },
-      { kind: 'space' },
-      { kind: 'note', segments: ['Holiday begins on ', { blank: 1, width: 'md' }] },
-      { kind: 'note', segments: ['No more than ', { blank: 2, width: 'sm' }, ' people in cycling group.'] },
-      { kind: 'note', segments: ['Each day, group cycles ', { blank: 3, width: 'md' }, ' on average.'] },
-      { kind: 'note', segments: ['Some of the hotels have a ', { blank: 4, width: 'lg' }] },
-      { kind: 'note', segments: ['Holiday costs £ ', { blank: 5, width: 'sm' }, ' per person without flights.'] },
-      { kind: 'note', segments: ['All food included except ', { blank: 6, width: 'md' }] },
-      { kind: 'note', segments: ['Essential to bring a ', { blank: 7, width: 'md' }] },
-      { kind: 'note', segments: ['Discount possible on equipment at www. ', { blank: 8, width: 'md' }, '.com'] },
-      { kind: 'note', segments: ['Possible that the ', { blank: 9, width: 'md' }, ' may change.'] },
-      { kind: 'note', segments: ['Guided tour of a ', { blank: 10, width: 'md' }, ' is arranged.'] },
-    ],
-  }],
-  questions: [
-    q(1, 'note-completion', 'Holiday begins on', ['17th April', '17 April', 'April 17', 'April 17th']),
-    q(2, 'note-completion', 'Maximum number of people in the cycling group', '16 / sixteen'),
-    q(3, 'note-completion', 'Average distance cycled each day', ['45 km', '45 kilometres', '45 kilometers', '45km', 'forty-five km']),
-    q(4, 'note-completion', 'Some hotels have a', 'swimming pool / pool'),
-    q(5, 'note-completion', 'Holiday cost per person without flights', ['1013', '1,013', '£1013', '£1,013']),
-    q(6, 'note-completion', 'Food not included', 'snacks'),
-    q(7, 'note-completion', 'Essential item to bring', 'helmet / cycle helmet'),
-    q(8, 'note-completion', 'Equipment discount website', 'ballantyne'),
-    q(9, 'note-completion', 'Item that may change', 'route'),
-    q(10, 'note-completion', 'Guided tour destination', 'theatre / theater'),
-  ],
+  groups: [
+    { range: 'Questions 1 - 8', instruction: 'Choose the correct letter, A, B or C.', blocks: mcqs(part1Questions.slice(0, 8)) },
+    {
+      range: 'Questions 9 - 10', instruction: 'Complete the notes below. Write ONE WORD AND/OR NUMBERS for each answer.',
+      blocks: [
+        { kind: 'subhead', text: 'Address:' }, { kind: 'text', text: 'Winsham Farm' },
+        { kind: 'note', segments: [{ blank: 9, width: 'md' }, ' Rd'] },
+        { kind: 'text', text: 'Near Sherborne' }, { kind: 'note', segments: [{ blank: 10, width: 'md' }] },
+      ],
+    },
+  ], questions: part1Questions,
 }
 
-const restaurantOptions = [
-  { letter: 'A', text: 'the decoration' },
-  { letter: 'B', text: 'easy parking' },
-  { letter: 'C', text: 'entertainment' },
-  { letter: 'D', text: 'excellent service' },
-  { letter: 'E', text: 'good value' },
-  { letter: 'F', text: 'good views' },
-  { letter: 'G', text: 'quiet location' },
-  { letter: 'H', text: 'wide menu' },
+const part2Questions = [
+  q(11, 'Stocktaking: main advantage', 'travelling / traveling', 'Travelling is the advantage identified for stocktaking.'),
+  q(12, 'Stocktaking: recommendation', 'get good shoes', 'Good shoes are recommended because stocktaking involves tiring work on your feet.'),
+  q(13, 'Office work: main disadvantage', 'wearing formal clothes', 'Having to wear formal clothes is the disadvantage of office work.'),
+  q(14, 'Office work: choose a', 'large office', 'Choose a large office. The article a is already printed before the blank.'),
+  q(15, 'Theme park attendant: main advantage', 'good pay', 'Good pay is the advantage of working as a theme park attendant.'),
+  q(16, 'Theme park attendant: recommendation', 'live nearby', 'Living nearby is recommended for this vacation job.'),
+  q(17, 'Peter learned about the job', 'B', 'Peter found the job on the computer.', ['from a college friend', 'on the computer', 'from a student job centre']),
+  q(18, 'Peter mainly enjoyed the job because it was', 'C', 'Peter enjoyed the unusual nature of the job.', ['easy', 'challenging', 'unusual']),
+  q(19, "The job's most interesting aspect was", 'B', 'Working with children was the most interesting aspect for Peter.', ['learning about the environment', 'working with children', 'caring for the animals']),
+  q(20, 'Peter has decided that next vacation he', 'A', 'Peter has decided not to take a job during his next vacation.', ["won't take a job", 'will work at the zoo.', 'will work elsewhere']),
 ]
 
 const part2: Section = {
-  id: 'lt3-part2',
-  title: 'The Market and Harbour Restaurants',
-  partLabel: 'Part 2',
+  id: 'lt3-jan2026-part2', title: 'Vacation Jobs', partLabel: 'Part 2',
   partInstruction: 'Listen and answer questions 11 - 20.',
   groups: [
     {
-      range: 'Questions 11 - 14',
-      instruction: 'Choose the correct letter, A, B or C.',
-      blocks: [
-        { kind: 'mcq', blank: 11, prompt: 'The market is now situated', options: ['under a car park.', 'beside the cathedral.', 'near the river.'] },
-        { kind: 'mcq', blank: 12, prompt: 'On only one day a week the market sells', options: ['antique furniture.', 'local produce.', 'hand-made items.'] },
-        { kind: 'mcq', blank: 13, prompt: 'The area is well known for', options: ['ice cream.', 'a cake.', 'a fish dish.'] },
-        { kind: 'mcq', blank: 14, prompt: 'What change has taken place in the harbour area?', options: ['Fish can now be bought from the fishermen.', 'The restaurants have moved to a different part.', 'There are fewer restaurants than there used to be.'] },
-      ],
+      range: 'Questions 11 - 16', instruction: 'Complete the table below. Write NO MORE THAN THREE WORDS AND/OR A NUMBER for each answer.',
+      blocks: [{ kind: 'table', columns: ['Vacation Job', 'Main advantage', 'Main disadvantage', 'Recommendation'], rows: [
+        [{ segments: ['Stocktaking'] }, { segments: [{ blank: 11, width: 'md' }] }, { segments: ['Tiring'] }, { segments: [{ blank: 12, width: 'lg' }] }],
+        [{ segments: ['Office work'] }, { segments: ['Air-conditioning'] }, { segments: [{ blank: 13, width: 'lg' }] }, { segments: ['Choose a ', { blank: 14, width: 'md' }] }],
+        [{ segments: ['Theme park attendant'] }, { segments: [{ blank: 15, width: 'md' }] }, { segments: ['Rude customers'] }, { segments: [{ blank: 16, width: 'md' }] }],
+      ] }],
     },
-    {
-      range: 'Questions 15 - 20',
-      instruction: 'Which advantage is mentioned for each of the following restaurants? Choose SIX answers from the box and write the correct letter, A-H, next to questions 15-20.',
-      blocks: [{
-        kind: 'grid',
-        columns: restaurantOptions.map((option) => option.letter),
-        rows: [
-          { blank: 15, label: 'Merrivales' },
-          { blank: 16, label: 'The Lobster Pot' },
-          { blank: 17, label: 'Elliots' },
-          { blank: 18, label: 'The Cabin' },
-          { blank: 19, label: 'The Olive Tree' },
-          { blank: 20, label: 'The Old School Restaurant' },
-        ],
-        options: restaurantOptions,
-      }],
-    },
-  ],
-  questions: [
-    q(11, 'multiple-choice', 'The market is now situated', 'A', ['under a car park.', 'beside the cathedral.', 'near the river.']),
-    q(12, 'multiple-choice', 'On only one day a week the market sells', 'C', ['antique furniture.', 'local produce.', 'hand-made items.']),
-    q(13, 'multiple-choice', 'The area is well known for', 'B', ['ice cream.', 'a cake.', 'a fish dish.']),
-    q(14, 'multiple-choice', 'What change has taken place in the harbour area?', 'B', ['Fish can now be bought from the fishermen.', 'The restaurants have moved to a different part.', 'There are fewer restaurants than there used to be.']),
-    q(15, 'matching-information', 'Merrivales', 'D'),
-    q(16, 'matching-information', 'The Lobster Pot', 'H'),
-    q(17, 'matching-information', 'Elliots', 'F'),
-    q(18, 'matching-information', 'The Cabin', 'G'),
-    q(19, 'matching-information', 'The Olive Tree', 'C'),
-    q(20, 'matching-information', 'The Old School Restaurant', 'A'),
-  ],
+    { range: 'Questions 17 - 20', instruction: 'Choose the correct letter, A, B or C.', blocks: mcqs(part2Questions.slice(6)) },
+  ], questions: part2Questions,
 }
 
-const filmOptions = [
-  { letter: 'A', text: 'actors' },
-  { letter: 'B', text: 'furniture' },
-  { letter: 'C', text: 'background noise' },
-  { letter: 'D', text: 'costumes' },
-  { letter: 'E', text: 'local council' },
-  { letter: 'F', text: 'equipment' },
-  { letter: 'G', text: 'shooting schedule' },
-  { letter: 'H', text: 'understudies' },
-  { letter: 'I', text: 'shopowners' },
-]
-
-const mapOptions = [
-  { letter: 'A', text: 'lights' },
-  { letter: 'B', text: 'fixed camera' },
-  { letter: 'C', text: 'mirror' },
-  { letter: 'D', text: 'torches' },
-  { letter: 'E', text: 'wooden screen' },
-  { letter: 'F', text: 'bike' },
-  { letter: 'G', text: 'large box' },
-]
-
 const part3: Section = {
-  id: 'lt3-part3',
-  title: 'Film Project',
-  partLabel: 'Part 3',
+  id: 'lt3-jan2026-part3', title: 'Study Syndicates', partLabel: 'Part 3',
   partInstruction: 'Listen and answer questions 21 - 30.',
   groups: [
     {
-      range: 'Questions 21 - 26',
-      instruction: 'Choose SIX answers from the box and write the correct letter, A-I, next to questions 21-26.',
+      range: 'Questions 21 - 22', instruction: 'Complete the notes below. Write NO MORE THAN THREE WORDS for each answer.',
       blocks: [
-        { kind: 'title', text: 'FILM PROJECT' },
-        { kind: 'grid', columns: filmOptions.map((option) => option.letter), rows: [
-          { blank: 21, label: 'Visit locations and discuss' },
-          { blank: 22, label: 'Contact the ____ about roadworks' },
-          { blank: 23, label: 'Plan the' },
-          { blank: 24, label: 'Hold auditions and recheck availability of the' },
-          { blank: 25, label: 'Choose the ____ from the volunteers' },
-          { blank: 26, label: 'Collect ____ and organise food and transport' },
-        ], options: filmOptions },
+        { kind: 'subhead', text: 'Reasons for having Study Syndicates:' },
+        { kind: 'note', bullet: true, segments: ['teaching one another is a good way to learn'] },
+        { kind: 'note', bullet: true, segments: ['it gives the opportunity to ', { blank: 21, width: 'md' }] },
+        { kind: 'note', bullet: true, segments: ['shared reading means fuller notes'] },
+        { kind: 'note', bullet: true, segments: ['You can do ', { blank: 22, width: 'lg' }] },
       ],
     },
     {
-      range: 'Questions 27 - 30',
-      instruction: 'Choose four answers from the box and write the correct letter, A-G, next to questions 27-30.',
+      range: 'Questions 23 - 25', instruction: 'Complete the table below. Write NO MORE THAN THREE WORDS AND/OR A NUMBER for each answer.',
       blocks: [
-        { kind: 'diagram', diagram: 'old-water-mill' },
+        { kind: 'subhead', text: 'PLAN FOR STUDY SYNDICATE' },
+        { kind: 'table', columns: ['Date', 'Geology Topic', 'Name of Presenter'], rows: [
+          [{ segments: ['9th May'] }, { segments: [{ blank: 23, width: 'lg' }] }, { segments: ['Bob'] }],
+          [{ segments: [{ blank: 24, width: 'md' }] }, { segments: ['glaciated areas'] }, { segments: ['Andy'] }],
+          [{ segments: ['23rd May'] }, { segments: ['rock formation'] }, { segments: ['Helen and John'] }],
+          [{ segments: [{ blank: 25, width: 'md' }] }, { segments: ['Volcanoes'] }, { segments: ['John'] }],
+        ] },
       ],
     },
-  ],
-  questions: [
-    q(21, 'matching-information', 'Visit locations and discuss', 'C'),
-    q(22, 'matching-information', 'Contact the ____ about roadworks', 'E'),
-    q(23, 'matching-information', 'Plan the', 'G'),
-    q(24, 'matching-information', 'Hold auditions and recheck availability of the', 'A'),
-    q(25, 'matching-information', 'Choose the ____ from the volunteers', 'H'),
-    q(26, 'matching-information', 'Collect ____ and organise food and transport', 'B'),
-    q(27, 'matching-information', 'Location 27 on the old water-mill plan', 'B', mapOptions.map(option => `${option.letter} ${option.text}`)),
-    q(28, 'matching-information', 'Location 28 on the old water-mill plan', 'A', mapOptions.map(option => `${option.letter} ${option.text}`)),
-    q(29, 'matching-information', 'Location 29 on the old water-mill plan', 'E', mapOptions.map(option => `${option.letter} ${option.text}`)),
-    q(30, 'matching-information', 'Location 30 on the old water-mill plan', 'G', mapOptions.map(option => `${option.letter} ${option.text}`)),
+    {
+      range: 'Questions 26 - 30', instruction: 'Complete the notes below. Write NO MORE THAN THREE WORDS AND/OR A NUMBER for each answer.',
+      blocks: [
+        { kind: 'note', bullet: true, segments: ['Presentations should last for ', { blank: 26, width: 'lg' }] },
+        { kind: 'note', segments: ['(plus time for ', { blank: 27, width: 'lg' }, ' )'] }, { kind: 'space' },
+        { kind: 'note', bullet: true, segments: ['Sources of information'] },
+        { kind: 'note', bullet: true, indent: true, segments: ['bibliography'] },
+        { kind: 'note', bullet: true, indent: true, segments: ['library books'] },
+        { kind: 'note', bullet: true, indent: true, segments: [{ blank: 28, width: 'lg' }] },
+        { kind: 'note', bullet: true, indent: true, segments: [{ blank: 29, width: 'md' }] }, { kind: 'space' },
+        { kind: 'note', bullet: true, segments: ['For the presentations, use:'] },
+        { kind: 'note', bullet: true, indent: true, segments: ['overhead projector'] },
+        { kind: 'note', bullet: true, indent: true, segments: ['whiteboard'] },
+        { kind: 'note', bullet: true, indent: true, segments: [{ blank: 30, width: 'md' }] },
+      ],
+    },
+  ], questions: [
+    q(21, 'Study syndicates give the opportunity to', 'share ideas', 'Sharing ideas is one reason for forming a study syndicate.'),
+    q(22, 'In a study syndicate you can do', 'deeper research / much deeper research', 'Members can carry out deeper research by working together.'),
+    q(23, 'Geology topic presented by Bob on 9th May', 'Mountain building', 'Bob will present mountain building on 9th May.'),
+    q(24, "Date of Andy's presentation on glaciated areas", '17th May / 17 May / May 17 / May 17th', 'Glaciated areas is scheduled for 17th May.'),
+    q(25, "Date of John's presentation on volcanoes", '29th May / 29 May / May 29 / May 29th', 'The volcanoes presentation is scheduled for 29th May.'),
+    q(26, 'Presentations should last for', '30-40 minutes / 30 to 40 minutes', 'The presentation itself should last 30 to 40 minutes, with additional time afterwards.'),
+    q(27, 'Additional time should be allowed for', 'question(s); discussion / questions / question / questions and discussion / question and discussion', 'The source accepts questions or discussion; the notes leave space for both activities.'),
+    q(28, 'Source of information besides bibliography and library books', 'articles (from journal) / articles / journal articles / articles from journal', 'Journal articles are another information source. The source key makes the journal qualifier optional.'),
+    q(29, 'Another source of information', 'internet / the internet', 'The internet is also suggested as an information source.'),
+    q(30, 'Presentation material besides the overhead projector and whiteboard', 'photocopy', 'The source answer for the additional presentation material is photocopy.'),
   ],
 }
 
 const part4: Section = {
-  id: 'lt3-part4',
-  title: 'Exotic Pests',
-  partLabel: 'Part 4',
+  id: 'lt3-jan2026-part4', title: 'Health on the Night Shift', partLabel: 'Part 4',
   partInstruction: 'Listen and answer questions 31 - 40.',
   groups: [{
-    range: 'Questions 31 - 40',
-    instruction: 'Complete the table below. Write NO MORE THAN TWO WORDS for each answer.',
-    blocks: [{
-      kind: 'table', columns: ['Origin', 'Name', 'New habitat / notes'], rows: [
-        [{ segments: ['Australia'] }, { segments: ['red-backed spider'] }, { segments: ['Even on island in middle of ', { blank: 31, width: 'xl' }] }],
-        [{ segments: ['England'] }, { segments: ['rabbit'] }, { segments: ['Australia; 800 years ago: imported into England to be used for ', { blank: 32, width: 'lg' }] }],
-        [{ segments: ['America'] }, { segments: ['fire ants'] }, { segments: ['New habitat: ', { blank: 33, width: 'md' }, ' in Brisbane; imported by chance'] }],
-        [{ segments: ['Australia'] }, { segments: [{ blank: 34, width: 'md' }] }, { segments: ['New habitat: Scotland. Deliberately introduced in order to improve ', { blank: 35, width: 'md' }, ' (not effective)'] }],
-        [{ segments: ['New Zealand'] }, { segments: ['flatworm'] }, { segments: ['New habitat: ', { blank: 36, width: 'md' }, ' Europe. Accidental introduction inside imported ', { blank: 37, width: 'md' }] }],
-        [{ segments: ['Japan'] }, { segments: [{ blank: 38, width: 'md' }] }, { segments: ['New habitat: Australian coastal waters; some advantages'] }],
-        [{ segments: ['Australia'] }, { segments: ['budgerigar'] }, { segments: ['Urban areas of south-east ', { blank: 39, width: 'md' }, '. Smaller flocks because of arrival of ', { blank: 40, width: 'md' }, ' in recent years'] }],
-      ],
-    }],
-  }],
-  questions: [
-    q(31, 'note-completion', 'Island in the middle of', 'Atlantic / Atlantic Ocean / the Atlantic'),
-    q(32, 'note-completion', 'Rabbit was imported into England to be used for', 'food source / food / luxury food'),
-    q(33, 'note-completion', 'Fire ants: new habitat in Brisbane', 'gardens / in gardens'),
-    q(34, 'note-completion', 'Australian pest introduced to Scotland', 'earthworm / earth worm'),
-    q(35, 'note-completion', 'Purpose of deliberate introduction', 'soil / soil condition'),
-    q(36, 'note-completion', 'Flatworm new habitat in Europe', 'northwest / north-west / north west'),
-    q(37, 'note-completion', 'Accidental introduction inside imported', 'plant pots'),
-    q(38, 'note-completion', 'Japanese pest in Australian coastal waters', 'seaweed / seaweeds / sea weed / sea weeds'),
-    q(39, 'note-completion', 'Budgerigar habitat in south-east', 'United States / USA'),
-    q(40, 'note-completion', 'Cause of smaller flocks', 'competitors / new competitors'),
+    range: 'Questions 31 - 40', instruction: 'Complete the notes below. Write NO MORE THAN THREE WORDS for each answer.',
+    blocks: [
+      { kind: 'title', text: 'HEALTH ON THE NIGHT SHIFT' }, { kind: 'subhead', text: 'Background:' },
+      { kind: 'note', bullet: true, segments: [{ blank: 31, width: 'lg' }, ' in number of night workers because of 24-hour shopping/services'] },
+      { kind: 'note', bullet: true, segments: ['Need to examine effects of changing work and sleep habits'] },
+      { kind: 'note', bullet: true, segments: ['US and British research found these lead to health problems'] }, { kind: 'space' },
+      { kind: 'subhead', text: 'Main Causes:' }, { kind: 'note', segments: ['A) ', { blank: 32, width: 'md' }] },
+      { kind: 'note', bullet: true, segments: ['regulates daily life'] },
+      { kind: 'note', bullet: true, segments: ['connected to behavioural patterns and cycles of ', { blank: 33, width: 'md' }] },
+      { kind: 'note', bullet: true, segments: ['programmes us to be awake and asleep at certain times'] },
+      { kind: 'subhead', text: 'B) Sleep Debt' },
+      { kind: 'note', bullet: true, segments: ['impossible to get enough sleep during daytime'] },
+      { kind: 'note', segments: ['C) ', { blank: 34, width: 'md' }] },
+      { kind: 'note', bullet: true, segments: ["different working/sleeping times, 'dislocation'"] }, { kind: 'space' },
+      { kind: 'subhead', text: 'Effects:' }, { kind: 'subhead', text: 'A) Physical' },
+      { kind: 'note', bullet: true, segments: ['higher incidence of ', { blank: 35, width: 'md' }, ' problems'] },
+      { kind: 'note', bullet: true, segments: ['more minor illnesses, suggesting that immunity of shift workers is affected'] },
+      { kind: 'subhead', text: 'B) Psychological' },
+      { kind: 'note', bullet: true, segments: ['most common: ', { blank: 36, width: 'md' }] },
+      { kind: 'note', bullet: true, segments: [{ blank: 37, width: 'md' }, ' affected, e.g. decision-making, planning, which regulate our ', { blank: 38, width: 'md' }] },
+      { kind: 'subhead', text: 'C) Social' }, { kind: 'text', text: 'Night shift work can lead to:' },
+      { kind: 'note', bullet: true, segments: ['destruction of ', { blank: 39, width: 'md' }, ' and other relationships, e.g. ', { blank: 40, width: 'lg' }] },
+      { kind: 'note', bullet: true, segments: ['eventually, for individuals: social isolation'] },
+    ],
+  }], questions: [
+    q(31, 'Change in the number of night workers', 'a huge increase / huge increase', 'There is a huge increase in night workers as shopping and services operate around the clock.'),
+    q(32, 'Main cause A: what regulates daily life?', 'internal clock', 'The internal clock regulates daily life and the timing of waking and sleeping.'),
+    q(33, 'Cycles connected to behavioural patterns', 'light dark / light and dark', 'The internal clock is linked to light and dark. Both parts of the cycle belong in this blank.'),
+    q(34, 'Main cause C: different working and sleeping times', 'unsocial hours', 'Unsocial hours disrupt the alignment of working and sleeping times.'),
+    q(35, 'Physical effects: higher incidence of which problems?', 'stomach', 'Physical effects include a higher incidence of stomach problems.'),
+    q(36, 'Most common psychological effect', 'depression', 'Depression is identified as the most common psychological effect.'),
+    q(37, 'What is affected, including decision-making and planning?', 'mental ability', 'Mental ability includes decision-making and planning, which can be affected by night work.'),
+    q(38, 'Decision-making and planning regulate our', 'performance', 'Decision-making and planning help regulate performance.'),
+    q(39, 'Night shift work can lead to destruction of', 'family life', 'Family life can be disrupted by night shift work.'),
+    q(40, 'Examples of other relationships affected', 'peer group/friends / peer group / friends', 'Relationships with the peer group or friends are also affected. Either source alternative is accepted.'),
   ],
 }
 
 export const listeningFullTest3: IELTSTest = {
-  id: 'ielts-listening-3',
-  title: 'IELTS Listening Full Test 3',
-  type: 'Academic',
-  module: 'Listening',
-  duration: 30,
-  totalQuestions: 40,
-  continuousAudioUrl: AUDIO_URL,
-  sections: [part1, part2, part3, part4],
+  id: 'ielts-listening-3', title: 'IELTS Listening Full Test 3', type: 'Academic', module: 'Listening',
+  duration: 30, totalQuestions: 40, continuousAudioUrl: AUDIO_URL, sections: [part1, part2, part3, part4],
 }

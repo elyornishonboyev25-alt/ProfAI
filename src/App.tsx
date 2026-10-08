@@ -1,3 +1,4 @@
+import { useAccountDataSync } from '@/hooks/useAccountDataSync'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import ClassAssignmentContext from '@/features/learningCenter/ClassAssignmentContext'
@@ -15,6 +16,7 @@ import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
+import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
@@ -41,6 +43,7 @@ const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
+const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
@@ -250,6 +253,7 @@ function App() {
   const location = useLocation()
   const pathname = location.pathname
   const user = useAuthStore((state: AuthState) => state.user)
+  const accountData = useAccountDataSync(user?.id)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
@@ -289,7 +293,10 @@ function App() {
     pathname.startsWith('/admission') ||
     pathname === '/ai-tutor' ||
     isLeaderboardMode
-  const isSatTestRoute = /^\/mock\/sat(?:\/\d+)?$/.test(pathname) || /^\/sat\/mock\/\d+\/run$/.test(pathname)
+  const isSatTestRoute =
+    /^\/sat\/question-bank\/run\/[^/]+$/.test(pathname) ||
+    /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
+    /^\/sat\/mock\/\d+\/run$/.test(pathname)
   const isCustomTestMode =
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
@@ -448,6 +455,7 @@ function App() {
     <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
+      <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
@@ -476,9 +484,9 @@ function App() {
                   : 'min-h-full min-h-screen'
               }`}
             >
-              <ErrorBoundary key={location.key}>
+              <ErrorBoundary key={`${user?.id ?? 'guest'}:${location.key}:${isTestMode || isExamModeActive ? 0 : accountData.revision}`}>
                 <Suspense fallback={<RouteLoader />}>
-                    <BillingBoundary><Routes location={location}>
+                    <BillingBoundary>{!accountData.ready ? <RouteLoader /> : <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />
                       <Route path="/diagnostic" element={<Navigate to="/register" replace />} />
                       <Route path="/dashboard" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
@@ -547,6 +555,7 @@ function App() {
                         }
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
+                      <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route
@@ -865,7 +874,7 @@ function App() {
                       <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><QuickOnboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Onboarding /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
-                    </Routes></BillingBoundary>
+                    </Routes>}</BillingBoundary>
                 </Suspense>
               </ErrorBoundary>
 

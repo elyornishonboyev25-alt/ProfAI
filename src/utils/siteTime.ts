@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 export const SITE_TIME_UPDATED_EVENT = 'smarttest:site-time-updated'
 
 const STORAGE_PREFIX = 'smarttest-site-time-v1'
@@ -17,7 +18,7 @@ function localDateKey(date: Date) {
 
 export function loadSiteTime(userId: string): SiteTimeLog {
   try {
-    const raw = window.localStorage.getItem(siteTimeStorageKey(userId))
+    const raw = accountStorageFor(userId ?? 'guest').getItem(siteTimeStorageKey(userId))
     const parsed: unknown = raw ? JSON.parse(raw) : null
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
     return Object.fromEntries(Object.entries(parsed).filter(([key, seconds]) =>
@@ -52,7 +53,7 @@ function recordElapsed(userId: string, start: number, end: number) {
     cursor = segmentEnd
   }
   try {
-    window.localStorage.setItem(siteTimeStorageKey(userId), JSON.stringify(log))
+    accountStorageFor(userId ?? 'guest').setItem(siteTimeStorageKey(userId), JSON.stringify(log))
     const nextTotal = recentSiteTimeSeconds(log)
     if ((previousTotal === 0 && nextTotal > 0) || Math.floor(previousTotal / 60) !== Math.floor(nextTotal / 60)) {
       window.dispatchEvent(new Event(SITE_TIME_UPDATED_EVENT))

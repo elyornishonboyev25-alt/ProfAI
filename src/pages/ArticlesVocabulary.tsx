@@ -5,6 +5,7 @@ import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
 import ArticleCover from '@/components/articles/ArticleCover'
 import { articles } from '@/data/articles'
 import '@/styles/articlesArena.css'
+import { VocabularyLanguageToggle } from '@/components/vocab/VocabularyLanguage'
 
 export default function ArticlesVocabulary() {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ export default function ArticlesVocabulary() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="premium-top-controls">
+                  <VocabularyLanguageToggle />
                   <button onClick={() => navigate('/vocabulary')} className="premium-back-btn">
                     <ArrowLeft className="h-3.5 w-3.5" />
                      <UiText text={"Back to Vocabulary"} /> </button>

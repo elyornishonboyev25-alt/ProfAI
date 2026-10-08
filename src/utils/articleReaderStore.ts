@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 // Persistence for the Article reader: reading preferences (shared across articles) plus
 // per-article highlights and notes. All localStorage-backed and event-driven so the reader
 // toolbar, the highlight layer, and the notes panel stay in sync.
@@ -52,7 +53,7 @@ function emit() {
 function readJSON<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
   try {
-    const raw = window.localStorage.getItem(key)
+    const raw = accountStorage.getItem(key)
     if (!raw) return fallback
     return JSON.parse(raw) as T
   } catch {
@@ -62,7 +63,7 @@ function readJSON<T>(key: string, fallback: T): T {
 
 function writeJSON(key: string, value: unknown) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(key, JSON.stringify(value))
+  accountStorage.setItem(key, JSON.stringify(value))
   emit()
 }
 

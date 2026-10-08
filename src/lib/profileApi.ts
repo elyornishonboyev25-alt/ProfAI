@@ -4,6 +4,11 @@ import { apiClient } from '@/lib/apiClient'
 // badges, learner search and public profiles. Public endpoints return nicknames
 // only and never expose another learner's email.
 
+function notifyProfileUpdated<T>(result: T): T {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('smarttest:profile-updated'))
+  return result
+}
+
 export type SkillTrackKey =
   | 'IELTS_LISTENING'
   | 'IELTS_READING'
@@ -114,6 +119,10 @@ export type PublicProfilePayload = {
     averageScore: number
     averageAccuracy: number
   } | null
+  recentAttempts?: Array<{
+    completedAt: string
+    test: { title: string; category: 'IELTS' | 'SAT' | 'GENERAL' }
+  }>
   xpBreakdown: Array<{ source: string; amount: number }>
   skillAnalytics: PublicSkillAnalytics | null
   competitive: {
@@ -156,11 +165,11 @@ export async function fetchAccount(): Promise<AccountResponse> {
 export async function updateAccount(
   patch: Partial<AccountProfileFields> & { fullName?: string },
 ): Promise<{ fullName?: string; profile: AccountProfileFields }> {
-  return apiClient.put<{ fullName?: string; profile: AccountProfileFields }>('/profile/account', patch, { auth: true })
+  return apiClient.put<{ fullName?: string; profile: AccountProfileFields }>('/profile/account', patch, { auth: true }).then(notifyProfileUpdated)
 }
 
 export async function uploadAvatar(dataUrl: string): Promise<{ avatarUrl: string | null }> {
-  return apiClient.post<{ avatarUrl: string | null }>('/profile/avatar', { dataUrl }, { auth: true })
+  return apiClient.post<{ avatarUrl: string | null }>('/profile/avatar', { dataUrl }, { auth: true }).then(notifyProfileUpdated)
 }
 
 export async function removeAvatar(expectedAvatarUrl?: string): Promise<boolean> {
@@ -169,9 +178,11 @@ export async function removeAvatar(expectedAvatarUrl?: string): Promise<boolean>
       auth: true,
       body: { expectedAvatarUrl },
     })
+    if (result.removed) notifyProfileUpdated(result)
     return result.removed
   }
   await apiClient.delete('/profile/avatar', { auth: true })
+  notifyProfileUpdated(null)
   return true
 }
 
@@ -189,11 +200,12 @@ export async function upsertBadge(input: {
 }
 
 export async function pinBadge(id: string, pinned: boolean): Promise<{ badge: SkillBadgeRecord }> {
-  return apiClient.patch<{ badge: SkillBadgeRecord }>('/profile/badges/pin', { id, pinned }, { auth: true })
+  return apiClient.patch<{ badge: SkillBadgeRecord }>('/profile/badges/pin', { id, pinned }, { auth: true }).then(notifyProfileUpdated)
 }
 
 export async function deleteBadge(id: string): Promise<void> {
   await apiClient.delete(`/profile/badges/${encodeURIComponent(id)}`, { auth: true })
+  notifyProfileUpdated(null)
 }
 
 export async function searchLearners(

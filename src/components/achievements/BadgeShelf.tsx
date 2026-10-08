@@ -112,7 +112,7 @@ export default function BadgeShelf() {
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3 px-1">
         <div>
           <p className="flex items-center gap-2 text-sm font-black text-slate-900"><Sparkles className="h-4 w-4 text-red-600" /> Your honors collection</p>
-          <p className="mt-1 max-w-md text-xs leading-5 text-slate-600">Real results. Lasting recognition. All badges appear on your public profile. Pin your favorites to highlight them.</p>
+          <p className="mt-1 max-w-md text-xs leading-5 text-slate-600">Real results. Lasting recognition. All earned medals appear on your public profile. Pin your favorites to highlight them.</p>
         </div>
         <span className="rounded-full border border-white bg-white/60 px-3 py-1.5 text-[11px] font-bold text-slate-600">{badges.length} earned</span>
       </div>

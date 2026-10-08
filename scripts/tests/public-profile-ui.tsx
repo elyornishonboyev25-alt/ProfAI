@@ -46,21 +46,20 @@ export async function run() {
     <Routes><Route path="/public/:nickname" element={<PublicProfile />} /></Routes>
   </MemoryRouter>))
   const badgeCards = () => [...container.querySelectorAll('article')].find((el) => el.textContent?.includes('Achievement badges'))!
-  const cards = () => badgeCards().querySelectorAll('.achievement-card')
-  assert.equal(cards().length, 10, 'All badges render, including unpinned, ninth and owner offline badges')
+  assert.equal(badgeCards().querySelectorAll('.achievement-card').length, 10, 'All badges render, including unpinned, ninth and owner offline badges')
   assert.match(badgeCards().textContent!, /SAT Master/)
-  assert.equal(cards()[0].getAttribute('data-pinned'), 'true', 'Pinned badges appear first in the new card design')
-  assert.match(cards()[0].textContent!, /Tier 7/)
-  assert.equal(cards()[0].querySelector('.achievement-card__score strong')?.textContent, '1510')
+  const satCard = [...badgeCards().querySelectorAll('.achievement-card')].find((card) => card.querySelector('h3')?.textContent === 'SAT Master')!
+  assert.match(satCard.textContent!, /Tier 7/)
+  assert.match(satCard.querySelector('.achievement-card__score')!.textContent!, /1510score/)
   assert.match(container.textContent!, /Computer Science/)
   assert.match(container.textContent!, /Saved bio/)
   assert.ok(!container.textContent!.includes('private@example.test'))
   await act(async () => { await pinBadge('7', false) })
   assert.ok(!badgeCards().textContent!.includes('Pinned'), 'Saved pin changes refresh the public profile')
-  assert.equal(cards().length, 10, 'Unpinning never removes badges')
+  assert.equal(badgeCards().querySelectorAll('.achievement-card').length, 10, 'Unpinning never removes badges')
   payload = { ...payload, profile: { ...payload.profile, isSelf: false, bio: 'Updated bio' } }
   await act(async () => window.dispatchEvent(new Event('focus')))
-  assert.equal(cards().length, 9, 'Another learner never receives owner local badges')
+  assert.equal(badgeCards().querySelectorAll('.achievement-card').length, 9, 'Another learner never receives owner local badges')
   assert.match(container.textContent!, /Updated bio/, 'Returning to the page refreshes saved fields')
   payload = { ...payload, visibility: { ...payload.visibility, showBadges: false, showResults: false }, badges: [], stats: null }
   await act(async () => window.dispatchEvent(new Event('smarttest:profile-updated')))

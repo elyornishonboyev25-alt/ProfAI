@@ -343,7 +343,7 @@ export default function PublicProfile() {
             <div className="achievement-collection mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {showcaseBadges.map((b) => (
                 <AchievementCard key={b.id} track={b.track} band={b.band} tier={b.tier} pinned={b.pinned} compact>
-                  {b.pinned ? <span className="achievement-pin"><Star className="h-3 w-3 fill-current" /> Pinned</span> : null}
+                  {b.pinned ? <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-red-700"><Star className="h-3 w-3 fill-current" /> Pinned</span> : null}
                 </AchievementCard>
               ))}
             </div>

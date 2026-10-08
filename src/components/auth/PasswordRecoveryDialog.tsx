@@ -116,7 +116,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="panel-surface relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white bg-white p-6 shadow-[0_32px_90px_rgba(15,23,42,.3)] sm:p-8"
+            className="account-recovery-dialog panel-surface relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white bg-white p-6 shadow-[0_32px_90px_rgba(15,23,42,.3)] sm:p-8"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-red-500 to-red-700" />
             <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">

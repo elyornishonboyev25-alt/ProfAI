@@ -5,12 +5,12 @@ import ClassAssignmentContext from '@/features/learningCenter/ClassAssignmentCon
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import WorkspaceToolbar from '@/components/layout/WorkspaceToolbar'
-import LanguageSelector from '@/components/layout/LanguageSelector'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { isPublicAccountRoute } from '@/utils/accountAccess'
 import PremiumRoute from '@/components/auth/PremiumRoute'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
@@ -20,7 +20,6 @@ import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
-import NicknameGate from '@/components/speaking/NicknameGate'
 import { sendHeartbeat } from '@/lib/speakingApi'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
@@ -73,8 +72,6 @@ const AnalyzeMistakes = lazy(() => import('@/pages/AnalyzeMistakes'))
 const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
-const Onboarding = lazy(() => import('@/pages/Onboarding'))
-const QuickOnboarding = lazy(() => import('@/pages/QuickOnboarding'))
 const Premium = lazy(() => import('@/pages/Premium'))
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'))
 const IELTSWritingTest = lazy(() => import('@/pages/IELTSWritingTest'))
@@ -255,6 +252,7 @@ function App() {
   const user = useAuthStore((state: AuthState) => state.user)
   const accountData = useAccountDataSync(user?.id)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
+  const accessToken = useAuthStore((state: AuthState) => state.accessToken)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
 
@@ -442,12 +440,12 @@ function App() {
     )
   }
 
-  // New accounts enter onboarding once. Completing the review or skipping its
-  // final step persists the flag, so learners can edit their profile later.
-  if (user && !user.onboardingCompleted && pathname !== '/onboarding' && pathname !== '/focus' && !pathname.startsWith('/shared/')) {
-    return <Navigate to="/onboarding" replace />
+  // Resolve access before rendering navigation, loaders or private pages.
+  if ((!user || !accessToken) && !isPublicAccountRoute(pathname)) {
+    return <Navigate to="/login" replace state={{ from: { pathname, search: location.search, hash: location.hash } }} />
   }
-  if (user?.onboardingCompleted && pathname === '/onboarding') {
+  if (user && accessToken && isAuthPage) return <Navigate to="/dashboard" replace />
+  if (user && accessToken && (pathname === '/onboarding' || pathname === '/focus')) {
     return <Navigate to="/dashboard" replace />
   }
 
@@ -458,9 +456,7 @@ function App() {
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <ClassAssignmentContext />
-      {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
-      {user?.onboardingCompleted && (pathname === '/community' || pathname === '/speaking-community' || pathname.startsWith('/speaker/')) ? <NicknameGate /> : null}
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
@@ -866,13 +862,13 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <AnimatedRoute>
-                              <QuickOnboarding />
+                              <Navigate to="/dashboard" replace />
                             </AnimatedRoute>
                           </ProtectedRoute>
                         }
                       />
-                      <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><QuickOnboarding /></AnimatedRoute></ProtectedRoute>} />
-                      <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Onboarding /></AnimatedRoute></ProtectedRoute>} />
+                      <Route path="/focus" element={<ProtectedRoute><AnimatedRoute><Navigate to="/dashboard" replace /></AnimatedRoute></ProtectedRoute>} />
+                      <Route path="/study-profile" element={<ProtectedRoute><AnimatedRoute><Navigate to="/account" replace /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
                     </Routes>}</BillingBoundary>
                 </Suspense>

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { CheckCircle2, KeyRound, Loader2, Mail, RefreshCw } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, RefreshCw } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useCopy } from '@/i18n/interface'
 import type { AuthUser } from '@/types/platform'
@@ -16,14 +16,32 @@ type Props = {
 
 export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRecover, intent = 'sign-in' }: Props) {
   const { c } = useCopy()
+  const location = useLocation()
+  const creating = intent === 'create-account'
   const [email, setEmail] = useState(initialEmail)
   const [sentTo, setSentTo] = useState('')
   const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [accountRoute, setAccountRoute] = useState<'/login' | '/register' | null>(null)
   const [resendAt, setResendAt] = useState(0)
   const [remaining, setRemaining] = useState(0)
+
+  const validatePassword = () => {
+    if (!creating) return true
+    if (password.length < 8 || password.length > 72) {
+      setError('Use 8–72 characters for your account password.')
+      return false
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return false
+    }
+    return true
+  }
 
   useEffect(() => {
     const update = () => setRemaining(Math.max(0, Math.ceil((resendAt - Date.now()) / 1000)))
@@ -39,6 +57,7 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
       setError('Enter a valid Gmail address.')
       return
     }
+    if (!validatePassword()) return
     setBusy(true)
     setError('')
     setAccountRoute(null)
@@ -62,6 +81,7 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
     event.preventDefault()
     if (busy) return
     if (!sentTo) return sendCode()
+    if (!validatePassword()) return
     if (!/^\d{6}$/.test(code)) {
       setError('Enter the 6-digit code sent to your Gmail.')
       return
@@ -69,7 +89,7 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
     setBusy(true)
     setError('')
     try {
-      const session = await apiClient.post<EmailAuthSession>(intent === 'create-account' ? '/auth/email/register' : '/auth/email/login', { email: sentTo, verificationCode: code }, { auth: false })
+      const session = await apiClient.post<EmailAuthSession>(creating ? '/auth/register' : '/auth/email/login', { email: sentTo, verificationCode: code, ...(creating ? { password } : {}) }, { auth: false })
       await onAuthenticated(session)
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'Unable to sign in. Please try again.')
@@ -93,7 +113,25 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
             placeholder="name@gmail.com" />
         </div>
       </div>
-      <p className="auth-email-helper">{intent === 'create-account' ? c('We will send a one-time code to confirm your Gmail and create your account.') : c('Get a one-time code by email. Your existing progress stays saved.')}</p>
+      {creating && <>
+        <div className="auth-email-field">
+          <label htmlFor="auth-create-password">{c('Account password')}</label>
+          <div className="auth-cinema-input-wrap">
+            <Lock size={19} />
+            <input id="auth-create-password" type={showPassword ? 'text' : 'password'} required minLength={8} maxLength={72} autoComplete="new-password" disabled={busy} value={password} onChange={event => { setPassword(event.target.value); setError('') }} placeholder={c('At least 8 characters')} aria-describedby="auth-password-help" />
+            <button type="button" className="auth-cinema-eye" aria-label={c(showPassword ? 'Hide password' : 'Show password')} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button>
+          </div>
+          <p id="auth-password-help" className="auth-email-helper">{c('Create a password for ProfAI. Your Gmail password stays private.')}</p>
+        </div>
+        <div className="auth-email-field">
+          <label htmlFor="auth-confirm-password">{c('Confirm password')}</label>
+          <div className="auth-cinema-input-wrap">
+            <Lock size={19} />
+            <input id="auth-confirm-password" type={showPassword ? 'text' : 'password'} required minLength={8} maxLength={72} autoComplete="new-password" disabled={busy} value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); setError('') }} placeholder={c('Repeat your account password')} />
+          </div>
+        </div>
+      </>}
+      <p className="auth-email-helper">{creating ? c('We will send a one-time code to confirm your Gmail and create your account.') : c('Get a one-time code by email. Your existing progress stays saved.')}</p>
       {sentTo && (
         <div className="auth-email-verification">
           <p role="status" className="auth-email-sent"><CheckCircle2 size={18} /><span>{c('Code sent to')} <strong>{sentTo}</strong>. {c('Check your inbox and spam folder.')}</span></p>
@@ -111,7 +149,7 @@ export default function EmailCodeForm({ initialEmail = '', onAuthenticated, onRe
         </div>
       )}
       {error && <p role="alert" className="auth-cinema-error">{c(error)}</p>}
-      {accountRoute && <Link to={accountRoute} state={{ email: email.trim().toLowerCase() }} className="auth-cinema-account-link">{c(accountRoute === '/register' ? 'Create account with this Gmail' : 'Sign in with this Gmail')}</Link>}
+      {accountRoute && <Link to={accountRoute} state={{ ...(location.state as object ?? {}), email: email.trim().toLowerCase() }} className="auth-cinema-account-link">{c(accountRoute === '/register' ? 'Create account with this Gmail' : 'Sign in with this Gmail')}</Link>}
       <button type="submit" disabled={busy || (!sentTo && remaining > 0)} className="auth-cinema-submit">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : sentTo ? <CheckCircle2 size={19} /> : <Mail size={19} />}
         <span>{c(busy ? 'Please wait...' : sentTo ? intent === 'create-account' ? 'Verify & create account' : 'Verify & continue' : 'Send Gmail verification code')}</span>

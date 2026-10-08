@@ -1,0 +1,35 @@
+.profai-dashboard .dashboard-main-shell { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; contain: none; padding: clamp(4px, 1vw, 16px); }
+.profai-dashboard .dashboard-main-shell::before { display: none; }
+.profai-dashboard :is(.dashboard-glass-card,.dashboard-stat-card,.dashboard-learning-card) {
+  border: 1px solid rgba(255,255,255,.96);
+  background: linear-gradient(140deg, rgba(255,255,255,.86), rgba(239,242,247,.65));
+  box-shadow: 0 16px 40px rgba(57,64,80,.07), inset 0 1px 0 white, inset 0 -1px 0 rgba(136,148,169,.12);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+.profai-dashboard .dashboard-avatar-ring { background: linear-gradient(135deg,#c42b41,#e76376); box-shadow: 0 10px 24px rgba(173,36,58,.14); }
+.profai-dashboard .dashboard-exam-card { display: flex; align-items: flex-start; gap: 18px; padding: 26px; min-height: 174px; transition: transform 160ms ease,box-shadow 160ms ease; }
+.profai-dashboard .dashboard-exam-card:hover { transform: translateY(-3px); box-shadow: 0 20px 42px rgba(57,64,80,.11),inset 0 1px 0 white; }
+.dashboard-exam-icon { display: grid; place-items: center; flex: 0 0 52px; height: 52px; border: 1px solid rgba(255,255,255,.96); border-radius: 17px; color: #c02740; background: linear-gradient(135deg,#fff,#f6e4e8); box-shadow: 0 5px 15px rgba(110,28,46,.04); }
+.profai-dashboard .dashboard-stat-card { border-radius: 22px; }
+.profai-dashboard .dashboard-icon-button:hover { color: #b42039; }
+.profai-dashboard button:focus-visible { outline: 3px solid rgba(182,31,54,.6); outline-offset: 4px; }
+.profai-dashboard .dashboard-entrance-header h1 { white-space: normal; overflow: visible; font-size: clamp(25px,2.5vw,38px); }
+@media (max-width: 640px) {
+  .profai-dashboard .dashboard-exam-card { min-height: 144px; padding: 22px; }
+  .profai-dashboard .dashboard-entrance-header { gap: 16px; padding-bottom: 20px; }
+  .profai-dashboard .dashboard-avatar-ring { width: 3.5rem; height: 3.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profai-dashboard .dashboard-exam-card { transition: none; }
+  .profai-dashboard .dashboard-exam-card:hover { transform: none; }
+}
+.app-shell-dashboard { --workspace-canvas: radial-gradient(ellipse at 7% 4%,rgba(208,215,226,.68),transparent 42%), radial-gradient(ellipse at 93% 52%,rgba(194,41,65,.06),transparent 42%),linear-gradient(140deg,#f7f8fa,#e9edf2 60%,#f8f9fb); }
+.app-shell-dashboard .workspace-background .ambient-mesh { background: radial-gradient(ellipse at 75% 90%,rgba(193,201,215,.3),transparent 60%); }
+.app-shell-dashboard .workspace-background :is(.ambient-grid,.ambient-sphere) { display: none; }
+.app-shell-dashboard .profai-sidebar { background: linear-gradient(145deg,rgba(255,255,255,.76),rgba(232,237,244,.62)); border: 1px solid rgba(255,255,255,.96); box-shadow: 0 20px 55px rgba(54,64,80,.09),inset 0 1px 0 white; backdrop-filter: blur(20px); }
+.app-shell-dashboard .profai-sidebar::before { background: radial-gradient(ellipse at top,rgba(255,255,255,.7),transparent 65%); }
+.app-shell-dashboard .profai-dashboard .dashboard-entrance-grid { grid-template-columns: minmax(0,1fr); }
+.app-shell-dashboard .profai-dashboard .dashboard-entrance-learning { padding: 24px; border: 1px solid rgba(255,255,255,.96); background: linear-gradient(140deg,rgba(255,255,255,.86),rgba(239,242,247,.65)); box-shadow: 0 16px 40px rgba(57,64,80,.07),inset 0 1px 0 white; }
+@media (min-width: 1280px) {
+  .app-shell-dashboard .profai-dashboard .dashboard-entrance-grid { grid-template-columns: minmax(0,1fr) minmax(240px,288px); }
+}

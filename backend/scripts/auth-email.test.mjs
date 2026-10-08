@@ -43,6 +43,11 @@ globalThis.prisma = {
   },
   user: {
     findUnique: async ({ where }) => users.find((row) => matches(row, where)) ?? null,
+    findUniqueOrThrow: async ({ where }) => {
+      const user = users.find((row) => matches(row, where))
+      if (!user) throw new Error('Account not found')
+      return user
+    },
     create: async ({ data }) => {
       const row = { id: crypto.randomUUID(), role: 'USER', xp: 0, level: 1, currentStreak: 0, profile: null, ...data }
       users.push(row)
@@ -55,6 +60,9 @@ globalThis.prisma = {
     create: async ({ data }) => { tokens.push(data); return data },
     updateMany: async () => { revoked = true; return { count: tokens.length } },
   },
+  premiumGrant: { findUnique: async () => null },
+  billingSubscription: { findMany: async () => [] },
+  freeTrial: { findUnique: async () => null },
   $transaction: async (queries) => Promise.all(queries),
 }
 const realFetch = globalThis.fetch
@@ -191,6 +199,12 @@ test('registration requires its emailed code and creates a usable password', asy
   const result = await post('/register', { email, verificationCode: deliveredCode(), password: 'new-password-123' })
   assert.equal(result.status, 201)
   assert.equal(await verifyPassword('new-password-123', users[0].passwordHash), true)
+  assert.equal(result.body.user.nickname, null)
+  const login = await post('/login', { email, password: 'new-password-123' })
+  assert.equal(login.status, 200)
+  assert.equal(login.body.user.id, result.body.user.id)
+  assert.ok(login.body.accessToken)
+  assert.equal((await post('/login', { email, password: 'wrong-password-123' })).status, 401)
   assert.equal((await request('REGISTER')).body.code, 'ACCOUNT_EXISTS')
 })
 

@@ -1,30 +1,31 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles, UserPlus } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { useCopy } from '@/i18n/interface'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { BrandMark } from '@/components/brand/BrandLogo'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
-import AuthShowcasePanel from '@/components/auth/AuthShowcasePanel'
+import AccountShowcase from '@/components/auth/AccountShowcase'
 import PasswordRecoveryDialog from '@/components/auth/PasswordRecoveryDialog'
 import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
 import { takeFlashToast } from '@/utils/authFlash'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { claimStoredGuestDiagnostic, peekGuestDiagnosticDestination, takeGuestDiagnosticDestination } from '@/lib/guestDiagnostic'
 import type { AuthUser } from '@/types/platform'
-import '@/styles/auth-cinema.css'
+import { accountReturnPath } from '@/utils/accountAccess'
+import LanguageSelector from '@/components/layout/LanguageSelector'
+import '@/styles/account-access.css'
 
 const loginSchema = z.object({
   email: z.string().email('Valid Gmail address is required').refine((value) => value.toLowerCase().endsWith('@gmail.com'), 'Use your Gmail address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password must be at most 72 characters'),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -32,13 +33,13 @@ type AuthSessionPayload = { user: AuthUser; accessToken: string; refreshToken: s
 
 export default function Login() {
   const { c } = useCopy()
-  const navigate = useNavigate()
   const location = useLocation()
   const createMode = location.pathname === '/register'
   const setSession = useAuthStore((state: AuthState) => state.setSession)
   const pushToast = useToastStore((state: ToastState) => state.pushToast)
   const { minimalMotion } = useMotionPreferences()
   const [showPassword, setShowPassword] = useState(false)
+  const [loginMethod, setLoginMethod] = useState<'password' | 'code'>('password')
   const [notFound, setNotFound] = useState<{ email?: string } | null>(null)
   const [recoveryOpen, setRecoveryOpen] = useState(false)
   const [recoveryEmail, setRecoveryEmail] = useState('')
@@ -49,8 +50,8 @@ export default function Login() {
   }, [pushToast])
 
   const redirectPath = useMemo(() => {
-    const state = location.state as { from?: { pathname?: string } } | null
-    return state?.from?.pathname ?? '/dashboard'
+    const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null
+    return accountReturnPath(state?.from)
   }, [location.state])
   const initialEmail = (location.state as { email?: string } | null)?.email ?? ''
 
@@ -62,10 +63,12 @@ export default function Login() {
   const finishEmailAuth = async (payload: EmailAuthSession) => {
     setSession(payload)
     const diagnosticClaimed = await claimStoredGuestDiagnostic()
-    captureAnalyticsEvent(createMode ? 'signup_completed' : 'login_completed', { method: 'email_code' })
+    captureAnalyticsEvent(createMode ? 'signup_completed' : 'login_completed', { method: createMode ? 'email_password' : 'email_code' })
     if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'email_code' })
     const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
-    navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
+    // The application remounts its router when account ownership changes.
+    // A document redirect keeps the intended destination and resets scroll.
+    window.location.replace(destination)
   }
 
   const signInWithPassword = async (values: LoginFormValues) => {
@@ -79,7 +82,7 @@ export default function Login() {
       if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: 'password_login' })
       pushToast({ type: 'success', title: 'Signed in successfully', message: 'Welcome back to ProfAI.' })
       const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
-      navigate(payload.user.onboardingCompleted ? destination : '/onboarding', { replace: true })
+      window.location.replace(destination)
     } catch (error) {
       if (error instanceof ApiError && error.code === 'ACCOUNT_NOT_FOUND') {
         setNotFound({ email })
@@ -99,7 +102,7 @@ export default function Login() {
       if (diagnosticClaimed) captureAnalyticsEvent('diagnostic_claimed', { method: createMode ? 'google' : 'google_login' })
       pushToast({ type: 'success', title: createMode ? 'Account ready' : 'Signed in with Google', message: 'Welcome to ProfAI.' })
       const destination = peekGuestDiagnosticDestination() ? takeGuestDiagnosticDestination(redirectPath) : redirectPath
-      window.location.assign(payload.user.onboardingCompleted ? destination : '/onboarding')
+      window.location.replace(destination)
     } catch (error) {
       if (!createMode && error instanceof ApiError && error.code === 'ACCOUNT_NOT_FOUND') {
         setNotFound({})
@@ -113,6 +116,10 @@ export default function Login() {
 
   return (
     <div className="auth-cinema-page workspace-page">
+      <div className="account-access-toolbar">
+        <Link to="/" className="account-access-home"><ArrowLeft size={16} />{c('Back to home')}</Link>
+        <LanguageSelector />
+      </div>
       <motion.main
         initial={minimalMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -120,24 +127,19 @@ export default function Login() {
         className="auth-cinema-shell"
         id="sign-in"
       >
-        <AuthShowcasePanel mode={createMode ? 'register' : 'login'} />
+        <AccountShowcase />
 
         <section className="auth-cinema-form-side" aria-label={createMode ? 'Create account' : 'Sign in'}>
           <div className="auth-cinema-form-inner">
-            <div className="auth-cinema-lockup">
-              <span className="auth-cinema-lockup-icon"><BrandMark size={43} /></span>
-              <div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div>
-            </div>
-
             <nav className="auth-cinema-tabs" aria-label="Account access">
-              <Link to="/login" aria-current={!createMode ? 'page' : undefined} className={!createMode ? 'is-active' : ''}><UiText text="Sign in" /></Link>
-              <Link to="/register" aria-current={createMode ? 'page' : undefined} className={createMode ? 'is-active' : ''}><UiText text="Create account" /></Link>
+              <Link to="/login" state={location.state} aria-current={!createMode ? 'page' : undefined} className={!createMode ? 'is-active' : ''}><UiText text="Sign in" /></Link>
+              <Link to="/register" state={location.state} aria-current={createMode ? 'page' : undefined} className={createMode ? 'is-active' : ''}><UiText text="Create account" /></Link>
             </nav>
 
             <div className="auth-cinema-intro">
               <span><Sparkles size={14} /> {c(createMode ? 'Your journey begins here' : 'Pick up where you left off')}</span>
-              <h1>{c(createMode ? 'Make your next move.' : 'Welcome back.')}</h1>
-              <p>{c(createMode ? 'Create an account with your Gmail to keep every step of your journey together.' : 'Sign in to continue your IELTS, SAT, and university journey.')}</p>
+              <h1>{c(createMode ? 'Create your account.' : 'Welcome back.')}</h1>
+              <p>{c(createMode ? 'Your Gmail and a password. Then you are ready to practice.' : 'Sign in to continue your IELTS, SAT, and university journey.')}</p>
             </div>
 
             {!createMode && notFound && (
@@ -146,13 +148,15 @@ export default function Login() {
                 <div>
                   <strong>{c('Account not found')}</strong>
                   <p>{notFound.email ? `${notFound.email} — ${c('Create one to get started.')}` : c('We could not find an account for that Google email.')}</p>
-                  <Link to="/register" state={notFound.email ? { email: notFound.email } : undefined}>{c('Create an account')} <ArrowRight size={15} /></Link>
+                  <Link to="/register" state={{ ...(location.state as object ?? {}), email: notFound.email }}>{c('Create an account')} <ArrowRight size={15} /></Link>
                 </div>
               </div>
             )}
 
             {createMode ? (
               <EmailCodeForm key="create" intent="create-account" initialEmail={initialEmail} onAuthenticated={finishEmailAuth} />
+            ) : loginMethod === 'code' ? (
+              <EmailCodeForm key="sign-in-code" initialEmail={getValues('email')} onAuthenticated={finishEmailAuth} />
             ) : (
               <form onSubmit={handleSubmit(signInWithPassword)} className="auth-cinema-password-form" aria-label="Sign in with password">
                 <label htmlFor="auth-email">{c('Gmail address')}</label>
@@ -163,15 +167,16 @@ export default function Login() {
                 {errors.email && <p className="auth-cinema-error">{c(errors.email.message || '')}</p>}
 
                 <div className="auth-cinema-label-row">
-                  <label htmlFor="auth-password">{c('Password')}</label>
+                  <label htmlFor="auth-password">{c('Account password')}</label>
                   <button type="button" onClick={() => { setRecoveryEmail(getValues('email')); setRecoveryOpen(true) }}>{c('Forgot password?')}</button>
                 </div>
                 <div className="auth-cinema-input-wrap">
                   <Lock size={19} />
                   <input id="auth-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder={c('Enter your password')} {...register('password')} />
-                  <button type="button" className="auth-cinema-eye" aria-label={c(showPassword ? 'Hide password' : 'Show password')} onClick={() => setShowPassword((value) => !value)}>{showPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button>
+                  <button type="button" className="auth-cinema-eye" aria-label={c(showPassword ? 'Hide password' : 'Show password')} aria-pressed={showPassword} onClick={() => setShowPassword((value) => !value)}>{showPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button>
                 </div>
                 {errors.password && <p className="auth-cinema-error">{c(errors.password.message || '')}</p>}
+                <p className="auth-email-helper">{c('Use your ProfAI password, not your Gmail password.')}</p>
 
                 <button className="auth-cinema-submit" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
@@ -179,6 +184,7 @@ export default function Login() {
                 </button>
               </form>
             )}
+            {!createMode && <button type="button" className="auth-cinema-switch-method" onClick={() => { setLoginMethod(method => method === 'password' ? 'code' : 'password'); setNotFound(null) }}>{c(loginMethod === 'password' ? 'Sign in with an email code' : 'Sign in with your password')}</button>}
 
             <div className="auth-cinema-divider"><span />{c('or continue with')}<span /></div>
             <div className="auth-cinema-google"><GoogleAuthButton mode={createMode ? 'signup' : 'signin'} onCredential={handleGoogleCredential} /></div>

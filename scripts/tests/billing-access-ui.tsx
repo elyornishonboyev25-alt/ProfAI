@@ -5,6 +5,7 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import { getSATSectionTest } from '@/features/sat/catalog'
 import { createSATAttempt } from '@/features/sat/practiceTest4'
+import { saveSATAttempt, clearSATAttempt } from '@/features/sat/attemptStorage'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import '@/i18n'
@@ -19,13 +20,12 @@ export async function run() {
   }
   useAuthStore.setState({ user: { id: 'billing-ui', email: 'billing@example.com', fullName: 'Billing', role: 'USER' } as NonNullable<typeof originalUser> })
   const test = getSATSectionTest('1', null)
-  const key = `profai:sat:${test.id}:attempt:v1`
-  localStorage.setItem(key, JSON.stringify({ ...createSATAttempt(test.id, test.modules, 'practice'), status: 'submitted', submittedAt: Date.now() }))
+  saveSATAttempt({ ...createSATAttempt(test.id, test.modules, 'practice'), status: 'submitted', submittedAt: Date.now() })
   function TestPage() {
     const navigate = useNavigate()
     const location = useLocation()
     return location.pathname.startsWith('/mock/') ? <div>Saved review<button onClick={() => {
-      localStorage.removeItem(key)
+      clearSATAttempt(test.id)
       navigate('/sat/mock/1/run')
     }}>Restart test</button></div> : <p>Paid test content</p>
   }
@@ -52,6 +52,6 @@ export async function run() {
     await act(async () => root.unmount())
     apiClient.get = originalGet
     useAuthStore.setState({ user: originalUser })
-    localStorage.removeItem(key)
+    clearSATAttempt(test.id)
   }
 }

@@ -20,8 +20,7 @@ import { ApiError } from '@/lib/apiClient'
 import { fetchPublicProfile, type PublicProfilePayload } from '@/lib/profileApi'
 import { formatUniversityRank, getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
-import SkillBadge from '@/components/achievements/SkillBadge'
-import { TIER_NAME, TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
+import AchievementCard from '@/components/achievements/AchievementCard'
 import { useAuthStore } from '@/store/authStore'
 import { mergeLocalPublicProfilePerformance } from '@/utils/localProfilePerformance'
 
@@ -317,14 +316,10 @@ export default function PublicProfile() {
         <Reveal>
           <article className="surface-card p-6">
             <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-              <Award className="h-4 w-4 text-blue-600" />  <UiText text={"Achievement badges"} /> </h3>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Award className="h-4 w-4 text-red-600" />  <UiText text={"Achievement badges"} /> </h3>
+            <div className="achievement-collection mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {showcaseBadges.map((b) => (
-                <div key={b.id} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-3">
-                  <SkillBadge track={b.track} band={b.band} size={104} showBand />
-                  <p className="mt-1 text-xs font-bold text-slate-800">{TRACK_META[b.track]?.short}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{TIER_NAME[b.tier]} · {formatAchievementScore(b.track, b.band)}</p>
-                </div>
+                <AchievementCard key={b.id} track={b.track} band={b.band} tier={b.tier} compact />
               ))}
             </div>
           </article>

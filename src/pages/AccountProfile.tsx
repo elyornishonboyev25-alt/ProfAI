@@ -868,7 +868,7 @@ export default function AccountProfile() {
           <section id="achievements" className="account-profile-card mt-6 scroll-mt-24 surface-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+                <Sparkles className="h-5 w-5 text-red-600" />
                  <UiText text={"Achievement badges"} /> </h2>
               <span className="soft-chip"> <UiText text={"Earned from mock / exam results"} /> </span>
             </div>

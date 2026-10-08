@@ -40,6 +40,8 @@ import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, XPGem
 import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
 import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
 import '@/styles/profile-recent-attempts.css'
+import '@/components/achievements/achievements.css'
+import { BrandMark } from '@/components/brand/BrandLogo'
 
 function CompactSkeletonCard() {
   return <Skeleton className="h-28 w-full rounded-2xl" />
@@ -634,9 +636,9 @@ export default function Profile() {
 
         <Reveal delay={0.08}>
           <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
             <div className="flex items-center gap-2">
-              <ArenaMetricMark icon={Sparkles} tone="amber" size="sm" />
+              <ArenaMetricMark icon={Sparkles} tone="red" size="sm" />
               <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Achievements"} /> </h2>
             </div>
             {loading ? (
@@ -648,17 +650,17 @@ export default function Profile() {
               <Stagger className="mt-4 space-y-2.5">
                 {data.achievements.slice(0, 5).map((entry) => (
                   <StaggerItem key={entry.achievement.id}>
-                    <div className="group flex items-start gap-2.5 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50/60 to-white p-3 transition hover:border-amber-200 hover:shadow-[0_8px_18px_rgba(245,158,11,0.15)]">
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
-                        <CheckCircle2 className="h-4 w-4" />
+                    <div className="achievement-glass flex items-start gap-2.5 rounded-2xl p-3">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-gradient-to-br from-white to-slate-200 shadow-sm">
+                        <BrandMark size={34} />
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-slate-900">{entry.achievement.title}</p>
                         <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">{entry.achievement.description}</p>
                       </div>
                       {entry.achievement.xpReward > 0 ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          <Zap className="h-3 w-3 fill-amber-400 text-amber-500" />+{entry.achievement.xpReward}
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                          <Zap className="h-3 w-3 fill-red-400 text-red-500" />+{entry.achievement.xpReward}
                         </span>
                       ) : (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
@@ -669,8 +671,8 @@ export default function Profile() {
                 ))}
               </Stagger>
             ) : (
-              <div className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-amber-200 bg-amber-50/40 px-4 py-8 text-center">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+              <div className="achievement-glass mt-4 flex flex-col items-center justify-center rounded-2xl px-4 py-8 text-center">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
                   <Sparkles className="h-5 w-5" />
                 </span>
                 <p className="mt-3 text-sm font-bold text-slate-700"> <UiText text={"No achievements yet"} /> </p>

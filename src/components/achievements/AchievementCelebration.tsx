@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Share2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -7,9 +7,10 @@ import { useToastStore } from '@/store/toastStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { playAchievementFanfare } from '@/utils/sound'
 import SkillBadge from './SkillBadge'
-import { TRACK_META, formatAchievementScore, nextAchievementThreshold, tierForAchievement } from './badgeMeta'
+import { TRACK_META, TIER_NAME, formatAchievementScore, nextAchievementThreshold, tierForAchievement } from './badgeMeta'
 
-const COLORS = ['#f7cd6b', '#e24653', '#fff4ca', '#a04e37']
+const COLORS = ['#e2e8f0', '#e24653', '#ffffff', '#aeb9cc']
+const GLOW: Record<number, string> = { 6: '#d8a178', 7: '#e8bd65', 8: '#cbd3df', 9: '#a8dce8' }
 
 export default function AchievementCelebration() {
   const current = useCelebrationStore((state) => state.current)
@@ -17,13 +18,31 @@ export default function AchievementCelebration() {
   const pushToast = useToastStore((state) => state.pushToast)
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
+  const dialogRef = useRef<HTMLElement>(null)
 
   useEffect(() => { if (current) playAchievementFanfare() }, [current])
   useEffect(() => {
     if (!current) return
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') dismiss() }
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismiss()
+      if (event.key !== 'Tab') return
+      const controls = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      if (!controls?.length) return
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+      previousFocus?.focus()
+    }
   }, [current, dismiss])
 
   const confetti = useMemo(() => Array.from({ length: minimalMotion ? 0 : 38 }, (_, id) => ({
@@ -55,7 +74,7 @@ export default function AchievementCelebration() {
   return (
     <AnimatePresence>
       <motion.div key={current.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[300] flex items-center justify-center overflow-y-auto bg-[#161b28]/75 p-3 backdrop-blur-lg sm:p-5"
+        className="fixed inset-0 z-[300] flex items-center justify-center overflow-y-auto bg-[#161b28]/65 p-3 backdrop-blur-md sm:p-5"
         onClick={dismiss}>
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {confetti.map((piece) => <motion.span key={piece.id} className="absolute left-1/2 top-0 h-2 w-3 rounded-sm"
@@ -63,23 +82,23 @@ export default function AchievementCelebration() {
             animate={{ y: '95vh', opacity: [0, 1, 1, 0], rotate: piece.rotate }}
             transition={{ delay: piece.delay, duration: piece.duration, ease: 'easeIn' }} />)}
         </div>
-        <motion.section role="dialog" aria-modal="true" aria-label={`${meta.title} achievement unlocked`}
+        <motion.section ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${meta.title} achievement unlocked`}
           initial={minimalMotion ? { opacity: 0 } : { opacity: 0, scale: .83, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .94 }}
           transition={{ type: 'spring', stiffness: 230, damping: 22 }} onClick={(event) => event.stopPropagation()}
-          className="relative my-auto w-full max-w-[600px] overflow-hidden rounded-[2rem] border border-white/50 bg-[linear-gradient(145deg,rgba(112,116,125,.84),rgba(55,57,65,.90))] px-6 pb-8 pt-9 text-center text-white shadow-[0_35px_100px_rgba(0,0,0,.5),inset_0_1px_2px_rgba(255,255,255,.55)] backdrop-blur-3xl sm:px-11">
-          <div className="pointer-events-none absolute left-1/2 top-28 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/35 blur-[75px]" />
-          <div className="pointer-events-none absolute inset-x-0 top-28 h-48 bg-[radial-gradient(ellipse_at_center,rgba(255,214,99,.35),transparent_70%)]" />
+          className="achievement-dialog relative my-auto w-full max-w-[600px] overflow-hidden rounded-[2rem] border border-white/65 px-5 pb-7 pt-8 text-center text-white sm:px-11">
+          <div style={{ backgroundColor: GLOW[tier] }} className="pointer-events-none absolute left-1/2 top-28 h-72 w-72 -translate-x-1/2 rounded-full opacity-30 blur-[65px]" />
           <button type="button" onClick={dismiss} aria-label="Close achievement" className="absolute right-4 top-4 z-10 rounded-full border border-white/30 bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"><X className="h-4 w-4" /></button>
-          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-amber-200">ProfAI Honors</p>
-          <h2 className="relative mt-2 text-[clamp(2rem,5.5vw,3.35rem)] font-black leading-tight tracking-[-.05em] drop-shadow-[0_3px_12px_rgba(0,0,0,.3)]">Achievement Unlocked!</h2>
+          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-white/85">ProfAI Honors</p>
+          <h2 className="relative mt-2 text-[clamp(1.8rem,5.5vw,3rem)] font-black leading-tight tracking-[-.05em] drop-shadow-[0_3px_12px_rgba(0,0,0,.3)]">Achievement Unlocked!</h2>
           <motion.div className="relative mx-auto mt-1 flex justify-center drop-shadow-[0_18px_22px_rgba(0,0,0,.32)]"
             initial={minimalMotion ? undefined : { scale: .5, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: .16, type: 'spring', stiffness: 170, damping: 15 }}>
-            <SkillBadge track={current.track} band={current.band} size={238} />
+            <SkillBadge track={current.track} band={current.band} size={250} />
           </motion.div>
-          <p className="relative mt-1 font-serif text-xl font-bold text-amber-100">{meta.title} · Tier {tier}</p>
-          <p className="relative mt-1 text-sm text-white/80">{meta.label} · {meta.group === 'IELTS' ? 'Band' : 'Score'} {formatAchievementScore(current.track, current.band)}</p>
+          <p className="relative mt-1 text-xl font-extrabold tracking-tight">{meta.title}</p>
+          <p className="relative mt-1 text-xs font-semibold text-white/85">{TIER_NAME[tier]} medal · Tier {tier} · {meta.label}</p>
+          <p className="relative mt-3 text-3xl font-black tracking-tight">{formatAchievementScore(current.track, current.band)} <span className="text-sm font-semibold tracking-normal text-white/80">{meta.group === 'IELTS' ? 'band' : 'score'}</span></p>
           <div className="relative mx-auto mt-6 max-w-md">
             <div className="flex items-center justify-between gap-3 text-xs font-semibold text-white/85">
               <span>{next === null ? 'Highest tier achieved' : `Progress to Tier ${tier + 1}`}</span>
@@ -93,11 +112,11 @@ export default function AchievementCelebration() {
           </div>
           <div className="relative mt-7 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => { dismiss(); navigate('/account#achievements') }}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/50 bg-white/25 px-5 font-bold text-white shadow-[inset_0_1px_3px_rgba(255,255,255,.4)] transition hover:bg-white/35">
+              className="achievement-btn">
               View collection <ArrowRight className="h-4 w-4" />
             </button>
             <button type="button" onClick={() => void share()}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-red-300/70 bg-[linear-gradient(120deg,#bd121e,#ee3f48,#f1787b)] px-5 font-bold text-white shadow-[0_8px_22px_rgba(177,18,32,.38),inset_0_1px_3px_rgba(255,255,255,.5)] transition hover:brightness-110">
+              className="achievement-btn achievement-btn--red">
               <Share2 className="h-4 w-4" /> Share
             </button>
           </div>

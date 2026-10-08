@@ -1,67 +1,70 @@
-import { useId } from 'react'
-import { BookOpen, Headphones, Mic, PenLine, Sigma, Trophy, Type, type LucideIcon } from 'lucide-react'
-import { TRACK_META, formatAchievementScore, tierForAchievement, type SkillTrackKey } from './badgeMeta'
+﻿import { useId } from 'react'
+import { TRACK_META, TIER_NAME, formatAchievementScore, tierForAchievement, type SkillTrackKey } from './badgeMeta'
+import './achievements.css'
 
-const ICONS: Record<string, LucideIcon> = { BookOpen, Headphones, Mic, PenLine, Sigma, Trophy, Type }
+// One minted crest for every exam, with the official ProfAI mark.
 const METAL = {
-  6: ['#f2d4ab', '#aa7040', '#724222', '#603b26'],
-  7: ['#fff4c1', '#e6ae4c', '#98601e', '#78501f'],
-  8: ['#f9fcff', '#b8c8dc', '#687c9a', '#455570'],
-  9: ['#edffff', '#83dce9', '#258ca8', '#15526b'],
+  6: ['#fff0db', '#d8a178', '#87502d', '#f0c6a4'],
+  7: ['#fff8dc', '#e8bd65', '#8c591b', '#f8dfa0'],
+  8: ['#ffffff', '#cbd3df', '#627084', '#e9edf4'],
+  9: ['#f4ffff', '#a8dce8', '#386c81', '#dbf3f8'],
 } as const
 
 export type SkillBadgeProps = { track: SkillTrackKey; band: number; size?: number; showBand?: boolean; showLabel?: boolean; className?: string }
 
 function sealPath(): string {
-  return `M${Array.from({ length: 48 }, (_, i) => {
-    const angle = (i / 48) * Math.PI * 2 - Math.PI / 2
-    const r = i % 2 ? 82 : 86
-    return `${(120 + Math.cos(angle) * r).toFixed(2)} ${(170 + Math.sin(angle) * r).toFixed(2)}`
+  return `M${Array.from({ length: 144 }, (_, i) => {
+    const angle = (i / 144) * Math.PI * 2 - Math.PI / 2
+    const radius = 83 + 2.6 * Math.cos(angle * 18)
+    return `${(120 + Math.cos(angle) * radius).toFixed(2)} ${(174 + Math.sin(angle) * radius).toFixed(2)}`
   }).join(' L')} Z`
 }
 
-export default function SkillBadge({ track, band, size = 120, showBand = true, showLabel = false, className }: SkillBadgeProps) {
+export default function SkillBadge({ track, band, size = 120, showBand = true, showLabel = false, className = '' }: SkillBadgeProps) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
-  const tier = tierForAchievement(track, band) ?? 7
+  const tier = tierForAchievement(track, band) ?? (band < 7 ? 6 : 7)
   const meta = TRACK_META[track]
-  const Icon = ICONS[meta?.icon ?? 'Trophy']
   const [light, mid, dark, face] = METAL[tier]
-  const title = meta?.title ?? 'Achievement'
   const score = formatAchievementScore(track, band)
   return (
-    <div className={className} style={{ width: size, height: size * 268 / 240, flex: 'none', lineHeight: 0 }}>
-      <svg viewBox="0 0 240 268" width="100%" height="100%" role="img" aria-label={`${title}, Tier ${tier}, ${meta?.group === 'SAT' ? 'score' : 'band'} ${score}`}>
+    <div className={`achievement-medal ${className}`} style={{ width: size, flex: 'none' }}>
+      <svg viewBox="0 0 240 268" width="100%" style={{ display: 'block' }} role="img" aria-label={`${meta.title}, ${TIER_NAME[tier]}, Tier ${tier}, ${meta.group === 'SAT' ? 'score' : 'band'} ${score}`}>
         <defs>
-          <linearGradient id={`metal-${uid}`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={light} /><stop offset="44%" stopColor={mid} /><stop offset="75%" stopColor={dark} /><stop offset="100%" stopColor={light} /></linearGradient>
-          <linearGradient id={`face-${uid}`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={dark} /><stop offset="52%" stopColor={face} /><stop offset="100%" stopColor={dark} /></linearGradient>
-          <linearGradient id={`ribbon-${uid}`} x1="0" y1="0" x2="1" y2="0"><stop stopColor="#694018" /><stop offset="42%" stopColor={mid} /><stop offset="56%" stopColor={light} /><stop offset="100%" stopColor="#805021" /></linearGradient>
-          <radialGradient id={`glow-${uid}`}><stop stopColor={light} stopOpacity=".5" /><stop offset="100%" stopColor={light} stopOpacity="0" /></radialGradient>
-          <path id={`arc-${uid}`} d="M 57 153 A 63 63 0 0 1 183 153" />
+          <linearGradient id={`metal-${uid}`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={light} /><stop offset="23%" stopColor={mid} /><stop offset="43%" stopColor={light} /><stop offset="61%" stopColor={mid} /><stop offset="83%" stopColor={dark} /><stop offset="100%" stopColor={light} /></linearGradient>
+          <linearGradient id={`face-${uid}`} x1="0" y1="0" x2=".8" y2="1"><stop stopColor={light} /><stop offset="48%" stopColor={face} /><stop offset="100%" stopColor={mid} /></linearGradient>
+          <linearGradient id={`ribbon-${uid}`} x1="0" y1="0" x2="1" y2="0"><stop stopColor={dark} /><stop offset="18%" stopColor={mid} /><stop offset="48%" stopColor={light} /><stop offset="66%" stopColor={mid} /><stop offset="100%" stopColor={dark} /></linearGradient>
+          <radialGradient id={`glow-${uid}`}><stop stopColor={mid} stopOpacity=".28" /><stop offset="100%" stopColor={light} stopOpacity="0" /></radialGradient>
+          <path id={`arc-${uid}`} d="M 58 173 A 62 62 0 0 1 182 173" />
         </defs>
-        <circle cx="120" cy="151" r="113" fill={`url(#glow-${uid})`} />
-        <path d="M55 3 H96 L130 91 L94 108 Z M144 3 H185 L146 108 L110 91 Z" fill={`url(#ribbon-${uid})`} stroke={dark} strokeWidth="2" />
-        <path d="M91 3 H103 L134 87 H122 Z M137 3 H149 L118 87 H106 Z" fill={light} opacity=".5" />
-        <rect x="96" y="83" width="48" height="28" rx="8" fill={`url(#metal-${uid})`} stroke={dark} strokeWidth="2" />
-        <path d={sealPath()} fill={`url(#metal-${uid})`} stroke={dark} strokeWidth="3" />
-        <circle cx="120" cy="170" r="78" fill="none" stroke={light} strokeWidth="2" opacity=".8" />
-        <circle cx="120" cy="170" r="69" fill={`url(#face-${uid})`} stroke={dark} strokeWidth="3" />
-        <circle cx="120" cy="170" r="62" fill="none" stroke={light} strokeWidth="2" opacity=".95" />
-        <circle cx="120" cy="170" r="54" fill="none" stroke={mid} strokeWidth="1" opacity=".7" />
-        <text fill="#fff8df" fontSize={title.length > 20 ? 10 : 13} fontFamily="Georgia, serif" fontWeight="700" letterSpacing=".2" textAnchor="middle">
-          <textPath href={`#arc-${uid}`} startOffset="50%">{title} · Tier {tier}</textPath>
+        <circle cx="120" cy="168" r="108" fill={`url(#glow-${uid})`} />
+        <path d="M56 4 H97 L133 94 L99 109 Z" fill={`url(#ribbon-${uid})`} stroke={dark} strokeWidth="1" />
+        <path d="M143 4 H184 L145 109 L109 94 Z" fill={`url(#ribbon-${uid})`} stroke={dark} strokeWidth="1" />
+        <path d="M60 5 H65 L102 101 M174 5 H179 L142 103" fill="none" stroke={light} strokeWidth="2" opacity=".65" />
+        <rect x="97" y="86" width="46" height="28" rx="9" fill={`url(#metal-${uid})`} stroke={dark} strokeWidth="2" />
+        <rect x="103" y="91" width="34" height="16" rx="5" fill="none" stroke={light} strokeWidth="2" />
+        <path d={sealPath()} fill={`url(#metal-${uid})`} stroke={dark} strokeWidth="1.5" />
+        <circle cx="120" cy="174" r="77" fill="none" stroke={light} strokeWidth="1.5" />
+        <circle cx="120" cy="174" r="71" fill={`url(#face-${uid})`} stroke={dark} strokeWidth="1.8" />
+        <circle cx="120" cy="174" r="67" fill="none" stroke={light} strokeWidth="1.8" />
+        <circle cx="120" cy="179" r="46" fill="none" stroke={dark} strokeWidth=".8" opacity=".4" />
+        <text fill={dark} fontSize={meta.title.length > 20 ? 10.5 : 12} fontFamily="Inter, system-ui, sans-serif" fontWeight="750" textAnchor="middle">
+          <textPath href={`#arc-${uid}`} startOffset="50%">{meta.title} · Tier {tier}</textPath>
         </text>
-        <Icon x="92" y="135" width="56" height="46" color="#fff8df" strokeWidth={1.8} />
-        {showBand && <text x="120" y="199" textAnchor="middle" fontSize={meta?.group === 'SAT' ? 22 : 27} fontFamily="Georgia, serif" fontWeight="700" fill="#fff8df">{score}</text>}
-        <g fill={light} opacity=".93">
+        <image href="/logo.svg" x="86" y="137" width="68" height="68" />
+        {showBand && <text x="120" y="211" textAnchor="middle" fontSize={meta.group === 'SAT' ? 21 : 24} fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing="-1" fill={dark}>{score}</text>}
+        <g fill={`url(#metal-${uid})`} stroke={dark} strokeWidth=".45">
+          <path d="M62 177 Q63 217 107 236 M178 177 Q177 217 133 236" fill="none" strokeWidth="1.5" />
           {Array.from({ length: 7 }, (_, i) => {
-            const y = 174 + i * 8
-            const left = 63 + i * 4
-            return <g key={i}><ellipse cx={left} cy={y} rx="3.5" ry="7" transform={`rotate(-42 ${left} ${y})`} /><ellipse cx={240 - left} cy={y} rx="3.5" ry="7" transform={`rotate(42 ${240 - left} ${y})`} /></g>
+            const angle = (.04 + i * .06) * Math.PI
+            const x = 120 - Math.cos(angle) * 57
+            const y = 176 + Math.sin(angle) * 57
+            return <g key={i}><ellipse cx={x} cy={y} rx="3.3" ry="7" transform={`rotate(${-35 - i * 9} ${x} ${y})`} /><ellipse cx={240 - x} cy={y} rx="3.3" ry="7" transform={`rotate(${35 + i * 9} ${240 - x} ${y})`} /></g>
           })}
+          <path d="m120 226 2.5 5.5 6 .7-4.5 4 1.3 6-5.3-3-5.3 3 1.3-6-4.5-4 6-.7Z" />
         </g>
-        <text x="120" y="226" textAnchor="middle" fill={light} fontSize="17">✦</text>
+        <path d="M49 155 A75 75 0 0 1 142 103" fill="none" stroke="white" strokeWidth="2" opacity=".6" />
       </svg>
-      {showLabel && <span className="block text-center text-xs font-bold text-slate-800">{title}</span>}
+      {showLabel && <span className="mt-1 block text-center text-xs font-bold leading-normal text-slate-800">{meta.title}</span>}
     </div>
   )
 }

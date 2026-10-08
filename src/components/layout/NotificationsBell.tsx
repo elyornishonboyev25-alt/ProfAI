@@ -1,10 +1,9 @@
-import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Award, Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Loader2, MessageSquareText, RefreshCw, Sparkles, X } from 'lucide-react'
+import { Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Loader2, MessageSquareText, RefreshCw, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fetchBadges, type SkillBadgeRecord } from '@/lib/profileApi'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -14,17 +13,8 @@ import './notifications.css'
 import { ownerText } from '@/i18n/owner'
 import { premiumLanguage } from '@/i18n/premium'
 import { classText } from '@/features/learningCenter/messages'
-
-const TRACK_LABELS: Record<string, string> = {
-  IELTS_LISTENING: 'Listening',
-  IELTS_READING: 'Reading',
-  IELTS_WRITING: 'Writing',
-  IELTS_SPEAKING: 'Speaking',
-  IELTS_OVERALL: 'IELTS Full Mock',
-  SAT_MATH: 'SAT Math',
-  SAT_ENGLISH: 'SAT English',
-  SAT_OVERALL: 'SAT Full Mock',
-}
+import SkillBadge from '@/components/achievements/SkillBadge'
+import { TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
 
 type NotificationItem = {
   id: string
@@ -360,19 +350,17 @@ export default function NotificationsBell() {
                         key={badge.id}
                         onClick={() => {
                           setOpen(false)
-                          navigate('/account')
+                          navigate('/account#achievements')
                         }}
                         className="profai-notification-row flex w-full items-center gap-3 rounded-2xl border border-white bg-white/65 px-3 py-3 text-left transition hover:border-red-200 hover:bg-white"
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_6px_14px_rgba(245,158,11,0.3)]">
-                          <Award className="h-4 w-4" />
-                        </span>
+                        <SkillBadge track={badge.track} band={badge.band} size={46} showBand={false} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-bold text-slate-900">
-                            {TRACK_LABELS[badge.track] ?? badge.track} · Tier {badge.tier}
+                            {TRACK_META[badge.track].title} · Tier {badge.tier}
                           </span>
                           <span className="block text-[11px] text-slate-500">
-                             <UiText text={"Band"} /> {badge.band.toFixed(1)} ·{' '}
+                            {TRACK_META[badge.track].group === 'SAT' ? 'Score' : 'Band'} {formatAchievementScore(badge.track, badge.band)} ·{' '}
                             {new Date(badge.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         </span>

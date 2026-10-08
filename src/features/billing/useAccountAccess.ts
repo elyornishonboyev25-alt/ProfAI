@@ -19,5 +19,13 @@ export function useAccountAccess() {
     const timer = window.setInterval(() => { setNow(Date.now()); void refresh() }, 60000)
     return () => window.clearInterval(timer)
   }, [user?.id, refresh])
-  return currentAccess(userId === user?.id && wallet?.access ? wallet.access : user?.access, now)
+  const access = userId === user?.id && wallet?.access ? wallet.access : user?.access
+  useEffect(() => {
+    if (!access?.active || !access.expiresAt) return
+    const remaining = new Date(access.expiresAt).getTime() - Date.now()
+    if (!Number.isFinite(remaining)) return
+    const timer = window.setTimeout(() => { setNow(Date.now()); void refresh() }, Math.max(0, Math.min(remaining + 1, 2147483647)))
+    return () => window.clearTimeout(timer)
+  }, [access?.active, access?.expiresAt, refresh])
+  return currentAccess(access, now)
 }

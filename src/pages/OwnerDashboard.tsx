@@ -15,7 +15,7 @@ import { hasOwnerAccess } from '@/utils/ownerAccess'
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
 type NewUser = { id: string; fullName: string; email: string; createdAt: string }
 type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
-type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null; coinWallet?: { balance: number } | null; billingSubscriptions?: Array<{ plan: string; expiresAt: string }> }
+type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null; billingSubscriptions?: Array<{ plan: string; expiresAt: string }> }
 type PaymentRequest = { id: string; plan: string; amountUzs: number; currency?: string; amountMinor?: number; method?: string; status: string; createdAt: string; user: NewUser }
 type Overview = {
   metrics: { totalUsers: number; todayUsers: number; weekUsers: number; totalReports: number; openReports: number }
@@ -23,7 +23,7 @@ type Overview = {
 }
 
 const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
-const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely', TRIAL_14: '14-day free trial' }
+const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely' }
 
 function Pagination({ page, total, pageSize, onChange, language }: { page: number; total: number; pageSize: number; onChange: (page: number) => void; language: OwnerLanguage }) {
   const maxPage = Math.max(1, Math.ceil(total / pageSize))
@@ -196,11 +196,11 @@ export default function OwnerDashboard() {
             <div className="min-w-0"><p className="font-bold text-slate-900">{person.fullName} {person.nickname && <span className="text-sm font-normal text-slate-500">@{person.nickname}</span>}</p><p className="break-all text-sm text-slate-600">{person.email}</p><p className="mt-1 text-xs text-slate-500">{t('Joined:')} {dateFormat.format(new Date(person.createdAt))}</p>
               <p className={`mt-1 text-xs font-bold ${person.fixedPremium || grantActive ? 'text-emerald-700' : 'text-slate-500'}`}>{person.fixedPremium ? t('Permanent Premium') : grantActive ? `${t(planLabels[grant?.plan ?? ''] ?? grant?.plan ?? '')} · ${grant?.expiresAt ? t('until {date}', { date: dateFormat.format(new Date(grant.expiresAt)) }) : t('Indefinitely')}` : t('No Premium')}</p>
             </div>
-            <p className="text-xs text-slate-500">{person.coinWallet?.balance ?? 0} coins · {person.billingSubscriptions?.map(plan => `${plan.plan} (${dateFormat.format(new Date(plan.expiresAt))})`).join(', ')}</p>
+            <p className="text-xs text-slate-500">{person.billingSubscriptions?.map(plan => `${plan.plan} (${dateFormat.format(new Date(plan.expiresAt))})`).join(', ')}</p>
             <div className="flex flex-wrap items-center gap-2">
               <select aria-label={t('Premium duration for {email}', { email: person.email })} value={grantPlans[person.id] ?? 'MONTHLY'} onChange={event => setGrantPlans(value => ({ ...value, [person.id]: event.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-                {BILLING_PRODUCTS.map(product => <option key={product.code} value={product.code}>{product.code} · {product.coins} coins</option>)}
-                <option value="TRIAL_14">{t('14-day free trial')}</option><option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
+                {BILLING_PRODUCTS.map(product => <option key={product.code} value={product.code}>{product.code} · ${(product.amountUsd / 100).toFixed(2)}</option>)}
+                <option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
               </select>
               <button type="button" disabled={updatingId === person.id} onClick={() => void grantPremium(person)} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Grant Premium')}</button>
               {(grant || person.billingSubscriptions?.length) && !person.fixedPremium && <button type="button" disabled={updatingId === person.id} onClick={() => void revokePremium(person)} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Revoke')}</button>}

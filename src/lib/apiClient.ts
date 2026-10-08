@@ -122,7 +122,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({ message: 'Unexpected API error.' }))
-    if (payload.code === 'INSUFFICIENT_COINS') window.dispatchEvent(new CustomEvent('profai:coins-required', { detail: payload.message }))
+    if (['PREMIUM_REQUIRED', 'CLASS_PLAN_REQUIRED', 'TEACHER_PLAN_REQUIRED'].includes(payload.code)) window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: payload.message }))
     throw new ApiError(payload.message ?? 'API request failed.', response.status, payload.code)
   }
 

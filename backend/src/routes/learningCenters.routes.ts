@@ -13,7 +13,7 @@ import { Router, type Response } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requireTeacherPlan } from '../services/coinBilling.service.js'
+import { requireTeacherPlan, requireClassPlan } from '../services/billing.service.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { generateAiText } from '../services/aiProvider.service.js'
@@ -171,11 +171,13 @@ async function requireCenterAccess(
   userId: string,
   roles?: LearningCenterRole[],
 ): Promise<NonNullable<CenterAccess> | null> {
+  await requireClassPlan(userId)
   const membership = await findCenterAccess(slug, userId)
   if (!membership) {
     res.status(404).json({ message: 'Learning center workspace not found.' })
     return null
   }
+  if (STAFF_ROLES.includes(membership.role)) await requireTeacherPlan(userId)
   if (roles && !roles.includes(membership.role)) {
     res.status(403).json({ message: 'You do not have permission to perform this workspace action.' })
     return null
@@ -416,6 +418,7 @@ router.get(
   '/workspaces',
   requireAuth,
   asyncHandler(async (req, res) => {
+    await requireClassPlan(req.user!.id)
     const memberships = await prisma.learningCenterMember.findMany({
       where: { userId: req.user!.id, status: LearningCenterMemberStatus.ACTIVE },
       orderBy: { joinedAt: 'asc' },
@@ -518,10 +521,12 @@ router.post(
   '/join/:code',
   requireAuth,
   asyncHandler(async (req, res) => {
+    await requireClassPlan(req.user!.id)
     const invitation = await prisma.learningCenterInvitation.findUnique({
       where: { code: req.params.code.toUpperCase() },
       include: { center: true },
     })
+    if (invitation?.role === LearningCenterRole.TEACHER) await requireTeacherPlan(req.user!.id)
     if (!invitation || invitation.acceptedAt || invitation.expiresAt.getTime() < Date.now()) {
       return res.status(404).json({ message: 'This invitation is invalid or has expired.' })
     }
@@ -959,6 +964,8 @@ router.post(
     if (payload.nickname && !existingUser) return res.status(404).json({ message: 'No user has this nickname.' })
     if (payload.role === LearningCenterRole.ADMIN && !existingUser) return res.status(404).json({ message: 'Administrator must already have a ProfAI account.' })
     if (existingUser) {
+      await requireClassPlan(existingUser.id)
+      if (payload.role === LearningCenterRole.TEACHER || payload.role === LearningCenterRole.ADMIN) await requireTeacherPlan(existingUser.id)
       const existingMember = await prisma.learningCenterMember.findUnique({ where: { centerId_userId: { centerId: access.centerId, userId: existingUser.id } } })
       if (existingMember?.role === LearningCenterRole.OWNER) return res.status(409).json({ message: 'The class owner cannot be reassigned.' })
       if (payload.role === LearningCenterRole.STUDENT && existingMember && STAFF_ROLES.includes(existingMember.role)) {

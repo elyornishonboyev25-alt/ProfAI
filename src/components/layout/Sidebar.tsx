@@ -15,7 +15,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
   const user = useAuthStore(s => s.user)
   const access = useAccountAccess()
   const unlimited = access?.active && access.kind === 'UNLIMITED'
-  const hasGrantedAccess = access?.active && access.kind !== 'COINS'
+  const hasGrantedAccess = access?.active && access.kind !== 'FREE'
   const { c } = useCopy()
   const planLabel = unlimited ? 'Unlimited' : hasGrantedAccess ? c('Plans') : c('Upgrade')
   useEffect(() => {

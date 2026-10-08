@@ -3,7 +3,7 @@ import { assistantRequestSchema } from '../services/assistantPolicy.js'
 import { answerAssistant } from '../services/assistant.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { withCoinCharge, BillingError } from '../services/coinBilling.service.js'
+import { withStudyAccess, BillingError } from '../services/billing.service.js'
 const router = Router()
 
 router.post('/chat', asyncHandler(async (req, res) => {
@@ -12,7 +12,7 @@ router.post('/chat', asyncHandler(async (req, res) => {
   const close = () => { if (!res.writableEnded) controller.abort() }
   res.on('close', close)
   try {
-    return res.json(await withCoinCharge(req.user!.id, 'ai', () => answerAssistant(req.user!.id, payload, controller.signal)))
+    return res.json(await withStudyAccess(req.user!.id, 'ai', () => answerAssistant(req.user!.id, payload, controller.signal)))
   } catch (error) {
     if (controller.signal.aborted) return
     if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
@@ -27,7 +27,7 @@ router.post('/stream', asyncHandler(async (req, res) => {
   const write = (event: string, data: unknown) => { if (!res.destroyed) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`) }
   const heartbeat = setInterval(() => { if (!res.destroyed) res.write(': keep-alive\n\n') }, 10000)
   try {
-    const result = await withCoinCharge(req.user!.id, 'ai', async () => {
+    const result = await withStudyAccess(req.user!.id, 'ai', async () => {
       res.status(200).set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no' })
       res.flushHeaders()
       return answerAssistant(req.user!.id, payload, controller.signal, (reply) => write('reply', { reply }))

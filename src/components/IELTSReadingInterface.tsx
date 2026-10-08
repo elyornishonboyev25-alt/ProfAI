@@ -53,12 +53,10 @@ import { AnimatedBackground } from './AnimatedBackground'
 import { useBadgeStore } from '@/store/badgeStore'
 import { isCompleteIeltsObjectiveSection } from '@/components/achievements/badgeMeta'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { useBillingText } from '@/features/billing/copy'
-import { LISTENING_TEST_COST } from '@/features/billing/catalog'
 import '@/styles/reading-exam-typography.css'
 
 interface IELTSReadingInterfaceProps {
-  startAccess?: { cost: number; busy: boolean; ready?: boolean; error: string; unlock: () => Promise<boolean> }
+  startAccess?: { busy: boolean; ready?: boolean; error: string; unlock: () => Promise<boolean> }
   test: IELTSTest
   onComplete: (results: TestResult) => void
   onExit: () => void
@@ -254,10 +252,7 @@ export default function IELTSReadingInterface({
 }: IELTSReadingInterfaceProps) {
   const isReviewMode = Boolean(reviewPayload?.result)
   const isListening = test.module === 'Listening'
-  const billingText = useBillingText()
   const startRequestRef = useRef(false)
-  const listeningCost = startAccess?.cost ?? LISTENING_TEST_COST
-  const listeningPrice = isListening ? <span className="shrink-0 text-sm font-semibold text-slate-600">{billingText(`${listeningCost} coins`, `${listeningCost} tanga`, `${listeningCost} монет`)}</span> : null
   const awardBadge = useBadgeStore((s) => s.awardIfEligible)
   const badgeUserId = useAuthStore((s: AuthState) => s.user?.id ?? null)
   // Listening audio state (playlist with controls in practice and review)
@@ -3029,7 +3024,7 @@ export default function IELTSReadingInterface({
               <button type="button" disabled={startAccess?.busy} onClick={(event) => { event.stopPropagation(); setTestMode('practice'); setShowModeModal(true); }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all disabled:opacity-50">
                 Enter Practice Library
               </button>
-              {listeningPrice}
+
             </div>
             <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
@@ -3059,7 +3054,7 @@ export default function IELTSReadingInterface({
               <button type="button" disabled={startAccess?.busy} aria-busy={startAccess?.busy} onClick={event => { event.stopPropagation(); void handleStartTest({ mode: 'simulation' }) }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/20 transform group-hover:scale-[1.02] transition-all disabled:opacity-50">
                 Launch Final Simulation
               </button>
-              {listeningPrice}
+
             </div>
           </PremiumCard>
         </div>
@@ -6633,7 +6628,6 @@ export default function IELTSReadingInterface({
                     Start Training Session
                     <CheckIcon className="w-6 h-6" />
                   </button>
-                  {listeningPrice && <div className="mt-3 text-center">{listeningPrice}</div>}
                   {startAccess?.error && <p role="alert" className="mt-3 text-sm text-red-600">{startAccess.error}</p>}
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
-import { BillingError } from '../services/coinBilling.service.js'
+import { BillingError } from '../services/billing.service.js'
 
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({ message: `Route not found: ${req.method} ${req.path}` })

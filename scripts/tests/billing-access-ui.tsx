@@ -15,7 +15,7 @@ export async function run() {
   const requests: string[] = []
   apiClient.get = async <T,>(path: string) => {
     requests.push(path)
-    return { unlocked: false, balance: 5, cost: path.includes('feature=test') ? 10 : 50 } as T
+    return path.startsWith('/billing/access') ? { unlocked: false } as T : { access: { kind: 'TRIAL', active: false, startsAt: new Date(Date.now() - 604800000).toISOString(), expiresAt: new Date(Date.now() - 1).toISOString(), trialDays: 7, daysRemaining: 0 }, canJoinClass: false, canCreateClass: false, subscriptions: [], orders: [] } as T
   }
   useAuthStore.setState({ user: { id: 'billing-ui', email: 'billing@example.com', fullName: 'Billing', role: 'USER' } as NonNullable<typeof originalUser> })
   const test = getSATSectionTest('1', null)
@@ -37,7 +37,7 @@ export async function run() {
       await new Promise(resolve => setTimeout(resolve, 20))
     })
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)) })
-    assert.ok(element.textContent?.includes('Saved review'), 'saved results remain free with an empty balance')
+    assert.ok(element.textContent?.includes('Saved review'), 'saved results remain free after trial expiry')
     assert.equal(requests.length, 0, 'review does not request a paid unlock')
     await act(async () => {
       element.querySelector('button')!.click()
@@ -46,8 +46,8 @@ export async function run() {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)) })
     assert.ok(requests.some(path => path.includes('feature=mock')), 'restart rechecks server access')
     assert.equal(element.textContent?.includes('Paid test content'), false, 'saved review cannot carry free access into a new attempt')
-    assert.ok(element.querySelector('a[href="/premium"]'), 'insufficient balance offers top-up')
-    console.log('PASS: free SAT saved review, restart access recheck and insufficient-balance protection')
+    assert.ok(element.querySelector('a[href="/premium"]'), 'expired trial offers subscription plans')
+    console.log('PASS: free SAT saved review, restart access recheck and expired-trial protection')
   } finally {
     await act(async () => root.unmount())
     apiClient.get = originalGet

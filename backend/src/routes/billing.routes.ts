@@ -5,21 +5,20 @@ import { requireAuth } from '../middleware/auth.js'
 import { requireOwner } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { isPremiumUser } from '../utils/premium.js'
-import { extendPremiumExpiry, PREMIUM_PLANS, type PaidPlan } from '../utils/premiumPlans.js'
-import { BILLING_PRODUCTS, COIN_COSTS, WELCOME_COINS, billingProduct, extendBillingExpiry } from '../utils/billingCatalog.js'
+import { extendPremiumExpiry, type PaidPlan } from '../utils/premiumPlans.js'
+import { BILLING_PRODUCTS, billingProduct, extendBillingExpiry } from '../utils/billingCatalog.js'
 import { FREE_TRIAL_DAYS, describeAccess } from '../utils/accessEntitlement.js'
-import { randomUUID } from 'node:crypto'
-import { accessStatus, unlockResource, walletOverview, lockWallet, fulfillPayment, BillingError } from '../services/coinBilling.service.js'
+import { accessStatus, unlockResource, accountOverview, lockBilling, fulfillPayment, BillingError } from '../services/billing.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
 import { approvedMedia, educationalCatalog } from '../services/educationalMedia.service.js'
 import { createPaymentQuote, dollarRate, verifyPaymentQuote } from '../services/billingQuote.service.js'
 
 const router = Router()
-const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED', 'TRIAL_14'].includes(value) || Boolean(billingProduct(value))) })
+const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED'].includes(value) || Boolean(billingProduct(value))) })
 const pageSchema = z.coerce.number().int().min(1).max(10000).default(1)
 const PAGE_SIZE = 20
 
-router.get('/plans', (_req, res) => res.json({ plans: PREMIUM_PLANS, products: BILLING_PRODUCTS, costs: COIN_COSTS, welcomeCoins: WELCOME_COINS, providers: paymentProviders() }))
+router.get('/plans', (_req, res) => res.json({ products: BILLING_PRODUCTS, trialDays: FREE_TRIAL_DAYS, providers: paymentProviders() }))
 
 router.get('/quote', requireAuth, asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store')
@@ -29,11 +28,11 @@ router.get('/quote', requireAuth, asyncHandler(async (req, res) => {
   return res.json(createPaymentQuote(product, await dollarRate()))
 }))
 
-router.get('/wallet', requireAuth, asyncHandler(async (req, res) => {
+router.get('/account', requireAuth, asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store')
-  const [wallet, orders] = await Promise.all([walletOverview(req.user!.id), prisma.paymentRequest.findMany({
+  const [wallet, orders] = await Promise.all([accountOverview(req.user!.id), prisma.paymentRequest.findMany({
     where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 20,
-    select: { id: true, plan: true, currency: true, amountMinor: true, coins: true, status: true, method: true, checkoutUrl: true, createdAt: true } })])
+    select: { id: true, plan: true, currency: true, amountMinor: true, status: true, method: true, checkoutUrl: true, createdAt: true } })])
   return res.json({ ...wallet, orders })
 }))
 const accessSchema = z.object({ feature: z.enum(['test', 'mock', 'shadowing', 'podcast']), resource: z.string().max(180) })
@@ -48,11 +47,11 @@ router.get('/access', requireAuth, asyncHandler(async (req, res) => {
   const payload = accessSchema.parse(req.query)
   const free = await validateLesson(payload.feature, payload.resource)
   const status = await accessStatus(req.user!.id, payload.feature, payload.resource)
-  return res.json(free ? { ...status, unlocked: true, cost: 0 } : status)
+  return res.json(free ? { ...status, unlocked: true, expiresAt: null } : status)
 }))
 router.post('/access', requireAuth, asyncHandler(async (req, res) => {
   const payload = accessSchema.parse(req.body)
-  if (await validateLesson(payload.feature, payload.resource)) return res.json({ charged: 0 })
+  if (await validateLesson(payload.feature, payload.resource)) return res.json({ unlocked: true })
   return res.json(await unlockResource(req.user!.id, payload.feature, payload.resource))
 }))
 router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
@@ -63,15 +62,11 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
   if (!provider?.enabled) throw new BillingError('PAYMENTS_UNAVAILABLE', 'This payment method is not available yet.', 503)
   const amountUzs = payload.currency === 'UZS' ? verifyPaymentQuote(payload.quote, product).amountUzs : 0
   const order = await prisma.$transaction(async tx => {
-    await lockWallet(tx, req.user!.id)
-    if (product.audience === 'CENTER_STUDENT') {
-      const member = await tx.learningCenterMember.findFirst({ where: { userId: req.user!.id, role: 'STUDENT', status: 'ACTIVE' } })
-      if (!member) throw new BillingError('CENTER_MEMBERSHIP_REQUIRED', 'Join your teacher’s class to use the learning center student rate.', 403)
-    }
+    await lockBilling(tx, req.user!.id)
     const existing = await tx.paymentRequest.findFirst({ where: { userId: req.user!.id, status: { in: ['PENDING', 'SUBMITTED', 'PROCESSING'] } } })
     if (existing) throw new BillingError('REQUEST_OPEN', 'Finish or cancel your existing order first.', 409)
     return tx.paymentRequest.create({ data: { userId: req.user!.id, plan: product.code, audience: product.audience, months: product.months,
-      coins: product.coins, currency: payload.currency, amountUzs,
+      currency: payload.currency, amountUzs,
       amountMinor: payload.currency === 'UZS' ? amountUzs * 100 : product.amountUsd, method: payload.provider } })
   })
   try {
@@ -92,11 +87,11 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
     prisma.paymentRequest.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 10,
       select: { id: true, plan: true, amountUzs: true, status: true, method: true, createdAt: true, reviewedAt: true } }),
   ])
-  return res.json({ plans: PREMIUM_PLANS, grant, requests })
+  return res.json({ products: BILLING_PRODUCTS, grant, requests })
 }))
 
 router.post('/requests', requireAuth, asyncHandler(async (req, res) => {
-  return res.status(410).json({ message: 'Choose a coin plan and an online payment method.', code: 'LEGACY_PLANS_CLOSED' })
+  return res.status(410).json({ message: 'Choose a subscription and an online payment method.', code: 'LEGACY_PLANS_CLOSED' })
 
 }))
 
@@ -133,7 +128,7 @@ router.get('/owner/users', requireAuth, requireOwner, asyncHandler(async (req, r
     prisma.user.count({ where }),
     prisma.user.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
       select: { id: true, fullName: true, email: true, nickname: true, role: true, createdAt: true,
-        coinWallet: { select: { balance: true } }, billingSubscriptions: { select: { audience: true, plan: true, expiresAt: true } },
+        billingSubscriptions: { select: { audience: true, plan: true, expiresAt: true } },
         premiumGrant: { select: { plan: true, source: true, expiresAt: true, startsAt: true } } } }),
   ])
   return res.json({ items: users.map(user => {
@@ -150,9 +145,7 @@ router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(asy
   const product = billingProduct(parsed.data.plan)
   if (product) {
     await prisma.$transaction(async tx => {
-      await lockWallet(tx, user.id)
-      await tx.coinWallet.update({ where: { userId: user.id }, data: { balance: { increment: product.coins } } })
-      await tx.coinEntry.create({ data: { userId: user.id, key: `owner:${randomUUID()}`, amount: product.coins, reason: `OWNER:${product.code}` } })
+      await lockBilling(tx, user.id)
       if (product.months) {
         const current = await tx.billingSubscription.findUnique({ where: { userId_audience: { userId: user.id, audience: product.audience } } })
         const expiresAt = extendBillingExpiry(product.months, current?.expiresAt)
@@ -164,8 +157,8 @@ router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(asy
   }
   const existing = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true, source: true } })
   const now = new Date()
-  const source = existing?.source === 'SELECTED_ACCESS' && ['UNLIMITED', 'TRIAL_14'].includes(parsed.data.plan) ? 'SELECTED_ACCESS' : 'OWNER'
-  const expiresAt = parsed.data.plan === 'UNLIMITED' ? null : parsed.data.plan === 'TRIAL_14' ? new Date(now.getTime() + FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000) : extendPremiumExpiry(parsed.data.plan as PaidPlan, existing?.expiresAt, now)
+  const source = existing?.source === 'SELECTED_ACCESS' && parsed.data.plan === 'UNLIMITED' ? 'SELECTED_ACCESS' : 'OWNER'
+  const expiresAt = parsed.data.plan === 'UNLIMITED' ? null : extendPremiumExpiry(parsed.data.plan as PaidPlan, existing?.expiresAt, now)
   const grant = await prisma.premiumGrant.upsert({
     where: { userId: user.id },
     create: { userId: user.id, plan: parsed.data.plan, source, startsAt: now, expiresAt, grantedBy: req.user!.id },

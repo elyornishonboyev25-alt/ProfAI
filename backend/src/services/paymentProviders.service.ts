@@ -1,7 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import type { PaymentRequest } from '@prisma/client'
 import { env } from '../config/env.js'
-import { BillingError } from './coinBilling.service.js'
+import { BillingError } from './billing.service.js'
 
 export type PaymentProvider = 'PAYME' | 'CLICK' | 'STRIPE'
 export function paymentProviders() {

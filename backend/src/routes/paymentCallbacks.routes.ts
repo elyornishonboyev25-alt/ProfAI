@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { env } from '../config/env.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { fulfillPayment, lockWallet } from '../services/coinBilling.service.js'
+import { fulfillPayment, lockBilling } from '../services/billing.service.js'
 import { clickSignature, paymentProviders, safeEqual, verifyStripeSignature } from '../services/paymentProviders.service.js'
 
 export const paymentCallbacks = Router()
@@ -22,7 +22,7 @@ paymentCallbacks.post('/click', asyncHandler(async (req, res) => {
   const result = await prisma.$transaction(async tx => {
     const initial = await tx.paymentRequest.findUnique({ where: { id: p.merchant_trans_id } })
     if (!initial || initial.method !== 'CLICK' || initial.currency !== 'UZS') return { error: -5, note: 'Order not found' }
-    await lockWallet(tx, initial.userId)
+    await lockBilling(tx, initial.userId)
     const order = await tx.paymentRequest.findUniqueOrThrow({ where: { id: initial.id } })
     if (Math.round(Number(p.amount) * 100) !== order.amountMinor) return { error: -2, note: 'Incorrect amount' }
     const providerId = `CLICK:${p.click_trans_id}`
@@ -70,7 +70,7 @@ paymentCallbacks.post('/payme', asyncHandler(async (req, res) => {
       const found = creation ? await tx.paymentRequest.findUnique({ where: { id: account!.order_id } }) :
         await tx.paymentRequest.findUnique({ where: { providerId: `PAYME:${transactionId}` } })
       if (!found || found.method !== 'PAYME' || found.currency !== 'UZS') throw new PaymeError(creation ? -31050 : -31003, 'Order or transaction not found', creation ? 'order_id' : undefined)
-      await lockWallet(tx, found.userId)
+      await lockBilling(tx, found.userId)
       let order = await tx.paymentRequest.findUniqueOrThrow({ where: { id: found.id } })
       if (creation && z.number().int().positive().parse(params.amount) !== order.amountMinor) throw new PaymeError(-31001, 'Incorrect amount')
       if (order.status === 'PROCESSING' && order.providerTime && Date.now() - Number(order.providerTime) > 43200000) {

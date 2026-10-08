@@ -16,15 +16,8 @@ export function isPremiumUser(input: { role: 'USER' | 'ADMIN'; email: string; ni
     Boolean(normalizedNickname && PREMIUM_NICKNAME_ALLOWLIST.has(normalizedNickname))
   )
 }
-import { prisma } from '../lib/prisma.js'
-import { describeAccess } from './accessEntitlement.js'
-
+import { accountOverview } from '../services/billing.service.js'
 
 export async function hasPremiumAccess(input: { id: string; role: 'USER' | 'ADMIN'; email: string; nickname?: string | null }) {
-  const grant = await prisma.premiumGrant.findUnique({
-    where: { userId: input.id },
-    select: { plan: true, source: true, startsAt: true, expiresAt: true },
-  })
-  if (describeAccess(grant, isPremiumUser(input)).active) return true
-  return Boolean(await prisma.billingSubscription.findFirst({ where: { userId: input.id, expiresAt: { gt: new Date() } } }))
+  return (await accountOverview(input.id)).access.active
 }

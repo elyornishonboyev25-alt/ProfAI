@@ -4,7 +4,7 @@ import { generateExaminerAudio, transcribeSpeakingAudio, type VoiceAudio } from 
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { assessSpeakingAudio, speakingAssessmentSchema } from '../services/speakingAssessment.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
-import { withCoinCharge } from '../services/coinBilling.service.js'
+import { withStudyAccess } from '../services/billing.service.js'
 
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
@@ -15,7 +15,7 @@ router.post('/assess', asyncHandler(async (req, res) => {
   if (payload.audio.reduce((sum, clip) => sum + Buffer.from(clip.data, 'base64').length, 0) > 8000000) return res.status(413).json({ message: 'Audio samples are too large. Use shorter recordings.' })
   const controller = new AbortController()
   res.on('close', () => { if (!res.writableEnded) controller.abort() })
-  try { return res.json(await withCoinCharge(req.user!.id, 'speaking', () => assessSpeakingAudio(req.user!.id, payload, controller.signal))) }
+  try { return res.json(await withStudyAccess(req.user!.id, 'speaking', () => assessSpeakingAudio(req.user!.id, payload, controller.signal))) }
   catch (error) {
     if (controller.signal.aborted) return
     if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })

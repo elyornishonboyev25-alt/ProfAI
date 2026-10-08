@@ -17,21 +17,21 @@ export async function run() {
   const previousPost = apiClient.post
   const previousTimeout = globalThis.setTimeout
   globalThis.setTimeout = ((callback, delay, ...args) => previousTimeout(callback, delay === 2200 ? 0 : delay, ...args)) as typeof setTimeout
-  useAuthStore.setState({ user: { id: 'listening-coins', email: 'coins@example.com', fullName: 'Coins', role: 'USER' } as NonNullable<typeof previousUser> })
+  useAuthStore.setState({ user: { id: 'listening-trial', email: 'trial@example.com', fullName: 'Trial', role: 'USER', access: { kind: 'TRIAL', active: true, startsAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 604800000).toISOString(), trialDays: 7, daysRemaining: 7 } } as NonNullable<typeof previousUser> })
   await i18n.changeLanguage('uz')
   let posts = 0
   let accept!: () => void
   let reject!: (error: Error) => void
   apiClient.get = async <T,>(path: string) => {
-    assert.ok(!path.startsWith('/billing/access'), 'Listening entry never mounts the separate coin gate')
-    return {} as T
+    assert.ok(!path.startsWith('/billing/access'), 'Listening entry never mounts the separate activity gate')
+    return { access: useAuthStore.getState().user?.access, canJoinClass: false, canCreateClass: false, subscriptions: [], orders: [] } as T
   }
   apiClient.post = async <T,>(path: string, body: unknown) => {
     assert.equal(path, '/billing/access')
     assert.deepEqual(body, { feature: 'test', resource: `test:listening:${listeningFullTest3.id}` })
     posts++
     await new Promise<void>((resolve, fail) => { accept = resolve; reject = fail })
-    return { charged: 10, balance: 140 } as T
+    return { unlocked: true } as T
   }
   function Page({ preset = false }: { preset?: boolean }) {
     const location = useLocation()
@@ -54,7 +54,7 @@ export async function run() {
     await mount()
     assert.equal(posts, 0, 'opening the mode screen costs nothing')
     assert.equal(element.querySelector('.billing-access-panel'), null)
-    assert.equal([...element.querySelectorAll('span')].filter(item => item.textContent === '10 tanga').length, 2)
+    assert.equal(element.textContent?.includes('tanga'), false)
     await click('Enter Practice Library')
     assert.equal(posts, 0, 'selecting practice parts costs nothing')
     await click('Start Training Session')
@@ -74,10 +74,10 @@ export async function run() {
     await mount()
     await click('Launch Final Simulation')
     assert.equal(posts, 3)
-    await act(async () => reject(new ApiError('Insufficient coins', 402, 'INSUFFICIENT_COINS')))
+    await act(async () => reject(new ApiError('Trial expired', 402, 'PREMIUM_REQUIRED')))
     await settle()
     assert.equal(element.textContent, 'Premium')
-    assert.equal(element.querySelector('audio'), null, 'insufficient coins cannot start an exam')
+    assert.equal(element.querySelector('audio'), null, 'expired trial cannot start an exam')
     await act(async () => root.unmount())
     root = createRoot(element)
     await mount(true)
@@ -85,7 +85,7 @@ export async function run() {
     await act(async () => accept())
     await settle()
     assert.ok(element.querySelector('audio'), 'preset launch is not stranded by StrictMode')
-    console.log('PASS: no Listening coin-page flash, two simple prices, charge on Start, blocked and retryable failures, StrictMode preset launch')
+    console.log('PASS: Listening trial access, no coin prices, authorization on Start, retryable failures, expired trial and StrictMode launch')
   } finally {
     await act(async () => root.unmount())
     apiClient.get = previousGet

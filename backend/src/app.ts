@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser'
 import { env, isProduction } from './config/env.js'
 import { aiRateLimit, apiRateLimit } from './middleware/rateLimit.js'
 import { requireAuth } from './middleware/auth.js'
+import { enforceStudyAccess } from './middleware/studyAccess.js'
 import { errorHandler, notFoundHandler } from './middleware/error.js'
 import healthRoutes from './routes/health.routes.js'
 import authRoutes from './routes/auth.routes.js'
@@ -66,13 +67,14 @@ app.use(morgan(isProduction ? 'combined' : 'dev'))
 app.use(
   '/api/v1/ai/generate',
   requireAuth,
+  enforceStudyAccess,
   aiRateLimit,
   express.json({ limit: '6mb' }),
   aiGenerationRoutes,
 )
-app.use('/api/v1/ai/speaking-audio', requireAuth, aiRateLimit, express.json({ limit: '12mb' }), speakingAudioRoutes)
-app.use('/api/v1/ai/assistant', requireAuth, aiRateLimit, express.json({ limit: '6mb' }), assistantRoutes)
-app.use('/api/v1/ai/voice', requireAuth, aiRateLimit, express.json({ limit: '384kb' }), realtimeCoachRoutes)
+app.use('/api/v1/ai/speaking-audio', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '12mb' }), speakingAudioRoutes)
+app.use('/api/v1/ai/assistant', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '6mb' }), assistantRoutes)
+app.use('/api/v1/ai/voice', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '384kb' }), realtimeCoachRoutes)
 
 // Authenticate and bound voice uploads before accepting the larger JSON body.
 app.post('/api/v1/shadowing-recordings', requireAuth, shadowingUploadLimit, express.json({ limit: '5mb' }))

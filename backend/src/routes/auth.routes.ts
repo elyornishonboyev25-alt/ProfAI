@@ -17,8 +17,7 @@ import {
 } from '../utils/jwt.js'
 import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
-import { hasPremiumAccess } from '../utils/premium.js'
-import { walletOverview } from '../services/coinBilling.service.js'
+import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 
 const router = Router()
@@ -142,25 +141,18 @@ async function sanitizeUser(user: {
   avatarUrl?: string | null
   profile?: { onboardingCompletedAt: Date | null } | null
 }) {
-  const premium = await hasPremiumAccess({
-    id: user.id,
-    role: user.role,
-    email: user.email,
-    nickname: user.nickname,
-  })
-  const grant = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true } })
-
-  const wallet = await walletOverview(user.id)
+  const wallet = await accountOverview(user.id)
+  const premium = wallet.access.active && wallet.access.kind !== 'TRIAL'
   return {
     access: wallet.access,
-    coinBalance: wallet.balance,
     canCreateClass: wallet.canCreateClass,
+    canJoinClass: wallet.canJoinClass,
     id: user.id,
     email: user.email,
     fullName: user.fullName,
     role: user.role,
     premium,
-    premiumExpiresAt: grant?.expiresAt?.toISOString() ?? null,
+    premiumExpiresAt: premium ? wallet.access.expiresAt : null,
     xp: user.xp,
     level: user.level,
     currentStreak: user.currentStreak,

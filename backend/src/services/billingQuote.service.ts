@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../config/env.js'
 import type { BillingProduct } from '../utils/billingCatalog.js'
-import { BillingError } from './coinBilling.service.js'
+import { BillingError } from './billing.service.js'
 
 const RATE_URL = 'https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/'
 const QUOTE_TTL = 15 * 60_000

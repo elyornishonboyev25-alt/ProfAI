@@ -5,7 +5,7 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is ProfAI free to use?', answer: 'New accounts receive 150 welcome coins. Vocabulary, saved results and selected lessons remain free. Paid practice uses coins.' },
+  { question: 'Is ProfAI free to use?', answer: 'Start for free with 7 days of AI, IELTS and SAT. After your one-time trial, Student is $3/month and Teacher is $5/month. Classes require a paid plan. Saved results and vocabulary stay available.' },
   { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
   { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]

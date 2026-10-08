@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { AiGenerationError, generateAiText } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { withCoinCharge } from '../services/coinBilling.service.js'
+import { withStudyAccess } from '../services/billing.service.js'
 import { assessWriting, writingRequestSchema } from '../services/writingAssessment.service.js'
 
 const router = Router()
@@ -12,7 +12,7 @@ router.post('/writing/evaluate', asyncHandler(async (req, res) => {
   const controller = new AbortController()
   const close = () => { if (!res.writableEnded) controller.abort() }
   res.on('close', close)
-  try { return res.json(await withCoinCharge(req.user!.id, 'writing', () => assessWriting(req.user!.id, payload, controller.signal))) }
+  try { return res.json(await withStudyAccess(req.user!.id, 'writing', () => assessWriting(req.user!.id, payload, controller.signal))) }
   catch (error) {
     if (controller.signal.aborted) return
     if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
@@ -49,7 +49,7 @@ router.post(
     const payload = generateBodySchema.parse(req.body ?? {})
     let result
     try {
-      result = await withCoinCharge(req.user!.id, payload.purpose === 'writing_evaluation' ? 'writing' : ['speaking_evaluation', 'speaking_response_analysis'].includes(payload.purpose) ? 'speaking' : 'ai', () => generateAiText({
+      result = await withStudyAccess(req.user!.id, payload.purpose === 'writing_evaluation' ? 'writing' : ['speaking_evaluation', 'speaking_response_analysis'].includes(payload.purpose) ? 'speaking' : 'ai', () => generateAiText({
         userId: req.user!.id,
         purpose: payload.purpose,
         systemPrompt: payload.systemPrompt,

@@ -1,25 +1,9 @@
-/**
- * Premium access model.
- *
- * IMPORTANT: `ENFORCE_PREMIUM` is the master switch. While it is `false`,
- * every feature stays fully open for ALL users (current product state) —
- * nothing is ever locked, so no one can be accidentally shut out. The tier
- * logic, free-attempt counter and upgrade overlay are all wired and ready,
- * but stay dormant until paid tiers are connected on the backend and this
- * flag is flipped to `true`.
- */
-export const ENFORCE_PREMIUM = false
-
-/**
- * Gate the premium-only content sections (Admission, Shadowing, Podcast,
- * Articles, Vocabulary, …) behind the PremiumGate teaser for non-premium
- * accounts. Independent of ENFORCE_PREMIUM (which drives the older
- * attempt-based gate). Flip to `false` to instantly reopen every section.
- */
+/** Study access comes from the server's one-time trial or active subscription. */
+export const ENFORCE_PREMIUM = true
+// General vocabulary, articles and saved results remain open.
 export const ENFORCE_CONTENT_PREMIUM = false
-
-/** Free users get this many test attempts before the upgrade prompt appears. */
-export const FREE_ATTEMPT_LIMIT = 4
+// Access is time-based; there is no separate allowance of test attempts.
+export const FREE_ATTEMPT_LIMIT = 0
 
 export type PremiumTier = 'FREE' | 'BASIC' | 'STANDARD' | 'PRO' | 'UNLIMITED'
 
@@ -37,6 +21,7 @@ const PREMIUM_NICKNAME_ALLOWLIST = new Set<string>(['firdavs', 'erkinov7', 'erki
 type PremiumInput = {
   email?: string | null
   nickname?: string | null
+  access?: { active: boolean; kind: string; expiresAt: string | null }
   premium?: boolean | null
   premiumExpiresAt?: string | null
   role?: string | null
@@ -49,6 +34,7 @@ type PremiumInput = {
  */
 export function isPremiumUser(input?: PremiumInput) {
   if (!input) return false
+  if (input.access) return input.access.active && input.access.kind !== 'TRIAL' && (!input.access.expiresAt || new Date(input.access.expiresAt).getTime() > Date.now())
   if (input.role === 'ADMIN') return true
   if (input.email && PREMIUM_EMAIL_ALLOWLIST.has(input.email.trim().toLowerCase())) return true
   if (input.nickname && PREMIUM_NICKNAME_ALLOWLIST.has(input.nickname.trim().toLowerCase())) return true
@@ -57,12 +43,9 @@ export function isPremiumUser(input?: PremiumInput) {
   return false
 }
 
-/**
- * Whether the user can access premium-gated features. AI stays unlimited for
- * everyone. While `ENFORCE_PREMIUM` is false this is always `true`.
- */
+/** Whether an active subscription or unexpired welcome trial allows study. */
 export function hasPremiumAccess(input?: PremiumInput) {
-  if (!ENFORCE_PREMIUM) return true
+  if (input?.access) return input.access.active && (!input.access.expiresAt || new Date(input.access.expiresAt).getTime() > Date.now())
   return isPremiumUser(input)
 }
 
@@ -76,13 +59,13 @@ export type FreeAttemptInfo = {
 
 /** Derive the free-attempt status for a given used-count and user. */
 export function getFreeAttemptInfo(used: number, input?: PremiumInput): FreeAttemptInfo {
-  const unlimited = !ENFORCE_PREMIUM || isPremiumUser(input)
+  const unlimited = hasPremiumAccess(input)
   const safeUsed = Math.max(0, Math.floor(Number.isFinite(used) ? used : 0))
   return {
     used: safeUsed,
     limit: FREE_ATTEMPT_LIMIT,
     remaining: unlimited ? Number.POSITIVE_INFINITY : Math.max(0, FREE_ATTEMPT_LIMIT - safeUsed),
-    reached: unlimited ? false : safeUsed >= FREE_ATTEMPT_LIMIT,
+    reached: !unlimited,
     unlimited,
   }
 }

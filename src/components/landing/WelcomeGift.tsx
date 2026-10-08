@@ -5,25 +5,25 @@ import { ArrowRight, Gift, Sparkles } from 'lucide-react'
 
 const copy = {
   "en": {
-    "label": "A welcome gift for you",
-    "title": "150 welcome coins to get started",
-    "open": "Open your gift",
-    "detail": "Create an account and receive 150 coins. Try IELTS, SAT, podcast and shadowing. Your saved results and free activities stay available.",
-    "action": "Claim 150 coins"
+    "label": "Your first week is on us",
+    "title": "7 days of IELTS, SAT and AI · $0",
+    "open": "Explore your free week",
+    "detail": "Start for free. No card required. Try IELTS, SAT and AI for 7 days, once per account. Then continue from $3/month. Classes require a paid plan.",
+    "action": "Start for free"
   },
   "uz": {
-    "label": "Siz uchun sovg‘a",
-    "title": "Boshlash uchun 150 sovg‘a tanga",
-    "open": "Sovg‘ani ochish",
-    "detail": "Akkaunt oching va 150 tanga oling. IELTS, SAT, podcast va shadowingni sinang. Natijalar va bepul mashqlar doim ochiq qoladi.",
-    "action": "150 tangani olish"
+    "label": "Birinchi hafta bizdan",
+    "title": "IELTS, SAT va AI — 7 kun · $0",
+    "open": "Bepul haftani ko‘rish",
+    "detail": "Bepul boshlang. Karta talab etilmaydi. IELTS, SAT va AIni har akkauntga bir marta 7 kun sinang. Keyin oyiga $3 dan davom eting. Classes uchun pullik tarif kerak.",
+    "action": "Bepul boshlang"
   },
   "ru": {
-    "label": "Подарок для вас",
-    "title": "150 приветственных монет",
-    "open": "Открыть подарок",
-    "detail": "Создайте аккаунт и получите 150 монет. Попробуйте IELTS, SAT, подкасты и шэдоуинг. Результаты и бесплатные занятия всегда доступны.",
-    "action": "Получить 150 монет"
+    "label": "Первая неделя за наш счёт",
+    "title": "7 дней IELTS, SAT и AI · $0",
+    "open": "Узнать о бесплатной неделе",
+    "detail": "Начните бесплатно. Карта не нужна. Попробуйте IELTS, SAT и AI 7 дней, один раз на аккаунт. Далее от $3/мес. Для классов нужен платный тариф.",
+    "action": "Начать бесплатно"
   }
 } as const
 

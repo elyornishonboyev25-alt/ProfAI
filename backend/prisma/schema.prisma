@@ -170,13 +170,17 @@ model User {
   studyPlan                           StudyPlan?
   premiumGrant                        PremiumGrant?
   paymentRequests                     PaymentRequest[]
-  coinWallet                          CoinWallet?
-  coinEntries                         CoinEntry[]
-  coinAccess                          CoinAccess[]
   billingSubscriptions                BillingSubscription[]
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+// Email is retained independently of profiles so deleting/recreating an account cannot renew a trial.
+model FreeTrial {
+  email     String   @id
+  startsAt  DateTime @default(now())
+  expiresAt DateTime
 }
 
 model PremiumGrant {
@@ -200,7 +204,6 @@ model PaymentRequest {
   amountUzs     Int
   currency      String   @default("UZS")
   amountMinor   Int      @default(0)
-  coins         Int      @default(0)
   months        Int      @default(0)
   audience      String?
   providerId    String?  @unique
@@ -222,38 +225,6 @@ model PaymentRequest {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
-}
-
-model CoinWallet {
-  userId    String   @id
-  balance   Int      @default(0)
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model CoinEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  key       String   @unique
-  amount    Int
-  reason    String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@index([userId, createdAt])
-}
-
-model CoinAccess {
-  id           String   @id @default(cuid())
-  userId       String
-  resource     String
-  feature      String
-  expiresAt    DateTime?
-  writingLeft  Int      @default(0)
-  speakingLeft Int      @default(0)
-  createdAt    DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@unique([userId, resource])
-  @@index([userId, expiresAt])
 }
 
 model BillingSubscription {

@@ -5,7 +5,6 @@ import {
   COMMUNITY_TRIAL_SECONDS,
   TRIAL_LIMITS,
   addCommunitySeconds,
-  consumeTrial,
   getCommunitySecondsUsed,
   getTrialUsed,
   type TrialFeature,
@@ -25,24 +24,19 @@ export type FeatureTrial = {
 }
 
 /**
- * Access state for a trial-gated feature. The shared access switch currently
- * gives everyone unlimited use, so the old trial gate stays inactive.
+ * The welcome trial and subscriptions include study use for their full duration.
+ * Historical attempt counters do not grant or renew access.
  */
 export function useFeatureTrial(feature: TrialFeature): FeatureTrial {
   const user = useAuthStore((state: AuthState) => state.user)
   const isPremium = hasPremiumAccess(user)
-  const [used, setUsed] = useState(() => getTrialUsed(feature, user?.id))
+  const used = getTrialUsed(feature, user?.id)
 
   const limit = TRIAL_LIMITS[feature]
-  const remaining = isPremium ? Number.POSITIVE_INFINITY : Math.max(0, limit - used)
-  const locked = !isPremium && used >= limit
+  const remaining = isPremium ? Number.POSITIVE_INFINITY : 0
+  const locked = !isPremium
 
-  const consume = useCallback(() => {
-    if (isPremium) return true
-    if (getTrialUsed(feature, user?.id) >= limit) return false
-    setUsed(consumeTrial(feature, user?.id))
-    return true
-  }, [feature, isPremium, limit, user?.id])
+  const consume = useCallback(() => isPremium, [isPremium])
 
   return { isPremium, used, limit, remaining, locked, consume }
 }

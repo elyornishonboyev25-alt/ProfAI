@@ -31,7 +31,7 @@ test.notifications = [
   { id: 'assignment-update', type: 'SYSTEM', title: 'New class assignment: IELTS Full Mock', message: 'Your next IELTS assignment is ready. Complete the full mock before the next lesson.', metadata: { kind: 'CLASS_ASSIGNMENT', centerSlug: 'oxford', examTrack: 'IELTS' }, readAt: null, createdAt: new Date().toISOString() },
 ]
 ;(apiClient as any).get = async (path: string) => {
-  if (path === '/billing/wallet') return wallet
+  if (path === '/billing/account') return wallet
   if (path === '/dashboard/notifications') return { notifications: test.notifications, unreadCount: test.notifications.filter((item: any) => !item.readAt).length }
   if (path === '/profile/badges') return { badges: [] }
   return { weeklyProgress: [] }

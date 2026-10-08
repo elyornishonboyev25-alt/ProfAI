@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
-import { LISTENING_TEST_COST } from './catalog'
 
 export function useListeningStartAccess(resource: string | null, feature: 'test' | 'mock' = 'test') {
   const userId = useAuthStore(state => state.user?.id)
@@ -35,7 +34,7 @@ export function useListeningStartAccess(resource: string | null, feature: 'test'
       return !controller.signal.aborted
     } catch (failure) {
       if (!controller.signal.aborted) {
-        if (failure instanceof ApiError && failure.code === 'INSUFFICIENT_COINS') navigate('/premium')
+        if (failure instanceof ApiError && failure.code === 'PREMIUM_REQUIRED') navigate('/premium')
         else setError(failure instanceof Error ? failure.message : 'Could not start the test.')
       }
       return false
@@ -44,5 +43,5 @@ export function useListeningStartAccess(resource: string | null, feature: 'test'
     }
   }
 
-  return { cost: LISTENING_TEST_COST, busy, ready, error, unlock }
+  return { busy, ready, error, unlock }
 }

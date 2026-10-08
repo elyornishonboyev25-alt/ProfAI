@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import AccessGate from './AccessGate'
+import AccountGate from './AccountGate'
 import { useBillingText } from './copy'
-export function routeCoinResource(pathname: string, search: string) {
+export function routeStudyResource(pathname: string, search: string) {
   const test = pathname.match(/^\/test\/(reading|listening|sat)\/([A-Za-z0-9_-]+)$/)
   if (test) return { feature: 'test' as const, resource: `test:${test[1]}:${test[2]}` }
   const database = pathname.match(/^\/tests\/([A-Za-z0-9_-]+)\/attempt$/)
@@ -20,7 +21,7 @@ export function routeCoinResource(pathname: string, search: string) {
   }
   return null
 }
-function SATSavedReview({ mockId, search, access, children }: { mockId: string; search: string; access: NonNullable<ReturnType<typeof routeCoinResource>>; children: ReactNode }) {
+function SATSavedReview({ mockId, search, access, children }: { mockId: string; search: string; access: NonNullable<ReturnType<typeof routeStudyResource>>; children: ReactNode }) {
   const [savedReview, setSavedReview] = useState<boolean | null>(null)
   const text = useBillingText()
   useEffect(() => {
@@ -37,10 +38,14 @@ function SATSavedReview({ mockId, search, access, children }: { mockId: string; 
 }
 export default function BillingBoundary({ children }: { children: ReactNode }) {
   const { pathname, search } = useLocation()
-  const access = routeCoinResource(pathname, search)
-  // Listening authorizes access from its own Start action, keeping mode selection visible.
-  if (access?.resource.startsWith('test:listening:')) return <>{children}</>
+  const access = routeStudyResource(pathname, search)
+  const classes = /^\/learning-center(?:\/|$)/.test(pathname)
+  if (classes) return <AccountGate classes>{children}</AccountGate>
+  if (pathname === '/sat/mistakes') return <>{children}</>
+  const study = /^\/(?:ielts|sat|test|mock)(?:\/|$)/.test(pathname) || ['/ai-tutor', '/writing-lab', '/speaking-lab', '/speaking-community'].includes(pathname)
+  // Listening keeps its Start action; the account gate covers its preview as well.
+  if (access?.resource.startsWith('test:listening:')) return <AccountGate>{children}</AccountGate>
   const sat = pathname.match(/^\/(?:mock\/sat|sat\/mock)\/([A-Za-z0-9_-]+)(?:\/run)?$/)
   if (sat && access) return <SATSavedReview key={`${pathname}:${search}`} mockId={sat[1]} search={search} access={access}>{children}</SATSavedReview>
-  return access ? <AccessGate key={access.resource} {...access}>{children}</AccessGate> : <>{children}</>
+  return access ? <AccessGate key={access.resource} {...access}>{children}</AccessGate> : study ? <AccountGate>{children}</AccountGate> : <>{children}</>
 }

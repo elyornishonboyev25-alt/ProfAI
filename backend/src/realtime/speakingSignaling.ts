@@ -1,3 +1,4 @@
+import { onAccountDeleted } from '../services/accountLifecycle.js'
 import type { Server } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
 
@@ -34,6 +35,28 @@ const debateRooms = new Map<string, DebateRoom>()
 const discussionRooms = new Map<string, Client[]>()
 const discussionHistory = new Map<string, Array<{ id: string; userId: string; name: string; text: string; createdAt: string }>>()
 const clients = new Set<Client>()
+onAccountDeleted((userId) => {
+  for (const client of [...clients]) {
+    if (client.userId !== userId) continue
+    removeFromQueue(client)
+    unpair(client, true)
+    leaveDebate(client, true)
+    leaveDiscussion(client)
+    clients.delete(client)
+    client.ws.close(1008, 'Account deleted')
+  }
+  for (const [roomId, messages] of discussionHistory) {
+    const remaining = messages.filter(message => message.userId !== userId)
+    if (remaining.length) discussionHistory.set(roomId, remaining)
+    else discussionHistory.delete(roomId)
+    if (remaining.length !== messages.length) {
+      for (const member of discussionRooms.get(roomId) ?? []) {
+        send(member, { type: 'discussionSnapshot', roomId, messages: remaining })
+      }
+    }
+  }
+  broadcastRoomStats()
+})
 
 const DEBATE_ROOM_SIZE = 5
 let nextDebateRoomNumber = 1

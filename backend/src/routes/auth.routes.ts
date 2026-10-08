@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { OAuth2Client } from 'google-auth-library'
 import { prisma } from '../lib/prisma.js'
+import { permanentlyDeleteAccount } from '../services/accountDeletion.service.js'
 import { authRateLimit } from '../middleware/rateLimit.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -688,6 +689,10 @@ router.post(
       },
     })
 
+    if (!stored && !await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true } })) {
+      return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
+    }
+
     if (!stored || stored.revokedAt || stored.expiresAt < new Date() || stored.userId !== payload.sub) {
       return res.status(401).json({ message: 'Refresh token expired or revoked.' })
     }
@@ -756,10 +761,7 @@ router.delete(
       })
     }
 
-    // User-owned records cascade at the database layer. Shared resources such
-    // as authored tests and submitted shadowing videos retain their content and
-    // simply clear the author reference (onDelete: SetNull).
-    await prisma.user.delete({ where: { id: user.id } })
+    await permanentlyDeleteAccount(user)
 
     return res.status(204).send()
   }),

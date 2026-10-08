@@ -19,6 +19,7 @@ const data = {
   },
 }
 const prisma = {
+  user: { findUnique: async ({ where }) => ({ id: where.id, role: "USER" }) },
   accountLearningData: data,
   $transaction: (run) => {
     const next = lock.then(() => run({ accountLearningData: data, $queryRaw: async () => [] }))

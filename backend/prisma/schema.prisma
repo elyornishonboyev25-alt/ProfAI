@@ -176,7 +176,7 @@ model User {
   @@index([createdAt])
 }
 
-// Email is retained independently of profiles so deleting/recreating an account cannot renew a trial.
+// Email-keyed trial data is removed with permanent account deletion.
 model FreeTrial {
   email     String   @id
   startsAt  DateTime @default(now())
@@ -475,7 +475,7 @@ model GuestDiagnostic {
   claimedById   String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  claimedBy     User?     @relation(fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedBy     User?     @relation(fields: [claimedById], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
   @@index([claimedById, claimedAt])

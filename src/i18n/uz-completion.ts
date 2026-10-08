@@ -1,5 +1,6 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  "Your test answers and results, shared recordings, XP, streaks, AI conversations, vocabulary, profile and owned classes will be permanently removed. Creating an account again starts with a new profile and empty history.": "Test javoblari va natijalaringiz, ulashilgan ovoz yozuvlari, XP, ketma-ketliklar, AI suhbatlari, lug‘at, profil va siz yaratgan sinflar butunlay o‘chiriladi. Qayta akkaunt ochsangiz, yangi profil va bo‘sh tarix bilan boshlaysiz.",
   'Previous conversation': 'Avvalgi suhbat',
   'message': 'xabar',
   'Retry audio': 'Audioni qayta yoqish',

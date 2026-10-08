@@ -1,3 +1,4 @@
+import { onAccountDeleted } from '../services/accountLifecycle.js'
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
@@ -190,6 +191,7 @@ type FallbackVocabularyNotebook = {
 
 const fallbackAiPreferenceStore = new Map<string, FallbackAiPreference>()
 const fallbackVocabularyStore = new Map<string, FallbackVocabularyNotebook[]>()
+onAccountDeleted((userId) => { fallbackAiPreferenceStore.delete(userId); fallbackVocabularyStore.delete(userId) })
 
 function createFallbackId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.round(Math.random() * 100000)}`

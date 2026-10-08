@@ -42,7 +42,8 @@
     "validate:sat-test9": "node scripts/validate-sat-test9.mjs",
     "validate:sat-questionbank": "node scripts/validate-sat-questionbank.mjs",
     "validate:sat-math-answers": "node scripts/validate-sat-math-answers.mjs",
-    "test:billing-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/billing-pricing-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-trial-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-billing-ui.tsx"
+    "test:billing-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/billing-pricing-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-trial-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-billing-ui.tsx",
+    "test:account-deletion": "node scripts/test-account-deletion.mjs && node backend/scripts/account-deletion.test.mjs && node backend/scripts/account-deletion-runtime.test.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

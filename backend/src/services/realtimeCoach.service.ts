@@ -1,3 +1,4 @@
+import { onAccountDeleted } from './accountLifecycle.js'
 import { createHash, randomUUID } from 'node:crypto'
 import WebSocket from 'ws'
 import { env } from '../config/env.js'
@@ -8,6 +9,9 @@ import { answerAssistant, assistantData, loadAssistantRecords } from './assistan
 
 type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; history: Array<{ role: 'user' | 'assistant'; content: string }> }
 const calls = new Map<string, VoiceCall>()
+onAccountDeleted(async (userId) => {
+  await Promise.all([...calls.values()].filter(call => call.userId === userId).map(call => endVoiceCall(userId, call.id)))
+})
 
 export function voiceInstructions(context: AssistantContext, data: unknown) {
   return `You are ProfAI, a calm, professional personal tutor in a live voice conversation.

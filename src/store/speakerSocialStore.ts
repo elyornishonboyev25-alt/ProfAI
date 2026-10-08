@@ -49,6 +49,9 @@ export const useSpeakerSocialStore = create<SpeakerSocialState>()(
           const ratings = { ...state.ratings }
           delete nicknames[userId]
           delete ratings[userId]
+          for (const owner of Object.keys(ratings)) {
+            ratings[owner] = ratings[owner].filter((rating) => rating.fromUserId !== userId)
+          }
           return { nicknames, ratings }
         }),
     }),

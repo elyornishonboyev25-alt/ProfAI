@@ -1,3 +1,4 @@
+import { onAccountDeleted } from './accountLifecycle.js'
 import { Difficulty, LeaderboardPeriod, type Prisma, type TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { addUtcDays, getPeriodStart, startOfUtcDay } from '../utils/date.js'
@@ -114,6 +115,7 @@ type UserAggregateRow = {
 const LEADERBOARD_CACHE_TTL_MS = 45_000
 
 const leaderboardCache = new Map<string, LeaderboardCacheEntry>()
+onAccountDeleted(() => { leaderboardCache.clear() })
 
 export const DIFFICULTY_MULTIPLIERS: Record<Difficulty, number> = {
   EASY: 1.0,

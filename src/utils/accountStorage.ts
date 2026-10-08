@@ -6,6 +6,18 @@ const knownPrefix = (owner: string) => `profai:account-known:v1:${encodeURICompo
 const dirtyPrefix = (owner: string) => `profai:account-dirty:v1:${encodeURIComponent(owner)}:`
 export type AccountMutation = { base: string | null; value: string | null }
 const pending = new Map<string, Map<string, AccountMutation>>()
+const deletedOwners = new Set<string>()
+
+export function belongsToAccount(key: string, owner: string) {
+  return key.startsWith(prefix(owner)) || key.startsWith(knownPrefix(owner)) ||
+    key.startsWith(dirtyPrefix(owner)) || isOwnedLegacyKey(key, owner) ||
+    key.split(':').includes(owner)
+}
+
+export function forgetAccountStorage(owner: string) {
+  deletedOwners.add(owner)
+  pending.delete(owner)
+}
 
 function isOwnedLegacyKey(key: string, owner: string) {
   const suffixKeys = [
@@ -35,6 +47,7 @@ export function accountStorageFor(owner = useAuthStore.getState().user?.id ?? 'g
   const storage = () => window.localStorage
   return {
     getItem(key: string): string | null {
+      if (deletedOwners.has(owner)) return null
       const saved = storage().getItem(prefix(owner) + key)
       if (saved !== null || owner === 'guest' || storage().getItem(knownPrefix(owner) + key) === '1') return saved
       const ownedLegacy = isOwnedLegacyKey(key, owner)
@@ -47,6 +60,7 @@ export function accountStorageFor(owner = useAuthStore.getState().user?.id ?? 'g
     removeItem(key: string) { write(key, null) },
   }
   function write(key: string, value: string | null) {
+    if (deletedOwners.has(owner)) return
     // An async evaluation belonging to a signed-out account may not write into
     // the next account. Explicit owners retain their own offline cache only.
     const previous = storage().getItem(prefix(owner) + key)
@@ -70,6 +84,7 @@ export const accountStorage = {
 }
 
 export function getAccountMutations(owner: string) {
+  if (deletedOwners.has(owner)) return new Map<string, AccountMutation>()
   let changes = pending.get(owner)
   if (!changes) {
     changes = new Map()
@@ -97,6 +112,7 @@ export function getAccountMutations(owner: string) {
 }
 
 export function applyAccountData(owner: string, key: string, value: string | null, acknowledged?: AccountMutation) {
+  if (deletedOwners.has(owner)) return false
   const changes = getAccountMutations(owner)
   if (acknowledged && changes.get(key) === acknowledged) {
     changes.delete(key)

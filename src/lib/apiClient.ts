@@ -1,3 +1,4 @@
+import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
 import { notifyXpAward } from '@/store/xpNotificationStore'
@@ -95,6 +96,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (auth && useAuthStore.getState().user?.id !== owner) throw new ApiError('Account changed.', 409)
 
   if (response.status === 401 && auth) {
+    const failure = await response.clone().json().catch(() => null)
+    if (failure?.code === 'ACCOUNT_DELETED' && owner) {
+      // Also handles deletion on another device. No refresh can restore this ID.
+      if (useAuthStore.getState().user?.id === owner) useAuthStore.getState().clearSession()
+      purgeAccountClientData(owner)
+      throw new ApiError(failure.message, 401, failure.code)
+    }
+
     syncStoredSession()
     const current = useAuthStore.getState()
     const sameUser = current.user?.id === authState.user?.id
@@ -157,7 +166,9 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
     syncStoredSession()
     if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
     if (error instanceof ApiError && error.status === 401) {
+      const owner = useAuthStore.getState().user?.id
       useAuthStore.getState().clearSession()
+      if (error.code === 'ACCOUNT_DELETED' && owner) purgeAccountClientData(owner)
       return 'rejected'
     }
     return 'unavailable'

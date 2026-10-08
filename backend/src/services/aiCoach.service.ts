@@ -1,3 +1,4 @@
+import { onAccountDeleted } from './accountLifecycle.js'
 import { z } from 'zod'
 import { TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
@@ -64,6 +65,7 @@ type AiCoachContext = {
 const AI_REPORT_CACHE_TTL_MS = 10 * 60 * 1000
 
 const aiReportCache = new Map<string, { expiresAt: number; payload: AiReportResponse }>()
+onAccountDeleted((userId) => { aiReportCache.delete(userId) })
 
 const hfReportSchema = z
   .object({

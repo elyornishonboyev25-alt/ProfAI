@@ -99,7 +99,7 @@ export default function DeleteAccountDialog({
                   <AlertTriangle className="h-4 w-4" /> This cannot be undone
                 </p>
                 <p className="mt-1.5 text-xs leading-5 text-error-900/70">
-                  Your study history, XP, streaks, AI conversations, saved vocabulary, profile and results will be permanently removed.
+                  Your test answers and results, shared recordings, XP, streaks, AI conversations, vocabulary, profile and owned classes will be permanently removed. Creating an account again starts with a new profile and empty history.
                 </p>
               </div>
 

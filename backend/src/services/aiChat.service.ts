@@ -1,3 +1,4 @@
+import { onAccountDeleted } from './accountLifecycle.js'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { generateSkillAnalytics } from './analytics.service.js'
@@ -121,6 +122,7 @@ const messageDelegate = prismaRuntime.aiConversationMessage as
   | undefined
 
 const replyHistory = new Map<string, string[]>()
+onAccountDeleted((userId) => { replyHistory.delete(userId) })
 
 function containsAny(input: string, tokens: string[]) {
   return tokens.some((token) => input.includes(token))

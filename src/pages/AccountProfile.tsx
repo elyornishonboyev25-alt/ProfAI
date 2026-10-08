@@ -534,13 +534,13 @@ export default function AccountProfile() {
     setDeletingAccount(true)
     try {
       await apiClient.delete('/auth/account', { body: payload })
+      clearSession()
       if (user?.id) purgeAccountClientData(user.id)
       setFlashToast({
         type: 'success',
         title: 'Account deleted',
         message: 'Your ProfAI account and personal learning data were permanently removed.',
       })
-      clearSession()
       window.location.replace('/login')
     } catch (error) {
       pushToast({

@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
 import { verifyAccessToken } from '../utils/jwt.js'
+import { prisma } from '../lib/prisma.js'
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Authentication required.' })
@@ -9,15 +10,25 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.slice(7)
 
+  let payload
   try {
-    const payload = verifyAccessToken(token)
-    req.user = {
-      id: payload.sub,
-      role: payload.role,
-    }
-    return next()
+    payload = verifyAccessToken(token)
   } catch {
     return res.status(401).json({ message: 'Invalid or expired access token.' })
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, role: true } })
+    if (!user) {
+      return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
+    }
+    req.user = {
+      id: user.id,
+      role: user.role,
+    }
+    return next()
+  } catch (error) {
+    return next(error)
   }
 }
 

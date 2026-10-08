@@ -1,3 +1,4 @@
+import { onAccountDeleted } from './accountLifecycle.js'
 import { TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { calculateConsistencyScore, calculateSpeedEfficiency } from './leaderboard.service.js'
@@ -103,6 +104,7 @@ type TrackSkillDefinition = {
 const ANALYTICS_CACHE_TTL_MS = 60_000
 
 const analyticsCache = new Map<string, { expiresAt: number; payload: SkillAnalyticsPayload }>()
+onAccountDeleted((userId) => { analyticsCache.delete(userId) })
 
 const TRACKED_CATEGORIES: TestCategory[] = ['SAT', 'IELTS']
 

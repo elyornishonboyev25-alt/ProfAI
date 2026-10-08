@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, Sparkles, ShieldCheck, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, ShieldCheck, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import PricingCards, { formatBillingMoney } from './PricingCards'
@@ -95,12 +95,6 @@ export default function Membership() {
   }
   return <main className="workspace-page billing-page billing-simple-page"><div className="billing-content">
     <div className="billing-page-nav"><Link to="/dashboard" className="billing-text-button"><ArrowLeft size={17} />{text('Dashboard', 'Bosh sahifa', 'Главная')}</Link><span><ShieldCheck size={15} />{text('No auto-renewal', 'Avtomatik uzaytirilmaydi', 'Без автопродления')}</span></div>
-    <header className="billing-trial-hero"><div><span className="billing-eyebrow"><Sparkles size={15} />{text('YOUR NEXT CHAPTER', 'YANGI BOSQICHINGIZ', 'ВАШ НОВЫЙ ЭТАП')}</span>
-      <h1>{text('Big goals.', 'Katta maqsadlar.', 'Большие цели.')}<br /><span>{text('Start for free.', 'Bepul boshlang.', 'Начните бесплатно.')}</span></h1>
-      <p>{text('Build your IELTS and SAT confidence with your AI study coach. Your first 7 days are free.', 'AI yordamchisi bilan IELTS va SATga ishonch bilan tayyorlaning. Birinchi 7 kun bepul.', 'Готовьтесь к IELTS и SAT увереннее с AI-помощником. Первые 7 дней бесплатно.')}</p>
-      {!user && <Link to="/register" className="billing-primary">{text('Start for free', 'Bepul boshlang', 'Начать бесплатно')}<ArrowRight size={17} /></Link>}
-      <div className="billing-trial-proof"><span><CheckCircle2 size={15} />{text('No card required', 'Karta talab etilmaydi', 'Без карты')}</span><span><ShieldCheck size={15} />{text('No automatic charges', 'Avtomatik pul yechilmaydi', 'Без автоматических списаний')}</span></div>
-    </div><div className="billing-trial-price"><span>{text('YOUR FIRST WEEK', 'BIRINCHI HAFTANGIZ', 'ВАША ПЕРВАЯ НЕДЕЛЯ')}</span><strong>$0</strong><p>IELTS · SAT · AI</p><small>{text('7 days to find your rhythm', 'O‘z ritmingizni topish uchun 7 kun', '7 дней, чтобы найти свой ритм')}</small></div></header>
     {user && access && <div className={`billing-status ${access.active ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{fullAccess ? text('Premium active. Your access is ready.', 'Premium faol. Imkoniyatlar ochiq.', 'Premium активен. Доступ открыт.') : access.active ? text(`Your free trial: ${access.daysRemaining} days left.`, `Bepul sinov: ${access.daysRemaining} kun qoldi.`, `Пробный период: осталось ${access.daysRemaining} дн.`) : text('Your free trial has ended. Choose a plan to continue.', 'Bepul sinov tugadi. Davom etish uchun tarif tanlang.', 'Пробный период закончился. Выберите тариф.')}</div>}
     {walletError && <div className="billing-error" role="alert">{walletError}<button onClick={() => void refresh()}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></div>}
     {returnedOrder && <div className={`billing-status ${returnedOrder.status === 'APPROVED' ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{returnedOrder.status === 'APPROVED' ? text('Payment confirmed. Your Premium access is ready.', 'To‘lov tasdiqlandi. Premium imkoniyatlar ochiq.', 'Оплата подтверждена. Premium доступ открыт.') : text('Payment status', 'To‘lov holati', 'Статус оплаты') + ': ' + orderStatusLabel(returnedOrder.status, text)}<button className="billing-text-button" onClick={() => void refresh()}>{text('Refresh', 'Yangilash', 'Обновить')}</button></div>}

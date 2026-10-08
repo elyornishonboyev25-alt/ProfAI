@@ -5,6 +5,7 @@ import ClassAssignmentContext from '@/features/learningCenter/ClassAssignmentCon
 
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import WorkspaceToolbar from '@/components/layout/WorkspaceToolbar'
+import LanguageSelector from '@/components/layout/LanguageSelector'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
@@ -456,6 +457,7 @@ function App() {
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <ClassAssignmentContext />
+      {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
       <DeferredAchievementCelebration />
       {!isTestMode ? (

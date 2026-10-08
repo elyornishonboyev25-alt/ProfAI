@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getFreeAttemptInfo } from '@/utils/premiumAccess'
@@ -10,7 +11,7 @@ function keyFor(userId: string | null) {
 
 function readCount(userId: string | null): number {
   try {
-    const raw = localStorage.getItem(keyFor(userId))
+    const raw = accountStorageFor(userId ?? 'guest').getItem(keyFor(userId))
     const parsed = raw ? Number.parseInt(raw, 10) : 0
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
   } catch {
@@ -37,7 +38,7 @@ export function useTestAttempts() {
     setUsed((previous) => {
       const next = previous + 1
       try {
-        localStorage.setItem(keyFor(userId), String(next))
+        accountStorageFor(userId ?? 'guest').setItem(keyFor(userId), String(next))
       } catch {
         /* storage unavailable — ignore */
       }
@@ -48,7 +49,7 @@ export function useTestAttempts() {
   const reset = useCallback(() => {
     setUsed(0)
     try {
-      localStorage.removeItem(keyFor(userId))
+      accountStorageFor(userId ?? 'guest').removeItem(keyFor(userId))
     } catch {
       /* ignore */
     }

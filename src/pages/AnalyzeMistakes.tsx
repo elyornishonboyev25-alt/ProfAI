@@ -70,7 +70,7 @@ type ConfirmState =
   | null
 
 function buildReadingAttempt(entry: ReadingAnalysisHistoryEntry): UnifiedAttempt {
-  const test = resolveIeltsTestById(entry.testId)
+  const test = resolveIeltsTestById(entry.testId, entry.resultPayload)
   const isListening = test?.module === 'Listening'
   const sectionIds = entry.resultPayload.detailedBreakdown?.activeSectionIds
   const analysis = isListening
@@ -278,7 +278,7 @@ export default function AnalyzeMistakes() {
     }
 
     if (attempt.source !== 'reading-local' || !attempt.readingEntry) return
-    const resolvedTest = resolveIeltsTestById(attempt.readingEntry.testId)
+    const resolvedTest = resolveIeltsTestById(attempt.readingEntry.testId, attempt.readingEntry.resultPayload)
     if (!resolvedTest) return
 
     saveReviewState(attempt.readingEntry.testId, {

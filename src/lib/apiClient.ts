@@ -1,5 +1,6 @@
 import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
+import { notifyXpAward } from '@/store/xpNotificationStore'
 
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
 const API_BASE_URL = configuredApiUrl?.replace(/\/$/, '') ?? '/api/v1'
@@ -10,6 +11,7 @@ export function publicApiUrl(path: string): string {
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
+  expectedUserId?: string
   auth?: boolean
   retryOnUnauthorized?: boolean
   responseType?: 'json' | 'raw'
@@ -61,9 +63,14 @@ async function ensureRefreshed(refreshToken: string): Promise<RefreshResult> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = true, retryOnUnauthorized = true, headers, body, responseType = 'json', ...rest } = options
+  const { expectedUserId, auth = true, retryOnUnauthorized = true, headers, body, responseType = 'json', ...rest } = options
+  const initiatingOwner = useAuthStore.getState().user?.id
   if (auth) syncStoredSession()
   const authState = useAuthStore.getState()
+
+  const owner = expectedUserId ?? initiatingOwner
+  if (auth && authState.user?.id !== owner) throw new ApiError('Account changed.', 409)
+  if (auth && expectedUserId && authState.user?.id !== expectedUserId) throw new ApiError('Account changed.', 409)
 
   const requestHeaders = new Headers(headers)
   requestHeaders.set('Content-Type', 'application/json')
@@ -84,6 +91,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new Error('Unable to connect. Check your connection and try again.')
   }
 
+  if (auth) syncStoredSession()
+  if (auth && useAuthStore.getState().user?.id !== owner) throw new ApiError('Account changed.', 409)
+
   if (response.status === 401 && auth) {
     syncStoredSession()
     const current = useAuthStore.getState()
@@ -98,7 +108,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       if ((result === 'refreshed' || result === 'superseded') &&
           latest.user?.id === authState.user?.id && latest.accessToken &&
           latest.refreshToken !== authState.refreshToken) {
-        return request<T>(path, { ...options, retryOnUnauthorized: false })
+        return request<T>(path, { ...options, expectedUserId: owner, retryOnUnauthorized: false })
       }
       if (result === 'unavailable') {
         throw new Error('Backend is temporarily unavailable. Your session is saved and will retry automatically.')
@@ -123,7 +133,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (responseType === 'raw') return response as T
 
   if ((path.startsWith('/ai/') || path.startsWith('/billing/')) && rest.method === 'POST') window.dispatchEvent(new Event('profai:billing-updated'))
-  return response.json() as Promise<T>
+  const payload = await response.json() as T
+  if (auth) syncStoredSession()
+  if (auth && useAuthStore.getState().user?.id !== owner) throw new ApiError('Account changed.', 409)
+  if (auth && owner && rest.method === 'POST') notifyXpAward(owner, payload, path, body)
+  return payload
 }
 
 async function refreshSession(refreshToken: string): Promise<RefreshResult> {

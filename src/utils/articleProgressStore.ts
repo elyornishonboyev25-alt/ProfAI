@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 // Per-article reading progress (max scroll % reached), used by the Reading
 // Library catalog to show progress rings and "Read" badges (concept 21).
 // New dedicated key — never touches existing smarttest-* stores.
@@ -9,7 +10,7 @@ type ProgressMap = Record<string, number>
 export function getArticleProgressMap(): ProgressMap {
   if (typeof window === 'undefined') return {}
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? '{}') as unknown
+    const parsed = JSON.parse(accountStorage.getItem(STORAGE_KEY) ?? '{}') as unknown
     if (!parsed || typeof parsed !== 'object') return {}
     return parsed as ProgressMap
   } catch {
@@ -31,7 +32,7 @@ export function saveArticleProgress(slug: string, percent: number): void {
   if (clamped <= previous || (clamped - previous < 5 && clamped < 95)) return
   map[slug] = clamped
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
+    accountStorage.setItem(STORAGE_KEY, JSON.stringify(map))
   } catch {
     /* storage full/blocked — reading continues fine without progress */
   }

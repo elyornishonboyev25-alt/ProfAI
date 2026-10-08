@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -129,10 +130,10 @@ const PLAN_GENERATION_STEPS = [
 function saveToAccountProfile(firstName: string, lastName: string, targetExam: ExamTarget) {
   try {
     const key = 'smarttest-account-profile-v1'
-    const existing = localStorage.getItem(key)
+    const existing = accountStorage.getItem(key)
     const prev = existing ? JSON.parse(existing) : {}
     const updated = { ...prev, fullName: `${firstName} ${lastName}`.trim(), targetExam }
-    localStorage.setItem(key, JSON.stringify(updated))
+    accountStorage.setItem(key, JSON.stringify(updated))
   } catch {
     // ignore — account profile mirror is best-effort.
   }

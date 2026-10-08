@@ -1,4 +1,5 @@
 import { IELTSTest } from '../types/ieltsTypes'
+import { listeningFullTest1 } from './listeningFullTest1'
 import { listeningFullTest2 } from './listeningFullTest2'
 import { listeningFullTest3 } from './listeningFullTest3'
 import { listeningFullTest4 } from './listeningFullTest4'
@@ -22,19 +23,6 @@ import { listeningFullTest21 } from './listeningFullTest21'
 import { listeningFullTest22 } from './listeningFullTest22'
 import { listeningFullTests23to30 } from './listeningFullTests23to30'
 
-// Test 1 originally shipped with four copies of Test 3's complete recording
-// and placeholder questions/keys. Keep its public IDs for saved attempts while
-// using the paper that actually belongs to that recording.
-const listeningFullTest1: IELTSTest = {
-  ...listeningFullTest3,
-  id: 'ielts-listening-1',
-  title: 'IELTS Listening Full Test 1',
-  sections: listeningFullTest3.sections.map((section, index) => ({
-    ...section,
-    id: `ielts-listening-test1-part${index + 1}`,
-    questions: section.questions.map(question => ({ ...question, id: `ls1-q${question.number}` })),
-  })),
-}
 export const mockListeningTests: IELTSTest[] = [
   listeningFullTest1,
   listeningFullTest2,

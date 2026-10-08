@@ -42,7 +42,7 @@ function controls(block) {
 // Read the independent user-supplied answer sheets already transcribed by the
 // per-paper regression suites, rather than deriving their expected keys here.
 function sourceKey(number) {
-  if (sourceKeys[number === 1 ? 3 : number]) return sourceKeys[number === 1 ? 3 : number].answers
+  if (sourceKeys[number]) return sourceKeys[number].answers
   if (number >= 23) {
     const source = JSON.parse(readFileSync('scripts/fixtures/ielts-full-mocks-23-30-integrity.json', 'utf8')).listening[number]
     return numbers(40).map(n => {
@@ -141,7 +141,6 @@ for (const [index, test] of tests.entries()) {
   }
   const oldWrongAnswers = {
     1: [[5, '103'], [4, 'swimming']],
-    3: [[5, '103'], [4, 'swimming']],
     7: [[23, 'A']],
     8: [[38, 'salty']],
     10: [[13, 'A'], [20, 'B']],
@@ -165,4 +164,4 @@ for (const [index, test] of tests.entries()) {
 assert.equal(ids.size, 1200)
 assert.equal(audioHashes.get('/audio/ielts-listening/listening-full-test-7.mp3'), 'ccce06dcb6c656465cc6aad980f22a9b037e8c29045400207f5260bf4ab4b5dc', 'Test 7: repaired MP3 metadata')
 assert.equal(audioHashes.get('/audio/ielts-listening/listening-full-test-10.mp3'), '8b0a971a59282b2cfce79be3dc1365fc3807d744f140a8047bc207a28b1ea5d3', 'Test 10: repaired MP3 metadata')
-console.log(`PASS: 1,200 unique question IDs; ${audioHashes.size} distinct audio paths. Tests 1 and 3 retain their pre-existing shared paper.`)
+console.log(`PASS: 1,200 unique question IDs; ${audioHashes.size} distinct audio paths.`)

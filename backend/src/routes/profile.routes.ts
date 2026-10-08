@@ -2101,7 +2101,7 @@ router.get(
     }
 
     // Heavy analytics are best-effort: a failure must not break the profile page.
-    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak, xpEvents] = await Promise.all([
+    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak, xpEvents, recentAttempts] = await Promise.all([
       generateSkillAnalytics(user.id).catch(() => null),
       generateLeaderboard({ period: 'all', currentUserId: user.id }).catch(() => null),
       prisma.testAttempt
@@ -2119,6 +2119,12 @@ router.get(
         where: { userId: user.id, amount: { gt: 0 } },
         _sum: { amount: true },
         orderBy: { source: 'asc' },
+      }).catch(() => []),
+      prisma.testAttempt.findMany({
+        where: { userId: user.id },
+        orderBy: { completedAt: 'desc' },
+        take: 8,
+        select: { completedAt: true, test: { select: { title: true, category: true } } },
       }).catch(() => []),
     ])
     const rankRow = leaderboard?.rows.find((row) => row.userId === user.id) ?? null
@@ -2146,11 +2152,12 @@ router.get(
         showUniversity: profile.showUniversity,
         showBadges: profile.showBadges,
       },
+      recentAttempts: profile.showResults ? recentAttempts : [],
       stats: profile.showResults
         ? {
             totalAttempts: attemptsCount ?? 0,
-            averageScore: Number((attemptsAgg?._avg.finalScore ?? 0).toFixed(1)),
-            averageAccuracy: Number((attemptsAgg?._avg.percentage ?? 0).toFixed(1)),
+            averageScore: Number((attemptsAgg?._avg.finalScore ?? 0).toFixed(2)),
+            averageAccuracy: Number((attemptsAgg?._avg.percentage ?? 0).toFixed(2)),
           }
         : null,
       xpBreakdown: [

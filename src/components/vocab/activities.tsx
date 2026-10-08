@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import { SaveWordButton } from './SaveWordButton'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -29,6 +30,8 @@ import { Burst } from '@/components/fx'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { isSpeechSynthesisSupported, speak as speakText } from '@/lib/speech'
 import '@/styles/vocabulary-practice.css'
+import { useVocabularyLanguage } from './VocabularyLanguage'
+import { getVocabularyTranslation } from '@/utils/vocabularyTranslation'
 
 export type ActivityMode = 'flashcards' | 'matching' | 'quiz' | 'typing'
 
@@ -129,12 +132,12 @@ export function usePronunciation() {
 
 // ---------------------------------------------------------------- mastery store
 function getMastery(key: string): Record<string, boolean> {
-  return safeParse<Record<string, Record<string, boolean>>>(localStorage.getItem(MASTERY_STORAGE_KEY), {})[key] ?? {}
+  return safeParse<Record<string, Record<string, boolean>>>(accountStorage.getItem(MASTERY_STORAGE_KEY), {})[key] ?? {}
 }
 function setMastery(key: string, map: Record<string, boolean>) {
-  const all = safeParse<Record<string, Record<string, boolean>>>(localStorage.getItem(MASTERY_STORAGE_KEY), {})
+  const all = safeParse<Record<string, Record<string, boolean>>>(accountStorage.getItem(MASTERY_STORAGE_KEY), {})
   all[key] = map
-  localStorage.setItem(MASTERY_STORAGE_KEY, JSON.stringify(all))
+  accountStorage.setItem(MASTERY_STORAGE_KEY, JSON.stringify(all))
 }
 
 // ---------------------------------------------------------------- reward store
@@ -148,12 +151,12 @@ type MatchingRewardState = {
 type MatchingCelebration = { amount: number; reason: string; total: number }
 
 function getAllMatchingRewardStates(): Record<string, MatchingRewardState> {
-  return safeParse<Record<string, MatchingRewardState>>(localStorage.getItem(MATCHING_REWARDS_STORAGE_KEY), {})
+  return safeParse<Record<string, MatchingRewardState>>(accountStorage.getItem(MATCHING_REWARDS_STORAGE_KEY), {})
 }
 function saveMatchingRewardState(key: string, state: MatchingRewardState) {
   const all = getAllMatchingRewardStates()
   all[key] = state
-  localStorage.setItem(MATCHING_REWARDS_STORAGE_KEY, JSON.stringify(all))
+  accountStorage.setItem(MATCHING_REWARDS_STORAGE_KEY, JSON.stringify(all))
 }
 function getSectionRewardState(key: string, totalGroups: number): MatchingRewardState {
   const stored = getAllMatchingRewardStates()[key]
@@ -168,12 +171,12 @@ function getSectionRewardState(key: string, totalGroups: number): MatchingReward
   return { awardedGroups, bonusAwarded, completed, totalDiamonds: Math.max(baseDiamonds, stored.totalDiamonds ?? 0), completedAt: stored.completedAt }
 }
 function getDiamondBank() {
-  const raw = Number(localStorage.getItem(VOCAB_DIAMOND_BANK_STORAGE_KEY))
+  const raw = Number(accountStorage.getItem(VOCAB_DIAMOND_BANK_STORAGE_KEY))
   return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 0
 }
 function addToDiamondBank(amount: number) {
   const next = getDiamondBank() + Math.max(0, Math.floor(amount))
-  localStorage.setItem(VOCAB_DIAMOND_BANK_STORAGE_KEY, String(next))
+  accountStorage.setItem(VOCAB_DIAMOND_BANK_STORAGE_KEY, String(next))
   return next
 }
 
@@ -236,6 +239,7 @@ export function ActivityPicker({ basePath, entriesCount, navigationState, previe
 
 // ================================================================ Flashcards
 export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entries: VocabularyEntry[]; masteryKey: string; onComplete?: (accuracy: number) => void }) {
+  const language = useVocabularyLanguage()
   const { reducedMotion } = useMotionPreferences()
   const meaningId = useId()
   const advanceTimer = useRef<ReturnType<typeof setTimeout>>()
@@ -250,6 +254,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
   const { isSupported, speakingText, speak, stop } = usePronunciation()
 
   const current = deck[index]
+  const translation = current && getVocabularyTranslation(current, language)
   const progress = ((index + 1) / deck.length) * 100
   const masteredCount = deck.filter((c) => known[c.id]).length
   const speakingCurrent = speakingText === current?.term
@@ -352,11 +357,11 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
             <div id={meaningId} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} aria-hidden={!flipped} className="vocab-flash-face vocab-flash-back">
               <span className="vocab-flash-label">Meaning & translation</span>
               <p className="vocab-flash-back-term" lang="en">{current.term}</p>
-              <div className="vocab-flash-meaning" data-bilingual={Boolean(current.uzbek)}>
-              {current.uzbek ? (
+              <div className="vocab-flash-meaning" data-bilingual={Boolean(translation)}>
+              {translation ? (
                 <div className="vocab-flash-translation">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">Uzbek</p>
-                  <p className="vocab-flash-definition">{current.uzbek}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">{language === 'ru' ? 'Русский' : 'O‘zbekcha'}</p>
+                  <p lang={language} className="vocab-flash-definition">{translation}</p>
                 </div>
               ) : null}
               <div>

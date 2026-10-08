@@ -26,6 +26,7 @@ import {
   isIeltsTrackCatalogTest,
 } from '@/utils/ieltsTrackCatalog'
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
+import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getNextFullMockSection, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
@@ -121,8 +122,19 @@ export default function TestInterface() {
       return
     }
 
+    // Full Mock review can arrive without a sourceTest snapshot. Resolve the
+    // saved paper before loading a replacement that reuses the public slot.
+    if (type === 'listening' && reviewPayload?.result) {
+      const savedPaper = resolveIeltsTestById(id, reviewPayload.result)
+      if (savedPaper) {
+        setTestData(savedPaper)
+        setLoading(false)
+        return
+      }
+    }
+
     if (sourceTest?.id === id) {
-      setTestData(type === 'listening' ? mockListeningTests.find(test => test.id === id) ?? sourceTest : sourceTest)
+      setTestData(type === 'listening' ? resolveIeltsTestById(id, reviewPayload?.result) ?? sourceTest : sourceTest)
       setLoading(false)
       return
     }
@@ -167,7 +179,7 @@ export default function TestInterface() {
 
     setTestData(foundTest ?? null)
     setLoading(false)
-  }, [id, sourceTest, trackTestComingSoon, type])
+  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type])
 
   const handleComplete = (results: unknown) => {
     // Inside a Full Mock, a section counts as done only when its test is actually

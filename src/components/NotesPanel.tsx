@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react'
+import { accountStorage } from '@/utils/accountStorage'
+import { useState, useEffect } from 'react'
 import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 interface NotesPanelProps {
@@ -11,7 +12,7 @@ export default function NotesPanel({ testId, isOpen, onClose }: NotesPanelProps)
     const [note, setNote] = useState('')
 
     useEffect(() => {
-        const savedNote = localStorage.getItem(`ielts-note-${testId}`)
+        const savedNote = accountStorage.getItem(`ielts-note-${testId}`)
         if (savedNote) {
             setNote(savedNote)
         }
@@ -20,7 +21,7 @@ export default function NotesPanel({ testId, isOpen, onClose }: NotesPanelProps)
     const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newNote = e.target.value
         setNote(newNote)
-        localStorage.setItem(`ielts-note-${testId}`, newNote)
+        accountStorage.setItem(`ielts-note-${testId}`, newNote)
     }
 
     if (!isOpen) return null

@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 // Speaking practice catalog (1–30) + Full Mock catalog (1–30). Practice tests
 // cycle through Part 1 → Part 2 (cue card) → Part 3, then repeat from Part 1.
 //
@@ -178,7 +179,7 @@ function speakingCompletionKey(userId?: string) {
 export function getCompletedSpeakingTestIds(userId?: string): Set<string> {
   if (typeof window === 'undefined') return new Set()
   try {
-    const stored = JSON.parse(window.localStorage.getItem(speakingCompletionKey(userId)) ?? '[]')
+    const stored = JSON.parse(accountStorageFor(userId ?? 'guest').getItem(speakingCompletionKey(userId)) ?? '[]')
     return new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : [])
   } catch {
     return new Set()
@@ -189,19 +190,19 @@ export function markSpeakingTestCompleted(testId: string, userId?: string) {
   if (typeof window === 'undefined' || !testId) return
   const completed = getCompletedSpeakingTestIds(userId)
   completed.add(testId)
-  window.localStorage.setItem(speakingCompletionKey(userId), JSON.stringify([...completed]))
+  accountStorageFor(userId ?? 'guest').setItem(speakingCompletionKey(userId), JSON.stringify([...completed]))
   const evidenceKey = `${speakingCompletionKey(userId)}:dates`
   try {
-    const dates = JSON.parse(window.localStorage.getItem(evidenceKey) ?? '{}') as Record<string, string>
+    const dates = JSON.parse(accountStorageFor(userId ?? 'guest').getItem(evidenceKey) ?? '{}') as Record<string, string>
     dates[testId] ??= new Date().toISOString()
-    window.localStorage.setItem(evidenceKey, JSON.stringify(dates))
+    accountStorageFor(userId ?? 'guest').setItem(evidenceKey, JSON.stringify(dates))
   } catch { /* The speaking completion remains saved even if date storage is unavailable. */ }
 }
 
 export function getSpeakingCompletionDates(userId?: string): Record<string, string> {
   if (typeof window === 'undefined') return {}
   try {
-    const dates = JSON.parse(window.localStorage.getItem(`${speakingCompletionKey(userId)}:dates`) ?? '{}')
+    const dates = JSON.parse(accountStorageFor(userId ?? 'guest').getItem(`${speakingCompletionKey(userId)}:dates`) ?? '{}')
     return dates && typeof dates === 'object' && !Array.isArray(dates) ? dates as Record<string, string> : {}
   } catch { return {} }
 }

@@ -22,6 +22,7 @@ import { CountUp } from '@/components/fx'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/my-vocabulary.css'
 import { ActivityPicker, usePronunciation } from '@/components/vocab/activities'
+import { VocabularyLanguageToggle, VocabularyTranslation } from '@/components/vocab/VocabularyLanguage'
 import { explainWord } from '@/services/geminiAI'
 import {
   addSavedWord,
@@ -59,6 +60,7 @@ function Overview() {
         <header className="my-vocabulary-hero">
           <div className="my-vocabulary-intro">
             <div className="my-vocabulary-controls">
+              <VocabularyLanguageToggle accent="blue" />
               <button type="button" onClick={() => navigate('/vocabulary')} className="my-vocabulary-back">
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" /><UiText text="Back to Vocabulary" />
               </button>
@@ -200,6 +202,7 @@ function Collection({ context }: { context: VocabContext }) {
       <div className="my-vocabulary-shell space-y-5">
         <section className="my-vocabulary-collection-hero">
           <div className="premium-top-controls">
+            <VocabularyLanguageToggle accent="blue" />
             <button onClick={() => navigate('/vocabulary/my-words')} className="premium-back-btn-sm">
               <ArrowLeft className="h-4 w-4" />  <UiText text={"My Words"} /> </button>
             <span className="premium-top-chip gap-1"><Icon className="h-3.5 w-3.5" /> {meta.label}</span>
@@ -272,7 +275,7 @@ function WordCard({ word, onSpeak, onRemove }: { word: SavedWord; onSpeak: () =>
               {word.source === 'ai' ? 'AI' : word.source === 'studio' ? 'Studio' : 'You'}
             </span>
           </div>
-          {word.uzbek ? <p className="mt-1 text-xs font-semibold text-emerald-700">{word.uzbek}</p> : null}
+          <VocabularyTranslation entry={word} className="mt-1 text-xs font-semibold text-emerald-700" />
           <p className="mt-1 text-xs leading-5 text-slate-600">{word.definition}</p>
           {word.origin ? <p className="mt-2 text-xs text-slate-500">From: {word.origin}</p> : null}
           {word.origins?.map((origin) => (

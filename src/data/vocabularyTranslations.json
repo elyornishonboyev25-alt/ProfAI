@@ -1,0 +1,10458 @@
+{
+  "3r process": {
+    "ru": "3Р-процесс",
+    "uz": "3R jarayoni"
+  },
+  "abandoned": {
+    "ru": "заброшенный"
+  },
+  "abatement": {
+    "ru": "снижение"
+  },
+  "abdomen": {
+    "ru": "живот"
+  },
+  "abiotic factors": {
+    "ru": "абиотические факторы",
+    "uz": "abiotik omillar"
+  },
+  "absorbed": {
+    "ru": "поглощенный"
+  },
+  "abstract": {
+    "ru": "абстрактный"
+  },
+  "abundance": {
+    "ru": "избыток",
+    "uz": "mo'l-ko'llik"
+  },
+  "academic": {
+    "ru": "академический"
+  },
+  "academic motivation": {
+    "ru": "академическая мотивация",
+    "uz": "akademik motivatsiya"
+  },
+  "academic performance": {
+    "ru": "успеваемость"
+  },
+  "accelerated": {
+    "ru": "ускоренный"
+  },
+  "accentuate": {
+    "ru": "подчеркивать"
+  },
+  "access": {
+    "ru": "доступ"
+  },
+  "accessibility": {
+    "ru": "доступность"
+  },
+  "accessible": {
+    "ru": "доступный"
+  },
+  "accidentally": {
+    "ru": "случайно"
+  },
+  "acclaim": {
+    "ru": "признание"
+  },
+  "acclaimed": {
+    "ru": "признанный"
+  },
+  "acclimation": {
+    "ru": "акклиматизация",
+    "uz": "moslashish"
+  },
+  "accommodation": {
+    "ru": "жильё; размещение"
+  },
+  "accompanied": {
+    "ru": "сопровождаемый"
+  },
+  "accompaniment": {
+    "ru": "музыкальное сопровождение"
+  },
+  "accompanying": {
+    "ru": "сопровождающий"
+  },
+  "accomplish": {
+    "ru": "выполнить"
+  },
+  "accordingly": {
+    "ru": "соответственно"
+  },
+  "accountability": {
+    "ru": "подотчетность"
+  },
+  "accounted for": {
+    "ru": "составляли; объясняли"
+  },
+  "accreditation": {
+    "ru": "аккредитация",
+    "uz": "akkreditatsiya"
+  },
+  "accredited": {
+    "ru": "аккредитованный"
+  },
+  "accumulate": {
+    "ru": "накапливать"
+  },
+  "accumulated": {
+    "ru": "накопленный"
+  },
+  "accurately": {
+    "ru": "точно"
+  },
+  "achievable": {
+    "ru": "достижимый"
+  },
+  "achievement": {
+    "ru": "достижение"
+  },
+  "achievement context": {
+    "ru": "контекст достижения",
+    "uz": "yutuqlar konteksti"
+  },
+  "achievement goals": {
+    "ru": "цели достижения",
+    "uz": "maqsadlarga erishish"
+  },
+  "acidification": {
+    "ru": "подкисление"
+  },
+  "acknowledge": {
+    "ru": "признавать"
+  },
+  "acolytes": {
+    "ru": "помощники"
+  },
+  "acoustic": {
+    "ru": "акустический",
+    "uz": "akustik"
+  },
+  "acoustic metamaterial": {
+    "ru": "акустический метаматериал",
+    "uz": "akustik metamaterial"
+  },
+  "acoustic signal": {
+    "ru": "акустический сигнал",
+    "uz": "akustik signal"
+  },
+  "acquaintances": {
+    "ru": "знакомые"
+  },
+  "acquisition": {
+    "ru": "приобретение"
+  },
+  "activation": {
+    "ru": "активация"
+  },
+  "adapt": {
+    "ru": "адаптироваться"
+  },
+  "adaptability": {
+    "ru": "адаптивность"
+  },
+  "adaptation": {
+    "ru": "приспособление",
+    "uz": "moslashuv"
+  },
+  "adaptations": {
+    "ru": "адаптации"
+  },
+  "adaptive reuse": {
+    "ru": "адаптивное повторное использование"
+  },
+  "additives": {
+    "ru": "добавки",
+    "uz": "qo'shimchalar"
+  },
+  "adipose tissue": {
+    "ru": "жировая ткань"
+  },
+  "adjacent": {
+    "ru": "соседний"
+  },
+  "adjusting": {
+    "ru": "корректировка"
+  },
+  "adjustments": {
+    "ru": "корректировки",
+    "uz": "tuzatishlar"
+  },
+  "administered": {
+    "ru": "управляется"
+  },
+  "administration": {
+    "ru": "администрация"
+  },
+  "administrative": {
+    "ru": "административный"
+  },
+  "adolescents": {
+    "ru": "подростки"
+  },
+  "adoption": {
+    "ru": "принятие"
+  },
+  "advance": {
+    "ru": "заранее; продвижение"
+  },
+  "advantageous inequity": {
+    "ru": "выгодное неравенство",
+    "uz": "foydali tengsizlik"
+  },
+  "adventurous": {
+    "ru": "авантюрный"
+  },
+  "adverse": {
+    "ru": "неблагоприятный"
+  },
+  "adverse events": {
+    "ru": "побочные эффекты"
+  },
+  "adversity": {
+    "ru": "невзгоды"
+  },
+  "advocates": {
+    "ru": "защитники"
+  },
+  "aerosol": {
+    "ru": "аэрозоль",
+    "uz": "aerozol"
+  },
+  "aesthetic": {
+    "ru": "эстетический"
+  },
+  "aesthetic appeal": {
+    "ru": "эстетическая привлекательность"
+  },
+  "affection": {
+    "ru": "привязанность"
+  },
+  "affective engagement": {
+    "ru": "аффективное взаимодействие",
+    "uz": "ta'sirchan jalb qilish"
+  },
+  "affinities": {
+    "ru": "сходство"
+  },
+  "affluent": {
+    "ru": "богатый"
+  },
+  "afford": {
+    "ru": "позволить себе"
+  },
+  "affordability": {
+    "ru": "доступность",
+    "uz": "arzonlik"
+  },
+  "affordable": {
+    "ru": "доступный"
+  },
+  "aftermath": {
+    "ru": "последствия"
+  },
+  "age-appropriate": {
+    "ru": "соответствующий возрасту"
+  },
+  "ageing population": {
+    "ru": "старение населения"
+  },
+  "agency": {
+    "ru": "агентство"
+  },
+  "agglomeration": {
+    "ru": "агломерация"
+  },
+  "aggregation": {
+    "ru": "агрегирование"
+  },
+  "aggressive": {
+    "ru": "агрессивный"
+  },
+  "agreeableness": {
+    "ru": "приятность",
+    "uz": "muvofiqlik"
+  },
+  "agreement": {
+    "ru": "соглашение"
+  },
+  "agricultural": {
+    "ru": "сельскохозяйственный"
+  },
+  "agriculture": {
+    "ru": "сельское хозяйство",
+    "uz": "qishloq xo'jaligi"
+  },
+  "air bladder": {
+    "ru": "воздушный пузырь",
+    "uz": "havo pufagi"
+  },
+  "albedo": {
+    "ru": "альбедо",
+    "uz": "albedo"
+  },
+  "algae": {
+    "ru": "водоросли",
+    "uz": "yosunlar"
+  },
+  "algal blooms": {
+    "ru": "цветение водорослей",
+    "uz": "yosun gullaydi"
+  },
+  "algorithm": {
+    "ru": "алгоритм"
+  },
+  "algorithmication": {
+    "ru": "алгоритмизация"
+  },
+  "algorithms": {
+    "ru": "алгоритмы"
+  },
+  "aligned": {
+    "ru": "выровнен"
+  },
+  "allegedly": {
+    "ru": "якобы"
+  },
+  "alliance": {
+    "ru": "альянс"
+  },
+  "allocated": {
+    "ru": "выделено"
+  },
+  "allocating": {
+    "ru": "распределение"
+  },
+  "allocation": {
+    "ru": "распределение"
+  },
+  "alloys": {
+    "ru": "сплавы",
+    "uz": "qotishmalar"
+  },
+  "alongside": {
+    "ru": "рядом"
+  },
+  "alpine": {
+    "ru": "альпийский",
+    "uz": "alp tog'lari"
+  },
+  "alternative": {
+    "ru": "альтернатива"
+  },
+  "alternatives": {
+    "ru": "альтернативы"
+  },
+  "amass": {
+    "ru": "накапливать"
+  },
+  "amateur": {
+    "ru": "любитель"
+  },
+  "amazon dieback": {
+    "ru": "вымирание Амазонки",
+    "uz": "amazon Dieback"
+  },
+  "ambition": {
+    "ru": "амбиции"
+  },
+  "ambitious": {
+    "ru": "амбициозный"
+  },
+  "ameliorate": {
+    "ru": "улучшить"
+  },
+  "amenities": {
+    "ru": "удобства"
+  },
+  "amino acids": {
+    "ru": "аминокислоты",
+    "uz": "aminokislotalar"
+  },
+  "amorphous": {
+    "ru": "аморфный"
+  },
+  "amphibians": {
+    "ru": "земноводные",
+    "uz": "amfibiyalar"
+  },
+  "amplitude": {
+    "ru": "амплитуда",
+    "uz": "amplituda"
+  },
+  "amygdala": {
+    "ru": "миндалевидное тело",
+    "uz": "amigdala"
+  },
+  "analogous to": {
+    "ru": "аналогичный"
+  },
+  "analogy": {
+    "ru": "аналогия"
+  },
+  "analysis": {
+    "ru": "анализ"
+  },
+  "analytical": {
+    "ru": "аналитический"
+  },
+  "anatomical neutral": {
+    "ru": "анатомический нейтральный",
+    "uz": "anatomik neytral"
+  },
+  "anatomy": {
+    "ru": "анатомия"
+  },
+  "ancestors": {
+    "ru": "предки"
+  },
+  "ancient": {
+    "ru": "древний"
+  },
+  "anecdotal": {
+    "ru": "анекдотический"
+  },
+  "anemone": {
+    "ru": "анемона",
+    "uz": "anemon"
+  },
+  "animating force": {
+    "ru": "оживляющая сила"
+  },
+  "anniversary": {
+    "ru": "годовщина"
+  },
+  "annotate": {
+    "ru": "комментировать"
+  },
+  "annual growth rings": {
+    "ru": "годовые годичные кольца",
+    "uz": "yillik o'sish halqalari"
+  },
+  "anomalous": {
+    "ru": "аномальный"
+  },
+  "anonymous": {
+    "ru": "анонимный"
+  },
+  "antenna": {
+    "ru": "антенна"
+  },
+  "anthropological": {
+    "ru": "антропологический"
+  },
+  "anthropologists": {
+    "ru": "антропологи"
+  },
+  "anti-malarial": {
+    "ru": "противомалярийный"
+  },
+  "anti-reflection": {
+    "ru": "антибликовый"
+  },
+  "antibiotic": {
+    "ru": "антибиотик"
+  },
+  "anticipating": {
+    "ru": "ожидая"
+  },
+  "anticipation": {
+    "ru": "ожидание"
+  },
+  "antidote": {
+    "ru": "противоядие"
+  },
+  "antifragility": {
+    "ru": "антихрупкость",
+    "uz": "antimo'rtlik"
+  },
+  "antique": {
+    "ru": "антикварный"
+  },
+  "antiquities": {
+    "ru": "древности"
+  },
+  "anxiety": {
+    "ru": "беспокойство",
+    "uz": "anksiyete"
+  },
+  "apathy": {
+    "ru": "апатия"
+  },
+  "apology": {
+    "ru": "извинение"
+  },
+  "aposematism": {
+    "ru": "апосематизм",
+    "uz": "apozematizm"
+  },
+  "appealing": {
+    "ru": "привлекательный"
+  },
+  "applauded": {
+    "ru": "аплодировали"
+  },
+  "appliance": {
+    "ru": "прибор"
+  },
+  "appliances": {
+    "ru": "техника"
+  },
+  "applicable": {
+    "ru": "применимый"
+  },
+  "applicant": {
+    "ru": "заявитель"
+  },
+  "applicants": {
+    "ru": "заявители"
+  },
+  "application": {
+    "ru": "заявление; применение"
+  },
+  "appraising": {
+    "ru": "оценивающий"
+  },
+  "appreciate": {
+    "ru": "ценить"
+  },
+  "appreciation": {
+    "ru": "признательность"
+  },
+  "apprehensive": {
+    "ru": "опасающийся"
+  },
+  "appressorium": {
+    "ru": "апрессорий",
+    "uz": "appressorium"
+  },
+  "approach-avoidance distinction": {
+    "ru": "различие подход-избегание",
+    "uz": "yondashuv-qochish farqi"
+  },
+  "appropriate": {
+    "ru": "соответствующий"
+  },
+  "approved": {
+    "ru": "одобренный"
+  },
+  "approximate": {
+    "ru": "приблизительный"
+  },
+  "approximately": {
+    "ru": "примерно"
+  },
+  "aptamer": {
+    "ru": "аптамер",
+    "uz": "aptamer"
+  },
+  "aquaponics": {
+    "ru": "аквапоника",
+    "uz": "aquaponika"
+  },
+  "aquatic mammals": {
+    "ru": "водные млекопитающие"
+  },
+  "aquifer": {
+    "ru": "водоносный горизонт",
+    "uz": "suv qatlami"
+  },
+  "ar features": {
+    "ru": "aR-функции",
+    "uz": "aR xususiyatlari"
+  },
+  "arcana": {
+    "ru": "арканы"
+  },
+  "archaeological": {
+    "ru": "археологический"
+  },
+  "archaeologist": {
+    "ru": "археолог"
+  },
+  "architect": {
+    "ru": "архитектор"
+  },
+  "architectural": {
+    "ru": "архитектурный"
+  },
+  "architecture": {
+    "ru": "архитектура"
+  },
+  "archival": {
+    "ru": "архивный"
+  },
+  "archives": {
+    "ru": "архивы"
+  },
+  "arctic circle": {
+    "ru": "полярный круг"
+  },
+  "arctic ocean": {
+    "ru": "северный Ледовитый океан",
+    "uz": "shimoliy Muz okeani"
+  },
+  "arctic tundra": {
+    "ru": "арктическая тундра",
+    "uz": "arktik tundra"
+  },
+  "arid": {
+    "ru": "засушливый",
+    "uz": "quruq"
+  },
+  "arid and semi-arid regions": {
+    "ru": "засушливые и полузасушливые регионы",
+    "uz": "qurg'oqchil va yarim qurg'oqchil hududlar"
+  },
+  "arrangements": {
+    "ru": "договорённости; организация"
+  },
+  "arrests": {
+    "ru": "аресты"
+  },
+  "arrhythmia": {
+    "ru": "аритмия",
+    "uz": "aritmiya"
+  },
+  "artfulness": {
+    "ru": "хитрость"
+  },
+  "arthropod": {
+    "ru": "членистоногие",
+    "uz": "artropod"
+  },
+  "arthropods": {
+    "ru": "членистоногие",
+    "uz": "artropodlar"
+  },
+  "articles": {
+    "ru": "статьи"
+  },
+  "artifacts": {
+    "ru": "артефакты"
+  },
+  "artificial intelligence": {
+    "ru": "искусственный интеллект",
+    "uz": "sun'iy intellekt"
+  },
+  "artificial neural network": {
+    "ru": "искусственная нейронная сеть",
+    "uz": "sun'iy neyron tarmog'i"
+  },
+  "artificially": {
+    "ru": "искусственно"
+  },
+  "artistic": {
+    "ru": "художественный"
+  },
+  "asphyxiated": {
+    "ru": "задохнулся"
+  },
+  "aspiration": {
+    "ru": "стремление"
+  },
+  "assault": {
+    "ru": "атаковать"
+  },
+  "assembly hall": {
+    "ru": "актовый зал"
+  },
+  "assertion": {
+    "ru": "утверждение"
+  },
+  "assignments": {
+    "ru": "задания"
+  },
+  "assistant": {
+    "ru": "помощник"
+  },
+  "assistants": {
+    "ru": "помощники"
+  },
+  "associated": {
+    "ru": "связанный"
+  },
+  "assumptions": {
+    "ru": "предположения"
+  },
+  "astonishing": {
+    "ru": "удивительный"
+  },
+  "astronomical": {
+    "ru": "астрономический"
+  },
+  "astronomy": {
+    "ru": "астрономия"
+  },
+  "atmosphere": {
+    "ru": "атмосфера",
+    "uz": "atmosfera"
+  },
+  "atmospheric pressure": {
+    "ru": "атмосферное давление",
+    "uz": "atmosfera bosimi"
+  },
+  "attainable": {
+    "ru": "достижимый"
+  },
+  "attained": {
+    "ru": "достигнутый"
+  },
+  "attendance": {
+    "ru": "посещаемость"
+  },
+  "attendant": {
+    "ru": "сотрудник; обслуживающий работник"
+  },
+  "attention": {
+    "ru": "внимание",
+    "uz": "diqqat"
+  },
+  "attention span": {
+    "ru": "концентрация внимания"
+  },
+  "attest": {
+    "ru": "свидетельствовать"
+  },
+  "attitude": {
+    "ru": "отношение"
+  },
+  "attributable": {
+    "ru": "относимый"
+  },
+  "attributed": {
+    "ru": "приписываемый"
+  },
+  "attrition": {
+    "ru": "потертость"
+  },
+  "atypical": {
+    "ru": "нетипичный"
+  },
+  "audience": {
+    "ru": "аудитория"
+  },
+  "auditions": {
+    "ru": "прослушивания"
+  },
+  "auditory cortex": {
+    "ru": "слуховая кора",
+    "uz": "eshitish korteksi"
+  },
+  "auditory cues": {
+    "ru": "слуховые сигналы"
+  },
+  "auditory nerve": {
+    "ru": "слуховой нерв",
+    "uz": "eshitish nervi"
+  },
+  "auditory nuclei": {
+    "ru": "слуховые ядра",
+    "uz": "eshitish yadrolari"
+  },
+  "auditory system": {
+    "ru": "слуховая система",
+    "uz": "eshitish tizimi"
+  },
+  "augment": {
+    "ru": "увеличить"
+  },
+  "augmented": {
+    "ru": "дополненный"
+  },
+  "authentic": {
+    "ru": "аутентичный"
+  },
+  "authenticity": {
+    "ru": "подлинность"
+  },
+  "authoritative": {
+    "ru": "авторитетный"
+  },
+  "automated": {
+    "ru": "автоматизированный"
+  },
+  "automation": {
+    "ru": "автоматизация"
+  },
+  "autonomic nervous system": {
+    "ru": "автономная нервная система",
+    "uz": "avtonom nerv tizimi"
+  },
+  "autonomous reasons": {
+    "ru": "автономные причины",
+    "uz": "avtonom sabablar"
+  },
+  "autonomy": {
+    "ru": "автономия"
+  },
+  "availability": {
+    "ru": "наличие; доступность"
+  },
+  "avant-garde": {
+    "ru": "авангард"
+  },
+  "average": {
+    "ru": "средний"
+  },
+  "avoidance of learned fear": {
+    "ru": "избегание приобретенного страха",
+    "uz": "o'rganilgan qo'rquvdan qochish"
+  },
+  "avoidant coping": {
+    "ru": "избегающее преодоление трудностей",
+    "uz": "qochish"
+  },
+  "awareness": {
+    "ru": "осведомленность",
+    "uz": "ogohlik"
+  },
+  "background": {
+    "ru": "предыстория; фон"
+  },
+  "backpack": {
+    "ru": "рюкзак"
+  },
+  "backpackers": {
+    "ru": "туристы"
+  },
+  "bacteria": {
+    "ru": "бактерии",
+    "uz": "bakteriyalar"
+  },
+  "balanced": {
+    "ru": "сбалансированный"
+  },
+  "balanced diet": {
+    "ru": "сбалансированная диета"
+  },
+  "baleen whales": {
+    "ru": "усатые киты",
+    "uz": "balen kitlari"
+  },
+  "bankruptcy": {
+    "ru": "банкротство"
+  },
+  "barometer": {
+    "ru": "барометр"
+  },
+  "barricade": {
+    "ru": "баррикада"
+  },
+  "barrier": {
+    "ru": "барьер"
+  },
+  "base": {
+    "ru": "база",
+    "uz": "baza"
+  },
+  "baseline": {
+    "ru": "базовый уровень",
+    "uz": "asosiy"
+  },
+  "basic services": {
+    "ru": "базовые услуги"
+  },
+  "basilar membrane": {
+    "ru": "базилярная мембрана",
+    "uz": "bazilar membrana"
+  },
+  "batrachotoxin": {
+    "ru": "батрахотоксин",
+    "uz": "batraxotoksin"
+  },
+  "battery": {
+    "ru": "батарея"
+  },
+  "bedding": {
+    "ru": "постельные принадлежности"
+  },
+  "behavior": {
+    "ru": "поведение",
+    "uz": "xulq-atvor"
+  },
+  "behavior coding": {
+    "ru": "кодирование поведения",
+    "uz": "xulq-atvorni kodlash"
+  },
+  "behavioral engagement": {
+    "ru": "поведенческое взаимодействие",
+    "uz": "xulq-atvor ishtiroki"
+  },
+  "behavioral inhibition": {
+    "ru": "поведенческое торможение",
+    "uz": "xulq-atvorni inhibe qilish"
+  },
+  "behaviour": {
+    "ru": "поведение"
+  },
+  "behavioural": {
+    "ru": "поведенческий"
+  },
+  "belonging": {
+    "ru": "принадлежность"
+  },
+  "belongings": {
+    "ru": "вещи"
+  },
+  "beltian bodies": {
+    "ru": "бельтианские тела",
+    "uz": "belt tanalari"
+  },
+  "beneath": {
+    "ru": "под"
+  },
+  "beneficial": {
+    "ru": "полезный; благоприятный"
+  },
+  "beneficiary": {
+    "ru": "бенефициар"
+  },
+  "benefits": {
+    "ru": "преимущества"
+  },
+  "benevolent": {
+    "ru": "доброжелательный"
+  },
+  "benthic invertebrates": {
+    "ru": "бентические беспозвоночные",
+    "uz": "bentik umurtqasizlar"
+  },
+  "bias": {
+    "ru": "предвзятость"
+  },
+  "bilingual": {
+    "ru": "двуязычный",
+    "uz": "ikki tilli"
+  },
+  "bilingual advantage": {
+    "ru": "двуязычное преимущество",
+    "uz": "ikki tilli afzallik"
+  },
+  "bilingualism": {
+    "ru": "двуязычие"
+  },
+  "binding": {
+    "ru": "переплёт; переплетение книги"
+  },
+  "bio-generate": {
+    "ru": "биогенерация",
+    "uz": "bio-generate"
+  },
+  "biodegradable": {
+    "ru": "биоразлагаемый",
+    "uz": "biologik parchalanadigan"
+  },
+  "biodiversity": {
+    "ru": "биоразнообразие",
+    "uz": "biologik xilma-xillik"
+  },
+  "biofilm": {
+    "ru": "биопленка",
+    "uz": "biofilm"
+  },
+  "biofilm matrix": {
+    "ru": "биопленочная матрица",
+    "uz": "biofilm matritsasi"
+  },
+  "biogeochemical cycle": {
+    "ru": "биогеохимический цикл",
+    "uz": "biogeokimyoviy tsikl"
+  },
+  "biography": {
+    "ru": "биография"
+  },
+  "bioink": {
+    "ru": "биочернила",
+    "uz": "bioink"
+  },
+  "bioinspired design": {
+    "ru": "биоинспирированный дизайн",
+    "uz": "biologik ilhomlangan dizayn"
+  },
+  "biological": {
+    "ru": "биологический"
+  },
+  "biological carbon pump": {
+    "ru": "биологический углеродный насос",
+    "uz": "biologik uglerod pompasi"
+  },
+  "biological pump": {
+    "ru": "биологический насос",
+    "uz": "biologik nasos"
+  },
+  "biological traits": {
+    "ru": "биологические черты",
+    "uz": "biologik xususiyatlar"
+  },
+  "bioluminescence": {
+    "ru": "биолюминесценция",
+    "uz": "bioluminesans"
+  },
+  "biome": {
+    "ru": "биом",
+    "uz": "biom"
+  },
+  "biomimetic": {
+    "ru": "биомиметический",
+    "uz": "biomimetika"
+  },
+  "biospeleology": {
+    "ru": "биоспелеология",
+    "uz": "biospeleologiya"
+  },
+  "biosurfactants": {
+    "ru": "биосурфактанты",
+    "uz": "biosurfaktanlar"
+  },
+  "biotic factors": {
+    "ru": "биотические факторы",
+    "uz": "biotik omillar"
+  },
+  "birds of prey": {
+    "ru": "хищные птицы",
+    "uz": "yirtqich qushlar"
+  },
+  "birdsong": {
+    "ru": "пение птиц"
+  },
+  "blacksmith": {
+    "ru": "кузнец"
+  },
+  "blade": {
+    "ru": "лезвие",
+    "uz": "pichoq"
+  },
+  "bloom": {
+    "ru": "цвести",
+    "uz": "gullash"
+  },
+  "boat strikes": {
+    "ru": "столкновения с лодками"
+  },
+  "bolster": {
+    "ru": "поддерживать"
+  },
+  "bolus": {
+    "ru": "болюс",
+    "uz": "bolus"
+  },
+  "bone density": {
+    "ru": "плотность кости"
+  },
+  "bonfire": {
+    "ru": "костер"
+  },
+  "booking": {
+    "ru": "бронирование"
+  },
+  "bookings": {
+    "ru": "бронирования"
+  },
+  "borehole": {
+    "ru": "скважина",
+    "uz": "quduq"
+  },
+  "borrowing": {
+    "ru": "заимствование"
+  },
+  "bottled": {
+    "ru": "разлитый по бутылкам"
+  },
+  "bottleneck": {
+    "ru": "узкое место"
+  },
+  "boundaries": {
+    "ru": "границы"
+  },
+  "boyle’s law": {
+    "ru": "закон Бойля",
+    "uz": "boyl qonuni"
+  },
+  "brainstormed": {
+    "ru": "мозговой штурм"
+  },
+  "branchline": {
+    "ru": "филиал",
+    "uz": "filial liniyasi"
+  },
+  "brand": {
+    "ru": "бренд"
+  },
+  "brand loyalty": {
+    "ru": "лояльность к бренду"
+  },
+  "breaching": {
+    "ru": "нарушение"
+  },
+  "breadth": {
+    "ru": "широта"
+  },
+  "breakdown": {
+    "ru": "авария"
+  },
+  "breakthrough": {
+    "ru": "прорыв"
+  },
+  "breakthroughs": {
+    "ru": "прорывы"
+  },
+  "breathing": {
+    "ru": "дыхание"
+  },
+  "breathtaking": {
+    "ru": "захватывающий дух"
+  },
+  "breeding": {
+    "ru": "разведение"
+  },
+  "brine": {
+    "ru": "рассол",
+    "uz": "sho'r suv"
+  },
+  "brine channels": {
+    "ru": "соляные каналы",
+    "uz": "sho'r suv kanallari"
+  },
+  "brine pockets": {
+    "ru": "карманы для рассола",
+    "uz": "sho'r suvli cho'ntaklar"
+  },
+  "brine rejection": {
+    "ru": "отказ от рассола",
+    "uz": "brinni rad etish"
+  },
+  "broadcast": {
+    "ru": "транслировать"
+  },
+  "broaden": {
+    "ru": "расширять"
+  },
+  "budget allocation": {
+    "ru": "распределение бюджета"
+  },
+  "budgeting": {
+    "ru": "составление бюджета"
+  },
+  "bunds": {
+    "ru": "бунды",
+    "uz": "bundlar"
+  },
+  "buoyancy": {
+    "ru": "плавучесть",
+    "uz": "suzuvchanlik"
+  },
+  "burden": {
+    "ru": "груз"
+  },
+  "bureaucratic": {
+    "ru": "бюрократический"
+  },
+  "burial chamber": {
+    "ru": "погребальная камера"
+  },
+  "burnout": {
+    "ru": "выгорание"
+  },
+  "burrow": {
+    "ru": "нора",
+    "uz": "burrow"
+  },
+  "burrows": {
+    "ru": "норы"
+  },
+  "business strategy": {
+    "ru": "бизнес-стратегия",
+    "uz": "biznes strategiyasi"
+  },
+  "buttress": {
+    "ru": "опора"
+  },
+  "calcium carbonate": {
+    "ru": "карбонат кальция",
+    "uz": "kaltsiy karbonat"
+  },
+  "calorie": {
+    "ru": "калорийность",
+    "uz": "kaloriya"
+  },
+  "cambium": {
+    "ru": "камбий",
+    "uz": "kambiy"
+  },
+  "camera-shy": {
+    "ru": "стесняется камеры"
+  },
+  "camouflage": {
+    "ru": "камуфляж",
+    "uz": "kamuflyaj"
+  },
+  "cancellation": {
+    "ru": "отмена"
+  },
+  "cannibalism": {
+    "ru": "каннибализм"
+  },
+  "canonical": {
+    "ru": "канонический"
+  },
+  "canopy": {
+    "ru": "навес",
+    "uz": "kanop"
+  },
+  "canopy height": {
+    "ru": "высота навеса",
+    "uz": "kanop balandligi"
+  },
+  "capabilities": {
+    "ru": "возможности"
+  },
+  "capacious": {
+    "ru": "вместительный"
+  },
+  "capacity": {
+    "ru": "емкость"
+  },
+  "capital-intensive": {
+    "ru": "капиталоёмкий"
+  },
+  "captivate": {
+    "ru": "пленять"
+  },
+  "captivity": {
+    "ru": "плен"
+  },
+  "capturing": {
+    "ru": "захват"
+  },
+  "carbohydrates": {
+    "ru": "углеводы",
+    "uz": "uglevodlar"
+  },
+  "carbon credits": {
+    "ru": "углеродные кредиты"
+  },
+  "carbon cycle": {
+    "ru": "углеродный цикл",
+    "uz": "uglerod aylanishi"
+  },
+  "carbon sink": {
+    "ru": "поглотитель углерода",
+    "uz": "karbon lavabo"
+  },
+  "carbonic acid": {
+    "ru": "угольная кислота",
+    "uz": "karbon kislotasi"
+  },
+  "cardiovascular": {
+    "ru": "сердечно-сосудистый"
+  },
+  "caretaker": {
+    "ru": "смотритель"
+  },
+  "carnivores": {
+    "ru": "хищники",
+    "uz": "yirtqich hayvonlar"
+  },
+  "carnivorous": {
+    "ru": "плотоядный",
+    "uz": "yirtqich"
+  },
+  "carpel": {
+    "ru": "карпель",
+    "uz": "karpel"
+  },
+  "carrying capacity": {
+    "ru": "экологическая ёмкость",
+    "uz": "yuk tashish qobiliyati"
+  },
+  "cartographer": {
+    "ru": "картограф"
+  },
+  "carve out": {
+    "ru": "создать; выделить"
+  },
+  "case study": {
+    "ru": "тематическое исследование",
+    "uz": "case Study"
+  },
+  "casual": {
+    "ru": "повседневный"
+  },
+  "catastrophe": {
+    "ru": "катастрофа"
+  },
+  "catching up": {
+    "ru": "догонять"
+  },
+  "categorically": {
+    "ru": "категорически"
+  },
+  "categories": {
+    "ru": "категории"
+  },
+  "category": {
+    "ru": "категория"
+  },
+  "catering": {
+    "ru": "кейтеринг"
+  },
+  "cautious": {
+    "ru": "осторожный"
+  },
+  "cautiously": {
+    "ru": "осторожно"
+  },
+  "cavities": {
+    "ru": "кариес",
+    "uz": "bo'shliqlar"
+  },
+  "cecotrophs": {
+    "ru": "цекотрофы",
+    "uz": "sekotroflar"
+  },
+  "cecum": {
+    "ru": "слепая кишка",
+    "uz": "ko'richak"
+  },
+  "celebrations": {
+    "ru": "праздники"
+  },
+  "cellulose": {
+    "ru": "целлюлоза",
+    "uz": "tsellyuloza"
+  },
+  "centenarians": {
+    "ru": "долгожители"
+  },
+  "centrepiece": {
+    "ru": "центральная часть"
+  },
+  "cerebellum": {
+    "ru": "мозжечок",
+    "uz": "serebellum"
+  },
+  "ceremony": {
+    "ru": "церемония"
+  },
+  "certainty": {
+    "ru": "уверенность"
+  },
+  "certificate": {
+    "ru": "сертификат"
+  },
+  "challenge": {
+    "ru": "испытание"
+  },
+  "chamber": {
+    "ru": "зал; помещение"
+  },
+  "championing": {
+    "ru": "отстаивание"
+  },
+  "channel aquaponics": {
+    "ru": "канал Аквапоника",
+    "uz": "kanal akvaponika"
+  },
+  "channel protein": {
+    "ru": "канальный белок",
+    "uz": "kanal oqsili"
+  },
+  "character": {
+    "ru": "характер"
+  },
+  "characterise": {
+    "ru": "характеризовать"
+  },
+  "characterised": {
+    "ru": "характеризуется"
+  },
+  "characteristic": {
+    "ru": "характеристика"
+  },
+  "charging infrastructure": {
+    "ru": "зарядная инфраструктура"
+  },
+  "charismatic": {
+    "ru": "харизматичный"
+  },
+  "check off": {
+    "ru": "отметить"
+  },
+  "chemical energy": {
+    "ru": "химическая энергия",
+    "uz": "kimyoviy energiya"
+  },
+  "chemicals": {
+    "ru": "химикаты"
+  },
+  "childcare": {
+    "ru": "уход за детьми"
+  },
+  "childhood": {
+    "ru": "детство"
+  },
+  "chiroptera": {
+    "ru": "рукокрылые",
+    "uz": "chiroptera"
+  },
+  "chlorophyll": {
+    "ru": "хлорофилл",
+    "uz": "xlorofil"
+  },
+  "chloroplasts": {
+    "ru": "хлоропласты",
+    "uz": "xloroplastlar"
+  },
+  "cholesterol": {
+    "ru": "холестерин"
+  },
+  "chronic": {
+    "ru": "хронический",
+    "uz": "surunkali"
+  },
+  "chronic disease": {
+    "ru": "хроническое заболевание"
+  },
+  "chronically": {
+    "ru": "хронически"
+  },
+  "chrysalis": {
+    "ru": "куколка",
+    "uz": "krizalis"
+  },
+  "circadian clock": {
+    "ru": "циркадные часы",
+    "uz": "sirkadiyalik soat"
+  },
+  "circadian rhythm": {
+    "ru": "циркадный ритм",
+    "uz": "sirkadiyalik ritm"
+  },
+  "circular economy": {
+    "ru": "циркулярная экономика"
+  },
+  "circulation": {
+    "ru": "обращение"
+  },
+  "circumspection": {
+    "ru": "осмотрительность"
+  },
+  "citizen science": {
+    "ru": "гражданская наука",
+    "uz": "fuqarolik fanlari"
+  },
+  "citizenry": {
+    "ru": "гражданство"
+  },
+  "civil liberties": {
+    "ru": "гражданские свободы"
+  },
+  "civilisation": {
+    "ru": "цивилизация"
+  },
+  "claim": {
+    "ru": "требование; утверждение"
+  },
+  "clarity": {
+    "ru": "ясность"
+  },
+  "classical": {
+    "ru": "классический"
+  },
+  "classification": {
+    "ru": "классификация"
+  },
+  "classmates": {
+    "ru": "одноклассники"
+  },
+  "climate": {
+    "ru": "климат",
+    "uz": "iqlim"
+  },
+  "climate change": {
+    "ru": "изменение климата",
+    "uz": "iqlim o'zgarishi"
+  },
+  "climate models": {
+    "ru": "климатические модели",
+    "uz": "iqlim modellari"
+  },
+  "climate system": {
+    "ru": "климатическая система",
+    "uz": "iqlim tizimi"
+  },
+  "climate-mitigation": {
+    "ru": "смягчение последствий изменения климата"
+  },
+  "climates": {
+    "ru": "климат"
+  },
+  "clinical": {
+    "ru": "клинический"
+  },
+  "clinical depression": {
+    "ru": "клиническая депрессия"
+  },
+  "clinical trials": {
+    "ru": "клинические испытания"
+  },
+  "cliques": {
+    "ru": "клики",
+    "uz": "kliklar"
+  },
+  "closed-loop": {
+    "ru": "замкнутый контур"
+  },
+  "closeness": {
+    "ru": "близость"
+  },
+  "closest": {
+    "ru": "ближайший"
+  },
+  "cloud condensation nuclei": {
+    "ru": "ядра конденсации облаков",
+    "uz": "bulutli kondensatsiya yadrolari"
+  },
+  "cloud forest": {
+    "ru": "облачный лес",
+    "uz": "bulutli o'rmon"
+  },
+  "co-evolved": {
+    "ru": "совместно эволюционировали"
+  },
+  "co-operate": {
+    "ru": "сотрудничать"
+  },
+  "coal": {
+    "ru": "уголь"
+  },
+  "coalesce": {
+    "ru": "сливаться"
+  },
+  "coastal": {
+    "ru": "прибрежный"
+  },
+  "coastal zone": {
+    "ru": "прибрежная зона",
+    "uz": "sohil zonasi"
+  },
+  "cobblestones": {
+    "ru": "булыжники"
+  },
+  "cochlea": {
+    "ru": "улитка",
+    "uz": "koklea"
+  },
+  "cochlear implant": {
+    "ru": "кохлеарный имплантат",
+    "uz": "koxlear implant"
+  },
+  "cognition": {
+    "ru": "познание",
+    "uz": "idrok"
+  },
+  "cognitive": {
+    "ru": "когнитивный; познавательный"
+  },
+  "cognitive behavioral therapy": {
+    "ru": "когнитивно-поведенческая терапия",
+    "uz": "kognitiv xulq-atvor terapiyasi"
+  },
+  "cognitive engagement": {
+    "ru": "когнитивное взаимодействие",
+    "uz": "kognitiv ishtirok"
+  },
+  "cognitive flexibility": {
+    "ru": "когнитивная гибкость",
+    "uz": "kognitiv moslashuvchanlik"
+  },
+  "cognitive frameworks": {
+    "ru": "когнитивные рамки",
+    "uz": "kognitiv ramkalar"
+  },
+  "cognitive load": {
+    "ru": "когнитивная нагрузка"
+  },
+  "cognitive neuroscientists": {
+    "ru": "когнитивные нейробиологи",
+    "uz": "kognitiv nevrologlar"
+  },
+  "cognitive science": {
+    "ru": "когнитивная наука",
+    "uz": "kognitiv fan"
+  },
+  "coherent": {
+    "ru": "последовательный",
+    "uz": "muvofiq"
+  },
+  "cohesion": {
+    "ru": "сплоченность",
+    "uz": "uyg'unlik"
+  },
+  "cohousing": {
+    "ru": "кохаузинг",
+    "uz": "uy-joy"
+  },
+  "collaborate": {
+    "ru": "сотрудничать"
+  },
+  "collaborating": {
+    "ru": "сотрудничество"
+  },
+  "collaboration": {
+    "ru": "сотрудничество"
+  },
+  "collaborative": {
+    "ru": "совместный"
+  },
+  "collagen": {
+    "ru": "коллаген",
+    "uz": "kollagen"
+  },
+  "colleague": {
+    "ru": "коллега"
+  },
+  "colleagues": {
+    "ru": "коллеги"
+  },
+  "collection": {
+    "ru": "коллекция"
+  },
+  "collective": {
+    "ru": "коллектив"
+  },
+  "collective fear": {
+    "ru": "коллективный страх"
+  },
+  "collectively": {
+    "ru": "коллективно"
+  },
+  "collude": {
+    "ru": "вступать в сговор"
+  },
+  "colocation": {
+    "ru": "колокейшн"
+  },
+  "colonial period": {
+    "ru": "колониальный период",
+    "uz": "mustamlaka davri"
+  },
+  "colonisation": {
+    "ru": "колонизация"
+  },
+  "colonists": {
+    "ru": "колонисты"
+  },
+  "colony": {
+    "ru": "колония",
+    "uz": "koloniya"
+  },
+  "colossal": {
+    "ru": "колоссальный"
+  },
+  "comfort zone": {
+    "ru": "зона комфорта"
+  },
+  "comfortable": {
+    "ru": "комфортный"
+  },
+  "comforting": {
+    "ru": "утешительный"
+  },
+  "commemorating": {
+    "ru": "чествование"
+  },
+  "commensalism": {
+    "ru": "комменсализм",
+    "uz": "kommensalizm"
+  },
+  "commercial": {
+    "ru": "коммерческий"
+  },
+  "commercial interests": {
+    "ru": "коммерческие интересы"
+  },
+  "commission": {
+    "ru": "заказ; комиссия"
+  },
+  "commissioned": {
+    "ru": "заказанный; введённый в эксплуатацию"
+  },
+  "commodity": {
+    "ru": "товар"
+  },
+  "common resource": {
+    "ru": "общий ресурс",
+    "uz": "umumiy resurs"
+  },
+  "commonplace": {
+    "ru": "обычное дело"
+  },
+  "communicate": {
+    "ru": "общаться"
+  },
+  "communication": {
+    "ru": "коммуникация",
+    "uz": "aloqa"
+  },
+  "community": {
+    "ru": "сообщество"
+  },
+  "community engagement": {
+    "ru": "участие сообщества"
+  },
+  "community garden": {
+    "ru": "общественный сад",
+    "uz": "jamoa bog'i"
+  },
+  "community hub": {
+    "ru": "центр сообщества"
+  },
+  "commuting": {
+    "ru": "поездка на работу"
+  },
+  "companion planting": {
+    "ru": "посадка-компаньон",
+    "uz": "hamkor ekish"
+  },
+  "companionship": {
+    "ru": "дружеское общение"
+  },
+  "comparable": {
+    "ru": "сопоставимый"
+  },
+  "comparatively": {
+    "ru": "сравнительно"
+  },
+  "compared with": {
+    "ru": "по сравнению с"
+  },
+  "comparison": {
+    "ru": "сравнение"
+  },
+  "compartment": {
+    "ru": "отсек"
+  },
+  "compelling": {
+    "ru": "неотразимый"
+  },
+  "compensate": {
+    "ru": "компенсировать"
+  },
+  "compensation": {
+    "ru": "компенсация"
+  },
+  "competence": {
+    "ru": "компетентность",
+    "uz": "kompetentsiya"
+  },
+  "competition": {
+    "ru": "соревнование"
+  },
+  "competitive": {
+    "ru": "конкурентоспособный"
+  },
+  "competitiveness": {
+    "ru": "конкурентоспособность"
+  },
+  "competitors": {
+    "ru": "конкуренты"
+  },
+  "compiled": {
+    "ru": "скомпилировано"
+  },
+  "completion": {
+    "ru": "завершение"
+  },
+  "complexities": {
+    "ru": "сложности"
+  },
+  "complexity": {
+    "ru": "сложность"
+  },
+  "compliance": {
+    "ru": "согласие"
+  },
+  "complicated": {
+    "ru": "сложный"
+  },
+  "complimentary": {
+    "ru": "бесплатный"
+  },
+  "composition": {
+    "ru": "состав; композиция"
+  },
+  "compositions": {
+    "ru": "композиции"
+  },
+  "composting": {
+    "ru": "компостирование"
+  },
+  "comprehension": {
+    "ru": "понимание"
+  },
+  "comprehensive": {
+    "ru": "всесторонний"
+  },
+  "comprehensively": {
+    "ru": "всесторонне"
+  },
+  "compressing": {
+    "ru": "сжимающий"
+  },
+  "comprised": {
+    "ru": "состоит из"
+  },
+  "compromise settlement": {
+    "ru": "компромиссное урегулирование"
+  },
+  "compulsory": {
+    "ru": "обязательный"
+  },
+  "computer model": {
+    "ru": "компьютерная модель",
+    "uz": "kompyuter modeli"
+  },
+  "computer models": {
+    "ru": "компьютерные модели",
+    "uz": "kompyuter modellari"
+  },
+  "computer programming": {
+    "ru": "компьютерное программирование",
+    "uz": "kompyuter dasturlash"
+  },
+  "computer-mediated": {
+    "ru": "опосредованный компьютером"
+  },
+  "concealed": {
+    "ru": "скрытый"
+  },
+  "concealment": {
+    "ru": "сокрытие"
+  },
+  "concedes": {
+    "ru": "уступает"
+  },
+  "conceive": {
+    "ru": "представить; сформировать идею"
+  },
+  "concentrate": {
+    "ru": "сконцентрироваться"
+  },
+  "concentrated": {
+    "ru": "концентрированный"
+  },
+  "concentration": {
+    "ru": "концентрация",
+    "uz": "konsentratsiya"
+  },
+  "conception": {
+    "ru": "концепция"
+  },
+  "concepts": {
+    "ru": "концепции"
+  },
+  "conceptualize": {
+    "ru": "концептуализировать"
+  },
+  "concession": {
+    "ru": "льгота; уступка"
+  },
+  "concluded": {
+    "ru": "пришел к выводу"
+  },
+  "conclusion": {
+    "ru": "заключение"
+  },
+  "concrete predictions": {
+    "ru": "конкретные прогнозы"
+  },
+  "concur": {
+    "ru": "соглашаться"
+  },
+  "concussion": {
+    "ru": "сотрясение",
+    "uz": "miya chayqalishi"
+  },
+  "condenser": {
+    "ru": "конденсатор"
+  },
+  "condition": {
+    "ru": "состояние"
+  },
+  "conditioning": {
+    "ru": "обусловливание"
+  },
+  "conditions": {
+    "ru": "условия"
+  },
+  "conducted": {
+    "ru": "проведенный"
+  },
+  "conductivity": {
+    "ru": "проводимость",
+    "uz": "o'tkazuvchanlik"
+  },
+  "confidence": {
+    "ru": "уверенность"
+  },
+  "confident": {
+    "ru": "уверенный"
+  },
+  "confined": {
+    "ru": "ограниченный"
+  },
+  "confirm": {
+    "ru": "подтверждать"
+  },
+  "conflict": {
+    "ru": "конфликт"
+  },
+  "confronted": {
+    "ru": "столкнулся"
+  },
+  "congestion": {
+    "ru": "скопление; перегруженность"
+  },
+  "congruent": {
+    "ru": "конгруэнтный",
+    "uz": "muvofiq"
+  },
+  "coniferous trees": {
+    "ru": "хвойные деревья",
+    "uz": "ignabargli daraxtlar"
+  },
+  "conjecture": {
+    "ru": "догадка"
+  },
+  "conjectures": {
+    "ru": "догадки"
+  },
+  "connected": {
+    "ru": "подключен"
+  },
+  "connection": {
+    "ru": "связь"
+  },
+  "conquered": {
+    "ru": "завоеван"
+  },
+  "conscientious": {
+    "ru": "добросовестный"
+  },
+  "conscientiousness": {
+    "ru": "добросовестность",
+    "uz": "vijdonlilik"
+  },
+  "conscious": {
+    "ru": "сознательный"
+  },
+  "conscious experience": {
+    "ru": "сознательный опыт",
+    "uz": "ongli tajriba"
+  },
+  "consciousness": {
+    "ru": "сознание"
+  },
+  "consecutive": {
+    "ru": "последовательный"
+  },
+  "consensus": {
+    "ru": "консенсус"
+  },
+  "consequence": {
+    "ru": "последствие"
+  },
+  "consequential": {
+    "ru": "последовательный"
+  },
+  "conservation": {
+    "ru": "сохранение; охрана природы",
+    "uz": "saqlash"
+  },
+  "conserve": {
+    "ru": "сохранять"
+  },
+  "considerable": {
+    "ru": "значительный"
+  },
+  "considerate": {
+    "ru": "внимательный"
+  },
+  "consistency": {
+    "ru": "последовательность"
+  },
+  "consistent": {
+    "ru": "последовательный"
+  },
+  "consolidated": {
+    "ru": "консолидированный"
+  },
+  "consolidation": {
+    "ru": "укрепление; объединение",
+    "uz": "konsolidatsiya"
+  },
+  "conspecific": {
+    "ru": "сородичей"
+  },
+  "constitute": {
+    "ru": "составлять",
+    "uz": "tashkil etish"
+  },
+  "constitutes": {
+    "ru": "представляет собой"
+  },
+  "constitutive defenses": {
+    "ru": "конституционная защита",
+    "uz": "konstitutsiyaviy mudofaalar"
+  },
+  "constrain": {
+    "ru": "сдерживать"
+  },
+  "constraints": {
+    "ru": "ограничения"
+  },
+  "constrict": {
+    "ru": "сжимать"
+  },
+  "construction": {
+    "ru": "строительство"
+  },
+  "constructive interference": {
+    "ru": "конструктивное вмешательство",
+    "uz": "konstruktiv aralashuv"
+  },
+  "consultation": {
+    "ru": "консультация"
+  },
+  "consulting firm": {
+    "ru": "консалтинговая фирма"
+  },
+  "consumer": {
+    "ru": "потребитель"
+  },
+  "consumer awareness": {
+    "ru": "осведомленность потребителей"
+  },
+  "consumer behaviour": {
+    "ru": "потребительское поведение"
+  },
+  "consumer choice": {
+    "ru": "потребительский выбор"
+  },
+  "consumers": {
+    "ru": "потребители"
+  },
+  "consumption": {
+    "ru": "потребление"
+  },
+  "contagious": {
+    "ru": "заразный"
+  },
+  "contaminated": {
+    "ru": "загрязненный"
+  },
+  "contemporaneous": {
+    "ru": "современный"
+  },
+  "contemporaries": {
+    "ru": "современники"
+  },
+  "contemporary": {
+    "ru": "современный"
+  },
+  "content": {
+    "ru": "содержание"
+  },
+  "contention": {
+    "ru": "раздор"
+  },
+  "contentious": {
+    "ru": "спорный"
+  },
+  "contentment": {
+    "ru": "удовлетворенность"
+  },
+  "contextual": {
+    "ru": "контекстуальный"
+  },
+  "continent": {
+    "ru": "континент",
+    "uz": "qit'a"
+  },
+  "continent collision": {
+    "ru": "столкновение континентов",
+    "uz": "qit'a to'qnashuvi"
+  },
+  "continental": {
+    "ru": "континентальный"
+  },
+  "contingent": {
+    "ru": "зависящий от обстоятельств"
+  },
+  "continuity": {
+    "ru": "преемственность"
+  },
+  "continuum robots": {
+    "ru": "континуум Роботы",
+    "uz": "uzluksiz robotlar"
+  },
+  "contract": {
+    "ru": "договор"
+  },
+  "contradiction": {
+    "ru": "противоречие"
+  },
+  "contradictory": {
+    "ru": "противоречивый"
+  },
+  "contraption": {
+    "ru": "устройство"
+  },
+  "contrary": {
+    "ru": "вопреки"
+  },
+  "contrary to": {
+    "ru": "вопреки"
+  },
+  "contrary to popular belief": {
+    "ru": "вопреки распространенному мнению"
+  },
+  "contrast": {
+    "ru": "контраст"
+  },
+  "contribute": {
+    "ru": "способствовать"
+  },
+  "contribution": {
+    "ru": "вклад"
+  },
+  "control": {
+    "ru": "контроль"
+  },
+  "control condition": {
+    "ru": "условия управления",
+    "uz": "nazorat holati"
+  },
+  "controlled reasons": {
+    "ru": "контролируемые причины",
+    "uz": "nazorat qilinadigan sabablar"
+  },
+  "controversial": {
+    "ru": "спорный"
+  },
+  "controversy": {
+    "ru": "споры"
+  },
+  "convened": {
+    "ru": "созвал"
+  },
+  "convenience": {
+    "ru": "удобство"
+  },
+  "convenient": {
+    "ru": "удобный"
+  },
+  "conventional": {
+    "ru": "общепринятый"
+  },
+  "conventional wisdom": {
+    "ru": "общепринятая мудрость"
+  },
+  "conventions": {
+    "ru": "конвенции"
+  },
+  "converge": {
+    "ru": "сходиться"
+  },
+  "convergence": {
+    "ru": "конвергенция"
+  },
+  "convergent": {
+    "ru": "сходящийся"
+  },
+  "convergent evolution": {
+    "ru": "конвергентная эволюция",
+    "uz": "konvergent evolyutsiya"
+  },
+  "conversation": {
+    "ru": "беседа"
+  },
+  "conversely": {
+    "ru": "наоборот"
+  },
+  "conversion": {
+    "ru": "преобразование"
+  },
+  "conversion efficiency": {
+    "ru": "эффективность преобразования"
+  },
+  "converted": {
+    "ru": "преобразованный"
+  },
+  "conveyed": {
+    "ru": "переданный"
+  },
+  "conviction": {
+    "ru": "убеждение"
+  },
+  "convictions": {
+    "ru": "убеждения"
+  },
+  "cooling": {
+    "ru": "охлаждение"
+  },
+  "cooperation": {
+    "ru": "сотрудничество",
+    "uz": "hamkorlik"
+  },
+  "cooperative": {
+    "ru": "кооператив"
+  },
+  "cooperative breeding": {
+    "ru": "кооперативное разведение",
+    "uz": "kooperativ naslchilik"
+  },
+  "coordinate": {
+    "ru": "координировать"
+  },
+  "coordination": {
+    "ru": "координация",
+    "uz": "muvofiqlashtirish"
+  },
+  "coping strategies": {
+    "ru": "стратегии преодоления трудностей",
+    "uz": "yengish strategiyalari"
+  },
+  "copper": {
+    "ru": "медь"
+  },
+  "copyright": {
+    "ru": "авторское право"
+  },
+  "coral bleaching": {
+    "ru": "коралловое отбеливание",
+    "uz": "marjonlarni oqartirish"
+  },
+  "core": {
+    "ru": "основной",
+    "uz": "yadro"
+  },
+  "core barrel": {
+    "ru": "колонковый ствол",
+    "uz": "yadro barrel"
+  },
+  "corollary": {
+    "ru": "следствие"
+  },
+  "corporate": {
+    "ru": "корпоративный"
+  },
+  "correlates": {
+    "ru": "коррелирует"
+  },
+  "correlation": {
+    "ru": "корреляция"
+  },
+  "correspondence": {
+    "ru": "переписка"
+  },
+  "corresponding": {
+    "ru": "соответствующий"
+  },
+  "cortex": {
+    "ru": "кора головного мозга",
+    "uz": "korteks"
+  },
+  "cosmology": {
+    "ru": "космология",
+    "uz": "kosmologiya"
+  },
+  "costumes": {
+    "ru": "костюмы"
+  },
+  "counter-productive": {
+    "ru": "контрпродуктивный"
+  },
+  "counteract": {
+    "ru": "противодействовать"
+  },
+  "counterbalance": {
+    "ru": "противовес"
+  },
+  "counterintuitive": {
+    "ru": "нелогичный"
+  },
+  "counterpart": {
+    "ru": "коллега"
+  },
+  "counterparts": {
+    "ru": "аналоги; соответствующие лица"
+  },
+  "countryside": {
+    "ru": "сельская местность"
+  },
+  "courtesy": {
+    "ru": "учтивость"
+  },
+  "cousins": {
+    "ru": "двоюродные братья и сестры"
+  },
+  "craftsmanship": {
+    "ru": "мастерство"
+  },
+  "cranial endothermy": {
+    "ru": "краниальная эндотермия",
+    "uz": "kranial endotermiya"
+  },
+  "creativity": {
+    "ru": "креативность"
+  },
+  "creatures": {
+    "ru": "существа"
+  },
+  "credibility": {
+    "ru": "авторитет"
+  },
+  "credible": {
+    "ru": "заслуживающий доверия"
+  },
+  "credits": {
+    "ru": "зачётные единицы; кредиты"
+  },
+  "cretaceous": {
+    "ru": "меловой период",
+    "uz": "bo'r davri"
+  },
+  "criteria": {
+    "ru": "критерии"
+  },
+  "critical": {
+    "ru": "критический"
+  },
+  "critical mineral": {
+    "ru": "критический минерал",
+    "uz": "muhim mineral"
+  },
+  "critical thinking": {
+    "ru": "критическое мышление"
+  },
+  "critically": {
+    "ru": "критически"
+  },
+  "critically endangered": {
+    "ru": "находится под угрозой исчезновения"
+  },
+  "cross-contamination": {
+    "ru": "перекрестное загрязнение",
+    "uz": "o'zaro kontaminatsiya"
+  },
+  "cross-cultural": {
+    "ru": "межкультурный"
+  },
+  "cross-section": {
+    "ru": "поперечное сечение"
+  },
+  "crossing": {
+    "ru": "пересечение",
+    "uz": "ketish"
+  },
+  "crushed": {
+    "ru": "раздавленный"
+  },
+  "crustaceans": {
+    "ru": "ракообразные",
+    "uz": "qisqichbaqasimonlar"
+  },
+  "cryptanalysis": {
+    "ru": "криптоанализ"
+  },
+  "crystallised": {
+    "ru": "кристаллизованный"
+  },
+  "cubicles": {
+    "ru": "кабинки; рабочие ячейки"
+  },
+  "cuisine": {
+    "ru": "кухня"
+  },
+  "culinary tradition": {
+    "ru": "кулинарная традиция"
+  },
+  "culminated": {
+    "ru": "завершился; достиг кульминации"
+  },
+  "cultivated": {
+    "ru": "культивированный"
+  },
+  "cultivation": {
+    "ru": "выращивание"
+  },
+  "cultural heritage": {
+    "ru": "культурное наследие"
+  },
+  "cultural identity": {
+    "ru": "культурная самобытность"
+  },
+  "cultural immersion": {
+    "ru": "культурное погружение"
+  },
+  "cumulative": {
+    "ru": "накопительный"
+  },
+  "cumulative effect": {
+    "ru": "накопительный эффект",
+    "uz": "kumulyativ effekt"
+  },
+  "curation": {
+    "ru": "курирование"
+  },
+  "curiosity": {
+    "ru": "любопытство"
+  },
+  "curious": {
+    "ru": "любопытный"
+  },
+  "currents": {
+    "ru": "течения",
+    "uz": "oqimlar"
+  },
+  "curriculum": {
+    "ru": "учебный план",
+    "uz": "o'quv dasturi"
+  },
+  "cursory": {
+    "ru": "беглый"
+  },
+  "cushioning": {
+    "ru": "амортизация"
+  },
+  "customary": {
+    "ru": "привычный"
+  },
+  "customs": {
+    "ru": "обычаи; таможня"
+  },
+  "cycle": {
+    "ru": "цикл"
+  },
+  "cycle path": {
+    "ru": "велосипедная дорожка"
+  },
+  "cycling": {
+    "ru": "езда на велосипеде"
+  },
+  "damaged": {
+    "ru": "поврежден"
+  },
+  "dark matter": {
+    "ru": "темная Материя",
+    "uz": "qorong'u materiya"
+  },
+  "dark triad": {
+    "ru": "темная триада",
+    "uz": "qorong'u triada"
+  },
+  "data": {
+    "ru": "данные",
+    "uz": "ma'lumotlar"
+  },
+  "database": {
+    "ru": "база данных"
+  },
+  "dawdled": {
+    "ru": "бездельничал"
+  },
+  "deadline": {
+    "ru": "крайний срок"
+  },
+  "deadlines": {
+    "ru": "сроки"
+  },
+  "dearth": {
+    "ru": "нехватка"
+  },
+  "debate club": {
+    "ru": "дебатный клуб"
+  },
+  "debates": {
+    "ru": "дебаты"
+  },
+  "debris": {
+    "ru": "обломки"
+  },
+  "decentralized": {
+    "ru": "децентрализованный"
+  },
+  "deceptive": {
+    "ru": "обманчивый"
+  },
+  "deciduous trees": {
+    "ru": "лиственные деревья",
+    "uz": "bargli daraxtlar"
+  },
+  "decipherment": {
+    "ru": "расшифровка"
+  },
+  "decision": {
+    "ru": "решение"
+  },
+  "decisive": {
+    "ru": "решающий"
+  },
+  "decline": {
+    "ru": "спад; снижение"
+  },
+  "decomposition": {
+    "ru": "разложение",
+    "uz": "parchalanish"
+  },
+  "decoration": {
+    "ru": "украшение"
+  },
+  "decoupled": {
+    "ru": "отделенный"
+  },
+  "dedication": {
+    "ru": "преданность"
+  },
+  "deference": {
+    "ru": "почтение"
+  },
+  "deficiencies": {
+    "ru": "недостатки"
+  },
+  "deficiency": {
+    "ru": "недостаток"
+  },
+  "definitive": {
+    "ru": "окончательный"
+  },
+  "definitively": {
+    "ru": "окончательно"
+  },
+  "deforestation": {
+    "ru": "вырубка лесов",
+    "uz": "o'rmonlarni kesish"
+  },
+  "degradation": {
+    "ru": "деградация",
+    "uz": "degradatsiya"
+  },
+  "dehiscence": {
+    "ru": "раскрытие",
+    "uz": "chiqib ketish"
+  },
+  "deliberately": {
+    "ru": "умышленно"
+  },
+  "delivery": {
+    "ru": "доставка"
+  },
+  "demanding": {
+    "ru": "требовательный"
+  },
+  "demographic": {
+    "ru": "демографический"
+  },
+  "demographics": {
+    "ru": "демография"
+  },
+  "demolishing": {
+    "ru": "снос"
+  },
+  "demolition": {
+    "ru": "снос"
+  },
+  "demonstrated": {
+    "ru": "продемонстрировал"
+  },
+  "demonstrations": {
+    "ru": "демонстрации"
+  },
+  "demonstrative": {
+    "ru": "демонстративный"
+  },
+  "den": {
+    "ru": "ден",
+    "uz": "den"
+  },
+  "dendrochronology": {
+    "ru": "дендрохронология",
+    "uz": "dendroxronologiya"
+  },
+  "density": {
+    "ru": "плотность",
+    "uz": "zichlik"
+  },
+  "dentin": {
+    "ru": "дентин",
+    "uz": "dentin"
+  },
+  "deoxygenation": {
+    "ru": "деоксигенация"
+  },
+  "depicted": {
+    "ru": "изображен"
+  },
+  "depleted": {
+    "ru": "истощенный"
+  },
+  "deposit": {
+    "ru": "залог; депозит"
+  },
+  "deposition": {
+    "ru": "осаждение"
+  },
+  "depredation": {
+    "ru": "хищничество",
+    "uz": "depredatsiya"
+  },
+  "depth": {
+    "ru": "глубина"
+  },
+  "derided": {
+    "ru": "высмеянный"
+  },
+  "derivative": {
+    "ru": "производная"
+  },
+  "descendants": {
+    "ru": "потомки"
+  },
+  "desiccation": {
+    "ru": "высыхание",
+    "uz": "quritish"
+  },
+  "desirable": {
+    "ru": "желательный"
+  },
+  "desirable traits": {
+    "ru": "желательные черты"
+  },
+  "destination": {
+    "ru": "место назначения"
+  },
+  "destructive": {
+    "ru": "разрушительный"
+  },
+  "destructive coping strategies": {
+    "ru": "деструктивные стратегии преодоления трудностей"
+  },
+  "destructive interference": {
+    "ru": "разрушительное вмешательство",
+    "uz": "buzg'unchi aralashuv"
+  },
+  "detection": {
+    "ru": "обнаружение"
+  },
+  "deteriorated": {
+    "ru": "ухудшился"
+  },
+  "deteriorating": {
+    "ru": "ухудшающийся"
+  },
+  "deterioration": {
+    "ru": "ухудшение"
+  },
+  "determination": {
+    "ru": "решимость; определение"
+  },
+  "determine": {
+    "ru": "определять"
+  },
+  "detrimental": {
+    "ru": "вредный"
+  },
+  "detritus": {
+    "ru": "детрит",
+    "uz": "detritus"
+  },
+  "devastating": {
+    "ru": "разрушительный"
+  },
+  "developers": {
+    "ru": "разработчики"
+  },
+  "development": {
+    "ru": "развитие; разработка"
+  },
+  "devised": {
+    "ru": "разработанный"
+  },
+  "diagnosis": {
+    "ru": "диагноз"
+  },
+  "diametrically opposed": {
+    "ru": "диаметрально противоположный"
+  },
+  "diapause": {
+    "ru": "диапауза",
+    "uz": "diapauza"
+  },
+  "diatoms": {
+    "ru": "диатомовые водоросли",
+    "uz": "diatomlar"
+  },
+  "dictatorial": {
+    "ru": "диктаторский"
+  },
+  "differentiation": {
+    "ru": "дифференциация",
+    "uz": "differentsiatsiya"
+  },
+  "diffraction": {
+    "ru": "дифракция"
+  },
+  "diffusion": {
+    "ru": "диффузия",
+    "uz": "diffuziya"
+  },
+  "diffusion barrier": {
+    "ru": "диффузионный барьер"
+  },
+  "digestive system": {
+    "ru": "пищеварительная система",
+    "uz": "ovqat hazm qilish tizimi"
+  },
+  "digital divide": {
+    "ru": "цифровой разрыв"
+  },
+  "digital infrastructure": {
+    "ru": "цифровая инфраструктура"
+  },
+  "digital literacy": {
+    "ru": "цифровая грамотность"
+  },
+  "digitizing": {
+    "ru": "оцифровка",
+    "uz": "raqamlashtirish"
+  },
+  "dignity": {
+    "ru": "достоинство"
+  },
+  "dimension": {
+    "ru": "аспект; измерение"
+  },
+  "dimensions": {
+    "ru": "размеры"
+  },
+  "dimethyl sulfide": {
+    "ru": "диметилсульфид",
+    "uz": "dimetil sulfid"
+  },
+  "diminish": {
+    "ru": "уменьшать"
+  },
+  "diminishing": {
+    "ru": "уменьшающийся"
+  },
+  "diminution": {
+    "ru": "уменьшение"
+  },
+  "diploid": {
+    "ru": "диплоидный",
+    "uz": "diploid"
+  },
+  "diplomatic": {
+    "ru": "дипломатический"
+  },
+  "direct help": {
+    "ru": "прямая помощь",
+    "uz": "to'g'ridan-to'g'ri yordam"
+  },
+  "disability": {
+    "ru": "инвалидность"
+  },
+  "disaffection": {
+    "ru": "недовольство"
+  },
+  "disapprove": {
+    "ru": "не одобрять"
+  },
+  "discern": {
+    "ru": "различать"
+  },
+  "discerning": {
+    "ru": "проницательный"
+  },
+  "discharged": {
+    "ru": "выписан"
+  },
+  "discipline": {
+    "ru": "дисциплина"
+  },
+  "discontented": {
+    "ru": "недовольный"
+  },
+  "discontinuity": {
+    "ru": "разрыв"
+  },
+  "discount": {
+    "ru": "скидка"
+  },
+  "discourage": {
+    "ru": "обескураживать"
+  },
+  "discouraged": {
+    "ru": "обескураженный"
+  },
+  "discreet": {
+    "ru": "сдержанный"
+  },
+  "discrepancies": {
+    "ru": "расхождения"
+  },
+  "discrepancy": {
+    "ru": "несоответствие"
+  },
+  "discretion": {
+    "ru": "осмотрительность"
+  },
+  "discriminate": {
+    "ru": "различать"
+  },
+  "discrimination": {
+    "ru": "дискриминация"
+  },
+  "discursive": {
+    "ru": "дискурсивный"
+  },
+  "discussion": {
+    "ru": "обсуждение"
+  },
+  "disengage": {
+    "ru": "отключаться"
+  },
+  "disinhibition": {
+    "ru": "расторможенность"
+  },
+  "disoriented": {
+    "ru": "дезориентированный",
+    "uz": "orientatsiya buzilgan"
+  },
+  "disparities": {
+    "ru": "неравенство"
+  },
+  "disparity": {
+    "ru": "неравенство"
+  },
+  "dispersal": {
+    "ru": "рассредоточение",
+    "uz": "tarqatish"
+  },
+  "dispersed": {
+    "ru": "рассеянный"
+  },
+  "dispersion": {
+    "ru": "дисперсия"
+  },
+  "dispiriting": {
+    "ru": "удручающий"
+  },
+  "display": {
+    "ru": "отображать"
+  },
+  "disposable packaging": {
+    "ru": "одноразовая упаковка"
+  },
+  "disposal": {
+    "ru": "утилизация"
+  },
+  "disposition": {
+    "ru": "расположение"
+  },
+  "disproportionately": {
+    "ru": "непропорционально"
+  },
+  "dispute": {
+    "ru": "спор"
+  },
+  "disrupted": {
+    "ru": "нарушен"
+  },
+  "dissatisfaction": {
+    "ru": "неудовлетворенность"
+  },
+  "dissatisfied": {
+    "ru": "неудовлетворенный"
+  },
+  "dissertation": {
+    "ru": "диссертация"
+  },
+  "dissipate": {
+    "ru": "рассеять",
+    "uz": "tarqatish"
+  },
+  "dissociate": {
+    "ru": "отделять"
+  },
+  "dissolution": {
+    "ru": "растворение",
+    "uz": "eritilish"
+  },
+  "dissolve": {
+    "ru": "растворить",
+    "uz": "eritmoq"
+  },
+  "distinction": {
+    "ru": "различие"
+  },
+  "distinctions": {
+    "ru": "различия"
+  },
+  "distinctive": {
+    "ru": "отличительный"
+  },
+  "distinctiveness": {
+    "ru": "отличительность"
+  },
+  "distinguish": {
+    "ru": "различать"
+  },
+  "distinguished": {
+    "ru": "выдающийся"
+  },
+  "distracted": {
+    "ru": "несосредоточенный"
+  },
+  "distraction": {
+    "ru": "отвлечение"
+  },
+  "distributed": {
+    "ru": "распределенный"
+  },
+  "distribution": {
+    "ru": "распределение"
+  },
+  "district": {
+    "ru": "округ"
+  },
+  "diurnal": {
+    "ru": "дневной",
+    "uz": "kundalik"
+  },
+  "diversification": {
+    "ru": "диверсификация",
+    "uz": "diversifikatsiya"
+  },
+  "diversified": {
+    "ru": "диверсифицированный"
+  },
+  "diversity": {
+    "ru": "разнообразие",
+    "uz": "turli xillik"
+  },
+  "dna": {
+    "ru": "дНК",
+    "uz": "dNK"
+  },
+  "dna code": {
+    "ru": "код ДНК",
+    "uz": "dNK kodi"
+  },
+  "documentaries": {
+    "ru": "документальные фильмы"
+  },
+  "documentary": {
+    "ru": "документальный фильм"
+  },
+  "dome": {
+    "ru": "купол"
+  },
+  "domestic labour": {
+    "ru": "домашний труд"
+  },
+  "domesticate": {
+    "ru": "приручить"
+  },
+  "domestication": {
+    "ru": "приручение"
+  },
+  "dominance": {
+    "ru": "доминирование"
+  },
+  "dominant": {
+    "ru": "доминирующий"
+  },
+  "dominate": {
+    "ru": "доминировать"
+  },
+  "donation": {
+    "ru": "пожертвование"
+  },
+  "donations": {
+    "ru": "пожертвования"
+  },
+  "dormant": {
+    "ru": "спящий",
+    "uz": "uyqusiz"
+  },
+  "dorsal patch": {
+    "ru": "дорсальная нашивка",
+    "uz": "dorsal patch"
+  },
+  "doubled": {
+    "ru": "удвоился"
+  },
+  "drainage": {
+    "ru": "дренаж"
+  },
+  "dramatically": {
+    "ru": "резко"
+  },
+  "drawbacks": {
+    "ru": "недостатки"
+  },
+  "dried": {
+    "ru": "сушеный"
+  },
+  "drifting longline fishing": {
+    "ru": "дрейфующая ярусная рыбалка",
+    "uz": "drifting Longline Fishing"
+  },
+  "drink driving": {
+    "ru": "вождение в нетрезвом виде"
+  },
+  "drought": {
+    "ru": "засуха",
+    "uz": "qurg'oqchilik"
+  },
+  "durability": {
+    "ru": "долговечность"
+  },
+  "durable": {
+    "ru": "прочный"
+  },
+  "duration": {
+    "ru": "продолжительность",
+    "uz": "davomiyligi"
+  },
+  "dynamic": {
+    "ru": "динамичный"
+  },
+  "dynamics": {
+    "ru": "динамика"
+  },
+  "e-commerce": {
+    "ru": "электронная коммерция"
+  },
+  "ear canal": {
+    "ru": "ушной канал",
+    "uz": "quloq kanali"
+  },
+  "eardrum": {
+    "ru": "барабанная перепонка",
+    "uz": "quloq pardasi"
+  },
+  "earth observation": {
+    "ru": "наблюдение Земли",
+    "uz": "yerni kuzatish"
+  },
+  "echo": {
+    "ru": "эхо",
+    "uz": "echo"
+  },
+  "echo chamber": {
+    "ru": "эхо-камера"
+  },
+  "echogram": {
+    "ru": "эхограмма",
+    "uz": "ekogramma"
+  },
+  "echolocation": {
+    "ru": "эхолокация",
+    "uz": "ekolokatsiya"
+  },
+  "eclipse": {
+    "ru": "затмение",
+    "uz": "tutilish"
+  },
+  "eclipsed": {
+    "ru": "затмил"
+  },
+  "ecological": {
+    "ru": "экологический",
+    "uz": "ekologik"
+  },
+  "ecological services": {
+    "ru": "экологические услуги",
+    "uz": "ekologik xizmatlar"
+  },
+  "ecology": {
+    "ru": "экология",
+    "uz": "ekologiya"
+  },
+  "econometrics": {
+    "ru": "эконометрика",
+    "uz": "ekonometriya"
+  },
+  "economic democracy": {
+    "ru": "экономическая демократия"
+  },
+  "economically": {
+    "ru": "экономически"
+  },
+  "economy of scale": {
+    "ru": "экономия масштаба",
+    "uz": "masshtab iqtisodiyoti"
+  },
+  "ecosystem": {
+    "ru": "экосистема",
+    "uz": "ekotizim"
+  },
+  "ecosystem degradation": {
+    "ru": "деградация экосистемы",
+    "uz": "ekotizim degradatsiyasi"
+  },
+  "ecosystem engineer": {
+    "ru": "экосистемный инженер",
+    "uz": "ekotizim muhandisi"
+  },
+  "ecosystem engineers": {
+    "ru": "экосистемные инженеры",
+    "uz": "ekotizim muhandislari"
+  },
+  "ecosystem restoration": {
+    "ru": "восстановление экосистемы",
+    "uz": "ekotizimni tiklash"
+  },
+  "ecosystem services": {
+    "ru": "экосистемные услуги",
+    "uz": "ekotizim xizmatlari"
+  },
+  "ecosystems": {
+    "ru": "экосистемы"
+  },
+  "ectothermic": {
+    "ru": "эктотермический",
+    "uz": "ektotermik"
+  },
+  "edible seeds": {
+    "ru": "съедобные семена",
+    "uz": "ovqatlanadigan urug'lar"
+  },
+  "educational": {
+    "ru": "образовательный"
+  },
+  "educational attainment": {
+    "ru": "уровень образования"
+  },
+  "effectively": {
+    "ru": "эффективно"
+  },
+  "effectiveness": {
+    "ru": "эффективность"
+  },
+  "efficacy": {
+    "ru": "эффективность"
+  },
+  "efficiency": {
+    "ru": "эффективность"
+  },
+  "efficient": {
+    "ru": "эффективный"
+  },
+  "effluent": {
+    "ru": "сточные воды",
+    "uz": "oqova suv"
+  },
+  "effortless": {
+    "ru": "легкий"
+  },
+  "elaborate": {
+    "ru": "сложный; детально разработанный"
+  },
+  "elasticity": {
+    "ru": "эластичность"
+  },
+  "electric charge": {
+    "ru": "электрический заряд",
+    "uz": "elektr zaryadi"
+  },
+  "electric vehicles": {
+    "ru": "электромобили"
+  },
+  "electrical conductivity": {
+    "ru": "электрическая проводимость",
+    "uz": "elektr o'tkazuvchanligi"
+  },
+  "electricity": {
+    "ru": "электричество"
+  },
+  "electromagnetic spectrum": {
+    "ru": "электромагнитный спектр",
+    "uz": "elektromagnit spektr"
+  },
+  "electronegative": {
+    "ru": "электроотрицательный",
+    "uz": "elektromanfiy"
+  },
+  "electronic equipment": {
+    "ru": "электронное оборудование"
+  },
+  "element": {
+    "ru": "элемент",
+    "uz": "element"
+  },
+  "elementary": {
+    "ru": "элементарный"
+  },
+  "elevated railways": {
+    "ru": "надземные железные дороги"
+  },
+  "elite": {
+    "ru": "элитный; лучший"
+  },
+  "elite athletes": {
+    "ru": "элитные спортсмены"
+  },
+  "elytra": {
+    "ru": "надкрылья"
+  },
+  "embroidered": {
+    "ru": "вышитый"
+  },
+  "embryo": {
+    "ru": "эмбрион",
+    "uz": "embrion"
+  },
+  "embryos": {
+    "ru": "эмбрионы",
+    "uz": "embrionlar"
+  },
+  "emerge": {
+    "ru": "появляться",
+    "uz": "chiqish"
+  },
+  "emergence": {
+    "ru": "появление"
+  },
+  "emergency": {
+    "ru": "чрезвычайная ситуация"
+  },
+  "emerges": {
+    "ru": "появляется"
+  },
+  "emissions": {
+    "ru": "выбросы"
+  },
+  "emotion regulation": {
+    "ru": "регулирование эмоций",
+    "uz": "hissiyotlarni tartibga solish"
+  },
+  "emotion-focused coping": {
+    "ru": "эмоционально-ориентированное преодоление трудностей",
+    "uz": "tuyg'uga yo'naltirilgan kurash"
+  },
+  "emotional intelligence": {
+    "ru": "эмоциональный интеллект"
+  },
+  "emotionally loaded": {
+    "ru": "эмоционально загружен"
+  },
+  "emotions": {
+    "ru": "эмоции"
+  },
+  "empathy": {
+    "ru": "сочувствие"
+  },
+  "emphasize": {
+    "ru": "подчеркивать"
+  },
+  "empirical": {
+    "ru": "эмпирический"
+  },
+  "employability": {
+    "ru": "возможность трудоустройства"
+  },
+  "employers": {
+    "ru": "работодатели"
+  },
+  "employment": {
+    "ru": "работа"
+  },
+  "employment stability": {
+    "ru": "стабильность занятости"
+  },
+  "emulsifier": {
+    "ru": "эмульгатор",
+    "uz": "emulsifikator"
+  },
+  "emulsion": {
+    "ru": "эмульсия",
+    "uz": "emulsiya"
+  },
+  "encouraged": {
+    "ru": "поощряется"
+  },
+  "encouragement": {
+    "ru": "поощрение"
+  },
+  "endangered": {
+    "ru": "находящийся под угрозой исчезновения",
+    "uz": "xavf ostida"
+  },
+  "endeavour": {
+    "ru": "усилие; стремление"
+  },
+  "endemic": {
+    "ru": "эндемик",
+    "uz": "endemik"
+  },
+  "endocarp": {
+    "ru": "эндокарпий",
+    "uz": "endokarp"
+  },
+  "endosperm": {
+    "ru": "эндосперм",
+    "uz": "endosperm"
+  },
+  "enduring": {
+    "ru": "прочный"
+  },
+  "energetic masking potential": {
+    "ru": "потенциал энергетической маскировки",
+    "uz": "energetik niqoblash potentsiali"
+  },
+  "energy": {
+    "ru": "энергия",
+    "uz": "energiya"
+  },
+  "enforcement": {
+    "ru": "исполнение"
+  },
+  "engender": {
+    "ru": "порождать"
+  },
+  "engendering": {
+    "ru": "порождающий"
+  },
+  "engineering": {
+    "ru": "инженерия"
+  },
+  "engravings": {
+    "ru": "гравюры"
+  },
+  "enlightening": {
+    "ru": "просветительский"
+  },
+  "enlivened": {
+    "ru": "оживленный"
+  },
+  "enquiries": {
+    "ru": "запросы"
+  },
+  "enquiring": {
+    "ru": "вопрошающий"
+  },
+  "enrichment": {
+    "ru": "обогащение",
+    "uz": "boyitish"
+  },
+  "enrolment": {
+    "ru": "зачисление"
+  },
+  "ensuing": {
+    "ru": "последующий"
+  },
+  "entanglement": {
+    "ru": "запутывание"
+  },
+  "entertainment": {
+    "ru": "развлечение"
+  },
+  "enthusiasm": {
+    "ru": "энтузиазм"
+  },
+  "enthusiastically": {
+    "ru": "с энтузиазмом"
+  },
+  "entities": {
+    "ru": "сущности"
+  },
+  "entrenched": {
+    "ru": "укоренившийся"
+  },
+  "entrepreneurs": {
+    "ru": "предприниматели"
+  },
+  "environment": {
+    "ru": "среда"
+  },
+  "environmental": {
+    "ru": "относящийся к окружающей среде"
+  },
+  "environmental contaminants": {
+    "ru": "загрязнители окружающей среды",
+    "uz": "atrof-muhitni ifloslantiruvchi moddalar"
+  },
+  "environmental degradation": {
+    "ru": "деградация окружающей среды"
+  },
+  "environmental steward": {
+    "ru": "экологический управляющий",
+    "uz": "atrof-muhit bo'yicha boshqaruvchi"
+  },
+  "environmental variability": {
+    "ru": "экологическая изменчивость",
+    "uz": "atrof-muhitning o'zgaruvchanligi"
+  },
+  "envisioned": {
+    "ru": "предполагал"
+  },
+  "enzymes": {
+    "ru": "ферменты",
+    "uz": "fermentlar"
+  },
+  "ephemeral": {
+    "ru": "эфемерный"
+  },
+  "epidemic": {
+    "ru": "эпидемия",
+    "uz": "epidemiya"
+  },
+  "epistemology": {
+    "ru": "эпистемология",
+    "uz": "epistemologiya"
+  },
+  "epitomes": {
+    "ru": "воплощения"
+  },
+  "equal opportunity": {
+    "ru": "равные возможности"
+  },
+  "equanimity": {
+    "ru": "невозмутимость",
+    "uz": "tenglik"
+  },
+  "equidistant": {
+    "ru": "равноудаленный"
+  },
+  "equipment": {
+    "ru": "оборудование"
+  },
+  "equipped": {
+    "ru": "оборудованный"
+  },
+  "equitable": {
+    "ru": "справедливый"
+  },
+  "equivalent": {
+    "ru": "эквивалент"
+  },
+  "equivocal": {
+    "ru": "двусмысленный"
+  },
+  "erosion": {
+    "ru": "эрозия",
+    "uz": "eroziya"
+  },
+  "eruptions": {
+    "ru": "извержения"
+  },
+  "essential": {
+    "ru": "необходимый; существенный"
+  },
+  "essential amino acids": {
+    "ru": "незаменимые аминокислоты",
+    "uz": "muhim aminokislotalar"
+  },
+  "established": {
+    "ru": "созданный; утвердившийся"
+  },
+  "establishing": {
+    "ru": "создание"
+  },
+  "establishment": {
+    "ru": "учреждение"
+  },
+  "establishments": {
+    "ru": "заведения"
+  },
+  "esteemed": {
+    "ru": "уважаемый"
+  },
+  "estimated": {
+    "ru": "оцененный"
+  },
+  "estuary": {
+    "ru": "устье",
+    "uz": "estuariy"
+  },
+  "ethical": {
+    "ru": "этический"
+  },
+  "ethnographer": {
+    "ru": "этнограф"
+  },
+  "eutrophication": {
+    "ru": "эвтрофикация",
+    "uz": "evtrofikatsiya"
+  },
+  "evaluate": {
+    "ru": "оценивать",
+    "uz": "baholash"
+  },
+  "evaluating": {
+    "ru": "оценивая"
+  },
+  "evaluation": {
+    "ru": "оценка"
+  },
+  "evapo-transpiration": {
+    "ru": "эвапо-транспирация",
+    "uz": "evapo-transpiratsiya"
+  },
+  "evaporating": {
+    "ru": "испаряющийся"
+  },
+  "evaporation": {
+    "ru": "испарение",
+    "uz": "bug'lanish"
+  },
+  "evaporative heat loss": {
+    "ru": "потери тепла при испарении",
+    "uz": "bug'lanishda issiqlik yo'qotilishi"
+  },
+  "evapotranspiration": {
+    "ru": "эвапотранспирация",
+    "uz": "evapotranspiratsiya"
+  },
+  "evidence": {
+    "ru": "доказательство"
+  },
+  "evidence-based strategies": {
+    "ru": "стратегии, основанные на фактических данных"
+  },
+  "evocative": {
+    "ru": "вызывающий воспоминания"
+  },
+  "evolution": {
+    "ru": "эволюция",
+    "uz": "evolyutsiya"
+  },
+  "evolutionary": {
+    "ru": "эволюционный"
+  },
+  "evolutionary change": {
+    "ru": "эволюционные изменения",
+    "uz": "evolyutsion o'zgarish"
+  },
+  "exacerbating": {
+    "ru": "обострение"
+  },
+  "exaggerated": {
+    "ru": "преувеличенный"
+  },
+  "exaggerating": {
+    "ru": "преувеличение"
+  },
+  "examination": {
+    "ru": "экзамен; обследование"
+  },
+  "excavations": {
+    "ru": "раскопки"
+  },
+  "exceptional": {
+    "ru": "исключительный"
+  },
+  "exchange": {
+    "ru": "обмен"
+  },
+  "exclusively": {
+    "ru": "исключительно"
+  },
+  "executive function": {
+    "ru": "исполнительная функция",
+    "uz": "ijro etuvchi funktsiya"
+  },
+  "executive functions": {
+    "ru": "исполнительные функции",
+    "uz": "ijroiya funktsiyalari"
+  },
+  "exemplar": {
+    "ru": "образец"
+  },
+  "exemplified": {
+    "ru": "проиллюстрированный"
+  },
+  "exercise": {
+    "ru": "упражнение"
+  },
+  "exertion": {
+    "ru": "напряжение",
+    "uz": "mashq qilish"
+  },
+  "exhausted": {
+    "ru": "измученный"
+  },
+  "exhausting": {
+    "ru": "утомительный"
+  },
+  "exhibition": {
+    "ru": "выставка"
+  },
+  "exhibits": {
+    "ru": "экспонаты"
+  },
+  "exhilarating": {
+    "ru": "волнующий"
+  },
+  "exocarp": {
+    "ru": "экзокарпий",
+    "uz": "ekzokarp"
+  },
+  "exoplanet": {
+    "ru": "экзопланета",
+    "uz": "ekzosayyora"
+  },
+  "exorbitant": {
+    "ru": "непомерный"
+  },
+  "exoskeleton": {
+    "ru": "экзоскелет",
+    "uz": "ekzoskelet"
+  },
+  "exotic": {
+    "ru": "экзотический"
+  },
+  "exotic vegetation": {
+    "ru": "экзотическая растительность"
+  },
+  "expansion": {
+    "ru": "расширение",
+    "uz": "kengayish"
+  },
+  "expectations": {
+    "ru": "ожидания"
+  },
+  "expeditions": {
+    "ru": "экспедиции"
+  },
+  "expenditure": {
+    "ru": "расходы"
+  },
+  "expenses": {
+    "ru": "затраты"
+  },
+  "experience": {
+    "ru": "опыт"
+  },
+  "experiment": {
+    "ru": "эксперимент"
+  },
+  "experimental": {
+    "ru": "экспериментальный"
+  },
+  "experimentation": {
+    "ru": "экспериментирование"
+  },
+  "expertise": {
+    "ru": "специальные знания; компетентность"
+  },
+  "expiry dates": {
+    "ru": "сроки годности"
+  },
+  "explicable": {
+    "ru": "объяснимый"
+  },
+  "explicit": {
+    "ru": "явный"
+  },
+  "exploitation": {
+    "ru": "эксплуатация",
+    "uz": "ekspluatatsiya"
+  },
+  "exploited": {
+    "ru": "эксплуатируемый"
+  },
+  "exploration": {
+    "ru": "разведка"
+  },
+  "exposure": {
+    "ru": "контакт"
+  },
+  "expressive": {
+    "ru": "выразительный"
+  },
+  "exquisite": {
+    "ru": "изысканный"
+  },
+  "exquisitely": {
+    "ru": "изысканно"
+  },
+  "extant": {
+    "ru": "сохранившийся"
+  },
+  "extinct": {
+    "ru": "вымерший",
+    "uz": "yo'qolgan"
+  },
+  "extinction": {
+    "ru": "вымирание",
+    "uz": "yo'q bo'lib ketish"
+  },
+  "extinctions": {
+    "ru": "вымирания"
+  },
+  "extirpated": {
+    "ru": "искоренен"
+  },
+  "extort": {
+    "ru": "вымогать"
+  },
+  "extra-curricular": {
+    "ru": "внеклассный"
+  },
+  "extract": {
+    "ru": "извлекать"
+  },
+  "extracted": {
+    "ru": "извлеченный"
+  },
+  "extrafloral nectaries": {
+    "ru": "экстрафлоральные нектарники",
+    "uz": "ekstraloral nektarlar"
+  },
+  "extraordinary": {
+    "ru": "необыкновенный"
+  },
+  "extraterrestrials": {
+    "ru": "инопланетяне"
+  },
+  "extraversion": {
+    "ru": "экстраверсия",
+    "uz": "ekstraversiya"
+  },
+  "extremophiles": {
+    "ru": "экстремофилы",
+    "uz": "ekstremofillar"
+  },
+  "extrinsic motivation": {
+    "ru": "внешняя мотивация",
+    "uz": "tashqi motivatsiya"
+  },
+  "f1 generation": {
+    "ru": "поколение F1",
+    "uz": "f1 avlodi"
+  },
+  "fabrication": {
+    "ru": "изготовление"
+  },
+  "face-to-face": {
+    "ru": "лицом к лицу"
+  },
+  "facetious": {
+    "ru": "шуточный"
+  },
+  "facilitate": {
+    "ru": "способствовать"
+  },
+  "facilitated": {
+    "ru": "облегчил; сделал возможным"
+  },
+  "facilitator": {
+    "ru": "координатор"
+  },
+  "facilities": {
+    "ru": "инфраструктура; удобства"
+  },
+  "facility": {
+    "ru": "объект; удобство"
+  },
+  "fairer future": {
+    "ru": "более справедливое будущее"
+  },
+  "false doors": {
+    "ru": "ложные двери"
+  },
+  "familial": {
+    "ru": "семейный"
+  },
+  "familiar": {
+    "ru": "привычный"
+  },
+  "family bonds": {
+    "ru": "семейные узы"
+  },
+  "family routine": {
+    "ru": "семейная рутина"
+  },
+  "famished predators": {
+    "ru": "голодные хищники"
+  },
+  "farm-to-fork journey": {
+    "ru": "путешествие от фермы до прилавка",
+    "uz": "fermadan vilkaga sayohat"
+  },
+  "farmland": {
+    "ru": "сельскохозяйственные угодья"
+  },
+  "fascinated": {
+    "ru": "очарованный"
+  },
+  "fascinating": {
+    "ru": "очаровательный"
+  },
+  "fashionable": {
+    "ru": "модный"
+  },
+  "fatigue": {
+    "ru": "усталость",
+    "uz": "charchoq"
+  },
+  "fault": {
+    "ru": "вина",
+    "uz": "xato"
+  },
+  "favourable": {
+    "ru": "благоприятный"
+  },
+  "fearful temperament": {
+    "ru": "пугающий темперамент",
+    "uz": "qo'rqinchli temperament"
+  },
+  "feces": {
+    "ru": "фекалии",
+    "uz": "najas"
+  },
+  "feedback": {
+    "ru": "обратная связь"
+  },
+  "feeding ground": {
+    "ru": "кормовая площадка",
+    "uz": "oziqlantirish maydoni"
+  },
+  "fend off": {
+    "ru": "отбиваться"
+  },
+  "fermentative bacteria": {
+    "ru": "ферментативные бактерии",
+    "uz": "fermentativ bakteriyalar"
+  },
+  "fertile": {
+    "ru": "плодородный",
+    "uz": "fertil"
+  },
+  "fertilisers": {
+    "ru": "удобрения"
+  },
+  "festival": {
+    "ru": "фестиваль"
+  },
+  "festoons": {
+    "ru": "фестоны"
+  },
+  "fiber": {
+    "ru": "волокно",
+    "uz": "elyaf"
+  },
+  "fiction": {
+    "ru": "вымысел"
+  },
+  "fidelity": {
+    "ru": "верность"
+  },
+  "filter feeders": {
+    "ru": "фильтраторы",
+    "uz": "filtrni oziqlantiruvchilar"
+  },
+  "filtration": {
+    "ru": "фильтрация"
+  },
+  "fin ray effect": {
+    "ru": "эффект плавникового луча",
+    "uz": "fin Ray effekti"
+  },
+  "finances": {
+    "ru": "финансы"
+  },
+  "financial": {
+    "ru": "финансовый"
+  },
+  "financial literacy": {
+    "ru": "финансовая грамотность"
+  },
+  "financial security": {
+    "ru": "финансовая безопасность"
+  },
+  "finite": {
+    "ru": "конечный"
+  },
+  "fireworks": {
+    "ru": "фейерверк"
+  },
+  "fiscal": {
+    "ru": "фискальный"
+  },
+  "fish stock": {
+    "ru": "рыбный бульон",
+    "uz": "baliq zahirasi"
+  },
+  "fisheries": {
+    "ru": "рыболовство",
+    "uz": "baliqchilik"
+  },
+  "fit": {
+    "ru": "соответствовать"
+  },
+  "flag football": {
+    "ru": "пометить Футбол",
+    "uz": "bayroq futbol"
+  },
+  "flagella": {
+    "ru": "жгутики",
+    "uz": "flagella"
+  },
+  "flagellates": {
+    "ru": "жгутиконосцы",
+    "uz": "flagellats"
+  },
+  "flatbread": {
+    "ru": "лепешка"
+  },
+  "flavour": {
+    "ru": "вкус"
+  },
+  "flavours": {
+    "ru": "вкусы"
+  },
+  "flexibility": {
+    "ru": "гибкость"
+  },
+  "flexible flippers": {
+    "ru": "гибкие ласты"
+  },
+  "flightless": {
+    "ru": "нелетающий"
+  },
+  "flipper": {
+    "ru": "ласт"
+  },
+  "flourished": {
+    "ru": "процветал"
+  },
+  "fluctuation": {
+    "ru": "колебание"
+  },
+  "fluency": {
+    "ru": "беглость"
+  },
+  "fluently": {
+    "ru": "бегло"
+  },
+  "fluid": {
+    "ru": "жидкость",
+    "uz": "suyuqlik"
+  },
+  "fluorescence": {
+    "ru": "флуоресценция",
+    "uz": "floresans"
+  },
+  "fmri": {
+    "ru": "фМРТ",
+    "uz": "fMRI"
+  },
+  "foam": {
+    "ru": "мыло",
+    "uz": "ko'pik"
+  },
+  "focus group": {
+    "ru": "фокус-группа",
+    "uz": "fokus guruhi"
+  },
+  "foliar uptake": {
+    "ru": "листовое поглощение",
+    "uz": "barglarning o'zlashtirilishi"
+  },
+  "folk story": {
+    "ru": "народная история"
+  },
+  "follow-up": {
+    "ru": "следовать за"
+  },
+  "food matrix": {
+    "ru": "пищевая матрица",
+    "uz": "oziq-ovqat matritsasi"
+  },
+  "food safety": {
+    "ru": "безопасность пищевых продуктов",
+    "uz": "oziq-ovqat xavfsizligi"
+  },
+  "food security": {
+    "ru": "продовольственная безопасность",
+    "uz": "oziq-ovqat xavfsizligi"
+  },
+  "food texture": {
+    "ru": "пищевая текстура",
+    "uz": "oziq-ovqat teksturasi"
+  },
+  "food waste": {
+    "ru": "пищевые отходы"
+  },
+  "food web": {
+    "ru": "пищевая сеть",
+    "uz": "oziq-ovqat tarmog'i"
+  },
+  "food-supply chain": {
+    "ru": "цепочка поставок продуктов питания",
+    "uz": "oziq-ovqat ta'minoti zanjiri"
+  },
+  "foot-stimulating": {
+    "ru": "стимулирующий ноги"
+  },
+  "footpath": {
+    "ru": "тропинка"
+  },
+  "foraging": {
+    "ru": "собирательство",
+    "uz": "oziq-ovqat qidirish"
+  },
+  "forecasting": {
+    "ru": "прогнозирование"
+  },
+  "foreground": {
+    "ru": "передний план"
+  },
+  "forest edge": {
+    "ru": "лесная опушка",
+    "uz": "o'rmon chekkasi"
+  },
+  "forest fragmentation": {
+    "ru": "фрагментация леса",
+    "uz": "o'rmonlarning parchalanishi"
+  },
+  "forest monitoring": {
+    "ru": "мониторинг леса",
+    "uz": "o'rmon monitoringi"
+  },
+  "formal mindfulness training": {
+    "ru": "формальный тренинг осознанности",
+    "uz": "rasmiy ongni rivojlantirish treningi"
+  },
+  "formulating": {
+    "ru": "формулирование"
+  },
+  "forthcoming": {
+    "ru": "предстоящий"
+  },
+  "fossil record": {
+    "ru": "ископаемая пластинка",
+    "uz": "fotoalbom yozuvi"
+  },
+  "fossilised": {
+    "ru": "окаменелый"
+  },
+  "fossils": {
+    "ru": "окаменелости",
+    "uz": "fotoalbomlar"
+  },
+  "foster": {
+    "ru": "взращивать"
+  },
+  "foundation": {
+    "ru": "фундамент"
+  },
+  "fragile": {
+    "ru": "хрупкий"
+  },
+  "fragmented": {
+    "ru": "фрагментированный"
+  },
+  "framework": {
+    "ru": "рамки"
+  },
+  "frequency": {
+    "ru": "частота",
+    "uz": "chastotasi"
+  },
+  "frequent": {
+    "ru": "частый"
+  },
+  "frequently": {
+    "ru": "часто"
+  },
+  "fresh produce": {
+    "ru": "свежие продукты",
+    "uz": "yangi mahsulot"
+  },
+  "freshening": {
+    "ru": "освежающий",
+    "uz": "yangilanish"
+  },
+  "freshwater": {
+    "ru": "пресноводный",
+    "uz": "chuchuk suv"
+  },
+  "freshwater habitat": {
+    "ru": "пресноводная среда обитания",
+    "uz": "chuchuk suv yashash joyi"
+  },
+  "friction": {
+    "ru": "трение",
+    "uz": "ishqalanish"
+  },
+  "friendships": {
+    "ru": "дружба"
+  },
+  "frightening": {
+    "ru": "пугающий"
+  },
+  "frivolous": {
+    "ru": "легкомысленный"
+  },
+  "froglet": {
+    "ru": "лягушка"
+  },
+  "frogspawn": {
+    "ru": "лягушечья икра"
+  },
+  "frostline": {
+    "ru": "морозная линия",
+    "uz": "ayoz chizig'i"
+  },
+  "frugivores": {
+    "ru": "плодоядные",
+    "uz": "mevaxo'r hayvonlar"
+  },
+  "frustration": {
+    "ru": "разочарование"
+  },
+  "frustrations": {
+    "ru": "разочарования"
+  },
+  "fulfilment": {
+    "ru": "выполнение"
+  },
+  "full-time": {
+    "ru": "на постоянной основе"
+  },
+  "functional": {
+    "ru": "функциональный"
+  },
+  "fund-raising": {
+    "ru": "сбор средств"
+  },
+  "fundamental": {
+    "ru": "фундаментальный"
+  },
+  "fundamental frequency": {
+    "ru": "основная частота"
+  },
+  "fundamentally flawed": {
+    "ru": "фундаментально ошибочный"
+  },
+  "funding": {
+    "ru": "финансирование"
+  },
+  "fungi": {
+    "ru": "грибы",
+    "uz": "zamburug'lar"
+  },
+  "furniture": {
+    "ru": "мебель"
+  },
+  "fusion": {
+    "ru": "слияние",
+    "uz": "fusion"
+  },
+  "fussy eater": {
+    "ru": "привередливый едок"
+  },
+  "g-force": {
+    "ru": "g-сила",
+    "uz": "g-kuch"
+  },
+  "galleries": {
+    "ru": "галереи"
+  },
+  "garments": {
+    "ru": "одежда"
+  },
+  "gas": {
+    "ru": "газ"
+  },
+  "gastric emptying rate": {
+    "ru": "скорость опорожнения желудка",
+    "uz": "oshqozonni bo'shatish tezligi"
+  },
+  "gathering": {
+    "ru": "встреча"
+  },
+  "gatherings": {
+    "ru": "собрания"
+  },
+  "gender disparity": {
+    "ru": "гендерное неравенство"
+  },
+  "gender gap": {
+    "ru": "гендерный разрыв"
+  },
+  "gene transcription": {
+    "ru": "транскрипция генов",
+    "uz": "gen transkripsiyasi"
+  },
+  "gene-environment interactions": {
+    "ru": "взаимодействие генов и окружающей среды",
+    "uz": "gen va atrof-muhitning o'zaro ta'siri"
+  },
+  "generalist": {
+    "ru": "универсальный специалист",
+    "uz": "generalist"
+  },
+  "generalists": {
+    "ru": "генералисты",
+    "uz": "generalistlar"
+  },
+  "generalizable": {
+    "ru": "обобщаемый"
+  },
+  "generalization": {
+    "ru": "обобщение"
+  },
+  "generation": {
+    "ru": "поколение"
+  },
+  "generator": {
+    "ru": "генератор"
+  },
+  "generously": {
+    "ru": "щедро"
+  },
+  "genes": {
+    "ru": "гены",
+    "uz": "genlar"
+  },
+  "genetic": {
+    "ru": "генетический"
+  },
+  "genetic diversity": {
+    "ru": "генетическое разнообразие",
+    "uz": "genetik xilma-xillik"
+  },
+  "genetic mutations": {
+    "ru": "генетические мутации"
+  },
+  "genetic structure": {
+    "ru": "генетическая структура"
+  },
+  "genome": {
+    "ru": "геном",
+    "uz": "genom"
+  },
+  "genome editing": {
+    "ru": "редактирование генома"
+  },
+  "genre": {
+    "ru": "жанр"
+  },
+  "genuine": {
+    "ru": "подлинный"
+  },
+  "genus": {
+    "ru": "род",
+    "uz": "jins"
+  },
+  "geoengineering": {
+    "ru": "геоинженерия",
+    "uz": "geoinjeneriya"
+  },
+  "geographical": {
+    "ru": "географический"
+  },
+  "geography": {
+    "ru": "география"
+  },
+  "geologic map": {
+    "ru": "геологическая карта",
+    "uz": "geologik xarita"
+  },
+  "geological formations": {
+    "ru": "геологические образования"
+  },
+  "geological history": {
+    "ru": "геологическая история",
+    "uz": "geologik tarix"
+  },
+  "geologists": {
+    "ru": "геологи",
+    "uz": "geologlar"
+  },
+  "geology": {
+    "ru": "геология"
+  },
+  "geometric propagation": {
+    "ru": "геометрическое распространение",
+    "uz": "geometrik tarqalish"
+  },
+  "geophysicist": {
+    "ru": "геофизик"
+  },
+  "geoscientist": {
+    "ru": "геолог",
+    "uz": "geologiya olimi"
+  },
+  "geostationary": {
+    "ru": "геостационарный",
+    "uz": "geostatsionar"
+  },
+  "geothermal": {
+    "ru": "геотермальный"
+  },
+  "germinate": {
+    "ru": "прорастать",
+    "uz": "nihol"
+  },
+  "gift-giving": {
+    "ru": "дарение подарков"
+  },
+  "glacier-fed": {
+    "ru": "ледниковое питание"
+  },
+  "glaciers": {
+    "ru": "ледники"
+  },
+  "globalisation": {
+    "ru": "глобализация"
+  },
+  "gloriously": {
+    "ru": "великолепно"
+  },
+  "glucosinolates": {
+    "ru": "глюкозинолаты",
+    "uz": "glyukozinolatlar"
+  },
+  "goal-directed self-talk": {
+    "ru": "целенаправленный разговор с самим собой",
+    "uz": "maqsadga yo'naltirilgan o'z-o'zidan suhbat"
+  },
+  "gps collars": {
+    "ru": "gPS-ошейники",
+    "uz": "gPS yoqalari"
+  },
+  "gps-related": {
+    "ru": "связанные с GPS"
+  },
+  "gradually": {
+    "ru": "постепенно"
+  },
+  "graduate": {
+    "ru": "выпускник"
+  },
+  "graduates": {
+    "ru": "выпускники"
+  },
+  "graduation": {
+    "ru": "выпускной"
+  },
+  "grafting": {
+    "ru": "прививка растений"
+  },
+  "grain stores": {
+    "ru": "зерновые склады"
+  },
+  "grasp": {
+    "ru": "понять"
+  },
+  "grassroots": {
+    "ru": "низовой уровень"
+  },
+  "grateful": {
+    "ru": "благодарный"
+  },
+  "gratification": {
+    "ru": "удовлетворение"
+  },
+  "gratifying": {
+    "ru": "приятный"
+  },
+  "gravitas": {
+    "ru": "авторитет"
+  },
+  "gravity": {
+    "ru": "гравитация",
+    "uz": "gravitatsiya"
+  },
+  "gray flood defenses": {
+    "ru": "серая защита от наводнения",
+    "uz": "kulrang toshqindan himoya qilish"
+  },
+  "gray matter": {
+    "ru": "серое вещество",
+    "uz": "kulrang materiya"
+  },
+  "green roofs": {
+    "ru": "зеленые крыши",
+    "uz": "yashil tomlar"
+  },
+  "green space": {
+    "ru": "зеленая зона"
+  },
+  "greenhouse effect": {
+    "ru": "парниковый эффект",
+    "uz": "issiqxona effekti"
+  },
+  "greenhouse gas": {
+    "ru": "парниковый газ",
+    "uz": "issiqxona gazi"
+  },
+  "greenhouse gases": {
+    "ru": "парниковые газы",
+    "uz": "issiqxona gazlari"
+  },
+  "greenhouse gasses": {
+    "ru": "парниковые газы",
+    "uz": "issiqxona gazlari"
+  },
+  "groceries": {
+    "ru": "продукты"
+  },
+  "grounded": {
+    "ru": "заземленный"
+  },
+  "group integration": {
+    "ru": "групповая интеграция",
+    "uz": "guruh integratsiyasi"
+  },
+  "grubbing": {
+    "ru": "грызть",
+    "uz": "ovlash"
+  },
+  "grudgingly": {
+    "ru": "неохотно"
+  },
+  "guanidine": {
+    "ru": "гуанидин",
+    "uz": "guanidin"
+  },
+  "guano": {
+    "ru": "гуано",
+    "uz": "guano"
+  },
+  "guaranteed": {
+    "ru": "гарантированный"
+  },
+  "guidelines": {
+    "ru": "руководящие принципы"
+  },
+  "gullies": {
+    "ru": "овраги",
+    "uz": "soylar"
+  },
+  "gutters": {
+    "ru": "желоба"
+  },
+  "habitable": {
+    "ru": "обитаемый"
+  },
+  "habitat": {
+    "ru": "среда обитания",
+    "uz": "yashash joyi"
+  },
+  "habitat conservation": {
+    "ru": "сохранение среды обитания"
+  },
+  "habitat destruction": {
+    "ru": "разрушение среды обитания"
+  },
+  "habitat fragmentation": {
+    "ru": "фрагментация среды обитания",
+    "uz": "habitatning parchalanishi"
+  },
+  "habituation": {
+    "ru": "привыкание",
+    "uz": "odatlanish"
+  },
+  "hair cells": {
+    "ru": "волосковые клетки",
+    "uz": "soch hujayralari"
+  },
+  "halved": {
+    "ru": "разделенный пополам"
+  },
+  "hamper": {
+    "ru": "мешать"
+  },
+  "hand-coloured": {
+    "ru": "раскрашенный вручную"
+  },
+  "handling": {
+    "ru": "обращение; управление"
+  },
+  "handmade": {
+    "ru": "ручной работы"
+  },
+  "haploid induction": {
+    "ru": "гаплоидная индукция",
+    "uz": "gaploid induksiyasi"
+  },
+  "haploids": {
+    "ru": "гаплоиды",
+    "uz": "gaploidlar"
+  },
+  "harbour": {
+    "ru": "гавань"
+  },
+  "harmful algal bloom": {
+    "ru": "вредное цветение водорослей",
+    "uz": "zararli alg guli"
+  },
+  "harsh climate": {
+    "ru": "суровый климат"
+  },
+  "harsh conditions": {
+    "ru": "суровые условия"
+  },
+  "harvested": {
+    "ru": "собранный"
+  },
+  "harvesting": {
+    "ru": "сбор урожая"
+  },
+  "hatching": {
+    "ru": "вылупление"
+  },
+  "hatchling": {
+    "ru": "детеныш",
+    "uz": "chiqish"
+  },
+  "haypile": {
+    "ru": "сено",
+    "uz": "haypile"
+  },
+  "hazards": {
+    "ru": "опасности"
+  },
+  "headlines": {
+    "ru": "заголовки"
+  },
+  "health outcomes": {
+    "ru": "результаты в отношении здоровья"
+  },
+  "healthcare": {
+    "ru": "здравоохранение"
+  },
+  "heightened": {
+    "ru": "повышенный"
+  },
+  "helping behaviors": {
+    "ru": "помогающее поведение",
+    "uz": "yordamchi xatti-harakatlar"
+  },
+  "herbivore": {
+    "ru": "травоядное животное",
+    "uz": "o'txo'r"
+  },
+  "herbivores": {
+    "ru": "травоядные",
+    "uz": "o'txo'r hayvonlar"
+  },
+  "heritage": {
+    "ru": "наследство"
+  },
+  "heterogeneous": {
+    "ru": "неоднородный"
+  },
+  "heuristics": {
+    "ru": "эвристика",
+    "uz": "evristika"
+  },
+  "hierarchical": {
+    "ru": "иерархический"
+  },
+  "hierarchy": {
+    "ru": "иерархия"
+  },
+  "high street": {
+    "ru": "главная улица"
+  },
+  "hippocampus": {
+    "ru": "гиппокамп",
+    "uz": "gippokamp"
+  },
+  "historical": {
+    "ru": "исторический"
+  },
+  "historical significance": {
+    "ru": "историческое значение"
+  },
+  "hoarding": {
+    "ru": "накопление"
+  },
+  "homeostatic sleep pressure": {
+    "ru": "гомеостатическое давление сна",
+    "uz": "uyqudagi gomeostatik bosim"
+  },
+  "homesickness": {
+    "ru": "тоска по дому"
+  },
+  "homogeneous": {
+    "ru": "однородный"
+  },
+  "honesty": {
+    "ru": "честность"
+  },
+  "horizons": {
+    "ru": "горизонты"
+  },
+  "hormones": {
+    "ru": "гормоны",
+    "uz": "gormonlar"
+  },
+  "horseback": {
+    "ru": "верхом на лошади"
+  },
+  "horticultural analogue": {
+    "ru": "садоводческий аналог"
+  },
+  "hospitality": {
+    "ru": "гостеприимство"
+  },
+  "host": {
+    "ru": "хозяин",
+    "uz": "xost"
+  },
+  "host star": {
+    "ru": "ведущая звезда",
+    "uz": "xost yulduzi"
+  },
+  "household": {
+    "ru": "семья"
+  },
+  "household chores": {
+    "ru": "домашние дела"
+  },
+  "housing shortage": {
+    "ru": "нехватка жилья"
+  },
+  "humanatons": {
+    "ru": "гуманаты",
+    "uz": "gumanatonlar"
+  },
+  "humanities": {
+    "ru": "гуманитарные науки"
+  },
+  "humidity": {
+    "ru": "влажность"
+  },
+  "hybrid strains": {
+    "ru": "гибридные штаммы"
+  },
+  "hydroacoustics": {
+    "ru": "гидроакустика",
+    "uz": "gidroakustika"
+  },
+  "hydrodynamics": {
+    "ru": "гидродинамика",
+    "uz": "gidrodinamika"
+  },
+  "hydrophilic": {
+    "ru": "гидрофильный",
+    "uz": "gidrofil"
+  },
+  "hydrophobic": {
+    "ru": "гидрофобный",
+    "uz": "hidrofobik"
+  },
+  "hydroponics": {
+    "ru": "гидропоника",
+    "uz": "gidroponika"
+  },
+  "hyper-vigilant": {
+    "ru": "сверхбдительный"
+  },
+  "hypertension": {
+    "ru": "гипертония"
+  },
+  "hyphae": {
+    "ru": "гифы",
+    "uz": "gifalar"
+  },
+  "hypotheses": {
+    "ru": "гипотезы",
+    "uz": "gipotezalar"
+  },
+  "hypothesis": {
+    "ru": "гипотеза",
+    "uz": "gipoteza"
+  },
+  "hypoxic": {
+    "ru": "гипоксический",
+    "uz": "gipoksik"
+  },
+  "ice sheet": {
+    "ru": "ледяной покров",
+    "uz": "muz qatlami"
+  },
+  "ice shelf": {
+    "ru": "шельфовый ледник",
+    "uz": "muz tokchasi"
+  },
+  "ice shelves": {
+    "ru": "шельфовые ледники",
+    "uz": "muz tokchalari"
+  },
+  "ice storm belt": {
+    "ru": "пояс ледяной бури",
+    "uz": "muz bo'roni kamari"
+  },
+  "ice-albedo feedback": {
+    "ru": "обратная связь лед-альбедо",
+    "uz": "ice-Albedo haqida fikr-mulohaza"
+  },
+  "iconoclastic": {
+    "ru": "иконоборческий"
+  },
+  "idealized": {
+    "ru": "идеализированный"
+  },
+  "identification": {
+    "ru": "идентификация"
+  },
+  "identified": {
+    "ru": "идентифицированный"
+  },
+  "identity": {
+    "ru": "личность"
+  },
+  "identity goals": {
+    "ru": "цели идентичности",
+    "uz": "identifikatsiya maqsadlari"
+  },
+  "illness": {
+    "ru": "болезнь"
+  },
+  "illuminate": {
+    "ru": "освещать"
+  },
+  "illusory": {
+    "ru": "иллюзорный"
+  },
+  "illustrates": {
+    "ru": "иллюстрирует"
+  },
+  "imaginary": {
+    "ru": "воображаемый"
+  },
+  "imagination": {
+    "ru": "воображение"
+  },
+  "imaginative": {
+    "ru": "творческий"
+  },
+  "immense": {
+    "ru": "огромный"
+  },
+  "immiscible": {
+    "ru": "несмешиваемый",
+    "uz": "aralashmas"
+  },
+  "immunisation": {
+    "ru": "иммунизация"
+  },
+  "immunity": {
+    "ru": "иммунитет"
+  },
+  "immutable": {
+    "ru": "неизменный"
+  },
+  "impairment": {
+    "ru": "обесценение"
+  },
+  "impartial": {
+    "ru": "беспристрастный"
+  },
+  "impartiality": {
+    "ru": "беспристрастность"
+  },
+  "impeded": {
+    "ru": "препятствовал"
+  },
+  "impediment": {
+    "ru": "препятствие"
+  },
+  "imperative": {
+    "ru": "императив"
+  },
+  "imperfection": {
+    "ru": "несовершенство"
+  },
+  "impertinence": {
+    "ru": "дерзость"
+  },
+  "impertinent": {
+    "ru": "дерзкий"
+  },
+  "implementation": {
+    "ru": "выполнение"
+  },
+  "implemented": {
+    "ru": "реализован"
+  },
+  "implements": {
+    "ru": "орудия; инструменты"
+  },
+  "implications": {
+    "ru": "последствия; подразумеваемый смысл"
+  },
+  "imports": {
+    "ru": "импорт"
+  },
+  "impression": {
+    "ru": "впечатление"
+  },
+  "impugn": {
+    "ru": "оспаривать"
+  },
+  "impulse purchases": {
+    "ru": "импульсивные покупки"
+  },
+  "in absentia": {
+    "ru": "заочно",
+    "uz": "sirtdan"
+  },
+  "inaccessible": {
+    "ru": "недоступный"
+  },
+  "inaccuracies": {
+    "ru": "неточности"
+  },
+  "inadequate": {
+    "ru": "недостаточный; несоответствующий"
+  },
+  "inanimate": {
+    "ru": "неодушевленный"
+  },
+  "inaugurated": {
+    "ru": "торжественно открыт"
+  },
+  "inauguration": {
+    "ru": "торжественное открытие; вступление в должность"
+  },
+  "incentives": {
+    "ru": "стимулы"
+  },
+  "incidence": {
+    "ru": "частота возникновения"
+  },
+  "incidental": {
+    "ru": "случайный"
+  },
+  "incidental capture": {
+    "ru": "случайный захват"
+  },
+  "inclination": {
+    "ru": "склонность; наклон"
+  },
+  "inclusion": {
+    "ru": "включение"
+  },
+  "inclusivity": {
+    "ru": "инклюзивность"
+  },
+  "incomprehensible": {
+    "ru": "непонятный"
+  },
+  "inconceivable": {
+    "ru": "немыслимый"
+  },
+  "inconclusive": {
+    "ru": "неубедительный"
+  },
+  "incongruent": {
+    "ru": "несоответствующий",
+    "uz": "mos kelmaydigan"
+  },
+  "inconsequential": {
+    "ru": "несущественный"
+  },
+  "incorporated": {
+    "ru": "включен"
+  },
+  "increase": {
+    "ru": "увеличивать"
+  },
+  "increment borer": {
+    "ru": "инкрементальный бур",
+    "uz": "borerni oshirish"
+  },
+  "incremental": {
+    "ru": "постепенный"
+  },
+  "incurring": {
+    "ru": "понесенные"
+  },
+  "indefatigably": {
+    "ru": "неутомимо"
+  },
+  "indefinitely": {
+    "ru": "на неопределенный срок"
+  },
+  "independence": {
+    "ru": "независимость"
+  },
+  "independent": {
+    "ru": "независимый"
+  },
+  "independently": {
+    "ru": "независимо"
+  },
+  "indicator species": {
+    "ru": "виды индикаторов",
+    "uz": "ko'rsatkich turlari"
+  },
+  "indigenous": {
+    "ru": "коренной; местный"
+  },
+  "indigenous peoples": {
+    "ru": "коренные народы",
+    "uz": "mahalliy xalqlar"
+  },
+  "indignities": {
+    "ru": "унижения"
+  },
+  "indirect help": {
+    "ru": "косвенная помощь",
+    "uz": "bilvosita yordam"
+  },
+  "indistinguishable": {
+    "ru": "неотличимый"
+  },
+  "individual responsibility": {
+    "ru": "индивидуальная ответственность"
+  },
+  "individualism": {
+    "ru": "индивидуализм"
+  },
+  "individuation": {
+    "ru": "индивидуация"
+  },
+  "induce": {
+    "ru": "вызывать"
+  },
+  "induced": {
+    "ru": "вызванный"
+  },
+  "inducible defenses": {
+    "ru": "индуцируемая защита",
+    "uz": "inducible mudofaa"
+  },
+  "industrial processes": {
+    "ru": "промышленные процессы"
+  },
+  "industrialisation": {
+    "ru": "индустриализация"
+  },
+  "ineffective": {
+    "ru": "неэффективный"
+  },
+  "ineluctable": {
+    "ru": "неизбежный"
+  },
+  "inequity": {
+    "ru": "неравенство",
+    "uz": "tengsizlik"
+  },
+  "inequity aversion": {
+    "ru": "неприятие неравенства",
+    "uz": "tengsizlikdan voz kechish"
+  },
+  "inevitability": {
+    "ru": "неизбежность"
+  },
+  "inevitable": {
+    "ru": "неизбежный"
+  },
+  "inevitably": {
+    "ru": "неизбежно"
+  },
+  "inexplicable": {
+    "ru": "необъяснимый"
+  },
+  "inextricably": {
+    "ru": "неразрывно"
+  },
+  "infallible": {
+    "ru": "непогрешимый"
+  },
+  "infiltrated": {
+    "ru": "проникший"
+  },
+  "inflation": {
+    "ru": "инфляция",
+    "uz": "inflyatsiya"
+  },
+  "influenced": {
+    "ru": "под влиянием"
+  },
+  "influential": {
+    "ru": "влиятельный"
+  },
+  "informal mindfulness training": {
+    "ru": "неформальный тренинг осознанности",
+    "uz": "norasmiy ongni rivojlantirish treningi"
+  },
+  "information": {
+    "ru": "информация",
+    "uz": "ma'lumot"
+  },
+  "informational masking potential": {
+    "ru": "потенциал информационной маскировки",
+    "uz": "axborot niqoblash potentsiali"
+  },
+  "infrared": {
+    "ru": "инфракрасный",
+    "uz": "infraqizil"
+  },
+  "infrared light": {
+    "ru": "инфракрасный свет",
+    "uz": "infraqizil nur"
+  },
+  "infrastructure": {
+    "ru": "инфраструктура"
+  },
+  "ingenious": {
+    "ru": "гениальный"
+  },
+  "ingredients": {
+    "ru": "ингредиенты"
+  },
+  "inhabitants": {
+    "ru": "жители"
+  },
+  "inherent": {
+    "ru": "присущий"
+  },
+  "inhibition": {
+    "ru": "торможение",
+    "uz": "inhibisyon"
+  },
+  "initially": {
+    "ru": "изначально"
+  },
+  "initiate": {
+    "ru": "инициировать"
+  },
+  "initiated": {
+    "ru": "инициирован"
+  },
+  "initiatives": {
+    "ru": "инициативы"
+  },
+  "injection": {
+    "ru": "инъекция"
+  },
+  "innovation": {
+    "ru": "инновации"
+  },
+  "innovative": {
+    "ru": "инновационный"
+  },
+  "innovators": {
+    "ru": "новаторы"
+  },
+  "inscriptions": {
+    "ru": "надписи"
+  },
+  "insecticide": {
+    "ru": "инсектицид"
+  },
+  "inseparable": {
+    "ru": "неотделимый"
+  },
+  "inspection": {
+    "ru": "инспекция"
+  },
+  "inspiration": {
+    "ru": "вдохновение"
+  },
+  "installation": {
+    "ru": "установка"
+  },
+  "instant access": {
+    "ru": "мгновенный доступ"
+  },
+  "instant replay": {
+    "ru": "мгновенный повтор"
+  },
+  "instant success": {
+    "ru": "мгновенный успех"
+  },
+  "instinct": {
+    "ru": "инстинкт"
+  },
+  "instinctive": {
+    "ru": "инстинктивный"
+  },
+  "institution": {
+    "ru": "учреждение",
+    "uz": "tashkilot"
+  },
+  "institutionalisation": {
+    "ru": "институционализация"
+  },
+  "instructions": {
+    "ru": "инструкции"
+  },
+  "instructors": {
+    "ru": "инструкторы"
+  },
+  "instrumentation": {
+    "ru": "приборное оснащение"
+  },
+  "instruments": {
+    "ru": "инструменты"
+  },
+  "insufficient": {
+    "ru": "недостаточный"
+  },
+  "insulation": {
+    "ru": "изоляция"
+  },
+  "insuperable": {
+    "ru": "непреодолимый"
+  },
+  "insurance": {
+    "ru": "страхование"
+  },
+  "intact": {
+    "ru": "нетронутый"
+  },
+  "intake": {
+    "ru": "прием"
+  },
+  "intangible": {
+    "ru": "нематериальный"
+  },
+  "integral": {
+    "ru": "неотъемлемый"
+  },
+  "integrated": {
+    "ru": "интегрированный"
+  },
+  "integrating": {
+    "ru": "интеграция"
+  },
+  "integrity": {
+    "ru": "целостность; честность"
+  },
+  "intellectual": {
+    "ru": "интеллектуальный"
+  },
+  "intellectual property": {
+    "ru": "интеллектуальная собственность"
+  },
+  "intelligence": {
+    "ru": "интеллект"
+  },
+  "intense": {
+    "ru": "интенсивный"
+  },
+  "intensify": {
+    "ru": "усиливать"
+  },
+  "intensity": {
+    "ru": "интенсивность"
+  },
+  "intensive": {
+    "ru": "интенсивный"
+  },
+  "intensively": {
+    "ru": "интенсивно"
+  },
+  "intention": {
+    "ru": "намерение"
+  },
+  "interaction": {
+    "ru": "взаимодействие"
+  },
+  "interactive": {
+    "ru": "интерактивный"
+  },
+  "intercede": {
+    "ru": "ходатайствовать"
+  },
+  "interconnects": {
+    "ru": "соединяет между собой"
+  },
+  "intercorrelate": {
+    "ru": "взаимокоррелировать"
+  },
+  "intercultural": {
+    "ru": "межкультурный"
+  },
+  "interdependence": {
+    "ru": "взаимозависимость"
+  },
+  "interface": {
+    "ru": "интерфейс",
+    "uz": "interfeys"
+  },
+  "interference": {
+    "ru": "вмешательство"
+  },
+  "intergenerational": {
+    "ru": "межпоколенческий"
+  },
+  "intermittent": {
+    "ru": "прерывистый"
+  },
+  "intermittently": {
+    "ru": "периодически"
+  },
+  "international exposure": {
+    "ru": "международный опыт"
+  },
+  "international space station": {
+    "ru": "международная космическая станция",
+    "uz": "xalqaro kosmik stansiya"
+  },
+  "interned": {
+    "ru": "интернированный"
+  },
+  "interoception": {
+    "ru": "интероцепция",
+    "uz": "interosepsiya"
+  },
+  "interpretation": {
+    "ru": "интерпретация"
+  },
+  "interpretations": {
+    "ru": "интерпретации"
+  },
+  "intersected": {
+    "ru": "пересекся"
+  },
+  "intersection": {
+    "ru": "пересечение"
+  },
+  "intertidal zone": {
+    "ru": "приливная зона",
+    "uz": "intertidal zona"
+  },
+  "intervention": {
+    "ru": "вмешательство"
+  },
+  "interventions": {
+    "ru": "вмешательства"
+  },
+  "interviewees": {
+    "ru": "опрашиваемые; участники интервью"
+  },
+  "intimidating": {
+    "ru": "пугающий"
+  },
+  "intonation": {
+    "ru": "интонация",
+    "uz": "intonatsiya"
+  },
+  "intricate": {
+    "ru": "сложный"
+  },
+  "intrigues": {
+    "ru": "интриги"
+  },
+  "intriguing": {
+    "ru": "интригующий"
+  },
+  "intrinsic motivation": {
+    "ru": "внутренняя мотивация",
+    "uz": "ichki motivatsiya"
+  },
+  "introduced species": {
+    "ru": "интродуцированные виды",
+    "uz": "kiritilgan turlar"
+  },
+  "intrusive": {
+    "ru": "навязчивый"
+  },
+  "intuitive": {
+    "ru": "интуитивный"
+  },
+  "invaluable": {
+    "ru": "бесценный"
+  },
+  "invariably": {
+    "ru": "неизменно"
+  },
+  "invasion": {
+    "ru": "вторжение"
+  },
+  "invasive": {
+    "ru": "инвазивный"
+  },
+  "invasive species": {
+    "ru": "инвазивные виды",
+    "uz": "invaziv turlar"
+  },
+  "inverse": {
+    "ru": "обратный"
+  },
+  "invertebrate": {
+    "ru": "беспозвоночное",
+    "uz": "umurtqasizlar"
+  },
+  "invertebrates": {
+    "ru": "беспозвоночные",
+    "uz": "umurtqasizlar"
+  },
+  "investigation": {
+    "ru": "расследование"
+  },
+  "investigators": {
+    "ru": "исследователи; следователи"
+  },
+  "investment": {
+    "ru": "инвестиции"
+  },
+  "involuntary": {
+    "ru": "непроизвольный"
+  },
+  "involved": {
+    "ru": "вовлеченный"
+  },
+  "involvement": {
+    "ru": "участие"
+  },
+  "inward incline": {
+    "ru": "наклон внутрь"
+  },
+  "ion": {
+    "ru": "ион",
+    "uz": "ion"
+  },
+  "ions": {
+    "ru": "ионы",
+    "uz": "ionlar"
+  },
+  "ipso facto": {
+    "ru": "в силу самого факта"
+  },
+  "iridescent": {
+    "ru": "радужный",
+    "uz": "iridescent"
+  },
+  "ironically": {
+    "ru": "по иронии судьбы"
+  },
+  "irony": {
+    "ru": "ирония"
+  },
+  "irregularity": {
+    "ru": "неправильность"
+  },
+  "irrelevant": {
+    "ru": "не имеющий отношения"
+  },
+  "irreplaceable": {
+    "ru": "незаменимый"
+  },
+  "irreproachable": {
+    "ru": "безупречный"
+  },
+  "irreversible": {
+    "ru": "необратимый"
+  },
+  "irrevocably": {
+    "ru": "безвозвратно"
+  },
+  "irrigation": {
+    "ru": "орошение",
+    "uz": "sug'orish"
+  },
+  "isolation": {
+    "ru": "изоляция"
+  },
+  "iterative design": {
+    "ru": "итеративный дизайн",
+    "uz": "iterativ dizayn"
+  },
+  "job security": {
+    "ru": "гарантия занятости"
+  },
+  "journeys": {
+    "ru": "путешествия"
+  },
+  "judgement": {
+    "ru": "суждение"
+  },
+  "judgment call": {
+    "ru": "решение на основе личной оценки"
+  },
+  "justification": {
+    "ru": "обоснование"
+  },
+  "juvenile": {
+    "ru": "несовершеннолетний",
+    "uz": "voyaga etmagan"
+  },
+  "keen": {
+    "ru": "увлеченный"
+  },
+  "kelp": {
+    "ru": "келп",
+    "uz": "kelp"
+  },
+  "keystone species": {
+    "ru": "краеугольные виды",
+    "uz": "asosiy tosh turlari"
+  },
+  "kombucha": {
+    "ru": "чайный гриб",
+    "uz": "kombucha"
+  },
+  "krill": {
+    "ru": "криль",
+    "uz": "krill"
+  },
+  "label data": {
+    "ru": "данные этикетки",
+    "uz": "yorliq ma'lumotlari"
+  },
+  "labelling": {
+    "ru": "маркировка"
+  },
+  "labour force": {
+    "ru": "рабочая сила"
+  },
+  "labour market": {
+    "ru": "рынок труда"
+  },
+  "lagged behind": {
+    "ru": "отставал"
+  },
+  "land allocation": {
+    "ru": "выделение земли"
+  },
+  "land breeze": {
+    "ru": "ленд Бриз",
+    "uz": "land Breeze"
+  },
+  "land subsidence": {
+    "ru": "проседание земли",
+    "uz": "erning cho'kishi"
+  },
+  "land use": {
+    "ru": "землепользование"
+  },
+  "landlord": {
+    "ru": "домовладелец"
+  },
+  "landmark": {
+    "ru": "важный этап; ориентир"
+  },
+  "landscape": {
+    "ru": "ландшафт; пейзаж"
+  },
+  "landscapes": {
+    "ru": "пейзажи"
+  },
+  "landscaping": {
+    "ru": "ландшафтный дизайн"
+  },
+  "language barrier": {
+    "ru": "языковой барьер"
+  },
+  "larvae": {
+    "ru": "личинки",
+    "uz": "lichinkalar"
+  },
+  "larval": {
+    "ru": "личиночный"
+  },
+  "latrines": {
+    "ru": "уборные",
+    "uz": "hojatxonalar"
+  },
+  "laughter": {
+    "ru": "смех"
+  },
+  "lawsonite": {
+    "ru": "лавсонит",
+    "uz": "lawsonit"
+  },
+  "layout": {
+    "ru": "макет"
+  },
+  "leaching": {
+    "ru": "выщелачивание",
+    "uz": "yuvish"
+  },
+  "leadership": {
+    "ru": "лидерство"
+  },
+  "leading cause": {
+    "ru": "ведущая причина"
+  },
+  "leakage": {
+    "ru": "утечка"
+  },
+  "least popular": {
+    "ru": "наименее популярный"
+  },
+  "leather jacket": {
+    "ru": "кожаная куртка"
+  },
+  "legalistic": {
+    "ru": "законнический"
+  },
+  "legislation": {
+    "ru": "законодательство"
+  },
+  "legislative": {
+    "ru": "законодательный"
+  },
+  "legislature": {
+    "ru": "законодательный орган"
+  },
+  "legitimacy": {
+    "ru": "легитимность"
+  },
+  "legitimate": {
+    "ru": "законный"
+  },
+  "legitimize": {
+    "ru": "узаконить"
+  },
+  "liable": {
+    "ru": "ответственный"
+  },
+  "licence": {
+    "ru": "лицензия"
+  },
+  "licensed": {
+    "ru": "лицензированный"
+  },
+  "lidar": {
+    "ru": "лидар",
+    "uz": "liDAR"
+  },
+  "life cycle": {
+    "ru": "жизненный цикл",
+    "uz": "hayot davrasi"
+  },
+  "lifelong learning": {
+    "ru": "обучение на протяжении всей жизни"
+  },
+  "lifestyles": {
+    "ru": "образ жизни"
+  },
+  "lifetime": {
+    "ru": "продолжительность жизни"
+  },
+  "light pollution": {
+    "ru": "световое загрязнение",
+    "uz": "engil ifloslanish"
+  },
+  "light triad": {
+    "ru": "светлая Триада",
+    "uz": "yengil triada"
+  },
+  "light-filled": {
+    "ru": "наполненный светом"
+  },
+  "lighthouse": {
+    "ru": "маяк"
+  },
+  "lighting": {
+    "ru": "освещение"
+  },
+  "likelihood": {
+    "ru": "вероятность"
+  },
+  "limitations": {
+    "ru": "ограничения"
+  },
+  "limnology": {
+    "ru": "лимнология",
+    "uz": "limnologiya"
+  },
+  "lineages": {
+    "ru": "родословная"
+  },
+  "linear": {
+    "ru": "линейный"
+  },
+  "linguistic": {
+    "ru": "лингвистический"
+  },
+  "listeners": {
+    "ru": "слушатели"
+  },
+  "literacy": {
+    "ru": "грамотность"
+  },
+  "literature": {
+    "ru": "литература"
+  },
+  "litter": {
+    "ru": "мусор",
+    "uz": "axlat"
+  },
+  "litterbag": {
+    "ru": "мешок для мусора",
+    "uz": "axlat sumkasi"
+  },
+  "live arrival times": {
+    "ru": "время прибытия в реальном времени"
+  },
+  "livelihoods": {
+    "ru": "средства к существованию"
+  },
+  "livestock": {
+    "ru": "домашний скот",
+    "uz": "chorvachilik"
+  },
+  "local communities": {
+    "ru": "местные сообщества"
+  },
+  "local economy": {
+    "ru": "местная экономика"
+  },
+  "location advantage": {
+    "ru": "преимущество местоположения",
+    "uz": "joylashuv afzalligi"
+  },
+  "locomotives": {
+    "ru": "локомотивы"
+  },
+  "logistics": {
+    "ru": "логистика"
+  },
+  "loneliness": {
+    "ru": "одиночество"
+  },
+  "long read genome": {
+    "ru": "долго читаемый геном",
+    "uz": "uzoq o'qilgan genom"
+  },
+  "long-term": {
+    "ru": "долгосрочный"
+  },
+  "longevity": {
+    "ru": "долголетие"
+  },
+  "longitudinal": {
+    "ru": "продольный; длительный"
+  },
+  "lost touch": {
+    "ru": "потерял связь"
+  },
+  "lost years": {
+    "ru": "потерянные годы",
+    "uz": "yo'qotilgan yillar"
+  },
+  "loudness": {
+    "ru": "громкость",
+    "uz": "ovoz balandligi"
+  },
+  "low prevalence effect": {
+    "ru": "эффект низкой распространенности",
+    "uz": "kam tarqalganlik effekti"
+  },
+  "low-level jet": {
+    "ru": "низкоуровневый реактивный самолет",
+    "uz": "past darajadagi Jet"
+  },
+  "luciferase": {
+    "ru": "люцифераза",
+    "uz": "lusiferaza"
+  },
+  "luciferin": {
+    "ru": "люциферин",
+    "uz": "luciferin"
+  },
+  "lucrative": {
+    "ru": "прибыльный"
+  },
+  "machine learning": {
+    "ru": "машинное обучение",
+    "uz": "mashina o'rganish"
+  },
+  "machinery": {
+    "ru": "техника"
+  },
+  "macroinvertebrates": {
+    "ru": "макробеспозвоночные",
+    "uz": "makroumurtqasizlar"
+  },
+  "magazine": {
+    "ru": "журнал"
+  },
+  "maimonides’ rule": {
+    "ru": "правило Маймонида",
+    "uz": "maymonidlar qoidasi"
+  },
+  "mainline": {
+    "ru": "основная линия",
+    "uz": "magistral"
+  },
+  "mainstream": {
+    "ru": "мейнстрим"
+  },
+  "maintain": {
+    "ru": "поддерживать"
+  },
+  "maintaining": {
+    "ru": "поддержание"
+  },
+  "maintenance": {
+    "ru": "обслуживание"
+  },
+  "mammal": {
+    "ru": "млекопитающее",
+    "uz": "sutemizuvchilar"
+  },
+  "manageable": {
+    "ru": "управляемый"
+  },
+  "management": {
+    "ru": "управление"
+  },
+  "manifest": {
+    "ru": "проявляться; обнаруживать"
+  },
+  "manipulate": {
+    "ru": "манипулировать"
+  },
+  "manipulation": {
+    "ru": "манипуляция"
+  },
+  "mantle": {
+    "ru": "мантия",
+    "uz": "mantiya"
+  },
+  "manufacturer": {
+    "ru": "производитель"
+  },
+  "manufacturers": {
+    "ru": "производители"
+  },
+  "manufacturing": {
+    "ru": "производство"
+  },
+  "manuscripts": {
+    "ru": "рукописи"
+  },
+  "marina": {
+    "ru": "пристань для яхт"
+  },
+  "marine": {
+    "ru": "морской",
+    "uz": "dengizchi"
+  },
+  "marine algae": {
+    "ru": "морские водоросли",
+    "uz": "dengiz yosunlari"
+  },
+  "marine protected areas": {
+    "ru": "морские охраняемые территории",
+    "uz": "dengiz muhofaza qilinadigan hududlar"
+  },
+  "market share": {
+    "ru": "доля рынка"
+  },
+  "marketing": {
+    "ru": "маркетинг"
+  },
+  "marsh": {
+    "ru": "марш",
+    "uz": "marsh"
+  },
+  "marsupials": {
+    "ru": "сумчатые",
+    "uz": "marsupiallar"
+  },
+  "mass": {
+    "ru": "масса",
+    "uz": "massa"
+  },
+  "mass extinctions": {
+    "ru": "массовые вымирания",
+    "uz": "ommaviy qirilishlar"
+  },
+  "masterpiece": {
+    "ru": "шедевр"
+  },
+  "mastery goal": {
+    "ru": "цель мастерства",
+    "uz": "ustalik maqsadi"
+  },
+  "material": {
+    "ru": "материал"
+  },
+  "materialism": {
+    "ru": "материализм"
+  },
+  "materials": {
+    "ru": "материалы"
+  },
+  "mathematical": {
+    "ru": "математический"
+  },
+  "mature": {
+    "ru": "зрелый"
+  },
+  "maturity": {
+    "ru": "зрелость"
+  },
+  "maximize": {
+    "ru": "максимизировать"
+  },
+  "maximum": {
+    "ru": "максимум"
+  },
+  "mean": {
+    "ru": "иметь в виду",
+    "uz": "ma'nosi"
+  },
+  "meaningful": {
+    "ru": "значимый"
+  },
+  "measurements": {
+    "ru": "измерения"
+  },
+  "mechanical": {
+    "ru": "механический"
+  },
+  "mechanics": {
+    "ru": "механика; механики"
+  },
+  "mechanism": {
+    "ru": "механизм"
+  },
+  "mechanisms": {
+    "ru": "механизмы"
+  },
+  "media literacy": {
+    "ru": "медиаграмотность"
+  },
+  "medial prefrontal cortex": {
+    "ru": "медиальная префронтальная кора",
+    "uz": "medial prefrontal korteks"
+  },
+  "medial superior olive": {
+    "ru": "медиал Супериор Оливковый",
+    "uz": "medial Superior Zaytun"
+  },
+  "mediated": {
+    "ru": "опосредованный"
+  },
+  "medication": {
+    "ru": "медикамент"
+  },
+  "medicine": {
+    "ru": "лекарство"
+  },
+  "medieval": {
+    "ru": "средневековый"
+  },
+  "medium-sized": {
+    "ru": "среднего размера"
+  },
+  "megawatts": {
+    "ru": "мегаватты"
+  },
+  "melatonin": {
+    "ru": "мелатонин",
+    "uz": "melatonin"
+  },
+  "melodic": {
+    "ru": "мелодичный"
+  },
+  "melting": {
+    "ru": "плавление"
+  },
+  "membership": {
+    "ru": "членство"
+  },
+  "membrane": {
+    "ru": "мембрана",
+    "uz": "membran"
+  },
+  "memorable": {
+    "ru": "запоминающийся"
+  },
+  "memorialise": {
+    "ru": "увековечивать память"
+  },
+  "memories": {
+    "ru": "воспоминания"
+  },
+  "mental health": {
+    "ru": "психическое здоровье",
+    "uz": "ruhiy salomatlik"
+  },
+  "mentoring": {
+    "ru": "наставничество"
+  },
+  "merchant": {
+    "ru": "торговец"
+  },
+  "merged": {
+    "ru": "объединенный"
+  },
+  "meristems": {
+    "ru": "меристемы",
+    "uz": "meristemlar"
+  },
+  "merit": {
+    "ru": "заслуга"
+  },
+  "mesocarp": {
+    "ru": "мезокарпий",
+    "uz": "mezokarp"
+  },
+  "mesopelagic zone": {
+    "ru": "мезопелагическая зона",
+    "uz": "mezopelagiya zonasi"
+  },
+  "mesophotic": {
+    "ru": "мезофотский",
+    "uz": "mezofotik"
+  },
+  "messaging": {
+    "ru": "обмен сообщениями"
+  },
+  "meta-study": {
+    "ru": "мета-исследование",
+    "uz": "meta-tadqiqot"
+  },
+  "metabolism": {
+    "ru": "метаболизм",
+    "uz": "metabolizm"
+  },
+  "metacognition": {
+    "ru": "метапознание",
+    "uz": "metakognisiya"
+  },
+  "metamorphic rock": {
+    "ru": "метаморфическая скала",
+    "uz": "metamorfik tosh"
+  },
+  "metamorphism": {
+    "ru": "метаморфизм",
+    "uz": "metamorfizm"
+  },
+  "metamorphosis": {
+    "ru": "метаморфоза"
+  },
+  "meteorology": {
+    "ru": "метеорология",
+    "uz": "meteorologiya"
+  },
+  "metering": {
+    "ru": "измерение"
+  },
+  "method of loci": {
+    "ru": "метод локусов",
+    "uz": "loci usuli"
+  },
+  "methodically": {
+    "ru": "методично"
+  },
+  "methodologies": {
+    "ru": "методологии"
+  },
+  "methodology": {
+    "ru": "методология"
+  },
+  "methyl jasmonate": {
+    "ru": "метил Жасмонат",
+    "uz": "metil jasmonat"
+  },
+  "metropolis": {
+    "ru": "мегаполис"
+  },
+  "microalgae": {
+    "ru": "микроводоросли",
+    "uz": "mikroalglar"
+  },
+  "microbes": {
+    "ru": "микробы",
+    "uz": "mikroblar"
+  },
+  "microbial communities": {
+    "ru": "микробные сообщества",
+    "uz": "mikrob jamiyatlari"
+  },
+  "microbial diversity": {
+    "ru": "микробное разнообразие",
+    "uz": "mikroblarning xilma-xilligi"
+  },
+  "microbiome": {
+    "ru": "микробиом",
+    "uz": "mikrobioma"
+  },
+  "microbiota": {
+    "ru": "микробиота",
+    "uz": "mikrobiota"
+  },
+  "microorganisms": {
+    "ru": "микроорганизмы",
+    "uz": "mikroorganizmlar"
+  },
+  "microplastics": {
+    "ru": "микропластик",
+    "uz": "mikroplastmassalar"
+  },
+  "middle ages": {
+    "ru": "средний возраст",
+    "uz": "o'rta yosh"
+  },
+  "migration": {
+    "ru": "миграция",
+    "uz": "migratsiya"
+  },
+  "migratory": {
+    "ru": "миграционный",
+    "uz": "migratsiya"
+  },
+  "milestone": {
+    "ru": "веха"
+  },
+  "millennia": {
+    "ru": "тысячелетия"
+  },
+  "millimetres": {
+    "ru": "миллиметры"
+  },
+  "million": {
+    "ru": "миллион"
+  },
+  "mind-numbing": {
+    "ru": "монотонный; утомляющий"
+  },
+  "mindfulness": {
+    "ru": "внимательность",
+    "uz": "ehtiyotkorlik"
+  },
+  "mindset": {
+    "ru": "образ мышления"
+  },
+  "mineral": {
+    "ru": "минерал",
+    "uz": "mineral"
+  },
+  "minerals": {
+    "ru": "минералы",
+    "uz": "minerallar"
+  },
+  "miniature": {
+    "ru": "миниатюрный; миниатюра"
+  },
+  "minimal": {
+    "ru": "минимальный"
+  },
+  "minimum": {
+    "ru": "минимум"
+  },
+  "minor league": {
+    "ru": "малая лига"
+  },
+  "minority cultures": {
+    "ru": "культуры меньшинств"
+  },
+  "mischievous": {
+    "ru": "озорной"
+  },
+  "misconception": {
+    "ru": "заблуждение",
+    "uz": "noto'g'ri tushuncha"
+  },
+  "misconceptions": {
+    "ru": "заблуждения"
+  },
+  "mishandled": {
+    "ru": "неправильно обращались"
+  },
+  "misinformation": {
+    "ru": "дезинформация"
+  },
+  "misleading": {
+    "ru": "вводящий в заблуждение"
+  },
+  "misperception": {
+    "ru": "неправильное восприятие"
+  },
+  "misrepresents": {
+    "ru": "искажает"
+  },
+  "missile-tracking system": {
+    "ru": "система слежения за ракетами"
+  },
+  "mixotrophs": {
+    "ru": "миксотрофы",
+    "uz": "mixotroflar"
+  },
+  "mobile eye-tracking": {
+    "ru": "мобильное отслеживание взгляда",
+    "uz": "mobil ko'zni kuzatish"
+  },
+  "mobility": {
+    "ru": "мобильность"
+  },
+  "mobility landscape": {
+    "ru": "система транспортной мобильности"
+  },
+  "modal share": {
+    "ru": "доля поездок по видам транспорта"
+  },
+  "modal shift": {
+    "ru": "переход на другой вид транспорта"
+  },
+  "model plants": {
+    "ru": "модельные растения",
+    "uz": "modelli o'simliklar"
+  },
+  "moderation": {
+    "ru": "умеренность; модерация"
+  },
+  "modifications": {
+    "ru": "модификации"
+  },
+  "molecular biology tools": {
+    "ru": "инструменты молекулярной биологии",
+    "uz": "molekulyar biologiya vositalari"
+  },
+  "molecules": {
+    "ru": "молекулы",
+    "uz": "molekulalar"
+  },
+  "molten": {
+    "ru": "расплавленный"
+  },
+  "molting": {
+    "ru": "линька",
+    "uz": "mollash"
+  },
+  "momentous": {
+    "ru": "важный"
+  },
+  "monetizing": {
+    "ru": "монетизация"
+  },
+  "monitored": {
+    "ru": "контролируемый"
+  },
+  "monitoring": {
+    "ru": "мониторинг",
+    "uz": "monitoring"
+  },
+  "mono-functional": {
+    "ru": "монофункциональный"
+  },
+  "monopoly": {
+    "ru": "монополия"
+  },
+  "monumental": {
+    "ru": "монументальный"
+  },
+  "mooring": {
+    "ru": "причал",
+    "uz": "mooring"
+  },
+  "morally dubious": {
+    "ru": "морально сомнительный"
+  },
+  "morphology": {
+    "ru": "морфология",
+    "uz": "morfologiya"
+  },
+  "motifs": {
+    "ru": "мотивы"
+  },
+  "motivation": {
+    "ru": "мотивация"
+  },
+  "motivational climate": {
+    "ru": "мотивационный климат",
+    "uz": "motivatsion iqlim"
+  },
+  "motivational regulations": {
+    "ru": "мотивационные регламенты",
+    "uz": "motivatsiya qoidalari"
+  },
+  "motor cortex": {
+    "ru": "моторная кора",
+    "uz": "motor korteksi"
+  },
+  "moved to tears": {
+    "ru": "тронут до слез"
+  },
+  "movement signature": {
+    "ru": "подпись движения",
+    "uz": "harakat imzosi"
+  },
+  "multi-crystalline": {
+    "ru": "мультикристаллический"
+  },
+  "multi-spectral remote sensing data": {
+    "ru": "данные мультиспектрального дистанционного зондирования",
+    "uz": "ko'p spektrli masofaviy zondlash ma'lumotlari"
+  },
+  "multidisciplinary": {
+    "ru": "междисциплинарный"
+  },
+  "multifunctional": {
+    "ru": "многофункциональный"
+  },
+  "multilateral": {
+    "ru": "многосторонний"
+  },
+  "multinational": {
+    "ru": "многонациональный"
+  },
+  "multinational corporations": {
+    "ru": "транснациональные корпорации"
+  },
+  "mural proportions": {
+    "ru": "пропорции фрески"
+  },
+  "muscle atonia": {
+    "ru": "мышечная атония",
+    "uz": "mushak atoniyasi"
+  },
+  "musculoskeletal system": {
+    "ru": "опорно-двигательная система",
+    "uz": "muskul-skelet tizimi"
+  },
+  "mutable": {
+    "ru": "изменчивый"
+  },
+  "mutualism": {
+    "ru": "мутуализм",
+    "uz": "mutualizm"
+  },
+  "mycelium": {
+    "ru": "мицелий",
+    "uz": "miselyum"
+  },
+  "mycorrhizal fungi": {
+    "ru": "микоризные грибы",
+    "uz": "mikorizal qo'ziqorinlar"
+  },
+  "mycorrhizal helper bacteria": {
+    "ru": "микоризные бактерии-помощники",
+    "uz": "mikorizaga yordam beruvchi bakteriyalar"
+  },
+  "myosin": {
+    "ru": "миозин",
+    "uz": "miyozin"
+  },
+  "myrmecophytes": {
+    "ru": "мирмекофиты",
+    "uz": "mirmekofitlar"
+  },
+  "mystified": {
+    "ru": "озадаченный"
+  },
+  "nanoparticles": {
+    "ru": "наночастицы",
+    "uz": "nanozarrachalar"
+  },
+  "nanoplastics": {
+    "ru": "нанопластика",
+    "uz": "nanoplastika"
+  },
+  "nanotechnology": {
+    "ru": "нанотехнологии"
+  },
+  "nanotubes": {
+    "ru": "нанотрубки"
+  },
+  "narrative": {
+    "ru": "повествование"
+  },
+  "nationality": {
+    "ru": "национальность"
+  },
+  "native": {
+    "ru": "родной",
+    "uz": "mahalliy"
+  },
+  "native species": {
+    "ru": "местные виды",
+    "uz": "mahalliy turlar"
+  },
+  "natural experiments": {
+    "ru": "естественные эксперименты",
+    "uz": "tabiiy tajribalar"
+  },
+  "natural habitat": {
+    "ru": "естественная среда обитания"
+  },
+  "natural history collections": {
+    "ru": "коллекции естественной истории",
+    "uz": "tabiiy tarix to'plamlari"
+  },
+  "natural pest-control": {
+    "ru": "натуральная борьба с вредителями",
+    "uz": "tabiiy zararkunandalarga qarshi kurash"
+  },
+  "natural resource management": {
+    "ru": "управление природными ресурсами",
+    "uz": "tabiiy resurslarni boshqarish"
+  },
+  "natural selection": {
+    "ru": "естественный отбор",
+    "uz": "tabiiy tanlanish"
+  },
+  "naturalism": {
+    "ru": "натурализм"
+  },
+  "nature reserves": {
+    "ru": "природные заповедники",
+    "uz": "qo'riqxonalar"
+  },
+  "neatly": {
+    "ru": "аккуратно"
+  },
+  "neck flexion": {
+    "ru": "сгибание шеи",
+    "uz": "bo'yin egilishi"
+  },
+  "nectar": {
+    "ru": "нектар",
+    "uz": "nektar"
+  },
+  "neglect": {
+    "ru": "пренебрегать",
+    "uz": "e'tiborsizlik"
+  },
+  "neglected": {
+    "ru": "заброшенный"
+  },
+  "negligible": {
+    "ru": "незначительный"
+  },
+  "negotiate": {
+    "ru": "вести переговоры"
+  },
+  "negotiation": {
+    "ru": "переговоры"
+  },
+  "neighborhood": {
+    "ru": "район"
+  },
+  "neighbourhood": {
+    "ru": "район"
+  },
+  "neighbouring": {
+    "ru": "соседний"
+  },
+  "neighbourly": {
+    "ru": "добрососедский"
+  },
+  "neighbours": {
+    "ru": "соседи"
+  },
+  "nematodes": {
+    "ru": "нематоды",
+    "uz": "nematodalar"
+  },
+  "neocortex": {
+    "ru": "неокортекс",
+    "uz": "neokorteks"
+  },
+  "nesting": {
+    "ru": "гнездование"
+  },
+  "network": {
+    "ru": "сеть"
+  },
+  "networking": {
+    "ru": "сеть",
+    "uz": "tarmoqqa ulanish"
+  },
+  "neural signal": {
+    "ru": "нейронный сигнал"
+  },
+  "neuroimaging": {
+    "ru": "нейровизуализация",
+    "uz": "neyroimaging"
+  },
+  "neurological": {
+    "ru": "неврологический"
+  },
+  "neurologist": {
+    "ru": "невролог"
+  },
+  "neurons": {
+    "ru": "нейроны",
+    "uz": "neyronlar"
+  },
+  "neuroplasticity": {
+    "ru": "нейропластичность",
+    "uz": "neyroplastiklik"
+  },
+  "neuroscience": {
+    "ru": "нейробиология"
+  },
+  "neuroscientists": {
+    "ru": "нейробиологи"
+  },
+  "neuroticism": {
+    "ru": "невротизм",
+    "uz": "nevrotizm"
+  },
+  "neutralise": {
+    "ru": "нейтрализовать"
+  },
+  "nevertheless": {
+    "ru": "тем не менее"
+  },
+  "newsletter": {
+    "ru": "информационный бюллетень"
+  },
+  "niche": {
+    "ru": "ниша",
+    "uz": "niche"
+  },
+  "nitrogen": {
+    "ru": "азот",
+    "uz": "azot"
+  },
+  "nitrogen concentrations": {
+    "ru": "концентрация азота",
+    "uz": "azot kontsentratsiyasi"
+  },
+  "nitrogen fixation": {
+    "ru": "фиксация азота",
+    "uz": "azot fiksatsiyasi"
+  },
+  "nociceptors": {
+    "ru": "ноцицепторы",
+    "uz": "nosiseptorlar"
+  },
+  "nocturnal": {
+    "ru": "ночной",
+    "uz": "tungi"
+  },
+  "nomadic herders": {
+    "ru": "кочевые пастухи",
+    "uz": "ko'chmanchi chorvadorlar"
+  },
+  "non-fiction": {
+    "ru": "документальная и научно-популярная литература"
+  },
+  "non-native": {
+    "ru": "неродной",
+    "uz": "mahalliy bo'lmagan"
+  },
+  "nonconductive": {
+    "ru": "непроводящий"
+  },
+  "nonetheless": {
+    "ru": "тем не менее"
+  },
+  "nonpharmacological": {
+    "ru": "нефармакологический"
+  },
+  "notable": {
+    "ru": "заметный"
+  },
+  "note": {
+    "ru": "примечание",
+    "uz": "eslatma"
+  },
+  "noticeable": {
+    "ru": "заметный"
+  },
+  "notifications": {
+    "ru": "уведомления"
+  },
+  "notoriously": {
+    "ru": "известный своей дурной славой"
+  },
+  "novel plant-based foods": {
+    "ru": "новые растительные продукты",
+    "uz": "yangi o'simlikka asoslangan ovqatlar"
+  },
+  "nuclear": {
+    "ru": "ядерный"
+  },
+  "nucleotide": {
+    "ru": "нуклеотид",
+    "uz": "nukleotid"
+  },
+  "nucleus": {
+    "ru": "ядро",
+    "uz": "yadro"
+  },
+  "nurseries": {
+    "ru": "питомники",
+    "uz": "bolalar bog'chalari"
+  },
+  "nurture": {
+    "ru": "воспитывать"
+  },
+  "nutrients": {
+    "ru": "питательные вещества",
+    "uz": "oziq moddalar"
+  },
+  "nutrition": {
+    "ru": "питание"
+  },
+  "nutritional value": {
+    "ru": "пищевая ценность"
+  },
+  "nutritious": {
+    "ru": "питательный",
+    "uz": "oziqlantiruvchi"
+  },
+  "nylon": {
+    "ru": "нейлон",
+    "uz": "neylon"
+  },
+  "nymphs": {
+    "ru": "нимфы",
+    "uz": "nimfalar"
+  },
+  "objections": {
+    "ru": "возражения"
+  },
+  "objectives": {
+    "ru": "цели"
+  },
+  "objectivity": {
+    "ru": "объективность"
+  },
+  "obscure": {
+    "ru": "затемнять"
+  },
+  "observable": {
+    "ru": "наблюдаемый",
+    "uz": "kuzatish mumkin"
+  },
+  "observation": {
+    "ru": "наблюдение"
+  },
+  "observatory": {
+    "ru": "обсерватория"
+  },
+  "obsessive": {
+    "ru": "навязчивый"
+  },
+  "obsolescence": {
+    "ru": "устаревание"
+  },
+  "obstacles": {
+    "ru": "препятствия"
+  },
+  "obstruction": {
+    "ru": "препятствие"
+  },
+  "obviating": {
+    "ru": "избежание"
+  },
+  "occasion": {
+    "ru": "случай"
+  },
+  "occasional": {
+    "ru": "периодический; случающийся время от времени"
+  },
+  "occult precipitation": {
+    "ru": "оккультные осадки",
+    "uz": "yashirin yog'ingarchilik"
+  },
+  "occupation": {
+    "ru": "занятие"
+  },
+  "occupational boundaries": {
+    "ru": "профессиональные границы"
+  },
+  "ocean acidification": {
+    "ru": "закисление океана",
+    "uz": "okeanlarning kislotalanishi"
+  },
+  "ocean current": {
+    "ru": "океанское течение",
+    "uz": "okean oqimi"
+  },
+  "ocean deoxygenation": {
+    "ru": "деоксигенация океана",
+    "uz": "okeanlarni kislorodsizlantirish"
+  },
+  "ocean heat content": {
+    "ru": "содержание тепла в океане",
+    "uz": "okean issiqlik tarkibi"
+  },
+  "offshore": {
+    "ru": "расположенный в море у побережья"
+  },
+  "offspring": {
+    "ru": "потомство",
+    "uz": "nasl"
+  },
+  "olfactory receptors": {
+    "ru": "обонятельные рецепторы",
+    "uz": "xushbo'y retseptorlari"
+  },
+  "olfactory system": {
+    "ru": "обонятельная система",
+    "uz": "hid bilish tizimi"
+  },
+  "omen": {
+    "ru": "предзнаменование"
+  },
+  "omitted variables bias": {
+    "ru": "смещение пропущенных переменных",
+    "uz": "o'tkazib yuborilgan o'zgaruvchilar tarafkashligi"
+  },
+  "ooze": {
+    "ru": "слизняк",
+    "uz": "oqish"
+  },
+  "open-source": {
+    "ru": "с открытым исходным кодом"
+  },
+  "openness": {
+    "ru": "открытость",
+    "uz": "ochiqlik"
+  },
+  "operational": {
+    "ru": "действующий; эксплуатационный"
+  },
+  "opportunities": {
+    "ru": "возможности"
+  },
+  "opportunity cost": {
+    "ru": "альтернативная стоимость; упущенная выгода"
+  },
+  "opprobrium": {
+    "ru": "позор",
+    "uz": "opprobrium"
+  },
+  "optical": {
+    "ru": "оптический"
+  },
+  "optimism": {
+    "ru": "оптимизм"
+  },
+  "optimistic": {
+    "ru": "оптимистичный",
+    "uz": "optimistik"
+  },
+  "optional": {
+    "ru": "необязательный"
+  },
+  "optometrist": {
+    "ru": "оптометрист",
+    "uz": "optometrist"
+  },
+  "ordinary": {
+    "ru": "обычный"
+  },
+  "organic": {
+    "ru": "органический",
+    "uz": "organik"
+  },
+  "organic carbon": {
+    "ru": "органический углерод",
+    "uz": "organik uglerod"
+  },
+  "organic matter": {
+    "ru": "органическое вещество",
+    "uz": "organik moddalar"
+  },
+  "organised": {
+    "ru": "организованный"
+  },
+  "organising": {
+    "ru": "организация"
+  },
+  "organoid": {
+    "ru": "органоид",
+    "uz": "organoid"
+  },
+  "orientation": {
+    "ru": "ориентация"
+  },
+  "orientations": {
+    "ru": "ориентации"
+  },
+  "originality": {
+    "ru": "оригинальность"
+  },
+  "originated": {
+    "ru": "возник"
+  },
+  "ornithologist": {
+    "ru": "орнитолог",
+    "uz": "ornitolog"
+  },
+  "osteoarthritis": {
+    "ru": "остеоартрит"
+  },
+  "osteoporosis": {
+    "ru": "остеопороз"
+  },
+  "otolith organs": {
+    "ru": "отолитовые органы",
+    "uz": "otolit organlari"
+  },
+  "otoliths": {
+    "ru": "отолиты",
+    "uz": "otolitlar"
+  },
+  "out of the blue": {
+    "ru": "неожиданно"
+  },
+  "outbreak": {
+    "ru": "вспышка"
+  },
+  "outcome goals": {
+    "ru": "конечные цели",
+    "uz": "natija maqsadlari"
+  },
+  "outcomes": {
+    "ru": "результаты"
+  },
+  "outdated": {
+    "ru": "устаревший"
+  },
+  "outdoors": {
+    "ru": "на открытом воздухе"
+  },
+  "outgoing": {
+    "ru": "общительный"
+  },
+  "outmoded": {
+    "ru": "устаревший"
+  },
+  "outnumbered": {
+    "ru": "в меньшинстве"
+  },
+  "outperform": {
+    "ru": "превосходить"
+  },
+  "outperformed": {
+    "ru": "превзошел"
+  },
+  "output": {
+    "ru": "объём выпуска; результат"
+  },
+  "outsmarted": {
+    "ru": "перехитрил"
+  },
+  "outsourced": {
+    "ru": "передан на аутсорсинг"
+  },
+  "outstanding": {
+    "ru": "выдающийся"
+  },
+  "overcoming": {
+    "ru": "преодоление"
+  },
+  "overconsumption": {
+    "ru": "чрезмерное потребление"
+  },
+  "overcrowding": {
+    "ru": "перенаселенность"
+  },
+  "overfishing": {
+    "ru": "перелов",
+    "uz": "haddan tashqari baliq ovlash"
+  },
+  "overground": {
+    "ru": "надземный"
+  },
+  "overheated": {
+    "ru": "перегретый"
+  },
+  "overlooked": {
+    "ru": "упущенный из виду"
+  },
+  "overlooking": {
+    "ru": "с видом"
+  },
+  "overnight": {
+    "ru": "за ночь; на ночь"
+  },
+  "overriding": {
+    "ru": "преобладающий; первостепенный"
+  },
+  "overtook": {
+    "ru": "обогнал"
+  },
+  "overwhelming": {
+    "ru": "подавляющий"
+  },
+  "overwinter": {
+    "ru": "зимовка",
+    "uz": "qishlash"
+  },
+  "overwintering": {
+    "ru": "зимовка",
+    "uz": "qishlash"
+  },
+  "ovule": {
+    "ru": "яйцеклетка",
+    "uz": "tuxumdon"
+  },
+  "ownership": {
+    "ru": "собственность"
+  },
+  "packaged": {
+    "ru": "упакованный"
+  },
+  "packaging": {
+    "ru": "упаковка"
+  },
+  "padded": {
+    "ru": "мягкий"
+  },
+  "paddy fields": {
+    "ru": "рисовые поля",
+    "uz": "paddy Fields"
+  },
+  "painting": {
+    "ru": "рисование"
+  },
+  "paleolimnology": {
+    "ru": "палеолимнология",
+    "uz": "paleolimnologiya"
+  },
+  "paleontologists": {
+    "ru": "палеонтологи",
+    "uz": "paleontologlar"
+  },
+  "palpable": {
+    "ru": "ощутимый"
+  },
+  "paludiculture": {
+    "ru": "болотокультура",
+    "uz": "paludikultura"
+  },
+  "panoramic": {
+    "ru": "панорамный"
+  },
+  "paradigms": {
+    "ru": "парадигмы"
+  },
+  "paradox": {
+    "ru": "парадокс"
+  },
+  "parasitism": {
+    "ru": "паразитизм",
+    "uz": "parazitlik"
+  },
+  "parental guidance": {
+    "ru": "родительское руководство"
+  },
+  "parental supervision": {
+    "ru": "родительский надзор"
+  },
+  "paris agreement": {
+    "ru": "парижское соглашение",
+    "uz": "parij kelishuvi"
+  },
+  "parity": {
+    "ru": "паритет"
+  },
+  "part-time": {
+    "ru": "неполная занятость"
+  },
+  "participants": {
+    "ru": "участники"
+  },
+  "participation": {
+    "ru": "участие"
+  },
+  "partnership": {
+    "ru": "партнерство"
+  },
+  "passive": {
+    "ru": "пассивный"
+  },
+  "paste": {
+    "ru": "паста; густая смесь"
+  },
+  "patent": {
+    "ru": "патент"
+  },
+  "pathogen contamination": {
+    "ru": "патогенное загрязнение",
+    "uz": "patogen bilan ifloslanish"
+  },
+  "pathogens": {
+    "ru": "патогены"
+  },
+  "patience": {
+    "ru": "терпение"
+  },
+  "patiently": {
+    "ru": "терпеливо"
+  },
+  "pattern": {
+    "ru": "шаблон"
+  },
+  "patterns": {
+    "ru": "узоры"
+  },
+  "pavement": {
+    "ru": "тротуар"
+  },
+  "payment": {
+    "ru": "оплата"
+  },
+  "peak": {
+    "ru": "пик"
+  },
+  "peat": {
+    "ru": "торф",
+    "uz": "torf"
+  },
+  "peatlands": {
+    "ru": "торфяники",
+    "uz": "torf yerlari"
+  },
+  "pectoral flippers": {
+    "ru": "грудные ласты"
+  },
+  "pedestrianised": {
+    "ru": "пешеходный"
+  },
+  "pedestrians": {
+    "ru": "пешеходы"
+  },
+  "peer review": {
+    "ru": "экспертная оценка"
+  },
+  "peers": {
+    "ru": "сверстники",
+    "uz": "tengdoshlar"
+  },
+  "pelvic bones": {
+    "ru": "кости таза"
+  },
+  "pension": {
+    "ru": "пенсия"
+  },
+  "pensioners": {
+    "ru": "пенсионеры"
+  },
+  "perceive": {
+    "ru": "воспринимать",
+    "uz": "idrok qilish"
+  },
+  "perceived": {
+    "ru": "воспринимаемый"
+  },
+  "perceived threat": {
+    "ru": "воспринимаемая угроза"
+  },
+  "percentage points": {
+    "ru": "процентные пункты"
+  },
+  "perception": {
+    "ru": "восприятие"
+  },
+  "perceptions": {
+    "ru": "восприятия",
+    "uz": "hislar"
+  },
+  "perceptual overload": {
+    "ru": "перцептивная перегрузка"
+  },
+  "perennials": {
+    "ru": "многолетники",
+    "uz": "ko'p yillik o'simliklar"
+  },
+  "perfection": {
+    "ru": "совершенство"
+  },
+  "perfectionists": {
+    "ru": "перфекционисты"
+  },
+  "performance": {
+    "ru": "выступление; эффективность"
+  },
+  "performance goal": {
+    "ru": "цель производительности",
+    "uz": "ishlash maqsadi"
+  },
+  "pericarp": {
+    "ru": "околоплодник",
+    "uz": "perikarp"
+  },
+  "peripheral defocus": {
+    "ru": "периферийная дефокусировка",
+    "uz": "periferik defokus"
+  },
+  "perishable": {
+    "ru": "скоропортящийся"
+  },
+  "permafrost": {
+    "ru": "вечная мерзлота",
+    "uz": "abadiy muzlik"
+  },
+  "permeability": {
+    "ru": "проницаемость"
+  },
+  "perpetrated": {
+    "ru": "совершенный"
+  },
+  "perseverance": {
+    "ru": "упорство"
+  },
+  "persevering": {
+    "ru": "настойчивый"
+  },
+  "persist": {
+    "ru": "продолжаться; упорствовать"
+  },
+  "persistence": {
+    "ru": "упорство"
+  },
+  "persistent": {
+    "ru": "настойчивый"
+  },
+  "personal characteristics": {
+    "ru": "личные характеристики",
+    "uz": "shaxsiy xususiyatlar"
+  },
+  "personal identity": {
+    "ru": "личность",
+    "uz": "shaxsiy identifikatsiya"
+  },
+  "personalised": {
+    "ru": "персонализированный"
+  },
+  "personality": {
+    "ru": "личность",
+    "uz": "shaxsiyat"
+  },
+  "personality traits": {
+    "ru": "черты личности",
+    "uz": "shaxsiy xususiyatlar"
+  },
+  "personnel": {
+    "ru": "персонал"
+  },
+  "perspective": {
+    "ru": "перспектива"
+  },
+  "persuaded": {
+    "ru": "убедил"
+  },
+  "persuasive": {
+    "ru": "убедительный"
+  },
+  "perverse parody": {
+    "ru": "извращенная пародия"
+  },
+  "pessimistic": {
+    "ru": "пессимистичный"
+  },
+  "pester power": {
+    "ru": "влияние настойчивых просьб детей на покупки"
+  },
+  "pesticides": {
+    "ru": "пестициды"
+  },
+  "pests": {
+    "ru": "вредители"
+  },
+  "petiole": {
+    "ru": "черешок",
+    "uz": "petiole"
+  },
+  "petroleum": {
+    "ru": "нефть"
+  },
+  "ph": {
+    "ru": "рН",
+    "uz": "pH"
+  },
+  "pharmaceuticals": {
+    "ru": "лекарственные препараты"
+  },
+  "phenolics": {
+    "ru": "фенолы",
+    "uz": "fenolik moddalar"
+  },
+  "phenomenon": {
+    "ru": "явление"
+  },
+  "pheromones": {
+    "ru": "феромоны",
+    "uz": "feromonlar"
+  },
+  "philosopher": {
+    "ru": "философ"
+  },
+  "philosophy": {
+    "ru": "философия"
+  },
+  "phloem": {
+    "ru": "флоэма",
+    "uz": "floema"
+  },
+  "photographs": {
+    "ru": "фотографии"
+  },
+  "photography": {
+    "ru": "фотография"
+  },
+  "photosynthesis": {
+    "ru": "фотосинтез",
+    "uz": "fotosintez"
+  },
+  "photosynthesising": {
+    "ru": "фотосинтезирующий"
+  },
+  "photovoltaics": {
+    "ru": "фотовольтаика"
+  },
+  "phylum": {
+    "ru": "тип",
+    "uz": "filum"
+  },
+  "physical activity": {
+    "ru": "физическая активность"
+  },
+  "physical demands": {
+    "ru": "физические требования"
+  },
+  "physical stores": {
+    "ru": "физические магазины"
+  },
+  "physical therapist": {
+    "ru": "физиотерапевт",
+    "uz": "jismoniy terapevt"
+  },
+  "physiological": {
+    "ru": "физиологический"
+  },
+  "physiologist": {
+    "ru": "физиолог"
+  },
+  "phytoplankton": {
+    "ru": "фитопланктон",
+    "uz": "fitoplankton"
+  },
+  "phytoplankton blooms": {
+    "ru": "фитопланктон цветет",
+    "uz": "fitoplankton gullaydi"
+  },
+  "pigment": {
+    "ru": "пигмент",
+    "uz": "pigment"
+  },
+  "pigments": {
+    "ru": "пигменты",
+    "uz": "pigmentlar"
+  },
+  "pillars": {
+    "ru": "столбы"
+  },
+  "pilot projects": {
+    "ru": "пилотные проекты"
+  },
+  "pinpoint": {
+    "ru": "точно определить"
+  },
+  "pioneered": {
+    "ru": "впервые разработал; стал пионером"
+  },
+  "piped": {
+    "ru": "по трубопроводу"
+  },
+  "pitch": {
+    "ru": "подача",
+    "uz": "pitch"
+  },
+  "placeholder": {
+    "ru": "заполнитель",
+    "uz": "to'ldiruvchi"
+  },
+  "placement": {
+    "ru": "размещение"
+  },
+  "plankton": {
+    "ru": "планктон",
+    "uz": "plankton"
+  },
+  "plant breeding": {
+    "ru": "селекция растений",
+    "uz": "o'simlikchilik"
+  },
+  "plant defenses": {
+    "ru": "защита растений",
+    "uz": "o'simliklarni himoya qilish"
+  },
+  "plant microbiome": {
+    "ru": "растительный микробиом",
+    "uz": "o'simlik mikrobiomasi"
+  },
+  "plantations": {
+    "ru": "плантации"
+  },
+  "plaster": {
+    "ru": "штукатурка"
+  },
+  "plaster of paris": {
+    "ru": "гипс",
+    "uz": "parij gipsi"
+  },
+  "plausibly": {
+    "ru": "правдоподобно"
+  },
+  "play-based": {
+    "ru": "игровой"
+  },
+  "pleasurable": {
+    "ru": "приятный"
+  },
+  "pneumatic networks": {
+    "ru": "пневматические сети",
+    "uz": "pnevmatik tarmoqlar"
+  },
+  "pockets": {
+    "ru": "карманы"
+  },
+  "policy": {
+    "ru": "политика"
+  },
+  "pollen": {
+    "ru": "пыльца",
+    "uz": "polen"
+  },
+  "pollination": {
+    "ru": "опыление",
+    "uz": "changlanish"
+  },
+  "pollution": {
+    "ru": "загрязнение",
+    "uz": "ifloslanish"
+  },
+  "polyester": {
+    "ru": "полиэстер",
+    "uz": "polyester"
+  },
+  "polynesian settlers": {
+    "ru": "полинезийские поселенцы"
+  },
+  "polystyrene": {
+    "ru": "полистирол",
+    "uz": "polistirol"
+  },
+  "popularity": {
+    "ru": "популярность"
+  },
+  "population": {
+    "ru": "население"
+  },
+  "portable": {
+    "ru": "портативный"
+  },
+  "portfolio": {
+    "ru": "портфолио; собрание работ"
+  },
+  "portion sizes": {
+    "ru": "размеры порций"
+  },
+  "portrayed": {
+    "ru": "изображенный"
+  },
+  "positioning": {
+    "ru": "позиционирование"
+  },
+  "possessions": {
+    "ru": "имущество"
+  },
+  "postage": {
+    "ru": "почтовые расходы"
+  },
+  "postgraduate": {
+    "ru": "аспирант"
+  },
+  "postponing": {
+    "ru": "откладывание"
+  },
+  "posture": {
+    "ru": "поза",
+    "uz": "durum"
+  },
+  "potential": {
+    "ru": "потенциал"
+  },
+  "practical": {
+    "ru": "практичный"
+  },
+  "practical design": {
+    "ru": "практичный дизайн"
+  },
+  "practical skills": {
+    "ru": "практические навыки"
+  },
+  "practitioner": {
+    "ru": "практик"
+  },
+  "practitioners": {
+    "ru": "практикующие"
+  },
+  "pre-emptive": {
+    "ru": "упреждающий"
+  },
+  "pre-school": {
+    "ru": "дошкольный"
+  },
+  "precarious": {
+    "ru": "ненадежный"
+  },
+  "precaution": {
+    "ru": "предосторожность"
+  },
+  "precedent": {
+    "ru": "прецедент"
+  },
+  "precipitated": {
+    "ru": "спровоцировал; осаждённый"
+  },
+  "precise": {
+    "ru": "точный"
+  },
+  "precision": {
+    "ru": "точность"
+  },
+  "preclude": {
+    "ru": "исключать"
+  },
+  "predator": {
+    "ru": "хищник",
+    "uz": "yirtqich"
+  },
+  "predators": {
+    "ru": "хищники"
+  },
+  "predecessors": {
+    "ru": "предшественники"
+  },
+  "predicated": {
+    "ru": "предикат"
+  },
+  "predictive validity": {
+    "ru": "прогностическая достоверность",
+    "uz": "bashoratli haqiqiylik"
+  },
+  "predisposition": {
+    "ru": "предрасположенность"
+  },
+  "predominantly": {
+    "ru": "преимущественно"
+  },
+  "predominate": {
+    "ru": "преобладать"
+  },
+  "preference": {
+    "ru": "предпочтение"
+  },
+  "preferential": {
+    "ru": "льготный"
+  },
+  "prefrontal cortex": {
+    "ru": "префронтальная кора",
+    "uz": "prefrontal korteks"
+  },
+  "prehistoric": {
+    "ru": "доисторический"
+  },
+  "prejudices": {
+    "ru": "предрассудки"
+  },
+  "preliminary": {
+    "ru": "предварительный"
+  },
+  "preparation": {
+    "ru": "подготовка",
+    "uz": "tayyorgarlik"
+  },
+  "preparedness": {
+    "ru": "готовность"
+  },
+  "preponderance": {
+    "ru": "перевес"
+  },
+  "prescription": {
+    "ru": "рецепт"
+  },
+  "presence": {
+    "ru": "присутствие"
+  },
+  "presentations": {
+    "ru": "презентации"
+  },
+  "preservation": {
+    "ru": "сохранение"
+  },
+  "preservative": {
+    "ru": "консервант"
+  },
+  "preserve": {
+    "ru": "сохранять"
+  },
+  "preserved": {
+    "ru": "сохраненный"
+  },
+  "preserves": {
+    "ru": "сохраняет"
+  },
+  "preserving": {
+    "ru": "сохранение"
+  },
+  "pressed": {
+    "ru": "прессованный"
+  },
+  "pressure": {
+    "ru": "давление"
+  },
+  "prestigious": {
+    "ru": "престижный"
+  },
+  "presumably": {
+    "ru": "предположительно"
+  },
+  "pretentiousness": {
+    "ru": "претенциозность"
+  },
+  "prevailing": {
+    "ru": "преобладающий"
+  },
+  "prevalence": {
+    "ru": "распространенность"
+  },
+  "prevalent": {
+    "ru": "распространенный"
+  },
+  "preventable": {
+    "ru": "предотвратимый"
+  },
+  "preventive healthcare": {
+    "ru": "профилактическое здравоохранение"
+  },
+  "prey": {
+    "ru": "добыча",
+    "uz": "o'lja"
+  },
+  "priceless": {
+    "ru": "бесценный"
+  },
+  "primary motor cortex": {
+    "ru": "первичная моторная кора",
+    "uz": "birlamchi motor korteksi"
+  },
+  "primary visual cortex": {
+    "ru": "первичная зрительная кора",
+    "uz": "birlamchi vizual korteks"
+  },
+  "primitive": {
+    "ru": "примитивный"
+  },
+  "primordial": {
+    "ru": "первозданный",
+    "uz": "boshlang'ich"
+  },
+  "principles": {
+    "ru": "принципы"
+  },
+  "printed material": {
+    "ru": "печатный материал"
+  },
+  "printmaking": {
+    "ru": "эстамп"
+  },
+  "priorities": {
+    "ru": "приоритеты"
+  },
+  "prioritize": {
+    "ru": "расставить приоритеты"
+  },
+  "privacy": {
+    "ru": "конфиденциальность"
+  },
+  "private resource": {
+    "ru": "частный ресурс",
+    "uz": "shaxsiy resurs"
+  },
+  "privilege": {
+    "ru": "привилегия"
+  },
+  "problem-focused coping": {
+    "ru": "проблемно-ориентированное преодоление трудностей",
+    "uz": "muammoga yo'naltirilgan kurash"
+  },
+  "problem-solving": {
+    "ru": "решение проблем"
+  },
+  "procedure": {
+    "ru": "процедура"
+  },
+  "procedures": {
+    "ru": "процедуры"
+  },
+  "processed": {
+    "ru": "обработано"
+  },
+  "processing": {
+    "ru": "обработка"
+  },
+  "proclamations": {
+    "ru": "прокламации"
+  },
+  "procrastination": {
+    "ru": "прокрастинация"
+  },
+  "prodigious": {
+    "ru": "необычайный; поразительный"
+  },
+  "producer responsibility": {
+    "ru": "ответственность производителя"
+  },
+  "production": {
+    "ru": "производство"
+  },
+  "production costs": {
+    "ru": "производственные затраты",
+    "uz": "ishlab chiqarish xarajatlari"
+  },
+  "productive": {
+    "ru": "продуктивный"
+  },
+  "productivity": {
+    "ru": "производительность"
+  },
+  "professional": {
+    "ru": "профессиональный"
+  },
+  "professionalism": {
+    "ru": "профессионализм"
+  },
+  "professorship": {
+    "ru": "должность профессора"
+  },
+  "proficiency": {
+    "ru": "высокий уровень владения"
+  },
+  "profit": {
+    "ru": "выгода"
+  },
+  "profitable": {
+    "ru": "прибыльный"
+  },
+  "profound": {
+    "ru": "глубокий"
+  },
+  "profoundly": {
+    "ru": "глубоко; чрезвычайно"
+  },
+  "profoundly consistent": {
+    "ru": "глубоко последовательный"
+  },
+  "programming": {
+    "ru": "программирование"
+  },
+  "progression": {
+    "ru": "прогресс"
+  },
+  "progressively": {
+    "ru": "постепенно"
+  },
+  "projection": {
+    "ru": "проекция"
+  },
+  "proliferation": {
+    "ru": "распространение"
+  },
+  "prolific": {
+    "ru": "плодовитый"
+  },
+  "prominent": {
+    "ru": "видный"
+  },
+  "pronounced": {
+    "ru": "выраженный"
+  },
+  "property": {
+    "ru": "свойство"
+  },
+  "proponent": {
+    "ru": "сторонник"
+  },
+  "proponents": {
+    "ru": "сторонники"
+  },
+  "proportion": {
+    "ru": "пропорция"
+  },
+  "proprietary": {
+    "ru": "патентованный; принадлежащий владельцу"
+  },
+  "propriety": {
+    "ru": "приличие"
+  },
+  "proprioceptors": {
+    "ru": "проприорецепторы",
+    "uz": "proprioreseptorlar"
+  },
+  "propulsion": {
+    "ru": "движение за счёт тяги"
+  },
+  "propulsive": {
+    "ru": "движущий"
+  },
+  "prose": {
+    "ru": "проза"
+  },
+  "prospective": {
+    "ru": "перспективный",
+    "uz": "istiqbolli"
+  },
+  "prospects": {
+    "ru": "перспективы"
+  },
+  "prosperity": {
+    "ru": "процветание"
+  },
+  "protagonist": {
+    "ru": "главный герой"
+  },
+  "protected areas": {
+    "ru": "охраняемые территории"
+  },
+  "protein": {
+    "ru": "белок"
+  },
+  "proteins": {
+    "ru": "белки",
+    "uz": "proteinlar"
+  },
+  "proto-elements": {
+    "ru": "протоэлементы"
+  },
+  "prototype": {
+    "ru": "прототип",
+    "uz": "prototip"
+  },
+  "protozoa": {
+    "ru": "простейшие",
+    "uz": "protozoa"
+  },
+  "protruding": {
+    "ru": "выступающий"
+  },
+  "provincial": {
+    "ru": "провинциальный"
+  },
+  "provision": {
+    "ru": "обеспечение"
+  },
+  "proxies": {
+    "ru": "прокси",
+    "uz": "proksi-serverlar"
+  },
+  "pseudo-religious": {
+    "ru": "псевдорелигиозный"
+  },
+  "psychology": {
+    "ru": "психология",
+    "uz": "psixologiya"
+  },
+  "psychometric": {
+    "ru": "психометрический"
+  },
+  "psychometricians": {
+    "ru": "психометристы"
+  },
+  "psychosocial functioning": {
+    "ru": "психосоциальное функционирование",
+    "uz": "psixososyal faoliyat"
+  },
+  "pteropod": {
+    "ru": "птеропод",
+    "uz": "pteropod"
+  },
+  "public art": {
+    "ru": "искусство в общественном пространстве"
+  },
+  "public drinking": {
+    "ru": "употребление алкоголя в общественных местах"
+  },
+  "public funding": {
+    "ru": "государственное финансирование"
+  },
+  "public health": {
+    "ru": "общественное здравоохранение"
+  },
+  "public transport": {
+    "ru": "общественный транспорт"
+  },
+  "publicity": {
+    "ru": "реклама"
+  },
+  "pulmonary": {
+    "ru": "легочный"
+  },
+  "pulp": {
+    "ru": "мякоть"
+  },
+  "pumped": {
+    "ru": "накачанный"
+  },
+  "pupa": {
+    "ru": "куколка"
+  },
+  "purchase": {
+    "ru": "покупка"
+  },
+  "purification": {
+    "ru": "очистка"
+  },
+  "put-together": {
+    "ru": "собранный воедино"
+  },
+  "qualification": {
+    "ru": "квалификация"
+  },
+  "qualifications": {
+    "ru": "квалификация"
+  },
+  "quality": {
+    "ru": "качество"
+  },
+  "quantified": {
+    "ru": "выраженный количественно"
+  },
+  "quantities": {
+    "ru": "количества"
+  },
+  "questionnaire": {
+    "ru": "вопросник"
+  },
+  "questionnaires": {
+    "ru": "анкеты"
+  },
+  "quintessential": {
+    "ru": "наиболее типичный; воплощающий суть"
+  },
+  "quotation": {
+    "ru": "ценовое предложение; цитата"
+  },
+  "radar": {
+    "ru": "радар"
+  },
+  "radial glia": {
+    "ru": "радиальная глия",
+    "uz": "radial Glia"
+  },
+  "radiation": {
+    "ru": "радиация",
+    "uz": "radiatsiya"
+  },
+  "radical": {
+    "ru": "радикальный"
+  },
+  "radiocarbon dating": {
+    "ru": "радиоуглеродное датирование",
+    "uz": "radiokarbon bilan tanishish"
+  },
+  "raft aquaponics": {
+    "ru": "плот Аквапоника",
+    "uz": "raft akvaponika"
+  },
+  "railway extension": {
+    "ru": "расширение железной дороги"
+  },
+  "rainfall": {
+    "ru": "осадки"
+  },
+  "ramifications": {
+    "ru": "разветвления",
+    "uz": "natijalar"
+  },
+  "rational": {
+    "ru": "рациональный"
+  },
+  "re-domesticated": {
+    "ru": "повторно одомашненный"
+  },
+  "re-enactment": {
+    "ru": "реконструкция"
+  },
+  "reaction": {
+    "ru": "реакция"
+  },
+  "reactions": {
+    "ru": "реакции"
+  },
+  "realization": {
+    "ru": "осознание; реализация"
+  },
+  "reasoning": {
+    "ru": "рассуждение"
+  },
+  "reassembling": {
+    "ru": "повторная сборка"
+  },
+  "reassessment": {
+    "ru": "переоценка"
+  },
+  "reassuring": {
+    "ru": "обнадеживающий"
+  },
+  "rebuild": {
+    "ru": "перестроить"
+  },
+  "recede": {
+    "ru": "отступить",
+    "uz": "orqaga qaytish"
+  },
+  "receipts": {
+    "ru": "квитанции"
+  },
+  "receiver": {
+    "ru": "получатель",
+    "uz": "qabul qiluvchi"
+  },
+  "reception": {
+    "ru": "прием"
+  },
+  "reception room": {
+    "ru": "приемная"
+  },
+  "receptionists": {
+    "ru": "администраторы"
+  },
+  "recipes": {
+    "ru": "рецепты"
+  },
+  "reciprocate": {
+    "ru": "отвечать взаимностью"
+  },
+  "reciprocity": {
+    "ru": "взаимность"
+  },
+  "recognised": {
+    "ru": "признанный"
+  },
+  "recognition": {
+    "ru": "признание"
+  },
+  "recollections": {
+    "ru": "воспоминания"
+  },
+  "recolonized": {
+    "ru": "повторно колонизированный"
+  },
+  "recommendations": {
+    "ru": "рекомендации"
+  },
+  "reconnect": {
+    "ru": "повторно подключиться"
+  },
+  "reconstructed": {
+    "ru": "реконструирован"
+  },
+  "recording": {
+    "ru": "запись"
+  },
+  "recovery": {
+    "ru": "восстановление"
+  },
+  "recreation": {
+    "ru": "отдых"
+  },
+  "recruiting": {
+    "ru": "набор сотрудников"
+  },
+  "recruitment": {
+    "ru": "набор персонала"
+  },
+  "rectified": {
+    "ru": "исправленный"
+  },
+  "rectify": {
+    "ru": "исправить"
+  },
+  "recurrences": {
+    "ru": "рецидивы"
+  },
+  "recycled": {
+    "ru": "переработанный"
+  },
+  "recycling": {
+    "ru": "переработка"
+  },
+  "recycling rate": {
+    "ru": "доля переработанных отходов"
+  },
+  "red tide": {
+    "ru": "красный прилив",
+    "uz": "qizil suv oqimi"
+  },
+  "redeployment": {
+    "ru": "перераспределение"
+  },
+  "redeveloped": {
+    "ru": "реконструированный"
+  },
+  "redevelopment": {
+    "ru": "перепланировка"
+  },
+  "rediscover": {
+    "ru": "открыть заново"
+  },
+  "redistribution": {
+    "ru": "перераспределение"
+  },
+  "reduce": {
+    "ru": "уменьшать"
+  },
+  "redundancies": {
+    "ru": "увольнения"
+  },
+  "redundant": {
+    "ru": "избыточный",
+    "uz": "ortiqcha"
+  },
+  "reference": {
+    "ru": "ссылка"
+  },
+  "reflection": {
+    "ru": "отражение"
+  },
+  "reflections": {
+    "ru": "размышления"
+  },
+  "reflective": {
+    "ru": "аналитический; отражающий"
+  },
+  "reflexologists": {
+    "ru": "рефлексотерапевты"
+  },
+  "refracting": {
+    "ru": "преломляющий"
+  },
+  "reframed": {
+    "ru": "переосмысленный"
+  },
+  "refreshing": {
+    "ru": "освежающий"
+  },
+  "refrigeration": {
+    "ru": "охлаждение"
+  },
+  "regardless": {
+    "ru": "несмотря ни на что"
+  },
+  "regenerate": {
+    "ru": "регенерировать"
+  },
+  "regeneration": {
+    "ru": "восстановление",
+    "uz": "regeneratsiya"
+  },
+  "regenerative therapy": {
+    "ru": "регенеративная терапия",
+    "uz": "regenerativ terapiya"
+  },
+  "regime shifts": {
+    "ru": "сдвиги режима",
+    "uz": "rejim o'zgarishi"
+  },
+  "registered": {
+    "ru": "зарегистрированный"
+  },
+  "registration": {
+    "ru": "регистрация"
+  },
+  "regular contact": {
+    "ru": "регулярный контакт"
+  },
+  "regulars": {
+    "ru": "завсегдатаи"
+  },
+  "regulating": {
+    "ru": "регулирующий"
+  },
+  "regulation": {
+    "ru": "регулирование"
+  },
+  "regulatory": {
+    "ru": "нормативный"
+  },
+  "rehabilitation": {
+    "ru": "реабилитация"
+  },
+  "rehearsal": {
+    "ru": "репетиция"
+  },
+  "rehearsals": {
+    "ru": "репетиции"
+  },
+  "reinforced": {
+    "ru": "усиленный"
+  },
+  "reinterpreted": {
+    "ru": "переосмысленный"
+  },
+  "reintroduction": {
+    "ru": "реинтродукция"
+  },
+  "rejection": {
+    "ru": "отказ",
+    "uz": "rad etish"
+  },
+  "rejuvenate": {
+    "ru": "омолаживать"
+  },
+  "relational goals": {
+    "ru": "реляционные цели",
+    "uz": "aloqaviy maqsadlar"
+  },
+  "relationships": {
+    "ru": "отношения"
+  },
+  "relative sea-level rise": {
+    "ru": "относительное повышение уровня моря",
+    "uz": "dengiz sathining nisbiy ko'tarilishi"
+  },
+  "relatively": {
+    "ru": "относительно"
+  },
+  "relatives": {
+    "ru": "родственники"
+  },
+  "relaxation techniques": {
+    "ru": "техники релаксации",
+    "uz": "dam olish texnikasi"
+  },
+  "relentlessly": {
+    "ru": "неустанно"
+  },
+  "relevance": {
+    "ru": "актуальность"
+  },
+  "relevant": {
+    "ru": "соответствующий"
+  },
+  "reliability": {
+    "ru": "надежность"
+  },
+  "reliable": {
+    "ru": "надежный"
+  },
+  "reliance": {
+    "ru": "доверие"
+  },
+  "relied on": {
+    "ru": "полагался на"
+  },
+  "relish": {
+    "ru": "наслаждаться"
+  },
+  "relocated": {
+    "ru": "переехал"
+  },
+  "reluctant": {
+    "ru": "неохотно соглашающийся"
+  },
+  "rem sleep": {
+    "ru": "быстрый сон",
+    "uz": "rEM uyqusi"
+  },
+  "remained": {
+    "ru": "остался"
+  },
+  "remains": {
+    "ru": "останки; остатки"
+  },
+  "remarkable": {
+    "ru": "замечательный"
+  },
+  "remediable": {
+    "ru": "поправимый"
+  },
+  "remodelled": {
+    "ru": "реконструированный"
+  },
+  "remote sensing": {
+    "ru": "дистанционное зондирование",
+    "uz": "masofadan zondlash"
+  },
+  "remote work": {
+    "ru": "удаленная работа"
+  },
+  "removals": {
+    "ru": "переезд; перевозка имущества"
+  },
+  "remunerated": {
+    "ru": "оплачиваемый"
+  },
+  "renewable": {
+    "ru": "возобновляемый"
+  },
+  "renewed": {
+    "ru": "обновленный"
+  },
+  "renowned": {
+    "ru": "известный"
+  },
+  "rental": {
+    "ru": "аренда"
+  },
+  "repairman": {
+    "ru": "ремонтник"
+  },
+  "repairs": {
+    "ru": "ремонт"
+  },
+  "repertoire": {
+    "ru": "репертуар"
+  },
+  "repetitious": {
+    "ru": "повторяющийся"
+  },
+  "replaced": {
+    "ru": "заменил"
+  },
+  "replacement": {
+    "ru": "замена"
+  },
+  "replete": {
+    "ru": "насыщенный"
+  },
+  "replicability": {
+    "ru": "воспроизводимость"
+  },
+  "representation": {
+    "ru": "изображение; представительство"
+  },
+  "representational": {
+    "ru": "изобразительный; представляющий объекты"
+  },
+  "reproduce": {
+    "ru": "воспроизводить"
+  },
+  "reproduces": {
+    "ru": "воспроизводит"
+  },
+  "reproduction": {
+    "ru": "воспроизводство"
+  },
+  "reptiles": {
+    "ru": "рептилии"
+  },
+  "repudiate": {
+    "ru": "отвергать"
+  },
+  "repudiation": {
+    "ru": "отказ"
+  },
+  "reputable": {
+    "ru": "уважаемый"
+  },
+  "reputation": {
+    "ru": "репутация",
+    "uz": "obro'-e'tibor"
+  },
+  "requirement": {
+    "ru": "требование"
+  },
+  "requirements": {
+    "ru": "требования"
+  },
+  "research": {
+    "ru": "исследовать"
+  },
+  "researchers": {
+    "ru": "исследователи"
+  },
+  "reservations": {
+    "ru": "бронирования; сомнения"
+  },
+  "reserve": {
+    "ru": "бронировать"
+  },
+  "residency": {
+    "ru": "место проживания; резидентство"
+  },
+  "residential": {
+    "ru": "жилой",
+    "uz": "aholi yashash joyi"
+  },
+  "residents": {
+    "ru": "жители"
+  },
+  "resilience": {
+    "ru": "устойчивость"
+  },
+  "resistance": {
+    "ru": "сопротивление"
+  },
+  "reskilling": {
+    "ru": "переподготовка"
+  },
+  "resonance frequency": {
+    "ru": "резонансная частота",
+    "uz": "rezonans chastotasi"
+  },
+  "resonant sound absorption": {
+    "ru": "резонансное звукопоглощение",
+    "uz": "rezonansli tovushni yutish"
+  },
+  "resourcefulness": {
+    "ru": "находчивость"
+  },
+  "resources": {
+    "ru": "ресурсы"
+  },
+  "respective": {
+    "ru": "соответствующий"
+  },
+  "respectively": {
+    "ru": "соответственно"
+  },
+  "respiration": {
+    "ru": "дыхание",
+    "uz": "nafas olish"
+  },
+  "respiratory": {
+    "ru": "респираторный"
+  },
+  "resplendent": {
+    "ru": "блестящий"
+  },
+  "respondents": {
+    "ru": "респонденты"
+  },
+  "responsibilities": {
+    "ru": "обязанности"
+  },
+  "responsibility": {
+    "ru": "ответственность"
+  },
+  "restoration": {
+    "ru": "восстановление"
+  },
+  "restorative": {
+    "ru": "восстановительный"
+  },
+  "restoring": {
+    "ru": "восстановление"
+  },
+  "restriction": {
+    "ru": "ограничение"
+  },
+  "restrictions": {
+    "ru": "ограничения"
+  },
+  "resurrection plants": {
+    "ru": "воскрешающие растения",
+    "uz": "tirilish o'simliklari"
+  },
+  "retained": {
+    "ru": "сохранен"
+  },
+  "retelling": {
+    "ru": "пересказ"
+  },
+  "retention": {
+    "ru": "удержание; сохранение"
+  },
+  "retina": {
+    "ru": "сетчатка",
+    "uz": "retina"
+  },
+  "retirement": {
+    "ru": "выход на пенсию"
+  },
+  "retraining": {
+    "ru": "переподготовка"
+  },
+  "retrenched": {
+    "ru": "сокращенный"
+  },
+  "retrofitting": {
+    "ru": "модернизация"
+  },
+  "reusable": {
+    "ru": "многоразовый"
+  },
+  "reused": {
+    "ru": "повторно используемый"
+  },
+  "reusing": {
+    "ru": "повторное использование"
+  },
+  "revegetation": {
+    "ru": "растительность",
+    "uz": "o'simliklarni ko'paytirish"
+  },
+  "revelation": {
+    "ru": "откровение"
+  },
+  "revenue": {
+    "ru": "доход; выручка"
+  },
+  "revenue sources": {
+    "ru": "источники дохода"
+  },
+  "reverberation": {
+    "ru": "отражение звука; реверберация"
+  },
+  "revert": {
+    "ru": "возвращаться"
+  },
+  "revision": {
+    "ru": "пересмотр"
+  },
+  "revolution": {
+    "ru": "революция"
+  },
+  "revolutionary": {
+    "ru": "революционный"
+  },
+  "rewarding": {
+    "ru": "вознаграждение"
+  },
+  "rewarding chunks": {
+    "ru": "полезные куски"
+  },
+  "rewetting": {
+    "ru": "переувлажнение",
+    "uz": "qayta namlash"
+  },
+  "rhizosphere": {
+    "ru": "ризосфера",
+    "uz": "rizosfera"
+  },
+  "rhythm": {
+    "ru": "ритм",
+    "uz": "ritm"
+  },
+  "riboswitch": {
+    "ru": "рибопереключатель",
+    "uz": "riboswitch"
+  },
+  "rift": {
+    "ru": "рифт",
+    "uz": "rift"
+  },
+  "roadworks": {
+    "ru": "дорожные работы"
+  },
+  "roasted": {
+    "ru": "жареный"
+  },
+  "robust": {
+    "ru": "крепкий"
+  },
+  "rodents": {
+    "ru": "грызуны",
+    "uz": "kemiruvchilar"
+  },
+  "role models": {
+    "ru": "ролевые модели",
+    "uz": "rol modellari"
+  },
+  "rollercoaster": {
+    "ru": "американские горки"
+  },
+  "rolling": {
+    "ru": "прокатка"
+  },
+  "rollover": {
+    "ru": "перекатывать"
+  },
+  "rookery": {
+    "ru": "лежбище",
+    "uz": "rookery"
+  },
+  "root tip": {
+    "ru": "корневой кончик",
+    "uz": "ildiz uchi"
+  },
+  "rotation": {
+    "ru": "вращение"
+  },
+  "rugged terrain": {
+    "ru": "пересеченная местность"
+  },
+  "rumen": {
+    "ru": "рубец",
+    "uz": "rumen"
+  },
+  "ruminants": {
+    "ru": "жвачные животные",
+    "uz": "kavsh qaytaruvchi hayvonlar"
+  },
+  "rumination": {
+    "ru": "размышление",
+    "uz": "ruminatsiya"
+  },
+  "saccule": {
+    "ru": "мешочек",
+    "uz": "sackula"
+  },
+  "sacrifice": {
+    "ru": "жертва"
+  },
+  "safeguards": {
+    "ru": "гарантии"
+  },
+  "salient": {
+    "ru": "выдающийся",
+    "uz": "ko'zga ko'ringan"
+  },
+  "saline aquifer": {
+    "ru": "соленый водоносный горизонт"
+  },
+  "salinity": {
+    "ru": "соленость",
+    "uz": "sho'rlanish"
+  },
+  "salt tolerant": {
+    "ru": "солеустойчивый"
+  },
+  "sanatorium": {
+    "ru": "санаторий"
+  },
+  "sanction": {
+    "ru": "санкция"
+  },
+  "sanctuaries": {
+    "ru": "святилища"
+  },
+  "sanctuary": {
+    "ru": "заповедник; убежище"
+  },
+  "satisfaction": {
+    "ru": "удовлетворение"
+  },
+  "satisfying": {
+    "ru": "удовлетворяющий"
+  },
+  "scaffold": {
+    "ru": "строительные леса"
+  },
+  "scalability": {
+    "ru": "масштабируемость"
+  },
+  "scar": {
+    "ru": "шрам",
+    "uz": "chandiq"
+  },
+  "scarcity": {
+    "ru": "нехватка; дефицит"
+  },
+  "scat": {
+    "ru": "скат",
+    "uz": "skat"
+  },
+  "sceptical": {
+    "ru": "скептический"
+  },
+  "sceptical resistance": {
+    "ru": "скептическое сопротивление"
+  },
+  "schedules": {
+    "ru": "графики"
+  },
+  "schema": {
+    "ru": "схема",
+    "uz": "sxema"
+  },
+  "scholarship": {
+    "ru": "стипендия",
+    "uz": "stipendiya"
+  },
+  "scholarships": {
+    "ru": "стипендии"
+  },
+  "school belonging": {
+    "ru": "школьная принадлежность",
+    "uz": "maktabga tegishli"
+  },
+  "schoolchildren": {
+    "ru": "школьники"
+  },
+  "scientific method": {
+    "ru": "научный метод",
+    "uz": "ilmiy usul"
+  },
+  "scientific research": {
+    "ru": "научные исследования"
+  },
+  "screen time": {
+    "ru": "экранное время"
+  },
+  "screening": {
+    "ru": "скрининг"
+  },
+  "scrupulous": {
+    "ru": "скрупулезный"
+  },
+  "scrutiny": {
+    "ru": "исследование"
+  },
+  "scuba": {
+    "ru": "подводное плавание",
+    "uz": "sCUBA"
+  },
+  "sculptures": {
+    "ru": "скульптуры"
+  },
+  "sea breeze": {
+    "ru": "морской бриз",
+    "uz": "dengiz shabadasi"
+  },
+  "sea ice": {
+    "ru": "морской лед",
+    "uz": "dengiz muzi"
+  },
+  "sea-ice algae": {
+    "ru": "морские ледяные водоросли",
+    "uz": "dengiz muzli yosunlari"
+  },
+  "sea-ice core": {
+    "ru": "ядро морского льда",
+    "uz": "dengiz muz yadrosi"
+  },
+  "sea-level change": {
+    "ru": "изменение уровня моря",
+    "uz": "dengiz sathining o'zgarishi"
+  },
+  "sea-level rise": {
+    "ru": "повышение уровня моря",
+    "uz": "dengiz sathining ko'tarilishi"
+  },
+  "seasonal": {
+    "ru": "сезонный"
+  },
+  "seasonal employment": {
+    "ru": "сезонная занятость"
+  },
+  "seasonal variation": {
+    "ru": "сезонные колебания"
+  },
+  "secluded": {
+    "ru": "уединенный"
+  },
+  "second-hand": {
+    "ru": "подержанный"
+  },
+  "secondary metabolites": {
+    "ru": "вторичные метаболиты",
+    "uz": "ikkilamchi metabolitlar"
+  },
+  "secretary": {
+    "ru": "секретарь"
+  },
+  "sector": {
+    "ru": "сектор"
+  },
+  "security": {
+    "ru": "безопасность"
+  },
+  "sedentary": {
+    "ru": "малоподвижный"
+  },
+  "sedges": {
+    "ru": "осока",
+    "uz": "sedges"
+  },
+  "sediment": {
+    "ru": "осадок",
+    "uz": "cho'kma"
+  },
+  "sediment core": {
+    "ru": "осадочный керн",
+    "uz": "cho'kindi yadrosi"
+  },
+  "sedimentary rock": {
+    "ru": "осадочная порода",
+    "uz": "choʻkindi jins"
+  },
+  "sedimentary rocks": {
+    "ru": "осадочные породы",
+    "uz": "choʻkindi jinslar"
+  },
+  "sediments": {
+    "ru": "отложения",
+    "uz": "cho'kmalar"
+  },
+  "seed coat": {
+    "ru": "семенная оболочка",
+    "uz": "urug'lik qobig'i"
+  },
+  "seed dispersal": {
+    "ru": "распространение семян",
+    "uz": "urug'larning tarqalishi"
+  },
+  "seed germination": {
+    "ru": "прорастание семян",
+    "uz": "urug'larning unib chiqishi"
+  },
+  "seedlings": {
+    "ru": "саженцы"
+  },
+  "seemingly": {
+    "ru": "по-видимому"
+  },
+  "selection": {
+    "ru": "выбор",
+    "uz": "tanlash"
+  },
+  "selective": {
+    "ru": "избирательный"
+  },
+  "self-assured": {
+    "ru": "уверенный в себе"
+  },
+  "self-categorization theory": {
+    "ru": "теория самокатегоризации",
+    "uz": "o'z-o'zini toifalash nazariyasi"
+  },
+  "self-concept": {
+    "ru": "я-концепция",
+    "uz": "o'z-o'zini anglash"
+  },
+  "self-confidence": {
+    "ru": "уверенность в себе"
+  },
+  "self-control": {
+    "ru": "самоконтроль",
+    "uz": "o'zini boshqarish"
+  },
+  "self-cueing": {
+    "ru": "самоподсказка",
+    "uz": "o'z-o'zini ko'rsatish"
+  },
+  "self-driving": {
+    "ru": "беспилотный"
+  },
+  "self-esteem": {
+    "ru": "самооценка"
+  },
+  "self-expression": {
+    "ru": "самовыражение"
+  },
+  "self-improvement": {
+    "ru": "самосовершенствование"
+  },
+  "self-reinforcing feedback loop": {
+    "ru": "самоусиливающаяся петля обратной связи",
+    "uz": "o'z-o'zini mustahkamlovchi fikr-mulohaza zanjiri"
+  },
+  "self-sufficient": {
+    "ru": "самодостаточный"
+  },
+  "self-talk": {
+    "ru": "разговор с самим собой",
+    "uz": "o'z-o'zidan suhbat"
+  },
+  "selfing": {
+    "ru": "селфинг",
+    "uz": "o'z-o'zini tutish"
+  },
+  "semantics": {
+    "ru": "семантика"
+  },
+  "semi-permeable": {
+    "ru": "полупроницаемый"
+  },
+  "seminar": {
+    "ru": "семинар"
+  },
+  "sensation": {
+    "ru": "ощущение"
+  },
+  "sense of belonging": {
+    "ru": "чувство принадлежности",
+    "uz": "aid bo'lish hissi"
+  },
+  "sensitivity": {
+    "ru": "чувствительность"
+  },
+  "sensors": {
+    "ru": "датчики",
+    "uz": "sensorlar"
+  },
+  "sensory cortex": {
+    "ru": "сенсорная кора",
+    "uz": "sensor korteks"
+  },
+  "sensory homunculus": {
+    "ru": "сенсорный гомункул",
+    "uz": "sensorli homunculus"
+  },
+  "separation": {
+    "ru": "разделение"
+  },
+  "sequential": {
+    "ru": "последовательный"
+  },
+  "sequestration": {
+    "ru": "связывание и хранение"
+  },
+  "serendipity": {
+    "ru": "случайность"
+  },
+  "service changes": {
+    "ru": "изменения в сервисе"
+  },
+  "services": {
+    "ru": "услуги"
+  },
+  "setbacks": {
+    "ru": "неудачи"
+  },
+  "settlement": {
+    "ru": "урегулирование"
+  },
+  "settlements": {
+    "ru": "поселения"
+  },
+  "settlers": {
+    "ru": "поселенцы"
+  },
+  "shape memory alloys": {
+    "ru": "сплавы с памятью формы",
+    "uz": "shakli xotira qotishmalari"
+  },
+  "shape memory polymers": {
+    "ru": "полимеры с памятью формы",
+    "uz": "shakl xotirasi polimerlari"
+  },
+  "shaped": {
+    "ru": "сформированный"
+  },
+  "shared dishes": {
+    "ru": "общие блюда"
+  },
+  "sharing": {
+    "ru": "делиться"
+  },
+  "sharply": {
+    "ru": "резко"
+  },
+  "shattering": {
+    "ru": "сокрушительный"
+  },
+  "short read genome": {
+    "ru": "короткое чтение генома",
+    "uz": "qisqa o'qilgan genom"
+  },
+  "shortsightedness": {
+    "ru": "близорукость",
+    "uz": "qisqani ko'ra olmaslik"
+  },
+  "shredding": {
+    "ru": "измельчение"
+  },
+  "siblings": {
+    "ru": "братья и сестры",
+    "uz": "birodarlar"
+  },
+  "significant": {
+    "ru": "значительный"
+  },
+  "significantly": {
+    "ru": "существенно"
+  },
+  "silhouettes": {
+    "ru": "силуэты"
+  },
+  "simulate": {
+    "ru": "моделировать"
+  },
+  "simulations": {
+    "ru": "симуляции"
+  },
+  "simultaneously": {
+    "ru": "одновременно"
+  },
+  "situated": {
+    "ru": "расположен"
+  },
+  "situational awareness": {
+    "ru": "ситуационная осведомленность",
+    "uz": "vaziyatdan xabardorlik"
+  },
+  "skeletal muscles": {
+    "ru": "скелетные мышцы",
+    "uz": "skelet mushaklari"
+  },
+  "skip meals": {
+    "ru": "пропускать приемы пищи"
+  },
+  "skyrocketing": {
+    "ru": "стремительный рост"
+  },
+  "sleep deprivation": {
+    "ru": "лишение сна"
+  },
+  "sleep spindles": {
+    "ru": "спящие шпиндели",
+    "uz": "uyqu shpindellari"
+  },
+  "slow-wave sleep": {
+    "ru": "медленный сон",
+    "uz": "sekin to'lqinli uyqu"
+  },
+  "sludge": {
+    "ru": "шлам",
+    "uz": "loy"
+  },
+  "sluggish": {
+    "ru": "вялый"
+  },
+  "snapping": {
+    "ru": "щелчок"
+  },
+  "social": {
+    "ru": "социальные",
+    "uz": "ijtimoiy"
+  },
+  "social cognition": {
+    "ru": "социальное познание",
+    "uz": "ijtimoiy bilish"
+  },
+  "social cohesion": {
+    "ru": "социальная сплоченность",
+    "uz": "ijtimoiy hamjihatlik"
+  },
+  "social comparison": {
+    "ru": "социальное сравнение",
+    "uz": "ijtimoiy taqqoslash"
+  },
+  "social engagement": {
+    "ru": "социальная активность",
+    "uz": "ijtimoiy ishtirok"
+  },
+  "social identity": {
+    "ru": "социальная идентичность",
+    "uz": "ijtimoiy identifikatsiya"
+  },
+  "social identity theory": {
+    "ru": "теория социальной идентичности",
+    "uz": "ijtimoiy identifikatsiya nazariyasi"
+  },
+  "social interactions": {
+    "ru": "социальные взаимодействия",
+    "uz": "ijtimoiy aloqalar"
+  },
+  "social media": {
+    "ru": "социальные сети"
+  },
+  "social mobility": {
+    "ru": "социальная мобильность"
+  },
+  "social network": {
+    "ru": "социальная сеть",
+    "uz": "ijtimoiy tarmoq"
+  },
+  "social support": {
+    "ru": "социальная поддержка",
+    "uz": "ijtimoiy qo'llab-quvvatlash"
+  },
+  "social value": {
+    "ru": "социальная ценность"
+  },
+  "social-ecological network": {
+    "ru": "социально-экологическая сеть",
+    "uz": "ijtimoiy-ekologik tarmoq"
+  },
+  "social-emotional learning": {
+    "ru": "социально-эмоциональное обучение",
+    "uz": "ijtimoiy-hissiy ta'lim"
+  },
+  "socio-economic": {
+    "ru": "социально-экономический"
+  },
+  "socioeconomic": {
+    "ru": "социально-экономический"
+  },
+  "soft grippers": {
+    "ru": "мягкие захваты",
+    "uz": "yumshoq tutqichlar"
+  },
+  "soil": {
+    "ru": "земля",
+    "uz": "tuproq"
+  },
+  "soil erosion": {
+    "ru": "эрозия почвы",
+    "uz": "tuproq eroziyasi"
+  },
+  "soil invertebrates": {
+    "ru": "почвенные беспозвоночные",
+    "uz": "tuproqli umurtqasizlar"
+  },
+  "soilless systems": {
+    "ru": "беспочвенные системы",
+    "uz": "tuproqsiz tizimlar"
+  },
+  "solar radiation": {
+    "ru": "солнечное излучение",
+    "uz": "quyosh radiatsiyasi"
+  },
+  "solely": {
+    "ru": "исключительно"
+  },
+  "solidifies": {
+    "ru": "затвердевает"
+  },
+  "solubility pump": {
+    "ru": "насос растворимости",
+    "uz": "eruvchanlik pompasi"
+  },
+  "solvent": {
+    "ru": "растворитель",
+    "uz": "solvent"
+  },
+  "sophisticated": {
+    "ru": "сложный"
+  },
+  "sorting": {
+    "ru": "сортировка"
+  },
+  "sound": {
+    "ru": "звук",
+    "uz": "ovoz"
+  },
+  "source materials": {
+    "ru": "исходные материалы"
+  },
+  "souvenirs": {
+    "ru": "сувениры"
+  },
+  "sovereign": {
+    "ru": "суверен"
+  },
+  "spawn": {
+    "ru": "спавн",
+    "uz": "urug'lantirish"
+  },
+  "specialist": {
+    "ru": "специалист",
+    "uz": "mutaxassis"
+  },
+  "specialists": {
+    "ru": "специалисты",
+    "uz": "mutaxassislar"
+  },
+  "specialization": {
+    "ru": "специализация",
+    "uz": "mutaxassislik"
+  },
+  "specialized": {
+    "ru": "специализированный"
+  },
+  "species": {
+    "ru": "разновидность",
+    "uz": "turlar"
+  },
+  "species diversity": {
+    "ru": "видовое разнообразие",
+    "uz": "turlarning xilma-xilligi"
+  },
+  "specimen": {
+    "ru": "образец",
+    "uz": "namuna"
+  },
+  "specimens": {
+    "ru": "образцы"
+  },
+  "spectacular": {
+    "ru": "зрелищный"
+  },
+  "spectators": {
+    "ru": "зрители"
+  },
+  "spectral signature": {
+    "ru": "спектральная подпись",
+    "uz": "spektral imzo"
+  },
+  "spectrogram": {
+    "ru": "спектрограмма",
+    "uz": "spektrogramma"
+  },
+  "spectrum": {
+    "ru": "спектр"
+  },
+  "speculated": {
+    "ru": "предположил"
+  },
+  "speech prosody": {
+    "ru": "речевая просодия",
+    "uz": "nutq prosodiyasi"
+  },
+  "spices": {
+    "ru": "специи"
+  },
+  "spicules": {
+    "ru": "спикулы",
+    "uz": "spikulalar"
+  },
+  "spicy": {
+    "ru": "пряный"
+  },
+  "spirits": {
+    "ru": "духи"
+  },
+  "sponsorship": {
+    "ru": "спонсорство"
+  },
+  "spontaneous self-talk": {
+    "ru": "спонтанный разговор с самим собой",
+    "uz": "o'z-o'zidan o'z-o'zidan gapirish"
+  },
+  "sporadically": {
+    "ru": "спорадически"
+  },
+  "spores": {
+    "ru": "споры",
+    "uz": "sporalar"
+  },
+  "spreads": {
+    "ru": "распространяется"
+  },
+  "spurious": {
+    "ru": "ложный"
+  },
+  "stability": {
+    "ru": "стабильность"
+  },
+  "stabilization": {
+    "ru": "стабилизация",
+    "uz": "stabilizatsiya"
+  },
+  "stable isotopes": {
+    "ru": "стабильные изотопы",
+    "uz": "barqaror izotoplar"
+  },
+  "stable particle": {
+    "ru": "стабильная частица",
+    "uz": "barqaror zarracha"
+  },
+  "stakeholders": {
+    "ru": "заинтересованные стороны"
+  },
+  "standardized": {
+    "ru": "стандартизированный"
+  },
+  "staple foods": {
+    "ru": "основные продукты питания"
+  },
+  "starspots": {
+    "ru": "звездные пятна",
+    "uz": "yulduzli dog'lar"
+  },
+  "statistical": {
+    "ru": "статистический"
+  },
+  "statistical learning": {
+    "ru": "статистическое обучение",
+    "uz": "statistik ta'lim"
+  },
+  "statistical models": {
+    "ru": "статистические модели",
+    "uz": "statistik modellar"
+  },
+  "statistics": {
+    "ru": "статистика"
+  },
+  "steam": {
+    "ru": "пар"
+  },
+  "steep": {
+    "ru": "отвесный"
+  },
+  "stem cells": {
+    "ru": "стволовые клетки",
+    "uz": "ildiz hujayralari"
+  },
+  "stem from": {
+    "ru": "происходят из"
+  },
+  "stemflow": {
+    "ru": "стемфлоу",
+    "uz": "stemflow"
+  },
+  "stereotyped": {
+    "ru": "стереотипный"
+  },
+  "stereotypical": {
+    "ru": "стереотипный",
+    "uz": "stereotipik"
+  },
+  "stimulation": {
+    "ru": "стимуляция"
+  },
+  "stock assessments": {
+    "ru": "оценка запасов",
+    "uz": "aktsiyalarni baholash"
+  },
+  "stoicism": {
+    "ru": "стоицизм",
+    "uz": "stoitsizm"
+  },
+  "stomata": {
+    "ru": "устьица",
+    "uz": "stomata"
+  },
+  "storage": {
+    "ru": "хранение; хранилище"
+  },
+  "storm water": {
+    "ru": "ливневая вода"
+  },
+  "stormwater-management": {
+    "ru": "управление ливневыми водами"
+  },
+  "storytelling": {
+    "ru": "рассказывание историй"
+  },
+  "stranding": {
+    "ru": "скрутка",
+    "uz": "to'planish"
+  },
+  "straps": {
+    "ru": "ремни"
+  },
+  "strategic": {
+    "ru": "стратегический"
+  },
+  "strategies": {
+    "ru": "стратегии"
+  },
+  "stratification": {
+    "ru": "стратификация",
+    "uz": "tabakalanish"
+  },
+  "streaming": {
+    "ru": "распределение учеников по уровню; потоковая передача"
+  },
+  "stress": {
+    "ru": "стресс",
+    "uz": "stress"
+  },
+  "stress pattern": {
+    "ru": "модель стресса",
+    "uz": "stress namunasi"
+  },
+  "strictures": {
+    "ru": "ограничения"
+  },
+  "strike zone": {
+    "ru": "зона удара"
+  },
+  "striking": {
+    "ru": "поразительный"
+  },
+  "structural": {
+    "ru": "структурный"
+  },
+  "structure": {
+    "ru": "структура"
+  },
+  "structured": {
+    "ru": "структурированный"
+  },
+  "struggling": {
+    "ru": "столкнувшийся с трудностями"
+  },
+  "stumbled across": {
+    "ru": "наткнулся"
+  },
+  "subconscious": {
+    "ru": "подсознание"
+  },
+  "subcontracting": {
+    "ru": "субподряд"
+  },
+  "subduction": {
+    "ru": "субдукция",
+    "uz": "subduktsiya"
+  },
+  "subdued": {
+    "ru": "подавленный"
+  },
+  "subjective": {
+    "ru": "субъективный",
+    "uz": "subyektiv"
+  },
+  "sublime": {
+    "ru": "возвышенный"
+  },
+  "submission": {
+    "ru": "представление работы; подача"
+  },
+  "subscribers": {
+    "ru": "подписчики"
+  },
+  "subscribing": {
+    "ru": "подписка"
+  },
+  "subscription": {
+    "ru": "подписка"
+  },
+  "subsequent generations": {
+    "ru": "последующие поколения"
+  },
+  "subsequently": {
+    "ru": "впоследствии"
+  },
+  "subside": {
+    "ru": "спадать"
+  },
+  "subsidies": {
+    "ru": "субсидии"
+  },
+  "subsisted": {
+    "ru": "существовал"
+  },
+  "subsistence agriculture": {
+    "ru": "натуральное сельское хозяйство"
+  },
+  "subsonic": {
+    "ru": "дозвуковой",
+    "uz": "subsonik"
+  },
+  "substantial": {
+    "ru": "существенный"
+  },
+  "substantiate": {
+    "ru": "обосновать"
+  },
+  "substantiating": {
+    "ru": "обоснование"
+  },
+  "substitute": {
+    "ru": "замена; заменять"
+  },
+  "substrate aquaponics": {
+    "ru": "субстрат для аквапоники",
+    "uz": "substrat Aquaponics"
+  },
+  "subsurface": {
+    "ru": "недра"
+  },
+  "subterranean habitats": {
+    "ru": "подземные места обитания",
+    "uz": "er osti yashash joylari"
+  },
+  "subtle": {
+    "ru": "тонкий"
+  },
+  "subtle nuances": {
+    "ru": "тонкие нюансы"
+  },
+  "subtleties": {
+    "ru": "тонкости"
+  },
+  "suburb": {
+    "ru": "пригород"
+  },
+  "suburban": {
+    "ru": "пригородный"
+  },
+  "succession": {
+    "ru": "преемственность"
+  },
+  "successive": {
+    "ru": "следующие друг за другом"
+  },
+  "sufficient": {
+    "ru": "достаточный"
+  },
+  "suffragette": {
+    "ru": "суфражистка"
+  },
+  "sunspots": {
+    "ru": "солнечные пятна",
+    "uz": "quyosh dog'lari"
+  },
+  "supercentenarians": {
+    "ru": "люди в возрасте 110 лет и старше"
+  },
+  "supercontinent": {
+    "ru": "суперконтинент",
+    "uz": "superkontinent"
+  },
+  "supercooled seawater": {
+    "ru": "переохлажденная морская вода",
+    "uz": "haddan tashqari sovutilgan dengiz suvi"
+  },
+  "superficially": {
+    "ru": "поверхностно"
+  },
+  "superfluous": {
+    "ru": "излишний"
+  },
+  "superior": {
+    "ru": "превосходящий; более высокого качества"
+  },
+  "superior temporal sulcus": {
+    "ru": "верхняя височная борозда",
+    "uz": "yuqori temporal sulkus"
+  },
+  "superorganism": {
+    "ru": "суперорганизм",
+    "uz": "superorganizm"
+  },
+  "supervision": {
+    "ru": "надзор"
+  },
+  "supervisor": {
+    "ru": "руководитель"
+  },
+  "supplanting": {
+    "ru": "вытесняя"
+  },
+  "supplementary": {
+    "ru": "дополнительный"
+  },
+  "supplementary feeding": {
+    "ru": "прикорм"
+  },
+  "suppliers": {
+    "ru": "поставщики"
+  },
+  "supply chain": {
+    "ru": "цепочка поставок"
+  },
+  "supposition": {
+    "ru": "предположение"
+  },
+  "surface heating": {
+    "ru": "поверхностное отопление",
+    "uz": "yuzaki isitish"
+  },
+  "surmounted": {
+    "ru": "преодолён"
+  },
+  "surpass": {
+    "ru": "превосходить"
+  },
+  "surrounded": {
+    "ru": "окруженный"
+  },
+  "surroundings": {
+    "ru": "окрестности"
+  },
+  "surveillance": {
+    "ru": "наблюдение"
+  },
+  "survey": {
+    "ru": "опрос",
+    "uz": "so'rov"
+  },
+  "susceptible": {
+    "ru": "восприимчивый"
+  },
+  "suspended": {
+    "ru": "подвешенный; приостановленный"
+  },
+  "sustain": {
+    "ru": "поддерживать"
+  },
+  "sustainability": {
+    "ru": "устойчивость"
+  },
+  "sustainable": {
+    "ru": "устойчивый",
+    "uz": "barqaror"
+  },
+  "sustainable agriculture": {
+    "ru": "устойчивое сельское хозяйство"
+  },
+  "sustainable development": {
+    "ru": "устойчивое развитие"
+  },
+  "sustainable tourism": {
+    "ru": "устойчивый туризм"
+  },
+  "sustained": {
+    "ru": "продолжительный; непрерывный"
+  },
+  "sve": {
+    "ru": "сВЕ",
+    "uz": "sVE"
+  },
+  "sway": {
+    "ru": "качаться"
+  },
+  "switching off": {
+    "ru": "выключение"
+  },
+  "symbiodiniaceae": {
+    "ru": "симбиодиниевые",
+    "uz": "symbiodiniaceae"
+  },
+  "symbiosis": {
+    "ru": "симбиоз",
+    "uz": "simbioz"
+  },
+  "symbolically": {
+    "ru": "символически"
+  },
+  "sympathetic": {
+    "ru": "сочувствующий"
+  },
+  "symptom": {
+    "ru": "симптом"
+  },
+  "synthesizing": {
+    "ru": "синтезирующий"
+  },
+  "syrinx": {
+    "ru": "сиринкс",
+    "uz": "sirinks"
+  },
+  "systematic": {
+    "ru": "систематический"
+  },
+  "systems thinking": {
+    "ru": "системное мышление",
+    "uz": "tizimli fikrlash"
+  },
+  "tactical": {
+    "ru": "тактический"
+  },
+  "tadpoles": {
+    "ru": "головастики"
+  },
+  "take advantage of": {
+    "ru": "воспользоваться"
+  },
+  "talent development": {
+    "ru": "развитие талантов"
+  },
+  "talented": {
+    "ru": "талантливый"
+  },
+  "tally": {
+    "ru": "подсчет"
+  },
+  "talus": {
+    "ru": "осыпь",
+    "uz": "talus"
+  },
+  "taproot": {
+    "ru": "стержневой корень",
+    "uz": "ildiz ildizi"
+  },
+  "target": {
+    "ru": "цель",
+    "uz": "maqsad"
+  },
+  "targeted": {
+    "ru": "целевой"
+  },
+  "targeted advertising": {
+    "ru": "таргетированная реклама"
+  },
+  "targeted research": {
+    "ru": "целевые исследования"
+  },
+  "tarsus": {
+    "ru": "тарсус",
+    "uz": "tarsus"
+  },
+  "task cohesion": {
+    "ru": "сплоченность задач",
+    "uz": "vazifaning uyg'unligi"
+  },
+  "taxation": {
+    "ru": "налогообложение"
+  },
+  "taxonomists": {
+    "ru": "систематики",
+    "uz": "taksonomlar"
+  },
+  "taxpayer": {
+    "ru": "налогоплательщик"
+  },
+  "team-work": {
+    "ru": "командная работа"
+  },
+  "technique": {
+    "ru": "техника"
+  },
+  "techniques": {
+    "ru": "методы"
+  },
+  "technology": {
+    "ru": "технология"
+  },
+  "tectonic plate": {
+    "ru": "тектоническая плита",
+    "uz": "tektonik plastinka"
+  },
+  "tedious": {
+    "ru": "скучный"
+  },
+  "telemetry": {
+    "ru": "телеметрия",
+    "uz": "telemetriya"
+  },
+  "telepresence": {
+    "ru": "телеприсутствие"
+  },
+  "temperament": {
+    "ru": "темперамент",
+    "uz": "temperament"
+  },
+  "temperate": {
+    "ru": "умеренный",
+    "uz": "mo''tadil"
+  },
+  "temperate region": {
+    "ru": "умеренный регион",
+    "uz": "mo''tadil mintaqa"
+  },
+  "temperature": {
+    "ru": "температура"
+  },
+  "temporal lobe": {
+    "ru": "височная доля"
+  },
+  "temporarily": {
+    "ru": "временно"
+  },
+  "temporoparietal junction": {
+    "ru": "височно-теменной переход",
+    "uz": "temporoparietal birikma"
+  },
+  "tenants": {
+    "ru": "арендаторы"
+  },
+  "terpenes": {
+    "ru": "терпены",
+    "uz": "terpenlar"
+  },
+  "terrestrial": {
+    "ru": "земной",
+    "uz": "yerdagi"
+  },
+  "textile": {
+    "ru": "текстиль",
+    "uz": "to'qimachilik"
+  },
+  "texture": {
+    "ru": "текстура"
+  },
+  "thawed": {
+    "ru": "размороженный"
+  },
+  "theft": {
+    "ru": "кража"
+  },
+  "theoretical": {
+    "ru": "теоретический"
+  },
+  "theoretically": {
+    "ru": "теоретически"
+  },
+  "theory": {
+    "ru": "теория",
+    "uz": "nazariya"
+  },
+  "thereby": {
+    "ru": "тем самым"
+  },
+  "thermal comfort": {
+    "ru": "тепловой комфорт",
+    "uz": "termal qulaylik"
+  },
+  "thermal emission spectrometer": {
+    "ru": "термоэмиссионный спектрометр",
+    "uz": "termal emissiya spektrometri"
+  },
+  "thermal imaging camera": {
+    "ru": "тепловизионная камера",
+    "uz": "termal tasvir kamerasi"
+  },
+  "thermal infrared": {
+    "ru": "тепловой инфракрасный",
+    "uz": "termal infraqizil"
+  },
+  "thermal stress": {
+    "ru": "термический стресс"
+  },
+  "thermokarst": {
+    "ru": "термокарст",
+    "uz": "termokarst"
+  },
+  "thickness": {
+    "ru": "толщина"
+  },
+  "thoroughly": {
+    "ru": "тщательно"
+  },
+  "thoughtful": {
+    "ru": "вдумчивый"
+  },
+  "threatened": {
+    "ru": "угрожал"
+  },
+  "threatening": {
+    "ru": "угрожающий"
+  },
+  "threshold": {
+    "ru": "порог",
+    "uz": "eshik"
+  },
+  "thrill": {
+    "ru": "трепет"
+  },
+  "thrillers": {
+    "ru": "триллеры"
+  },
+  "thrive": {
+    "ru": "процветать"
+  },
+  "throughfall": {
+    "ru": "сквозное падение",
+    "uz": "o'tish"
+  },
+  "throwaway culture": {
+    "ru": "одноразовая культура"
+  },
+  "ticket sales": {
+    "ru": "продажа билетов"
+  },
+  "timber": {
+    "ru": "древесина"
+  },
+  "timbers": {
+    "ru": "деревянные балки"
+  },
+  "time-consuming": {
+    "ru": "требующий много времени"
+  },
+  "tipping point": {
+    "ru": "переломный момент",
+    "uz": "burilish nuqtasi"
+  },
+  "tipping point cascades": {
+    "ru": "каскады переломного момента",
+    "uz": "chiqish nuqtasi kaskadlari"
+  },
+  "tolerance": {
+    "ru": "переносимость; терпимость"
+  },
+  "tooth regeneration": {
+    "ru": "регенерация зубов",
+    "uz": "tish regeneratsiyasi"
+  },
+  "toothed whales": {
+    "ru": "зубатые киты",
+    "uz": "tishli kitlar"
+  },
+  "top predators": {
+    "ru": "лучшие хищники",
+    "uz": "eng yaxshi yirtqichlar"
+  },
+  "topographic maps": {
+    "ru": "топографические карты",
+    "uz": "topografik xaritalar"
+  },
+  "total value": {
+    "ru": "общая стоимость"
+  },
+  "toxic": {
+    "ru": "токсичный"
+  },
+  "toxin": {
+    "ru": "токсин",
+    "uz": "toksin"
+  },
+  "toxins": {
+    "ru": "токсины",
+    "uz": "toksinlar"
+  },
+  "tracking": {
+    "ru": "отслеживание"
+  },
+  "trade-off": {
+    "ru": "компромисс"
+  },
+  "traditional": {
+    "ru": "традиционный"
+  },
+  "traditional surveys": {
+    "ru": "традиционные опросы",
+    "uz": "an'anaviy so'rovlar"
+  },
+  "traditions": {
+    "ru": "традиции"
+  },
+  "trafficked": {
+    "ru": "торговля людьми",
+    "uz": "sotilgan"
+  },
+  "trails": {
+    "ru": "тропы"
+  },
+  "training": {
+    "ru": "обучение"
+  },
+  "trait": {
+    "ru": "черта",
+    "uz": "xususiyat"
+  },
+  "trajectory": {
+    "ru": "траектория"
+  },
+  "tramline": {
+    "ru": "трамвайная линия"
+  },
+  "transactions": {
+    "ru": "транзакции"
+  },
+  "transcriptomics": {
+    "ru": "транскриптомика",
+    "uz": "transkriptomika"
+  },
+  "transfer": {
+    "ru": "передача",
+    "uz": "transfer"
+  },
+  "transferring": {
+    "ru": "передача"
+  },
+  "transformation": {
+    "ru": "трансформация"
+  },
+  "transformative": {
+    "ru": "преобразующий"
+  },
+  "transformed": {
+    "ru": "преобразованный"
+  },
+  "transient": {
+    "ru": "преходящий"
+  },
+  "transit": {
+    "ru": "транзит",
+    "uz": "tranzit"
+  },
+  "transition": {
+    "ru": "переход"
+  },
+  "translation": {
+    "ru": "перевод"
+  },
+  "transmit": {
+    "ru": "передавать"
+  },
+  "transmitter": {
+    "ru": "передатчик",
+    "uz": "transmitter"
+  },
+  "transmutation": {
+    "ru": "трансмутация"
+  },
+  "transparency": {
+    "ru": "прозрачность"
+  },
+  "transparent": {
+    "ru": "прозрачный"
+  },
+  "transpiration": {
+    "ru": "транспирация",
+    "uz": "transpiratsiya"
+  },
+  "transpiration stream": {
+    "ru": "транспирационный поток",
+    "uz": "transpiratsiya oqimi"
+  },
+  "transplanting": {
+    "ru": "пересадка"
+  },
+  "transport": {
+    "ru": "транспорт"
+  },
+  "transport footprint": {
+    "ru": "транспортный след",
+    "uz": "transport izi"
+  },
+  "transporter": {
+    "ru": "транспортер",
+    "uz": "transporter"
+  },
+  "transposing": {
+    "ru": "транспонирование"
+  },
+  "treasure": {
+    "ru": "сокровище"
+  },
+  "treasure trove": {
+    "ru": "сокровищница"
+  },
+  "treatment": {
+    "ru": "лечение; обработка"
+  },
+  "tree tea": {
+    "ru": "древесный чай",
+    "uz": "daraxt choyi"
+  },
+  "tremendous": {
+    "ru": "огромный"
+  },
+  "trend": {
+    "ru": "тенденция"
+  },
+  "trends": {
+    "ru": "тенденции"
+  },
+  "tributyltin": {
+    "ru": "трибутилолово",
+    "uz": "tributiltin"
+  },
+  "trophic transfer": {
+    "ru": "трофический трансфер",
+    "uz": "trofik transfer"
+  },
+  "trough": {
+    "ru": "впадина"
+  },
+  "trust": {
+    "ru": "доверять"
+  },
+  "trustworthy": {
+    "ru": "заслуживающий доверия"
+  },
+  "tuberculosis": {
+    "ru": "туберкулез"
+  },
+  "tuition fees": {
+    "ru": "плата за обучение"
+  },
+  "turbidity": {
+    "ru": "мутность",
+    "uz": "loyqalik"
+  },
+  "turbine": {
+    "ru": "турбина"
+  },
+  "turbulence": {
+    "ru": "турбулентность",
+    "uz": "turbulentlik"
+  },
+  "two-choice behavioral test": {
+    "ru": "поведенческий тест с двумя вариантами ответов",
+    "uz": "ikki tanlovli xulq-atvor testi"
+  },
+  "two-way mirror": {
+    "ru": "двустороннее зеркало",
+    "uz": "ikki tomonlama oyna"
+  },
+  "typography": {
+    "ru": "типографика"
+  },
+  "tyrannosaurids": {
+    "ru": "тираннозавриды",
+    "uz": "tiranozavrlar"
+  },
+  "ubiquity": {
+    "ru": "вездесущность"
+  },
+  "ultrasonic": {
+    "ru": "ультразвуковой",
+    "uz": "ultrasonik"
+  },
+  "ultrasonic frequencies": {
+    "ru": "ультразвуковые частоты",
+    "uz": "ultrasonik chastotalar"
+  },
+  "unambiguous": {
+    "ru": "однозначный"
+  },
+  "unattainable": {
+    "ru": "недостижимый"
+  },
+  "unbeatable": {
+    "ru": "непобедимый"
+  },
+  "uncertainty": {
+    "ru": "неопределенность"
+  },
+  "unchanged": {
+    "ru": "неизменный"
+  },
+  "unconditional affection": {
+    "ru": "безусловная привязанность"
+  },
+  "unconsciously": {
+    "ru": "бессознательно"
+  },
+  "uncontacted": {
+    "ru": "не вступавший в контакт с внешним миром"
+  },
+  "uncontroversial": {
+    "ru": "бесспорный"
+  },
+  "unconvinced": {
+    "ru": "неубежденный"
+  },
+  "underappreciated": {
+    "ru": "недооцененный"
+  },
+  "underdog": {
+    "ru": "андердог",
+    "uz": "kambag'al"
+  },
+  "underestimate": {
+    "ru": "недооценивать"
+  },
+  "undergraduates": {
+    "ru": "студенты"
+  },
+  "underground": {
+    "ru": "под землей"
+  },
+  "underlying": {
+    "ru": "лежащий в основе"
+  },
+  "undermine": {
+    "ru": "подрывать"
+  },
+  "undersaturated": {
+    "ru": "ненасыщенный",
+    "uz": "toʻyinmagan"
+  },
+  "underscore": {
+    "ru": "подчеркивать"
+  },
+  "understudies": {
+    "ru": "дублёры актёров"
+  },
+  "undertaken": {
+    "ru": "предпринятый"
+  },
+  "undertaking": {
+    "ru": "начинание; предприятие"
+  },
+  "undervalued": {
+    "ru": "недооцененный"
+  },
+  "undisputed": {
+    "ru": "бесспорный"
+  },
+  "undoubtedly": {
+    "ru": "несомненно"
+  },
+  "unearthed": {
+    "ru": "раскопан"
+  },
+  "unemployed": {
+    "ru": "безработный"
+  },
+  "unemployment": {
+    "ru": "безработица"
+  },
+  "unequivocal": {
+    "ru": "однозначный"
+  },
+  "unfailingly": {
+    "ru": "неизменно"
+  },
+  "unfamiliar": {
+    "ru": "незнакомый"
+  },
+  "unfocused": {
+    "ru": "несфокусированный"
+  },
+  "unforgiving": {
+    "ru": "неумолимый"
+  },
+  "unfounded": {
+    "ru": "необоснованный"
+  },
+  "uniform": {
+    "ru": "униформа"
+  },
+  "uninitiated": {
+    "ru": "непосвященный"
+  },
+  "uniqueness": {
+    "ru": "уникальность"
+  },
+  "unmotivated": {
+    "ru": "немотивированный"
+  },
+  "unpredictability": {
+    "ru": "непредсказуемость"
+  },
+  "unpredictably": {
+    "ru": "непредсказуемо"
+  },
+  "unrivaled": {
+    "ru": "непревзойденный"
+  },
+  "unsatisfactory": {
+    "ru": "неудовлетворительный"
+  },
+  "unscathed": {
+    "ru": "невредимый"
+  },
+  "unsupervised": {
+    "ru": "без присмотра"
+  },
+  "unsustainable": {
+    "ru": "неустойчивый"
+  },
+  "unthinkable": {
+    "ru": "немыслимый"
+  },
+  "untranslated": {
+    "ru": "непереведенный"
+  },
+  "unweathered": {
+    "ru": "невыветренный",
+    "uz": "ob-havosiz"
+  },
+  "upbringing": {
+    "ru": "воспитание"
+  },
+  "upwelling": {
+    "ru": "апвеллинг",
+    "uz": "ko'tarilish"
+  },
+  "urban agriculture": {
+    "ru": "городское сельское хозяйство",
+    "uz": "shahar qishloq xo'jaligi"
+  },
+  "urban canyon effect": {
+    "ru": "эффект городского каньона",
+    "uz": "shahar kanyon effekti"
+  },
+  "urban expansion": {
+    "ru": "расширение городов"
+  },
+  "urban gradient": {
+    "ru": "городской градиент",
+    "uz": "shahar gradienti"
+  },
+  "urban heat island": {
+    "ru": "городской остров тепла",
+    "uz": "shahar issiqlik oroli"
+  },
+  "urban heat island effect": {
+    "ru": "эффект городского острова тепла",
+    "uz": "shahar issiqlik oroli effekti"
+  },
+  "urban planning": {
+    "ru": "городское планирование"
+  },
+  "urban wildlife": {
+    "ru": "городская дикая природа",
+    "uz": "shahar yovvoyi tabiati"
+  },
+  "urbanisation": {
+    "ru": "урбанизация"
+  },
+  "urgent": {
+    "ru": "срочный"
+  },
+  "utilities": {
+    "ru": "коммунальные услуги"
+  },
+  "utility": {
+    "ru": "полезность"
+  },
+  "utricle": {
+    "ru": "утрикл",
+    "uz": "utrikula"
+  },
+  "utterly": {
+    "ru": "крайне"
+  },
+  "vagus nerve": {
+    "ru": "блуждающий нерв",
+    "uz": "vagus nervi"
+  },
+  "validated": {
+    "ru": "проверенный"
+  },
+  "van der waals forces": {
+    "ru": "силы Ван дер Ваальса",
+    "uz": "van Der Waals kuchlari"
+  },
+  "variability": {
+    "ru": "изменчивость"
+  },
+  "variable": {
+    "ru": "переменная"
+  },
+  "variables": {
+    "ru": "переменные"
+  },
+  "varied": {
+    "ru": "разнообразный"
+  },
+  "vascular tissues": {
+    "ru": "сосудистые ткани",
+    "uz": "qon tomir to'qimalari"
+  },
+  "vegetation": {
+    "ru": "растительность"
+  },
+  "vehicles": {
+    "ru": "транспортные средства"
+  },
+  "ventilation": {
+    "ru": "вентиляция"
+  },
+  "ventral striatum": {
+    "ru": "вентральное полосатое тело",
+    "uz": "ventral Striatum"
+  },
+  "ventricles": {
+    "ru": "желудочки",
+    "uz": "qorinchalar"
+  },
+  "verbal": {
+    "ru": "словесный"
+  },
+  "verdant": {
+    "ru": "зеленый"
+  },
+  "verification": {
+    "ru": "проверка"
+  },
+  "verified": {
+    "ru": "проверено"
+  },
+  "versatile": {
+    "ru": "универсальный"
+  },
+  "versatility": {
+    "ru": "универсальность"
+  },
+  "vertical farming": {
+    "ru": "вертикальное земледелие",
+    "uz": "vertikal dehqonchilik"
+  },
+  "vessels": {
+    "ru": "суда; сосуды"
+  },
+  "vested interest": {
+    "ru": "корыстный интерес"
+  },
+  "vestibular system": {
+    "ru": "вестибулярная система",
+    "uz": "vestibulyar tizim"
+  },
+  "veterinary": {
+    "ru": "ветеринарный"
+  },
+  "viable": {
+    "ru": "жизнеспособный; осуществимый"
+  },
+  "vibrant": {
+    "ru": "яркий"
+  },
+  "vibrations": {
+    "ru": "вибрации"
+  },
+  "vicinity": {
+    "ru": "окрестности"
+  },
+  "vicious cycle": {
+    "ru": "порочный круг"
+  },
+  "viewership": {
+    "ru": "зрительская аудитория"
+  },
+  "viewpoints": {
+    "ru": "точки зрения"
+  },
+  "villagers": {
+    "ru": "жители деревни"
+  },
+  "vindicate": {
+    "ru": "оправдать"
+  },
+  "virtual objects": {
+    "ru": "виртуальные объекты",
+    "uz": "virtual ob'ektlar"
+  },
+  "virtual reality": {
+    "ru": "виртуальная реальность"
+  },
+  "virtual voice assistant": {
+    "ru": "виртуальный голосовой помощник",
+    "uz": "virtual ovozli yordamchi"
+  },
+  "vision": {
+    "ru": "зрение"
+  },
+  "visitor quotas": {
+    "ru": "квоты посетителей"
+  },
+  "visual interference": {
+    "ru": "визуальные помехи",
+    "uz": "vizual shovqin"
+  },
+  "visual processing": {
+    "ru": "визуальная обработка",
+    "uz": "vizual ishlov berish"
+  },
+  "visual search": {
+    "ru": "визуальный поиск",
+    "uz": "vizual qidiruv"
+  },
+  "visual sharpness": {
+    "ru": "визуальная резкость",
+    "uz": "vizual aniqlik"
+  },
+  "visuospatial": {
+    "ru": "зрительно-пространственный"
+  },
+  "vital signs": {
+    "ru": "жизненно важные признаки",
+    "uz": "hayotiy belgilar"
+  },
+  "vocabulary": {
+    "ru": "словарный запас",
+    "uz": "lug'at"
+  },
+  "vocal": {
+    "ru": "голосовой"
+  },
+  "vocal signature": {
+    "ru": "вокальная подпись",
+    "uz": "vokal imzosi"
+  },
+  "vocalization": {
+    "ru": "вокализация",
+    "uz": "vokalizatsiya"
+  },
+  "vocalizations": {
+    "ru": "вокализации"
+  },
+  "volatility": {
+    "ru": "волатильность",
+    "uz": "o'zgaruvchanlik"
+  },
+  "volcanic highlands": {
+    "ru": "вулканическое нагорье",
+    "uz": "vulqon tog'lari"
+  },
+  "voluntary": {
+    "ru": "добровольный"
+  },
+  "volunteer": {
+    "ru": "волонтер"
+  },
+  "volunteering": {
+    "ru": "волонтерство"
+  },
+  "volunteers": {
+    "ru": "волонтеры"
+  },
+  "vortices": {
+    "ru": "вихри"
+  },
+  "vulnerable": {
+    "ru": "уязвимый"
+  },
+  "walking": {
+    "ru": "ходьба"
+  },
+  "walking distance": {
+    "ru": "расстояние пешком"
+  },
+  "warranted": {
+    "ru": "гарантировано"
+  },
+  "warranty": {
+    "ru": "гарантия"
+  },
+  "waste reduction": {
+    "ru": "сокращение отходов"
+  },
+  "waste water": {
+    "ru": "сточные воды"
+  },
+  "wastewater": {
+    "ru": "сточные воды",
+    "uz": "chiqindi suvlari"
+  },
+  "water conservation": {
+    "ru": "сохранение воды"
+  },
+  "water cycle": {
+    "ru": "водный цикл",
+    "uz": "suv aylanishi"
+  },
+  "water shear": {
+    "ru": "сдвиг воды",
+    "uz": "suv kesish"
+  },
+  "water supply": {
+    "ru": "водоснабжение"
+  },
+  "waterproof": {
+    "ru": "водонепроницаемый"
+  },
+  "watersheds": {
+    "ru": "водоразделы",
+    "uz": "suv havzalari"
+  },
+  "wave attenuation": {
+    "ru": "затухание волны",
+    "uz": "to'lqinlarning zaiflashishi"
+  },
+  "wavelength": {
+    "ru": "длина волны",
+    "uz": "to'lqin uzunligi"
+  },
+  "weakened": {
+    "ru": "ослабленный"
+  },
+  "weaned": {
+    "ru": "отлученный от груди",
+    "uz": "sutdan ajratilgan"
+  },
+  "weather": {
+    "ru": "погода",
+    "uz": "ob-havo"
+  },
+  "weekly average": {
+    "ru": "среднее за неделю"
+  },
+  "welcome break": {
+    "ru": "приятная передышка"
+  },
+  "welcoming": {
+    "ru": "гостеприимный"
+  },
+  "welfare": {
+    "ru": "благосостояние"
+  },
+  "well-being": {
+    "ru": "благополучие",
+    "uz": "salomatlik"
+  },
+  "well-chosen": {
+    "ru": "хорошо выбранный"
+  },
+  "wellbeing": {
+    "ru": "благополучие"
+  },
+  "wetland": {
+    "ru": "водно-болотное угодье",
+    "uz": "suv-botqoq yer"
+  },
+  "whereabouts": {
+    "ru": "местонахождение"
+  },
+  "whereas": {
+    "ru": "тогда как"
+  },
+  "white matter": {
+    "ru": "белое вещество",
+    "uz": "oq modda"
+  },
+  "whole numbers": {
+    "ru": "целые числа",
+    "uz": "butun sonlar"
+  },
+  "widespread": {
+    "ru": "широко распространенный"
+  },
+  "wildlife": {
+    "ru": "дикая природа"
+  },
+  "wildlife-friendly cities": {
+    "ru": "города, благоприятные для дикой природы",
+    "uz": "yovvoyi tabiat uchun qulay shaharlar"
+  },
+  "willingness": {
+    "ru": "готовность"
+  },
+  "wind profile": {
+    "ru": "профиль ветра",
+    "uz": "shamol profili"
+  },
+  "wombats": {
+    "ru": "вомбаты"
+  },
+  "woodland": {
+    "ru": "лесной массив"
+  },
+  "woody plants": {
+    "ru": "древесные растения",
+    "uz": "yog'ochli o'simliklar"
+  },
+  "work-life balance": {
+    "ru": "баланс между работой и личной жизнью"
+  },
+  "workforce": {
+    "ru": "рабочая сила"
+  },
+  "working memory": {
+    "ru": "рабочая память",
+    "uz": "ishlaydigan xotira"
+  },
+  "workshop": {
+    "ru": "мастерская"
+  },
+  "workshops": {
+    "ru": "семинары; мастерские"
+  },
+  "workspace": {
+    "ru": "рабочее пространство"
+  },
+  "workstation": {
+    "ru": "рабочая станция"
+  },
+  "worn out": {
+    "ru": "изношенный"
+  },
+  "worthwhile": {
+    "ru": "стоящий"
+  },
+  "worthy": {
+    "ru": "достойный"
+  },
+  "wrinkled skin": {
+    "ru": "морщинистая кожа"
+  },
+  "x-ray crystallography": {
+    "ru": "рентгеновская кристаллография",
+    "uz": "x-nurli kristallografiya"
+  },
+  "xylem": {
+    "ru": "ксилема",
+    "uz": "ksilem"
+  },
+  "yield": {
+    "ru": "давать результат; приносить урожай"
+  },
+  "yielded": {
+    "ru": "дали результат"
+  },
+  "zoning": {
+    "ru": "зонирование",
+    "uz": "rayonlashtirish"
+  },
+  "zooplankton": {
+    "ru": "зоопланктон",
+    "uz": "zooplankton"
+  }
+}

@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import type { IELTSTest, TestResult } from '@/types/ieltsTypes'
 import { learningCenterApi } from './api'
 import { apiClient } from '@/lib/apiClient'
@@ -5,7 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 
 const pending = new Map<string, Promise<unknown>>()
 export function waitForIeltsClassSync(testId: string, date: string) {
-  return pending.get(`${testId}-${date}`)?.catch(() => {}) ?? Promise.resolve()
+  return pending.get(`${useAuthStore.getState().user?.id ?? 'guest'}:${testId}-${date}`)?.catch(() => {}) ?? Promise.resolve()
 }
 
 export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTSTest, result: TestResult, assignmentId?: string) {
@@ -13,10 +14,10 @@ export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTST
     // Use the same idempotent attempt endpoint as Results, so class work and
     // review represent one attempt and award XP only once.
     const accuracy = result.totalQuestions ? result.correctAnswers / result.totalQuestions * 100 : 0
-    const key = `${result.testId}-${result.date}`
+    const userId = useAuthStore.getState().user?.id
+    const key = `${userId ?? 'guest'}:${result.testId}-${result.date}`
     const existing = pending.get(key)
     if (existing) return existing
-    const userId = useAuthStore.getState().user?.id
     const request = apiClient.post(`/tests/${type}-sync`, {
       externalAttemptKey: `${result.testId}-${result.date}`,
       externalTestId: result.testId, title: test.title, completedAt: result.date,
@@ -26,8 +27,8 @@ export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTST
       accuracy, finalScore: accuracy, difficulty: 'HARD', isPartial: false,
       subjects: type === 'listening' ? ['IELTS Listening', 'Listening', 'Audio', 'Comprehension'] : ['IELTS Reading', 'Reading', 'Passage', 'Comprehension'],
       assignmentId,
-    }).then((response) => {
-      try { window.localStorage.setItem(`smarttest-${type}-sync:${userId ?? 'guest'}:${key}`, 'ok') } catch { /* Server sync succeeded even if storage is unavailable. */ }
+    }, { expectedUserId: userId }).then((response) => {
+      try { accountStorageFor(userId ?? 'guest').setItem(`smarttest-${type}-sync:${userId ?? 'guest'}:${result.testId}-${result.date}`, 'ok') } catch { /* Server sync succeeded even if storage is unavailable. */ }
       return response
     }).finally(() => pending.delete(key))
     pending.set(key, request)

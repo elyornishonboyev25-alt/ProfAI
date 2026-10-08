@@ -8,102 +8,21 @@ import {
   CheckCircle2,
   Filter,
   History,
-  RotateCcw,
   Target,
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
+import { useFullscreen } from '@/hooks/useFullscreen'
+import { allQuestions, reviewQuestions, questionKey, readHistory, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATRichText from '@/components/sat/SATRichText'
-import { getSATReviewTests, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { getSATReviewTests } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
-import {
-  isSATAnswerCorrect,
-  type SATQuestion,
-} from '@/features/sat/practiceTest4'
+import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
 import { useAuthStore } from '@/store/authStore'
 import './SATQuestionBank.css'
 
-type QuestionRow = { key: string; question: SATQuestion; testNumber: number }
-type Result = {
-  key: string
-  section: string
-  domain: string
-  skill: string
-  correct: boolean
-  at: string
-  answer?: string
-  setId?: string
-  flagged?: boolean
-}
 type ReviewFilter = 'all' | 'incorrect' | 'correct' | 'skipped' | 'marked'
-const difficulty = (value: SATQuestion['difficulty']) =>
-  value === 'Foundation' ? 'Easy' : value === 'Advanced' ? 'Hard' : value
-const historyKey = (userId: string) => `profai:sat:question-bank:${userId}:v1`
-function readHistory(userId: string): Result[] {
-  try {
-    const data: unknown = JSON.parse(
-      window.localStorage.getItem(historyKey(userId)) ?? '[]',
-    )
-    return Array.isArray(data)
-      ? data.filter((row): row is Result =>
-          Boolean(
-            row &&
-            typeof row.key === 'string' &&
-            typeof row.section === 'string' &&
-            typeof row.domain === 'string' &&
-            typeof row.skill === 'string' &&
-            typeof row.correct === 'boolean' &&
-            typeof row.at === 'string' &&
-            Number.isFinite(Date.parse(row.at)) &&
-            (row.answer === undefined || typeof row.answer === 'string') &&
-            (row.setId === undefined || typeof row.setId === 'string') &&
-            (row.flagged === undefined || typeof row.flagged === 'boolean'),
-          ),
-        ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key }))
-      : []
-  } catch {
-    return []
-  }
-}
-const questionKey = (question: SATQuestion, testId: string) =>
-  `${question.section}:${question.sourceQuestionId ?? `${testId.replace(/-(math|reading-writing)$/, '')}:${question.id}`}`
-const allQuestions: QuestionRow[] = (() => {
-  const used = new Set<string>()
-  return Object.values(SAT_TEST_CATALOG)
-    .sort((a, b) => a.mockId - b.mockId)
-    .flatMap((test) =>
-      test.modules.flatMap((module) =>
-        module.questions.flatMap((question) => {
-          const key = questionKey(question, test.id)
-          if (used.has(key)) return []
-          used.add(key)
-          return [{ key, question, testNumber: test.mockId }]
-        }),
-      ),
-    )
-})()
-// Include retired catalog questions when reopening older practice sets.
-const reviewQuestions = new Map(
-  getSATReviewTests().flatMap((test) =>
-    test.modules.flatMap((module) =>
-      module.questions.map(
-        (question) =>
-          [
-            questionKey(question, test.id),
-            { key: questionKey(question, test.id), question, testNumber: test.mockId },
-          ] as const,
-      ),
-    ),
-  ),
-)
-allQuestions.forEach((row) => reviewQuestions.set(row.key, row))
-// Older bank sets used module positions as keys. They selected the first
-// catalog occurrence, so preserve that exact question when reopening them.
-allQuestions.forEach((row) => {
-  const legacyKey = `${row.question.section}:${row.question.sourceQuestionId ?? row.question.id}`
-  if (!reviewQuestions.has(legacyKey)) reviewQuestions.set(legacyKey, row)
-})
 const outcome = (result: Result): Exclude<ReviewFilter, 'all' | 'marked'> =>
   result.correct ? 'correct' : result.answer === '' ? 'skipped' : 'incorrect'
 const outcomeLabel = {
@@ -175,7 +94,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [skill, setSkill] = useState(params.get('skill') ?? 'all')
   const [level, setLevel] = useState('all')
   const [status, setStatus] = useState(
-    ['unanswered', 'incorrect'].includes(params.get('status') ?? '') ? params.get('status')! : 'all',
+    ['unanswered', 'incorrect', 'marked'].includes(params.get('status') ?? '') ? params.get('status')! : 'all',
   )
   const [count, setCount] = useState(
     [4, 6, 10, 15, 20, 30].includes(Number(params.get('count')))
@@ -183,12 +102,10 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       : 10,
   )
   const [history, setHistory] = useState(() => readHistory(userId))
-  const [quiz, setQuiz] = useState<QuestionRow[]>([])
-  const [index, setIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [flagged, setFlagged] = useState<string[]>([])
+  const [activeSet] = useState(() => loadBankSession(userId))
+  const { enter } = useFullscreen()
   const [calculatorOpen, setCalculatorOpen] = useState(false)
-  const [calculatorDocked, setCalculatorDocked] = useState(false)
+  const [calculatorDocked, setCalculatorDocked] = useState(true)
   const [error, setError] = useState('')
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all')
   const [reviewIndex, setReviewIndex] = useState(0)
@@ -261,7 +178,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   }, [reviewId])
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [index, reviewIndex])
+  }, [reviewIndex])
   const goTo = (view: 'practice' | 'history', id?: string) => {
     setParams((current) => {
       current.delete('review')
@@ -332,52 +249,29 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       .slice(0, 5)
   }, [history, mockHistory])
   const start = () => {
-    const priority = (row: QuestionRow) =>
+    if (activeSet && !window.confirm('Start a new set and replace your unfinished practice?')) return
+    const priority = (row: (typeof allQuestions)[number]) =>
       latest.get(row.key)?.correct === false ? 0 : latest.has(row.key) ? 2 : 1
-    setQuiz(
-      [...filtered].sort((a, b) => priority(a) - priority(b)).slice(0, count),
-    )
-    setIndex(0)
-    setAnswers({})
-    setFlagged(
-      filtered.filter((row) => markedKeys.has(row.key)).map((row) => row.key),
-    )
-    setError('')
-  }
-  const complete = () => {
-    const at = new Date().toISOString()
-    const setId = crypto.randomUUID()
-    const results: Result[] = quiz.map((row) => ({
-      key: row.key,
-      section: row.question.section,
-      domain: row.question.domain,
-      skill: row.question.skill,
-      correct: isSATAnswerCorrect(row.question, answers[row.key]),
-      answer: answers[row.key]?.trim() ?? '',
-      at,
-      setId,
-      flagged: flagged.includes(row.key),
-    }))
-    const next = [...history, ...results]
+    const rows = [...filtered].sort((a, b) => priority(a) - priority(b)).slice(0, count)
+    const session = {
+      id: crypto.randomUUID(),
+      keys: rows.map((row) => row.key),
+      index: 0,
+      answers: {},
+      flagged: rows.filter((row) => markedKeys.has(row.key)).map((row) => row.key),
+      createdAt: new Date().toISOString(),
+    }
     try {
-      window.localStorage.setItem(historyKey(userId), JSON.stringify(next))
-      setHistory(next)
-      setQuiz([])
-      setError('')
-      goTo('history', setId)
+      saveBankSession(userId, session)
+      void enter()
+      navigate(`/sat/question-bank/run/${session.id}`)
     } catch {
-      setError(
-        'Your results could not be saved. Free up browser storage and try Finish set again. Your answers are still here.',
-      )
+      setError('Your practice could not be started. Free up browser storage and try again.')
     }
   }
-  const current = quiz[index]
-  const mathVisible =
-    historyView
-      ? review?.row?.question.section === 'math'
-      : current
-        ? current.question.section === 'math'
-        : section !== 'reading-writing'
+  const mathVisible = historyView
+    ? review?.row?.question.section === 'math'
+    : section !== 'reading-writing'
   useEffect(() => {
     setCalculatorOpen(false)
   }, [mathVisible, historyView, reviewId])
@@ -400,7 +294,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     setStatus('all')
   }
   return (
-    <main className="sat-bank-page">
+    <main className="workspace-page sat-bank-page">
       <div className={`sat-bank-wrap ${mathVisible && calculatorOpen && calculatorDocked ? 'sat-bank-calculator-docked' : ''}`}>
         <button
           type="button"
@@ -698,7 +592,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               </button>
             </section>
           )
-        ) : !current ? (
+        ) : (
           <div className="sat-bank-grid">
             <section className="sat-bank-panel">
               <div className="sat-bank-panel-title">
@@ -706,6 +600,16 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 <span>{filtered.length} matching</span>
                 {calculatorButton}
               </div>
+              {activeSet ? (
+                <div className="sat-bank-resume" role="status">
+                  <p>You have an unfinished {activeSet.keys.length}-question set. Your answers are saved.</p>
+                  <button type="button" className="sat-bank-primary" onClick={() => {
+                    void enter()
+                    navigate(`/sat/question-bank/run/${activeSet.id}`)
+                  }}>Resume practice <ArrowRight size={17} /></button>
+                </div>
+              ) : null}
+              {error ? <p role="alert" className="sat-bank-alert">{error}</p> : null}
               <div className="sat-bank-filters">
                 <label>
                   Section
@@ -854,128 +758,6 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               </button>
             </aside>
           </div>
-        ) : (
-          <section className="sat-bank-session">
-            <div className="sat-bank-session-top">
-              <div>
-                <span>
-                  QUESTION {index + 1} / {quiz.length}
-                </span>
-                <h2>{current.question.skill}</h2>
-              </div>
-              {calculatorButton}
-              <button
-                type="button"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      'Leave this unfinished set? Your current answers have not been saved.',
-                    )
-                  ) {
-                    setQuiz([])
-                    setError('')
-                  }
-                }}
-              >
-                <RotateCcw size={16} /> Filters
-              </button>
-            </div>
-            <div
-              className="sat-bank-progress"
-              role="progressbar"
-              aria-label="Questions answered"
-              aria-valuemin={0}
-              aria-valuemax={quiz.length}
-              aria-valuenow={
-                quiz.filter((row) => answers[row.key]?.trim()).length
-              }
-            >
-              <span
-                style={{
-                  width: `${(quiz.filter((row) => answers[row.key]?.trim()).length / quiz.length) * 100}%`,
-                }}
-              />
-            </div>
-            <nav className="sat-bank-practice-navigator sat-bank-navigator" aria-label="Practice question navigator">
-              <p>Questions · {quiz.filter((row) => flagged.includes(row.key)).length} marked for review</p>
-              <div>
-                {quiz.map((row, position) => (
-                  <button
-                    type="button"
-                    key={row.key}
-                    className={`sat-bank-number ${answers[row.key]?.trim() ? 'answered' : ''}`}
-                    aria-label={`Go to question ${position + 1}${flagged.includes(row.key) ? ', Marked for Review' : ''}${answers[row.key]?.trim() ? ', Answered' : ', Unanswered'}`}
-                    aria-current={index === position ? 'step' : undefined}
-                    onClick={() => setIndex(position)}
-                  >
-                    {position + 1}
-                    {flagged.includes(row.key) ? <Bookmark size={12} className="sat-bank-mark-icon" aria-hidden="true" /> : null}
-                  </button>
-                ))}
-              </div>
-            </nav>
-            <div className="sat-bank-question">
-              <SATQuestionCanvas
-                question={current.question}
-                answer={answers[current.key] ?? ''}
-                onAnswer={(answer) =>
-                  setAnswers((currentAnswers) => ({
-                    ...currentAnswers,
-                    [current.key]: answer,
-                  }))
-                }
-                strokes={[]}
-                highlightAvailable={false}
-                onChange={() => {}}
-                flagged={flagged.includes(current.key)}
-                onToggleFlag={() =>
-                  setFlagged((values) =>
-                    values.includes(current.key)
-                      ? values.filter((key) => key !== current.key)
-                      : [...values, current.key],
-                  )
-                }
-              />
-            </div>
-            {error ? (
-              <p role="alert" className="sat-bank-alert">
-                {error}
-              </p>
-            ) : null}
-            <div className="sat-bank-session-footer">
-              <span>
-                {difficulty(current.question.difficulty)} · Practice Test{' '}
-                {current.testNumber}
-              </span>
-              {index ? (
-                <button type="button" onClick={() => setIndex(index - 1)}>
-                  Previous
-                </button>
-              ) : null}
-              {index + 1 < quiz.length ? (
-                <button
-                  type="button"
-                  className="sat-bank-primary"
-                  onClick={() => setIndex(index + 1)}
-                >
-                  Next <ArrowRight size={16} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="sat-bank-primary"
-                  onClick={complete}
-                >
-                  Finish set <BookOpenCheck size={16} />
-                </button>
-              )}
-            </div>
-            <p className="sat-bank-muted">
-              {quiz.filter((row) => answers[row.key]?.trim()).length} of{' '}
-              {quiz.length} answered. Unanswered questions will be marked as
-              skipped when you finish.
-            </p>
-          </section>
         )}
       </div>
       <DesmosDrawer

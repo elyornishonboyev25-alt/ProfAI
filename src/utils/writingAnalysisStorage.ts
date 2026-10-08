@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import type { WritingEvaluation, WritingError } from '@/services/geminiAI'
 import type { WritingTask } from '@/data/writingTestData'
 
@@ -53,7 +54,7 @@ function safeParseHistory(value: string | null): WritingAnalysisEntry[] {
 
 export function getWritingAnalysisHistory(userId?: string): WritingAnalysisEntry[] {
   if (typeof window === 'undefined') return []
-  try { return safeParseHistory(window.localStorage.getItem(getStorageKey(userId))) }
+  try { return safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(getStorageKey(userId))) }
   catch { return [] }
 }
 
@@ -99,9 +100,9 @@ export function saveWritingAnalysis(
 
   try {
     const storageKey = getStorageKey(userId)
-    const current = safeParseHistory(window.localStorage.getItem(storageKey))
+    const current = safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(storageKey))
     const merged = [entry, ...current].slice(0, ENTRY_LIMIT)
-    window.localStorage.setItem(storageKey, JSON.stringify(merged))
+    accountStorageFor(userId ?? 'guest').setItem(storageKey, JSON.stringify(merged))
     addWritingXP(userId, evaluation.xpAwarded)
   } catch { /* An unavailable or full local store must not hide the evaluation. */ }
 
@@ -111,7 +112,7 @@ export function saveWritingAnalysis(
 export function getWritingXP(userId?: string): number {
   if (typeof window === 'undefined') return 0
   try {
-    const val = window.localStorage.getItem(getXPKey(userId))
+    const val = accountStorageFor(userId ?? 'guest').getItem(getXPKey(userId))
     return val ? parseInt(val, 10) || 0 : 0
   } catch { return 0 }
 }
@@ -119,19 +120,19 @@ export function getWritingXP(userId?: string): number {
 function addWritingXP(userId: string | undefined, xp: number): void {
   if (typeof window === 'undefined') return
   const current = getWritingXP(userId)
-  window.localStorage.setItem(getXPKey(userId), String(current + xp))
+  accountStorageFor(userId ?? 'guest').setItem(getXPKey(userId), String(current + xp))
 }
 
 export function removeWritingAnalysisAttempt(attemptKey: string, userId?: string): WritingAnalysisEntry[] {
   if (typeof window === 'undefined') return []
   const storageKey = getStorageKey(userId)
-  const current = safeParseHistory(window.localStorage.getItem(storageKey))
+  const current = safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(storageKey))
   const next = current.filter((e) => e.attemptKey !== attemptKey)
-  window.localStorage.setItem(storageKey, JSON.stringify(next))
+  accountStorageFor(userId ?? 'guest').setItem(storageKey, JSON.stringify(next))
   return next
 }
 
 export function clearWritingAnalysisHistory(userId?: string): void {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem(getStorageKey(userId))
+  accountStorageFor(userId ?? 'guest').removeItem(getStorageKey(userId))
 }

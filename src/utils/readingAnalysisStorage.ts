@@ -1,4 +1,5 @@
-﻿import type { ReadingQuestionResult, ReadingSectionSummary } from '../types/ieltsTypes'
+import { accountStorageFor } from '@/utils/accountStorage'
+import type { ReadingQuestionResult, ReadingSectionSummary } from '../types/ieltsTypes'
 import type { TestResult } from '../types/ieltsTypes'
 
 const HISTORY_VERSION = 'v1'
@@ -110,14 +111,14 @@ function safeParseHistory(value: string | null): ReadingAnalysisHistoryEntry[] {
 export function getReadingAnalysisHistory(userId?: string): ReadingAnalysisHistoryEntry[] {
   if (typeof window === 'undefined') return []
   const storageKey = getStorageKey(userId)
-  return safeParseHistory(window.localStorage.getItem(storageKey))
+  return safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(storageKey))
 }
 
 export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void {
   if (typeof window === 'undefined') return
 
   const storageKey = getStorageKey(input.userId)
-  const current = safeParseHistory(window.localStorage.getItem(storageKey))
+  const current = safeParseHistory(accountStorageFor(input.userId ?? 'guest').getItem(storageKey))
   const withoutSameAttempt = current.filter((entry) => entry.attemptKey !== input.attemptKey)
 
   const nextEntry: ReadingAnalysisHistoryEntry = {
@@ -156,12 +157,12 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
     )
     .slice(0, ENTRY_LIMIT)
 
-  window.localStorage.setItem(storageKey, JSON.stringify(merged))
+  accountStorageFor(input.userId ?? 'guest').setItem(storageKey, JSON.stringify(merged))
 }
 
 export function clearReadingAnalysisHistory(userId?: string): void {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem(getStorageKey(userId))
+  accountStorageFor(userId ?? 'guest').removeItem(getStorageKey(userId))
 }
 
 export function removeReadingAnalysisAttempt(attemptKey: string, userId?: string): ReadingAnalysisHistoryEntry[] {
@@ -170,9 +171,9 @@ export function removeReadingAnalysisAttempt(attemptKey: string, userId?: string
   if (!normalizedKey) return getReadingAnalysisHistory(userId)
 
   const storageKey = getStorageKey(userId)
-  const current = safeParseHistory(window.localStorage.getItem(storageKey))
+  const current = safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(storageKey))
   const next = current.filter((entry) => entry.attemptKey !== normalizedKey)
-  window.localStorage.setItem(storageKey, JSON.stringify(next))
+  accountStorageFor(userId ?? 'guest').setItem(storageKey, JSON.stringify(next))
   return next
 }
 

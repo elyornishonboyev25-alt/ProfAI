@@ -10,11 +10,12 @@ import {
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { mergeProfileBadges } from '@/utils/profileBadges'
 import AchievementCard from './AchievementCard'
 import { TRACK_ORDER } from './badgeMeta'
 
 // Owner-facing badge manager: shows every earned badge and lets the learner pin the
-// ones they want on their public profile (or remove an old, lower one). Falls back to
+// favorites on their public profile (or remove an old, lower one). Falls back to
 // the local mirror when the backend is unreachable so badges are never invisible.
 export default function BadgeShelf() {
   const pushToast = useToastStore((s: ToastState) => s.pushToast)
@@ -29,14 +30,10 @@ export default function BadgeShelf() {
   useEffect(() => {
     let active = true
     setLoading(true)
-    const local = localRecords.filter((record) => record.userId === userId).map<SkillBadgeRecord>((record) => ({
-      id: `local-${record.track}-${record.tier}`, userId: userId ?? '', track: record.track,
-      tier: record.tier, band: record.band, pinned: false, source: null,
-      unlockedAt: record.unlockedAt, updatedAt: record.unlockedAt,
-    }))
+    const local = mergeProfileBadges([], localRecords, userId)
     const refresh = () => fetchBadges().then((list) => {
       if (!active) return
-      setBadges([...list, ...local.filter((record) => !list.some((saved) => saved.track === record.track && saved.tier === record.tier))])
+      setBadges(mergeProfileBadges(list, localRecords, userId))
       setOffline(false)
     })
     const onSynced = () => { void refresh().catch(() => { if (active) setOffline(true) }) }
@@ -115,12 +112,12 @@ export default function BadgeShelf() {
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3 px-1">
         <div>
           <p className="flex items-center gap-2 text-sm font-black text-slate-900"><Sparkles className="h-4 w-4 text-red-600" /> Your honors collection</p>
-          <p className="mt-1 max-w-md text-xs leading-5 text-slate-600">Real results. Lasting recognition. Pin your proudest achievements to your public profile.</p>
+          <p className="mt-1 max-w-md text-xs leading-5 text-slate-600">Real results. Lasting recognition. All badges appear on your public profile. Pin your favorites to highlight them.</p>
         </div>
         <span className="rounded-full border border-white bg-white/60 px-3 py-1.5 text-[11px] font-bold text-slate-600">{badges.length} earned</span>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[...badges].sort((a, b) => TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier).map((badge) => (
+        {[...badges].sort((a, b) => Number(b.pinned) - Number(a.pinned) || TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track) || b.tier - a.tier).map((badge) => (
           <motion.div
             key={badge.id}
             layout

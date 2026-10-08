@@ -113,10 +113,7 @@ can be supplied through `LISTENING_TEST_BROWSER`.
 
 ## Existing content limitations
 
-Tests 1 and 3 already shared the same complete recording. They still represent
-the same paper under two existing catalog IDs; this repair does not invent a new
-paper to make the catalog appear unique. A genuinely different Test 1 would need
-a matching replacement question paper and recording.
+At the time of this audit, Tests 1 and 3 shared the same paper. On 2026-10-07, Test 3 was replaced with the user-supplied January 2026 Practice Test 1; Test 1 retains the original Cycling Holiday paper. See LISTENING_FULL_TEST_3_SOURCE.md for the replacement source and verification.
 
 Test 19 is the previously user-authorized selection of 40 questions from a
 49-question recording. Original spoken numbers therefore differ from website

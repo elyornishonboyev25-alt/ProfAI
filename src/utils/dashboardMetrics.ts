@@ -1,3 +1,4 @@
+import { accountStorage } from '@/utils/accountStorage'
 import { getSATSectionTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
@@ -45,7 +46,7 @@ function progress(completed: number, total: number) {
 function readRecord(key: string): JsonRecord {
   if (typeof window === 'undefined') return {}
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(key) ?? '{}') as unknown
+    const parsed = JSON.parse(accountStorage.getItem(key) ?? '{}') as unknown
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as JsonRecord : {}
   } catch {
     return {}

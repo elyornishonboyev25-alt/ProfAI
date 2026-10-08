@@ -1,4 +1,5 @@
-﻿import type { IELTSTest, TestResult } from '@/types/ieltsTypes'
+import { useAuthStore } from '@/store/authStore'
+import type { IELTSTest, TestResult } from '@/types/ieltsTypes'
 
 type StoredReviewPayload = {
   result: TestResult
@@ -7,7 +8,7 @@ type StoredReviewPayload = {
 }
 
 function key(testId: string) {
-  return `smarttest-review-state:${testId}`
+  return `smarttest-review-state:${useAuthStore.getState().user?.id ?? 'guest'}:${testId}`
 }
 
 export function saveReviewState(testId: string, payload: { result: TestResult; test: IELTSTest }) {

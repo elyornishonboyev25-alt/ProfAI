@@ -22,6 +22,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const conversationKey = tutor.activeThread?.clientId ?? tutor.activeThreadId
 
   useEffect(() => {
+    if (!enabled) { setError(null); return }
     if (!enabled || !supported || !tutor.hasPremium || !tutor.user || !tutor.threadsLoaded) return
     let disposed = false
     const userId = tutor.user.id

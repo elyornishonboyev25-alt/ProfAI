@@ -7,7 +7,7 @@ type Callbacks = {
   ended: () => void
   failed: (message: string) => void
 }
-type PlaybackOptions = { language?: 'en' | 'uz' | 'ru'; deviceFallback?: boolean }
+type PlaybackOptions = { language?: 'en' | 'uz' | 'ru'; deviceFallback?: boolean; audio?: Promise<string> }
 
 // Keep one media element for the entire session. A new Audio() for each async
 // response loses the user's playback permission on mobile browsers.
@@ -46,8 +46,9 @@ export class ExaminerPlayback {
     const controller = new AbortController()
     this.controller = controller
     let completed = false
+    let failed = false
     const finish = () => {
-      if (!current() || completed) return
+      if (!current() || completed || failed) return
       completed = true
       clearTimeout(this.timer)
       this.retry = null
@@ -55,8 +56,10 @@ export class ExaminerPlayback {
       callbacks.ended()
     }
     const fail = (message: string) => {
-      if (!current() || completed) return
+      if (!current() || completed || failed) return
+      failed = true
       clearTimeout(this.timer)
+      this.player.pause()
       callbacks.loading(false)
       callbacks.failed(message)
     }
@@ -74,7 +77,7 @@ export class ExaminerPlayback {
       })
     }
     if (device) { void playDevice(); return }
-    void examinerAudio(text, voice, controller.signal, options.language).then((url) => {
+    void (options.audio ?? examinerAudio(text, voice, controller.signal, options.language)).then((url) => {
       if (!current()) { URL.revokeObjectURL(url); return }
       this.url = url
       this.player.src = url
@@ -85,18 +88,20 @@ export class ExaminerPlayback {
         this.retry = null
         clearTimeout(this.timer)
         this.player.onplaying = this.player.onended = this.player.onerror = null
+        this.player.ontimeupdate = null
         this.player.pause()
         void playDevice()
       }
       const play = () => {
         if (!current() || completed) return
+        failed = false
         callbacks.loading(true)
         clearTimeout(this.timer)
         this.timer = setTimeout(() => {
           if (!current() || completed) return
           this.player.pause()
           fail('Examiner audio was interrupted. Tap Play examiner to resume.')
-        }, 120_000)
+        }, 10_000)
         void this.player.play().catch((error: unknown) => {
           if (switchingToDevice) return
           if (error instanceof Error && error.name === 'NotSupportedError') fallback()
@@ -105,7 +110,13 @@ export class ExaminerPlayback {
       }
       this.retry = play
       let heardAudio = false
-      this.player.onplaying = () => { if (current() && !completed) { heardAudio = true; callbacks.loading(false); callbacks.started('neural') } }
+      const watchProgress = () => {
+        if (!current() || completed || failed) return
+        clearTimeout(this.timer)
+        this.timer = setTimeout(() => fail('Examiner audio was interrupted. Tap Play examiner to resume.'), 15_000)
+      }
+      this.player.onplaying = () => { if (current() && !completed && !failed) { heardAudio = true; watchProgress(); callbacks.loading(false); callbacks.started('neural') } }
+      this.player.ontimeupdate = watchProgress
       this.player.onended = () => { if (heardAudio) finish(); else fail('Examiner audio did not start. Tap Play examiner to hear the question.') }
       this.player.onerror = fallback
       play()
@@ -120,6 +131,7 @@ export class ExaminerPlayback {
     this.stopSpeech?.()
     this.stopSpeech = null
     this.player.onplaying = this.player.onended = this.player.onerror = null
+    this.player.ontimeupdate = null
     this.player.pause()
     this.retry = null
     if (this.url) URL.revokeObjectURL(this.url)

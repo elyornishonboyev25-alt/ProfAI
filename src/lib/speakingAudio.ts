@@ -1,10 +1,16 @@
-import { apiClient } from '@/lib/apiClient'
+import { apiClient, ApiError } from '@/lib/apiClient'
 
 export type ExaminerVoice = 'marin' | 'cedar'
 
-export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal, language: 'en' | 'uz' | 'ru' = 'en'): Promise<string> {
+export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal, language: 'en' | 'uz' | 'ru' = 'en', retryTransient = false): Promise<string> {
   return withTimeout(signal, 45_000, async (bounded) => {
-    const response = await apiClient.post<{ audioBase64: string; mimeType?: string }>('/ai/speaking-audio/voice', { text, voice, ...(language !== 'en' ? { language } : {}) }, { signal: bounded })
+    const generate = () => apiClient.post<{ audioBase64: string; mimeType?: string }>('/ai/speaking-audio/voice', { text, voice, ...(language !== 'en' ? { language } : {}) }, { signal: bounded })
+    const response = await generate().catch((error: unknown) => {
+      // One retry covers a dropped request or transient gateway failure. Both
+      // attempts share the deadline and cancellation; never retry auth errors.
+      if (!retryTransient || bounded.aborted || (error instanceof ApiError && ![502, 503, 504].includes(error.status))) throw error
+      return generate()
+    })
     if (!response.audioBase64) throw new Error('Examiner audio was empty.')
     const bytes = Uint8Array.from(atob(response.audioBase64), (character) => character.charCodeAt(0))
     return URL.createObjectURL(new Blob([bytes], { type: response.mimeType === 'audio/wav' ? 'audio/wav' : 'audio/mpeg' }))

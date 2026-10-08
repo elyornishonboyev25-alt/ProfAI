@@ -8,6 +8,7 @@ import { withCoinCharge } from '../services/coinBilling.service.js'
 
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
+const voiceInFlight = new Map<string, Promise<VoiceAudio | null>>()
 
 router.post('/assess', asyncHandler(async (req, res) => {
   const payload = speakingAssessmentSchema.parse(req.body)
@@ -31,10 +32,19 @@ router.post('/voice', asyncHandler(async (req, res) => {
   const cacheKey = JSON.stringify([req.user!.id, voice, language, text])
   const cached = voiceCache.get(cacheKey)
   if (cached && cached.expires > Date.now()) return res.json(cached.audio)
-  const audio = await generateExaminerAudio(text, voice, language)
+  let pending = voiceInFlight.get(cacheKey)
+  if (!pending) {
+    pending = generateExaminerAudio(text, voice, language).then((audio) => {
+      if (audio) {
+        if (voiceCache.size >= 24) voiceCache.delete(voiceCache.keys().next().value!)
+        voiceCache.set(cacheKey, { audio, expires: Date.now() + 10 * 60_000 })
+      }
+      return audio
+    }).finally(() => voiceInFlight.delete(cacheKey))
+    voiceInFlight.set(cacheKey, pending)
+  }
+  const audio = await pending
   if (!audio) return res.status(503).json({ message: 'Examiner voice is temporarily unavailable.' })
-  if (voiceCache.size >= 24) voiceCache.delete(voiceCache.keys().next().value!)
-  voiceCache.set(cacheKey, { audio, expires: Date.now() + 10 * 60_000 })
   return res.json(audio)
 }))
 

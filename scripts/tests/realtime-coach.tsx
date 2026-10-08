@@ -60,6 +60,11 @@ export async function run() {
   try {
     const voice = new RealtimeCoach(options)
     await voice.start()
+    currentPeer!.connectionState = 'disconnected'
+    currentPeer!.onconnectionstatechange?.()
+    assert.equal(peerCloses, 0, 'Brief network changes do not immediately kill a natural voice call')
+    currentPeer!.connectionState = 'connected'
+    currentPeer!.onconnectionstatechange?.()
     assert.ok(sent.some((event) => event.item?.content?.[0]?.text === 'Earlier question.'))
     const emit = (value: unknown) => channel.onmessage({ data: JSON.stringify(value) })
     emit({ type: 'conversation.item.input_audio_transcription.completed', item_id: 'u1', transcript: 'Salom.' })
@@ -105,6 +110,39 @@ export async function run() {
     cancelled.stop(); release(stream as any); await pending
     assert.equal(micStops, 2, 'Late microphone grants are released after cancellation')
     assert.equal(peerCloses, 1, 'No peer is created for a cancelled microphone request')
+    navigator.mediaDevices.getUserMedia = async () => stream as any
+    const nativeWindowTimeout = window.setTimeout
+    let connectionTimeout: (() => void) | undefined
+    let replyTimeout: (() => void) | undefined
+    window.setTimeout = ((callback: () => void, milliseconds?: number) => {
+      if (milliseconds === 35000) { connectionTimeout = callback; return 999998 }
+      if (milliseconds === 45000) { replyTimeout = callback; return 999999 }
+      return nativeWindowTimeout(callback, milliseconds)
+    }) as typeof window.setTimeout
+    const workingFetch = globalThis.fetch
+    const issues: string[] = []
+    try {
+      let negotiating: (() => void) | undefined
+      const entered = new Promise<void>((resolve) => { negotiating = resolve })
+      globalThis.fetch = async (url, request) => {
+        if (!String(url).endsWith('/ai/voice/connect')) return workingFetch(url, request)
+        negotiating!()
+        return new Promise((_resolve, reject) => request!.signal!.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')), { once: true }))
+      }
+      const timedOut = new RealtimeCoach({ ...options, error: (issue: Error) => issues.push(issue.message) })
+      const connecting = timedOut.start()
+      await entered
+      connectionTimeout!()
+      await connecting
+      assert.equal(issues.length, 1, 'A hung SDP request fails once and releases its microphone')
+      assert.match(issues[0], /connection timed out/)
+      globalThis.fetch = workingFetch
+      const silent = new RealtimeCoach({ ...options, error: (issue: Error) => issues.push(issue.message) })
+      await silent.start()
+      replyTimeout!()
+      assert.equal(issues.length, 2)
+      assert.match(issues[1], /reply timed out/, 'A silent initial response cannot leave the voice screen stuck thinking')
+    } finally { window.setTimeout = nativeWindowTimeout; globalThis.fetch = workingFetch }
     const sample = 'I enjoy reading books because they help me learn about different cultures and understand people. For example, I recently read an interesting novel about friendship.'
     const stats = analyseTranscript(sample, 15)
     assert.equal(estimateBandsFromStats(stats).pronunciationBand, 0)

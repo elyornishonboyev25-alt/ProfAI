@@ -30,7 +30,7 @@ import {
   type SpeechLang,
 } from '@/lib/speech'
 import { createMicMeter, type MicMeter } from '@/lib/audioMeter'
-import { canRetryCoachAudio, cancelCoachAudio, retryCoachAudio, speakCoachAudio, unlockCoachAudio } from '@/lib/coachAudio'
+import { canRetryCoachAudio, cancelCoachAudio, coachAudioVersion, retryCoachAudio, speakCoachAudio, unlockCoachAudio } from '@/lib/coachAudio'
 import type { AiPreferences, ChatLocale } from '@/types/platform'
 import { premiumLanguage, type PremiumLanguage } from '@/i18n/premium'
 import {
@@ -393,6 +393,7 @@ export function useAiTutor() {
       if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
       setSending(true)
       let threadId = activeThreadId ?? await createNewChat()
+      const replyVersion = coachAudioVersion()
       const draftThread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => thread.id === threadId)
       // A blank draft lives only in memory. Create its server record once the
       // learner actually sends a message, keeping existing offline messages safe.
@@ -458,18 +459,18 @@ export function useAiTutor() {
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
         updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, status: undefined })
-        await userPersistPromise
         if (!threadId.startsWith('local-')) {
-          void persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, response.replyLanguage ?? voiceLang).catch(() => null)
+          // Preserve message order without holding up audio or the next turn.
+          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, response.replyLanguage ?? voiceLang)).catch(() => null)
         }
 
         if (firstTurn && response.title) void renameChat(threadId, response.title)
         if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
         else if (response.memoryUpdates.length > 0) {
-          try {
-            const saved = await persistAiMemories(response.memoryUpdates)
-            upsertStoredMemories(ownerKey, saved)
-          } catch {
+          void persistAiMemories(response.memoryUpdates).then((saved) => {
+            if (useAuthStore.getState().user?.id === user?.id) upsertStoredMemories(ownerKey, saved)
+          }).catch(() => {
+            if (useAuthStore.getState().user?.id !== user?.id) return
             const now = new Date().toISOString()
             upsertStoredMemories(
               ownerKey,
@@ -480,11 +481,11 @@ export function useAiTutor() {
                 updatedAt: now,
               })),
             )
-          }
+          })
         }
 
         // Text matches each new message; voice retains its microphone/TTS language.
-        if (options.speak && ttsSupported && response.reply.trim()) {
+        if (options.speak && replyVersion === coachAudioVersion() && ttsSupported && response.reply.trim()) {
           speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
             loading: (loading) => { if (loading) { stopLevelPulse(); setVoiceState('thinking') } },
             started: () => { setVoiceError(null); setVoiceState('speaking'); startLevelPulse() },
@@ -498,7 +499,7 @@ export function useAiTutor() {
               setVoiceError(localized(uiLocale, 'Nova’s natural voice could not play. Retry audio to continue.', 'Не удалось воспроизвести естественный голос Новы. Повторите аудио, чтобы продолжить.', 'Novaning tabiiy ovozini eshittirib bo‘lmadi. Davom etish uchun audioni qayta yoqing.'))
             },
           })
-        } else {
+        } else if (!options.speak || replyVersion === coachAudioVersion()) {
           setVoiceState('idle')
         }
 

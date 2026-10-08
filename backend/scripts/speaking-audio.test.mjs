@@ -62,8 +62,22 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
     assert.equal(calls.length, before + 1)
   }
   assert.equal((await request('/voice', { text: 'Question?', language: 'invalid' })).status, 400)
+  let releaseAudio
+  let generationStarted
+  const started = new Promise((resolve) => { generationStarted = resolve })
+  provider = async () => { generationStarted(); return new Promise((resolve) => { releaseAudio = () => resolve(new Response('shared-audio')) }) }
+  const concurrentCount = calls.length
+  const first = request('/voice', { text: 'Concurrent natural voice?' })
+  await started
+  const second = request('/voice', { text: 'Concurrent natural voice?' })
+  await new Promise((resolve) => setTimeout(resolve, 30))
+  assert.equal(calls.length, concurrentCount + 1, 'Overlapping retries share one synthesis request')
+  releaseAudio()
+  assert.deepEqual((await Promise.all([first, second])).map((response) => response.status), [200, 200])
   provider = async () => { throw new Error('provider timeout') }
   assert.equal((await request('/voice', { text: 'A different question?', voice: 'cedar' })).status, 503)
+  provider = async () => new Response('recovered-audio')
+  assert.equal((await request('/voice', { text: 'A different question?', voice: 'cedar' })).status, 200, 'Failed synthesis never poisons the in-flight cache')
   provider = async () => new Response('')
   assert.equal((await request('/voice', { text: 'Empty audio?', voice: 'marin' })).status, 503)
   assert.equal((await request('/voice', { text: 'Question?', voice: 'invalid' })).status, 400)
@@ -96,8 +110,9 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
       if (String(url).includes('/audio/speech')) return new Response('{}', { status: 503 })
       assert.ok(String(url).includes(env.GEMINI_TTS_MODEL))
       const payload = JSON.parse(body)
-      assert.equal(payload.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName, profile)
+      assert.deepEqual(payload.generationConfig.speechConfig.voiceConfig, { voice: profile }, 'Gemini 3.8 uses the documented single-speaker voice configuration')
       assert.equal(payload.contents[0].parts[0].text, `Gemini fallback ${voice}?`)
+      assert.match(payload.contents[0].parts[0].speech_metadata.style, /British English/)
       return Response.json({ candidates: [{ content: { parts: [{ inlineData: { data: Buffer.from([0, 1, 2, 3]).toString('base64'), mimeType: 'audio/L16;codec=pcm;rate=24000' } }] } }] })
     }
     const response = await request('/voice', { text: `Gemini fallback ${voice}?`, voice })
@@ -111,6 +126,17 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
   }
   // A deployment with only Gemini still records/transcribes every browser format.
   env.OPENAI_API_KEY = ''
+  const modernModel = env.GEMINI_TTS_MODEL
+  env.GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts'
+  provider = async (_url, { body }) => {
+    const payload = JSON.parse(body)
+    assert.deepEqual(payload.generationConfig.speechConfig.voiceConfig, { prebuiltVoiceConfig: { voiceName: 'Kore' } })
+    assert.equal(payload.contents[0].parts[0].speech_metadata, undefined, 'Older TTS models do not accept modern metadata')
+    assert.match(payload.contents[0].parts[0].text, /Read this text aloud:\nLegacy configured voice\?$/)
+    return Response.json({ candidates: [{ content: { parts: [{ inlineData: { data: Buffer.from('wav-data').toString('base64'), mimeType: 'audio/wav' } }] } }] })
+  }
+  assert.equal((await request('/voice', { text: 'Legacy configured voice?' })).status, 200)
+  env.GEMINI_TTS_MODEL = modernModel
   for (const mimeType of ['audio/mp4', 'audio/webm', 'audio/ogg', 'audio/wav']) {
     provider = async (_url, { body }) => {
       const payload = JSON.parse(body)

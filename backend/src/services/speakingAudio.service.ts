@@ -49,13 +49,14 @@ export async function generateExaminerAudio(text: string, voice: 'marin' | 'ceda
   // Gemini deployments can provide natural examiner audio without a second
   // provider subscription. Keep male/female voices consistent across providers.
   for (const key of geminiKeys()) {
+    const modernTts = /^gemini-3\.8-/.test(env.GEMINI_TTS_MODEL)
     const audio = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(env.GEMINI_TTS_MODEL)}:generateContent`, {
       method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text, speech_metadata: { style } }] }],
+        contents: [{ role: 'user', parts: [modernTts ? { text, speech_metadata: { style } } : { text: `${style}\nRead this text aloud:\n${text}` }] }],
         generationConfig: {
           responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice === 'cedar' ? 'Charon' : 'Kore' } } },
+          speechConfig: { voiceConfig: modernTts ? { voice: voice === 'cedar' ? 'Charon' : 'Kore' } : { prebuiltVoiceConfig: { voiceName: voice === 'cedar' ? 'Charon' : 'Kore' } } },
         },
       }),
     }, budget, async (response) => {

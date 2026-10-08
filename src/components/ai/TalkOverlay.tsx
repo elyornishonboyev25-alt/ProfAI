@@ -66,32 +66,18 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   // Hands-free conversation: auto-listen when the overlay opens and again each time the
   // tutor finishes speaking — so it's a natural back-and-forth, no button pressing.
   const prevVoiceState = useRef(voiceState)
+  const startVoiceRef = useRef(startVoice)
+  startVoiceRef.current = startVoice
   useEffect(() => {
     const prev = prevVoiceState.current
     prevVoiceState.current = voiceState
     if (!talkOpen || !voiceSupported || voiceError) return
     // Start only when idle and we did NOT just stop listening/thinking (avoids loops).
     if (voiceState === 'idle' && prev !== 'listening' && prev !== 'thinking') {
-      const timer = window.setTimeout(() => startVoice(), 500)
+      const timer = window.setTimeout(() => startVoiceRef.current(), 350)
       return () => window.clearTimeout(timer)
     }
-  }, [voiceState, talkOpen, docked, voiceSupported, voiceError, startVoice])
-
-  // When the immersive view is up: Escape minimizes to the corner, and the page
-  // behind it is locked from scrolling.
-  useEffect(() => {
-    if (!talkOpen || docked) return
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') setDocked(true)
-    }
-    document.addEventListener('keydown', onKey)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = previousOverflow
-    }
-  }, [talkOpen, docked])
+  }, [voiceState, talkOpen, voiceSupported, voiceError])
 
   if (!talkOpen || !hasPremium) return null
 
@@ -233,6 +219,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
             <motion.button
               type="button"
               onClick={() => (isListening ? stopVoice() : startVoice())}
+              disabled={voiceState === 'thinking'}
               whileTap={{ scale: 0.92 }}
               className={`mt-10 inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-2xl transition ${
                 isListening
@@ -270,6 +257,7 @@ export function TalkOverlay() {
   const [mode, setMode] = useState<'coach' | 'examiner'>('coach')
   const [docked, setDocked] = useState(false)
   const [available, setAvailable] = useState<boolean | null>(null)
+  const [spokenReplies, setSpokenReplies] = useState(false)
   const [capabilityError, setCapabilityError] = useState(false)
   const [capabilityRetry, setCapabilityRetry] = useState(0)
   const dialog = useRef<HTMLDivElement>(null)
@@ -278,18 +266,28 @@ export function TalkOverlay() {
   const t = (en: string, uz: string, ru: string) => uiLanguage === 'uz' ? uz : uiLanguage === 'ru' ? ru : en
 
   useEffect(() => {
-    if (!talkOpen) { setStandard(false); setDocked(false); return }
+    if (!talkOpen) { setStandard(false); setDocked(false); setAvailable(null); return }
     if (!tutor.hasPremium) return
     const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort('timeout'), 8000)
     setAvailable(null); setCapabilityError(false)
     void apiClient.get<{ naturalVoice: boolean; spokenReplies?: boolean }>('/ai/voice/capabilities', { signal: controller.signal })
       .then((result) => {
+        if (controller.signal.aborted) return
         setAvailable(result.naturalVoice)
-        if (result.spokenReplies && tutor.voiceSupported) setStandard(true)
+        setSpokenReplies(Boolean(result.spokenReplies))
+        // Prefer streamed speech. The Speaking audio service remains the
+        // natural-voice fallback when WebRTC is unavailable.
+        if ((!result.naturalVoice || !live.supported) && result.spokenReplies && tutor.voiceSupported) setStandard(true)
       })
-      .catch(() => { if (!controller.signal.aborted) { setAvailable(false); setCapabilityError(true) } })
-    return () => controller.abort()
-  }, [talkOpen, tutor.hasPremium, tutor.user?.id, capabilityRetry])
+      .catch(() => { if (!controller.signal.aborted || controller.signal.reason === 'timeout') { setAvailable(false); setCapabilityError(true) } })
+      .finally(() => window.clearTimeout(timeout))
+    return () => { window.clearTimeout(timeout); controller.abort() }
+  }, [talkOpen, tutor.hasPremium, tutor.user?.id, tutor.voiceSupported, live.supported, capabilityRetry])
+
+  useEffect(() => {
+    if (talkOpen && !standard && available && live.error && spokenReplies && tutor.voiceSupported) setStandard(true)
+  }, [talkOpen, standard, available, live.error, spokenReplies, tutor.voiceSupported])
 
   useEffect(() => {
     if (!talkOpen || docked || standard) return

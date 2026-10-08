@@ -199,6 +199,7 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   const call = await response.json()
   assert.equal(call.session, undefined); assert.equal(call.client_secret, undefined)
   assert.equal(sessionConfig.audio.input.turn_detection.type, 'semantic_vad')
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'medium', 'Ordinary coaching avoids the examiner long-pause setting')
   assert.equal(sessionConfig.audio.input.turn_detection.interrupt_response, true)
   assert.equal(sessionConfig.tools[0].name, 'ask_coach')
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } }, 'other-user')).status, 404)

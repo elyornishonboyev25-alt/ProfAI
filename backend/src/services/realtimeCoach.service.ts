@@ -60,7 +60,7 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
     output_modalities: ['audio'], max_output_tokens: 900,
     audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', prompt: 'Transcribe the speaker verbatim, preserving their original language, mixed-language words, fillers and errors. Do not translate or improve their speech.' },
-      turn_detection: { type: 'semantic_vad', eagerness: 'low', create_response: true, interrupt_response: true } }, output: { voice: 'marin' } },
+      turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } }, output: { voice: 'marin' } },
     tools: [{ type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
     tool_choice: 'auto',

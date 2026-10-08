@@ -32,6 +32,8 @@ export class RealtimeCoach {
   private controller = new AbortController()
   private raf = 0
   private timer = 0
+  private connectionTimer = 0
+  private responseTimer = 0
   private sessionId: string | null = null
   private closed = false
   private muted = false
@@ -50,6 +52,10 @@ export class RealtimeCoach {
     if (this.channel?.readyState === 'open') this.channel.send(JSON.stringify(event))
   }
   private fail(error: Error) { if (!this.closed) { this.options.error(error); this.stop() } }
+  private waitForResponse() {
+    window.clearTimeout(this.responseTimer)
+    this.responseTimer = window.setTimeout(() => this.fail(new Error('The voice reply timed out. Please retry.')), 45_000)
+  }
 
   async start() {
     this.options.state('thinking')
@@ -80,11 +86,22 @@ export class RealtimeCoach {
         track.onended = () => this.fail(new Error('The microphone disconnected. Reconnect it and retry.'))
       })
       peer.onconnectionstatechange = () => {
-        if (peer.connectionState === 'failed' || peer.connectionState === 'disconnected') this.fail(new Error('Voice lost its connection. Your chat is saved; retry to continue.'))
+        window.clearTimeout(this.connectionTimer)
+        if (peer.connectionState === 'failed') this.fail(new Error('Voice lost its connection. Your chat is saved; retry to continue.'))
+        else if (peer.connectionState === 'disconnected') {
+          // ICE can recover a brief network change without ending the call.
+          this.connectionTimer = window.setTimeout(() => {
+            if (peer.connectionState === 'disconnected') this.fail(new Error('Voice lost its connection. Your chat is saved; retry to continue.'))
+          }, 5000)
+        }
       }
       this.channel = peer.createDataChannel('oai-events')
       const opened = new Promise<void>((resolve, reject) => {
-        const timer = window.setTimeout(() => reject(new Error('Voice connection timed out. Please retry.')), 35000)
+        const timer = window.setTimeout(() => {
+          const error = new Error('Voice connection timed out. Please retry.')
+          reject(error)
+          this.fail(error)
+        }, 35000)
         this.controller.signal.addEventListener('abort', () => { window.clearTimeout(timer); reject(new DOMException('Cancelled', 'AbortError')) }, { once: true })
         this.channel!.onopen = () => { window.clearTimeout(timer); resolve() }
       })
@@ -107,6 +124,7 @@ export class RealtimeCoach {
       this.send({ type: 'response.create', response: { instructions: this.options.context.mode === 'examiner'
         ? 'Begin the IELTS speaking mock: greet the candidate briefly and ask their full name. Ask one question only.'
         : 'Briefly greet the learner in their selected language and invite their next question. Use existing context naturally, without listing private memories.' } })
+      this.waitForResponse()
       this.meter(stream)
       this.timer = window.setTimeout(() => this.fail(new Error('This voice session has finished. Start another session to continue.')), session.maxMinutes * 60000)
     } catch (error) {
@@ -173,16 +191,21 @@ export class RealtimeCoach {
       this.fail(new Error('Voice could not complete this turn. Please retry.')); return
     }
     if (type === 'input_audio_buffer.speech_started') {
+      window.clearTimeout(this.responseTimer)
       if (this.speaking || this.responding) {
         if (this.activeResponseId) this.interruptedResponses.add(this.activeResponseId)
         this.flush('', true)
       }
       this.speaking = false; this.options.caption(''); this.options.state('listening')
     }
-    if (type === 'input_audio_buffer.speech_stopped' || type === 'response.created') this.options.state('thinking')
+    if (type === 'input_audio_buffer.speech_stopped' || type === 'response.created') {
+      this.options.state('thinking')
+      this.waitForResponse()
+    }
     if (type === 'response.created') { this.responding = true; this.activeResponseId = event.response?.id ?? '' }
-    if (type === 'output_audio_buffer.started') { this.speaking = true; this.activeResponseId = event.response_id ?? this.activeResponseId; this.options.state('speaking') }
+    if (type === 'output_audio_buffer.started') { window.clearTimeout(this.responseTimer); this.speaking = true; this.activeResponseId = event.response_id ?? this.activeResponseId; this.options.state('speaking') }
     if (type === 'output_audio_buffer.stopped' || type === 'output_audio_buffer.cleared') {
+      window.clearTimeout(this.responseTimer)
       this.speaking = false
       this.completedResponses.add(event.response_id)
       this.flush(event.response_id ?? '', type === 'output_audio_buffer.cleared')
@@ -230,6 +253,7 @@ export class RealtimeCoach {
     if (!this.closed && this.sessionId) await apiClient.post('/ai/voice/context', { id: this.sessionId, context }, { signal: this.controller.signal })
   }
   interrupt() {
+    window.clearTimeout(this.responseTimer)
     if (this.activeResponseId) this.interruptedResponses.add(this.activeResponseId)
     if (this.responding) this.send({ type: 'response.cancel' })
     if (this.speaking) this.send({ type: 'output_audio_buffer.clear' })
@@ -246,6 +270,7 @@ export class RealtimeCoach {
     this.flush('', true)
     this.controller.abort()
     window.clearTimeout(this.timer); cancelAnimationFrame(this.raf)
+    window.clearTimeout(this.connectionTimer); window.clearTimeout(this.responseTimer)
     this.channel?.close(); this.peer?.close()
     this.stream?.getTracks().forEach((track) => { track.onended = null; track.stop() })
     this.audio?.pause(); if (this.audio) this.audio.srcObject = null

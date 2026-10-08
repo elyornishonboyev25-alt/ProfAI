@@ -456,7 +456,7 @@ export default function IELTSWritingFullTestInterface({
 
     const overallBand = weightedBand(evaluations, tasks.map((task) => task.id))
     return (
-      <div className="ielts-writing-review min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] px-4 py-6 sm:px-6 lg:py-10">
+      <div className="workspace-page ielts-writing-review min-h-screen px-4 py-6 sm:px-6 lg:py-10">
         <div className="mx-auto max-w-5xl">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button type="button" onClick={onExit} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm">

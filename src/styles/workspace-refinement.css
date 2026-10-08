@@ -21,7 +21,6 @@
 @media(max-width:600px) { .language-trigger { gap:6px; padding:8px 6px; font-size:11px; }.practice-priorities { padding:22px; }.results-actions>* { flex:1; justify-content:center; }.liquid-mobile-nav a { padding-left:6px; padding-right:6px; } }
 
 /* Share the IELTS and SAT backdrop, with glass surfaces above the cool silver gradient. */
-.app-shell-dashboard { background:#f7f9ff; }
 .profai-dashboard .dashboard-main-shell { border-color:transparent; background:transparent; box-shadow:none; }
 .profai-dashboard .dashboard-main-shell::before { content:none; }
 .profai-dashboard .dashboard-entrance-grid { align-items:stretch; }

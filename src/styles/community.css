@@ -6,22 +6,6 @@
   overflow: hidden;
   height: 100dvh;
   color: var(--community-ink);
-  background:
-    linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px),
-    radial-gradient(circle at 17% 17%, rgba(255,255,255,.94), transparent 26%),
-    radial-gradient(circle at 83% 12%, rgba(225,239,255,.84), transparent 30%),
-    linear-gradient(135deg, #eef3fa 0%, #e9eef6 45%, #f5f6fa 100%);
-  background-size: 44px 44px, 44px 44px, auto, auto, auto;
-}
-
-.community-page::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background: radial-gradient(circle at 46% 16%, rgba(255,255,255,.92), transparent 18%), radial-gradient(circle at 94% 65%, rgba(255,213,217,.28), transparent 24%);
 }
 
 .community-shell { position: relative; z-index: 2; display: flex; width: min(100%, 1800px); height: 100%; flex-direction: column; overflow: hidden; margin-inline: auto; padding: 1.5rem clamp(1rem, 2.3vw, 2.5rem); }

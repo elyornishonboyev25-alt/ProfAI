@@ -6,24 +6,10 @@
   color: var(--lb-ink);
   min-height: 100vh;
   padding: 30px 32px 56px;
-  background:
-    radial-gradient(ellipse at 8% 8%, #dce2ea80, transparent 50%),
-    radial-gradient(ellipse at 100% 30%, #f0dadd60, transparent 42%),
-    linear-gradient(145deg, #f4f5f8, #e9edf2 55%, #f4f5f7);
 }
 .leaderboard-content {
   max-width: 1260px;
   margin: 0 auto;
-}
-.leaderboard-studio::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 8% 8%, #dce2ea80, transparent 50%),
-    radial-gradient(ellipse at 100% 30%, #f0dadd60, transparent 42%),
-    linear-gradient(145deg, #f4f5f8, #e9edf2 55%, #f4f5f7);
 }
 .leaderboard-studio .leaderboard-glass {
   border: 1px solid #ffffffed;

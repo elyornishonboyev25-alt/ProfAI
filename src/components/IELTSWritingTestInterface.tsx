@@ -715,7 +715,7 @@ export default function IELTSWritingTestInterface({
       b >= 7 ? 'from-emerald-500 to-green-600' : b >= 5.5 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-600'
 
     return (
-      <div className="ielts-writing-review min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fef2f2_45%,#fff_100%)] relative overflow-hidden">
+      <div className="workspace-page ielts-writing-review min-h-screen relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-rose-200/30 blur-3xl" />
           <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-orange-200/20 blur-3xl" />

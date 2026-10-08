@@ -12,7 +12,7 @@
   --arena-shadow: var(--liquid-shadow);
 }
 body { color: var(--liquid-ink); background: #f4f6f8; }
-.app-shell { background: radial-gradient(ellipse at 1% 0%, #e4f3f4 0, transparent 42%), radial-gradient(ellipse at 98% 4%, #fcebe5 0, transparent 38%), #f5f6f8; }
+.app-shell { background: var(--workspace-canvas); background-attachment: fixed; }
 .app-shell :where(a,button,input:not([type='search']),textarea,select,[role='button']):focus-visible { outline: 3px solid #9e2535; outline-offset: 4px; }
 .glass-control, .app-shell .liquid-sidebar, .liquid-mobile-nav {
   border: 1px solid rgba(255,255,255,.94);

@@ -1,4 +1,4 @@
-.coach-studio { --coach-red:#c71938; --coach-ink:#202330; --coach-muted:#666c7a; color:var(--coach-ink); background:radial-gradient(ellipse at 8% 5%,#fff8fa 0,transparent 48%),linear-gradient(135deg,#f1f2f5,#e7e9ef 56%,#f2eff2); }
+.coach-studio { --coach-red:#c71938; --coach-ink:#202330; --coach-muted:#666c7a; color:var(--coach-ink); }
 .coach-studio-frame { display:flex; flex:1; min-height:0; min-width:0; flex-direction:column; width:100%; max-width:1500px; margin:0 auto; gap:16px; }
 .coach-studio-header { display:flex; flex:none; align-items:center; justify-content:space-between; gap:16px; padding:5px 4px; }
 .coach-studio-eyebrow { display:block; font-size:10px; letter-spacing:.18em; color:var(--coach-red); font-weight:800; margin-bottom:6px; }
@@ -116,7 +116,6 @@
 }
 
 /* The full-page tutor shares the silver glass and red accents of the exam hubs. */
-.coach-studio--minimal { background:radial-gradient(ellipse at 90% 0%,#ffffffc9,transparent 50%),radial-gradient(ellipse at 8% 100%,#f9e8eb80,transparent 45%),linear-gradient(135deg,#eceef3,#dfe2e9 60%,#f0f1f4); }
 .coach-studio--minimal .coach-studio-frame { max-width:1440px; gap:14px; }
 .coach-studio--minimal .coach-chat-shell { flex:1; padding:6px; border-radius:28px; box-shadow:0 18px 50px #252b3e0c,inset 0 1px 0 #fff,inset 0 -1px 0 #c6cad566; }
 .ai-chat-window--studio { background:linear-gradient(145deg,#ffffffbf,#eef0f5a8); }

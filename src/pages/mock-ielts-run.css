@@ -4,7 +4,6 @@
   --mock-muted: #626c7b;
   padding: 36px 24px 56px;
   color: var(--mock-ink);
-  background: radial-gradient(ellipse at 2% 4%, #f3d9df88, transparent 40%), radial-gradient(ellipse at 98% 14%, #dce2ecb8, transparent 45%), linear-gradient(145deg, #f7f7fa, #eef0f5 62%, #f8f4f5);
 }
 .mock-run-content { max-width: 1180px; margin: 0 auto; }
 .mock-run-glass {

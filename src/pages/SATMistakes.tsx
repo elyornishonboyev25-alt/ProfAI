@@ -121,10 +121,9 @@ export default function SATMistakes() {
 
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,#fff1f2_0%,#fffafa_52%,#fff3f4_100%)]" />
       <div className="relative mx-auto max-w-6xl space-y-5">
         <MistakeLabNavigation />
-        <section className="rounded-[2rem] border border-white/90 bg-white/75 p-6 shadow-[0_24px_60px_rgba(220,38,38,0.1)] backdrop-blur-2xl sm:p-8">
+        <section className="glass-surface p-6 sm:p-8">
           <button onClick={() => navigate('/sat')} className="route-back-button">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to SAT Prep
           </button>
@@ -148,16 +147,16 @@ export default function SATMistakes() {
           ].map((metric) => {
             const Icon = metric.icon
             return (
-              <article key={metric.label} className="rounded-2xl border border-white bg-white/75 p-4 shadow-[0_12px_30px_rgba(220,38,38,.07)] backdrop-blur">
+              <article key={metric.label} className="glass-surface p-4">
                 <Icon className="h-4 w-4 text-red-600" />
-                <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-400">{metric.label}</p>
+                <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-500">{metric.label}</p>
                 <p className="mt-1 text-2xl font-black text-slate-950">{metric.value}</p>
               </article>
             )
           })}
         </section>
 
-        <section className="rounded-[2rem] border border-white/90 bg-white/78 p-5 shadow-[0_22px_55px_rgba(220,38,38,.08)] backdrop-blur-2xl sm:p-6">
+        <section className="glass-surface p-5 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.15em] text-red-600">Attempt history</p>
@@ -189,7 +188,7 @@ export default function SATMistakes() {
                             {completed ? 'Completed' : 'Saved incomplete'}
                           </span>
                         </div>
-                        <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                        <p className="mt-1 text-[11px] font-semibold text-slate-500">
                           {new Date(entry.savedAt).toLocaleString('en-GB', {
                             day: '2-digit',
                             month: 'short',
@@ -206,7 +205,7 @@ export default function SATMistakes() {
                         <p className="text-sm font-black text-red-800">{completed ? (isSATTestComplete(test) ? `${result.scoreRange} / ${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</p>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase text-slate-400">Correct answers</p>
+                        <p className="text-[9px] font-black uppercase text-slate-500">Correct answers</p>
                         <p className="text-sm font-black text-slate-800">{result.correct}/{result.total}</p>
                         <p className="mt-1 text-[10px] font-semibold text-slate-500">{result.incorrect} incorrect · {result.unanswered} unanswered</p>
                       </div>

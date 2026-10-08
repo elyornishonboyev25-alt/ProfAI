@@ -1,4 +1,4 @@
-﻿/* A shared visual language for the vocabulary workspace and all four activities. */
+/* A shared visual language for the vocabulary workspace and all four activities. */
 html:has(.vocab-practice) { overflow-y: hidden; scrollbar-gutter: auto; }
 .arena-route:has(> .vocab-practice) { display: flex; flex: 1; min-height: 0; height: auto; }
 .workspace-main:has(.vocab-practice) > .workspace-toolbar { flex: none; }
@@ -10,7 +10,6 @@ html:has(.vocab-practice) { overflow-y: hidden; scrollbar-gutter: auto; }
   --vocab-line: #e0e8e7;
   display: flex; flex: 1; min-height: 0; overflow: hidden;
   padding: 12px clamp(16px, 3vw, 44px) 16px;
-  background: radial-gradient(ellipse at 2% 0, #e3f0ec80, transparent 50%), radial-gradient(ellipse at 100% 40%, #f7e9e280, transparent 55%), #f5f7f5;
 }
 .vocab-practice[data-accent='blue'] { --vocab-accent: #365ca3; --vocab-soft: #edf2fe; }
 .vocab-practice[data-mode='matching'] { --vocab-accent: #9b6719; --vocab-soft: #fdf5e7; }

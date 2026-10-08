@@ -4,6 +4,11 @@
 
 :root {
   --app-bg: #f7f9ff;
+  /* Shared viewport canvas for navigation, page content and saved reviews. */
+  --workspace-canvas: radial-gradient(circle at 8% 12%, rgba(254, 202, 202, 0.32), transparent 31%),
+    radial-gradient(circle at 88% 20%, rgba(191, 219, 254, 0.52), transparent 35%),
+    radial-gradient(circle at 46% 92%, rgba(224, 231, 255, 0.34), transparent 38%),
+    linear-gradient(145deg, #fbfcff 0%, #f3f7fc 52%, #f9fbff 100%);
   --app-bg-soft: #eef4ff;
   --app-text: #0f172a;
   --app-red: #e52b32;
@@ -3508,11 +3513,7 @@ body {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 8% 12%, rgba(254, 202, 202, 0.32), transparent 31%),
-    radial-gradient(circle at 88% 20%, rgba(191, 219, 254, 0.52), transparent 35%),
-    radial-gradient(circle at 46% 92%, rgba(224, 231, 255, 0.34), transparent 38%),
-    linear-gradient(145deg, #fbfcff 0%, #f3f7fc 52%, #f9fbff 100%);
+  background: var(--workspace-canvas);
 }
 
 .workspace-background .ambient-mesh {

@@ -265,7 +265,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const headline = !submitted ? 'Your saved answers are ready to review.' : !completeTest ? 'Your available modules are complete. Review your answers below.' : displayedMidpoint >= (onlySection ? 725 : 1450) ? 'Elite work — you are in striking distance.' : displayedMidpoint >= (onlySection ? 600 : 1200) ? 'Strong foundation. Now turn review into points.' : 'You finished. Every smart review adds points.'
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_8%_4%,#ffe5e8_0%,transparent_29%),radial-gradient(circle_at_91%_9%,#dbeaff_0%,transparent_33%),linear-gradient(155deg,#f7faff,#fff9f9)] px-3 py-5 sm:px-5 lg:px-8 lg:py-8">
+    <main className="workspace-page min-h-screen px-3 py-5 sm:px-5 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-[96rem]">
         <header className="overflow-hidden rounded-[2.5rem] border border-white bg-white/90 shadow-[0_34px_90px_rgba(33,52,96,.12)] backdrop-blur-2xl">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_28rem]">

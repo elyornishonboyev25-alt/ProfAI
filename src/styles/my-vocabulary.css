@@ -10,7 +10,7 @@
 
 .my-vocabulary-shell { position: relative; width: 100%; max-width: 1200px; margin: 0 auto; }
 html:has(.my-vocabulary-overview) { overflow-y: hidden; scrollbar-gutter: auto; }
-.app-shell:has(.my-vocabulary-overview) { height: 100dvh; min-height: 0; overflow: hidden; background: #f5f6f8; }
+.app-shell:has(.my-vocabulary-overview) { height: 100dvh; min-height: 0; overflow: hidden; }
 .arena-route:has(> .my-vocabulary-overview) { display: flex; flex: 1; height: auto; min-height: 0; }
 .workspace-page.my-vocabulary-overview {
   display: flex;
@@ -18,7 +18,6 @@ html:has(.my-vocabulary-overview) { overflow-y: hidden; scrollbar-gutter: auto; 
   min-height: 0;
   min-width: 0;
   padding: 16px clamp(16px, 2.5vw, 36px) 22px;
-  background: #f5f6f8 !important;
   container-type: size;
 }
 .my-vocabulary-overview .my-vocabulary-shell { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: 20px; }

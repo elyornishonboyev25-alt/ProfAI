@@ -447,11 +447,10 @@ export default function AnalyzeMistakes() {
   return (
     <>
       <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,#fff1f2_0%,#fffafa_52%,#fff3f4_100%)]" />
         <div className="relative mx-auto w-full max-w-6xl space-y-5">
         <MistakeLabNavigation />
         <Reveal>
-        <section className="rounded-[2rem] border border-white/90 bg-white/78 p-6 shadow-[0_24px_60px_rgba(220,38,38,0.1)] backdrop-blur-2xl sm:p-8">
+        <section className="glass-surface p-6 sm:p-8">
           <button type="button" onClick={() => navigate('/review-mistakes')} className="route-back-button">
             <ArrowLeft className="h-3.5 w-3.5" /><UiText text="Review mistakes" />
           </button>
@@ -471,14 +470,14 @@ export default function AnalyzeMistakes() {
             { label: 'Reading accuracy', value: readingHistory.length ? `${insights.averageAccuracy.toFixed(0)}%` : '—', icon: Target },
             { label: 'Weakest area', value: insights.weakest, icon: TriangleAlert },
           ].map(({ label, value, icon: Icon }) => (
-            <article key={label} className="rounded-2xl border border-white bg-white/75 p-4 shadow-[0_12px_30px_rgba(220,38,38,.07)] backdrop-blur">
+            <article key={label} className="glass-surface p-4">
               <Icon className="h-4 w-4 text-red-600" />
-              <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-400"><UiText text={label} /></p>
+              <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-500"><UiText text={label} /></p>
               <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
             </article>
           ))}
         </section>
-        <section className="rounded-[2rem] border border-white/90 bg-white/78 p-5 shadow-[0_22px_55px_rgba(220,38,38,.08)] backdrop-blur-2xl sm:p-6">
+        <section className="glass-surface p-5 sm:p-6">
           {error ? (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
           ) : null}
@@ -509,7 +508,7 @@ export default function AnalyzeMistakes() {
                             className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-400"
                           />
                         </div>
-                        <p className="mt-1.5 text-[10px] font-bold text-slate-400">{area.incorrect}  <UiText text={"recurring errors"} /> </p>
+                        <p className="mt-1.5 text-[10px] font-bold text-slate-500">{area.incorrect}  <UiText text={"recurring errors"} /> </p>
                       </div>
                     ))}
                   </div>
@@ -561,7 +560,7 @@ export default function AnalyzeMistakes() {
           ) : null}
 
         </section>
-        <section className="rounded-[2rem] border border-white/90 bg-white/78 p-5 shadow-[0_22px_55px_rgba(220,38,38,.08)] backdrop-blur-2xl sm:p-6">
+        <section className="glass-surface p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black text-slate-950"><UiText text="Your IELTS review queue" /></h2>
             <button type="button" onClick={() => setConfirmState({ type: 'clear-all', backendCount: backendAttemptCount, localCount: localAttemptCount })} disabled={clearableAttemptCount === 0 || isClearingAll} className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45">

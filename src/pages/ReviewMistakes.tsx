@@ -5,9 +5,8 @@ import UiText from '@/components/common/UiText'
 export default function ReviewMistakes() {
   return (
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,#fff1f2_0%,#fffafa_52%,#fff3f4_100%)]" />
       <div className="relative mx-auto max-w-6xl space-y-5">
-        <section className="rounded-[2rem] border border-white/90 bg-white/75 p-6 shadow-[0_24px_60px_rgba(220,38,38,0.1)] backdrop-blur-2xl sm:p-8">
+        <section className="glass-surface p-6 sm:p-8">
           <Link to="/profile" className="route-back-button"><ArrowLeft className="h-3.5 w-3.5" /><UiText text="My Results" /></Link>
           <div className="mt-5 flex items-center justify-between gap-4">
             <div>

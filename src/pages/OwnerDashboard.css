@@ -3,14 +3,6 @@
   isolation: isolate;
   color: #172033;
 }
-.owner-dashboard::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 94% 4%, rgba(205, 212, 224, .65), transparent 32%), radial-gradient(ellipse at 0 18%, rgba(254, 205, 211, .25), transparent 24%);
-}
 .owner-dashboard .owner-hero {
   position: relative;
   overflow: hidden;

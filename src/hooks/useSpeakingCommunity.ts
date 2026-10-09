@@ -1,0 +1,201 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
+import { createVoiceConnection, type VoiceConnection } from '@/lib/webrtcVoice'
+import { useAuthStore } from '@/store/authStore'
+import { fetchAccount } from '@/lib/profileApi'
+
+export type SpeakingMember = { id: string; name: string; avatarUrl: string | null; muted: boolean; hand: boolean; side: string }
+export type SpeakingRoom = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; private: boolean; hostId: string; members: SpeakingMember[] }
+export type SpeakingChat = { id: string; name: string; text: string; createdAt: string }
+type Invitation = { id: string; from: SpeakingMember; expiresAt: number }
+export type RoomDraft = { title: string; topic: string; kind: string; level: string; capacity: number; private: boolean }
+
+export function useSpeakingCommunity(enabled: boolean) {
+  const [connected, setConnected] = useState(false)
+  const [rooms, setRooms] = useState<SpeakingRoom[]>([])
+  const [online, setOnline] = useState(0)
+  const [available, setAvailable] = useState<string[]>([])
+  const [room, setRoom] = useState<SpeakingRoom | null>(null)
+  const [selfId, setSelfId] = useState('')
+  const [messages, setMessages] = useState<SpeakingChat[]>([])
+  const [streams, setStreams] = useState<Record<string, MediaStream>>({})
+  const [peerStates, setPeerStates] = useState<Record<string, string>>({})
+  const [invitation, setInvitation] = useState<Invitation | null>(null)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [busy, setBusy] = useState(false)
+  const socketRef = useRef<WebSocket | null>(null)
+  const localRef = useRef<MediaStream | null>(null)
+  const peersRef = useRef(new Map<string, { voice: VoiceConnection; ready: Promise<void>; chain: Promise<void> }>())
+  const roomRef = useRef<SpeakingRoom | null>(null)
+  const pendingRef = useRef(false)
+  const generationRef = useRef(0)
+  const timeoutRef = useRef(0)
+  const pendingSignals = useRef(new Map<string, unknown[]>())
+  const send = useCallback((payload: unknown) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) socketRef.current.send(JSON.stringify(payload))
+  }, [])
+  const stopMedia = useCallback(() => {
+    generationRef.current += 1
+    pendingRef.current = false
+    window.clearTimeout(timeoutRef.current)
+    peersRef.current.forEach(peer => peer.voice.close())
+    peersRef.current.clear()
+    pendingSignals.current.clear()
+    localRef.current?.getTracks().forEach(track => track.stop())
+    localRef.current = null
+    roomRef.current = null
+    setRoom(null)
+    setStreams({})
+    setPeerStates({})
+    setMessages([])
+    setBusy(false)
+  }, [])
+
+  useEffect(() => {
+    if (!enabled) return
+    let disposed = false
+    let retry = 0
+    let attempts = 0
+    const addPeer = (member: SpeakingMember, isCaller: boolean) => {
+      if (!localRef.current || peersRef.current.has(member.id)) return
+      try {
+        const voice = createVoiceConnection({
+          isCaller,
+          sendSignal: data => send({ type: 'communitySignal', to: member.id, data }),
+          onRemoteStream: stream => setStreams(current => ({ ...current, [member.id]: stream })),
+          onStateChange: state => setPeerStates(current => ({ ...current, [member.id]: state })),
+        })
+        const ready = voice.start(localRef.current)
+        const entry = { voice, ready, chain: ready }
+        peersRef.current.set(member.id, entry)
+        for (const data of pendingSignals.current.get(member.id) ?? []) entry.chain = entry.chain.then(() => voice.handleSignal(data))
+        pendingSignals.current.delete(member.id)
+        entry.chain.catch(() => setError('A voice connection failed. Leave and rejoin the room to retry.'))
+      } catch { setError('Your browser could not start live audio. Please use a browser that supports WebRTC.') }
+    }
+    const connect = async () => {
+      // The account request uses the existing session refresh flow before opening the socket.
+      try { await fetchAccount() } catch (failure) { if (!disposed) setError(failure instanceof Error ? failure.message : 'Please sign in to connect.'); return }
+      if (disposed) return
+      let socket: WebSocket
+      try { socket = new WebSocket(getSpeakingWebSocketUrl()) } catch { setError('Speaking rooms could not connect. Please reload to retry.'); return }
+      socketRef.current = socket
+      socket.onopen = () => { if (!disposed) socket.send(JSON.stringify({ type: 'communityHello', token: useAuthStore.getState().accessToken })) }
+      socket.onmessage = event => {
+        if (disposed) return
+        let message
+        try { message = JSON.parse(event.data) } catch { return }
+        switch (message.type) {
+          case 'communityReady': setConnected(true); setSelfId(message.selfId); setError(''); attempts = 0; break
+          case 'communityLobby': setRooms(message.rooms); setOnline(message.online); setAvailable(message.available); break
+          case 'communityJoined':
+            if (!localRef.current) { send({ type: 'communityLeave' }); break }
+            window.clearTimeout(timeoutRef.current)
+            pendingRef.current = false
+            setBusy(false)
+            setNotice('')
+            roomRef.current = message.room
+            setRoom(message.room)
+            setSelfId(message.selfId)
+            setMessages(message.messages)
+            message.room.members.forEach((member: SpeakingMember) => addPeer(member, true))
+            break
+          case 'communityRoom': if (localRef.current) { roomRef.current = message.room; setRoom(message.room); setMessages(message.messages) } break
+          case 'communityPeerJoined': addPeer(message.peer, false); break
+          case 'communityPeerLeft':
+            peersRef.current.get(message.peerId)?.voice.close()
+            peersRef.current.delete(message.peerId)
+            pendingSignals.current.delete(message.peerId)
+            setStreams(current => { const next = { ...current }; delete next[message.peerId]; return next })
+            break
+          case 'communitySignal': {
+            const peer = peersRef.current.get(message.from)
+            if (peer) { peer.chain = peer.chain.then(() => peer.voice.handleSignal(message.data)); peer.chain.catch(() => setError('Audio connection interrupted. Leave and rejoin to retry.')) }
+            else if (pendingSignals.current.size < 8) pendingSignals.current.set(message.from, [...(pendingSignals.current.get(message.from) ?? []), message.data].slice(-30))
+            break
+          }
+          case 'communityChat': setMessages(current => [...current, message.message].slice(-80)); break
+          case 'communityLeft': stopMedia(); if (message.message) setNotice(message.message); break
+          case 'communityInvitation': setInvitation(message); break
+          case 'communityError': setError(message.message); if (!roomRef.current) stopMedia(); break
+          case 'communityNotice': setNotice(message.message); if (!message.message.startsWith('Invitation sent') && !roomRef.current) stopMedia(); break
+        }
+      }
+      socket.onerror = () => { if (!disposed) setError('Connection interrupted. Reconnecting to speaking rooms…') }
+      socket.onclose = () => {
+        if (disposed) return
+        setConnected(false)
+        setAvailable([])
+        setRooms([])
+        setInvitation(null)
+        stopMedia()
+        if (!disposed) { setError('Connection interrupted. Your microphone has been turned off. Reconnecting…'); retry = window.setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15_000)) }
+      }
+    }
+    void connect()
+    return () => {
+      disposed = true
+      window.clearTimeout(retry)
+      socketRef.current?.close()
+      socketRef.current = null
+      setConnected(false)
+      stopMedia()
+    }
+  }, [enabled, send, stopMedia])
+
+  useEffect(() => {
+    if (!invitation) return
+    const timeout = window.setTimeout(() => setInvitation(null), Math.max(0, invitation.expiresAt - Date.now()))
+    return () => window.clearTimeout(timeout)
+  }, [invitation])
+
+  const withMicrophone = async (payload: unknown, inviting = false) => {
+    if (!connected || pendingRef.current || roomRef.current) return
+    pendingRef.current = true
+    const generation = generationRef.current
+    setBusy(true)
+    setError('')
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires HTTPS and a supported browser.')
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+      if (generation !== generationRef.current || socketRef.current?.readyState !== WebSocket.OPEN) { stream.getTracks().forEach(t => t.stop()); return }
+      stream.getAudioTracks().forEach(track => { track.enabled = false })
+      localRef.current = stream
+      send(payload)
+      timeoutRef.current = window.setTimeout(() => {
+        if (!roomRef.current) { send({ type: 'communityLeave' }); stopMedia(); setNotice(inviting ? 'Invitation expired. Try another online partner.' : 'The room did not respond. Please try again.') }
+      }, inviting ? 65_000 : 15_000)
+    } catch (failure) {
+      stopMedia()
+      setError(failure instanceof Error && failure.message.includes('HTTPS') ? failure.message : 'Allow microphone access in your browser, then try again.')
+    }
+  }
+  const leave = () => { send({ type: 'communityLeave' }); stopMedia() }
+  const self = room?.members.find(member => member.id === selfId)
+  const changeState = (change: Partial<Pick<SpeakingMember, 'muted' | 'hand' | 'side'>>) => {
+    if (!self) return
+    const next = { ...self, ...change }
+    localRef.current?.getAudioTracks().forEach(track => { track.enabled = !next.muted })
+    send({ type: 'communityState', muted: next.muted, hand: next.hand, side: next.side })
+  }
+  return {
+    connected, rooms, online, available, room, selfId, self, messages, streams, peerStates, invitation, error, notice, busy,
+    clearError: () => setError(''),
+    create: (draft: RoomDraft) => withMicrophone({ type: 'communityCreate', ...draft }),
+    join: (roomId: string) => withMicrophone({ type: 'communityJoin', roomId }),
+    invite: (nickname: string) => withMicrophone({ type: 'communityInvite', nickname }, true),
+    reply: (accept: boolean) => {
+      if (!invitation) return
+      const payload = { type: 'communityReply', id: invitation.id, accept }
+      setInvitation(null)
+      if (accept) return withMicrophone(payload)
+      send(payload)
+    },
+    leave, changeState,
+    chat: (text: string) => send({ type: 'communityChat', text }),
+    remove: (peerId: string) => send({ type: 'communityRemove', peerId }),
+  }
+}
+
+export type SpeakingCommunity = ReturnType<typeof useSpeakingCommunity>

@@ -13,6 +13,7 @@
     "test:ai-coach-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach.tsx",
     "test:coach-studio": "node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",
+    "test:community-browser": "node scripts/test-community-browser.mjs",
     "validate:reading": "node scripts/validate-reading-bank.mjs",
     "validate:listening": "node scripts/validate-listening-bank.mjs",
     "test:listening-browser": "node scripts/test-listening-bank-browser.mjs",

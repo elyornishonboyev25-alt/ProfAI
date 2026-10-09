@@ -1,0 +1,101 @@
+import assert from 'node:assert/strict'
+import http from 'node:http'
+import { WebSocket } from 'ws'
+import { attachSpeakingSignaling } from '../dist/realtime/speakingSignaling.js'
+
+const server = http.createServer()
+const signaling = attachSpeakingSignaling(server, async token => token.startsWith('account:') ? { userId: token, name: token.slice(8), avatarUrl: null, public: token !== 'account:Hidden' } : null)
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+const url = `ws://127.0.0.1:${server.address().port}/ws/speaking`
+const sockets = []
+function next(socket, predicate, timeoutMs = 2500) {
+  const existing = socket.events.findIndex(predicate)
+  if (existing >= 0) return Promise.resolve(socket.events.splice(existing, 1)[0])
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { socket.off('message', receive); reject(new Error('Timed out waiting for event')) }, timeoutMs)
+    const receive = raw => {
+      const message = JSON.parse(raw.toString())
+      if (!predicate(message)) return
+      clearTimeout(timer)
+      socket.off('message', receive)
+      const index = socket.events.indexOf(message)
+      // Messages are captured by the first listener; consume the matching payload.
+      if (index >= 0) socket.events.splice(index, 1)
+      else { const captured = socket.events.findIndex(event => JSON.stringify(event) === JSON.stringify(message)); if (captured >= 0) socket.events.splice(captured, 1) }
+      resolve(message)
+    }
+    socket.on('message', receive)
+  })
+}
+const send = (socket, data) => socket.send(JSON.stringify(data))
+async function connect(name, valid = true) {
+  const socket = new WebSocket(url)
+  socket.events = []
+  socket.on('message', raw => socket.events.push(JSON.parse(raw.toString())))
+  sockets.push(socket)
+  await new Promise(resolve => socket.once('open', resolve))
+  send(socket, { type: 'communityHello', token: valid ? `account:${name}` : 'invalid', name: 'Spoofed name', userId: 'spoof' })
+  await next(socket, message => message.type === (valid ? 'communityReady' : 'communityError'))
+  return socket
+}
+const type = name => message => message.type === name
+try {
+  const host = await connect('Host'), guest = await connect('Guest'), third = await connect('Third'), hidden = await connect('Hidden'), invalid = await connect('Invalid', false)
+  assert.deepEqual((await next(host, message => message.type === 'communityLobby' && message.online === 3)).available.sort(), ['Guest', 'Host', 'Third'])
+  send(invalid, { type: 'communityCreate', title: 'Unauthorized', topic: 'No access' })
+  send(host, { type: 'communityCreate', title: 'Climate debate', topic: 'Should cities ban cars?', kind: 'debate', capacity: 2 })
+  const created = await next(host, type('communityJoined'))
+  const roomId = created.room.id
+  assert.equal(created.room.kind, 'debate')
+  const hostId = created.selfId
+  const listed = await next(guest, message => message.type === 'communityLobby' && message.rooms.some(room => room.id === roomId))
+  assert.equal(listed.rooms.length, 1, 'Unauthenticated clients cannot create rooms')
+  assert.equal(listed.rooms[0].members[0].name, 'Host', 'Identity comes from the verified account')
+  send(guest, { type: 'communityJoin', roomId })
+  const joined = await next(guest, type('communityJoined'))
+  const guestId = joined.selfId
+  assert.equal(joined.room.members[0].id, hostId)
+  assert.equal((await next(host, type('communityPeerJoined'))).peer.id, guestId)
+  send(third, { type: 'communityJoin', roomId })
+  assert.match((await next(third, type('communityError'))).message, /full/)
+  send(guest, { type: 'communityState', muted: false, hand: true, side: 'against' })
+  const state = await next(host, message => message.type === 'communityRoom' && message.room.members.some(member => member.id === guestId && member.hand))
+  assert.equal(state.room.members.find(member => member.id === guestId).muted, false)
+  send(guest, { type: 'communityChat', text: 'Hello team', name: 'Spoofed' })
+  assert.equal((await next(host, type('communityChat'))).message.name, 'Guest')
+  send(guest, { type: 'communitySignal', to: hostId, data: { sdp: { type: 'offer', sdp: 'test' } } })
+  assert.equal((await next(host, type('communitySignal'))).from, guestId)
+  send(third, { type: 'communitySignal', to: hostId, data: { sdp: 'intruder' } })
+  send(guest, { type: 'communityRemove', peerId: hostId })
+  send(host, { type: 'communityLeave' })
+  await next(host, type('communityLeft'))
+  const transfer = await next(guest, message => message.type === 'communityRoom' && message.room.hostId === guestId)
+  assert.equal(transfer.room.members.length, 1, 'Only hosts can remove members; host transfers on leave')
+  assert.ok(!host.events.some(message => message.type === 'communitySignal' && message.data.sdp === 'intruder'), 'Signals stay inside the room')
+  send(guest, { type: 'communityLeave' })
+  await next(guest, type('communityLeft'))
+  await next(third, message => message.type === 'communityLobby' && message.rooms.length === 0)
+  send(host, { type: 'communityInvite', nickname: 'Guest' })
+  const invitation = await next(guest, type('communityInvitation'))
+  send(third, { type: 'communityReply', id: invitation.id, accept: true })
+  send(guest, { type: 'communityReply', id: invitation.id, accept: true })
+  const directHost = await next(host, type('communityJoined'))
+  const directGuest = await next(guest, type('communityJoined'))
+  assert.equal(directHost.room.id, directGuest.room.id)
+  assert.equal(directHost.room.private, true)
+  const privateLobby = await next(third, message => message.type === 'communityLobby' && message.rooms.length === 0 && !message.available.includes('Host') && !message.available.includes('Guest'))
+  assert.equal(privateLobby.rooms.length, 0, 'Private calls never appear in the directory')
+  send(host, { type: 'communityRemove', peerId: directGuest.selfId })
+  assert.match((await next(guest, type('communityLeft'))).message, /host removed/)
+  send(host, { type: 'communityLeave' })
+  await next(host, type('communityLeft'))
+  send(third, { type: 'communityJoin', roomId: directHost.room.id })
+  assert.match((await next(third, type('communityError'))).message, /ended/)
+  send(hidden, { type: 'communityInvite', nickname: 'Host' })
+  await next(hidden, type('communityError'))
+  console.log('Community passed: account authentication, verified identity, live presence, custom rooms, capacity, chat, mic/hand/debate state, signal isolation, host transfer/removal, invitations and private room lifecycle.')
+} finally {
+  sockets.forEach(socket => socket.close())
+  signaling.close()
+  await new Promise(resolve => server.close(resolve))
+}

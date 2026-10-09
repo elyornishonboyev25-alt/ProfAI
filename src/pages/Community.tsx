@@ -43,7 +43,12 @@ import {
   subscribeToCommunityRoomStats,
   type CommunityRoomStats,
 } from '@/lib/communityRoomStats'
+import SpeakingHub from '@/components/community/SpeakingHub'
+import { useSpeakingCommunity } from '@/hooks/useSpeakingCommunity'
+import { useCommunityCopy } from '@/i18n/community'
+import type { CommunityChampion } from '@/lib/profileApi'
 import '@/styles/community.css'
+import '@/styles/speaking-hub.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
 type SmartFilter = 'sameBand' | 'sameCountry' | 'online'
@@ -90,6 +95,10 @@ export default function Community() {
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedMode = searchParams.get('mode')
   const mode: CommunityMode = COMMUNITY_MODES.includes(requestedMode as CommunityMode) ? requestedMode as CommunityMode : 'people'
+  const hub = useSpeakingCommunity(mode === 'people')
+  const [champion, setChampion] = useState<CommunityChampion | null>(null)
+  const [refresh, setRefresh] = useState(0)
+  const requestRef = useRef(0)
   const [query, setQuery] = useState('')
   const [exam, setExam] = useState<ExamFilter>('ALL')
   const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
@@ -153,27 +162,39 @@ export default function Community() {
 
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
-    setLoading(true)
+    const request = ++requestRef.current
+    if (!results.length) setLoading(true)
     debounceRef.current = window.setTimeout(async () => {
       try {
         const list = await searchLearners(query, {
           targetExam: exam === 'ALL' ? undefined : exam,
           country: sameCountryActive ? account?.profile.country ?? undefined : undefined,
           online: onlineActive || undefined,
-        })
+        }, value => { if (request === requestRef.current) setChampion(value) })
+        if (request !== requestRef.current) return
         setResults(list)
         setError('')
       } catch (requestError) {
+        if (request !== requestRef.current) return
         setResults([])
         setError(requestError instanceof Error ? requestError.message : 'Learners could not be loaded.')
       } finally {
-        setLoading(false)
+        if (request === requestRef.current) setLoading(false)
       }
     }, 260)
     return () => {
+      requestRef.current += 1
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
     }
-  }, [account?.profile.country, exam, onlineActive, query, sameCountryActive])
+  }, [account?.profile.country, exam, onlineActive, query, sameCountryActive, refresh])
+
+  useEffect(() => {
+    const update = () => { if (!document.hidden) setRefresh(value => value + 1) }
+    const timer = window.setInterval(update, 30_000)
+    window.addEventListener('focus', update)
+    document.addEventListener('visibilitychange', update)
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', update); document.removeEventListener('visibilitychange', update) }
+  }, [])
 
   const visibleResults = useMemo(() => {
     const ownTarget = normalizeScore(account?.profile.targetScore)
@@ -181,10 +202,9 @@ export default function Community() {
       ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
       : results
 
-    // The weekly crown owns the first discovery slot for as long as the
-    // champion is present in the current search/filter result.
+    // Keep the global champion first when they match the current filters.
     return [...filtered].sort(
-      (left, right) => Number(right.weeklyChampion === true) - Number(left.weeklyChampion === true),
+      (left, right) => Number(right.dailyChampion === true) - Number(left.dailyChampion === true),
     )
   }, [account?.profile.targetScore, results, sameBandActive])
 
@@ -213,13 +233,13 @@ export default function Community() {
             <BrandLockup className="community-brand" />
           </div>
 
-          {mode === 'people' ? <div className="community-search-bar">
+          {mode === 'people' && !hub.room ? <div className="community-search-bar">
             <label className="community-search-field">
               <Search className="h-7 w-7" />
               <input
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value.replace(/\s/g, ''))}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder="Find study partners..."
                 aria-label="Find study partners by nickname"
               />
@@ -233,7 +253,9 @@ export default function Community() {
           </div> : null}
         </header>
 
-        {mode === 'people' ? <section className={cn('community-layout', suggestionsOpen && 'has-suggestions-open')}>
+        {mode === 'people' ? <SpeakingHub hub={hub} champion={champion} invitedRoom={searchParams.get('room')} /> : null}
+
+        {mode === 'people' ? hub.room ? null : <section className={cn('community-layout', suggestionsOpen && 'has-suggestions-open')}>
           <aside className="community-left-column">
             <GlassPanel title="Quick filters" open={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)}>
               <nav className="community-side-list" aria-label="Learner filters">
@@ -294,8 +316,10 @@ export default function Community() {
                         key={learner.nickname ?? `${learner.xp}-${learner.level}-${index}`}
                         learner={learner}
                         score={matchScore(learner, account)}
-                        featured={learner.weeklyChampion === true}
+                        featured={learner.dailyChampion === true}
                         index={index}
+                        canTalk={hub.connected && !hub.room && !hub.busy && !!learner.nickname && hub.available.includes(learner.nickname)}
+                        onTalk={() => learner.nickname && void hub.invite(learner.nickname)}
                         onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })}
                       />
                     ))}
@@ -423,7 +447,8 @@ function SideFilter({ active, icon: Icon, label, onClick }: { active: boolean; i
   return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-side-filter', active && 'is-active')}><Icon className="h-[1.15rem] w-[1.15rem]" /><span>{label}</span></button>
 }
 
-function LearnerCard({ learner, score, featured, index, onOpen }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void }) {
+function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void; canTalk: boolean; onTalk: () => void }) {
+  const t = useCommunityCopy()
   return (
     <motion.article
       initial={{ opacity: 1, y: 22, scale: 0.97 }}
@@ -435,7 +460,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
       {featured ? (
         <span className="community-top-badge">
           <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
-          <span> <UiText text={"Top learner this week"} /> </span>
+          <span> {t('Top learner today')} </span>
         </span>
       ) : null}
       <div className="community-avatar-ring">
@@ -450,6 +475,7 @@ function LearnerCard({ learner, score, featured, index, onOpen }: { learner: Lea
         <span><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>
         <span><b>{learner.online ? 'Live' : learner.badgeCount}</b><small>{learner.online ? 'online now' : 'badges'}</small></span>
       </div>
+      {canTalk ? <button type="button" className="community-speak-button" onClick={onTalk}><Mic size={17} />{t('Speak together')}<span /></button> : null}
       <div className="community-card-footer">
         <span className="community-match-mini"><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} />{score}%</span>
         <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /> </button>

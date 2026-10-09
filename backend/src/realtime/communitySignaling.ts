@@ -3,7 +3,7 @@ import { WebSocket, type WebSocketServer } from 'ws'
 
 export type CommunityIdentity = { userId: string; name: string; avatarUrl: string | null; public: boolean }
 export type CommunityAuthenticator = (token: string) => Promise<CommunityIdentity | null>
-type Member = CommunityIdentity & { id: string; ws: WebSocket; roomId: string | null; muted: boolean; hand: boolean; side: string; lastMessage: number }
+type Member = CommunityIdentity & { id: string; ws: WebSocket; roomId: string | null; role: 'speaker' | 'listener'; muted: boolean; hand: boolean; side: string; lastMessage: number }
 type Chat = { id: string; name: string; text: string; createdAt: string }
 type Room = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; private: boolean; hostId: string; members: Member[]; messages: Chat[]; createdAt: string }
 
@@ -15,8 +15,8 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
   const send = (member: Member, payload: unknown) => {
     if (member.ws.readyState === WebSocket.OPEN) member.ws.send(JSON.stringify(payload))
   }
-  const person = (member: Member) => ({ id: member.id, name: member.name, avatarUrl: member.avatarUrl, muted: member.muted, hand: member.hand, side: member.side })
-  const summary = (room: Room) => ({ id: room.id, title: room.title, topic: room.topic, kind: room.kind, level: room.level, capacity: room.capacity, private: room.private, hostId: room.hostId, members: room.members.map(person), createdAt: room.createdAt })
+  const person = (member: Member) => ({ id: member.id, name: member.name, avatarUrl: member.avatarUrl, role: member.role, muted: member.muted, hand: member.hand, side: member.side })
+  const summary = (room: Room) => ({ id: room.id, title: room.title, topic: room.topic, kind: room.kind, level: room.level, capacity: room.capacity, maxParticipants: room.private ? room.capacity : 16, private: room.private, hostId: room.hostId, members: room.members.map(person), createdAt: room.createdAt })
   const lobby = () => {
     const people = [...members].filter(m => m.public)
     const payload = { type: 'communityLobby', rooms: [...rooms.values()].filter(r => !r.private).map(summary), online: [...new Set(people.map(m => m.userId))].length, available: [...new Set(people.filter(m => !m.roomId).map(m => m.name))] }
@@ -36,18 +36,23 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
     room.members = room.members.filter(m => m !== member)
     if (!room.members.length) rooms.delete(room.id)
     else {
-      if (room.hostId === member.id) room.hostId = room.members[0].id
+      if (room.hostId === member.id) {
+        const host = room.members.find(m => m.role === 'speaker') ?? room.members[0]
+        room.hostId = host.id
+        if (host.role === 'listener') { host.role = 'speaker'; host.muted = true }
+      }
       room.members.forEach(m => send(m, { type: 'communityPeerLeft', peerId: member.id }))
       update(room)
     }
   }
-  const join = (member: Member, room: Room) => {
+  const join = (member: Member, room: Room, listen = false) => {
     if (member.roomId === room.id) return
-    if (room.members.length >= room.capacity) return error(member, 'This room is full. Choose another room or create your own.')
+    if (room.members.length >= (room.private ? room.capacity : 16) || (!listen && room.members.filter(m => m.role === 'speaker').length >= room.capacity)) return error(member, 'This room is full. Choose another room or create your own.')
     if (room.members.some(m => m.userId === member.userId)) return error(member, 'You already joined this room in another tab.')
     leave(member)
     member.roomId = room.id
     member.muted = true
+    member.role = listen ? 'listener' : 'speaker'
     send(member, { type: 'communityJoined', room: summary(room), selfId: member.id, messages: room.messages })
     room.members.forEach(m => send(m, { type: 'communityPeerJoined', peer: person(member) }))
     room.members.push(member)
@@ -85,7 +90,7 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
         authenticating = false
         if (closed) return
         if (!identity) { ws.send(JSON.stringify({ type: 'communityError', message: 'Please sign in again to connect to speaking rooms.' })); return }
-        member = { ...identity, id: randomUUID(), ws, roomId: null, muted: true, hand: false, side: '', lastMessage: 0 }
+        member = { ...identity, id: randomUUID(), ws, roomId: null, role: 'speaker', muted: true, hand: false, side: '', lastMessage: 0 }
         members.add(member)
         send(member, { type: 'communityReady', selfId: member.id })
         lobby()
@@ -97,7 +102,7 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
         case 'communityCreate': create(member, data); break
         case 'communityJoin': {
           const target = rooms.get(String(data.roomId))
-          if (target) join(member, target)
+          if (target) join(member, target, data.listen === true)
           else error(member, 'This room has ended. Create a new room or join another conversation.')
           break
         }
@@ -108,7 +113,16 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           break
         }
         case 'communityState':
-          if (room) { member.muted = data.muted !== false; member.hand = data.hand === true; member.side = ['for', 'against'].includes(String(data.side)) ? String(data.side) : ''; update(room) }
+          if (room) { member.muted = member.role === 'listener' || data.muted !== false; member.hand = data.hand === true; member.side = ['for', 'against'].includes(String(data.side)) ? String(data.side) : ''; update(room) }
+          break
+        case 'communityTakeSeat':
+          if (room) {
+            if (member.role === 'listener' && room.members.filter(m => m.role === 'speaker').length >= room.capacity) { error(member, 'The stage is full. You can keep listening until a seat opens.'); break }
+            member.role = 'speaker'; member.muted = false; member.hand = false; update(room)
+          }
+          break
+        case 'communityStepDown':
+          if (room) { member.role = 'listener'; member.muted = true; member.hand = false; update(room) }
           break
         case 'communityChat':
           if (room && typeof data.text === 'string' && data.text.trim() && Date.now() - member.lastMessage >= 500) {

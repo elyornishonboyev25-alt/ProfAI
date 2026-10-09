@@ -4,8 +4,8 @@ import { createVoiceConnection, type VoiceConnection } from '@/lib/webrtcVoice'
 import { useAuthStore } from '@/store/authStore'
 import { fetchAccount } from '@/lib/profileApi'
 
-export type SpeakingMember = { id: string; name: string; avatarUrl: string | null; muted: boolean; hand: boolean; side: string }
-export type SpeakingRoom = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; private: boolean; hostId: string; members: SpeakingMember[] }
+export type SpeakingMember = { id: string; name: string; avatarUrl: string | null; role: 'speaker' | 'listener'; muted: boolean; hand: boolean; side: string }
+export type SpeakingRoom = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; maxParticipants: number; private: boolean; hostId: string; members: SpeakingMember[] }
 export type SpeakingChat = { id: string; name: string; text: string; createdAt: string }
 type Invitation = { id: string; from: SpeakingMember; expiresAt: number }
 export type RoomDraft = { title: string; topic: string; kind: string; level: string; capacity: number; private: boolean }
@@ -49,6 +49,15 @@ export function useSpeakingCommunity(enabled: boolean) {
     setStreams({})
     setPeerStates({})
     setMessages([])
+    setBusy(false)
+  }, [])
+  const releaseMicrophone = useCallback(() => {
+    generationRef.current += 1
+    pendingRef.current = false
+    window.clearTimeout(timeoutRef.current)
+    localRef.current?.getTracks().forEach(track => track.stop())
+    if (roomRef.current) localRef.current = new MediaStream()
+    peersRef.current.forEach(peer => { void peer.ready.then(() => peer.voice.replaceAudioTrack(null)).catch(() => {}) })
     setBusy(false)
   }, [])
 
@@ -101,7 +110,14 @@ export function useSpeakingCommunity(enabled: boolean) {
             setMessages(message.messages)
             message.room.members.forEach((member: SpeakingMember) => addPeer(member, true))
             break
-          case 'communityRoom': if (localRef.current) { roomRef.current = message.room; setRoom(message.room); setMessages(message.messages) } break
+          case 'communityRoom':
+            if (localRef.current) {
+              roomRef.current = message.room; setRoom(message.room); setMessages(message.messages)
+              const self = message.room.members.find((member: SpeakingMember) => member.id === message.selfId)
+              localRef.current.getAudioTracks().forEach(track => { track.enabled = self?.role === 'speaker' && !self.muted })
+              if (self?.role === 'speaker' && !self.muted && pendingRef.current && localRef.current.getAudioTracks().some(track => track.readyState === 'live')) { pendingRef.current = false; window.clearTimeout(timeoutRef.current); setBusy(false) }
+            }
+            break
           case 'communityPeerJoined': addPeer(message.peer, false); break
           case 'communityPeerLeft':
             peersRef.current.get(message.peerId)?.voice.close()
@@ -112,13 +128,13 @@ export function useSpeakingCommunity(enabled: boolean) {
           case 'communitySignal': {
             const peer = peersRef.current.get(message.from)
             if (peer) { peer.chain = peer.chain.then(() => peer.voice.handleSignal(message.data)); peer.chain.catch(() => setError('Audio connection interrupted. Leave and rejoin to retry.')) }
-            else if (pendingSignals.current.size < 8) pendingSignals.current.set(message.from, [...(pendingSignals.current.get(message.from) ?? []), message.data].slice(-30))
+            else if (pendingSignals.current.size < 16) pendingSignals.current.set(message.from, [...(pendingSignals.current.get(message.from) ?? []), message.data].slice(-30))
             break
           }
           case 'communityChat': setMessages(current => [...current, message.message].slice(-80)); break
           case 'communityLeft': stopMedia(); if (message.message) setNotice(message.message); break
           case 'communityInvitation': setInvitation(message); break
-          case 'communityError': setError(message.message); if (!roomRef.current) stopMedia(); break
+          case 'communityError': setError(message.message); if (!roomRef.current) stopMedia(); else if (pendingRef.current) releaseMicrophone(); break
           case 'communityNotice': setNotice(message.message); if (!message.message.startsWith('Invitation sent') && !roomRef.current) stopMedia(); break
         }
       }
@@ -142,7 +158,7 @@ export function useSpeakingCommunity(enabled: boolean) {
       setConnected(false)
       stopMedia()
     }
-  }, [enabled, send, stopMedia])
+  }, [enabled, send, stopMedia, releaseMicrophone])
 
   useEffect(() => {
     if (!invitation) return
@@ -150,15 +166,15 @@ export function useSpeakingCommunity(enabled: boolean) {
     return () => window.clearTimeout(timeout)
   }, [invitation])
 
-  const withMicrophone = async (payload: unknown, inviting = false) => {
+  const withMicrophone = async (payload: unknown, inviting = false, listen = false) => {
     if (!connected || pendingRef.current || roomRef.current) return
     pendingRef.current = true
     const generation = generationRef.current
     setBusy(true)
     setError('')
     try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires HTTPS and a supported browser.')
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+      if (!listen && !navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires HTTPS and a supported browser.')
+      const stream = listen ? new MediaStream() : await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
       if (generation !== generationRef.current || socketRef.current?.readyState !== WebSocket.OPEN) { stream.getTracks().forEach(t => t.stop()); return }
       stream.getAudioTracks().forEach(track => { track.enabled = false })
       localRef.current = stream
@@ -173,17 +189,44 @@ export function useSpeakingCommunity(enabled: boolean) {
   }
   const leave = () => { send({ type: 'communityLeave' }); stopMedia() }
   const self = room?.members.find(member => member.id === selfId)
+  const takeSeat = async () => {
+    const currentRoom = roomRef.current
+    if (!currentRoom || pendingRef.current) return
+    if (self?.role === 'listener' && currentRoom.members.filter(member => member.role === 'speaker').length >= currentRoom.capacity) { setError('The stage is full. You can keep listening until a seat opens.'); return }
+    pendingRef.current = true
+    const generation = generationRef.current
+    setBusy(true)
+    setError('')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+      if (generation !== generationRef.current || roomRef.current?.id !== currentRoom.id) { stream.getTracks().forEach(track => track.stop()); return }
+      stream.getAudioTracks().forEach(track => { track.enabled = false })
+      localRef.current?.getTracks().forEach(track => track.stop())
+      localRef.current = stream
+      await Promise.all([...peersRef.current.values()].map(async peer => { await peer.ready; await peer.voice.replaceAudioTrack(stream.getAudioTracks()[0]) }))
+      if (generation !== generationRef.current) return
+      send({ type: 'communityTakeSeat' })
+      timeoutRef.current = window.setTimeout(() => { if (pendingRef.current) { releaseMicrophone(); send({ type: 'communityState', muted: true, hand: false, side: self?.side ?? '' }); setError('The stage did not respond. Please try again.') } }, 10_000)
+    } catch {
+      if (generation !== generationRef.current) return
+      releaseMicrophone()
+      setError('Allow microphone access in your browser, then try again.')
+    }
+  }
   const changeState = (change: Partial<Pick<SpeakingMember, 'muted' | 'hand' | 'side'>>) => {
     if (!self) return
+    if (change.muted === false && (self.role === 'listener' || !localRef.current?.getAudioTracks().some(track => track.readyState === 'live'))) { void takeSeat(); return }
     const next = { ...self, ...change }
-    localRef.current?.getAudioTracks().forEach(track => { track.enabled = !next.muted })
+    localRef.current?.getAudioTracks().forEach(track => { track.enabled = next.role === 'speaker' && !next.muted })
     send({ type: 'communityState', muted: next.muted, hand: next.hand, side: next.side })
   }
   return {
     connected, rooms, online, available, room, selfId, self, messages, streams, peerStates, invitation, error, notice, busy,
     clearError: () => setError(''),
-    create: (draft: RoomDraft) => withMicrophone({ type: 'communityCreate', ...draft }),
-    join: (roomId: string) => withMicrophone({ type: 'communityJoin', roomId }),
+    create: (draft: RoomDraft) => withMicrophone({ type: 'communityCreate', ...draft }, false, true),
+    join: (roomId: string) => withMicrophone({ type: 'communityJoin', roomId, listen: true }, false, true),
+    takeSeat,
+    stepDown: () => { send({ type: 'communityStepDown' }); releaseMicrophone() },
     invite: (nickname: string) => withMicrophone({ type: 'communityInvite', nickname }, true),
     reply: (accept: boolean) => {
       if (!invitation) return

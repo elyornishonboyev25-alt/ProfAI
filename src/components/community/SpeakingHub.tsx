@@ -1,30 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, AudioLines, Check, Copy, Crown, Hand, Headphones, Loader2, LockKeyhole, MessageCircle, Mic, MicOff, PhoneOff, Plus, Radio, Search, Send, Sparkles, Users, X } from 'lucide-react'
+import { ArrowRight, AudioLines, Check, ChevronDown, Copy, Crown, Hand, Headphones, Loader2, LockKeyhole, MessageCircle, Mic, MicOff, PhoneOff, Plus, Radio, Search, Send, Settings2, Users, X } from 'lucide-react'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { cn } from '@/components/ui/utils'
-import type { RoomDraft, SpeakingCommunity } from '@/hooks/useSpeakingCommunity'
+import type { RoomDraft, SpeakingCommunity, SpeakingMember, SpeakingRoom } from '@/hooks/useSpeakingCommunity'
 import { useCommunityCopy } from '@/i18n/community'
 import type { CommunityChampion } from '@/lib/profileApi'
 
 const KINDS = { conversation: 'Conversation', debate: 'Debate', ielts: 'IELTS practice' }
 const LEVELS = { all: 'All levels', beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' }
-const DEFAULT_DRAFT: RoomDraft = { title: '', topic: '', kind: 'conversation', level: 'all', capacity: 5, private: false }
+const STARTERS = [
+  { title: 'Say hello', topic: 'Meet new people, introduce yourself and share something about your day.', kind: 'conversation', emoji: '👋', tone: 'peach' },
+  { title: 'Daily conversation', topic: 'Talk about hobbies, favourite places and everyday life.', kind: 'conversation', emoji: '☕', tone: 'mint' },
+  { title: 'Debate club', topic: 'Does technology bring us closer together? Pick a side and share your opinion.', kind: 'debate', emoji: '💬', tone: 'lilac' },
+  { title: 'IELTS speaking', topic: 'Describe a place you would love to visit. Ask each other follow-up questions.', kind: 'ielts', emoji: '🎯', tone: 'blue' },
+] as const
+
+function roomTone(room: SpeakingRoom) {
+  return room.kind === 'debate' ? 'lilac' : room.kind === 'ielts' ? 'blue' : room.id.charCodeAt(0) % 2 ? 'peach' : 'mint'
+}
 
 export default function SpeakingHub({ hub, champion, invitedRoom }: { hub: SpeakingCommunity; champion: CommunityChampion | null; invitedRoom: string | null }) {
   const t = useCommunityCopy()
   const [creating, setCreating] = useState(false)
   const [kind, setKind] = useState('all')
   const [query, setQuery] = useState('')
-  const [level, setLevel] = useState('all')
   const [text, setText] = useState('')
   const [copied, setCopied] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const chatRef = useRef<HTMLDivElement>(null)
-  const lobbyRef = useRef<HTMLElement>(null)
-  const visible = useMemo(() => hub.rooms.filter(room => (kind === 'all' || room.kind === kind) && (level === 'all' || room.level === 'all' || room.level === level) && `${room.title} ${room.topic}`.toLowerCase().includes(query.toLowerCase())), [hub.rooms, kind, level, query])
+  const visible = useMemo(() => hub.rooms.filter(room => (kind === 'all' || room.kind === kind) && `${room.title} ${room.topic}`.toLowerCase().includes(query.toLowerCase())), [hub.rooms, kind, query])
+  const room = hub.room
+  const speakers = room?.members.filter(member => member.role === 'speaker') ?? []
+  const listeners = room?.members.filter(member => member.role === 'listener') ?? []
+  const rules = t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')
+
   useEffect(() => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }) }, [hub.messages])
   useEffect(() => { if (hub.room) setCreating(false); setCopied(false); setShareUrl('') }, [hub.room?.id])
-  const room = hub.room
+
+  const openStarter = (index: number) => {
+    const starter = STARTERS[index]
+    void hub.create({ title: t(starter.title), topic: t(starter.topic), kind: starter.kind, capacity: 8, level: 'all', private: false })
+  }
   const share = async () => {
     if (!room) return
     const url = new URL('/community', window.location.origin)
@@ -33,35 +49,112 @@ export default function SpeakingHub({ hub, champion, invitedRoom }: { hub: Speak
     try { await navigator.clipboard.writeText(url.toString()); setCopied(true) } catch { setCopied(false) }
   }
   return <section className="speaking-hub" aria-label={t('Speaking community')}>
-    {hub.error ? <div className="hub-feedback is-error" role="alert"><span>{hub.error}</span><button type="button" onClick={hub.clearError} aria-label={t('Close')}><X size={17} /></button></div> : null}
-    {hub.notice ? <div className="hub-feedback" role="status">{hub.notice}</div> : null}
-    {hub.invitation ? <div className="hub-invitation" role="status"><span className="hub-invite-icon"><Headphones /></span><div><b>{t('Speaking invitation')}</b><p>@{hub.invitation.from.name} {t('invites you to a private voice conversation.')}</p></div><button type="button" className="hub-button is-primary" disabled={hub.busy || !!room} onClick={() => void hub.reply(true)}>{t('Accept & join')}</button><button type="button" className="hub-button" onClick={() => void hub.reply(false)}>{t('Decline')}</button></div> : null}
+    {hub.error ? <div className="hub-feedback is-error" role="alert"><span>{t(hub.error)}</span><button type="button" onClick={hub.clearError} aria-label={t('Close')}><X size={17} /></button></div> : null}
+    {hub.notice ? <div className="hub-feedback" role="status">{t(hub.notice)}</div> : null}
+    {hub.invitation ? <div className="hub-invitation" role="status">
+      <span className="hub-invite-icon"><Headphones /></span>
+      <div><b>{t('Speaking invitation')}</b><p>@{hub.invitation.from.name} {t('invites you to a private voice conversation.')}</p></div>
+      <button type="button" className="hub-button is-primary" disabled={hub.busy || !!room} onClick={() => void hub.reply(true)}>{t('Accept & join')}</button>
+      <button type="button" className="hub-button" onClick={() => void hub.reply(false)}>{t('Decline')}</button>
+    </div> : null}
     {room ? <>
-      <header className="hub-room-header"><div><span className="hub-eyebrow"><Radio size={14} />{t(room.private ? 'Private room' : 'Live')} · {t(KINDS[room.kind as keyof typeof KINDS])}</span><h2>{room.title}</h2><p>{room.members.length}/{room.capacity} · {t(LEVELS[room.level as keyof typeof LEVELS])}</p></div><button type="button" className="hub-button" onClick={() => void share()}>{copied ? <Check size={17} /> : <Copy size={17} />}{t(copied ? 'Link copied' : 'Invite friends')}</button></header>
+      <header className="hub-room-header">
+        <div><span className="hub-eyebrow"><Radio size={14} />{t(room.private ? 'Private room' : 'Live')} · English</span><h1>{room.title}</h1></div>
+        <div className="hub-room-header-actions"><span><Users size={16} />{room.members.length}</span><button type="button" className="hub-button" onClick={() => void share()}>{copied ? <Check size={17} /> : <Copy size={17} />}{t(copied ? 'Link copied' : 'Invite friends')}</button></div>
+      </header>
       {shareUrl ? <label className="hub-share-link">{t('Invitation link')}<input readOnly value={shareUrl} onFocus={event => event.target.select()} /></label> : null}
-      <div className="hub-session-layout"><div className="hub-session-main">
-        <div className={cn('hub-topic', room.kind === 'debate' && 'is-debate')}><span className="hub-eyebrow"><Sparkles size={14} />{t(KINDS[room.kind as keyof typeof KINDS])}</span><h3>{room.topic}</h3><p>{t('Listen, take turns and challenge ideas respectfully. Raise your hand when you want to speak.')}</p>{room.kind === 'debate' ? <div className="hub-debate-sides" aria-label={t('Choose your side')}>{['for', 'against'].map(side => <button type="button" key={side} aria-pressed={hub.self?.side === side} onClick={() => hub.changeState({ side: hub.self?.side === side ? '' : side })}>{t(side === 'for' ? 'For' : 'Against')} · {room.members.filter(member => member.side === side).length}</button>)}</div> : null}</div>
-        <div className="hub-speakers">{room.members.map(member => <article key={member.id} className={cn('hub-speaker', !member.muted && 'is-speaking', member.hand && 'has-hand')}><div className="hub-speaker-avatar"><ProfileAvatar src={member.avatarUrl} name={member.name} alt="" />{member.hand ? <span className="hub-raised-hand" aria-label={t('Raise hand')}><Hand size={14} /></span> : null}</div><b>@{member.name}</b><span>{member.id === hub.selfId ? t('You') : member.id === room.hostId ? t('Host') : member.side ? t(member.side === 'for' ? 'For' : 'Against') : t('Live')}</span><small>{member.muted ? <MicOff size={12} /> : <Mic size={12} />}{member.id !== hub.selfId && hub.peerStates[member.id] !== 'connected' ? t(hub.peerStates[member.id] === 'failed' || hub.peerStates[member.id] === 'disconnected' ? 'Audio interrupted' : 'Connecting audio') : t(member.muted ? 'Muted' : 'Mic on')}</small>{hub.selfId === room.hostId && member.id !== hub.selfId ? <button type="button" className="hub-remove" aria-label={`${t('Remove from room')}: ${member.name}`} title={t('Remove from room')} onClick={() => hub.remove(member.id)}><X size={14} /></button> : null}</article>)}{Array.from({ length: Math.max(0, room.capacity - room.members.length) }, (_, index) => <div className="hub-speaker is-empty" key={`empty-${index}`}><span className="hub-empty-seat"><Users size={23} /></span><small>{t('Open seat')}</small></div>)}</div>
-        <div className="hub-call-controls"><button type="button" className={cn('hub-button', !hub.self?.muted && 'is-primary')} onClick={() => hub.changeState({ muted: !hub.self?.muted })}>{hub.self?.muted ? <MicOff size={18} /> : <Mic size={18} />}{t(hub.self?.muted ? 'Unmute' : 'Mute')}</button><button type="button" className={cn('hub-button', hub.self?.hand && 'is-selected')} aria-pressed={hub.self?.hand === true} onClick={() => hub.changeState({ hand: !hub.self?.hand })}><Hand size={18} />{t(hub.self?.hand ? 'Lower hand' : 'Raise hand')}</button><button type="button" className="hub-button is-leave" onClick={hub.leave}><PhoneOff size={18} />{t('Leave room')}</button></div>
-      </div><aside className="hub-chat"><h3><MessageCircle size={18} />{t('Room chat')}</h3><div className="hub-chat-messages" ref={chatRef} role="log" aria-live="polite">{hub.messages.length ? hub.messages.map(message => <div key={message.id} className="hub-chat-message"><div><b>@{message.name}</b><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div><p>{message.text}</p></div>) : <p className="hub-chat-empty">{t('Say hello or share a question.')}</p>}</div><form onSubmit={event => { event.preventDefault(); if (text.trim()) { hub.chat(text.trim()); setText('') } }}><input value={text} onChange={event => setText(event.target.value)} maxLength={500} placeholder={t('Write a message')} aria-label={t('Write a message')} /><button type="submit" disabled={!text.trim()} aria-label={t('Send')}><Send size={18} /></button></form></aside></div>
+      <div className="hub-session-layout">
+        <div className={cn('hub-stage', `tone-${roomTone(room)}`)}>
+          <div className="hub-stage-top"><span><AudioLines size={16} />{t(KINDS[room.kind as keyof typeof KINDS])}</span><span>{speakers.length}/{room.capacity} {t('on stage')}</span></div>
+          <div className="hub-topic"><h2>{room.topic}</h2><p>{t('Good conversations start with listening.')}</p></div>
+          {room.kind === 'debate' ? <div className="hub-debate-sides" aria-label={t('Choose your side')}>
+            {['for', 'against'].map(side => <button type="button" key={side} aria-pressed={hub.self?.side === side} onClick={() => hub.changeState({ side: hub.self?.side === side ? '' : side })}>{t(side === 'for' ? 'For' : 'Against')} · {room.members.filter(member => member.side === side).length}</button>)}
+          </div> : null}
+          <div className="hub-speakers">
+            {speakers.map(member => <StageMember key={member.id} member={member} hub={hub} />)}
+            {Array.from({ length: Math.max(0, room.capacity - speakers.length) }, (_, index) => <button type="button" className="hub-speaker is-empty" key={`seat-${index}`} disabled={hub.busy || hub.self?.role === 'speaker'} onClick={() => void hub.takeSeat()} aria-label={t('Take a seat')}><span className="hub-empty-seat"><Plus size={24} /></span><b>{t('Take a seat')}</b></button>)}
+          </div>
+          <div className="hub-audience-heading"><Headphones size={16} /><b>{t('Listening')}</b><span>{listeners.length}</span>{hub.self?.role === 'listener' ? <small>{t('You are listening. Tap a seat to speak.')}</small> : null}</div>
+          <div className="hub-listeners">
+            {listeners.map(member => <div key={member.id} className="hub-listener"><span><ProfileAvatar src={member.avatarUrl} name={member.name} alt="" />{member.hand ? <i><Hand size={12} /></i> : null}</span><b>@{member.name}</b>{hub.selfId === room.hostId ? <button type="button" title={t('Remove from room')} aria-label={`${t('Remove from room')}: ${member.name}`} onClick={() => hub.remove(member.id)}><X size={12} /></button> : null}</div>)}
+            {!listeners.length ? <p>{t('Invite a friend to listen in.')}</p> : null}
+          </div>
+          <div className="hub-call-controls">
+            <button type="button" className={cn('hub-button', !hub.self?.muted && 'is-primary')} disabled={hub.busy} onClick={() => hub.self?.role === 'listener' ? void hub.takeSeat() : hub.changeState({ muted: !hub.self?.muted })}>{hub.busy ? <Loader2 size={18} className="animate-spin" /> : hub.self?.role === 'listener' ? <Mic size={18} /> : hub.self?.muted ? <MicOff size={18} /> : <Mic size={18} />}{t(hub.self?.role === 'listener' ? 'Take a seat' : hub.self?.muted ? 'Unmute' : 'Mute')}</button>
+            {hub.self?.role === 'listener' ? <button type="button" className={cn('hub-button', hub.self.hand && 'is-selected')} aria-pressed={hub.self.hand} onClick={() => hub.changeState({ hand: !hub.self?.hand })}><Hand size={18} />{t(hub.self.hand ? 'Lower hand' : 'Raise hand')}</button> : <button type="button" className="hub-button" onClick={hub.stepDown}><Headphones size={18} />{t('Listen instead')}</button>}
+            <button type="button" className="hub-button is-leave" onClick={hub.leave}><PhoneOff size={18} />{t('Leave room')}</button>
+          </div>
+        </div>
+        <aside className="hub-chat">
+          <h3><MessageCircle size={18} />{t('Room chat')}</h3>
+          <div className="hub-chat-messages" ref={chatRef} role="log" aria-live="polite">{hub.messages.length ? hub.messages.map(message => <div key={message.id} className="hub-chat-message"><div><b>@{message.name}</b><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div><p>{message.text}</p></div>) : <div className="hub-chat-empty"><MessageCircle size={28} /><p>{t('Say hello or share a question.')}</p></div>}</div>
+          <form onSubmit={event => { event.preventDefault(); if (text.trim()) { hub.chat(text.trim()); setText('') } }}><input value={text} onChange={event => setText(event.target.value)} maxLength={500} placeholder={t('Write a message')} aria-label={t('Write a message')} /><button type="submit" disabled={!text.trim()} aria-label={t('Send')}><Send size={18} /></button></form>
+        </aside>
+      </div>
       {Object.entries(hub.streams).map(([id, stream]) => <RemoteAudio key={id} stream={stream} />)}
     </> : <>
-      <div className="hub-hero"><div className="hub-hero-copy"><span className="hub-eyebrow"><AudioLines size={16} />{t('Speaking community')}<span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting…')}</span></span><h1>{t('A little courage. A real conversation.')}</h1><p>{t('Meet someone new, practise your English and find your people. Your next conversation starts here.')}</p><div className="hub-hero-actions"><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => setCreating(true)}><Plus size={19} />{t('Create a room')}</button><button type="button" className="hub-button" onClick={() => lobbyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{t('Explore rooms')}<ArrowRight size={17} /></button></div><div className="hub-hero-stats"><span><i /> <b>{hub.connected ? hub.online : '—'}</b> {t('online in community')}</span><span><Users size={15} /><b>{hub.connected ? hub.rooms.length : '—'}</b> {t('rooms open')}</span></div></div><div className="hub-voice-art" aria-hidden="true"><div className="hub-orbit is-outer" /><div className="hub-orbit is-inner" /><span className="hub-art-core"><Mic size={42} /></span><span className="hub-art-bubble is-a"><MessageCircle size={24} /></span><span className="hub-art-bubble is-b"><Headphones size={25} /></span><span className="hub-art-bubble is-c"><Users size={24} /></span><div className="hub-art-caption"><span>{Array.from({ length: 13 }, (_, i) => <i key={i} style={{ '--bar-height': `${[10, 20, 14, 30, 22, 38, 26][i % 7]}px`, animationDelay: `${i * .12}s` } as React.CSSProperties} />)}</span><small>{t('Your voice belongs here')}</small></div></div></div>
-      {champion ? <div className="hub-champion" title={t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}><span className="hub-champion-crown"><Crown size={21} /></span><div><b>{t('Top learner today')}</b><span>@{champion.nickname} · {champion.xp.toLocaleString()} XP</span></div><small>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</small></div> : null}
+      <header className="hub-discovery-heading">
+        <div><span className="hub-eyebrow"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting…')}</span>{hub.online} {t('online in community')}</span><h1>{t('Voice rooms')}<span>🎙️</span></h1><p>{t('Drop in. Listen. Join the conversation.')}</p></div>
+        <button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => { hub.clearError(); setCreating(true) }}><Plus size={19} />{t('Create a room')}</button>
+      </header>
       {invitedRoom ? <div className="hub-invitation"><LockKeyhole size={22} /><div><b>{t('Invitation link')}</b><p>{t('Someone invited you to a speaking room.')}</p></div><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => void hub.join(invitedRoom)}>{t('Join invited room')}<ArrowRight size={17} /></button></div> : null}
-      <section ref={lobbyRef} className="hub-lobby"><div className="hub-lobby-heading"><h2><Radio size={21} />{t('Live rooms')}<span>{visible.length}</span></h2><button type="button" className="hub-button" disabled={!hub.connected || hub.busy} onClick={() => setCreating(true)}><Plus size={17} />{t('Create a room')}</button></div><div className="hub-lobby-filters"><nav aria-label={t('Room type')}>{Object.entries({ all: 'All rooms', ...KINDS }).map(([value, label]) => <button type="button" key={value} aria-pressed={kind === value} className={cn(kind === value && 'is-active')} onClick={() => setKind(value)}>{t(label)}</button>)}</nav><label className="hub-room-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search rooms or topics')} aria-label={t('Search rooms or topics')} /></label><select value={level} onChange={event => setLevel(event.target.value)} aria-label={t('English level')}>{Object.entries(LEVELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></div><div className="hub-room-grid">{visible.map(room => <article key={room.id} className={`hub-room-card is-${room.kind}`}><div className="hub-room-card-top"><span className="hub-room-kind">{room.kind === 'debate' ? <AudioLines size={16} /> : room.kind === 'ielts' ? <Sparkles size={16} /> : <MessageCircle size={16} />}{t(KINDS[room.kind as keyof typeof KINDS])}</span><span className="hub-room-live"><i />{t('Live')}</span></div><h3>{room.title}</h3><p>{room.topic}</p><small>{t(LEVELS[room.level as keyof typeof LEVELS])}</small><div className="hub-room-card-bottom"><div className="hub-room-members">{room.members.slice(0, 3).map(member => <span key={member.id}><ProfileAvatar src={member.avatarUrl} name={member.name} alt="" /></span>)}<b>{room.members.length}/{room.capacity}</b></div><button type="button" className="hub-button" disabled={room.members.length >= room.capacity || !hub.connected || hub.busy} onClick={() => void hub.join(room.id)}>{t(room.members.length >= room.capacity ? 'Room full' : 'Join conversation')}<ArrowRight size={15} /></button></div></article>)}</div>{!visible.length ? <div className="hub-lobby-empty"><span><Headphones size={28} /></span><h3>{t('Start the first conversation')}</h3><p>{t('No rooms match these filters. Create a room and invite others to join you.')}</p></div> : null}</section>
+      <section className="hub-starters" aria-label={t('Start a room in one tap')}>
+        <div className="hub-section-label"><b>{t('Start a room in one tap')}</b><small>{t('Pick a topic. Your room is ready.')}</small></div>
+        <div className="hub-starter-grid">{STARTERS.map((starter, index) => <button type="button" key={starter.title} className={`hub-starter tone-${starter.tone}`} disabled={!hub.connected || hub.busy} onClick={() => openStarter(index)}><span className="hub-starter-emoji" aria-hidden="true">{starter.emoji}</span><span><b>{t(starter.title)}</b><small>{t('Open room')} <ArrowRight size={13} /></small></span><Plus size={17} /></button>)}</div>
+      </section>
+      <section className="hub-lobby" aria-label={t('Live rooms')}>
+        <div className="hub-lobby-filters"><nav aria-label={t('Room type')}>{Object.entries({ all: 'For you', ...KINDS }).map(([value, label]) => <button type="button" key={value} aria-pressed={kind === value} className={cn(kind === value && 'is-active')} onClick={() => setKind(value)}>{t(label)}</button>)}</nav><label className="hub-room-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search rooms or topics')} aria-label={t('Search rooms or topics')} /></label></div>
+        <div className="hub-section-label"><h2><span className="hub-live-dot" />{t('Live rooms')}<span>{visible.length}</span></h2><small><Headphones size={14} />{t('Enter and listen. No mic needed.')}</small></div>
+        <div className="hub-room-grid">{visible.map(room => <SocialRoomCard key={room.id} room={room} hub={hub} />)}</div>
+        {!visible.length ? <div className="hub-lobby-empty"><span>🫶</span><div><h3>{t(query || kind !== 'all' ? 'No rooms match yet' : 'Be the first voice in the room')}</h3><p>{t(query || kind !== 'all' ? 'Try another topic or open your own room.' : 'A hello is all it takes. Pick a topic above and welcome people in.')}</p></div><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => openStarter(0)}><Mic size={17} />{t('Start talking')}</button></div> : null}
+      </section>
+      {champion ? <div className="hub-champion" title={rules}><span><Crown size={21} /></span><div><b>{t('Top learner today')}</b><small>@{champion.nickname} · {champion.xp.toLocaleString()} XP</small></div><details><summary>{t('How it works')}<ChevronDown size={14} /></summary><p>{rules}</p></details></div> : null}
     </>}
-    {hub.busy ? <div className="hub-pending" role="status"><Loader2 className="animate-spin" size={17} />{t('Connecting…')}</div> : null}
-    {creating ? <CreateRoom onClose={() => { if (hub.busy) hub.leave(); setCreating(false) }} onCreate={hub.create} busy={hub.busy} error={hub.error} /> : null}
+    {hub.busy && !room ? <div className="hub-pending" role="status"><Loader2 className="animate-spin" size={17} />{t('Connecting…')}<button type="button" onClick={hub.leave}>{t('Cancel')}</button></div> : null}
+    {creating ? <QuickCreate onClose={() => { if (hub.busy) hub.leave(); setCreating(false) }} onCreate={hub.create} busy={hub.busy} error={hub.error} /> : null}
   </section>
 }
 
-function CreateRoom({ onClose, onCreate, busy, error }: { onClose: () => void; onCreate: (draft: RoomDraft) => Promise<void>; busy: boolean; error: string }) {
+function SocialRoomCard({ room, hub }: { room: SpeakingRoom; hub: SpeakingCommunity }) {
   const t = useCommunityCopy()
-  const [draft, setDraft] = useState<RoomDraft>(DEFAULT_DRAFT)
+  const host = room.members.find(member => member.id === room.hostId)
+  const speakers = room.members.filter(member => member.role === 'speaker')
+  const full = room.members.length >= room.maxParticipants
+  return <article className={`hub-room-card tone-${roomTone(room)}`}>
+    <div className="hub-room-cover"><div className="hub-room-tags"><span>English</span><span><Radio size={11} />{t('Live')}</span></div><span className="hub-room-cover-emoji" aria-hidden="true">{room.kind === 'debate' ? '💬' : room.kind === 'ielts' ? '🎯' : '☕'}</span><h3>{room.title}</h3><div className="hub-card-host"><span><ProfileAvatar src={host?.avatarUrl} name={host?.name} alt="" /></span><b>@{host?.name}</b><small>{t('Host')}</small></div></div>
+    <div className="hub-room-card-body"><div className="hub-room-card-info"><span>{t(KINDS[room.kind as keyof typeof KINDS])}</span><span>{t(LEVELS[room.level as keyof typeof LEVELS])}</span></div><p>{room.topic}</p><div className="hub-card-stage">{Array.from({ length: Math.min(room.capacity, 6) }, (_, index) => <span key={index} className={cn('hub-card-seat', !speakers[index] && 'is-open')}>{speakers[index] ? <ProfileAvatar src={speakers[index].avatarUrl} name={speakers[index].name} alt="" /> : <Mic size={13} />}</span>)}<small>{Math.max(0, room.capacity - speakers.length)} {t('open seats')}</small></div><div className="hub-room-card-bottom"><span><Headphones size={15} /><b>{room.members.length}</b>{t('in room')}</span><button type="button" className="hub-button" disabled={full || !hub.connected || hub.busy} onClick={() => void hub.join(room.id)}>{t(full ? 'Room full' : 'Enter room')}<ArrowRight size={15} /></button></div></div>
+  </article>
+}
+
+function StageMember({ member, hub }: { member: SpeakingMember; hub: SpeakingCommunity }) {
+  const t = useCommunityCopy()
+  return <article className={cn('hub-speaker', !member.muted && 'is-speaking', member.hand && 'has-hand')}>
+    <div className="hub-speaker-avatar"><ProfileAvatar src={member.avatarUrl} name={member.name} alt="" /><i>{member.muted ? <MicOff size={12} /> : <Mic size={12} />}</i></div>
+    <b>@{member.name}</b><span className={cn(member.id === hub.room?.hostId && 'is-host')}>{member.id === hub.room?.hostId ? <Crown size={10} /> : null}{t(member.id === hub.room?.hostId ? 'Host' : member.id === hub.selfId ? 'You' : 'Speaker')}</span>
+    {member.id !== hub.selfId && ['failed', 'disconnected'].includes(hub.peerStates[member.id]) ? <small>{t('Audio interrupted')}</small> : null}
+    {hub.selfId === hub.room?.hostId && member.id !== hub.selfId ? <button type="button" className="hub-remove" aria-label={`${t('Remove from room')}: ${member.name}`} title={t('Remove from room')} onClick={() => hub.remove(member.id)}><X size={14} /></button> : null}
+  </article>
+}
+
+function QuickCreate({ onClose, onCreate, busy, error }: { onClose: () => void; onCreate: (draft: RoomDraft) => Promise<void>; busy: boolean; error: string }) {
+  const t = useCommunityCopy()
+  const [starterIndex, setStarterIndex] = useState(0)
+  const [title, setTitle] = useState('')
+  const [topic, setTopic] = useState('')
+  const [privateRoom, setPrivateRoom] = useState(false)
+  const [capacity, setCapacity] = useState(8)
+  const [level, setLevel] = useState('all')
   const dialog = useRef<HTMLDialogElement>(null)
+  const starter = STARTERS[starterIndex]
   useEffect(() => { dialog.current?.showModal() }, [])
-  return <dialog className="hub-create-dialog" ref={dialog} onCancel={onClose} aria-labelledby="create-speaking-title"><form onSubmit={event => { event.preventDefault(); void onCreate(draft) }}><div className="hub-dialog-heading"><span className="hub-dialog-icon"><Mic size={24} /></span><button type="button" onClick={onClose} aria-label={t('Close')}><X size={20} /></button></div><h2 id="create-speaking-title">{t('Create a room')}</h2><label>{t('Room name')}<input autoFocus required maxLength={70} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })} /></label><label>{t('What will you talk about?')}<textarea required rows={3} maxLength={200} value={draft.topic} onChange={event => setDraft({ ...draft, topic: event.target.value })} /></label><div className="hub-form-grid"><label>{t('Room type')}<select value={draft.kind} onChange={event => setDraft({ ...draft, kind: event.target.value })}>{Object.entries(KINDS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label><label>{t('English level')}<select value={draft.level} onChange={event => setDraft({ ...draft, level: event.target.value })}>{Object.entries(LEVELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label><label>{t('Seats')}<select value={draft.capacity} onChange={event => setDraft({ ...draft, capacity: Number(event.target.value) })}>{[2, 3, 4, 5, 6, 7, 8].map(value => <option key={value}>{value}</option>)}</select></label><label>{t('Private room')}<select value={draft.private ? 'private' : 'public'} onChange={event => setDraft({ ...draft, private: event.target.value === 'private' })}><option value="public">{t('Open to everyone')}</option><option value="private">{t('Private · invite link only')}</option></select></label></div><p>{t('Your mic starts muted. Rooms close when everyone leaves.')}</p>{error ? <div className="hub-feedback is-error" role="alert">{error}</div> : null}<div className="hub-dialog-actions"><button type="button" className="hub-button" onClick={onClose}>{t('Cancel')}</button><button type="submit" className="hub-button is-primary" disabled={busy || !draft.title.trim() || !draft.topic.trim()}>{busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}{t('Create a room')}</button></div></form></dialog>
+  return <dialog className="hub-create-dialog" ref={dialog} onCancel={onClose} aria-labelledby="create-speaking-title"><form onSubmit={event => { event.preventDefault(); void onCreate({ title: title.trim() || t(starter.title), topic: topic.trim() || t(starter.topic), kind: starter.kind, capacity, level, private: privateRoom }) }}>
+    <div className="hub-dialog-heading"><span>🎙️</span><button type="button" onClick={onClose} aria-label={t('Close')}><X size={20} /></button></div><h2 id="create-speaking-title">{t('Your room. Your people.')}</h2><p>{t('Pick a vibe and go live. Everything is ready.')}</p>
+    <div className="hub-create-vibes" aria-label={t('Room type')}>{STARTERS.map((item, index) => <button type="button" key={item.title} aria-pressed={starterIndex === index} className={cn(`tone-${item.tone}`, starterIndex === index && 'is-selected')} onClick={() => setStarterIndex(index)}><span>{item.emoji}</span>{t(item.title)}{starterIndex === index ? <Check size={15} /> : null}</button>)}</div>
+    <label>{t('Room name')}<input maxLength={70} value={title} placeholder={t(starter.title)} onChange={event => setTitle(event.target.value)} /></label>
+    <details className="hub-optional-settings"><summary><Settings2 size={16} />{t('Room settings')}<ChevronDown size={14} /></summary><label>{t('What will you talk about?')}<textarea rows={2} maxLength={200} value={topic} placeholder={t(starter.topic)} onChange={event => setTopic(event.target.value)} /></label><div className="hub-form-grid"><label>{t('Seats')}<select value={capacity} onChange={event => setCapacity(Number(event.target.value))}>{[2, 4, 6, 8].map(value => <option key={value}>{value}</option>)}</select></label><label>{t('English level')}<select value={level} onChange={event => setLevel(event.target.value)}>{Object.entries(LEVELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label></div><label className="hub-private-toggle"><input type="checkbox" checked={privateRoom} onChange={event => setPrivateRoom(event.target.checked)} />{t('Private · invite link only')}</label></details>
+    {error ? <div className="hub-feedback is-error" role="alert">{t(error)}</div> : null}
+    <button type="submit" className="hub-button is-primary hub-go-live" disabled={busy}>{busy ? <Loader2 size={18} className="animate-spin" /> : <Radio size={18} />}{t('Open my room')}</button><small className="hub-create-note">{t('People join as listeners. You choose when to turn on your mic.')}</small>
+  </form></dialog>
 }
 
 function RemoteAudio({ stream }: { stream: MediaStream }) {

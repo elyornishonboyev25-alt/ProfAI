@@ -232,28 +232,28 @@ export default function Community() {
           <div className="community-brand-row">
             <BrandLockup className="community-brand" />
           </div>
-
-          {mode === 'people' && !hub.room ? <div className="community-search-bar">
-            <label className="community-search-field">
-              <Search className="h-7 w-7" />
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Find study partners..."
-                aria-label="Find study partners by nickname"
-              />
-              {loading ? <Loader2 className="h-5 w-5 animate-spin text-red-500" /> : null}
-            </label>
-            <div className="community-header-filters" aria-label="Quick partner filters">
-              <FilterPill active={sameBandActive} icon={Target} label="Same target band" onClick={toggleBandFilter} />
-              <FilterPill active={sameCountryActive} icon={Globe2} label="Same country" onClick={toggleCountryFilter} />
-              <FilterPill active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
-            </div>
-          </div> : null}
         </header>
 
         {mode === 'people' ? <SpeakingHub hub={hub} champion={champion} invitedRoom={searchParams.get('room')} /> : null}
+
+        {mode === 'people' && !hub.room ? <div className="community-search-bar">
+          <label className="community-search-field">
+            <Search className="h-7 w-7" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Find study partners..."
+              aria-label="Find study partners by nickname"
+            />
+            {loading ? <Loader2 className="h-5 w-5 animate-spin text-red-500" /> : null}
+          </label>
+          <div className="community-header-filters" aria-label="Quick partner filters">
+            <FilterPill active={sameBandActive} icon={Target} label="Same target band" onClick={toggleBandFilter} />
+            <FilterPill active={sameCountryActive} icon={Globe2} label="Same country" onClick={toggleCountryFilter} />
+            <FilterPill active={onlineActive} icon={Radio} label="Online now" onClick={() => toggleFilter('online')} />
+          </div>
+        </div> : null}
 
         {mode === 'people' ? hub.room ? null : <section className={cn('community-layout', suggestionsOpen && 'has-suggestions-open')}>
           <aside className="community-left-column">

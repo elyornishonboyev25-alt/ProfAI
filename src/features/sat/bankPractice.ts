@@ -1,6 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
 import { getSATReviewTests, SAT_TEST_CATALOG } from './catalog'
-import type { SATQuestion } from './practiceTest4'
+import type { HighlightStroke, SATQuestion } from './practiceTest4'
 
 export type QuestionRow = { key: string; question: SATQuestion; testNumber: number }
 export type Result = {
@@ -13,6 +13,20 @@ export type Result = {
   answer?: string
   setId?: string
   flagged?: boolean
+  highlights?: HighlightStroke[]
+}
+// Older sets have no highlights. Ignore malformed annotations without losing answers.
+function readHighlights(value: unknown): HighlightStroke[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((stroke) => {
+    const range = stroke?.textRange
+    if (!stroke || typeof stroke.id !== 'string' || typeof stroke.color !== 'string' ||
+      !range || typeof range.block !== 'string' || typeof range.text !== 'string' ||
+      !Number.isInteger(range.start) || !Number.isInteger(range.end) ||
+      range.start < 0 || range.end <= range.start || range.end - range.start !== range.text.length) return []
+    return [{ id: stroke.id, color: stroke.color, width: 0, points: [],
+      textRange: { block: range.block, start: range.start, end: range.end, text: range.text } }]
+  })
 }
 export const difficulty = (value: SATQuestion['difficulty']) =>
   value === 'Foundation' ? 'Easy' : value === 'Advanced' ? 'Hard' : value
@@ -37,7 +51,8 @@ export function readHistory(userId: string): Result[] {
             (row.setId === undefined || typeof row.setId === 'string') &&
             (row.flagged === undefined || typeof row.flagged === 'boolean'),
           ),
-        ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key }))
+        ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key,
+          highlights: readHighlights(row.highlights) }))
       : []
   } catch {
     return []
@@ -88,6 +103,7 @@ export type BankSession = {
   index: number
   answers: Record<string, string>
   flagged: string[]
+  highlights: Record<string, HighlightStroke[]>
   createdAt: string
 }
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`
@@ -104,7 +120,11 @@ export function loadBankSession(userId: string): BankSession | null {
       !Object.entries(data.answers).every(([key, value]) => data.keys.includes(key) && typeof value === 'string') ||
       !Array.isArray(data.flagged) || !data.flagged.every((key: unknown) => data.keys.includes(key))) return null
     if (readHistory(userId).some((row) => row.setId === data.id)) return null
-    return data as BankSession
+    const highlights = data.highlights && typeof data.highlights === 'object' && !Array.isArray(data.highlights)
+      ? data.highlights : {}
+    return { ...data, highlights: Object.fromEntries(
+      data.keys.map((key: string) => [key, readHighlights(highlights[key])]),
+    ) } as BankSession
   } catch {
     return null
   }

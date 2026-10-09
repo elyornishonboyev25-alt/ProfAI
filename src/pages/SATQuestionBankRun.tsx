@@ -108,6 +108,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         key, section: question.section, domain: question.domain, skill: question.skill,
         correct: isSATAnswerCorrect(question, session.answers[key]),
         answer: session.answers[key]?.trim() ?? '', flagged: session.flagged.includes(key),
+        highlights: session.highlights[key] ?? [],
         at, setId: session.id,
       }
     })
@@ -157,12 +158,15 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
       {error ? <p role="alert" className="sat-bank-run-error">{error}</p> : null}
       <div ref={viewport} className={`sat-bank-run-viewport ${calculatorOpen && calculatorDocked ? 'with-desmos' : ''}`}>
         <div className="sat-bank-run-meta"><span>{difficulty(current.question.difficulty)} · {current.question.skill}</span><span>Question {session.index + 1} of {session.keys.length}</span></div>
+        {!math ? <p className="mx-auto mb-4 max-w-[1400px] text-xs text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p> : null}
         <SATQuestionCanvas
           key={current.key}
           question={{ ...current.question, number: session.index + 1 }}
           answer={session.answers[current.key] ?? ''}
           onAnswer={(answer) => update({ ...session, answers: { ...session.answers, [current.key]: answer } })}
-          strokes={[]} highlightAvailable={false} onChange={() => {}}
+          strokes={session.highlights[current.key] ?? []}
+          highlightAvailable={!math}
+          onChange={(strokes) => update({ ...session, highlights: { ...session.highlights, [current.key]: strokes } })}
           flagged={session.flagged.includes(current.key)}
           onToggleFlag={() => update({ ...session, flagged: session.flagged.includes(current.key)
             ? session.flagged.filter((key) => key !== current.key) : [...session.flagged, current.key] })}

@@ -258,6 +258,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       keys: rows.map((row) => row.key),
       index: 0,
       answers: {},
+      highlights: {},
       flagged: rows.filter((row) => markedKeys.has(row.key)).map((row) => row.key),
       createdAt: new Date().toISOString(),
     }
@@ -438,7 +439,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                             question={review.row.question}
                             answer={review.result.answer ?? ''}
                             onAnswer={() => {}}
-                            strokes={[]}
+                            strokes={review.result.highlights ?? []}
                             highlightAvailable={false}
                             onChange={() => {}}
                             flagged={review.result.flagged ?? false}

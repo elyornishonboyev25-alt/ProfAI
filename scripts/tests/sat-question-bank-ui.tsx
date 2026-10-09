@@ -8,7 +8,9 @@ import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../sr
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
+import { accountStorageFor } from '../../src/utils/accountStorage'
 
+const storage = accountStorageFor('guest')
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
 const text = () => container.textContent!
@@ -68,9 +70,27 @@ async function change(label: string, value: string) {
     node.dispatchEvent(new Event('change', { bubbles: true }))
   })
 }
+async function highlight(block: string, color: string) {
+  const element = container.querySelector(`[data-sat-highlight-block="${block}"]`)!
+  assert.ok(element.textContent?.trim(), `Expected selectable ${block} text`)
+  await act(async () => {
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    window.getSelection()!.removeAllRanges()
+    window.getSelection()!.addRange(range)
+    document.dispatchEvent(new window.Event('mouseup', { bubbles: true }))
+    await new Promise(resolve => setTimeout(resolve, 25))
+  })
+  assert.equal(document.querySelectorAll('[data-sat-highlight-menu] button').length, 4)
+  await click(document.querySelector(`[aria-label="Highlight ${color}"]`))
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 25)) })
+}
 const path = () => container.querySelector('[data-location]')!.textContent!
 const matching = () => Number(container.querySelector('.sat-bank-panel-title span')!.textContent!.split(' ')[0])
 export async function run() {
+  const rect = { left: 100, top: 100, width: 80, height: 20, right: 180, bottom: 120, x: 100, y: 100, toJSON() {} }
+  window.Range.prototype.getBoundingClientRect = () => rect
+  window.Range.prototype.getClientRects = () => [rect] as unknown as DOMRectList
   localStorage.clear()
   await act(async () => useAuthStore.setState({ user: null }))
   const key = 'profai:sat:question-bank:guest:v1'
@@ -117,7 +137,15 @@ export async function run() {
   assert.match(container.querySelector('.sat-bank-run-number')!.getAttribute('aria-label')!, /Marked for Review/)
   await click(document.querySelector('[aria-label="Close question navigator"]'))
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  await highlight('context', 'amber')
+  await highlight('task', 'sky')
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 2)
+  await click(container.querySelector('[data-sat-highlight-id]'))
+  await click(document.querySelector('[data-sat-highlight-menu] button'))
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 1, 'Only the selected highlight is removed')
+  await highlight('context', 'emerald')
   await click(button('Next'))
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 0, 'Highlights belong to their question')
   const wrong = questions[1].choices.find(
     (choice) => choice.key !== questions[1].correctAnswer,
   )!.key
@@ -131,6 +159,7 @@ export async function run() {
   // Reload the separate runner: answers, position and marks must survive.
   const runPath = path()
   await render(runPath)
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 2, 'Highlights survive navigation and reload')
   assert.ok(button('Marked for Review'))
   assert.equal(
     container
@@ -158,18 +187,24 @@ export async function run() {
   assert.match(text(), /Question 1/)
   assert.match(text(), /Explanation/)
   assert.equal(container.querySelectorAll('[role="radio"]:disabled').length, 4)
-  const saved = JSON.parse(localStorage.getItem(key)!)
+  const saved = JSON.parse(storage.getItem(key)!)
   assert.equal(saved.length, 4)
   assert.equal(saved[0].answer, questions[0].correctAnswer)
   assert.equal(saved[0].flagged, true)
+  assert.equal(saved[0].highlights.length, 2, 'Submitted results retain text highlights')
+  assert.equal(saved[1].highlights.length, 0)
   assert.equal(saved[1].flagged, false)
   assert.equal(saved[1].answer, wrong)
   assert.equal(saved[2].answer, '')
   const reviewPath = path()
   await render(reviewPath)
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 2, 'Highlights survive saved review reload')
+  assert.equal(container.querySelector('[data-sat-highlight-id]')!.getAttribute('role'), null, 'Saved review highlights are read-only')
+  await click(container.querySelector('[data-sat-highlight-id]'))
+  assert.equal(document.querySelector('[data-sat-highlight-menu]'), null)
   assert.match(text(), /1 of 4 correct/)
   assert.match(text(), /Explanation/)
-  const beforeReview = localStorage.getItem(key)
+  const beforeReview = storage.getItem(key)
   await click(button('Marked for Review 1'))
   assert.equal(container.querySelectorAll('.sat-bank-number').length, 1)
   assert.match(container.querySelector('.sat-bank-number')!.getAttribute('aria-label')!, /Marked for Review/)
@@ -202,7 +237,7 @@ export async function run() {
   await click(container.querySelector('[data-router-back]'))
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 1)
   assert.equal(
-    localStorage.getItem(key),
+    storage.getItem(key),
     beforeReview,
     'Review must never overwrite saved answers',
   )
@@ -224,13 +259,15 @@ export async function run() {
   const legacy = { ...saved[1], at: '2026-08-01T12:00:00.000Z' }
   delete legacy.answer
   delete legacy.setId
-  localStorage.setItem(key, JSON.stringify([...saved, legacy]))
+  delete legacy.highlights
+  storage.setItem(key, JSON.stringify([...saved, legacy]))
   await render('/sat/question-bank?view=history')
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 2)
   await click(
     container.querySelectorAll<HTMLButtonElement>('.sat-bank-history-card')[1],
   )
   assert.match(text(), /Not recorded in older results/)
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 0, 'Older results without highlights still open')
   assert.match(text(), /Explanation/)
   await click(
     [...container.querySelectorAll('button')].find((node) =>
@@ -242,9 +279,14 @@ export async function run() {
   assert.match(text(), /This saved set is unavailable/)
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 2)
   // Malformed local entries do not crash the workspace.
-  localStorage.setItem(key, JSON.stringify([null, { key: 1 }, saved[0]]))
+  storage.setItem(key, JSON.stringify([null, { key: 1 }, saved[0]]))
   await render('/sat/question-bank?view=history')
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 1)
+  storage.setItem(key, JSON.stringify([{ ...saved[0], highlights: [null, { textRange: { start: -1 } }] }]))
+  await render('/sat/question-bank?view=history')
+  await click(container.querySelector('.sat-bank-history-card'))
+  assert.match(text(), /Explanation/)
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 0, 'Malformed annotations do not discard saved answers')
   // A different account cannot see the previous account's practice history.
   await act(async () =>
     useAuthStore.setState({ user: { id: 'another-user' } as never }),
@@ -280,10 +322,10 @@ export async function run() {
   // Submitted attempts may exist only in the old per-test storage slot.
   localStorage.clear()
   const submitted = { ...active, status: 'submitted', submittedAt: Date.now() }
-  localStorage.setItem(`profai:sat:${firstTest.id}:attempt:v1`, JSON.stringify(submitted))
+  storage.setItem(`profai:sat:${firstTest.id}:attempt:v1`, JSON.stringify(submitted))
   await render('/sat/question-bank?status=unanswered')
   assert.equal(matching(), total - firstTest.questionCount)
-  assert.equal(JSON.parse(localStorage.getItem('profai:sat:attempt-history:v1')!).length, 1)
+  assert.equal(JSON.parse(storage.getItem('profai:sat:attempt-history:v1')!).length, 1)
 
   // Section and retired allocations match the same source question in today's bank.
   localStorage.clear()
@@ -309,7 +351,7 @@ export async function run() {
 
   // Previous bank results used a shorter positional key. Keep their review and progress.
   localStorage.clear()
-  localStorage.setItem(key, JSON.stringify([{ ...saved[0], key: `${first.section}:${first.id}` }]))
+  storage.setItem(key, JSON.stringify([{ ...saved[0], key: `${first.section}:${first.id}` }]))
   await render('/sat/question-bank?status=unanswered')
   assert.equal(matching(), total - 1)
   await render('/sat/question-bank?view=history')
@@ -361,16 +403,24 @@ export async function run() {
   assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
   // Save and exit returns to the bank with a resumable set.
   const readingPath = path()
+  const activeKey = 'profai:sat:question-bank:guest:active:v1'
+  const oldSession = JSON.parse(storage.getItem(activeKey)!)
+  delete oldSession.highlights
+  storage.setItem(activeKey, JSON.stringify(oldSession))
+  await render(readingPath)
+  assert.ok(container.querySelector('.sat-bank-run'), 'Older sessions without highlights still resume')
+  await highlight('context', 'pink')
   await click(document.querySelector('[aria-label="Save and exit practice"]'))
   assert.match(text(), /Your answers are saved/)
   await click(button('Resume practice'))
   assert.equal(path(), readingPath)
+  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 1, 'Highlights survive save and resume')
   await act(async () => useAuthStore.setState({ user: { id: 'isolated-bank-user' } as never }))
   assert.match(text(), /This practice set is unavailable/)
   await render('/sat/question-bank/run/missing')
   assert.match(text(), /This practice set is unavailable/)
   await act(async () => root.unmount())
   console.log(
-    'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation and Math Desmos passed.',
+    'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
   )
 }

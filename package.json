@@ -31,6 +31,7 @@
     "build:all": "npm run build && npm --prefix backend run build",
     "start": "npm --prefix backend run start",
     "validate:vocabulary": "npm run sync:sat-vocabulary && node scripts/validate-vocabulary.mjs",
+    "test:university-requirements": "node scripts/test-listening-parts-ui.mjs scripts/tests/university-requirements.tsx",
     "test:auth-session": "node scripts/test-auth-session.mjs",
     "test:educational-media": "node scripts/test-educational-media.mjs",
     "test:vocabulary-ui": "npm run sync:sat-vocabulary && node scripts/test-vocabulary-ui.mjs",

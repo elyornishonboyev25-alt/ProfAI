@@ -407,7 +407,43 @@ export default function AdmissionUniversity() {
               {u.admission.verifiedAt ? <p className="mt-3 text-right text-[10px] font-medium text-slate-400">Verified {u.admission.verifiedAt}</p> : null}
             </section>
           </Reveal>
-        ) : null}
+        ) : (
+          <Reveal delay={0.04}>
+            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
+              <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
+                <Award className="h-5 w-5" style={{ color: accent }} />
+                IELTS · Programme requirements
+              </h2>
+              <p className="mt-2 text-[13px] leading-5 text-slate-500">
+                {u.ieltsDirectory
+                  ? 'Scores from the official IELTS recognition directory are indicative. Requirements vary by programme and degree level; confirm your course and component scores with the university.'
+                  : 'IELTS, SAT and other entry requirements have not yet been verified for this profile. Check the university’s current requirements for your chosen programme.'}
+              </p>
+              {u.ieltsDirectory?.scores.length ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {u.ieltsDirectory.scores.map((entry, index) => (
+                    <div key={`${entry.programme}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                      <p className="text-[13px] font-bold text-slate-700">{entry.programme}</p>
+                      <p className="mt-1.5 text-base font-black text-slate-900">IELTS Academic · {entry.minimum === null ? 'Score not listed' : entry.minimum.toFixed(1)}</p>
+                      {entry.detail ? <p className="mt-1 text-[12px] leading-5 text-slate-500">{entry.detail}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : u.ieltsDirectory ? <p className="mt-4 text-sm text-slate-500">The directory does not list an IELTS Academic score for this institution.</p> : null}
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] font-semibold">
+                {u.ieltsDirectory ? (
+                  <>
+                    <a href={u.ieltsDirectory.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">IELTS official directory <ExternalLink className="h-3 w-3" /></a>
+                    <span className="text-slate-400">Checked {u.ieltsDirectory.checkedAt}</span>
+                  </>
+                ) : (
+                  <a href={`https://ielts.org/take-a-test/why-choose-ielts/who-accepts-ielts?q=${encodeURIComponent(u.name)}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">Find in IELTS directory <ExternalLink className="h-3 w-3" /></a>
+                )}
+                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">University website <ExternalLink className="h-3 w-3" /></a> : null}
+              </div>
+            </section>
+          </Reveal>
+        )}
 
         {/* ----------------------- Cost of Living + Campus ----------------------- */}
         <div className="grid gap-6 lg:grid-cols-2">
@@ -442,7 +478,15 @@ export default function AdmissionUniversity() {
                 </div>
               </section>
             </Reveal>
-          ) : null}
+          ) : (
+            <Reveal delay={0.04} className="h-full">
+              <section className="h-full rounded-[1.6rem] border border-slate-200 bg-white p-6 sm:p-8">
+                <h2 className="flex items-center gap-2 text-xl font-black text-slate-900"><CircleDollarSign className="h-5 w-5" style={{ color: accent }} /> Cost of Living</h2>
+                <p className="mt-3 text-[13px] leading-5 text-slate-500">A current living-cost budget has not yet been verified for this profile. Check accommodation, food, transport, insurance and tuition separately when planning your budget.</p>
+                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1 text-[12px] font-bold text-red-600 hover:underline">University website <ExternalLink className="h-3 w-3" /></a> : null}
+              </section>
+            </Reveal>
+          )}
 
           {u.campus ? (
             <Reveal delay={0.06} className="h-full">
@@ -531,7 +575,7 @@ export default function AdmissionUniversity() {
         <Reveal delay={0.04}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Rankings from {QS_EDITION}; available admissions and student costs from official university sources.
+            Rankings from {QS_EDITION}; admissions and student costs from university sources and indicative programme scores from the official IELTS directory.
           </p>
         </Reveal>
       </div>

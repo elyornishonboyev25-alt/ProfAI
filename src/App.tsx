@@ -301,9 +301,8 @@ function App() {
     isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
   const isTestMode = isCustomTestMode || isClassicTestMode
-  const communityMode = pathname === '/community' ? new URLSearchParams(location.search).get('mode') : null
-  const isCommunityPeopleMode = pathname === '/community' && (!communityMode || communityMode === 'people')
-  const isLiveCommunityMode = communityMode === 'debate' || communityMode === 'partner'
+  const isCommunityPeopleMode = pathname === '/community'
+  const isLiveCommunityMode = pathname === '/community'
 
   // Warm the next route while the learner is reading the current screen. This
   // keeps Back from IELTS/SAT and sidebar navigation from waiting on a large

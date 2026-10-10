@@ -330,3 +330,45 @@
 @media (min-width: 761px) { .hub-call-controls { position: sticky; z-index: 20; bottom: 1rem; background: #ffffffec; border-color: #e1e7f0; box-shadow: 0 8px 26px #50688718; backdrop-filter: blur(12px); } }
 
 .hub-partner-guide > .hub-partner-badge { display: inline-flex; align-items: center; gap: .4rem; width: auto; height: auto; padding: .55rem .75rem; font-size: .68rem; border-radius: 99px; }
+
+/* Shared speaking studio styling for the Community workspace. */
+.community-page .speaking-hub { gap: 1.2rem; margin: 0 0 1.2rem; --hub-muted: #748397; --hub-line: #dfe6ee; }
+.community-page .hub-discovery-heading { padding: clamp(1.5rem,3vw,2.5rem); border: 1px solid #fff; border-radius: 25px; background: linear-gradient(120deg,#22384c,#33565d); color: #fff; box-shadow: 0 15px 40px #22384c12; }
+.community-page .hub-discovery-heading h1 { max-width: 640px; color: #fff; font-size: clamp(1.8rem,3vw,3rem); line-height: 1.13; }
+.community-page .hub-discovery-heading p { max-width: 560px; color: #cedcde; line-height: 1.7; }
+.community-page .hub-discovery-heading .hub-eyebrow { color: #afcecb; font-size: .65rem; text-transform: uppercase; letter-spacing: .1em; }
+.community-page .hub-discovery-heading .hub-button:not(.is-primary) { border-color: #ffffff38; background: #ffffff14; color: #fff; }
+.community-page .hub-hero-art { opacity: .9; transform: scale(.9); }
+.community-page .hub-art-mic { border-color: #ffffff45; background: #ffffff15; box-shadow: none; color: #c6e9df; }
+.community-page .hub-art-orbit { border-color: #ffffff20; }
+.community-page .hub-art-label { color: #d7e9e5; background: #ffffff12; border-color: #ffffff25; box-shadow: none; }
+.community-page .hub-art-chat, .community-page .hub-art-spark { color: #b7ded2; background: #ffffff13; border-color: #ffffff25; box-shadow: none; }
+.community-page .hub-starters, .community-page .hub-lobby { padding: 1.3rem; border: 1px solid #e4eaf0; border-radius: 22px; background: #ffffffc9; box-shadow: none; }
+.community-page .hub-starter { border-radius: 13px; box-shadow: none; border: 1px solid #e1e8ee; }
+.community-page .hub-section-label { gap: .8rem; }
+.community-page .hub-room-card { border-color: #e0e7ee; border-radius: 18px; box-shadow: none; }
+.community-page .hub-room-card:hover { box-shadow: 0 6px 20px #24364b0b; }
+.community-page .hub-room-cover { padding: 1.1rem; }
+.community-page .hub-button { border-radius: 11px; }
+.community-page .hub-button.is-primary { background: #d93446; box-shadow: none; }
+.community-page .hub-button.is-primary:hover:not(:disabled) { background: #bb2b3d; }
+.community-page .hub-partner-guide { padding: 1.2rem; background: #edf5f2; border: 1px solid #d8e7e0; border-radius: 18px; }
+.community-page .hub-partner-guide > span { color: #4c8270; border-color: #d7e6df; }
+.community-page .hub-partner-card { background: #fff; border-color: #e1e8ef; border-radius: 16px; box-shadow: none; }
+.community-page .hub-partner-card .hub-button { color: #31715d; background: #edf7f1; border-color: #d2e6dc; }
+.community-page .hub-partner-grid { max-height: 65dvh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: .2rem; }
+.community-page .hub-mode-bar { border-radius: 17px; border-color: #e0e7ee; box-shadow: none; background: #ffffffcf; }
+.community-page .hub-mode-switch button.is-active { color: #fff; background: #24364b; }
+.community-page .hub-stage { border-radius: 22px; border: 1px solid #dbe5e9; background: linear-gradient(155deg,#f1f7f5,#e9f0f5); box-shadow: none; }
+.community-page .hub-topic h2 { color: #263c52; }
+.community-page .hub-chat { border: 1px solid #dfe7ee; border-radius: 20px; box-shadow: none; background: #fff; }
+.community-page .hub-speaker.is-empty:hover:not(:disabled) { background: #ffffffb0; }
+.community-page .hub-lobby-empty { background: #f8fafb; border-color: #d9e3e9; border-radius: 15px; }
+.community-page .community-champion { position: relative; display: flex; flex-wrap: wrap; gap: .5rem; flex-shrink: 0; max-width: 350px; padding: .75rem 1rem; border: 1px solid #eadcbf; border-radius: 14px; background: #fffbf2; box-shadow: none; }
+.community-champion > svg { color: #ac823a; flex-shrink: 0; }
+.community-page .community-champion > span { display: block; width: auto; height: auto; padding: 0; border: 0; border-radius: 0; color: #92713b; background: transparent; font-size: .65rem; }
+.community-page .community-champion strong { font-size: .75rem; }
+.community-page .community-champion b { font-size: .5rem; }
+.community-page .community-champion details { margin: 0; font-size: .55rem; }
+.community-page .community-champion details p { width: 100%; max-width: 280px; line-height: 1.6; }
+@media (max-width: 760px) { .community-page .hub-discovery-heading { padding: 1.4rem; } .community-page .hub-starters, .community-page .hub-lobby { padding: 1rem; } .community-page .hub-room-search { width: 100%; } .community-page .hub-room-search input { width: 100%; } .community-page .hub-section-label { flex-wrap: wrap; } .community-page .community-champion { max-width: 100%; } .has-live-room .community-brand-row { display: none; } .has-live-room .community-header { margin-bottom: .6rem; } .has-live-room .hub-room-header h1 { font-size: 1.2rem; } }

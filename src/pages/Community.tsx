@@ -3,27 +3,21 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  ArrowLeft,
-  ArrowRight,
-  Award,
-  BadgeCheck,
-  ChevronDown,
+  ArrowUpDown,
   CircleHelp,
   Crown,
-  Flame,
   Globe2,
   GraduationCap,
   Loader2,
-  MapPin,
   MessageCircleMore,
   Mic,
   Radio,
   Search,
-  SlidersHorizontal,
+  RefreshCw,
   Sparkles,
   Target,
   Users,
-  Zap,
+  X,
 } from 'lucide-react'
 import {
   fetchAccount,
@@ -48,11 +42,11 @@ export type CommunityMode = 'people' | 'voice' | 'partner' | 'questions' | 'admi
 
 const COMMUNITY_MODES: CommunityMode[] = ['people', 'voice', 'partner', 'questions', 'admissions']
 
-const STUDY_ROOMS = [
-  { id: 'voice', name: 'Voice rooms', detail: 'Conversation & team debate', icon: Mic, section: 'voice' },
-  { id: 'questions', name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp, section: 'questions' },
-  { id: 'admissions', name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap, section: 'admissions' },
-  { id: 'partner', name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore, section: 'partner' },
+const COMMUNITY_SECTIONS = [
+  { id: 'voice', name: 'Voice rooms', detail: 'Conversation & team debate', icon: Mic },
+  { id: 'partner', name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore },
+  { id: 'questions', name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp },
+  { id: 'admissions', name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap },
 ] as const
 
 function normalizeScore(value: string | number | null | undefined) {
@@ -95,9 +89,7 @@ export default function Community() {
   const [query, setQuery] = useState('')
   const [exam, setExam] = useState<ExamFilter>('ALL')
   const [smartFilters, setSmartFilters] = useState<SmartFilter[]>([])
-  const [filtersOpen, setFiltersOpen] = useState(() => window.innerWidth > 760)
-  const [roomsOpen, setRoomsOpen] = useState(() => window.innerWidth > 760)
-  const [suggestionsOpen, setSuggestionsOpen] = useState(true)
+  const [sort, setSort] = useState<'recommended' | 'xp'>('recommended')
   const [results, setResults] = useState<LearnerSearchResult[]>([])
   const [account, setAccount] = useState<AccountResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -119,7 +111,7 @@ export default function Community() {
     )
   }
   const toggleBandFilter = () => {
-    if (normalizeScore(account?.profile.targetScore) === null) {
+    if (normalizeScore(account?.profile.targetScore) === null || !account?.profile.targetExam) {
       navigate('/profile')
       return
     }
@@ -145,12 +137,12 @@ export default function Community() {
     return () => {
       active = false
     }
-  }, [])
+  }, [hub.connected])
 
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     const request = ++requestRef.current
-    if (!results.length) setLoading(true)
+    setLoading(true)
     debounceRef.current = window.setTimeout(async () => {
       try {
         const list = await searchLearners(query, {
@@ -186,21 +178,22 @@ export default function Community() {
   const visibleResults = useMemo(() => {
     const ownTarget = normalizeScore(account?.profile.targetScore)
     const filtered = sameBandActive && ownTarget !== null
-      ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget)
+      ? results.filter((learner) => normalizeScore(learner.targetScore) === ownTarget && learner.targetExam === account?.profile.targetExam)
       : results
 
     // Keep the global champion first when they match the current filters.
     return [...filtered].sort(
       (left, right) => Number(right.dailyChampion === true) - Number(left.dailyChampion === true),
     )
-  }, [account?.profile.targetScore, results, sameBandActive])
+  }, [account?.profile.targetScore, account?.profile.targetExam, results, sameBandActive])
 
   const ranked = useMemo(
-    () => [...visibleResults].sort((a, b) => matchScore(b, account) - matchScore(a, account) || b.xp - a.xp),
-    [account, visibleResults],
+    () => [...visibleResults].sort((a, b) => Number(b.dailyChampion === true) - Number(a.dailyChampion === true) || (sort === 'xp' ? b.xp - a.xp : matchScore(b, account) - matchScore(a, account) || b.xp - a.xp)),
+    [account, visibleResults, sort],
   )
-  const suggested = ranked.slice(0, 3)
+  const hasFilters = query.trim() !== '' || exam !== 'ALL' || smartFilters.length > 0
   const clearFilters = () => {
+    setQuery('')
     setExam('ALL')
     setSmartFilters([])
   }
@@ -216,168 +209,46 @@ export default function Community() {
     <main className={cn('workspace-page community-page min-h-screen', hub.room && 'has-live-room')}>
       <div className="community-shell">
         <header className="community-header">
-          <div className="community-brand-row"><BrandLockup className="community-brand" /></div>
-          <nav className="community-main-nav" aria-label={t('Community navigation')}>
-            {([{ id: 'people', name: 'Explore', icon: Sparkles }, ...STUDY_ROOMS] as const).map(item => {
-              const Icon = item.icon
-              return <button type="button" key={item.id} aria-pressed={mode === item.id} className={cn(mode === item.id && 'is-active')} onClick={() => selectMode(item.id)}><Icon size={17} />{t(item.name)}</button>
-            })}
-          </nav>
+          <div className="community-brand-row"><BrandLockup className="community-brand" /><span className="community-brand-caption">{t('Speaking community')}</span></div>
+          <div className="community-status" role="status"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting...')}</span><span>{hub.online} {t('online in community')}</span></div>
         </header>
+        <nav className="community-main-nav" aria-label={t('Community navigation')}>
+          {([{ id: 'people', name: 'Explore', icon: Users, detail: 'Find your speaking circle' }, ...COMMUNITY_SECTIONS] as const).map(item => {
+            const Icon = item.icon
+            return <button type="button" key={item.id} aria-pressed={mode === item.id} className={cn(mode === item.id && 'is-active')} onClick={() => selectMode(item.id)}><span className="community-nav-icon"><Icon size={19} /></span><span><b>{t(item.name)}</b><small>{t(item.detail)}</small></span>{item.id === 'voice' || item.id === 'partner' ? <span className="community-nav-count">{item.id === 'voice' ? hub.rooms.length : hub.available.filter(name => name !== hub.selfName).length}</span> : null}</button>
+          })}
+        </nav>
 
-        <SpeakingHub hub={hub} champion={champion} invitedRoom={searchParams.get('room')} view={mode === 'partner' ? 'partner' : mode === 'questions' || mode === 'admissions' ? 'hidden' : 'rooms'} onFindPartner={() => selectMode('partner')} />
-        {!hub.room && (mode === 'questions' || mode === 'admissions') ? <SpeakingWorkspace mode={mode} onModeChange={selectMode} /> : null}
+        <SpeakingHub hub={hub} invitedRoom={searchParams.get('room')} view={mode === 'partner' ? 'partner' : mode === 'voice' ? 'rooms' : 'hidden'} />
+        {!hub.room && (mode === 'questions' || mode === 'admissions') ? <section className="community-speaking-workspace"><DiscussionRoom key={mode} roomId={mode === 'questions' ? 'hard-questions' : 'study-abroad'} title={mode === 'questions' ? 'Hard Questions' : 'Study Abroad Lounge'} description={mode === 'questions' ? 'Ask difficult questions and work through answers together.' : 'A shared room for applications, scholarships, visas and university life.'} /></section> : null}
 
-        {(mode === 'people' || mode === 'partner') && !hub.room ? <div className="community-search-bar">
-          <label className="community-search-field">
-            <Search className="h-7 w-7" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("Find study partners...")}
-              aria-label="Find study partners by nickname"
-            />
-            {loading ? <Loader2 className="h-5 w-5 animate-spin text-red-500" /> : null}
-          </label>
-          <div className="community-header-filters" aria-label="Quick partner filters">
-            <FilterPill active={sameBandActive} icon={Target} label={t("Same target band")} onClick={toggleBandFilter} />
-            <FilterPill active={sameCountryActive} icon={Globe2} label={t("Same country")} onClick={toggleCountryFilter} />
-            <FilterPill active={onlineActive} icon={Radio} label={t("Online now")} onClick={() => toggleFilter('online')} />
+        {mode === 'people' && !hub.room ? <section className="community-layout">
+          <div className="community-feed-heading">
+            <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find your speaking circle')}</span><h1>{t('Real people.')} <em>{t('Better conversations.')}</em></h1><p>{t('Find a learner, share a goal and start speaking together.')}</p></div>
+            {champion ? <div className="hub-champion community-champion"><Crown size={20} /><div><b>{t('Top learner today')}</b><strong>@{champion.nickname}</strong></div><span>{champion.xp.toLocaleString()} XP</span><details><summary>{t('How it works')}</summary><p>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</p></details></div> : null}
           </div>
-        </div> : null}
-
-        {(mode === 'people' || mode === 'partner') && !hub.room ? <section className={cn('community-layout', suggestionsOpen && 'has-suggestions-open')}>
-          <aside className="community-left-column">
-            <GlassPanel title={t("Quick filters")} open={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)}>
-              <nav className="community-side-list" aria-label="Learner filters">
-                <SideFilter active={exam === 'ALL' && smartFilters.length === 0} icon={SlidersHorizontal} label="All learners" onClick={clearFilters} />
-                <SideFilter active={sameBandActive} icon={Target} label={normalizeScore(account?.profile.targetScore) === null ? 'Add target band' : 'Same target band'} onClick={toggleBandFilter} />
-                <SideFilter active={exam === 'IELTS'} icon={MapPin} label="IELTS learners" onClick={() => setExam((value) => (value === 'IELTS' ? 'ALL' : 'IELTS'))} />
-                <SideFilter active={exam === 'SAT'} icon={GraduationCap} label="SAT learners" onClick={() => setExam((value) => (value === 'SAT' ? 'ALL' : 'SAT'))} />
-              </nav>
-            </GlassPanel>
-
-            <GlassPanel title={t("Study rooms")} open={roomsOpen} onToggle={() => setRoomsOpen((value) => !value)}>
-              <nav className="community-room-list" aria-label="Study rooms">
-                {STUDY_ROOMS.map((room) => {
-                  const Icon = room.icon
-                  const liveLabel = room.id === 'voice' ? `${hub.rooms.length} ${t('Live rooms')}` : room.id === 'partner' ? `${hub.available.filter(name => name !== hub.selfName).length} ${t('Available to talk')}` : t('Join')
-                  return (
-                    <button type="button" key={room.name} onClick={() => selectMode(room.section)} className="community-room-link" aria-label={`${t("Open room")}: ${t(room.name)}`}>
-                      <span className="community-room-icon"><Icon className="h-4 w-4" /></span>
-                      <span><b>{t(room.name)}</b><small>{t(room.detail)}</small></span>
-                      <i className={hub.connected && (room.id === 'voice' || room.id === 'partner') ? 'is-live' : ''}>{liveLabel}<ArrowRight /></i>
-                    </button>
-                  )
-                })}
-              </nav>
-            </GlassPanel>
-          </aside>
-
-          <div className="community-feed">
-            <div className="community-feed-heading">
-              <div>
-                <span className="community-eyebrow"><Sparkles className="h-3.5 w-3.5" />  <UiText text={"Smart matching"} /> </span>
-                <h1> <UiText text={"Find your next"} /> <em> <UiText text={"study partner."} /> </em></h1>
-                <p> <UiText text={"Connect with learners who share your target, country and momentum."} /> </p>
-              </div>
-              <div className="community-feed-meta"><span className="community-live-dot" />{loading ? 'Matching learners...' : `${visibleResults.length} profiles found`}</div>
-            </div>
-
-            <div className="community-card-viewport" role="region" aria-label="Study partner profiles" tabIndex={0}>
-              {error ? <div className="community-error">{error}</div> : null}
-              {!loading && !error && visibleResults.length === 0 ? (
-                <div className="community-empty">
-                  <span><Users className="h-8 w-8" /></span>
-                  <h2> <UiText text={"No matching learners yet"} /> </h2>
-                  <p> <UiText text={"Remove one or two filters to discover more study partners."} /> </p>
-                  <button type="button" onClick={clearFilters}> <UiText text={"Show all learners"} /> </button>
-                </div>
-              ) : null}
-
-              <div className="community-card-grid">
-                {loading && results.length === 0
-                  ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />)
-                  : visibleResults.map((learner, index) => (
-                      <LearnerCard
-                        key={learner.nickname ?? `${learner.xp}-${learner.level}-${index}`}
-                        learner={learner}
-                        score={matchScore(learner, account)}
-                        featured={learner.dailyChampion === true}
-                        index={index}
-                        canTalk={hub.connected && !hub.room && !hub.busy && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)}
-                        onTalk={() => learner.nickname && void hub.invite(learner.nickname)}
-                        onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })}
-                      />
-                    ))}
-              </div>
-            </div>
+          <div className="community-search-bar">
+            <label className="community-search-field"><Search size={20} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Find study partners...')} aria-label={t('Find study partners by nickname')} />{loading ? <Loader2 size={18} className="animate-spin" /> : null}</label>
+            <label className="community-exam-filter"><GraduationCap size={18} /><select aria-label={t('Exam goal')} value={exam} onChange={event => setExam(event.target.value as ExamFilter)}><option value="ALL">{t('All learners')}</option><option value="IELTS">{t('IELTS learners')}</option><option value="SAT">{t('SAT learners')}</option></select></label>
           </div>
-
-          <aside className="community-suggestions">
-            <div className="community-glass-panel community-suggestion-panel">
-              <button
-                type="button"
-                className="community-suggestions-toggle"
-                onClick={() => setSuggestionsOpen((open) => !open)}
-                aria-expanded={suggestionsOpen}
-                aria-controls="community-suggestions-content"
-              >
-                <span className="community-suggestions-copy">
-                  <span><Sparkles className="h-4 w-4" /> <UiText text={"Recommended"} /></span>
-                  <strong><UiText text={"Suggested partners"} /></strong>
-                  <small><UiText text={"Best matches from your active filters and study goals."} /></small>
-                </span>
-                <span className="community-suggestions-action">
-                  <BadgeCheck className="h-5 w-5" />
-                  <span>{suggested.length}</span>
-                  <span>{suggestionsOpen ? 'Hide' : 'Show'}</span>
-                  <ChevronDown className={cn('h-5 w-5', suggestionsOpen && 'is-open')} />
-                </span>
-              </button>
-              <div id="community-suggestions-content" hidden={!suggestionsOpen}>
-                <div className="community-suggestion-list">
-                  {suggested.map((learner) => (
-                    <SuggestedPartner key={`suggested-${learner.nickname}`} learner={learner} score={matchScore(learner, account)} onOpen={() => learner.nickname && navigate(`/u/${learner.nickname}`, { state: { from: '/community' } })} />
-                  ))}
-                  {!loading && suggested.length === 0 ? <p className="community-suggestion-empty"> <UiText text={"Suggestions will appear when a learner matches."} /> </p> : null}
-                </div>
-                <div className="community-suggestion-legend">
-                  <span><Zap /><small> <UiText text={"ACTIVE"} /> </small></span><span><Flame /><small> <UiText text={"STREAK"} /> </small></span><span><Award /><small> <UiText text={"BADGES"} /> </small></span>
-                </div>
-              </div>
-            </div>
-          </aside>
+          <div className="community-filter-row">
+            <div className="community-header-filters"><FilterPill active={sameBandActive} icon={Target} label={t('Same target band')} onClick={toggleBandFilter} /><FilterPill active={sameCountryActive} icon={Globe2} label={t('Same country')} onClick={toggleCountryFilter} /><FilterPill active={onlineActive} icon={Radio} label={t('Online now')} onClick={() => toggleFilter('online')} />{hasFilters ? <button type="button" className="community-clear-filters" onClick={clearFilters}><X size={14} />{t('Clear filters')}</button> : null}</div>
+            <label className="community-sort"><ArrowUpDown size={15} /><select value={sort} aria-label={t('Sort learners')} onChange={event => setSort(event.target.value as 'recommended' | 'xp')}><option value="recommended">{t('Best matches')}</option><option value="xp">{t('Most XP')}</option></select></label>
+          </div>
+          <div className="community-feed-meta" role="status"><span><Users size={15} />{visibleResults.length} {t('learners')}</span><span>{t('Scroll to discover more')}</span></div>
+          <div className="community-card-viewport" role="region" aria-label={t('Study partner profiles')} aria-busy={loading} tabIndex={0}>
+            {error ? <div className="community-error" role="alert"><p>{error}</p><button type="button" onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{t('Try again')}</button></div> : null}
+            {!loading && !error && ranked.length === 0 ? <div className="community-empty"><Users size={36} /><h2>{t('No matching learners yet')}</h2><p>{t('Remove one or two filters to discover more study partners.')}</p><button type="button" onClick={clearFilters}>{t('Show all learners')}</button></div> : null}
+            <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.dailyChampion === true} index={index} canTalk={hub.connected && !hub.room && !hub.busy && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
+          </div>
         </section> : null}
       </div>
     </main>
   )
 }
 
-function SpeakingWorkspace({ mode, onModeChange }: { mode: 'questions' | 'admissions'; onModeChange: (mode: CommunityMode) => void }) {
-  const t = useCommunityCopy()
-  return <section className="community-speaking-workspace">
-    <div className="community-speaking-heading"><span className="community-eyebrow"><MessageCircleMore size={16} />{t('Community room')}</span><h1>{t(mode === 'questions' ? 'Hard Questions' : 'Study Abroad Lounge')}</h1><p>{t(mode === 'questions' ? 'Ask and solve together' : 'Applications and university life')}</p><button type="button" onClick={() => onModeChange('people')} className="community-back-btn"><ArrowLeft size={16} />{t('Back to Community')}</button></div>
-    <div className="community-speaking-surface">{mode === 'questions' ? <DiscussionRoom roomId="hard-questions" title="Hard Questions" description="Ask difficult questions and work through answers together." /> : <DiscussionRoom roomId="study-abroad" title="Study Abroad Lounge" description="A shared room for applications, scholarships, visas and university life." />}</div>
-  </section>
-}
-
 function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
   return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-filter-pill', active && 'is-active')}><Icon className="h-5 w-5" />{label}</button>
-}
-
-function GlassPanel({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
-  return (
-    <section className="community-glass-panel community-collapsible">
-      <button type="button" onClick={onToggle} className="community-panel-title" aria-expanded={open}><span>{title}</span><ChevronDown className={cn('h-5 w-5', open && 'is-open')} /></button>
-      <div className={cn('community-collapse', open && 'is-open')}><div>{children}</div></div>
-    </section>
-  )
-}
-
-function SideFilter({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
-  return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-side-filter', active && 'is-active')}><Icon className="h-[1.15rem] w-[1.15rem]" /><span>{label}</span></button>
 }
 
 function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void; canTalk: boolean; onTalk: () => void }) {
@@ -387,7 +258,7 @@ function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk 
       initial={{ opacity: 1, y: 22, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.045, 0.25), duration: 0.45 }}
-      whileHover={{ y: -8, scale: 1.012 }}
+      whileHover={{ y: -3 }}
       className={cn('community-learner-card', featured && 'is-featured')}
     >
       {featured ? (
@@ -398,10 +269,10 @@ function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk 
       ) : null}
       <div className="community-avatar-ring">
         <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
-        <span className={cn('community-presence', learner.online && 'is-online')} />
+        <span className={cn('community-presence', learner.online && 'is-online')} title={t(learner.online ? 'Online now' : 'Offline')} />
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
-      <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || 'Global learner'}</p>
+      <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || t('Global learner')}</p>
       <div className="community-goal-row"><span>{targetLabel(learner)}</span><span>{learner.targetUniversitySlug || `Level ${learner.level}`}</span></div>
       <div className="community-stat-row">
         <span><b>{learner.xp.toLocaleString()}</b><small> <UiText text={"XP earned"} /> </small></span>
@@ -414,16 +285,6 @@ function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk 
         <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /> </button>
       </div>
     </motion.article>
-  )
-}
-
-function SuggestedPartner({ learner, score, onOpen }: { learner: LearnerSearchResult; score: number; onOpen: () => void }) {
-  return (
-    <button type="button" disabled={!learner.nickname} onClick={onOpen} className="community-suggested-card">
-      <span className="community-suggested-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></span>
-      <span className="community-suggested-name"><b>@{learner.nickname ?? 'learner'}</b><small>{targetLabel(learner)}</small><em> <UiText text={"View match"} /> </em></span>
-      <span className="community-match-ring" style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties}><b>{score}%</b></span>
-    </button>
   )
 }
 

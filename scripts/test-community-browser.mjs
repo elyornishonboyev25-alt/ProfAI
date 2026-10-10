@@ -16,13 +16,16 @@ async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-community-browser-'))
   const fixture = `
     import React from 'react'; import {createRoot} from 'react-dom/client';
-    import {MemoryRouter} from 'react-router-dom';
+    import {MemoryRouter,useNavigate,useLocation} from 'react-router-dom';
     import Community from './src/pages/Community';
     import {apiClient} from './src/lib/apiClient';
     import {useAuthStore} from './src/store/authStore';
     import './src/i18n/index';
     window.captureStreams=[];
     window.peerConnections=[];
+    window.communitySockets=[];
+    const NativeSocket=window.WebSocket;
+    window.WebSocket=class extends NativeSocket {constructor(url){super(url);window.communitySockets.push(this);}};
     const NativePC=window.RTCPeerConnection;
     window.RTCPeerConnection=class extends NativePC {constructor(options){super(options);window.peerConnections.push(this);}};
     const getMedia=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
@@ -31,9 +34,21 @@ async function main() {
     useAuthStore.setState({user:{id:name,nickname:name,fullName:name,premium:true,xp:100,level:2,currentStreak:3},accessToken:'account:'+name,refreshToken:'fixture'});
     const learner = (nickname, xp, dailyChampion=false) => ({nickname,xp,dailyChampion,avatarUrl:null,level:2,streak:3,badgeCount:2,country:'Uzbekistan',targetExam:'IELTS',targetScore:7,online:true});
     window.champion='Leader';
-    apiClient.get = async path => path.startsWith('/profile/search') ? {results:[learner(name==='Host'?'Guest':'Host',200),learner('Leader',900,window.champion==='Leader')],topLearner:{nickname:window.champion,xp:900,avatarUrl:null}} : {nickname:name,xp:100,profile:{country:'Uzbekistan',targetExam:'IELTS',targetScore:'7'}};
+    window.failSearch=false;
+    window.accountFailures=1;
+    apiClient.get = async path => {
+      if(!path.startsWith('/profile/search')) {if(window.accountFailures-->0)throw new Error('Temporary account failure');return {nickname:name,xp:100,profile:{country:'Uzbekistan',targetExam:'IELTS',targetScore:'7'}};}
+      if(window.failSearch){window.failSearch=false;throw new Error('Discovery is temporarily unavailable');}
+      const params=new URL(path,'http://localhost').searchParams;
+      const people=[learner(name==='Host'?'Guest':'Host',200),learner('Leader',900,window.champion==='Leader'),
+        {...learner('DifferentBand',100),targetScore:8}, {...learner('SatSameScore',150),targetExam:'SAT'},
+        {...learner('OtherCountry',120),country:'France'}, {...learner('OfflineLearner',90),online:false},
+        ...Array.from({length:10},(_,i)=>learner('Learner'+i,100+i))];
+      return {results:people.filter(person=>(!params.get('q')||person.nickname.toLowerCase().includes(params.get('q').toLowerCase()))&&(!params.get('targetExam')||person.targetExam===params.get('targetExam'))&&(!params.get('country')||person.country===params.get('country'))&&(!params.get('online')||person.online)),topLearner:{nickname:window.champion,xp:900,avatarUrl:null}};
+    };
     const root = createRoot(document.getElementById('root'));
-    root.render(<MemoryRouter initialEntries={['/community']}><div className="app-shell-community-people"><Community /></div></MemoryRouter>);
+    function Location(){window.navigateCommunity=useNavigate();window.communityPath=useLocation().pathname;return null;}
+    root.render(<MemoryRouter initialEntries={['/community']}><Location/><div className="app-shell-community-people"><Community /></div></MemoryRouter>);
   `
   const bundle = await build({ stdin: { contents: fixture, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: join(directory, 'fixture.js'), format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const base = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css
@@ -86,7 +101,7 @@ async function main() {
       }
       const click = async text => {
         await until(`[...document.querySelectorAll('button')].some(b=>!b.disabled && b.textContent.includes(${JSON.stringify(text)}))`)
-        return evaluate(`[...document.querySelectorAll('button')].find(b=>!b.disabled && b.textContent.includes(${JSON.stringify(text)})).click()`)
+        return evaluate(`(()=>{const buttons=[...document.querySelectorAll('button')].filter(b=>!b.disabled);(buttons.find(b=>b.textContent.trim()===${JSON.stringify(text)})||buttons.find(b=>b.textContent.includes(${JSON.stringify(text)}))).click();})()`)
       }
       await send('Runtime.enable')
       await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
@@ -113,6 +128,42 @@ async function main() {
     await layout(host, 'lobby')
     await layout(host, 'learners')
     await host.evaluate('window.scrollTo(0,0)')
+    assert.equal(await host.evaluate("!!document.querySelector('.community-room-list') || !!document.querySelector('.community-suggestions')"), false, 'Section shortcuts and learner lists are not duplicated');
+    for (const width of [1440,1024,390,320]) {
+      await host.send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<760});
+      assert.equal(await host.evaluate("(()=>{const v=document.querySelector('.community-card-viewport');v.scrollTop=100;return getComputedStyle(v).overflowY==='auto'&&v.scrollHeight>v.clientHeight&&v.scrollTop>0;})()"),true,'Learner directory scrolls independently at '+width+'px');
+    }
+    const setInput=async(selector,value)=>host.evaluate('(()=>{const input=document.querySelector('+JSON.stringify(selector)+');Object.getOwnPropertyDescriptor(input instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value").set.call(input,'+JSON.stringify(value)+');input.dispatchEvent(new Event(input instanceof HTMLSelectElement?"change":"input",{bubbles:true}));})()');
+    await setInput('.community-search-field input','DifferentBand');
+    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('DifferentBand')");
+    await host.click('Same target band');
+    await host.until("document.querySelector('.community-empty')");
+    await host.click('Show all learners');
+    await host.until("document.querySelectorAll('.community-learner-card').length===16 && document.querySelector('.community-search-field input').value===''");
+    await host.click('Same target band');
+    await host.until("document.querySelectorAll('.community-learner-card').length===14");
+    assert.equal(await host.evaluate("document.querySelector('.community-card-grid').innerText.includes('SatSameScore')"),false,'Same band also respects the exam');
+    await host.click('Clear filters');
+    await setInput('.community-exam-filter select','SAT');
+    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('SatSameScore')");
+    await host.click('Clear filters');
+    await host.click('Same country');
+    await host.until("document.querySelectorAll('.community-learner-card').length===15");
+    await host.click('Online now');
+    await host.until("document.querySelectorAll('.community-learner-card').length===14");
+    await host.click('Clear filters');
+    await host.evaluate("window.failSearch=true;window.dispatchEvent(new Event('focus'))");
+    await host.until("document.querySelector('.community-error')");
+    await host.click('Try again');
+    await host.until("!document.querySelector('.community-error')&&document.querySelectorAll('.community-learner-card').length===16");
+    await setInput('.community-sort select','xp');
+    await host.until("document.querySelectorAll('.community-learner-card')[2]?.innerText.includes('SatSameScore')");
+    await host.evaluate("document.querySelector('.community-card-footer button').click()");
+    await host.until("window.communityPath==='/u/Leader'");
+    await host.evaluate("window.navigateCommunity('/community')");
+    await host.click('Voice rooms');
+    await guest.click('Voice rooms');
+    await layout(host, 'voice');
     // Topic tiles start a room directly, without a form or typing.
     await host.click('Say hello')
     await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Say hello')`)
@@ -136,6 +187,16 @@ async function main() {
     await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')`)
     assert.equal(await host.evaluate('window.captureStreams.length'), 0, 'Custom creation also opens without microphone permission')
     await guest.until(`document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')`)
+    await host.click('Invite friends');
+    const invitation = await host.evaluate("document.querySelector('.hub-share-link input').value");
+    const invitePath = new URL(invitation).pathname + new URL(invitation).search;
+    await guest.evaluate(`window.navigateCommunity(${JSON.stringify(invitePath)})`);
+    await guest.until("document.querySelector('.hub-invitation') && !document.querySelector('.hub-lobby')");
+    await guest.click('Join invited room');
+    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')");
+    await guest.click('Leave room');
+    await guest.evaluate("window.navigateCommunity('/community?mode=voice')");
+    await guest.until("document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')");
     await layout(guest, 'feed')
     await guest.click('Enter room')
     await guest.until(`document.querySelector('.hub-listener')?.innerText.includes('Guest')`)
@@ -184,6 +245,7 @@ async function main() {
     await guest.until(`(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()`)
     await guest.click('Leave room')
     await host.click('Leave room')
+    await host.click('Explore')
     await host.until(`document.querySelector('.community-speak-button')`)
     await host.click('Speak together')
     await guest.until(`document.querySelector('.hub-invitation')?.innerText.includes('Host')`)
@@ -225,12 +287,27 @@ async function main() {
     await host.click('Leave room')
     assert.equal(await host.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Leaving stops every host microphone track')
     assert.equal(await guest.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Leaving stops every guest microphone track')
+    for (const section of ['Hard Questions','Study Abroad Lounge']) {
+      await host.click(section);await guest.click(section);
+      await host.until("document.querySelector('.discussion-status .is-live')");
+      await guest.until("document.querySelector('.discussion-status .is-live')");
+      assert.equal(await host.evaluate("document.querySelector('.discussion-messages').innerText.includes('Live room question')"),false,'Switching discussion rooms clears unrelated messages');
+      await host.evaluate("(()=>{const input=document.querySelector('.discussion-composer textarea');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(input,'Live room question');input.dispatchEvent(new Event('input',{bubbles:true}));})()");
+      await host.evaluate("document.querySelector('.discussion-composer button').click()");
+      await guest.until("document.querySelector('.discussion-messages').innerText.includes('Live room question')");
+      assert.equal(await host.evaluate("document.querySelector('.discussion-message.is-self')?.innerText.includes('You')"),true);
+      const socketCount = await host.evaluate('window.communitySockets.length');
+      await host.evaluate('window.communitySockets.at(-1).close()');
+      await host.until(`window.communitySockets.length>${socketCount} && document.querySelector('.discussion-status .is-live') && document.querySelector('.discussion-messages').innerText.includes('Live room question')`);
+      await layout(host,section==='Hard Questions'?'questions':'admissions');
+    }
+    await host.click('Explore');
     await host.send('Page.bringToFront')
     await host.evaluate(`window.champion='Guest'; window.dispatchEvent(new Event('focus'))`)
     await host.until(`document.querySelector('.hub-champion').innerText.includes('@Guest')`)
     assert.deepEqual(host.errors, [], 'Host has no browser exceptions')
     assert.deepEqual(guest.errors, [], 'Guest has no browser exceptions')
-    console.log('Community browser passed: real two-way WebRTC audio, mode switching without reconnecting, automatic debate teams and turns, random matching/cancellation/next partner, private invitations, microphone release, chat, visible call controls and layouts at 320–1440px, learner cards and champion refresh.')
+    console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner, private invitations and deep links, microphone release, chat, both discussion rooms, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')
     await host.send('Browser.close').catch(() => {})
   } finally {
     connections.forEach(socket => socket.close())

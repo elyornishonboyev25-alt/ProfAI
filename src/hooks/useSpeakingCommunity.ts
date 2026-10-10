@@ -91,10 +91,20 @@ export function useSpeakingCommunity(enabled: boolean) {
     }
     const connect = async () => {
       // The account request uses the existing session refresh flow before opening the socket.
-      try { await fetchAccount() } catch (failure) { if (!disposed) setError(failure instanceof Error ? failure.message : 'Please sign in to connect.'); return }
+      try { await fetchAccount() } catch (failure) {
+        if (!disposed) {
+          setError(failure instanceof Error ? failure.message : 'Please sign in to connect.')
+          retry = window.setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15_000))
+        }
+        return
+      }
       if (disposed) return
       let socket: WebSocket
-      try { socket = new WebSocket(getSpeakingWebSocketUrl()) } catch { setError('Speaking rooms could not connect. Please reload to retry.'); return }
+      try { socket = new WebSocket(getSpeakingWebSocketUrl()) } catch {
+        setError('Speaking rooms could not connect. Please reload to retry.')
+        retry = window.setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15_000))
+        return
+      }
       socketRef.current = socket
       socket.onopen = () => { if (!disposed) socket.send(JSON.stringify({ type: 'communityHello', token: useAuthStore.getState().accessToken })) }
       socket.onmessage = event => {

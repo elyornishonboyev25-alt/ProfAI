@@ -4,7 +4,6 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { cn } from '@/components/ui/utils'
 import type { RoomDraft, SpeakingCommunity, SpeakingMember, SpeakingRoom } from '@/hooks/useSpeakingCommunity'
 import { useCommunityCopy } from '@/i18n/community'
-import type { CommunityChampion } from '@/lib/profileApi'
 
 const KINDS = { conversation: 'Conversation', debate: 'Debate', ielts: 'IELTS practice' }
 const LEVELS = { all: 'All levels', beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' }
@@ -19,7 +18,7 @@ function roomTone(room: SpeakingRoom) {
   return room.kind === 'debate' ? 'lilac' : room.kind === 'ielts' ? 'blue' : room.id.charCodeAt(0) % 2 ? 'peach' : 'mint'
 }
 
-export default function SpeakingHub({ hub, champion, invitedRoom, view = 'rooms', onFindPartner }: { hub: SpeakingCommunity; champion: CommunityChampion | null; invitedRoom: string | null; view?: 'rooms' | 'partner' | 'hidden'; onFindPartner: () => void }) {
+export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub: SpeakingCommunity; invitedRoom: string | null; view?: 'rooms' | 'partner' | 'hidden' }) {
   const t = useCommunityCopy()
   const [creating, setCreating] = useState(false)
   const [kind, setKind] = useState('all')
@@ -33,7 +32,6 @@ export default function SpeakingHub({ hub, champion, invitedRoom, view = 'rooms'
   const room = hub.room
   const speakers = room?.members.filter(member => member.role === 'speaker') ?? []
   const listeners = room?.members.filter(member => member.role === 'listener') ?? []
-  const rules = t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')
   const isHost = room?.hostId === hub.selfId
 
   useEffect(() => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }) }, [hub.messages])
@@ -51,6 +49,7 @@ export default function SpeakingHub({ hub, champion, invitedRoom, view = 'rooms'
     try { await navigator.clipboard.writeText(url.toString()); setCopied(true) } catch { setCopied(false) }
   }
   return <section className="speaking-hub" aria-label={t('Speaking community')}>
+    {invitedRoom && !room ? <div className="hub-invitation"><LockKeyhole size={22} /><div><b>{t('Invitation link')}</b><p>{t('Someone invited you to a speaking room.')}</p></div><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => void hub.join(invitedRoom)}>{t('Join invited room')}<ArrowRight size={17} /></button></div> : null}
     {hub.error ? <div className="hub-feedback is-error" role="alert"><span>{t(hub.error)}</span><button type="button" onClick={hub.clearError} aria-label={t('Close')}><X size={17} /></button></div> : null}
     {hub.notice ? <div className="hub-feedback" role="status">{t(hub.notice)}</div> : null}
     {hub.invitation ? <div className="hub-invitation" role="status">
@@ -95,10 +94,9 @@ export default function SpeakingHub({ hub, champion, invitedRoom, view = 'rooms'
       {Object.entries(hub.streams).map(([id, stream]) => <RemoteAudio key={id} stream={stream} />)}
     </> : view === 'hidden' ? null : <>
       <header className="hub-discovery-heading">
-        <div><span className="hub-eyebrow"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting…')}</span>{hub.online} {t('online in community')}</span><h1>{t(view === 'partner' ? 'Meet your speaking partner.' : 'A little courage. A real conversation.')}</h1><p>{t(view === 'partner' ? 'One-to-one practice. A new person, a new perspective.' : 'One community. Real voices. More confidence every day.')}</p><div className="hub-hero-actions">{view === 'partner' ? <button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => void hub.match()}><Shuffle size={18} />{t('Find a random partner')}</button> : <><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => { hub.clearError(); setCreating(true) }}><Plus size={19} />{t('Create a room')}</button><button type="button" className="hub-button" onClick={onFindPartner}><Users size={18} />{t('Find a partner')}</button></>}</div></div>
+        <div><span className="hub-eyebrow"><AudioLines size={16} />{t(view === 'partner' ? 'One-to-one voice practice' : 'Conversation & team debate')}</span><h1>{t(view === 'partner' ? 'Meet your speaking partner.' : 'A little courage. A real conversation.')}</h1><p>{t(view === 'partner' ? 'One-to-one practice. A new person, a new perspective.' : 'One community. Real voices. More confidence every day.')}</p><div className="hub-hero-actions">{view === 'partner' ? <button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => void hub.match()}><Shuffle size={18} />{t('Find a random partner')}</button> : <><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => { hub.clearError(); setCreating(true) }}><Plus size={19} />{t('Create a room')}</button></>}</div></div>
         <div className="hub-hero-art" aria-hidden="true"><span className="hub-art-orbit" /><div className="hub-art-mic"><AudioLines size={54} /></div><span className="hub-art-label"><Headphones size={14} />{t('Listen. Speak. Grow.')}</span><span className="hub-art-spark"><Sparkles size={22} /></span><span className="hub-art-chat"><MessageCircle size={26} /></span></div>
       </header>
-      {invitedRoom ? <div className="hub-invitation"><LockKeyhole size={22} /><div><b>{t('Invitation link')}</b><p>{t('Someone invited you to a speaking room.')}</p></div><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => void hub.join(invitedRoom)}>{t('Join invited room')}<ArrowRight size={17} /></button></div> : null}
       {view === 'partner' ? <PartnerDiscovery hub={hub} /> : <><section className="hub-starters" aria-label={t('Start a room in one tap')}>
         <div className="hub-section-label"><b>{t('Start a room in one tap')}</b><small>{t('Pick a topic. Your room is ready.')}</small></div>
         <div className="hub-starter-grid">{STARTERS.map((starter, index) => <button type="button" key={starter.title} className={`hub-starter tone-${starter.tone}`} disabled={!hub.connected || hub.busy} onClick={() => openStarter(index)}><span className="hub-starter-emoji" aria-hidden="true">{starter.emoji}</span><span><b>{t(starter.title)}</b><small>{t('Open room')} <ArrowRight size={13} /></small></span><Plus size={17} /></button>)}</div>
@@ -109,7 +107,6 @@ export default function SpeakingHub({ hub, champion, invitedRoom, view = 'rooms'
         <div className="hub-room-grid">{visible.map(room => <SocialRoomCard key={room.id} room={room} hub={hub} />)}</div>
         {!visible.length ? <div className="hub-lobby-empty"><span>🫶</span><div><h3>{t(query || kind !== 'all' ? 'No rooms match yet' : 'Be the first voice in the room')}</h3><p>{t(query || kind !== 'all' ? 'Try another topic or open your own room.' : 'A hello is all it takes. Pick a topic above and welcome people in.')}</p></div><button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy} onClick={() => openStarter(0)}><Mic size={17} />{t('Start talking')}</button></div> : null}
       </section></>}
-      {champion ? <div className="hub-champion"><span><Crown size={24} /></span><div className="hub-champion-avatar"><ProfileAvatar src={champion.avatarUrl} name={champion.nickname} alt="" /></div><div><b>{t('Top learner today')}</b><strong>@{champion.nickname}</strong><small>{t('Consistency deserves the spotlight.')}</small></div><div className="hub-champion-xp"><strong>{champion.xp.toLocaleString()}</strong><small>{t('XP earned')}</small></div><details><summary>{t('How it works')}<ChevronDown size={14} /></summary><p>{rules}</p></details></div> : null}
     </>}
     {hub.busy && !room ? <div className="hub-pending" role="status"><Loader2 className="animate-spin" size={17} /><div><b>{t(hub.matching ? 'Looking for your next conversation…' : 'Connecting…')}</b>{hub.matching ? <p>{t('Stay here. We will connect you when another learner is ready.')}</p> : null}</div><button type="button" className="hub-button" onClick={hub.leave}>{t('Cancel')}</button></div> : null}
     {creating ? <QuickCreate onClose={() => { if (hub.busy) hub.leave(); setCreating(false) }} onCreate={hub.create} busy={hub.busy} error={hub.error} /> : null}

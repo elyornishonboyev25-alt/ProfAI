@@ -1,4 +1,6 @@
 import type { QSIndicators, University, UniversityBrand } from './types'
+import { enrichUniversityFromIeltsDirectory } from './ieltsDirectory'
+import { enrichUniversityWithLivingCosts } from './additionalUniversityCosts'
 import {
   QS_2027_RANKED_UNIVERSITY_COUNT,
   QS_2027_UNIVERSITY_CATALOG,
@@ -183,6 +185,8 @@ export function buildMissingQs2027Universities(existingUniversities: University[
   return QS_2027_UNIVERSITY_CATALOG
     .filter((row) => [...identityKeys(row[2])].every((key) => !existingKeys.has(key)))
     .map(universityFromRow)
+    .map(enrichUniversityFromIeltsDirectory)
+    .map(enrichUniversityWithLivingCosts)
 }
 
 export { QS_2027_RANKED_UNIVERSITY_COUNT }

@@ -24,6 +24,7 @@ type SignalPayload = { sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandid
 export type VoiceConnection = {
   start: (localStream: MediaStream) => Promise<void>
   handleSignal: (data: unknown) => Promise<void>
+  replaceAudioTrack: (track: MediaStreamTrack | null) => Promise<void>
   close: () => void
 }
 
@@ -36,13 +37,14 @@ export function createVoiceConnection(opts: {
   const pc = new RTCPeerConnection({ iceServers: iceServers() })
   let remoteDescriptionSet = false
   const pendingCandidates: RTCIceCandidateInit[] = []
+  let audioSender: RTCRtpSender | null = null
+  let localTrack: MediaStreamTrack | null = null
 
   pc.onicecandidate = (event) => {
     if (event.candidate) opts.sendSignal({ candidate: event.candidate.toJSON() })
   }
   pc.ontrack = (event) => {
-    const [stream] = event.streams
-    if (stream) opts.onRemoteStream(stream)
+    opts.onRemoteStream(event.streams[0] ?? new MediaStream([event.track]))
   }
   pc.onconnectionstatechange = () => opts.onStateChange?.(pc.connectionState)
 
@@ -60,7 +62,12 @@ export function createVoiceConnection(opts: {
   }
 
   const start = async (localStream: MediaStream) => {
-    localStream.getAudioTracks().forEach((track) => pc.addTrack(track, localStream))
+    const track = localStream.getAudioTracks()[0]
+    localTrack = track ?? null
+    // Listeners negotiate an audio sender without accessing the microphone.
+    // Replacing its track later lets them speak without reconnecting the room.
+    if (track) audioSender = pc.addTrack(track, localStream)
+    else if (opts.isCaller) audioSender = pc.addTransceiver('audio', { direction: 'sendrecv' }).sender
     if (opts.isCaller) {
       const offer = await pc.createOffer({ offerToReceiveAudio: true })
       await pc.setLocalDescription(offer)
@@ -79,6 +86,14 @@ export function createVoiceConnection(opts: {
       remoteDescriptionSet = true
       await flushCandidates()
       if (payload.sdp.type === 'offer') {
+        // An empty answerer must use the transceiver created by the offer.
+        // Adding a separate one before the offer leaves its sender unnegotiated.
+        const audio = pc.getTransceivers().find(transceiver => transceiver.mid !== null && transceiver.receiver.track.kind === 'audio')
+        if (audio) {
+          audio.direction = 'sendrecv'
+          audioSender = audio.sender
+          await audioSender.replaceTrack(localTrack)
+        }
         const answer = await pc.createAnswer()
         await pc.setLocalDescription(answer)
         opts.sendSignal({ sdp: { type: answer.type, sdp: answer.sdp } })
@@ -113,5 +128,5 @@ export function createVoiceConnection(opts: {
     }
   }
 
-  return { start, handleSignal, close }
+  return { start, handleSignal, close, replaceAudioTrack: async track => { localTrack = track; await audioSender?.replaceTrack(track) } }
 }

@@ -22,7 +22,8 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import './admission-universities.css'
 import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
-import { estimateRequirements, scoreUniversity } from '@/data/admission/match'
+import { scoreUniversity } from '@/data/admission/match'
+import { matchesUniversityIeltsFilter, universityIeltsLabel, type UniversityIeltsFilter } from '@/data/admission/ieltsDirectory'
 import type { University } from '@/data/admission'
 import { useAdmissionScores, type AdmissionScores } from '@/hooks/useAdmissionScores'
 import { prefetchUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
@@ -30,13 +31,13 @@ import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 
 type BudgetFilter = 'all' | 'published' | 'under-20k-usd'
-type IeltsFilter = 'all' | 'up-to-6.5' | 'up-to-7.0' | '7.5-plus' | 'no-cutoff'
+type IeltsFilter = UniversityIeltsFilter
 type RankFilter = 'all' | 'top-10' | 'top-25' | 'top-50' | 'unranked'
 const UNIVERSITY_PAGE_SIZE = 12
 
 function yearlyCostLabel(university: University) {
   const cost = university.costOfLiving
-  if (!cost) return 'Budget not published'
+  if (!cost) return 'Budget not verified'
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -48,13 +49,6 @@ function yearlyCostLabel(university: University) {
   const max = cost.maxAmount ? formatter.format(cost.maxAmount) : null
   const period = cost.period === 'month' ? '/mo' : '/yr'
   return `${min}${max ? `–${max}` : ''}${period}`
-}
-
-function ieltsLabel(university: University) {
-  const requirements = university.admission?.bachelor ?? []
-  const requirement = requirements.find((item) => item.comparison === 'ieltsOverall')
-    ?? requirements.find((item) => item.label === 'IELTS')
-  return requirement?.value ?? 'No IELTS cutoff'
 }
 
 const UniversityCard = memo(function UniversityCard({
@@ -122,7 +116,7 @@ const UniversityCard = memo(function UniversityCard({
       </div>
 
       <div className="admission-card-tags">
-        <span>IELTS {ieltsLabel(university)}</span>
+        <span>IELTS {universityIeltsLabel(university)}</span>
         {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
       </div>
 
@@ -254,12 +248,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
         || (budget === 'published' && Boolean(cost))
         || (budget === 'under-20k-usd' && cost?.currency === 'USD' && cost.period === 'academic-year' && (cost.maxAmount ?? cost.amount) <= 20_000)
 
-      const ieltsRequirement = estimateRequirements(university).ielts
-      const matchesIelts = ielts === 'all'
-        || (ielts === 'up-to-6.5' && ieltsRequirement !== null && ieltsRequirement <= 6.5)
-        || (ielts === 'up-to-7.0' && ieltsRequirement !== null && ieltsRequirement <= 7)
-        || (ielts === '7.5-plus' && ieltsRequirement !== null && ieltsRequirement >= 7.5)
-        || (ielts === 'no-cutoff' && ieltsRequirement === null)
+      const matchesIelts = matchesUniversityIeltsFilter(university, ielts)
 
       const matchesRank = rank === 'all'
         || (rank === 'top-10' && typeof university.rank === 'number' && university.rank <= 10)
@@ -402,7 +391,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               <div className="admission-filter-row">
                 <FilterSelect label="Country" value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
                 <FilterSelect label="Living-cost budget" value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
-                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }]} />
+                <FilterSelect label="IELTS requirement" value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }, { value: 'unverified', label: 'Requirement not verified' }]} />
                 <FilterSelect label="QS rank" value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
               </div>
 
@@ -465,7 +454,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               ) : null}
 
               <p className="admission-catalog-note">
-                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}, published 18 June 2026. Admission and cost details appear only where they have been independently verified.
+                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}, published 18 June 2026. IELTS directory scores are indicative and programme-specific; confirm them with the university. Admission policies and budgets are shown where verified.
               </p>
             </div>
           </section>

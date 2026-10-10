@@ -1,6 +1,7 @@
 import { onAccountDeleted } from '../services/accountLifecycle.js'
 import type { Server } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
+import { attachCommunitySignaling, type CommunityAuthenticator } from './communitySignaling.js'
 
 // Live-partner matchmaking + WebRTC signaling relay.
 // The server never touches audio — it only pairs two learners who are searching in
@@ -322,8 +323,20 @@ function postDiscussion(client: Client, roomId: string, text: string) {
   }
 }
 
-function attach(server: Server) {
-  const wss = new WebSocketServer({ server, path: '/ws/speaking' })
+function attach(server: Server, authenticate?: CommunityAuthenticator) {
+  const wss = new WebSocketServer({ server, path: '/ws/speaking', maxPayload: 1_000_000 })
+  attachCommunitySignaling(wss, authenticate)
+  const alive = new WeakSet<WebSocket>()
+  const heartbeat = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (!alive.has(ws)) { ws.terminate(); continue }
+      alive.delete(ws)
+      ws.ping()
+    }
+  }, 30_000)
+  heartbeat.unref()
+  wss.on('close', () => clearInterval(heartbeat))
+  wss.on('connection', ws => { alive.add(ws); ws.on('pong', () => alive.add(ws)) })
 
   wss.on('connection', (ws: WebSocket) => {
     const client: Client = {
@@ -347,6 +360,7 @@ function attach(server: Server) {
       } catch {
         return
       }
+      if (!msg || typeof msg !== 'object') return
 
       switch (msg.type) {
         case 'hello':

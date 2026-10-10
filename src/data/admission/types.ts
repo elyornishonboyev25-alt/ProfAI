@@ -111,6 +111,13 @@ export type University = {
   programmesCount?: number
   students?: StudentBody
   costOfLiving?: CostOfLiving
+  // IELTS's recognition directory lists indicative, programme-specific scores.
+  // Keep these separate from verified bachelor policies and score matching.
+  ieltsDirectory?: {
+    sourceUrl: string
+    checkedAt: string
+    scores: { programme: string; minimum: number | null; detail?: string }[]
+  }
   admission?: {
     bachelor?: AdmissionRequirement[]
     note?: string

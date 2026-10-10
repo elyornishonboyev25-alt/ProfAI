@@ -74,6 +74,8 @@ export type SkillBadgeRecord = {
   updatedAt: string
 }
 
+export type CommunityChampion = { nickname: string; avatarUrl: string | null; xp: number }
+
 export type LearnerSearchResult = {
   nickname: string | null
   avatarUrl: string | null
@@ -86,9 +88,8 @@ export type LearnerSearchResult = {
   targetScore: number | null
   targetUniversitySlug: string | null
   online: boolean
-  /** True for the current or last confirmed weekly community champion. */
-  weeklyChampion?: boolean
-  weeklyScore?: number
+  /** Global highest-XP eligible learner, recalculated every discovery request. */
+  dailyChampion?: boolean
 }
 
 export type PublicProfilePayload = {
@@ -211,16 +212,18 @@ export async function deleteBadge(id: string): Promise<void> {
 export async function searchLearners(
   q = '',
   filters: { targetExam?: 'IELTS' | 'SAT'; country?: string; online?: boolean } = {},
+  onChampion?: (champion: CommunityChampion | null) => void,
 ): Promise<LearnerSearchResult[]> {
   const params = new URLSearchParams()
   if (q.trim()) params.set('q', q.trim())
   if (filters.targetExam) params.set('targetExam', filters.targetExam)
   if (filters.country) params.set('country', filters.country)
   if (filters.online) params.set('online', 'true')
-  const res = await apiClient.get<{ results: LearnerSearchResult[] }>(
+  const res = await apiClient.get<{ results: LearnerSearchResult[]; topLearner: CommunityChampion | null }>(
     `/profile/search?${params.toString()}`,
     { auth: true },
   )
+  onChampion?.(res.topLearner ?? null)
   return res.results ?? []
 }
 

@@ -45,7 +45,7 @@ export default function OwnerDashboard() {
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
   const amount = (value: number) => `${new Intl.NumberFormat(locale).format(value)} ${t('UZS')}`
   const user = useAuthStore(state => state.user)
-  const isOwner = hasOwnerAccess(user?.email)
+  const isOwner = hasOwnerAccess(user?.email, user?.nickname)
   const [section, setSection] = useState('activity')
   const [overview, setOverview] = useState<Overview | null>(null)
   const [userPage, setUserPage] = useState(1)

@@ -13,6 +13,7 @@
     "test:ai-coach-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach.tsx",
     "test:coach-studio": "node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",
+    "test:full-mocks": "node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-flow-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-session-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/mock-results-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-audio-completion.tsx",
     "validate:reading": "node scripts/validate-reading-bank.mjs",
     "validate:listening": "node scripts/validate-listening-bank.mjs",
     "test:listening-browser": "node scripts/test-listening-bank-browser.mjs",

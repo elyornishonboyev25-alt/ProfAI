@@ -31,6 +31,7 @@ import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { useFullscreen } from '@/hooks/useFullscreen'
+import { useBillingText } from '@/features/billing/copy'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -48,6 +49,7 @@ type Props = {
   autoTimerEnabled?: boolean
   autoDurationMinutes?: number
   inFullMock?: boolean
+  fullMockId?: string
 }
 
 type Phase = 'landing' | 'writing' | 'submitted'
@@ -78,8 +80,10 @@ export default function IELTSWritingFullTestInterface({
   autoTimerEnabled,
   autoDurationMinutes,
   inFullMock = false,
+  fullMockId,
 }: Props) {
   const [searchParams] = useSearchParams()
+  const text = useBillingText()
   const tasks = fullTest.tasks
   const defaultDuration = tasks.reduce((total, task) => total + task.durationMinutes, 0)
   const effectiveDuration =
@@ -119,7 +123,7 @@ export default function IELTSWritingFullTestInterface({
   const totalWordCount = tasks.reduce((total, task) => total + wordCounts[task.id], 0)
   const hasDraft = Object.values(answers).some((answer) => answer.trim().length > 0)
   const user = useAuthStore((state: AuthState) => state.user)
-  const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}`
+  const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
@@ -256,7 +260,7 @@ export default function IELTSWritingFullTestInterface({
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
-      if (tasks.some((task) => task.taskType === 'task1') && tasks.some((task) => task.taskType === 'task2') && timerEnabled) awardBadge({
+      if (!inFullMock && tasks.some((task) => task.taskType === 'task1') && tasks.some((task) => task.taskType === 'task2') && timerEnabled) awardBadge({
         userId: user?.id ?? null,
         track: 'IELTS_WRITING',
         band: overallBand,
@@ -700,7 +704,7 @@ export default function IELTSWritingFullTestInterface({
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  aria-label={isFullscreen ? "To'liq ekrandan chiqish" : "To'liq ekran"}
+                  aria-label={isFullscreen ? text('Exit fullscreen', 'To‘liq ekrandan chiqish', 'Выйти из полноэкранного режима') : text('Fullscreen', 'To‘liq ekran', 'Полноэкранный режим')}
                   aria-pressed={isFullscreen}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
                 >

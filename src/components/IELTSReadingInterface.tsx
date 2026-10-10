@@ -58,6 +58,7 @@ import '@/styles/reading-exam-typography.css'
 interface IELTSReadingInterfaceProps {
   startAccess?: { busy: boolean; ready?: boolean; error: string; unlock: () => Promise<boolean> }
   test: IELTSTest
+  fullMockId?: string
   onComplete: (results: TestResult) => void
   onExit: () => void
   reviewPayload?: {
@@ -248,6 +249,7 @@ export default function IELTSReadingInterface({
   onExit,
   reviewPayload,
   launchPreset,
+  fullMockId,
   startAccess,
 }: IELTSReadingInterfaceProps) {
   const isReviewMode = Boolean(reviewPayload?.result)
@@ -266,6 +268,8 @@ export default function IELTSReadingInterface({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const lastAudioTimeRef = useRef(0)
   const submissionStartedRef = useRef(false)
+  const pendingAudioSeekRef = useRef<number | null>(null)
+  const [audioFinishedAt, setAudioFinishedAt] = useState<number | null>(null)
   // True while a clip is meant to be playing. Simulation blocks external pauses;
   // practice and review can clear this for an intentional pause.
   const shouldPlayRef = useRef(false)
@@ -335,6 +339,7 @@ export default function IELTSReadingInterface({
   const isSelectingTextRef = useRef(false)
   const selectionOriginRef = useRef<HTMLElement | null>(null)
   const startedAtRef = useRef<number | null>(null)
+  const deadlineRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
   const contrastClass =
     contrastMode === 'high'
@@ -347,7 +352,7 @@ export default function IELTSReadingInterface({
 
   // --- Session Persistence ---
   const personalStorage = accountStorageFor(badgeUserId ?? 'guest')
-  const sessionKey = `ielts_test_session_${test.id}`
+  const sessionKey = `ielts_test_session_${test.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
 
   useEffect(() => {
     if (!isReviewMode || !reviewPayload?.result) return
@@ -369,9 +374,9 @@ export default function IELTSReadingInterface({
   // Load session on mount
   useEffect(() => {
     if (isReviewMode) return
-    const savedSession = personalStorage.getItem(sessionKey)
-    if (savedSession) {
-      try {
+    try {
+      const savedSession = personalStorage.getItem(sessionKey)
+      if (savedSession) {
         const data = JSON.parse(savedSession)
         // Before v2, practice defaulted to the three Reading parts even for
         // Listening. Repair that persisted default once, retaining answers and
@@ -386,20 +391,38 @@ export default function IELTSReadingInterface({
         personalStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
         setCurrentSectionIndex(data.currentSectionIndex ?? 0)
         setAnswers(data.answers ?? {})
-        setTimeRemaining(data.timeRemaining ?? test.duration * 60)
-        setIsTestActive(false)
+        const savedTime = typeof data.timeRemaining === 'number' ? data.timeRemaining : test.duration * 60
+        deadlineRef.current = isListening || savedTime === -1 ? null
+          : typeof data.deadline === 'number' ? data.deadline : (data.timestamp ?? Date.now()) + savedTime * 1000
+        setTimeRemaining(deadlineRef.current === null ? savedTime : Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000)))
+        const active = data.isTestActive === true
+        setIsTestActive(active)
+        // The launch preset starts a NEW attempt only when no active session exists.
+        launchPresetAppliedRef.current = active
         setTestMode(data.testMode ?? 'simulation')
         setSelectedParts(restoredParts)
         setCustomTime(data.customTime ?? 60)
         setFlaggedQuestions(data.flaggedQuestions ?? [])
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
         startedAtRef.current = typeof data.startedAt === 'number' ? data.startedAt : null
-
-      } catch (e) {
-        console.error("Failed to restore session", e)
+        if (isListening) {
+          const trackCount = test.continuousAudioUrl ? 1 : (data.testMode === 'practice' ? restoredParts.length : test.sections.length)
+          setCurrentAudioIndex(clamp(Number.isInteger(data.currentAudioIndex) ? data.currentAudioIndex : 0, 0, Math.max(0, trackCount - 1)))
+          const position = Number.isFinite(data.audioCurrentTime) ? Math.max(0, data.audioCurrentTime) : 0
+          pendingAudioSeekRef.current = position
+          lastAudioTimeRef.current = position
+          setAudioCurrentTime(position)
+          const finished = data.audioDone === true && typeof data.audioFinishedAt === 'number'
+          setAudioDone(finished)
+          setAudioFinishedAt(finished ? data.audioFinishedAt : null)
+          // Unfinished audio resumes after a user gesture, at the saved position.
+          setAudioStarted(finished)
+        }
       }
+    } catch (e) {
+      console.error('Failed to restore session', e)
     }
-  }, [isReviewMode, isListening, sessionKey, test.duration, test.id, test.sections.length])
+  }, [isReviewMode, isListening, sessionKey, badgeUserId, test.duration, test.id, test.sections.length, test.continuousAudioUrl])
 
   useEffect(() => {
     setSelectedParts((current) => sanitizeSelectedParts(current, test.sections.length))
@@ -427,6 +450,7 @@ export default function IELTSReadingInterface({
   useEffect(() => {
     if (isReviewMode) return
     if (!isTestActive) return // Only save if the test has started
+    if (submissionStartedRef.current) return
 
     const sessionData = {
       partsSelectionVersion: 2,
@@ -440,9 +464,14 @@ export default function IELTSReadingInterface({
       flaggedQuestions,
       lastActiveQuestionIndex,
       startedAt: startedAtRef.current,
+      deadline: deadlineRef.current,
+      currentAudioIndex,
+      audioCurrentTime,
+      audioDone,
+      audioFinishedAt,
       timestamp: Date.now()
     }
-    personalStorage.setItem(sessionKey, JSON.stringify(sessionData))
+    try { personalStorage.setItem(sessionKey, JSON.stringify(sessionData)) } catch { /* Keep the in-memory attempt usable. */ }
   }, [
     currentSectionIndex,
     answers,
@@ -455,12 +484,18 @@ export default function IELTSReadingInterface({
     lastActiveQuestionIndex,
     sessionKey,
     isReviewMode,
+    badgeUserId,
+    currentAudioIndex,
+    audioCurrentTime,
+    audioDone,
+    audioFinishedAt,
   ])
 
   // Clear session helper
   const clearSession = () => {
     personalStorage.removeItem(sessionKey)
     startedAtRef.current = null
+    deadlineRef.current = null
   }
 
   const reviewActiveSectionIds = useMemo(() => {
@@ -560,6 +595,7 @@ export default function IELTSReadingInterface({
     shouldPlayRef.current = true
     setAudioStarted(true)
     setAudioDone(false)
+    setAudioFinishedAt(null)
     setAudioError(null)
     const audio = audioRef.current
     if (audio) {
@@ -621,6 +657,11 @@ export default function IELTSReadingInterface({
   const handleAudioLoadedMetadata = () => {
     const audio = audioRef.current
     if (!audio) return
+    if (pendingAudioSeekRef.current !== null && Number.isFinite(audio.duration)) {
+      const position = Math.min(pendingAudioSeekRef.current, audio.duration)
+      lastAudioTimeRef.current = position
+      try { audio.currentTime = position; pendingAudioSeekRef.current = null } catch { /* Retry at the next metadata event. */ }
+    }
     lastAudioTimeRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0
     setAudioDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
     setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
@@ -632,7 +673,8 @@ export default function IELTSReadingInterface({
     if (!audio) return
     // A seeking event must not replace the last permitted playback position.
     if (!audio.seeking) lastAudioTimeRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0
-    setAudioCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0)
+    const position = Number.isFinite(audio.currentTime) ? audio.currentTime : 0
+    setAudioCurrentTime((current) => Math.floor(current) === Math.floor(position) ? current : position)
   }
 
   const handleAudioSeeking = () => {
@@ -675,10 +717,12 @@ export default function IELTSReadingInterface({
         return
       }
       lastAudioTimeRef.current = 0
+      setAudioCurrentTime(0)
       setCurrentAudioIndex(next)
     } else {
       shouldPlayRef.current = false
       setAudioDone(true)
+      setAudioFinishedAt(Date.now())
       setIsAudioPlaying(false)
       const audio = audioRef.current
       if (audio && Number.isFinite(audio.duration)) setAudioCurrentTime(audio.duration)
@@ -1340,6 +1384,9 @@ export default function IELTSReadingInterface({
       stopListeningAudio()
       setAudioStarted(false)
       setAudioDone(false)
+      setAudioFinishedAt(null)
+      pendingAudioSeekRef.current = null
+      setAudioCurrentTime(0)
       setCurrentAudioIndex(0)
       setAudioError(null)
     }
@@ -1371,6 +1418,8 @@ export default function IELTSReadingInterface({
     if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
     launchTimerRef.current = setTimeout(() => {
       startedAtRef.current = Date.now()
+      const duration = effectiveMode === 'practice' ? effectiveCustomTime : test.duration
+      deadlineRef.current = isListening || duration === -1 ? null : Date.now() + duration * 60_000
       setIsTestActive(true)
       setIsLaunching(false)
       launchTimerRef.current = null
@@ -1420,7 +1469,7 @@ export default function IELTSReadingInterface({
     const correctCount = analysis.summary.correctAnswers
     const totalQuestions = analysis.summary.totalQuestions
     const isPartial = !isCompleteIeltsObjectiveSection(isListening ? 'IELTS_LISTENING' : 'IELTS_READING', test.sections.length, activeSections.length)
-    const score = isPartial ? 0 : calculateBandScore(correctCount)
+    const score = isPartial ? 0 : calculateBandScore(correctCount, totalQuestions - analysis.summary.skippedAnswers)
     const timeSpent = getCurrentTimeSpent()
 
     const result: TestResult = {
@@ -1441,7 +1490,7 @@ export default function IELTSReadingInterface({
     onComplete(result)
     // Full simulation (not partial-part practice) → award an IELTS Reading/Listening
     // band badge with celebration. Practice mode never awards a badge.
-    if (testMode === 'simulation' && !isPartial) {
+    if (!fullMockId && testMode === 'simulation' && !isPartial) {
       awardBadge({
         userId: badgeUserId,
         track: isListening ? 'IELTS_LISTENING' : 'IELTS_READING',
@@ -1499,6 +1548,10 @@ export default function IELTSReadingInterface({
     beginSubmitLoading(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
   }
 
+  useEffect(() => {
+    if (!isReviewMode && !isListening && isTestActive && timeRemaining === 0) handleTimeUp()
+  }, [isReviewMode, isListening, isTestActive, timeRemaining])
+
   useListeningAutoSubmit(
     isListening && !isReviewMode && isTestActive && audioStarted && !audioError && !showSubmitLoading,
     audioDone,
@@ -1511,6 +1564,7 @@ export default function IELTSReadingInterface({
       setIsTestActive(false)
       completeAndSubmitTest(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
     },
+    audioFinishedAt,
   )
 
   const handleAnswerChange = (qId: string, value: string | number | string[]) => {

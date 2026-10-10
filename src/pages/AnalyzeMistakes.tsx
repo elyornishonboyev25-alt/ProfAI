@@ -73,11 +73,11 @@ function buildReadingAttempt(entry: ReadingAnalysisHistoryEntry): UnifiedAttempt
   const test = resolveIeltsTestById(entry.testId, entry.resultPayload)
   const isListening = test?.module === 'Listening'
   const sectionIds = entry.resultPayload.detailedBreakdown?.activeSectionIds
-  const analysis = isListening
+  const analysis = test
     ? evaluateReadingAnswers(test.sections.filter(section => !sectionIds?.length || sectionIds.includes(section.id)), entry.resultPayload.answers)
     : null
   const summary = analysis?.summary ?? entry
-  const band = analysis ? calculateBandScore(summary.correctAnswers) : entry.bandScore
+  const band = analysis ? calculateBandScore(summary.correctAnswers, analysis.summary.totalQuestions - analysis.summary.skippedAnswers) : entry.bandScore
   return {
     id: `reading-${entry.attemptKey}`,
     title: entry.testTitle,

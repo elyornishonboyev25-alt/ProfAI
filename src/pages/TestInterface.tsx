@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useListeningStartAccess } from '@/features/billing/useListeningStartAccess'
 import { syncIeltsClassResult } from '@/features/learningCenter/ieltsResultSync'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
 import { generateRandomReadingTest, mockReadingTests } from '../data/ieltsReadingPassages'
@@ -27,7 +27,7 @@ import {
 } from '@/utils/ieltsTrackCatalog'
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
-import { getNextFullMockSection, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
   mode: 'practice' | 'simulation' | 'full-test'
@@ -72,6 +72,7 @@ export default function TestInterface() {
   const mockFrom = routeState?.from ?? 'tests'
   const [testData, setTestData] = useState<IELTSTest | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadedRoute, setLoadedRoute] = useState('')
   const trackType = type === 'reading' || type === 'listening' ? type : null
   const launchPreset = useMemo(() => {
     const statePreset = routeState?.launchPreset
@@ -114,6 +115,7 @@ export default function TestInterface() {
 
   useEffect(() => {
     setLoading(true)
+    setLoadedRoute(`${type}:${id}`)
     let foundTest: IELTSTest | undefined | null
 
     if (!id) {
@@ -191,17 +193,14 @@ export default function TestInterface() {
         if (assignmentId) useToastStore.getState().pushToast({ type: 'error', title: 'Class progress could not be saved', message: failure instanceof Error ? failure.message : 'Your result is available locally. Please try again when you are connected.' })
       })
     }
-    if (mockContext?.id && mockContext.section && !result.isPartial) {
-      saveFullMockSectionResult(mockContext.id, mockContext.section, {
+    if (mockContext?.id && trackType && !isReviewLaunch && !result.isPartial) {
+      if (result.testId !== id || getFullMockSectionRedirect(mockContext.id, trackType, location.pathname)) return
+      saveFullMockSectionResult(mockContext.id, trackType, {
         band: result.score, completedAt: result.date, testId: result.testId, result,
       })
-      const next = getNextFullMockSection(mockContext.id, mockContext.section)
+      const next = getFullMockPendingSection(mockContext.id)
       if (next?.launchPath) {
-        navigate(next.launchPath, { replace: true, state: {
-          entry: 'mock-ielts', from: mockFrom,
-          mock: { id: mockContext.id, section: next.key },
-          launchPreset: { mode: 'simulation' }, autoStart: true, timerEnabled: true,
-        } })
+        navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockContext.id, next.key, mockFrom) })
       } else {
         navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
       }
@@ -246,7 +245,14 @@ export default function TestInterface() {
     navigate('/test-preparation')
   }
 
-  if (loading) {
+  const mockRedirect = mockContext?.id && trackType && !isReviewLaunch
+    ? getFullMockSectionRedirect(mockContext.id, trackType, location.pathname) : null
+  if (mockRedirect && mockContext) {
+    const pending = getFullMockPendingSection(mockContext.id)
+    return <Navigate to={mockRedirect} replace state={pending ? fullMockLaunchState(mockContext.id, pending.key, mockFrom) : { from: mockFrom }} />
+  }
+
+  if (loading || loadedRoute !== `${type}:${id}`) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -300,7 +306,9 @@ export default function TestInterface() {
   if (type === 'reading') {
     return (
       <IELTSReadingInterface
+        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${isReviewLaunch ? 'review' : 'attempt'}`}
         test={testData}
+        fullMockId={mockContext?.id}
         onComplete={handleComplete}
         onExit={handleExit}
         reviewPayload={reviewPayload}
@@ -321,7 +329,9 @@ export default function TestInterface() {
     // header, navigation) with an added non-controllable audio playlist.
     return (
       <IELTSReadingInterface
+        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${isReviewLaunch ? 'review' : 'attempt'}`}
         test={testData}
+        fullMockId={mockContext?.id}
         startAccess={isReviewLaunch ? undefined : listeningAccess}
         onComplete={handleComplete}
         onExit={handleExit}

@@ -3,7 +3,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import MockIELTSRun from '@/pages/MockIELTSRun'
-import { getFullMockById, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { getFullMockById, getFullMockOverallBand, getFullMockResults, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 import type { TestResult } from '@/types/ieltsTypes'
 import i18n from '@/i18n'
 
@@ -42,6 +42,15 @@ export async function run() {
     assert.ok(element.textContent?.includes('Review opened'))
     assert.ok((reviewState as { reviewPayload?: { result?: TestResult } }).reviewPayload?.result)
     assert.equal((reviewState as { mock?: { section: string } }).mock?.section, 'listening')
+    saveFullMockSectionResult('full-mock-2', 'reading', {
+      band: 2, testId: 'legacy-empty-reading', completedAt: '2026-10-07',
+      result: { testId: 'legacy-empty-reading', date: '2026-10-07', score: 2, correctAnswers: 0, totalQuestions: 40, timeSpent: 3600, answers: { empty: [' ', ''] } },
+    })
+    for (const section of ['listening', 'writing', 'speaking'] as const) saveFullMockSectionResult('full-mock-2', section, { band: 7, testId: section, completedAt: '2026-10-07' })
+    assert.equal(getFullMockResults('full-mock-2').reading?.band, 0, 'Legacy blank paper is corrected on restore')
+    assert.equal(getFullMockResults('full-mock-2').reading?.result?.score, 0, 'Saved review uses corrected zero band')
+    assert.equal(getFullMockOverallBand('full-mock-2'), 5.5, 'Legacy empty papers no longer inflate the overall band')
     console.log('PASS: four mock cards, hidden partial scores, saved band calculation, progress, Writing/Speaking responses and Listening review navigation')
+    console.log('PASS: legacy unanswered Reading band, saved review and overall are corrected')
   } finally { await act(async () => root.unmount()); localStorage.clear() }
 }

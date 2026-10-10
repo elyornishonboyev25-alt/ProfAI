@@ -25,6 +25,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import {
   formatMockDuration,
+  fullMockLaunchState,
   FULL_MOCK_PROGRESS_EVENT,
   getFullMockById,
   getFullMockCompletedSections,
@@ -42,6 +43,11 @@ const SECTION_ICONS: Record<MockSectionKey, LucideIcon> = {
   writing: PenSquare,
   speaking: Mic2,
 }
+
+const SECTION_TRACKS = {
+  listening: 'IELTS_LISTENING', reading: 'IELTS_READING',
+  writing: 'IELTS_WRITING', speaking: 'IELTS_SPEAKING',
+} as const
 
 type SectionStatus = 'completed' | 'current' | 'locked' | 'coming-soon'
 
@@ -110,6 +116,15 @@ export default function MockIELTSRun() {
 
   useEffect(() => {
     if (!mock?.fullyReady || completedKeys.length !== MOCK_SECTION_COUNT || overallBand === null) return
+    const results = getFullMockResults(mock.id)
+    for (const section of mock.sections) {
+      const saved = results[section.key]
+      if (!saved) continue
+      awardBadge({
+        userId, track: SECTION_TRACKS[section.key],
+        band: saved.band, mode: 'full_mock', source: 'ielts-full-mock', silent: true,
+      })
+    }
     awardBadge({
       userId,
       track: 'IELTS_OVERALL',
@@ -117,18 +132,13 @@ export default function MockIELTSRun() {
       mode: 'full_mock',
       source: 'ielts-full-mock',
     })
-  }, [awardBadge, completedKeys.length, mock?.fullyReady, overallBand, userId])
+  }, [awardBadge, completedKeys.length, mock, overallBand, userId])
 
   const launchSection = useCallback(
     (section: MockSection) => {
       if (!section.launchPath || !mock) return
       navigate(section.launchPath, {
-        state: {
-          entry: 'mock-ielts',
-          from: from ?? 'mock',
-          mock: { id: mock.id, section: section.key },
-          launchPreset: { mode: 'simulation' },
-        },
+        state: fullMockLaunchState(mock.id, section.key, from),
       })
     },
     [from, mock, navigate],

@@ -11,6 +11,7 @@ import { resolveIeltsTestById } from '../../src/utils/ieltsTestCatalog'
 import { buildReadingDayTest } from '../../src/utils/generatedIeltsTests'
 import ResultsReview from '../../src/pages/ResultsReview'
 import { evaluateReadingAnswers } from '../../src/utils/ieltsUtils'
+import { accountStorageFor } from '../../src/utils/accountStorage'
 import type { TestResult } from '../../src/types/ieltsTypes'
 
 const container = document.getElementById('root')!
@@ -74,7 +75,7 @@ export async function run() {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, 'physical health')
       input.dispatchEvent(new window.Event('input', { bubbles: true }))
     })
-    const saved = JSON.parse(localStorage.getItem(`ielts_test_session_${test.id}`)!)
+    const saved = JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${test.id}`)!)
     assert.equal(saved.answers['rd26-q19'], 'physical health', `${mode}: input is stored against its question ID`)
     await act(async () => root.unmount())
     const result: TestResult = { testId: source.id, date: '2026-10-01', score: 1, correctAnswers: 1, totalQuestions: 40, timeSpent: 3600, answers: saved.answers }
@@ -96,7 +97,7 @@ export async function run() {
   const choice = [...card.querySelectorAll('button')].find(button => button.textContent === 'C')!
   assert.ok(choice, 'space-labelled sentence endings show a compact letter choice')
   await act(async () => choice.click())
-  assert.equal(JSON.parse(localStorage.getItem(`ielts_test_session_${endings.id}`)!).answers['day22-q12'], 'C', 'dropdown stores its letter, not a whole sentence')
+  assert.equal(JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${endings.id}`)!).answers['day22-q12'], 'C', 'dropdown stores its letter, not a whole sentence')
   await act(async () => root.unmount())
   console.log('PASS: sentence-ending dropdown stores the correct option letter')
 

@@ -26,6 +26,8 @@ const featuredAccountEmails: Record<string, string> = {
 }
 
 router.get('/featured-avatar/:id', asyncHandler(async (req, res) => {
+  // Public testimonial photos are embedded by the separately hosted frontend.
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
   const email = Object.prototype.hasOwnProperty.call(featuredAccountEmails, req.params.id)
     ? featuredAccountEmails[req.params.id]
     : undefined

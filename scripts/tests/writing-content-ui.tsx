@@ -6,6 +6,7 @@ import IELTSWritingFullTestInterface from '../../src/components/IELTSWritingFull
 import WritingResultModal from '../../src/components/WritingResultModal'
 import { getWritingFullTestById } from '../../src/data/writingTestData'
 import { getWritingAnalysisHistory, saveWritingAnalysis } from '../../src/utils/writingAnalysisStorage'
+import { accountStorageFor } from '../../src/utils/accountStorage'
 import type { WritingEvaluation } from '../../src/services/geminiAI'
 
 const container = document.getElementById('root')!
@@ -47,7 +48,7 @@ export async function run() {
     window.localStorage.clear()
     const test = getWritingFullTestById(`writing-full-${index}`)!
     // Exercise the same saved-session entry path used when a test is reopened.
-    window.localStorage.setItem(`profai:writing:draft:guest:${test.id}:session`, JSON.stringify({ timerEnabled: false, deadline: null }))
+    accountStorageFor('guest').setItem(`profai:writing:draft:guest:${test.id}:session`, JSON.stringify({ timerEnabled: false, deadline: null }))
     await render(<IELTSWritingFullTestInterface fullTest={test} onExit={() => {}} />)
     const visual = container.querySelector('svg[data-supplied-writing-diagram]')
     assert.ok(visual, `Test ${index} must show its supplied drawing`)

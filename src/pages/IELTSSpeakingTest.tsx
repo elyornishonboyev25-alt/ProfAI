@@ -3,7 +3,7 @@ import TestVocabulary from '@/components/vocab/TestVocabulary'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -39,7 +39,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
-import { saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
+import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import { saveSpeakingSession } from '@/lib/speakingApi'
 import { learningCenterApi } from '@/features/learningCenter/api'
 
@@ -136,6 +136,12 @@ export default function IELTSSpeakingTest() {
     return () => clearTimeout(t)
   }, [mode])
 
+  const mockRedirect = mockContext?.id ? getFullMockSectionRedirect(mockContext.id, 'speaking', location.pathname) : null
+  if (mockRedirect && mockContext) {
+    const pending = getFullMockPendingSection(mockContext.id)
+    return <Navigate to={mockRedirect} replace state={pending ? fullMockLaunchState(mockContext.id, pending.key, mockFrom) : { from: mockFrom }} />
+  }
+
   let content: ReactNode
   if (!mode) {
     content = (
@@ -207,7 +213,7 @@ export default function IELTSSpeakingTest() {
             })
           }
           // Simulation awards a Speaking band badge. Practice does not.
-          if (launchMode === 'simulation') awardBadge({
+          if (launchMode === 'simulation' && !mockContext?.id) awardBadge({
             userId: user?.id ?? null,
             track: 'IELTS_SPEAKING',
             band: analysis.overallBand,

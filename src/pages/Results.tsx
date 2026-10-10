@@ -119,8 +119,9 @@ export default function Results() {
       : result.detailedBreakdown?.readingAnalysis ?? evaluateReadingAnswers(activeSections, result.answers)
   }, [activeSections, result, test])
 
-  const bandScore = calculateBandScore(analysis.summary.correctAnswers)
-  const effectiveBandScore = Number((!isListeningTest && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
+  const answeredCount = analysis.summary.totalQuestions - analysis.summary.skippedAnswers
+  const bandScore = calculateBandScore(analysis.summary.correctAnswers, answeredCount)
+  const effectiveBandScore = Number((answeredCount > 0 && !isListeningTest && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
   const recommendations = useMemo(() => [
     analysis.summary.skippedAnswers > 0
       ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`

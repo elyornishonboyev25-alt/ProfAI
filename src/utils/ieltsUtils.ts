@@ -42,7 +42,9 @@ const QUESTION_TYPE_LABELS: Record<Question['type'], string> = {
   'drag-drop-summary': 'Drag-and-Drop Summary',
 }
 
-export const calculateBandScore = (correctCount: number): number => {
+export const calculateBandScore = (correctCount: number, answeredCount?: number): number => {
+  // Band 0 applies to an unanswered paper, not to an attempted paper with errors.
+  if (answeredCount === 0) return 0
   if (correctCount >= 39) return 9.0
   if (correctCount >= 37) return 8.5
   if (correctCount >= 35) return 8.0

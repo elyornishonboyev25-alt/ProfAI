@@ -1,10 +1,10 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
 import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
 import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
-import { getNextFullMockSection, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
+import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type WritingTestNavState = {
   autoStart?: boolean
@@ -12,7 +12,7 @@ type WritingTestNavState = {
   durationMinutes?: number
   entry?: string
   from?: string
-  mock?: { id: string; section: string }
+  mock?: { id: string; section: MockSectionKey }
 } | null
 
 export default function IELTSWritingTest() {
@@ -23,6 +23,12 @@ export default function IELTSWritingTest() {
 
   const task = useMemo(() => (id ? getWritingTaskById(id) : null), [id])
   const fullTest = useMemo(() => (id ? getWritingFullTestById(id) : null), [id])
+
+  const mockRedirect = navState?.mock?.id ? getFullMockSectionRedirect(navState.mock.id, 'writing', location.pathname) : null
+  if (mockRedirect && navState?.mock) {
+    const pending = getFullMockPendingSection(navState.mock.id)
+    return <Navigate to={mockRedirect} replace state={pending ? fullMockLaunchState(navState.mock.id, pending.key, navState.from) : { from: navState.from }} />
+  }
 
   const handleExit = () => {
     if (navState?.mock?.id) {
@@ -35,24 +41,23 @@ export default function IELTSWritingTest() {
   if (fullTest?.available) {
     return (
       <IELTSWritingFullTestInterface
+        key={`${fullTest.id}:${navState?.mock?.id ?? 'standalone'}`}
         fullTest={fullTest}
         onExit={handleExit}
         inFullMock={Boolean(navState?.mock?.id)}
+        fullMockId={navState?.mock?.id}
         onComplete={(band, summary, review) => {
           const mockId = navState?.mock?.id
           if (!mockId) return
           saveFullMockSectionResult(mockId, 'writing', {
             band, summary, review, testId: fullTest.id, completedAt: new Date().toISOString(),
           })
-          const next = getNextFullMockSection(mockId, 'writing')
-          if (next?.launchPath) navigate(next.launchPath, { replace: true, state: {
-            entry: 'mock-ielts', from: navState?.from,
-            mock: { id: mockId, section: next.key },
-          } })
+          const next = getFullMockPendingSection(mockId)
+          if (next?.launchPath) navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockId, next.key, navState?.from) })
           else navigate(`/mock/ielts/${mockId}`, { replace: true, state: { from: navState?.from } })
         }}
-        autoStart={navState?.autoStart}
-        autoTimerEnabled={navState?.timerEnabled}
+        autoStart={navState?.mock?.id ? true : navState?.autoStart}
+        autoTimerEnabled={navState?.mock?.id ? true : navState?.timerEnabled}
         autoDurationMinutes={navState?.durationMinutes}
       />
     )

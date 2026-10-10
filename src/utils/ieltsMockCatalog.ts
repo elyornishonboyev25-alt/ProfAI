@@ -204,7 +204,18 @@ function readResults(): FullMockResults {
 }
 
 export function getFullMockResults(mockId: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
-  return readResults()[mockId] ?? {}
+  const results = { ...readResults()[mockId] }
+  // Repair previously saved, entirely unanswered objective papers as well as
+  // new submissions. A blank paper must not inflate the overall mock band.
+  for (const key of ['listening', 'reading'] as const) {
+    const saved = results[key]
+    if (!saved?.result || saved.result.correctAnswers !== 0) continue
+    const answered = Object.values(saved.result.answers ?? {}).some((value) =>
+      (Array.isArray(value) ? value : [value]).some((entry) => String(entry ?? '').trim().length > 0),
+    )
+    if (!answered) results[key] = { ...saved, band: 0, result: { ...saved.result, score: 0 } }
+  }
+  return results
 }
 
 export function saveFullMockSectionResult(mockId: string, section: MockSectionKey, result: FullMockSectionResult): void {
@@ -233,4 +244,28 @@ export function getNextFullMockSection(mockId: string, section: MockSectionKey):
   const mock = getFullMockById(mockId)
   const index = mock?.sections.findIndex((entry) => entry.key === section) ?? -1
   return index >= 0 ? mock?.sections[index + 1] ?? null : null
+}
+
+/** Always resume the first unfinished section, including gaps in older progress. */
+export function getFullMockPendingSection(mockId: string): MockSection | null {
+  const completed = new Set(getFullMockCompletedSections(mockId))
+  return getFullMockById(mockId)?.sections.find((section) => section.available && !completed.has(section.key)) ?? null
+}
+
+export function fullMockLaunchState(mockId: string, section: MockSectionKey, from?: string) {
+  return {
+    entry: 'mock-ielts', from: from ?? 'mock',
+    mock: { id: mockId, section },
+    launchPreset: { mode: 'simulation' as const },
+    autoStart: true, timerEnabled: true,
+  }
+}
+
+/** Prevent a stale history entry from starting or completing the wrong section. */
+export function getFullMockSectionRedirect(mockId: string, section: MockSectionKey, pathname: string): string | null {
+  const mock = getFullMockById(mockId)
+  if (!mock) return '/mock/ielts'
+  const pending = getFullMockPendingSection(mockId)
+  if (pending?.key === section && pending.launchPath === pathname) return null
+  return pending?.launchPath ?? `/mock/ielts/${mockId}`
 }

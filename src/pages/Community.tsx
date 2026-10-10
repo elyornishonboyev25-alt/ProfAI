@@ -1,11 +1,14 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowUpDown,
   CircleHelp,
   Crown,
+  Award,
+  ArrowUpRight,
+  Flame,
   Globe2,
   GraduationCap,
   Loader2,
@@ -18,6 +21,7 @@ import {
   Target,
   Users,
   X,
+  Zap,
 } from 'lucide-react'
 import {
   fetchAccount,
@@ -225,7 +229,7 @@ export default function Community() {
         {mode === 'people' && !hub.room ? <section className="community-layout">
           <div className="community-feed-heading">
             <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find your speaking circle')}</span><h1>{t('Real people.')} <em>{t('Better conversations.')}</em></h1><p>{t('Find a learner, share a goal and start speaking together.')}</p></div>
-            {champion ? <div className="hub-champion community-champion"><Crown size={20} /><div><b>{t('Top learner today')}</b><strong>@{champion.nickname}</strong></div><span>{champion.xp.toLocaleString()} XP</span><details><summary>{t('How it works')}</summary><p>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</p></details></div> : null}
+            {champion ? <div className="hub-champion community-champion"><button type="button" className="community-champion-profile" onClick={() => navigate('/u/' + encodeURIComponent(champion.nickname), { state: { from: '/community' } })}><span className="community-champion-portrait"><ProfileAvatar src={champion.avatarUrl} name={champion.nickname} alt="" /><Crown size={15} /></span><span className="community-champion-copy"><b>{t('Top learner')}</b><strong>@{champion.nickname}</strong><small>{t('Highest earned XP')}</small></span><span className="community-champion-score"><Zap size={15} />{champion.xp.toLocaleString()}<small>XP</small><ArrowUpRight size={14} /></span></button><details><summary>{t('How it works')}</summary><p>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</p></details></div> : null}
           </div>
           <div className="community-search-bar">
             <label className="community-search-field"><Search size={20} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Find study partners...')} aria-label={t('Find study partners by nickname')} />{loading ? <Loader2 size={18} className="animate-spin" /> : null}</label>
@@ -239,7 +243,7 @@ export default function Community() {
           <div className="community-card-viewport" role="region" aria-label={t('Study partner profiles')} aria-busy={loading} tabIndex={0}>
             {error ? <div className="community-error" role="alert"><p>{error}</p><button type="button" onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{t('Try again')}</button></div> : null}
             {!loading && !error && ranked.length === 0 ? <div className="community-empty"><Users size={36} /><h2>{t('No matching learners yet')}</h2><p>{t('Remove one or two filters to discover more study partners.')}</p><button type="button" onClick={clearFilters}>{t('Show all learners')}</button></div> : null}
-            <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.dailyChampion === true} index={index} canTalk={hub.connected && !hub.room && !hub.busy && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
+            <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.nickname === champion?.nickname} index={index} available={!!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} canTalk={hub.connected && !hub.room && !hub.busy && !hub.invitation && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
           </div>
         </section> : null}
       </div>
@@ -251,20 +255,22 @@ function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; i
   return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-filter-pill', active && 'is-active')}><Icon className="h-5 w-5" />{label}</button>
 }
 
-function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void; canTalk: boolean; onTalk: () => void }) {
+function LearnerCard({ learner, score, featured, index, onOpen, available, canTalk, onTalk }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void; available: boolean; canTalk: boolean; onTalk: () => void }) {
   const t = useCommunityCopy()
+  const reducedMotion = useReducedMotion()
   return (
     <motion.article
-      initial={{ opacity: 1, y: 22, scale: 0.97 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: Math.min(index * 0.045, 0.25), duration: 0.45 }}
-      whileHover={{ y: -3 }}
+      transition={{ delay: Math.min(index * 0.025, 0.15), duration: reducedMotion ? 0 : 0.3 }}
       className={cn('community-learner-card', featured && 'is-featured')}
     >
+      <div className="community-card-cover" aria-hidden="true"><span /><span /></div>
+      <div className="community-card-topline"><span className={cn('community-availability', available ? 'is-ready' : learner.online && 'is-online')}><i />{t(available ? 'Ready to talk' : learner.online ? 'Online now' : 'Offline')}</span><span className="community-level">{t('Level')} {learner.level}</span></div>
       {featured ? (
         <span className="community-top-badge">
           <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
-          <span> {t('Top learner today')} </span>
+          <span> {t('Top learner')} </span>
         </span>
       ) : null}
       <div className="community-avatar-ring">
@@ -273,16 +279,16 @@ function LearnerCard({ learner, score, featured, index, onOpen, canTalk, onTalk 
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
       <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || t('Global learner')}</p>
-      <div className="community-goal-row"><span>{targetLabel(learner)}</span><span>{learner.targetUniversitySlug || `Level ${learner.level}`}</span></div>
+      <div className="community-goal-row"><span><Target size={12} />{learner.targetExam ? targetLabel(learner) : t('Open study goal')}</span>{learner.targetUniversitySlug ? <span><GraduationCap size={12} />{learner.targetUniversitySlug.replace(/-/g, ' ')}</span> : null}</div>
       <div className="community-stat-row">
-        <span><b>{learner.xp.toLocaleString()}</b><small> <UiText text={"XP earned"} /> </small></span>
-        <span><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>
-        <span><b>{learner.badgeCount}</b><small>{t('badges')}</small></span>
+        <span><Zap size={14} /><b>{learner.xp.toLocaleString()}</b><small> <UiText text={"XP earned"} /> </small></span>
+        <span><Flame size={14} /><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>
+        <span><Award size={14} /><b>{learner.badgeCount}</b><small>{t('badges')}</small></span>
       </div>
-      {canTalk ? <button type="button" className="community-speak-button" onClick={onTalk}><Mic size={17} />{t('Speak together')}<span /></button> : null}
+      {available ? <button type="button" className="community-speak-button" disabled={!canTalk} onClick={onTalk}><Mic size={17} />{t('Speak together')}<ArrowUpRight size={15} /></button> : null}
       <div className="community-card-footer">
-        <span className="community-match-mini"><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} />{score}%</span>
-        <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /> </button>
+        <span className="community-match-mini" title={t('Based on shared study goals, country and activity')}><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} /><span>{score}%<small>{t('Match')}</small></span></span>
+        <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /><ArrowUpRight size={15} /></button>
       </div>
     </motion.article>
   )

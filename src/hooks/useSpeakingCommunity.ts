@@ -23,6 +23,7 @@ export function useSpeakingCommunity(enabled: boolean) {
   const [streams, setStreams] = useState<Record<string, MediaStream>>({})
   const [peerStates, setPeerStates] = useState<Record<string, string>>({})
   const [invitation, setInvitation] = useState<Invitation | null>(null)
+  const [outgoingInvitation, setOutgoingInvitation] = useState<{ nickname: string; expiresAt: number } | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -56,6 +57,7 @@ export function useSpeakingCommunity(enabled: boolean) {
     setMessages([])
     setBusy(false)
     setMatching(false)
+    setOutgoingInvitation(null)
   }, [])
   const releaseMicrophone = useCallback(() => {
     generationRef.current += 1
@@ -125,6 +127,7 @@ export function useSpeakingCommunity(enabled: boolean) {
             setSelfId(message.selfId)
             setMessages(message.messages)
             setMatching(false)
+            setOutgoingInvitation(null)
             message.room.members.filter((member: SpeakingMember) => member.id !== message.selfId).forEach((member: SpeakingMember) => addPeer(member, true))
             break
           case 'communityRoom':
@@ -194,12 +197,13 @@ export function useSpeakingCommunity(enabled: boolean) {
     return () => window.clearTimeout(timeout)
   }, [invitation])
 
-  const beginRoomRequest = async (payload: unknown, inviting = false) => {
+  const beginRoomRequest = async (payload: Record<string, unknown>, inviting = false) => {
     if (socketRef.current?.readyState !== WebSocket.OPEN || pendingRef.current || roomRef.current || leavingRef.current) return
     pendingRef.current = true
     setBusy(true)
     setError('')
     setNotice('')
+    setOutgoingInvitation(inviting && typeof payload.nickname === 'string' ? { nickname: payload.nickname, expiresAt: Date.now() + 60_000 } : null)
     try {
       // Negotiate a listening connection first. Only taking a seat requests a mic.
       localRef.current = new MediaStream()
@@ -258,7 +262,7 @@ export function useSpeakingCommunity(enabled: boolean) {
     send({ type: 'communityState', muted: next.muted, hand: next.hand, side: next.side })
   }
   return {
-    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, error, notice, busy, matching,
+    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, error, notice, busy, matching,
     clearError: () => setError(''),
     create: (draft: RoomDraft) => beginRoomRequest({ type: 'communityCreate', ...draft }),
     join: (roomId: string) => beginRoomRequest({ type: 'communityJoin', roomId, listen: true }),
@@ -269,6 +273,7 @@ export function useSpeakingCommunity(enabled: boolean) {
     nextPartner: () => { leave(); nextPartnerRef.current = true },
     reply: (accept: boolean) => {
       if (!invitation) return
+      if (accept && (socketRef.current?.readyState !== WebSocket.OPEN || pendingRef.current || roomRef.current || leavingRef.current)) return
       const payload = { type: 'communityReply', id: invitation.id, accept }
       setInvitation(null)
       if (accept) return beginRoomRequest(payload)

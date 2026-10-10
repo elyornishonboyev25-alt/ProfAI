@@ -32,7 +32,7 @@ async function main() {
     navigator.mediaDevices.getUserMedia=async options=>{if(window.rejectMicrophoneOnce){window.rejectMicrophoneOnce=false;throw new DOMException('Permission denied','NotAllowedError');}const stream=await getMedia(options);window.captureStreams.push(stream);return stream;};
     const name = new URLSearchParams(location.search).get('name') || 'Host';
     useAuthStore.setState({user:{id:name,nickname:name,fullName:name,premium:true,xp:100,level:2,currentStreak:3},accessToken:'account:'+name,refreshToken:'fixture'});
-    const learner = (nickname, xp, dailyChampion=false) => ({nickname,xp,dailyChampion,avatarUrl:null,level:2,streak:3,badgeCount:2,country:'Uzbekistan',targetExam:'IELTS',targetScore:7,online:true});
+    const learner = (nickname, xp, dailyChampion=false) => ({nickname,xp:nickname===window.champion&&nickname!=='Leader'?950:xp,dailyChampion,avatarUrl:null,level:2,streak:3,badgeCount:2,country:'Uzbekistan',targetExam:'IELTS',targetScore:7,online:true});
     window.champion='Leader';
     window.failSearch=false;
     window.accountFailures=1;
@@ -44,7 +44,7 @@ async function main() {
         {...learner('DifferentBand',100),targetScore:8}, {...learner('SatSameScore',150),targetExam:'SAT'},
         {...learner('OtherCountry',120),country:'France'}, {...learner('OfflineLearner',90),online:false},
         ...Array.from({length:10},(_,i)=>learner('Learner'+i,100+i))];
-      return {results:people.filter(person=>(!params.get('q')||person.nickname.toLowerCase().includes(params.get('q').toLowerCase()))&&(!params.get('targetExam')||person.targetExam===params.get('targetExam'))&&(!params.get('country')||person.country===params.get('country'))&&(!params.get('online')||person.online)),topLearner:{nickname:window.champion,xp:900,avatarUrl:null}};
+      return {results:people.filter(person=>(!params.get('q')||person.nickname.toLowerCase().includes(params.get('q').toLowerCase()))&&(!params.get('targetExam')||person.targetExam===params.get('targetExam'))&&(!params.get('country')||person.country===params.get('country'))&&(!params.get('online')||person.online)),topLearner:{nickname:window.champion,xp:window.champion==='Leader'?900:950,avatarUrl:null}};
     };
     const root = createRoot(document.getElementById('root'));
     function Location(){window.navigateCommunity=useNavigate();window.communityPath=useLocation().pathname;return null;}
@@ -104,7 +104,7 @@ async function main() {
         return evaluate(`(()=>{const buttons=[...document.querySelectorAll('button')].filter(b=>!b.disabled);(buttons.find(b=>b.textContent.trim()===${JSON.stringify(text)})||buttons.find(b=>b.textContent.includes(${JSON.stringify(text)}))).click();})()`)
       }
       await send('Runtime.enable')
-      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
       await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 950, deviceScaleFactor: 1, mobile: false })
       await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/?name=${name}` })
       await until(`document.querySelector('.hub-connection.is-live') && document.querySelector('.community-learner-card')`)
@@ -115,6 +115,7 @@ async function main() {
     const screenshots = resolve('tmp/community-browser')
     await mkdir(screenshots, { recursive: true })
     async function layout(page, label) {
+      await page.send('Page.bringToFront');
       for (const [width, height] of [[1440, 950], [1024, 768], [390, 844], [320, 568]]) {
         await page.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 760 })
         assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true, `${label}: ${width}px has no horizontal overflow`)
@@ -128,6 +129,18 @@ async function main() {
     await layout(host, 'lobby')
     await layout(host, 'learners')
     await host.evaluate('window.scrollTo(0,0)')
+    await host.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 950, deviceScaleFactor: 1, mobile: false });
+    await host.send('Page.bringToFront');
+    // Render hover directly; pointer synthesis after mobile emulation varies by host.
+    await host.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'},{name:'hover',value:'hover'},{name:'pointer',value:'fine'}]});
+    await host.send('DOM.enable');await host.send('CSS.enable');
+    const dom = await host.send('DOM.getDocument');
+    const {nodeId:cardNode} = await host.send('DOM.querySelector',{nodeId:dom.root.nodeId,selector:'.community-learner-card'});
+    await host.send('CSS.forcePseudoState',{nodeId:cardNode,forcedPseudoClasses:['hover']});
+    await host.until("(()=>{const transform=getComputedStyle(document.querySelector('.community-learner-card')).transform;return transform!=='none' && new DOMMatrixReadOnly(transform).m42 < -4;})()");
+    await host.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'},{name:'hover',value:'hover'},{name:'pointer',value:'fine'}]});
+    await host.until("getComputedStyle(document.querySelector('.community-learner-card')).transform==='none'");
+    await host.send('CSS.forcePseudoState',{nodeId:cardNode,forcedPseudoClasses:[]});
     assert.equal(await host.evaluate("!!document.querySelector('.community-room-list') || !!document.querySelector('.community-suggestions')"), false, 'Section shortcuts and learner lists are not duplicated');
     for (const width of [1440,1024,390,320]) {
       await host.send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<760});
@@ -261,6 +274,29 @@ async function main() {
     await guest.click('Partner')
     await host.until(`document.querySelector('.hub-partner-card')?.innerText.includes('Guest')`)
     await layout(host, 'partner')
+    await setInput('.hub-partner-discovery .hub-room-search input',' nobody ');
+    await host.until("document.querySelector('.hub-partner-discovery .hub-lobby-empty')?.innerText.includes('No partner found')");
+    await host.click('Clear search');
+    await host.until("document.querySelector('.hub-partner-card')?.innerText.includes('Guest')");
+    await setInput('.hub-partner-discovery .hub-room-search input','  gUeSt  ');
+    await host.until("document.querySelectorAll('.hub-partner-card').length===1");
+    await host.click('Invite to talk');
+    await host.until("document.querySelector('.hub-pending.is-inviting')?.innerText.includes('@Guest')");
+    await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
+    await host.click('Cancel');
+    await guest.until("!document.querySelector('.hub-invitation')");
+    await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
+    await host.click('Invite to talk');
+    await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
+    await guest.click('Decline');
+    await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
+    await host.click('Invite to talk');
+    await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
+    await guest.click('Accept & join');
+    await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
+    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
+    await host.click('Leave room');await guest.click('Leave room');
+    await host.until("document.querySelector('.hub-partner-card')");
     const microphoneCount = await host.evaluate('window.captureStreams.length')
     await host.click('Find a random partner')
     await host.until(`document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')`)
@@ -305,6 +341,11 @@ async function main() {
     await host.send('Page.bringToFront')
     await host.evaluate(`window.champion='Guest'; window.dispatchEvent(new Event('focus'))`)
     await host.until(`document.querySelector('.hub-champion').innerText.includes('@Guest')`)
+    await host.until("document.querySelectorAll('.community-learner-card.is-featured').length===1 && document.querySelector('.community-learner-card.is-featured').innerText.includes('@Guest') && document.querySelector('.community-learner-card.is-featured').innerText.includes('950')");
+    await setInput('.community-search-field input','Leader');
+    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('@Leader')");
+    assert.equal(await host.evaluate("!!document.querySelector('.community-learner-card.is-featured')"),false,'Filtering never awards the crown to a lower-XP learner');
+    assert.equal(await host.evaluate("document.querySelector('.hub-champion').innerText.includes('@Guest')"),true,'The global highest-XP learner stays visible across filters');
     assert.deepEqual(host.errors, [], 'Host has no browser exceptions')
     assert.deepEqual(guest.errors, [], 'Guest has no browser exceptions')
     console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner, private invitations and deep links, microphone release, chat, both discussion rooms, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')

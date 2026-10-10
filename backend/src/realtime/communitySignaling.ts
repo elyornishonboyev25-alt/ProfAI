@@ -232,8 +232,8 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           const invite = invites.get(String(data.id))
           if (!invite || invite.to !== member) break
           invites.delete(String(data.id))
-          if (invite.expiresAt < Date.now() || !members.has(invite.from) || invite.from.ws.readyState !== WebSocket.OPEN) { error(member, 'This invitation has expired.'); break }
-          if (data.accept !== true || member.roomId || invite.from.roomId) { send(invite.from, { type: 'communityNotice', message: 'Your partner is unavailable or declined the invitation.' }); break }
+          if (invite.expiresAt < Date.now() || !members.has(invite.from) || invite.from.ws.readyState !== WebSocket.OPEN) { error(member, 'This invitation has expired.'); lobby(); break }
+          if (data.accept !== true || member.roomId || invite.from.roomId) { send(invite.from, { type: 'communityNotice', message: 'Your partner is unavailable or declined the invitation.' }); lobby(); break }
           const target = create(invite.from, { title: `${invite.from.name} & ${member.name}`, topic: 'Introduce yourself, share your interests and practise English together.', capacity: 2 }, true)
           if (target) join(member, target)
           break

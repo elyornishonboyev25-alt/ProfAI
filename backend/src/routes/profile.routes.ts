@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
+import { canUseOwnerNickname } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { addUtcDays } from '../utils/date.js'
 import { getLevelProgress } from '../config/levelConfig.js'
@@ -1367,6 +1368,9 @@ router.get(
     if (!NICKNAME_RE.test(value)) {
       return res.json({ available: false, reason: 'invalid' })
     }
+    if (!await canUseOwnerNickname(req.user!.id, value)) {
+      return res.json({ available: false, reason: 'taken' })
+    }
     const existing = await prisma.user.findFirst({
       where: { nickname: { equals: value, mode: 'insensitive' }, NOT: { id: req.user!.id } },
       select: { id: true },
@@ -1380,6 +1384,9 @@ router.put(
   requireAuth,
   asyncHandler(async (req, res) => {
     const { nickname } = nicknameSetSchema.parse(req.body ?? {})
+    if (!await canUseOwnerNickname(req.user!.id, nickname)) {
+      return res.status(409).json({ message: 'That nickname is reserved.' })
+    }
     const taken = await prisma.user.findFirst({
       where: { nickname: { equals: nickname, mode: 'insensitive' }, NOT: { id: req.user!.id } },
       select: { id: true },

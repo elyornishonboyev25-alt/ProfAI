@@ -663,7 +663,7 @@ export default function AccountProfile() {
 
             {/* Quick actions */}
             <div className="account-profile-quick-actions flex flex-col gap-2">
-              {hasOwnerAccess(user?.email) && (
+              {hasOwnerAccess(user?.email, user?.nickname) && (
                 <Link to="/owner" className="arena-primary-btn justify-center">
                   <ShieldCheck className="mr-2 h-4 w-4" /> <UiText text="Owner dashboard" />
                 </Link>

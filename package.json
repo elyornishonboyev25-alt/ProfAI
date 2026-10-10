@@ -33,6 +33,7 @@
     "validate:vocabulary": "npm run sync:sat-vocabulary && node scripts/validate-vocabulary.mjs",
     "test:university-requirements": "node scripts/test-listening-parts-ui.mjs scripts/tests/university-requirements.tsx",
     "test:auth-session": "node scripts/test-auth-session.mjs",
+    "test:owner-access": "node scripts/test-owner-access.mjs",
     "test:educational-media": "node scripts/test-educational-media.mjs",
     "test:vocabulary-ui": "npm run sync:sat-vocabulary && node scripts/test-vocabulary-ui.mjs",
     "test:ielts-vocabulary-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-test-vocabulary-ui.tsx",

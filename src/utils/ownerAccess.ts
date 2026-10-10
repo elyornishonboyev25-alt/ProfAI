@@ -3,6 +3,13 @@ const OWNER_EMAILS = new Set([
   'firdavsalimqulov998@gmail.com',
 ])
 
-export function hasOwnerAccess(email?: string | null): boolean {
-  return Boolean(email && OWNER_EMAILS.has(email.trim().toLowerCase()))
+// Keep aligned with the server's owner middleware, which authorizes requests
+// using the signed-in account's saved identity.
+const OWNER_NICKNAMES = new Set(['erkinov'])
+
+export function hasOwnerAccess(email?: string | null, nickname?: string | null): boolean {
+  return Boolean(
+    (email && OWNER_EMAILS.has(email.trim().toLowerCase())) ||
+    (nickname && OWNER_NICKNAMES.has(nickname.trim().toLowerCase())),
+  )
 }

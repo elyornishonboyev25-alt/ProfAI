@@ -7,7 +7,7 @@ import AccountBadge from '@/features/billing/AccountBadge'
 import { hasOwnerAccess } from '@/utils/ownerAccess'
 export default function WorkspaceToolbar() {
   const { c } = useCopy()
-  const owner = useAuthStore(state => hasOwnerAccess(state.user?.email))
+  const owner = useAuthStore(state => hasOwnerAccess(state.user?.email, state.user?.nickname))
   const { pathname } = useLocation()
   return <div className="workspace-toolbar"><Link to="/dashboard" className="workspace-mobile-brand">Prof<span>AI</span></Link><div className="workspace-toolbar-actions">
     <details className="liquid-mobile-tools"><summary aria-label={c('Study tools')}><Menu size={19} /></summary><nav className="glass-control" aria-label={c('Study tools')} onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')}>

@@ -8,6 +8,8 @@ import { premiumLanguage } from '@/i18n/premium'
 import { useAuthStore } from '@/store/authStore'
 import ReviewModeration from '@/components/landing/ReviewModeration'
 import OwnerReportInbox from '@/components/support/OwnerReportInbox'
+import OwnerAccountActivity from '@/components/owner/OwnerAccountActivity'
+import { activityText } from '@/i18n/ownerActivity'
 import './OwnerDashboard.css'
 import { BILLING_PRODUCTS } from '@/features/billing/catalog'
 import { hasOwnerAccess } from '@/utils/ownerAccess'
@@ -44,6 +46,7 @@ export default function OwnerDashboard() {
   const amount = (value: number) => `${new Intl.NumberFormat(locale).format(value)} ${t('UZS')}`
   const user = useAuthStore(state => state.user)
   const isOwner = hasOwnerAccess(user?.email)
+  const [section, setSection] = useState('activity')
   const [overview, setOverview] = useState<Overview | null>(null)
   const [userPage, setUserPage] = useState(1)
   const [reload, setReload] = useState(0)
@@ -145,23 +148,28 @@ export default function OwnerDashboard() {
       <div>
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-700"><ShieldCheck size={15} /> {t('Owner dashboard')}</div>
         <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{t('Site activity')}</h1>
-        <p className="mt-2 text-slate-600">{t('New users and submitted issue reports.')}</p>
+        <p className="mt-2 text-slate-600">{activityText('Manage your site in one place.', language)}</p>
       </div>
       <button type="button" onClick={() => setReload(value => value + 1)} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm disabled:opacity-50"><RefreshCw size={16} /> {t('Refresh')}</button>
     </div>
 
+    <nav className="owner-navigation" aria-label={t('Owner dashboard')}>
+      {[{ id: 'activity', label: 'Activity' }, { id: 'users', label: 'Users' }, { id: 'payments', label: 'Payments' }, { id: 'reports', label: 'Reports' }, { id: 'reviews', label: 'Reviews' }].map(item => <button type="button" key={item.id} aria-pressed={section === item.id} className={section === item.id ? 'is-active' : ''} onClick={() => setSection(item.id)}>{activityText(item.label, language)}{item.id === 'reports' && Boolean(overview?.metrics.openReports) && <span>{overview?.metrics.openReports}</span>}</button>)}
+    </nav>
+    {section === 'activity' && <OwnerAccountActivity language={language} reload={reload} />}
     {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
     {loading && !overview && <p role="status" className="rounded-2xl bg-white p-6 text-slate-600">{t('Loading data…')}</p>}
     {overview && <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div hidden={section !== 'users' && section !== 'reports'}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map(card => <div key={card.label} className="owner-metric rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
           <div className="flex items-center justify-between text-sm font-semibold text-slate-600"><span>{card.label}</span><card.icon size={19} className="text-red-600" /></div>
           <div className="mt-3 text-3xl font-black text-slate-950">{card.value ?? '—'}</div>
         </div>)}
       </div>
 
-      <OwnerReportInbox language={language} reload={reload} onChanged={() => setReload(value => value + 1)} />
-      <div className="mt-7 grid items-start gap-6">
+      </div>
+      <div hidden={section !== 'reports'}><OwnerReportInbox language={language} reload={reload} onChanged={() => setReload(value => value + 1)} /></div>
+      <div hidden={section !== 'users'}><div className="mt-7 grid items-start gap-6">
         <section className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{t('Users')}</h2><p className="mt-1 text-sm text-slate-500">{t('New registrations · total {count}', { count: overview.users.total })}</p></div></div>
           <div className="owner-users-list grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -175,12 +183,12 @@ export default function OwnerDashboard() {
           <Pagination page={userPage} total={overview.users.total} pageSize={overview.users.pageSize} onChange={setUserPage} language={language} />
         </section>
 
-      </div>
+      </div></div>
     </>}
-    <ReviewModeration language={language} reload={reload} />
+    <div hidden={section !== 'reviews'}><ReviewModeration language={language} reload={reload} /></div>
 
 
-    <section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="premium-users-title">
+    <div hidden={section !== 'users'}><section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="premium-users-title">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><h2 id="premium-users-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Crown size={21} className="text-amber-500" /> {t('Premium management')}</h2><p className="mt-1 text-sm text-slate-500">{t('Search for an account and grant Premium for 1, 3 or 12 months, or indefinitely.')}</p></div>
         <form onSubmit={event => { event.preventDefault(); setManagedPage(1); setUserQuery(search.trim()) }} className="flex w-full max-w-sm gap-2">
@@ -212,7 +220,8 @@ export default function OwnerDashboard() {
       {managedUsers && <Pagination page={managedPage} total={managedUsers.total} pageSize={managedUsers.pageSize} onChange={setManagedPage} language={language} />}
     </section>
 
-    <section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="payment-requests-title">
+    </div>
+    <div hidden={section !== 'payments'}><section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="payment-requests-title">
       <div className="flex flex-wrap items-center justify-between gap-4"><div><h2 id="payment-requests-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Wallet size={21} className="text-blue-600" /> {t('Payment requests')}</h2><p className="mt-1 text-sm text-slate-500">{t('Verify that the money reached your card before approval.')}</p></div>
         <select aria-label={t('Payment request status')} value={paymentStatus} onChange={event => { setPaymentStatus(event.target.value); setPaymentPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="SUBMITTED">{t('Needs review')}</option><option value="PENDING">{t('Pending')}</option><option value="APPROVED">{t('Approved')}</option><option value="REJECTED">{t('Rejected')}</option><option value="CANCELED">{t('Canceled')}</option><option value="ALL">{t('All')}</option></select>
       </div>
@@ -223,6 +232,6 @@ export default function OwnerDashboard() {
         {payments?.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No requests with this status.')}</p>}
       </div>
       {payments && <Pagination page={paymentPage} total={payments.total} pageSize={payments.pageSize} onChange={setPaymentPage} language={language} />}
-    </section>
+    </section></div>
   </div>
 }

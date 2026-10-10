@@ -53,7 +53,10 @@ async function main() {
   assert.equal(rotations, 1, 'Delayed 401 reuses the already refreshed session')
 
   seed(); rotations = 0
+  const deviceIds = new Set()
   fetchHandler = async (url, options) => {
+    const deviceId = options.headers.get('X-Device-Id')
+    if (deviceId) deviceIds.add(deviceId)
     if (url.endsWith('/auth/refresh')) {
       rotations++
       assert.equal(JSON.parse(options.body).refreshToken, 'refresh-old')
@@ -64,6 +67,8 @@ async function main() {
   await Promise.all([a.apiClient.get('/one'), a.apiClient.get('/two'), b.apiClient.get('/three')])
   assert.equal(rotations, 1, 'Concurrent requests across two tabs rotate only once')
   assert.equal(b.useAuthStore.getState().refreshToken, 'refresh-new')
+  assert.equal(deviceIds.size, 1, 'Two tabs share one browser device across refresh requests')
+  assert.match([...deviceIds][0], /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i)
 
   for (const status of [429, 500, 503]) {
     seed()

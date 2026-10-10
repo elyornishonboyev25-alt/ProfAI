@@ -12,6 +12,29 @@ export function useAccountDataSync(owner: string | undefined) {
   const [revision, setRevision] = useState(0)
   useEffect(() => {
     if (!owner) return
+    let running = false
+    const controller = new AbortController()
+    const heartbeat = async () => {
+      if (running || document.visibilityState === 'hidden' || useAuthStore.getState().user?.id !== owner) return
+      running = true
+      try {
+        await apiClient.post('/auth/activity/heartbeat', { refreshToken: useAuthStore.getState().refreshToken }, { expectedUserId: owner, signal: controller.signal })
+      } catch { /* Presence is best effort; the next heartbeat retries. */ }
+      finally { running = false }
+    }
+    void heartbeat()
+    const timer = window.setInterval(() => { void heartbeat() }, 30_000)
+    document.addEventListener('visibilitychange', heartbeat)
+    window.addEventListener('online', heartbeat)
+    return () => {
+      controller.abort()
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', heartbeat)
+      window.removeEventListener('online', heartbeat)
+    }
+  }, [owner])
+  useEffect(() => {
+    if (!owner) return
     try {
       migrateOwnedAccountData(owner)
       restoreSpeakingAccount(owner)

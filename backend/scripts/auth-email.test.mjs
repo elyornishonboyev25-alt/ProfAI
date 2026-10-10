@@ -14,6 +14,7 @@ let codes = []
 let users = []
 let sent = []
 let tokens = []
+let sessions = []
 let providerFails = false
 let revoked = false
 const matches = (row, where) => Object.entries(where).every(([key, value]) => {
@@ -57,13 +58,20 @@ globalThis.prisma = {
     update: async ({ where, data }) => Object.assign(users.find((row) => matches(row, where)), data),
   },
   refreshToken: {
-    create: async ({ data }) => { tokens.push(data); return data },
+    create: async ({ data }) => { const row = { id: crypto.randomUUID(), revokedAt: null, ...data }; tokens.push(row); return row },
+    findUnique: async ({ where }) => { const token = tokens.find(row => matches(row, where)); return token ? { ...token, user: users.find(user => user.id === token.userId) } : null },
+    update: async ({ where, data }) => Object.assign(tokens.find(row => matches(row, where)), data),
     updateMany: async () => { revoked = true; return { count: tokens.length } },
+  },
+  authSession: {
+    create: async ({ data }) => { const row = { id: crypto.randomUUID(), loginAt: new Date(), lastSeenAt: new Date(), endedAt: null, ...data }; sessions.push(row); return row },
+    update: async ({ where, data }) => Object.assign(sessions.find(row => matches(row, where)), data),
+    updateMany: async ({ where, data }) => { const rows = sessions.filter(row => matches(row, where)); rows.forEach(row => Object.assign(row, data)); return { count: rows.length } },
   },
   premiumGrant: { findUnique: async () => null },
   billingSubscription: { findMany: async () => [] },
   freeTrial: { findUnique: async () => null },
-  $transaction: async (queries) => Promise.all(queries),
+  $transaction: async (queries) => typeof queries === 'function' ? queries(globalThis.prisma) : Promise.all(queries),
 }
 const realFetch = globalThis.fetch
 globalThis.fetch = async (url, options) => {
@@ -83,16 +91,16 @@ app.use((error, _req, res, _next) => res.status(500).json({ message: error.messa
 const server = await new Promise((resolve) => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)) })
 const base = `http://127.0.0.1:${server.address().port}`
 const email = 'learner@gmail.com'
-async function post(path, body) {
-  const response = await realFetch(`${base}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-  return { status: response.status, body: await response.json() }
+async function post(path, body, headers = {}) {
+  const response = await realFetch(`${base}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) })
+  return { status: response.status, body: response.status === 204 ? null : await response.json() }
 }
 async function request(purpose = 'SIGN_IN') {
   return post('/verification/request', { email, purpose })
 }
 const deliveredCode = () => sent.at(-1).subject.match(/^\d{6}/)[0]
 beforeEach(() => {
-  codes = []; users = []; sent = []; tokens = []; revoked = false; providerFails = false
+  codes = []; users = []; sent = []; tokens = []; sessions = []; revoked = false; providerFails = false
   env.RESEND_API_KEY = 'test-email-provider-key'
   authRateLimit.resetKey('127.0.0.1')
 })
@@ -222,4 +230,41 @@ test('unknown recovery email has a generic response and creates no account', asy
   assert.equal((await request('RESET_PASSWORD')).status, 200)
   assert.equal(sent.length, 0)
   assert.equal(users.length, 0)
+})
+
+test('successful sign-ins track browser profiles; rotations and heartbeat do not add sign-ins', async () => {
+  const device = '11111111-1111-4111-8111-111111111111'
+  const headers = { 'X-Device-Id': device, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) Chrome/130.0' }
+  await request('REGISTER')
+  const registered = await post('/register', { email, verificationCode: deliveredCode(), password: 'new-password-123' }, headers)
+  assert.equal(registered.status, 201)
+  const login = await post('/login', { email, password: 'new-password-123' }, headers)
+  assert.equal(login.status, 200)
+  assert.equal(sessions.length, 2)
+  assert.equal(new Set(sessions.map(row => row.deviceId)).size, 1)
+  assert.equal(sessions[1].method, 'PASSWORD')
+  const rotated = await post('/refresh', { refreshToken: login.body.refreshToken }, headers)
+  assert.equal(rotated.status, 200)
+  assert.equal(sessions.length, 2)
+  assert.equal(tokens.at(-1).sessionId, sessions[1].id)
+  assert.equal((await post('/refresh', { refreshToken: login.body.refreshToken }, headers)).status, 401)
+  sessions[1].lastSeenAt = new Date(0)
+  const auth = { ...headers, Authorization: `Bearer ${rotated.body.accessToken}` }
+  assert.equal((await post('/activity/heartbeat', {}, auth)).status, 204)
+  assert.ok(sessions[1].lastSeenAt.getTime() > 0)
+  assert.equal(sessions.length, 2)
+  assert.equal((await post('/logout', { refreshToken: rotated.body.refreshToken }, auth)).status, 204)
+  assert.ok(sessions[1].endedAt)
+  const ended = sessions[1].lastSeenAt
+  await post('/activity/heartbeat', {}, auth)
+  assert.equal(sessions[1].lastSeenAt, ended, 'Logged-out sessions cannot become online again')
+  await post('/login', { email, password: 'new-password-123' }, { ...headers, 'X-Device-Id': '22222222-2222-4222-8222-222222222222' })
+  assert.equal(new Set(sessions.map(row => row.deviceId)).size, 2)
+  const before = sessions.length
+  await post('/login', { email, password: 'wrong-password-123' }, headers)
+  assert.equal(sessions.length, before, 'Failed sign-ins do not create history')
+  codes = []
+  await request('RESET_PASSWORD')
+  await post('/password/reset', { email, verificationCode: deliveredCode(), newPassword: 'replacement-password-123' })
+  assert.ok(sessions.every(row => row.endedAt), 'Password reset marks every device session offline')
 })

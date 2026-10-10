@@ -5,6 +5,7 @@ import { env } from '../config/env.js'
 type AccessPayload = {
   sub: string
   role: 'USER' | 'ADMIN'
+  sid?: string
 }
 
 type RefreshPayload = {

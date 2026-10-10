@@ -20,6 +20,8 @@ import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
+import { createAuthSession, requestDeviceId } from '../services/authActivity.service.js'
+import activityRoutes from './authActivity.routes.js'
 
 const router = Router()
 
@@ -184,29 +186,23 @@ async function issueAuthTokens(args: {
   role: 'USER' | 'ADMIN'
   ipAddress?: string
   userAgent?: string
+  deviceId: string
+  method: string
+  sessionId?: string | null
 }) {
-  const accessToken = signAccessToken({
-    sub: args.userId,
-    role: args.role,
+  const expiresAt = getTokenExpiryDate(env.REFRESH_TOKEN_EXPIRES_IN)
+  return prisma.$transaction(async (tx) => {
+    const session = args.sessionId
+      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt } })
+      : await createAuthSession({ ...args, expiresAt }, tx)
+    const accessToken = signAccessToken({ sub: args.userId, role: args.role, sid: session.id })
+    const refreshToken = signRefreshToken({ sub: args.userId, tokenId: generateTokenId() })
+    await tx.refreshToken.create({ data: {
+      userId: args.userId, tokenHash: hashToken(refreshToken), expiresAt,
+      ipAddress: args.ipAddress, userAgent: args.userAgent, sessionId: session.id,
+    } })
+    return { accessToken, refreshToken }
   })
-
-  const tokenId = generateTokenId()
-  const refreshToken = signRefreshToken({
-    sub: args.userId,
-    tokenId,
-  })
-
-  await prisma.refreshToken.create({
-    data: {
-      userId: args.userId,
-      tokenHash: hashToken(refreshToken),
-      expiresAt: getTokenExpiryDate(env.REFRESH_TOKEN_EXPIRES_IN),
-      ipAddress: args.ipAddress,
-      userAgent: args.userAgent,
-    },
-  })
-
-  return { accessToken, refreshToken }
 }
 
 async function verifyGoogleIdentityToken(idToken: string) {
@@ -368,6 +364,8 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'REGISTER',
     })
 
     return res.status(201).json({
@@ -422,6 +420,8 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'PASSWORD',
     })
 
     return res.json({
@@ -476,6 +476,8 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'REGISTER',
     })
     return res.status(201).json({ user: await sanitizeUser(user), ...tokens })
   }),
@@ -509,6 +511,8 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'EMAIL_CODE',
     })
     return res.json({ user: await sanitizeUser(user), ...tokens })
   }),
@@ -544,6 +548,7 @@ router.post(
         where: { userId: user.id, revokedAt: null },
         data: { revokedAt: new Date() },
       }),
+      prisma.authSession.updateMany({ where: { userId: user.id, endedAt: null }, data: { endedAt: new Date() } }),
     ])
 
     return res.json({ message: 'Password updated. You can now sign in with your new password.' })
@@ -633,6 +638,8 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'GOOGLE',
     })
 
     return res.status(existingUser ? 200 : 201).json({
@@ -707,6 +714,9 @@ router.post(
       role: stored.user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
+      deviceId: requestDeviceId(req),
+      method: 'RESTORED',
+      sessionId: stored.sessionId,
     })
 
     return res.json({
@@ -723,6 +733,10 @@ router.post(
   asyncHandler(async (req, res) => {
     const { refreshToken } = req.body
 
+    const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
+    if (stored?.userId === req.user!.id && stored.sessionId) {
+      await prisma.authSession.updateMany({ where: { id: stored.sessionId, userId: req.user!.id, endedAt: null }, data: { endedAt: new Date() } })
+    }
     await prisma.refreshToken.updateMany({
       where: {
         userId: req.user!.id,
@@ -794,5 +808,7 @@ router.get(
     return res.json({ user: await sanitizeUser(user) })
   }),
 )
+
+router.use(activityRoutes)
 
 export default router

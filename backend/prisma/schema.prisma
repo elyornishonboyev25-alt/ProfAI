@@ -134,6 +134,7 @@ model User {
   achievements                        UserAchievement[]
   notifications                       Notification[]
   refreshTokens                       RefreshToken[]
+  authSessions                        AuthSession[]
   dailyActivities                     DailyActivity[]
   leaderboardStates                   LeaderboardState[]
   tasks                               UserTask[]
@@ -897,11 +898,35 @@ model RefreshToken {
   revokedAt DateTime?
   ipAddress String?
   userAgent String?
+  sessionId String?
+  session   AuthSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
+  @@index([sessionId])
+}
+
+model AuthSession {
+  id          String    @id @default(cuid())
+  userId      String
+  deviceId    String
+  deviceType  String
+  browser     String
+  os          String
+  method      String
+  ipAddress   String?
+  loginAt     DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  expiresAt   DateTime
+  endedAt     DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokens      RefreshToken[]
+
+  @@index([userId, deviceId])
+  @@index([loginAt])
+  @@index([lastSeenAt])
 }
 
 model Test {

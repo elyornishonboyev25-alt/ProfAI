@@ -407,3 +407,68 @@
 }
 @media (max-width: 760px) { .community-page .hub-pending { flex-wrap: wrap; gap: .65rem; } .hub-pending-icon { width: 38px; height: 38px; } .community-page .hub-pending > .hub-button { min-height: 38px; margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .community-page .hub-partner-card, .community-page .hub-partner-avatar, .community-page .hub-starter, .community-page .hub-room-card { transform: none !important; transition: none !important; } }
+
+/* Compact voice studio: topic, people and persistent controls. */
+.community-page .hub-room-header { padding: 1.05rem 1.3rem; border: 1px solid #dce5ed; border-radius: 20px; background: #ffffffcf; }
+.community-page .hub-room-header h1 { margin-top: .25rem; font-size: clamp(1.2rem,1.8vw,1.65rem); }
+.community-page .hub-room-header .hub-eyebrow { color: #3b826d; }
+.community-page .hub-mode-bar { padding: .9rem 1.2rem; gap: 1rem; }
+.community-page .hub-mode-bar > p { max-width: 320px; font-size: .69rem; line-height: 1.6; }
+.community-page .hub-mode-switch { margin-top: .4rem; background: #eef2f6; }
+.community-page .hub-mode-switch button[aria-pressed=true] { background: #24364b; color: #fff; box-shadow: 0 3px 8px #24364b15; }
+.community-page .hub-session-layout { align-items: start; gap: 1rem; }
+.community-page .hub-stage { padding: 1.2rem; background: #f5f9f8; border-radius: 22px; }
+.community-page .hub-session-debate .hub-stage { background: #f5f3fa; border-color: #e0dbea; }
+.community-page .hub-session-ielts .hub-stage { background: #f2f6fc; border-color: #dbe4f1; }
+.community-page .hub-stage-top > span { padding: .35rem .6rem; border: 1px solid #dbe7e1; border-radius: 8px; background: #fff; color: #4b7669; font-size: .65rem; }
+.community-page .hub-topic { margin: .9rem 0 1.1rem; padding: 1.2rem; border: 1px solid #344c5f; border-radius: 16px; background: linear-gradient(115deg,#24364b,#36595f); color: #fff; }
+.community-page .hub-topic .hub-eyebrow { color: #b9d7d3; font-size: .58rem; text-transform: uppercase; letter-spacing: .08em; }
+.community-page .hub-topic h2 { max-width: 720px; margin-top: .45rem; color: #fff; font-size: clamp(1.05rem,1.5vw,1.4rem); line-height: 1.45; }
+.community-page .hub-topic p { color: #d4e2e3; font-size: .7rem; line-height: 1.6; }
+.community-page .hub-topic-editor summary { color: #cfebe1; min-height: 30px; }
+.community-page .hub-topic-editor input { color: #25374c; background: #fff; }
+.hub-stage-label { display: flex; align-items: center; gap: .4rem; margin: .8rem 0; color: #526b7c; font-size: .7rem; }
+.hub-stage-label > span { margin-left: auto; text-align: right; color: #758a97; font-size: .63rem; }
+.community-page .hub-speakers { gap: .55rem; }
+.community-page .hub-speaker { padding: .85rem .35rem; min-height: 132px; border: 1px solid #dce7e2; border-radius: 15px; background: #fff; }
+.community-page .hub-speaker-avatar { width: 58px; height: 58px; }
+.community-page .hub-speaker.is-speaking { border-color: #75b69e; background: #f0faf5; box-shadow: 0 0 0 2px #b9decd42; }
+.community-page .hub-speaker.is-empty { border-style: dashed; background: #ffffff70; }
+.community-page .hub-empty-seat { width: 46px; height: 46px; border: 1px solid #dce7e1; color: #769c8d; background: #f2f8f5; }
+.community-page .hub-speaker > b { font-size: .68rem; }
+.community-page .hub-speaker.is-empty > b { color: #648778; font-size: .64rem; }
+.community-page .hub-audience-heading { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid #dde7e4; }
+.community-page .hub-listeners { margin-top: .5rem; min-height: 35px; }
+.community-page .hub-call-controls { margin-top: .9rem; padding: .7rem; border-radius: 14px; }
+.community-page .hub-chat { height: 510px; background: #fff; }
+.community-page .hub-chat h3 { padding: 1rem; background: #f8fafc; }
+.community-page .hub-chat-empty { padding-top: 2.5rem; }
+.community-page .hub-chat form { min-height: 52px; }
+.community-page .hub-debate-clock { background: #fff; border-color: #e3deed; }
+.community-page .hub-debate-team { border-color: #dedfeb; border-radius: 16px; }
+.community-page .hub-speakers.is-pair .hub-speaker { min-height: 170px; }
+.community-page .hub-speakers.is-pair .hub-speaker-avatar { width: 76px; height: 76px; }
+.community-page .hub-starter { min-height: 95px; }
+.hub-hero-trust { display: flex; flex-wrap: wrap; gap: .6rem 1rem; margin-top: 1.1rem; color: #c9dedb; font-size: .65rem; }
+.hub-hero-trust > span { display: inline-flex; align-items: center; gap: .35rem; }
+.hub-activity-recovery { display: flex; align-items: center; flex-wrap: wrap; gap: .85rem; padding: 1rem 1.2rem; border: 1px solid #ead6aa; border-radius: 16px; background: #fffaf0; color: #806631; }
+.hub-activity-recovery > div { flex: 1; min-width: min(100%,220px); }
+.hub-activity-recovery b { font-size: .8rem; }
+.hub-activity-recovery p { max-width: 680px; margin-top: .3rem; font-size: .7rem; line-height: 1.6; }
+@media (max-width: 900px) { .community-page .hub-session-layout { grid-template-columns: minmax(0,1fr); } .community-page .hub-chat { height: 320px; } }
+@media (max-width: 760px) {
+ .community-page .hub-room-header { padding: .85rem; }
+ .community-page .hub-room-header-actions .hub-button { min-height: 40px; }
+ .community-page .hub-stage { padding: .85rem; }
+ .community-page .hub-mode-bar { padding: .85rem; }
+ .community-page .hub-mode-bar > p { max-width: none; }
+ .community-page .hub-topic { padding: 1rem; }
+ .community-page .hub-speaker { min-height: 118px; }
+ .community-page .hub-speaker-avatar { width: 46px; height: 46px; }
+ .community-page .hub-stage-label { flex-wrap: wrap; }
+ .hub-stage-label > span { width: 100%; margin-left: 0; text-align: left; }
+ .community-page .hub-call-controls { margin: 0; padding: .6rem; }
+ .community-page .hub-speakers.is-pair .hub-speaker { min-height: 155px; }
+ .community-page .hub-speakers.is-pair .hub-speaker-avatar { width: 64px; height: 64px; }
+ .hub-activity-recovery { padding: .9rem; } .hub-activity-recovery .hub-button { width: 100%; }
+}

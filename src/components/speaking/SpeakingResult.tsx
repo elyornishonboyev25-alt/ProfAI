@@ -13,6 +13,8 @@ import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { Burst } from '@/components/fx'
 import BandGauge from './BandGauge'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { speakingVocabularyTestId } from '@/utils/ieltsTestVocabulary'
 
 const CRITERIA: Array<{ key: keyof SpeakingEvaluation; label: string }> = [
@@ -96,6 +98,7 @@ export default function SpeakingResult({
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">{evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and selected recordings. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
       {!hideVocabularyReview ? <TestVocabulary testId={vocabularyTestId} variant="review" /> : null}
+      <ReviewPracticeLink skill="speaking" />
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}
@@ -171,7 +174,7 @@ export default function SpeakingResult({
       ) : null}
 
       {transcript?.length ? (
-        <details className="surface-card mt-5 p-5" open={reviewMode}>
+        <details className="surface-card mt-5 p-5" open>
           <summary className="flex cursor-pointer items-center gap-2 text-base font-black text-slate-900"><BookOpen className="h-4 w-4 text-red-600" /> Review your answers</summary>
           <div className="mt-4 space-y-3">
             {transcript.filter((turn) => turn.role === 'candidate').map((turn, index) => {
@@ -180,6 +183,7 @@ export default function SpeakingResult({
                 <p className="text-xs font-black uppercase tracking-wide text-red-600">Question {index + 1}</p>
                 <p className="mt-1 font-semibold leading-6 text-slate-800">{question?.text || 'Examiner question'}</p>
                 <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text || 'No clear speech captured for this question.'}</p>
+                {turn.text.trim() ? <ImprovedResponse text={evaluation.improvedAnswers?.find((item) => item.answerIndex === index && item.original === turn.text)?.improved} /> : null}
               </div>
             })}
           </div>

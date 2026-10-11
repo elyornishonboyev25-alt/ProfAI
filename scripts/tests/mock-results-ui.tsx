@@ -25,7 +25,7 @@ export async function run() {
     for (const [index, section] of mock.sections.entries()) {
       await act(async () => saveFullMockSectionResult(mock.id, section.key, {
         band: bands[section.key], testId: section.launchPath!.split('/').pop()!, completedAt: '2026-10-07T06:00:00Z',
-        ...(section.key === 'reading' || section.key === 'listening' ? { result: { testId: section.launchPath!.split('/').pop()!, date: '2026-10-07', score: bands[section.key], correctAnswers: 32, totalQuestions: 40, answers: {}, timeSpent: 1800 } as TestResult } : { review: [{ label: 'Your response', response: 'Saved response text', feedback: 'Saved feedback text' }] }),
+        ...(section.key === 'reading' || section.key === 'listening' ? { result: { testId: section.launchPath!.split('/').pop()!, date: '2026-10-07', score: bands[section.key], correctAnswers: 32, totalQuestions: 40, answers: {}, timeSpent: 1800 } as TestResult } : { review: [{ label: section.key === 'speaking' ? 'Your answer' : 'Task 1', response: 'Saved response text', feedback: 'Saved feedback text', improvedVersion: `Improved ${section.key} response` }, ...(section.key === 'writing' ? [{ label: 'Task 2', response: 'My second essay', improvedVersion: 'Improved second essay' }] : [])] }),
       }))
       if (index < 3) {
         assert.ok(element.querySelector('.mock-run-band')?.textContent?.includes('—'), 'scores stay hidden before all four sections finish')
@@ -38,6 +38,9 @@ export async function run() {
     assert.equal(element.querySelectorAll('.mock-run-review').length, 2)
     assert.equal(element.querySelectorAll('.mock-run-section-review details').length, 2)
     assert.ok(element.textContent?.includes('Saved response text'))
+    for (const path of ['/podcast', '/articles', '/shadowing-lab']) assert.ok(element.querySelector(`a[href="${path}"]`), `Full mock review links to ${path}`)
+    for (const text of ['Improved writing response', 'Improved speaking response', 'Improved second essay']) assert.ok(element.textContent?.includes(text))
+    assert.ok([...element.querySelectorAll('.mock-run-section-review details')].every(details => details.hasAttribute('open')))
     await act(async () => element.querySelector<HTMLButtonElement>('.mock-run-review')!.click())
     assert.ok(element.textContent?.includes('Review opened'))
     assert.ok((reviewState as { reviewPayload?: { result?: TestResult } }).reviewPayload?.result)

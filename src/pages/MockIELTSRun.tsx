@@ -1,4 +1,6 @@
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
@@ -384,8 +386,9 @@ export default function MockIELTSRun() {
                 {allSectionsDone && saved && (
                   <div className="mock-run-section-review">
                     <TestVocabulary testId={saved.testId} skill={section.key} variant="review" compact />
+                    {section.key !== 'writing' ? <ReviewPracticeLink skill={section.key} /> : null}
                     {!!saved.review?.length && (
-                      <details>
+                      <details open>
                         <summary>
                           {text(
                             `Review ${section.title.toLowerCase()} responses`,
@@ -403,6 +406,7 @@ export default function MockIELTSRun() {
                                   text('No response recorded.', 'Javob yozilmagan.', 'Ответ не записан.')}
                               </p>
                               {item.feedback && <p className="mock-run-feedback">{item.feedback}</p>}
+                              {(section.key === 'writing' || (section.key === 'speaking' && item.label === 'Your answer')) && item.response.trim() ? <ImprovedResponse text={item.improvedVersion} /> : null}
                             </div>
                           ))}
                         </div>

@@ -149,7 +149,8 @@ export async function run() {
       if (transcriptionFails) throw new Error('offline')
       return { text: 'I study English because I want to communicate with people around the world.' }
     }
-    return { text: JSON.stringify(body.purpose === 'speaking_examiner' ? { reply: 'What do you enjoy about that?' } : evaluationPayload) }
+    const candidateTexts = String(body.userMessage ?? '').split('FULL TRANSCRIPT (examiner questions + candidate answers):\n')[1]?.split('\n').filter(line => line.startsWith('Candidate: ')).map(line => line.slice('Candidate: '.length)) ?? []
+    return { text: JSON.stringify(body.purpose === 'speaking_examiner' ? { reply: 'What do you enjoy about that?' } : { ...(evaluationPayload as object), improvedAnswers: candidateTexts.flatMap((text, answerIndex) => text.trim() ? [{ answerIndex, original: text, improved: text }] : []) }) }
   }) as typeof apiClient.post
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })

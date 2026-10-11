@@ -8,6 +8,7 @@ import { getWritingFullTestById } from '../../src/data/writingTestData'
 import { getWritingAnalysisHistory, saveWritingAnalysis } from '../../src/utils/writingAnalysisStorage'
 import { accountStorageFor } from '../../src/utils/accountStorage'
 import type { WritingEvaluation } from '../../src/services/geminiAI'
+import '@/i18n'
 
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot> | undefined
@@ -23,6 +24,7 @@ async function click(element: Element | null) {
 const evaluation: WritingEvaluation = {
   overallBand: 7, taskAchievement: 7, coherenceCohesion: 7, lexicalResource: 7, grammaticalRange: 7,
   summary: 'Saved evaluation', strengths: [], improvements: [], errors: [], correctedVersion: '', xpAwarded: 0,
+  improvedVersion: 'My own saved response, expressed more clearly.',
 }
 
 export async function run() {
@@ -76,8 +78,10 @@ export async function run() {
     saveWritingAnalysis(undefined, task.id, task.title, task.taskType, 160, 1200, true, 'My saved response', evaluation, { id: test.id, overallBand: 7 }, task)
     const saved = getWritingAnalysisHistory()[0]
     assert.equal(saved.taskSnapshot?.diagram, task.diagram)
+    assert.equal(saved.improvedVersion, evaluation.improvedVersion)
     // A changed catalog ID must not change the saved question or drawing.
     await render(<WritingResultModal entry={{ ...saved, testId: 'writing-full-21-task-1' }} onClose={() => {}} />)
+    assert.ok(document.body.textContent?.includes(evaluation.improvedVersion!), 'Saved Writing review displays the personal rewrite without expanding a panel')
     assert.ok(document.querySelector('svg[data-supplied-writing-diagram]'))
     for (const detail of suppliedDetails[index] ?? []) assert.ok(document.querySelector('svg[data-supplied-writing-diagram]')?.textContent?.includes(detail), `Saved review ${index} source detail: ${detail}`)
     assert.ok(document.body.textContent?.includes(task.promptLead!))

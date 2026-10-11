@@ -1,5 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
 import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
 import { useEffect, useMemo, useState } from 'react'
@@ -366,6 +367,7 @@ export default function Results() {
 
         <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-12 sm:px-6">
           <TestVocabulary testId={resolvedTestId} variant="review" />
+          <ReviewPracticeLink skill={testType} />
           <Reveal>
           <section className="relative premium-hero p-6 sm:p-8">
             <Burst count={24} play={analysis.summary.accuracy >= 80} />

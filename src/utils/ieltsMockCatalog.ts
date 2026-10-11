@@ -189,7 +189,7 @@ export type FullMockSectionResult = {
   testId: string
   result?: TestResult
   summary?: string
-  review?: { label: string; response: string; feedback?: string }[]
+  review?: { label: string; response: string; feedback?: string; improvedVersion?: string }[]
 }
 
 const RESULT_STORAGE_KEY = 'smarttest:full-mock-results:v1'

@@ -1,5 +1,18 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Build your Listening with podcasts': 'Podkastlar bilan Listening ko‘nikmangizni rivojlantiring',
+  'Open podcasts': 'Podkastlarga o‘tish',
+  'Listen once for the main idea, then use the transcript to check missed words. Listen again without the transcript.': 'Avval asosiy fikrni tushunish uchun tinglang, so‘ng transkript orqali tushunmagan so‘zlaringizni tekshiring. Keyin transkriptsiz qayta tinglang.',
+  'Build your Reading with articles': 'Maqolalar bilan Reading ko‘nikmangizni rivojlantiring',
+  'Open articles': 'Maqolalarga o‘tish',
+  'Skim an article for its main idea, find evidence for key details, then summarise it in your own words.': 'Maqolaning asosiy fikrini aniqlang, muhim tafsilotlarni tasdiqlovchi dalillarni toping va o‘z so‘zlaringiz bilan qisqacha bayon qiling.',
+  'Build your Speaking with shadowing': 'Shadowing bilan Speaking ko‘nikmangizni rivojlantiring',
+  'Open shadowing': 'Shadowing mashqlariga o‘tish',
+  'Listen to a short clip, repeat it aloud, then record yourself. Compare stress, rhythm and pronunciation before trying again.': 'Qisqa parchani tinglang, ovoz chiqarib takrorlang va ovozingizni yozib oling. Qayta mashq qilishdan oldin urg‘u, ritm va talaffuzni solishtiring.',
+  'Your answer, improved': 'Javobingizning yaxshilangan shakli',
+  'Your ideas and meaning, with clearer structure, vocabulary and grammar.': 'O‘z fikrlaringiz va mazmuningiz saqlangan, tuzilish, lug‘at va grammatikasi yaxshilangan javob.',
+  'Compare this with your original answer, then try expressing the same ideas yourself.': 'Buni asl javobingiz bilan solishtiring, so‘ng shu fikrlarni o‘zingiz qayta ifodalab ko‘ring.',
+  'An improved version is unavailable for this attempt. Your original answer is preserved.': 'Bu urinish uchun yaxshilangan javob mavjud emas. Asl javobingiz saqlangan.',
   'Listening answer review': 'Listening javoblarini tekshirish',
   'Audio complete': 'Audio tugadi',
   'Check your answers': 'Javoblaringizni tekshiring',

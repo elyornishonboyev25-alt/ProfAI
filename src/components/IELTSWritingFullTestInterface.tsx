@@ -24,6 +24,7 @@ import {
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
@@ -44,7 +45,7 @@ import { learningCenterApi } from '@/features/learningCenter/api'
 type Props = {
   fullTest: WritingFullTest
   onExit: () => void
-  onComplete?: (band: number, summary: string, review: { label: string; response: string; feedback?: string }[]) => void
+  onComplete?: (band: number, summary: string, review: { label: string; response: string; feedback?: string; improvedVersion?: string }[]) => void
   autoStart?: boolean
   autoTimerEnabled?: boolean
   autoDurationMinutes?: number
@@ -335,6 +336,7 @@ export default function IELTSWritingFullTestInterface({
           label: `Task ${index + 1}`,
           response: answers[task.id] ?? '',
           feedback: results[index]?.summary,
+          improvedVersion: results[index]?.improvedVersion,
         })),
       )
     } catch (error) {
@@ -549,6 +551,7 @@ export default function IELTSWritingFullTestInterface({
                       </div>
                     </details>
                   ) : null}
+                  {answers[task.id]?.trim() ? <ImprovedResponse text={evaluation.improvedVersion} /> : null}
                   {evaluation.correctedVersion ? (
                     <details className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
                       <summary className="cursor-pointer text-sm font-bold text-blue-800">View corrected version</summary>

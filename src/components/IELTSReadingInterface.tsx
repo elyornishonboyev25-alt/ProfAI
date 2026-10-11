@@ -38,6 +38,7 @@ import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import TestVocabulary from './vocab/TestVocabulary'
+import ReviewPracticeLink from './ielts/ReviewPracticeLink'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
@@ -6429,7 +6430,7 @@ export default function IELTSReadingInterface({
             </div>
           </header>
           {listeningReviewSecondsRemaining !== null ? <ListeningReviewCountdown secondsRemaining={listeningReviewSecondsRemaining} /> : null}
-          {isReviewMode ? <div className="shrink-0 px-4"><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
+          {isReviewMode ? <div className="max-h-[30dvh] shrink-0 overflow-y-auto px-4"><ReviewPracticeLink skill={isListening ? 'listening' : 'reading'} compact /><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
           <div className="flex-1 relative overflow-hidden" id="test-main-container">
             {isListening ? (
               <div className="relative h-full overflow-hidden">

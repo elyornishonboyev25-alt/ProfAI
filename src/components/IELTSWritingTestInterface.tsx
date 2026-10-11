@@ -30,6 +30,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { evaluateWriting, type WritingEvaluation, type WritingError } from '@/services/geminiAI'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { saveWritingAnalysis, getWritingXP } from '@/utils/writingAnalysisStorage'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
@@ -911,6 +912,7 @@ export default function IELTSWritingTestInterface({
               )}
 
               {/* Corrected version */}
+              {answer.trim() ? <ImprovedResponse text={ev.improvedVersion} /> : null}
               {ev.correctedVersion && (
                 <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-3">

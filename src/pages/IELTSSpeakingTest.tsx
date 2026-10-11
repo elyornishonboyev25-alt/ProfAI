@@ -1,5 +1,7 @@
 import UiText from '@/components/common/UiText'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -226,9 +228,10 @@ export default function IELTSSpeakingTest() {
             saveFullMockSectionResult(mockContext.id, 'speaking', {
               band: analysis.overallBand,
               summary: analysis.summary,
-              review: transcript.map((turn) => ({
+              review: transcript.map((turn, index) => ({
                 label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
                 response: turn.text,
+                improvedVersion: turn.role === 'candidate' ? analysis.improvedAnswers?.find((item) => item.answerIndex === transcript.slice(0, index).filter((entry) => entry.role === 'candidate').length && item.original === turn.text)?.improved : undefined,
               })),
               testId: mode.mock.id,
               completedAt: new Date().toISOString(),
@@ -731,17 +734,8 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
       ) : null}
 
       {/* Band 8+ template */}
-      {analysis.band8Template ? (
-        <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-          <div className="flex items-center justify-between">
-            <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
-              <Sparkles className="h-3 w-3" /> Band 8+ model answer
-            </p>
-            <CopyButton text={analysis.band8Template} />
-          </div>
-          <p className="mt-2 text-sm leading-7 text-slate-700">{analysis.band8Template}</p>
-        </div>
-      ) : null}
+      <ImprovedResponse text={analysis.band8Template} />
+      <ReviewPracticeLink skill="speaking" />
 
       {/* Issues */}
       {analysis.issues.length > 0 ? (

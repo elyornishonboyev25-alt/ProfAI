@@ -1,5 +1,18 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Build your Listening with podcasts': 'Развивайте Listening с подкастами',
+  'Open podcasts': 'Открыть подкасты',
+  'Listen once for the main idea, then use the transcript to check missed words. Listen again without the transcript.': 'Прослушайте запись для понимания основной мысли, затем проверьте пропущенные слова по тексту. Прослушайте ещё раз без текста.',
+  'Build your Reading with articles': 'Развивайте Reading со статьями',
+  'Open articles': 'Открыть статьи',
+  'Skim an article for its main idea, find evidence for key details, then summarise it in your own words.': 'Определите основную мысль статьи, найдите подтверждение ключевых деталей и кратко перескажите её своими словами.',
+  'Build your Speaking with shadowing': 'Развивайте Speaking с shadowing',
+  'Open shadowing': 'Открыть shadowing',
+  'Listen to a short clip, repeat it aloud, then record yourself. Compare stress, rhythm and pronunciation before trying again.': 'Послушайте короткий фрагмент, повторите вслух и запишите себя. Сравните ударение, ритм и произношение перед следующей попыткой.',
+  'Your answer, improved': 'Улучшенная версия вашего ответа',
+  'Your ideas and meaning, with clearer structure, vocabulary and grammar.': 'Ваши идеи и смысл сохранены, а структура, лексика и грамматика улучшены.',
+  'Compare this with your original answer, then try expressing the same ideas yourself.': 'Сравните с исходным ответом, затем попробуйте самостоятельно выразить те же мысли.',
+  'An improved version is unavailable for this attempt. Your original answer is preserved.': 'Для этой попытки улучшенная версия недоступна. Ваш исходный ответ сохранён.',
   'Listening answer review': 'Проверка ответов Listening',
   'Audio complete': 'Аудиозапись завершена',
   'Check your answers': 'Проверьте ответы',

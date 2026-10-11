@@ -27,6 +27,7 @@ export interface WritingEvaluation {
   improvements: string[]
   errors: WritingError[]
   correctedVersion: string
+  improvedVersion?: string
   xpAwarded: number
 }
 

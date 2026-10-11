@@ -21,6 +21,7 @@ import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -260,6 +261,7 @@ export default function WritingResultModal({
             )}
 
             {/* Corrected version */}
+            {entry.studentResponse.trim() ? <ImprovedResponse text={entry.improvedVersion} /> : null}
             {entry.correctedVersion && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between mb-2">

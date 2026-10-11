@@ -14,6 +14,7 @@ export type Result = {
   setId?: string
   flagged?: boolean
   highlights?: HighlightStroke[]
+  eliminatedChoices?: string[]
 }
 // Older sets have no highlights. Ignore malformed annotations without losing answers.
 function readHighlights(value: unknown): HighlightStroke[] {
@@ -104,6 +105,7 @@ export type BankSession = {
   answers: Record<string, string>
   flagged: string[]
   highlights: Record<string, HighlightStroke[]>
+  eliminatedChoices?: Record<string, string[]>
   createdAt: string
 }
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`

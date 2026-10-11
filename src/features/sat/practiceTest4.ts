@@ -67,6 +67,7 @@ export type SATAttempt = {
   flagged: string[]
   notes: Record<string, string | SATNote[]>
   highlights: Record<string, HighlightStroke[]>
+  eliminatedChoices?: Record<string, string[]>
   startedAt: number
   updatedAt: number
   submittedAt?: number

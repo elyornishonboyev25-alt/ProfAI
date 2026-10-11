@@ -82,7 +82,7 @@ function statusMeta(question: SATQuestion, attempt: SATAttempt) {
   return { label: 'Incorrect', className: 'bg-red-50 text-red-700', icon: XCircle }
 }
 
-function ReviewQuestion({ question, response, note, strokes }: { question: SATQuestion; response?: string; note?: string | SATNote[]; strokes: HighlightStroke[] }) {
+function ReviewQuestion({ question, response, note, strokes, eliminatedChoices = [] }: { question: SATQuestion; response?: string; note?: string | SATNote[]; strokes: HighlightStroke[]; eliminatedChoices?: string[] }) {
   const { context, task } = splitSATPrompt(question.prompt)
   const correct = isSATAnswerCorrect(question, response)
   return (
@@ -128,6 +128,7 @@ function ReviewQuestion({ question, response, note, strokes }: { question: SATQu
                     <span data-sat-highlight-block={`choice-${choice.key}`} className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800">
                       {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-56 max-w-full rounded-lg object-contain" /> : null}
                       {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
+                      {eliminatedChoices.includes(choice.key) ? <span className="mt-1 block font-sans text-xs font-semibold text-slate-500">Crossed out during test</span> : null}
                     </span>
                     <span className="ml-auto shrink-0 pt-1 text-[9px] font-black uppercase tracking-[0.08em]">
                       {isCorrectChoice ? <span className="text-emerald-700">Correct</span> : isUserChoice ? <span className="text-red-700">Your answer</span> : null}
@@ -331,7 +332,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
 
           <article className="min-w-0 rounded-[2rem] border border-white bg-white/90 p-4 shadow-[0_24px_64px_rgba(33,52,96,.1)] sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-5"><div><p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-600">{selectedModule?.title}</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Question {selectedQuestion.number}</h2></div><div className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black ${selectedStatus.className}`}><StatusIcon className="h-4 w-4" />{selectedStatus.label}</div></div>
-            {filteredQuestions.length ? <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} strokes={attempt.highlights[selectedQuestion.id] ?? []} /> : <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-20 text-center text-sm font-semibold text-slate-500">No questions match this filter. Choose another status or module to continue reviewing.</div>}
+            {filteredQuestions.length ? <ReviewQuestion question={selectedQuestion} response={selectedResponse} note={attempt.notes[selectedQuestion.id]} strokes={attempt.highlights[selectedQuestion.id] ?? []} eliminatedChoices={attempt.eliminatedChoices?.[selectedQuestion.id] ?? []} /> : <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-20 text-center text-sm font-semibold text-slate-500">No questions match this filter. Choose another status or module to continue reviewing.</div>}
             <div className="mt-4 flex items-center justify-between gap-2">
               <button type="button" disabled={visibleIndex <= 0} onClick={() => setSelectedId(filteredQuestions[visibleIndex - 1].id)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-blue-300 disabled:opacity-30"><ArrowLeft className="h-4 w-4" /> Previous</button>
               <span className="text-xs font-black text-slate-500">{visibleIndex < 0 ? 0 : visibleIndex + 1} / {filteredQuestions.length}</span>

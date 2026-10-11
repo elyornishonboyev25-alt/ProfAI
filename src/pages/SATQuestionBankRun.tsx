@@ -109,6 +109,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         correct: isSATAnswerCorrect(question, session.answers[key]),
         answer: session.answers[key]?.trim() ?? '', flagged: session.flagged.includes(key),
         highlights: session.highlights[key] ?? [],
+        eliminatedChoices: session.eliminatedChoices?.[key] ?? [],
         at, setId: session.id,
       }
     })
@@ -165,6 +166,12 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
           answer={session.answers[current.key] ?? ''}
           onAnswer={(answer) => update({ ...session, answers: { ...session.answers, [current.key]: answer } })}
           strokes={session.highlights[current.key] ?? []}
+          eliminatedChoices={session.eliminatedChoices?.[current.key] ?? []}
+          onEliminatedChoicesChange={(choices) => update({
+            ...session,
+            eliminatedChoices: { ...session.eliminatedChoices, [current.key]: choices },
+            answers: { ...session.answers, [current.key]: choices.includes(session.answers[current.key]) ? '' : session.answers[current.key] ?? '' },
+          })}
           highlightAvailable={!math}
           onChange={(strokes) => update({ ...session, highlights: { ...session.highlights, [current.key]: strokes } })}
           flagged={session.flagged.includes(current.key)}

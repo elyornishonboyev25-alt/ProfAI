@@ -614,6 +614,12 @@ export default function SATMockRun() {
           answer={currentAnswer}
           onAnswer={updateAnswer}
           strokes={currentStrokes}
+          eliminatedChoices={attempt.eliminatedChoices?.[currentQuestion.id] ?? []}
+          onEliminatedChoicesChange={(choices) => persistUpdate((current) => ({
+            ...current,
+            eliminatedChoices: { ...current.eliminatedChoices, [currentQuestion.id]: choices },
+            answers: { ...current.answers, [currentQuestion.id]: choices.includes(current.answers[currentQuestion.id]) ? '' : current.answers[currentQuestion.id] ?? '' },
+          }))}
           onChange={changeHighlights}
           flagged={isFlagged}
           answerState={practiceChecked ? (practiceCorrect ? 'correct' : 'incorrect') : undefined}

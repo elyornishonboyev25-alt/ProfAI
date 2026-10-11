@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
@@ -247,9 +248,26 @@ export async function run() {
   assert.match(container.textContent!, /Maya/)
   await act(async () => femaleRoot.unmount())
   console.log('PASS: Maya always uses the female neural voice')
+  const resumeKey = 'profai:speaking:examiner:Speaking Mock 2:{"mode":"part1"}'
+  const savedSession = JSON.parse(accountStorageFor('guest').getItem(resumeKey)!)
+  assert.ok(savedSession.stages.length, 'Speaking stores the exact generated question sequence')
+  const resumeRoot = createRoot(container)
+  await act(async () => resumeRoot.render(<StrictMode><ExaminerSession config={{ mode: 'part1' }} modeLabel="Speaking Mock 2" onExit={() => {}} onSaved={() => {}} /></StrictMode>))
+  try {
+    assert.ok(button('Resume speaking test'), 'Interrupted Speaking presents the saved session')
+    await click('Resume speaking test')
+    const resumed = JSON.parse(accountStorageFor('guest').getItem(resumeKey)!)
+    assert.deepEqual(resumed.stages, savedSession.stages, 'Resume must not generate a different question sequence')
+    assert.deepEqual(resumed.history, savedSession.history)
+    assert.equal(resumed.examiner.name, savedSession.examiner.name)
+    await endAudio()
+    assert.equal(JSON.parse(accountStorageFor('guest').getItem(resumeKey)!).prompt, savedSession.stages[0].moves[0].text, 'Resuming a greeting continues to the first question')
+  } finally { await act(async () => resumeRoot.unmount()) }
+  console.log('PASS: Speaking reload in StrictMode keeps its examiner, question sequence, transcript and current move')
 
   voiceFails = true
   for (const [mock, name, voiceName] of [[1, 'Alex', 'Daniel'], [2, 'Maya', 'Google UK English Female']] as const) {
+    localStorage.clear()
     const fallbackRoot = createRoot(container)
     requestedVoices = []
     await act(async () => fallbackRoot.render(<ExaminerSession config={{ mode: 'part1' }} modeLabel={`Speaking Mock ${mock}`} onExit={() => {}} onSaved={() => {}} />))
@@ -327,6 +345,7 @@ export async function run() {
     browserTranscript = 'I enjoy studying languages in my spare time.'
     transcribedFiles = []
     const starts = recognitionStarts
+    localStorage.clear()
     const desktopRoot = createRoot(container)
     await act(async () => desktopRoot.render(<ExaminerSession config={{ mode: 'part1' }} modeLabel="Speaking Mock 1" onExit={() => {}} onSaved={() => {}} />))
     try {

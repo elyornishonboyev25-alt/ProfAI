@@ -1,3 +1,4 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, Check, ChevronDown, FileText, Maximize2, Minimize2, X } from 'lucide-react'
@@ -25,6 +26,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     const saved = loadBankSession(userId)
     return saved?.id === setId ? saved : null
   })
+  useActiveTest(Boolean(session))
   const [error, setError] = useState('')
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
@@ -34,7 +36,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   const viewport = useRef<HTMLDivElement>(null)
   const navigatorButton = useRef<HTMLButtonElement>(null)
   const navigatorClose = useRef<HTMLButtonElement>(null)
-  const current = session ? reviewQuestions.get(session.keys[session.index]) : undefined
+  const findQuestion = (key: string) => session?.questions?.[key] ?? reviewQuestions.get(key)
+  const current = session ? findQuestion(session.keys[session.index]) : undefined
   const math = current?.question.section === 'math'
   const answered = session?.keys.filter((key) => session.answers[key]?.trim()).length ?? 0
   useEffect(() => {
@@ -103,7 +106,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     if (!session) return
     const at = new Date().toISOString()
     const results: Result[] = session.keys.map((key) => {
-      const question = reviewQuestions.get(key)!.question
+      const question = findQuestion(key)!.question
       return {
         key, section: question.section, domain: question.domain, skill: question.skill,
         correct: isSATAnswerCorrect(question, session.answers[key]),

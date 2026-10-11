@@ -1,5 +1,7 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -322,6 +324,7 @@ export default function IELTSWritingTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${task.id}`
   const sessionKey = `${draftKey}:session`
+  useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const writingTrial = useFeatureTrial('writing')
   const [showWritingGate, setShowWritingGate] = useState(false)
@@ -337,22 +340,25 @@ export default function IELTSWritingTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
+        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
         deadlineRef.current = timed ? parsed.deadline! : null
         setTimerEnabled(timed)
         setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
         setIsTimerRunning(timed && parsed.deadline! > Date.now())
+        setBookmarked(parsed.bookmarked === true)
         setPhase('writing')
       }
     } catch { /* Start from launch screen. */ }
   }, [draftKey, effectiveDuration, sessionKey])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (phase !== 'writing') return
+    saveActiveTestPaper(sessionKey, task, user?.id ?? 'guest')
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled, deadline: deadlineRef.current, bookmarked })) } catch { /* Keep the current session. */ }
     try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, answer) } catch { /* Keep in-memory answer. */ }
-  }, [answer, draftKey, phase])
+  }, [answer, draftKey, phase, sessionKey, task, timerEnabled, bookmarked, user?.id])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -419,7 +425,7 @@ export default function IELTSWritingTestInterface({
       const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, task.visualContext)
       setAiEvaluation(result)
       try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* Evaluation still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Evaluation still succeeds. */ }
       if (answer.trim()) writingTrial.consume()
 
       const timeSpent = timerEnabled ? effectiveDuration * 60 - timeRemaining : 0

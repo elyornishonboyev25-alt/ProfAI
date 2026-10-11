@@ -1,9 +1,12 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
 import UiText from '@/components/common/UiText'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -267,16 +270,23 @@ export default function IELTSSpeakingTest() {
 function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit: () => void; onComplete: () => void }) {
   const recognition = useSpeechRecognition('en-US')
 
-  const items = useMemo(() => questionsForDay(day), [day])
-  const [index, setIndex] = useState(0)
-  const [answers, setAnswers] = useState<AnswerState[]>(() => items.map(blankAnswer))
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const sessionKey = `profai:speaking:day:${day.id}`
+  const [saved] = useState(() => {
+    try { return JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? 'null') as { index: number; answers: AnswerState[]; drafts: string[]; typingMode: boolean; prepLeft: number; speakLeft: number; finished: boolean; day?: SpeakingDayEntry; audioKey?: string } | null } catch { return null }
+  })
+  const audioKey = useRef(saved?.audioKey ?? `${sessionKey}:${Date.now()}`).current
+  const items = useMemo(() => questionsForDay(saved?.day ?? day), [saved, day])
+  const [index, setIndex] = useState(Math.min(items.length - 1, saved?.index ?? 0))
+  const [answers, setAnswers] = useState<AnswerState[]>(() => saved?.answers?.length === items.length ? saved.answers.map(answer => ({ ...answer, loading: false, audioUrl: null })) : items.map(blankAnswer))
   const [recording, setRecording] = useState(false)
   const [stoppingRecording, setStoppingRecording] = useState(false)
-  const [typingMode, setTypingMode] = useState(!canRecordAudio())
-  const [drafts, setDrafts] = useState<string[]>(() => items.map(() => ''))
-  const [prepLeft, setPrepLeft] = useState(0)
-  const [speakLeft, setSpeakLeft] = useState(0)
-  const [finished, setFinished] = useState(false)
+  const [typingMode, setTypingMode] = useState(saved?.typingMode ?? !canRecordAudio())
+  const [drafts, setDrafts] = useState<string[]>(() => saved?.drafts ?? items.map(() => ''))
+  const [prepLeft, setPrepLeft] = useState(saved?.prepLeft ?? 0)
+  const [speakLeft, setSpeakLeft] = useState(saved?.speakLeft ?? 0)
+  const [finished, setFinished] = useState(saved?.finished ?? false)
+  useActiveTest(!finished)
 
   const audioRecorderRef = useRef<AnswerRecording | null>(null)
   const audioBlobsRef = useRef(new Map<number, Blob>())
@@ -296,10 +306,28 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       .trim()
   }, [recognition.finalTranscript, recognition.interimTranscript])
 
+  useLayoutEffect(() => {
+    const data = { day: saved?.day ?? day, audioKey, index, answers: answers.map(answer => ({ ...answer, audioUrl: null, loading: false })), drafts, typingMode, prepLeft, speakLeft, finished }
+    try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify(data)) } catch { /* In-memory answers remain usable. */ }
+  }, [index, answers, drafts, typingMode, prepLeft, speakLeft, finished, owner, sessionKey])
+
+  useEffect(() => {
+    let cancelled = false
+    if (saved) void Promise.all(items.map(async (_, i) => {
+      const blob = await readTestAudio(owner, `${audioKey}:${i}`)
+      if (!blob || cancelled) return
+      audioBlobsRef.current.set(i, blob)
+      const url = URL.createObjectURL(blob)
+      audioUrlsRef.current.push(url)
+      setAnswers(previous => previous.map((answer, j) => j === i ? { ...answer, audioUrl: url } : answer))
+    }))
+    return () => { cancelled = true }
+  }, [owner, sessionKey, items, saved])
+
   // Part 2 has a prep + speak window; the others don't.
   const isPart2 = day.part === 2
   useEffect(() => {
-    if (!isPart2) return
+    if (!isPart2 || saved) return
     setPrepLeft(60)
     setSpeakLeft(120)
   }, [isPart2])
@@ -339,7 +367,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       const stream = await requestSpeakingMicrophone()
       if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
       audioStreamRef.current = stream
-      const recorder = new AnswerRecording(stream)
+      const recorder = new AnswerRecording(stream, undefined, blob => { void saveTestAudio(owner, `${audioKey}:${index}`, blob) })
       const questionIndex = index
       recordingQuestionRef.current = questionIndex
       audioRecorderRef.current = recorder

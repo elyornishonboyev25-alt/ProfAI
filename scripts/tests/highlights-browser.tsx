@@ -1,3 +1,4 @@
+import { saveTestAudio, readTestAudio, deleteAccountTestAudio } from '@/utils/testAudioStorage'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
@@ -31,6 +32,14 @@ function click(selector: string) {
 
 export async function run() {
   localStorage.clear()
+  const recording = new Blob(['saved speaking recording'], { type: 'audio/webm' })
+  await saveTestAudio('persistence-test', 'attempt:answer', recording)
+  const restored = await readTestAudio('persistence-test', 'attempt:answer')
+  check(await restored?.text() === 'saved speaking recording', 'Speaking audio survives closing and reopening IndexedDB')
+  check(restored?.type === 'audio/webm', 'Audio keeps its format')
+  check(await readTestAudio('different-user', 'attempt:answer') === null, 'Speaking audio is account scoped')
+  deleteAccountTestAudio('persistence-test')
+  deleteAccountTestAudio('different-user')
   const container = document.getElementById('root')!
   const root = createRoot(container)
   const text = 'Even in lyrics and essays the writer is to some extent a fictional hero with a fictional audience, for if the element of fictional projection disappeared completely, the writing would become direct address, or straight discursive writing, and cease to be literature.'

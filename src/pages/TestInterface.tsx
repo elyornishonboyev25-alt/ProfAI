@@ -1,3 +1,5 @@
+import { accountStorageFor } from '@/utils/accountStorage'
+import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
@@ -124,6 +126,17 @@ export default function TestInterface() {
       return
     }
 
+    if (!isReviewLaunch) {
+      const key = `ielts_test_session_${id}${mockContext?.id ? `:mock:${mockContext.id}` : ''}`
+      const randomSession = id === 'random' ? accountStorageFor().getItem('ielts_test_route_reading_random') : null
+      const saved = readActiveTestPaper<IELTSTest>(randomSession ?? key)
+      if (saved && (saved.id === id || id === 'random')) {
+        setTestData(saved)
+        setLoading(false)
+        return
+      }
+    }
+
     // Full Mock review can arrive without a sourceTest snapshot. Resolve the
     // saved paper before loading a replacement that reuses the public slot.
     if (type === 'listening' && reviewPayload?.result) {
@@ -179,9 +192,12 @@ export default function TestInterface() {
       foundTest = mockListeningTests.find((test) => test.id === id) ?? resolveGeneratedTrackTest('listening', id)
     }
 
+    if (id === 'random' && foundTest) {
+      try { accountStorageFor().setItem('ielts_test_route_reading_random', `ielts_test_session_${foundTest.id}`) } catch { /* Keep the current paper usable. */ }
+    }
     setTestData(foundTest ?? null)
     setLoading(false)
-  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type])
+  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type, isReviewLaunch, mockContext?.id])
 
   const handleComplete = (results: unknown) => {
     // Inside a Full Mock, a section counts as done only when its test is actually

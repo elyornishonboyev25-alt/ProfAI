@@ -17,7 +17,8 @@ import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 
 if (typeof window !== 'undefined') {
   try { document.documentElement.dataset.effects = localStorage.getItem('profai-effects') === 'reduced' ? 'reduced' : 'full' } catch { /* Optional preference. */ }
-  window.addEventListener('vite:preloadError', () => {
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault()
     void recoverFromStaleBuild(new Error('vite:preloadError'))
   })
   startBuildFreshnessMonitor()

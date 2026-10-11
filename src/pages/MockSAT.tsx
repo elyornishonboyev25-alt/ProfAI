@@ -1,3 +1,4 @@
+import { saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -99,6 +100,7 @@ export default function MockSAT() {
     if (!resume) {
       const attempt = createSATAttempt(test.id, test.modules, mode)
       saveSATAttempt(attempt)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
     }
     navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)
   }

@@ -1,5 +1,7 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
@@ -126,6 +128,7 @@ export default function IELTSWritingFullTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
+  useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
@@ -158,22 +161,26 @@ export default function IELTSWritingFullTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
+        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
         deadlineRef.current = timed ? parsed.deadline! : null
         setTimerEnabled(timed)
         setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
         setIsTimerRunning(timed && parsed.deadline! > Date.now())
+        setActiveTaskIndex(Math.max(0, Math.min(tasks.length - 1, parsed.activeTaskIndex ?? 0)))
+        setBookmarks(parsed.bookmarks ?? {})
         setPhase('writing')
       }
     } catch { /* Start from the launch screen. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (phase !== 'writing') return
+    saveActiveTestPaper(sessionKey, fullTest, user?.id ?? 'guest')
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
     try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
-  }, [answers, draftKey, phase])
+  }, [answers, draftKey, phase, sessionKey, fullTest, timerEnabled, activeTaskIndex, bookmarks, user?.id])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -231,7 +238,7 @@ export default function IELTSWritingFullTestInterface({
     setPhase('landing')
     autoSubmittedRef.current = false
     try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* No persisted draft. */ }
-    try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* No persisted session. */ }
+    try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* No persisted session. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
 
   const handleSubmit = useCallback(async () => {
@@ -257,7 +264,7 @@ export default function IELTSWritingFullTestInterface({
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
       try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Submission still succeeds. */ }
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Submission still succeeds. */ }
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))

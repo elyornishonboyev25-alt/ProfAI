@@ -1,6 +1,9 @@
+import { useReadingAnnotations } from '@/hooks/useReadingAnnotations'
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { textOffsets, textRange } from '@/utils/textRanges'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeftIcon,
@@ -380,6 +383,12 @@ export default function IELTSReadingInterface({
     if (isReviewMode) return
     try {
       const savedSession = personalStorage.getItem(sessionKey)
+      if (!savedSession) {
+        for (const section of test.sections) {
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}`)
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}:scroll`)
+        }
+      }
       if (savedSession) {
         const data = JSON.parse(savedSession)
         // Before v2, practice defaulted to the three Reading parts even for
@@ -406,6 +415,10 @@ export default function IELTSReadingInterface({
         setTestMode(data.testMode ?? 'simulation')
         setSelectedParts(restoredParts)
         setCustomTime(data.customTime ?? 60)
+        setContrastMode(data.contrastMode ?? 'normal')
+        setTextSizeMode(data.textSizeMode ?? 'regular')
+        setReadingFont(data.readingFont ?? 'sans')
+        setShowNotes(data.showNotes === true)
         setFlaggedQuestions(data.flaggedQuestions ?? [])
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
         startedAtRef.current = typeof data.startedAt === 'number' ? data.startedAt : null
@@ -450,13 +463,17 @@ export default function IELTSReadingInterface({
     return () => document.removeEventListener('fullscreenchange', syncFullscreenState)
   }, [])
 
+  useActiveTest(isTestActive && !isReviewMode)
+
   // Save session on changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isReviewMode) return
     if (!isTestActive) return // Only save if the test has started
     if (submissionStartedRef.current) return
 
+    saveActiveTestPaper(sessionKey, test, badgeUserId ?? 'guest')
     const sessionData = {
+      contrastMode, textSizeMode, readingFont, showNotes,
       partsSelectionVersion: 2,
       currentSectionIndex,
       answers,
@@ -477,6 +494,7 @@ export default function IELTSReadingInterface({
     }
     try { personalStorage.setItem(sessionKey, JSON.stringify(sessionData)) } catch { /* Keep the in-memory attempt usable. */ }
   }, [
+    contrastMode, textSizeMode, readingFont, showNotes,
     currentSectionIndex,
     answers,
     timeRemaining,
@@ -498,6 +516,7 @@ export default function IELTSReadingInterface({
   // Clear session helper
   const clearSession = () => {
     personalStorage.removeItem(sessionKey)
+    clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest')
     startedAtRef.current = null
     deadlineRef.current = null
   }
@@ -535,6 +554,8 @@ export default function IELTSReadingInterface({
 
   const currentSection = activeSections[currentSectionIndex] || activeSections[0]
   const isDayOneCurieSection = currentSection?.id === 'day1-curie-p1'
+  useReadingAnnotations(testShellRef, `${sessionKey}:annotations:${currentSection.id}`, badgeUserId ?? 'guest', isTestActive && !isReviewMode)
+
   const currentPassageNumber = resolvePassageNumber(currentSection, currentSectionIndex + 1)
 
   // ---- Listening audio playlist ----
@@ -3258,6 +3279,7 @@ export default function IELTSReadingInterface({
       <div
         id="reading-passage-pane"
         data-reading-markable="1"
+        key={currentSection.id}
         onClick={handleMarkPaneClick}
         className={`reading-pane reading-content h-full overflow-y-auto border-r border-red-100 bg-gradient-to-b from-white via-red-50/30 to-white p-4 sm:p-5 lg:p-6 font-sans leading-relaxed text-slate-800 transition-colors duration-300 scrollbar-thin scrollbar-thumb-red-200 ${isDayOneCurieSection ? 'day1-reading-pane' : ''}`}
       >
@@ -3951,6 +3973,7 @@ export default function IELTSReadingInterface({
           <div
             className="space-y-6 pb-28"
             data-reading-markable="1"
+        key={currentSection.id}
             onClick={handleMarkPaneClick}
           >
             {(currentSection?.groups ?? []).map((group, groupIndex) => renderListeningGroup(group, groupIndex))}
@@ -3964,6 +3987,7 @@ export default function IELTSReadingInterface({
     <div
       id="reading-questions-pane"
       data-reading-markable="1"
+        key={currentSection.id}
       onClick={handleMarkPaneClick}
       className="reading-pane reading-content reading-question-typography h-full overflow-y-auto border-l border-red-100 bg-white p-4 sm:p-5 lg:p-6 font-sans transition-colors duration-300 scrollbar-thin scrollbar-thumb-red-200"
     >

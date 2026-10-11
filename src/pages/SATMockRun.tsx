@@ -1,3 +1,6 @@
+import { accountStorageFor } from '@/utils/accountStorage'
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { readActiveTestPaper, saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import {
   useCallback,
@@ -76,7 +79,10 @@ export default function SATMockRun() {
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
-  const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
+  const test = useMemo(() => {
+    const candidate = getSATSectionTest(mockId, section)
+    return readActiveTestPaper<typeof candidate>(`profai:sat:${candidate.id}:attempt:v1`) ?? candidate
+  }, [mockId, section])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
   const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const backPath = section ? `/sat/${section}` : '/sat'
@@ -88,8 +94,14 @@ export default function SATMockRun() {
     const saved = loadSATAttempt(test.id)
     return saved ? migrateModuleTiming(saved, modules) : null
   })
+  useActiveTest(attempt?.status === 'active')
   const [now, setNow] = useState(Date.now())
-  const [timerVisible, setTimerVisible] = useState(true)
+  const uiKey = `profai:sat:${test.id}:workspace`
+  const [savedUi] = useState(() => {
+    try { return JSON.parse(accountStorageFor().getItem(uiKey) ?? '{}') as { attemptId?: string; timerVisible?: boolean; zoom?: number; checkedQuestions?: string[] } } catch { return {} }
+  })
+  const sameAttempt = savedUi.attemptId === attempt?.attemptId
+  const [timerVisible, setTimerVisible] = useState(sameAttempt ? savedUi.timerVisible ?? true : true)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
@@ -98,15 +110,20 @@ export default function SATMockRun() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(sameAttempt ? savedUi.zoom ?? 1 : 1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
   const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
   const [baselineRetry, setBaselineRetry] = useState(0)
-  const [checkedQuestions, setCheckedQuestions] = useState<string[]>([])
+  const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
   const [fullscreenExitOpen, setFullscreenExitOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
   const questionViewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!attempt) return
+    try { accountStorageFor().setItem(uiKey, JSON.stringify({ attemptId: attempt.attemptId, timerVisible, zoom, checkedQuestions })) } catch { /* Keep the current workspace usable. */ }
+  }, [attempt?.attemptId, timerVisible, zoom, checkedQuestions, uiKey])
 
   const moduleIndex = attempt?.currentModuleIndex ?? 0
   const currentModule = modules[moduleIndex] ?? modules[0]
@@ -279,8 +296,11 @@ export default function SATMockRun() {
   }, [moduleIndex, modules.length])
 
   useEffect(() => {
-    if (attempt) saveSATAttempt(attempt)
-  }, [attempt])
+    if (attempt) {
+      saveSATAttempt(attempt)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
+    }
+  }, [attempt, test])
 
   useEffect(() => {
     const current = attemptRef.current

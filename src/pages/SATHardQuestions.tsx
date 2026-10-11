@@ -1,3 +1,4 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, Check, CheckCircle2, Flame, Lightbulb, RotateCcw, Search, XCircle } from 'lucide-react'
@@ -23,6 +24,7 @@ function HardWorkspace({ userId }: { userId: string }) {
   const section: SATSection = params.get('section') === 'math' ? 'math' : 'reading-writing'
   const rows = HARD_QUESTIONS[section]
   const active = rows.find(row => row.key === params.get('q'))
+  useActiveTest(Boolean(active))
   const [progress, setProgress] = useState<HardProgress>(() => loadHardProgress(userId))
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')

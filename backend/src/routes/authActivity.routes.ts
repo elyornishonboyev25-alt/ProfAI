@@ -7,7 +7,7 @@ import { requireOwner } from '../middleware/owner.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { hashToken, verifyAccessToken, verifyRefreshToken } from '../utils/jwt.js'
-import { createAuthSession, onlineWhere, requestDeviceId, ONLINE_WINDOW_MS } from '../services/authActivity.service.js'
+import { AuthSessionError, createAuthSession, onlineWhere, requestDeviceId, ONLINE_WINDOW_MS } from '../services/authActivity.service.js'
 
 const router = Router()
 const heartbeatSchema = z.object({ refreshToken: z.string().min(1).max(4096).nullable().optional() })
@@ -25,12 +25,14 @@ router.post('/activity/heartbeat', requireAuth, validateBody(heartbeatSchema), a
     sessionId = stored.sessionId ?? undefined
     if (!sessionId) {
       sessionId = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${req.user!.id} FOR UPDATE`
+        const latest = await tx.refreshToken.findUnique({ where: { id: stored.id } })
+        if (latest?.sessionId) return latest.sessionId
         const session = await createAuthSession({ userId: req.user!.id, deviceId: requestDeviceId(req),
           userAgent: req.get('user-agent'), ipAddress: req.ip, method: 'RESTORED', expiresAt: stored.expiresAt }, tx)
         const claim = await tx.refreshToken.updateMany({ where: { id: stored.id, sessionId: null, revokedAt: null }, data: { sessionId: session.id } })
         if (claim.count) return session.id
-        await tx.authSession.delete({ where: { id: session.id } })
-        return (await tx.refreshToken.findUnique({ where: { id: stored.id } }))?.sessionId ?? undefined
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'This session has ended. Please sign in again.')
       })
     }
   }

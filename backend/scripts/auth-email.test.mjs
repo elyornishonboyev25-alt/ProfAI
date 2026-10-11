@@ -61,9 +61,11 @@ globalThis.prisma = {
     create: async ({ data }) => { const row = { id: crypto.randomUUID(), revokedAt: null, ...data }; tokens.push(row); return row },
     findUnique: async ({ where }) => { const token = tokens.find(row => matches(row, where)); return token ? { ...token, user: users.find(user => user.id === token.userId) } : null },
     update: async ({ where, data }) => Object.assign(tokens.find(row => matches(row, where)), data),
-    updateMany: async () => { revoked = true; return { count: tokens.length } },
+    updateMany: async ({ where, data }) => { revoked = true; const rows = tokens.filter(row => matches(row, where)); rows.forEach(row => Object.assign(row, data)); return { count: rows.length } },
   },
   authSession: {
+    findUnique: async ({ where }) => sessions.find(row => matches(row, where)) ?? null,
+    findMany: async ({ where }) => sessions.filter(row => matches(row, where)),
     create: async ({ data }) => { const row = { id: crypto.randomUUID(), loginAt: new Date(), lastSeenAt: new Date(), endedAt: null, ...data }; sessions.push(row); return row },
     update: async ({ where, data }) => Object.assign(sessions.find(row => matches(row, where)), data),
     updateMany: async ({ where, data }) => { const rows = sessions.filter(row => matches(row, where)); rows.forEach(row => Object.assign(row, data)); return { count: rows.length } },
@@ -71,6 +73,7 @@ globalThis.prisma = {
   premiumGrant: { findUnique: async () => null },
   billingSubscription: { findMany: async () => [] },
   freeTrial: { findUnique: async () => null },
+  $queryRaw: async () => [],
   $transaction: async (queries) => typeof queries === 'function' ? queries(globalThis.prisma) : Promise.all(queries),
 }
 const realFetch = globalThis.fetch
@@ -87,7 +90,8 @@ const { authRateLimit } = await import('../dist/middleware/rateLimit.js')
 const { verifyPassword } = await import('../dist/utils/password.js')
 const app = express()
 app.use(express.json(), router)
-app.use((error, _req, res, _next) => res.status(500).json({ message: error.message }))
+const { errorHandler } = await import('../dist/middleware/error.js')
+app.use(errorHandler)
 const server = await new Promise((resolve) => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)) })
 const base = `http://127.0.0.1:${server.address().port}`
 const email = 'learner@gmail.com'
@@ -267,4 +271,46 @@ test('successful sign-ins track browser profiles; rotations and heartbeat do not
   await request('RESET_PASSWORD')
   await post('/password/reset', { email, verificationCode: deliveredCode(), newPassword: 'replacement-password-123' })
   assert.ok(sessions.every(row => row.endedAt), 'Password reset marks every device session offline')
+})
+
+
+test('three devices can sign in; fourth is blocked for password and email code; logout frees a slot', async () => {
+  await request('REGISTER')
+  const credentials = { email, password: 'new-password-123' }
+  const deviceHeaders = number => ({ 'X-Device-Id': `${number}${'1'.repeat(7)}-1111-4111-8111-111111111111` })
+  const first = await post('/register', { ...credentials, verificationCode: deliveredCode() }, deviceHeaders(1))
+  assert.equal(first.status, 201)
+  for (const number of [2, 3]) assert.equal((await post('/login', credentials, deviceHeaders(number))).status, 200)
+  const tokenCount = tokens.length
+  const fourth = await post('/login', credentials, deviceHeaders(4))
+  assert.equal(fourth.status, 403)
+  assert.equal(fourth.body.code, 'DEVICE_LIMIT_REACHED')
+  assert.match(fourth.body.message, /3 devices/)
+  assert.equal(tokens.length, tokenCount)
+  assert.equal(sessions.length, 3)
+  codes = []; sent = []
+  await request('SIGN_IN')
+  const emailAttempt = await post('/email/login', { email, verificationCode: deliveredCode() }, deviceHeaders(4))
+  assert.equal(emailAttempt.status, 403)
+  assert.equal(emailAttempt.body.code, 'DEVICE_LIMIT_REACHED')
+  const repeated = await post('/login', credentials, deviceHeaders(1))
+  assert.equal(repeated.status, 200, 'Known device remains allowed at capacity')
+  const auth = { ...deviceHeaders(1), Authorization: `Bearer ${repeated.body.accessToken}` }
+  assert.equal((await post('/logout', { refreshToken: repeated.body.refreshToken }, auth)).status, 204)
+  assert.ok(sessions.filter(row => row.deviceId === deviceHeaders(1)['X-Device-Id']).every(row => row.endedAt))
+  assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, deviceHeaders(1))).status, 401)
+  assert.equal((await post('/activity/heartbeat', {}, { ...deviceHeaders(1), Authorization: `Bearer ${first.body.accessToken}` })).status, 401)
+  assert.equal((await post('/login', credentials, deviceHeaders(4))).status, 200)
+})
+
+test('refresh cannot move a session to another device; expired sessions do not occupy slots', async () => {
+  await request('REGISTER')
+  const credentials = { email, password: 'new-password-123' }
+  const header = number => ({ 'X-Device-Id': `${number}${'2'.repeat(7)}-2222-4222-8222-222222222222` })
+  const first = await post('/register', { ...credentials, verificationCode: deliveredCode() }, header(1))
+  assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, header(4))).body.code, 'SESSION_DEVICE_MISMATCH')
+  assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, header(1))).status, 200)
+  for (const number of [2, 3]) assert.equal((await post('/login', credentials, header(number))).status, 200)
+  sessions.filter(row => row.deviceId === header(1)['X-Device-Id']).forEach(row => { row.expiresAt = new Date(0) })
+  assert.equal((await post('/login', credentials, header(4))).status, 200)
 })

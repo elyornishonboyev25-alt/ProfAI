@@ -20,7 +20,7 @@ import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
-import { createAuthSession, requestDeviceId } from '../services/authActivity.service.js'
+import { AuthSessionError, createAuthSession, requestDeviceId } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
 
 const router = Router()
@@ -189,12 +189,28 @@ async function issueAuthTokens(args: {
   deviceId: string
   method: string
   sessionId?: string | null
+  previousTokenId?: string
 }) {
   const expiresAt = getTokenExpiryDate(env.REFRESH_TOKEN_EXPIRES_IN)
   return prisma.$transaction(async (tx) => {
+    if (args.sessionId) {
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${args.userId} FOR UPDATE`
+      const current = await tx.authSession.findUnique({ where: { id: args.sessionId } })
+      if (!current || current.userId !== args.userId || current.endedAt || current.expiresAt <= new Date()) {
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'This session has ended. Please sign in again.')
+      }
+      if (!args.deviceId.startsWith('unknown-') && current.deviceId !== args.deviceId) {
+        throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign in on this device.')
+      }
+    }
     const session = args.sessionId
       ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt } })
       : await createAuthSession({ ...args, expiresAt }, tx)
+    if (args.previousTokenId) {
+      // Admission and rotation commit together, so rejection keeps the old token.
+      const claimed = await tx.refreshToken.updateMany({ where: { id: args.previousTokenId, revokedAt: null, expiresAt: { gt: new Date() } }, data: { revokedAt: new Date() } })
+      if (claimed.count !== 1) throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Refresh token expired or revoked.')
+    }
     const accessToken = signAccessToken({ sub: args.userId, role: args.role, sid: session.id })
     const refreshToken = signRefreshToken({ sub: args.userId, tokenId: generateTokenId() })
     await tx.refreshToken.create({ data: {
@@ -704,11 +720,6 @@ router.post(
       return res.status(401).json({ message: 'Refresh token expired or revoked.' })
     }
 
-    await prisma.refreshToken.update({
-      where: { id: stored.id },
-      data: { revokedAt: new Date() },
-    })
-
     const tokens = await issueAuthTokens({
       userId: stored.user.id,
       role: stored.user.role,
@@ -717,6 +728,7 @@ router.post(
       deviceId: requestDeviceId(req),
       method: 'RESTORED',
       sessionId: stored.sessionId,
+      previousTokenId: stored.id,
     })
 
     return res.json({
@@ -735,7 +747,10 @@ router.post(
 
     const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
     if (stored?.userId === req.user!.id && stored.sessionId) {
-      await prisma.authSession.updateMany({ where: { id: stored.sessionId, userId: req.user!.id, endedAt: null }, data: { endedAt: new Date() } })
+      const session = await prisma.authSession.findUnique({ where: { id: stored.sessionId } })
+      if (session?.userId === req.user!.id) {
+        await prisma.authSession.updateMany({ where: { deviceId: session.deviceId, userId: req.user!.id, endedAt: null }, data: { endedAt: new Date() } })
+      }
     }
     await prisma.refreshToken.updateMany({
       where: {

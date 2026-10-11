@@ -18,6 +18,7 @@
     "test:ai-coach": "npm run build && node --test scripts/assistant-coach.test.mjs scripts/ai-provider.test.mjs scripts/speaking-audio.test.mjs scripts/writing-assessment.test.mjs",
     "test:speaking-audio": "node --test scripts/speaking-audio.test.mjs",
     "test:legacy-removal": "node --test scripts/legacy-removal.test.mjs",
+    "test:auth": "npm run build && node --test scripts/auth-email.test.mjs scripts/auth-activity.test.mjs scripts/device-limit.test.mjs",
     "test:billing": "npm run build && node --test scripts/billing.test.mjs",
     "test:guest-diagnostic": "npm run build && node --test scripts/guest-diagnostic.test.mjs"
   },

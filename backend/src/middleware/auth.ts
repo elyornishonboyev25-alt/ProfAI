@@ -22,6 +22,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     if (!user) {
       return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
     }
+    if (payload.sid) {
+      const session = await prisma.authSession.findUnique({ where: { id: payload.sid } })
+      if (!session || session.userId !== user.id || session.endedAt || session.expiresAt <= new Date()) {
+        return res.status(401).json({ message: 'This session has ended. Please sign in again.', code: 'SESSION_EXPIRED' })
+      }
+    }
     req.user = {
       id: user.id,
       role: user.role,

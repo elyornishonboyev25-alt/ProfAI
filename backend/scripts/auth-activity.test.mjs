@@ -16,15 +16,17 @@ globalThis.prisma = {
     updateMany: async ({ where, data }) => { const row = tokens.find(row => row.id === where.id && row.sessionId === null); if (!row) return { count: 0 }; Object.assign(row, data); return { count: 1 } },
   },
   authSession: {
+    findUnique: async ({ where }) => sessions.find(row => row.id === where.id) ?? null,
     create: async ({ data }) => { const row = { id: `session-${sessions.length}`, endedAt: null, ...data }; sessions.push(row); return row },
     delete: async () => {},
     updateMany: async ({ where, data }) => { calls.push({ where, data }); const row = sessions.find(row => row.id === where.id && row.userId === where.userId && !row.endedAt && row.expiresAt > new Date()); if (row) Object.assign(row, data); return { count: row ? 1 : 0 } },
     count: async ({ where }) => { calls.push({ countWhere: where }); return 3 },
     findFirst: async () => ({ loginAt: new Date('2026-10-10T01:00:00Z') }),
-    findMany: async (args) => { calls.push(args); return [{ id: 's1', user: learner, method: 'EMAIL_CODE' }] },
+    findMany: async (args) => { calls.push(args); return args.select?.deviceId ? sessions.filter(row => row.userId === args.where.userId && !row.endedAt && row.expiresAt > new Date()) : [{ id: 's1', user: learner, method: 'EMAIL_CODE' }] },
   },
   $queryRaw: async (query) => {
     calls.push(query)
+    if (!query.sql) return []
     if (query.sql.includes('SELECT u.id')) return [{ id: 'learner', fullName: 'Learner', email: 'learner@gmail.com', deviceCount: 2n, onlineDevices: 1n, loginCount: 5n, lastSeenAt: new Date() }]
     return [{ count: 1n }]
   },
@@ -34,7 +36,8 @@ const { default: router } = await import('../dist/routes/authActivity.routes.js'
 const { signAccessToken, signRefreshToken, hashToken } = await import('../dist/utils/jwt.js')
 const { describeDevice, requestDeviceId, onlineWhere } = await import('../dist/services/authActivity.service.js')
 const app = express(); app.use(express.json(), router)
-app.use((error, _req, res, _next) => res.status(500).json({ message: error.message }))
+const { errorHandler } = await import('../dist/middleware/error.js')
+app.use(errorHandler)
 const server = await new Promise(resolve => { const value = app.listen(0, '127.0.0.1', () => resolve(value)); })
 after(() => new Promise(resolve => server.close(resolve)))
 const base = `http://127.0.0.1:${server.address().port}`
@@ -103,4 +106,15 @@ test('device descriptions distinguish mobile, tablet and browser; online expires
   const fake = { get: () => '11111111-1111-4111-8111-111111111111' }
   assert.equal(requestDeviceId(fake), fake.get())
   assert.notEqual(requestDeviceId({ get: () => 'invalid' }), 'invalid')
+})
+
+test('legacy heartbeat cannot adopt a fourth device', async () => {
+  sessions = ['two', 'three', 'four'].map((deviceId, i) => ({ id: `active-${i}`, userId: learner.id, deviceId, endedAt: null, expiresAt: new Date(Date.now() + 86400000) }))
+  const refreshToken = signRefreshToken({ sub: learner.id, tokenId: 'legacy-limit' })
+  tokens = [{ id: 'legacy-limit', userId: learner.id, sessionId: null, revokedAt: null, tokenHash: hashToken(refreshToken), expiresAt: new Date(Date.now() + 86400000) }]
+  const result = await request('/activity/heartbeat', learner, { refreshToken })
+  assert.equal(result.response.status, 403)
+  assert.equal(result.body.code, 'DEVICE_LIMIT_REACHED')
+  assert.equal(sessions.length, 3)
+  assert.equal(tokens[0].sessionId, null)
 })

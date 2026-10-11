@@ -45,6 +45,7 @@ function remove(modelName, row) {
 }
 const prisma = Object.fromEntries(models.map(model => [names.get(model.name), {
   findUnique: async ({ where }) => rows[model.name].find(row => matches(row, where)) ?? null,
+  findMany: async ({ where }) => rows[model.name].filter(row => matches(row, where)),
   findFirst: async ({ where }) => rows[model.name].filter(row => matches(row, where)).at(-1) ?? null,
   create: async ({ data }) => {
     const row = { id: crypto.randomUUID(), xp: 0, level: 1, currentStreak: 0, role: 'USER', profile: null,
@@ -74,6 +75,7 @@ prisma.$transaction = async operation => {
   const snapshot = structuredClone(rows)
   try { return await operation(prisma) } catch (error) { rows = snapshot; throw error }
 }
+prisma.$queryRaw = async () => []
 const bundled = await build({
   stdin: { contents: `export { default } from './backend/src/routes/auth.routes'; export { onAccountDeleted } from './backend/src/services/accountLifecycle';`, resolveDir: process.cwd() },
   bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external',

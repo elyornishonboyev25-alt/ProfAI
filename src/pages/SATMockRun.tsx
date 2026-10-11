@@ -33,6 +33,8 @@ import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
+import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
+import { readSATNotes } from '@/features/sat/notes'
 import SATRichText from '@/components/sat/SATRichText'
 import SATSourceContent from '@/components/sat/SATSourceContent'
 import '@/components/sat/sat-exam-layout.css'
@@ -90,7 +92,6 @@ export default function SATMockRun() {
   const [timerVisible, setTimerVisible] = useState(true)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
-  const [noteDraft, setNoteDraft] = useState('')
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const [calculatorDocked, setCalculatorDocked] = useState(false)
   const [formulaSheetOpen, setFormulaSheetOpen] = useState(false)
@@ -218,20 +219,9 @@ export default function SATMockRun() {
   }, [backPath, exit, modules, navigate])
 
   const openNotes = useCallback(() => {
-    setNoteDraft(attemptRef.current?.notes[currentQuestion.id] ?? '')
     setNotesOpen(true)
-  }, [currentQuestion.id])
-
-  const saveNote = useCallback(() => {
-    persistUpdate((current) => {
-      const notes = { ...current.notes }
-      const trimmedNote = noteDraft.trim()
-      if (trimmedNote) notes[currentQuestion.id] = trimmedNote
-      else delete notes[currentQuestion.id]
-      return { ...current, notes }
-    })
-    setNotesOpen(false)
-  }, [currentQuestion.id, noteDraft, persistUpdate])
+    setToolsOpen(false)
+  }, [])
 
   const submitAttempt = useCallback(() => {
     persistUpdate((current) => ({
@@ -566,6 +556,7 @@ export default function SATMockRun() {
             </button>
             <button
               type="button"
+              aria-label="Highlights & Notes" aria-expanded={toolsOpen}
               onClick={() => { setToolsOpen((open) => !open); setMoreOpen(false) }}
               className="flex items-center gap-2 px-2 py-2 font-serif text-sm font-bold text-slate-700 sm:text-base"
             >
@@ -581,18 +572,19 @@ export default function SATMockRun() {
           </div>
 
           {toolsOpen ? (
-            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
+            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 max-h-[calc(100dvh-8rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-black">Highlights & Notes</p>
-                <button type="button" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
+                <button type="button" aria-label="Close highlights and notes" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p>
               <div className="mt-3 flex items-center gap-2">
                 <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
                 <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
               </div>
-              <button type="button" onClick={() => { openNotes(); setToolsOpen(false) }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
-                <NotebookPen className="h-4 w-4" /> {attempt.notes[currentQuestion.id] ? 'Edit note' : 'Add note'}
+              <div className="mt-3 max-h-[min(18rem,40dvh)] overflow-y-auto"><SATNoteList value={attempt.notes[currentQuestion.id]} /></div>
+              <button type="button" onClick={openNotes} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
+                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? `Manage notes (${readSATNotes(attempt.notes[currentQuestion.id]).length})` : 'Add note'}
               </button>
             </div>
           ) : null}
@@ -815,47 +807,23 @@ export default function SATMockRun() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 30, opacity: 0 }}
-              className="w-full max-w-lg rounded-2xl border border-slate-300 bg-white p-5 shadow-2xl"
+              className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-300 bg-white p-5 shadow-2xl"
               role="dialog"
               aria-modal="true"
               aria-labelledby="sat-note-title"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private note</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private notes</p>
                   <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold">Question {currentQuestion.number}</h2>
                 </div>
-                <button type="button" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
+                <button type="button" aria-label="Close notes" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <textarea
-                autoFocus
-                value={noteDraft}
-                onChange={(event) => setNoteDraft(event.target.value)}
-                placeholder="Write your reasoning, a formula to revisit, or why an option felt tempting..."
-                className="mt-4 min-h-44 w-full resize-y rounded-xl border-2 border-slate-400 bg-slate-50 p-4 text-sm font-medium leading-6 outline-none focus:border-[#4053d7] focus:bg-white focus:ring-4 focus:ring-indigo-100"
-              />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNoteDraft('')
-                    persistUpdate((current) => {
-                      const notes = { ...current.notes }
-                      delete notes[currentQuestion.id]
-                      return { ...current, notes }
-                    })
-                    setNotesOpen(false)
-                  }}
-                  disabled={!attempt.notes[currentQuestion.id]}
-                  className="rounded-full px-4 py-2.5 text-[11px] font-black text-red-700 disabled:invisible"
-                >
-                  Delete note
-                </button>
-                <button type="button" onClick={saveNote} className="rounded-full bg-black px-5 py-2.5 text-[11px] font-black text-white">
-                   <UiText text={"Save note"} /> </button>
-              </div>
+              <SATNotes key={currentQuestion.id} value={attempt.notes[currentQuestion.id]} onChange={notes => {
+                persistUpdate(current => ({ ...current, notes: { ...current.notes, [currentQuestion.id]: notes } }))
+              }} />
             </motion.section>
           </motion.div>
         ) : null}

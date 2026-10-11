@@ -1,3 +1,5 @@
+import { SATNoteList } from './SATNotes'
+import { readSATNotes, type SATNote } from '@/features/sat/notes'
 import { moduleTimes, totalTime } from '@/features/sat/timing'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -80,7 +82,7 @@ function statusMeta(question: SATQuestion, attempt: SATAttempt) {
   return { label: 'Incorrect', className: 'bg-red-50 text-red-700', icon: XCircle }
 }
 
-function ReviewQuestion({ question, response, note, strokes }: { question: SATQuestion; response?: string; note?: string; strokes: HighlightStroke[] }) {
+function ReviewQuestion({ question, response, note, strokes }: { question: SATQuestion; response?: string; note?: string | SATNote[]; strokes: HighlightStroke[] }) {
   const { context, task } = splitSATPrompt(question.prompt)
   const correct = isSATAnswerCorrect(question, response)
   return (
@@ -161,7 +163,7 @@ function ReviewQuestion({ question, response, note, strokes }: { question: SATQu
         </div>
       </section>
 
-      {note ? <section className="rounded-2xl border border-violet-100 bg-violet-50 p-4"><p className="text-[9px] font-black uppercase tracking-[0.12em] text-violet-700">Your test-day note</p><p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-700">{note}</p></section> : null}
+      {readSATNotes(note).length ? <section className="rounded-2xl border border-violet-100 bg-violet-50 p-4"><p className="mb-2 text-[9px] font-black uppercase tracking-[0.12em] text-violet-700">Your test-day notes</p><SATNoteList value={note} /></section> : null}
     </div>
     </SATTextHighlights>
   )

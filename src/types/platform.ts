@@ -65,6 +65,7 @@ export type DashboardOverview = {
   }>
   miniLeaderboard: Array<{
     rank: number
+    premium?: boolean
     fullName: string
     avatarUrl?: string | null
     totalXp: number

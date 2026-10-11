@@ -1,3 +1,4 @@
+import { textOffsets, textRange } from '@/utils/textRanges'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -1010,7 +1011,7 @@ export default function IELTSReadingInterface({
       acceptNode: (candidate) => {
         const node = candidate as Text
         const content = node.textContent ?? ''
-        if (!content.trim()) return NodeFilter.FILTER_REJECT
+        if (!content.trim() || node.parentElement?.closest('input, textarea, select, [contenteditable="true"]')) return NodeFilter.FILTER_REJECT
         try {
           return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
         } catch {
@@ -1136,15 +1137,28 @@ export default function IELTSReadingInterface({
       selectionTimerRef.current = setTimeout(publishSelection, 120)
     }
 
+    const closeFloatingTools = () => {
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current)
+      clearSelectionTools()
+      setHighlightPopover(null)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeFloatingTools()
+    }
+
     document.addEventListener('pointerdown', handlePointerDown, true)
     document.addEventListener('pointerup', handlePointerUp)
     document.addEventListener('pointercancel', handlePointerUp)
     document.addEventListener('selectionchange', handleSelectionChange)
+    document.addEventListener('scroll', closeFloatingTools, true)
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true)
       document.removeEventListener('pointerup', handlePointerUp)
       document.removeEventListener('pointercancel', handlePointerUp)
       document.removeEventListener('selectionchange', handleSelectionChange)
+      document.removeEventListener('scroll', closeFloatingTools, true)
+      document.removeEventListener('keydown', handleKeyDown)
       if (selectionTimerRef.current) {
         clearTimeout(selectionTimerRef.current)
       }
@@ -1161,6 +1175,8 @@ export default function IELTSReadingInterface({
       container.querySelectorAll<HTMLElement>('.ielts-highlight, .ielts-note'),
     ).filter((entry) => {
       if (entry === node) return true
+      // Deleting or editing a note must preserve a highlight underneath it.
+      if (entry.dataset.markType !== node.dataset.markType) return false
       if (groupId && entry.dataset.markGroup === groupId) return true
       if (entry.contains(node) || node.contains(entry)) return true
       try {
@@ -1249,12 +1265,20 @@ export default function IELTSReadingInterface({
         const touchingHighlights = collectIntersectingNodes(activeRange, markableContainer, '.ielts-highlight')
         if (touchingHighlights.length > 0) {
           workingRange = expandRangeWithNodes(activeRange, touchingHighlights)
+          const offsets = textOffsets(markableContainer, workingRange)
           unwrapNodes(touchingHighlights)
+          const restored = textRange(markableContainer, offsets.start, offsets.end)
+          if (!restored) return []
+          workingRange = restored
         }
       } else {
         const touchingNotes = collectIntersectingNodes(activeRange, markableContainer, '.ielts-note')
         if (touchingNotes.length > 0) {
+          const offsets = textOffsets(markableContainer, workingRange)
           unwrapNodes(touchingNotes)
+          const restored = textRange(markableContainer, offsets.start, offsets.end)
+          if (!restored) return []
+          workingRange = restored
         }
       }
 

@@ -20,6 +20,8 @@ export type Highlight = {
   blockIndex: number
   text: string
   color: HighlightColor
+  start?: number
+  end?: number
 }
 
 export type ReaderNote = {
@@ -90,19 +92,20 @@ export function getHighlights(slug: string): Highlight[] {
   return all[slug] ?? []
 }
 
-export function addHighlight(slug: string, blockIndex: number, text: string, color: HighlightColor): Highlight {
+export function addHighlight(slug: string, blockIndex: number, text: string, color: HighlightColor, offsets?: { start: number; end: number }): Highlight {
   const all = readJSON<Record<string, Highlight[]>>(HIGHLIGHTS_KEY, {})
   const list = all[slug] ?? []
-  const clean = text.trim()
+  const clean = offsets ? text : text.trim()
   // Avoid exact duplicates within the same block.
-  const existing = list.find((h) => h.blockIndex === blockIndex && h.text === clean)
+  const existing = list.find((h) => h.blockIndex === blockIndex && h.text === clean && h.start === offsets?.start && h.end === offsets?.end)
   if (existing) {
     existing.color = color
-    all[slug] = list
+    // The most recently chosen color wins where ranges overlap.
+    all[slug] = [...list.filter(highlight => highlight.id !== existing.id), existing]
     writeJSON(HIGHLIGHTS_KEY, all)
     return existing
   }
-  const highlight: Highlight = { id: makeId(), blockIndex, text: clean, color }
+  const highlight: Highlight = { id: makeId(), blockIndex, text: clean, color, ...offsets }
   all[slug] = [...list, highlight]
   writeJSON(HIGHLIGHTS_KEY, all)
   return highlight

@@ -148,7 +148,7 @@ const part4: Section = {
 
 export const listeningFullTest18: IELTSTest = {
   id: 'ielts-listening-18', title: 'IELTS Listening Full Test 18',
-  // Recording: 39:07.47; shared Listening submission follows its final end by 20 seconds.
+  // Recording: 39:07.47; shared Listening submission follows its final end by 2 minutes.
   type: 'Academic', module: 'Listening', duration: 40, totalQuestions: 40,
   continuousAudioUrl: '/audio/ielts-listening/listening-full-test-18.mp3',
   sections: [part1, part2, part3, part4],

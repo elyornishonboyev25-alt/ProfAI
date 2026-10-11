@@ -11,4 +11,4 @@
 ## IELTS diagrams and Listening completion
 
 - When the user supplies a map or small diagram, reproduce its original geometry, labels and details as an inline SVG/code drawing. Do not rely on a raster image, external image request, or image decoder for the displayed drawing. Keep it working in the test and Analyze/review, including saved attempts.
-- Listening tests, including full mocks and practice, must not display or end on a separate countdown timer. Automatically submit 20 seconds after the final audio track ends. Earlier playlist tracks, loading failures and review playback must not submit the test. Reading, Writing and Speaking timing remains unchanged.
+- Listening tests, including full mocks and practice, show a 2-minute answer-review countdown only after the final audio track ends and automatically submit when it expires. Keep the countdown visible inside the test and preserve its original deadline on reload. Earlier playlist tracks, loading failures and review playback must not start the countdown or submit the test. Reading, Writing and Speaking timing remains unchanged.

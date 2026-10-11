@@ -32,6 +32,8 @@ import { IELTSTest, TestResult, Section, Question, ListeningGroup, ListeningBloc
 import SplitScreen from './SplitScreen'
 import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
+import ListeningReviewCountdown from './ListeningReviewCountdown'
+import UiText from './common/UiText'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
@@ -720,6 +722,8 @@ export default function IELTSReadingInterface({
       setAudioCurrentTime(0)
       setCurrentAudioIndex(next)
     } else {
+      // A repeated final-ended event cannot extend an active answer-review period.
+      if (!isReviewMode && audioDone) return
       shouldPlayRef.current = false
       setAudioDone(true)
       setAudioFinishedAt(Date.now())
@@ -1552,7 +1556,7 @@ export default function IELTSReadingInterface({
     if (!isReviewMode && !isListening && isTestActive && timeRemaining === 0) handleTimeUp()
   }, [isReviewMode, isListening, isTestActive, timeRemaining])
 
-  useListeningAutoSubmit(
+  const listeningReviewSecondsRemaining = useListeningAutoSubmit(
     isListening && !isReviewMode && isTestActive && audioStarted && !audioError && !showSubmitLoading,
     audioDone,
     () => {
@@ -3068,7 +3072,7 @@ export default function IELTSReadingInterface({
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {isListening ? 'Audio followed by 20 seconds to check answers' : 'Customizable session time'}
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {isListening ? <UiText text="Audio followed by 2 minutes to check answers" /> : 'Customizable session time'}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Select specific parts to practice
@@ -3098,7 +3102,7 @@ export default function IELTSReadingInterface({
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-bold text-rose-400">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> {isListening ? 'Finishes 20 seconds after the audio ends' : `Strict ${test.duration}-minute limit`}
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> {isListening ? <UiText text="Finishes 2 minutes after the audio ends" /> : `Strict ${test.duration}-minute limit`}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Official scoring algorithms
@@ -3799,7 +3803,7 @@ export default function IELTSReadingInterface({
             </div>
           </div>
           {practiceControls ? (
-            <div className="flex items-center gap-2" aria-label="Practice audio controls">
+            <div className="flex w-full items-center justify-end gap-2 sm:w-auto" aria-label="Practice audio controls">
               <button
                 type="button"
                 onClick={() => skipPracticeAudio(-10)}
@@ -3889,7 +3893,6 @@ export default function IELTSReadingInterface({
       >
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-10">
           {renderListeningAudioPanel()}
-          {audioDone && !isReviewMode ? <p role="status" className="mb-4 rounded-xl border border-red-100 bg-white p-3 text-sm text-slate-700">Audio finished. You have 20 seconds to check your answers before automatic submission.</p> : null}
           {/* Compact part header bar */}
           <div className="mb-5 overflow-hidden rounded-2xl border border-red-100 shadow-[0_10px_26px_rgba(220,38,38,0.10)]">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-5 py-3 text-white">
@@ -6425,6 +6428,7 @@ export default function IELTSReadingInterface({
               )}
             </div>
           </header>
+          {listeningReviewSecondsRemaining !== null ? <ListeningReviewCountdown secondsRemaining={listeningReviewSecondsRemaining} /> : null}
           {isReviewMode ? <div className="shrink-0 px-4"><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
           <div className="flex-1 relative overflow-hidden" id="test-main-container">
             {isListening ? (

@@ -1,5 +1,14 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Listening answer review': 'Проверка ответов Listening',
+  'Audio complete': 'Аудиозапись завершена',
+  'Check your answers': 'Проверьте ответы',
+  'Finish writing and review your answers. They will be submitted automatically when time runs out.': 'Допишите и проверьте ответы. Они будут отправлены автоматически, когда время истечёт.',
+  'Time remaining': 'Осталось времени',
+  '30 seconds or less remaining. Your answers will be submitted automatically.': 'Осталось 30 секунд или меньше. Ответы будут отправлены автоматически.',
+  'Audio complete. You have 2 minutes to check your answers.': 'Аудиозапись завершена. У вас есть 2 минуты на проверку ответов.',
+  'Audio followed by 2 minutes to check answers': 'После аудиозаписи — 2 минуты на проверку ответов',
+  'Finishes 2 minutes after the audio ends': 'Автоматическая отправка через 2 минуты после аудиозаписи',
   'Previous conversation': 'Предыдущий разговор',
   'message': 'сообщение',
   'Retry audio': 'Повторить аудио',

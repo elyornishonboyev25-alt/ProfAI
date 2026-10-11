@@ -52,12 +52,12 @@ export async function run() {
   try {
     await render(<ShadowingLab />)
     assert.equal(container.querySelectorAll('.learning-card').length, 12)
-    assert.match(container.textContent!, /22 \/ 22 lessons/)
+    assert.match(container.textContent!, /40 \/ 40 lessons/)
     assert.match(container.querySelector('.learning-card')!.textContent!, /Morgan Freeman/)
     assert.doesNotMatch(container.textContent!, /Elon Musk|WatchMojo|Steve Jobs/)
     assert.equal(container.querySelectorAll('form').length, 0, 'No unreviewed-link submission')
     await click(button('Next'))
-    assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 2 \/ 2/)
+    assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 2 \/ 4/)
     await click(button('Actors'))
     assert.match(container.querySelector('.learning-pagination')!.textContent!, /Page 1 \/ 2/)
     assert.equal(container.querySelectorAll('.learning-card').length, Math.min(12, SHADOWING_CATALOG.filter(item => item.category === 'Actors').length))
@@ -77,8 +77,9 @@ export async function run() {
       text: `Whole cached phrase ${index + 1}.`,
     }))
     const irregular = prepareShadowingLesson(irregularCaptions, 40)
-    assert.equal(irregular.segments.length, 3, 'Balance irregular captions into 12–18 second sections')
-    assert.ok(irregular.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
+    assert.equal(irregular.segments.length, 4, 'Keep complete ten-second sentences instead of cutting words')
+    assert.deepEqual(irregular.segments.map(section => section.startSec), [0, 10, 20, 30])
+    assert.ok(irregular.segments.every(section => !section.textTimingEstimated))
     assert.equal(irregular.segments.map(section => section.text).join(' '), irregularCaptions.map(cue => cue.text).join(' '))
     const rolling = prepareShadowingLesson([
       { startSec: 0, endSec: 14, text: 'First overlapping caption.' },
@@ -86,17 +87,34 @@ export async function run() {
       { startSec: 24, endSec: 39, text: 'Next complete phrase.' },
     ], 39)
     assert.equal(rolling.segments.length, 3, 'Overlapping display times do not combine the whole video')
-    assert.ok(rolling.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
+    assert.ok(rolling.segments.every(section => [0, 10, 24].includes(section.startSec)))
     assert.equal(rolling.segments.map(section => section.text).join(' '), 'First overlapping caption. Second overlapping caption. Next complete phrase.')
+    const overlappingText = prepareShadowingLesson([
+      { startSec: 0, endSec: 8, text: 'We can improve our English' },
+      { startSec: 4, endSec: 12, text: 'our English every single day.' },
+      { startSec: 12, endSec: 20, text: 'Yes yes, practice helps.' },
+    ], 20)
+    assert.equal(overlappingText.segments.map(section => section.text).join(' '), 'We can improve our English every single day. Yes yes, practice helps.', 'Rolling words are deduplicated without removing genuine repetitions')
+    const repeatedDisplay = prepareShadowingLesson([{startSec:0,endSec:5,text:'A complete thought.'}, {startSec:3,endSec:9,text:'A complete thought.'}], 9)
+    assert.equal(repeatedDisplay.durationSec, 9, 'A repeated caption display cannot truncate the lesson ending')
+    assert.equal(repeatedDisplay.segments[0].text, 'A complete thought.')
+    const duplicateStart = prepareShadowingLesson([{startSec:0,endSec:10,text:'Hello'}, {startSec:0,endSec:10,text:'Hello everyone.'}], 10)
+    assert.equal(duplicateStart.captions[0].text, 'Hello everyone.')
+    const safeSentences = prepareShadowingLesson([
+      {startSec:0,endSec:7,text:'This is the start of a sentence'},
+      {startSec:7,endSec:19,text:'and this is its complete ending.'},
+      {startSec:19,endSec:30,text:'Here is another complete sentence.'},
+    ], 30)
+    assert.deepEqual(safeSentences.segments.map(section => section.endSec), [19,30], 'Prefer a complete sentence over a fixed fifteen-second cutoff')
     assert.equal(prepareShadowingLesson([], 40).segments.length, 0, 'Missing captions still never invent speech boundaries')
     await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 40, captions: irregularCaptions, segments: [] }} onBack={() => {}} />)
-    assert.equal(container.querySelectorAll('button[aria-label^="Play audio "]').length, 3)
+    assert.equal(container.querySelectorAll('button[aria-label^="Play audio "]').length, 4)
     assert.doesNotMatch(container.textContent!, /no safe 12–18 second boundaries|Choose another lesson/)
     await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 1"]'))
     assert.equal(currentTime, 0, 'Fallback sections use the original caption start')
     assert.ok(container.querySelector('button[aria-label="Pause audio 1"]'), 'Fallback section can play')
 
-    assert.equal(container.querySelectorAll('[data-testid="shadowing-section"] img').length, 3, 'Every section has its own video preview')
+    assert.equal(container.querySelectorAll('[data-testid="shadowing-section"] img').length, 4, 'Every section has its own video preview')
     const sectionFrame = container.querySelector('[data-testid="shadowing-section-video"] iframe')
     assert.ok(sectionFrame, 'Section video is ready')
     assert.equal(container.querySelector('[data-testid="shadowing-section-video"]')!.getAttribute('data-section-index'), '0')
@@ -107,8 +125,7 @@ export async function run() {
     const wholeTranscript = Array.from({ length: 180 }, (_, index) => `word${index}`).join(' ')
     for (let duration = 15; duration <= 120; duration++) {
       const lesson = prepareShadowingLesson([{ startSec: 0, endSec: duration, text: wholeTranscript }], duration)
-      assert.ok(lesson.segments.every((section, index) => section.endSec - section.startSec <= 18
-        && (section.endSec - section.startSec >= 12 || index === lesson.segments.length - 1 && duration < 24)), `Bounded sections for ${duration}s`)
+      assert.equal(lesson.segments.length, 1, `Never split a coarse ${duration}s caption using invented word timing`)
       assert.equal(lesson.segments[0].startSec, 0)
       assert.equal(lesson.segments.at(-1)!.endSec, duration)
       assert.equal(lesson.segments.map(section => section.text).join(' '), wholeTranscript, 'No lost or duplicated subtitle words')
@@ -117,7 +134,7 @@ export async function run() {
     const rolling84 = Array.from({ length: 28 }, (_, index) => ({ startSec: index * 3, endSec: Math.min(84, index * 3 + 12), text: `Caption ${index}.` }))
     const lesson84 = prepareShadowingLesson(rolling84, 84)
     assert.equal(lesson84.segments.length, 6, 'Reported 84-second transcript becomes six bounded clips')
-    assert.ok(lesson84.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
+    assert.ok(lesson84.segments.every(section => section.endSec - section.startSec <= 24 && section.startSec % 3 === 0), 'All cuts stay on caption boundaries')
     assert.equal(lesson84.segments.map(section => section.text).join(' '), rolling84.map(cue => cue.text).join(' '))
 
     // Independent players let full video continue across every audio boundary.
@@ -145,12 +162,16 @@ export async function run() {
     const captions = Array.from({ length: 45 }, (_, index) => ({ id: `cue:${index}`, orderIndex: index, startSec: index * 3, endSec: (index + 1) * 3, text: `Complete sentence ${index + 1}.` }))
     const prepared = prepareShadowingLesson(captions, 135)
     assert.equal(prepared.durationSec, 120)
+    const legacyWithEmptyCaptions = { ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 135, captions: [], segments: captions }
+    await render(<ShadowingPlayer video={legacyWithEmptyCaptions} onBack={() => {}} />)
+    assert.equal(container.querySelectorAll('[data-testid="shadowing-section"]').length, 8, 'An empty captions array does not hide usable saved segments')
+    players.length = 0
     assert.equal(prepared.captions.length, 40)
     assert.equal(prepared.segments.length, 8)
     assert.ok(prepared.segments.every(section => section.endSec - section.startSec >= 12 && section.endSec - section.startSec <= 18))
     assert.equal(prepared.segments.map(section => section.text).join(' '), captions.slice(0, 40).map(cue => cue.text).join(' '), 'No words lost or duplicated at joins')
     const longCue = { startSec: 0, endSec: 22, text: 'One long cue without safe word boundaries.' }
-    assert.deepEqual(prepareShadowingLesson([longCue], 22).segments.map(({ startSec, endSec }) => [startSec, endSec]), [[0, 12], [12, 22]], 'Keep the short remainder instead of an overlong section')
+    assert.deepEqual(prepareShadowingLesson([longCue], 22).segments.map(({ startSec, endSec }) => [startSec, endSec]), [[0, 22]], 'Keep a coarse cue intact when it has no word timestamps')
     await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 135, segments: captions }} onBack={() => {}} />)
     const [full, sectionPlayer] = players
     assert.equal(full.state.rate, 1)
@@ -176,6 +197,12 @@ export async function run() {
     assert.equal(full.state.time, 16, 'Pause/resume preserves full-video position')
     await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 1"]'))
     await wait(100)
+    sectionPlayer.state.time = 5
+    await wait(100)
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Pause audio 1"]'))
+    await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 1"]'))
+    assert.equal(sectionPlayer.state.time, 5, 'Resume preserves the paused phrase position')
+    assert.deepEqual(sectionPlayer.state.seeks, [0], 'Pause/resume does not seek back to the start')
     sectionPlayer.state.time = 15.01
     await wait(180)
     assert.deepEqual(sectionPlayer.state.seeks, [0], 'Section plays once without automatic repeats or auto-next')
@@ -184,13 +211,18 @@ export async function run() {
     await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play audio 2"]'))
     sectionPlayer.state.time = 70
     const audioPauses = sectionPlayer.state.pauses
-    await wait(180)
+    await wait(2200)
     assert.equal(sectionPlayer.state.pauses, audioPauses, 'Stale buffered time does not finish a newly selected section')
     sectionPlayer.state.time = 15.2
     await wait(100)
     sectionPlayer.state.time = 30.01
     await wait(180)
     assert.equal(sectionPlayer.state.pauses, audioPauses + 1)
+    await click(button('Replay section'))
+    assert.equal(sectionPlayer.state.seeks.at(-1), 15, 'Replay starts from the selected phrase boundary')
+    await click(button('Next section'))
+    assert.equal(sectionPlayer.state.seeks.at(-1), 30, 'Next phrase is an explicit learner action')
+    assert.ok(JSON.parse(localStorage.getItem(`profai-shadowing:${SHADOWING_CATALOG[0].youtubeId}`)!).completed.includes(0), 'Completed phrases persist locally')
     await click(button('I am ready — start practice'))
     assert.match(container.textContent!, /Full video practice/)
     assert.equal(full.state.seeks.at(-1), 0)
@@ -255,6 +287,8 @@ export async function run() {
       if (previousClipboard) Object.defineProperty(navigator,'clipboard',previousClipboard)
       else delete (navigator as any).clipboard
     }
+    full.state.time = 0.2
+    await wait(100)
     full.state.time = 120.1
     const endPauses = full.state.pauses
     await wait(180)
@@ -262,6 +296,8 @@ export async function run() {
     await act(async () => full.options.events.onError({ data: 150 }))
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /Playback could not load/)
     assert.ok(button('Retry player'))
+    await render(<ShadowingPlayer video={{ ...guidedShadowing(SHADOWING_CATALOG[0]), durationSec: 135, segments: captions }} onBack={() => {}} />)
+    assert.ok(container.querySelector('[aria-label="Completed"]'), 'Completed practice survives a lesson reload')
     window.YT.Player = originalPlayer
     const savedYouTube = window.YT
     window.YT = undefined
@@ -444,7 +480,7 @@ export async function run() {
     assert.match(container.textContent!, /1–10 daqiqa/)
     await render(<ShadowingLab />)
     assert.match(container.textContent!, /Inglizcha nutq ritmini toping/)
-    console.log('PASS: 22/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, independent shadowing playback, one-pass audio, caption boundaries, two-minute clips, playback errors, public recording sharing, disappearing controls, planned links and Uzbek UI')
+    console.log('PASS: 40/300-item libraries, duration boundaries and combinations, player controls, episode replacement, preference/bookmark isolation, pagination/filter reset, legacy exclusion, independent shadowing playback, one-pass audio, caption boundaries, two-minute clips, playback errors, public recording sharing, disappearing controls, planned links and Uzbek UI')
   } finally {
     apiClient.get = originalGet
     if (root) await act(async () => root!.unmount())

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -15,7 +16,7 @@ import { parseSectionParagraphs } from '@/utils/readingReview'
 import { saveReviewState } from '@/utils/resultsReviewState'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getFullMockById, getFullMockOverallBand, getFullMockResults, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
-import { evaluateReadingAnswers } from '@/utils/ieltsUtils'
+import { calculateBandScore, evaluateReadingAnswers } from '@/utils/ieltsUtils'
 import type { Question, Section, TestResult } from '@/types/ieltsTypes'
 
 const q = (changes: Partial<Question> = {}): Question => ({ id: 'fixture-q', number: 1, text: 'The ___ is useful.', type: 'note-completion', correctAnswer: 'art', ...changes })
@@ -40,20 +41,25 @@ export async function run() {
   const multipleLocations = resolveAnswerEvidence(s({ paragraphs: ['A', 'B', 'D'].map(label => ({ label, content: `${label} source paragraph.` })) }), q({ type: 'true-false-not-given', correctAnswer: 'TRUE', location: 'Paragraphs A and B' }))
   assert.deepEqual(multipleLocations.ranges.map(range => range.blockId), ['paragraph-0', 'paragraph-1'], 'the word and must not be interpreted as paragraph D')
 
-  const missing = new Set(['rd28-q4', 'rd28-q5', 'rd28-q6', 'rd28-q7', 'rd28-q8', 'rd28-q9'])
+  const restoredPassage = resolveIeltsTestById('ielts-reading-full-vol28')!.sections[0]
+  assert.equal(createHash('sha256').update(restoredPassage.content!).digest('hex'), 'a206bba0b1ff1b31340501626b2de5c6d512eb43ac85267ee0612b420f8405e0', 'the restored passage is exactly the user-supplied text, with normalized line endings')
+  assert.equal(sourceBlocks(restoredPassage).length, 10)
+  assert.equal(sourceBlocks(restoredPassage).map(block => block.text).join('\n\n'), restoredPassage.content, 'review keeps all original paragraphs and punctuation')
   const seenQuotes = new Set<string>()
+  const totals: Record<string, number> = {}
   let checked = 0
   for (const card of getIeltsReadingUnifiedCatalog()) {
     const test = resolveIeltsTestById(card.testId)!
     for (const section of test.sections) for (const question of section.questions) {
       const evidence = resolveAnswerEvidence(section, question)
-      if (missing.has(question.id)) assert.equal(evidence.state, 'unavailable', `${question.id}: incomplete source is reported`)
-      else assert.notEqual(evidence.state, 'unavailable', `${question.id}: every available source has evidence or a deliberate absence explanation`)
+      assert.notEqual(evidence.state, 'unavailable', `${question.id}: every catalog question has evidence or a deliberate absence explanation`)
+      assert.notEqual(evidence.state, 'key-conflict', `${question.id}: no current catalog key has a known source conflict`)
+      totals[evidence.state] = (totals[evidence.state] ?? 0) + 1
       const correction = readingEvidenceKeyConflicts[question.id]
       if (correction) {
         assert.equal(question.correctAnswer, correction.sourceAnswer, `${question.id}: catalog uses the verified key`)
         assert.notEqual(evidence.state, 'key-conflict', `${question.id}: corrected keys no longer report conflicts`)
-        if (!missing.has(question.id)) assert.equal(evidence.state, 'answer', `${question.id}: corrected key highlights the exact source`)
+        assert.equal(evidence.state, 'answer', `${question.id}: corrected key highlights the exact source`)
         assert.equal(resolveAnswerEvidence(section, { ...question, correctAnswer: correction.storedAnswer }).state, 'key-conflict', 'obsolete snapshots must not highlight evidence for a wrong key')
         const grade = (answer: string) => evaluateReadingAnswers([section], { [question.id]: answer }).questionResults.find(item => item.questionId === question.id)!.status
         assert.equal(grade(correction.sourceAnswer), 'correct', `${question.id}: the source answer earns a mark`)
@@ -72,7 +78,7 @@ export async function run() {
     }
   }
   assert.deepEqual([...seenQuotes].sort(), Object.keys(readingAnswerEvidence).sort(), 'no orphan evidence keys')
-  console.log(`PASS: ${checked} full-catalog questions, exact source offsets, reviewed quotations, absent information and six corrected answer keys`)
+  console.log(`PASS: ${checked} full-catalog questions, exact supplied passage, source offsets, reviewed quotations and seven corrected answer keys: ${JSON.stringify(totals)}`)
 
   const container = document.getElementById('root')!
   let root: ReturnType<typeof createRoot> | undefined
@@ -101,7 +107,7 @@ export async function run() {
       assert.ok(getFullMockById(mockId))
       saveFullMockSectionResult(mockId, 'reading', { band: saved.score, testId, completedAt: saved.date, result: saved })
       for (const skill of ['listening', 'writing', 'speaking'] as const) saveFullMockSectionResult(mockId, skill, { band: 7, testId: skill, completedAt: saved.date })
-      const expectedBand = testId.endsWith('25') ? 2 : 2.5
+      const expectedBand = calculateBandScore(Object.keys(answers).length, Object.keys(answers).length)
       assert.equal(getFullMockResults(mockId).reading?.band, expectedBand, 'saved mock Reading band regrades from the corrected catalog')
       assert.equal(getFullMockResults(mockId).reading?.result?.correctAnswers, Object.keys(answers).length)
       assert.equal(getFullMockOverallBand(mockId), Math.round((21 + expectedBand) / 4 * 2) / 2, 'overall mock band uses the corrected Reading score')
@@ -116,6 +122,32 @@ export async function run() {
       assert.equal(history.resultPayload?.correctAnswers, Object.keys(answers).length, 'saved review totals agree with the corrected cards')
       assert.equal(history.resultPayload?.score, expectedBand, 'a stale band is recalculated after corrected keys change the score')
     }
+    const restoredTest = resolveIeltsTestById('ielts-reading-full-vol28')!
+    const restoredResult = { ...result, testId: restoredTest.id, answers: { 'rd28-q12': 'NOT GIVEN' } }
+    await render(<MemoryRouter initialEntries={['/restored/mock/review']}><ReadingInterface test={restoredTest}
+      reviewPayload={{ result: restoredResult, showCorrectAnswers: true, initialQuestionId: 'rd28-q4' }} fullMockId="completed-mock"
+      onComplete={() => { throw new Error('Review must never submit a mock') }} onExit={() => {}} /></MemoryRouter>)
+    for (const number of [4, 5, 6, 7, 8, 9, 12]) {
+      await act(async () => container.querySelector<HTMLButtonElement>(`[aria-label="Show evidence for question ${number}"]`)!.click())
+      const highlights = [...container.querySelectorAll<HTMLElement>(`[data-answer-evidence="rd28-q${number}"]`)]
+      assert.ok(highlights.length > 0, `restored question ${number} opens its actual source highlight`)
+      assert.ok(highlights.every(highlight => highlight.querySelector('[data-question-number]')?.getAttribute('data-question-number') === String(number)))
+      const text = highlights.map(highlight => highlight.textContent).join(' ')
+      assert.ok(text.includes(number === 4 ? 'series of ridges' : number === 5 ? 'houses' : number === 6 ? 'Fishing' : number === 8 ? 'tsetse fly' : number === 9 ? 'fish is dried' : 'chickens and goats'), `restored question ${number} uses the matching source words`)
+      assert.ok(!container.textContent!.includes('An exact evidence location is not available'))
+    }
+    assert.equal(container.querySelector('[aria-label="Reading passage and evidence"] .ielts-reading-prose')!.textContent!.trim(), restoredPassage.content, 'number badges do not alter the complete original passage text')
+    const incompleteSavedTest = structuredClone(restoredTest)
+    incompleteSavedTest.sections[0].content = restoredPassage.content!.split('\n\n').filter((_, index) => index < 5 || index > 7).join('\n\n')
+    incompleteSavedTest.sections[0].questions.find(question => question.id === 'rd28-q12')!.correctAnswer = 'NOT GIVEN'
+    saveReviewState(restoredTest.id, { test: incompleteSavedTest, result: { ...restoredResult, detailedBreakdown: { activeSectionIds: [restoredPassage.id], readingAnalysis: evaluateReadingAnswers([incompleteSavedTest.sections[0]], restoredResult.answers) } } })
+    await render(<MemoryRouter initialEntries={[{ pathname: `/results/${restoredTest.id}/review`, state: { initialQuestionId: 'rd28-q12' } }]}><Routes><Route path="/results/:testId/review" element={<ResultsReview />} /></Routes></MemoryRouter>)
+    assert.equal(container.querySelector('.ielts-reading-prose')!.textContent!.trim(), restoredPassage.content, 'old saved attempts refresh their incomplete passage from the full catalog source')
+    const restoredCard = container.querySelector('#question-card-rd28-q12')!
+    assert.ok(restoredCard.textContent!.includes('Question 12 - Wrong'))
+    const submittedChoice = [...restoredCard.querySelectorAll('button')].find(button => button.textContent?.trim() === 'NOT GIVEN')!
+    assert.ok(submittedChoice.classList.contains('border-red-300'), 'the submitted NOT GIVEN choice remains visible as the wrong answer')
+    assert.ok(restoredCard.textContent!.includes('Correct answer: FALSE'), 'the restored source regrades Q12 without changing the submitted answer')
     localStorage.clear(); window.sessionStorage.clear()
     await render(<MemoryRouter initialEntries={[{ pathname: `/results/${test.id}`, state: { result, test } }]}><Routes>
       <Route path="/results/:testId" element={<Results />} />

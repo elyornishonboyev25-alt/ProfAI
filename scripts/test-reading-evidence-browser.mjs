@@ -17,9 +17,9 @@ const source = `
   import './src/i18n'; import Results from './src/pages/Results'; import TestInterface from './src/pages/TestInterface';
   import { resolveIeltsTestById } from './src/utils/ieltsTestCatalog';
   const root = createRoot(document.getElementById('root')); let run = 0;
-  window.show = () => {
-    const test = resolveIeltsTestById('ielts-reading-full-vol26');
-    const result = {testId:test.id,date:'2026-10-11',score:0,correctAnswers:0,totalQuestions:40,timeSpent:3600,answers:{'rd26-q19':'physical harm'}};
+  window.show = (testId = 'ielts-reading-full-vol26') => {
+    const test = resolveIeltsTestById(testId); window.sourcePassage = test.sections[0].content;
+    const result = {testId:test.id,date:'2026-10-11',score:0,correctAnswers:0,totalQuestions:40,timeSpent:3600,answers:testId.endsWith('28') ? {'rd28-q12':'NOT GIVEN'} : {'rd26-q19':'physical harm'}};
     root.render(<MemoryRouter key={++run} initialEntries={[{pathname:'/results/'+test.id,state:{test,result}}]}>
       <Routes><Route path='/results/:testId' element={<Results/>}/><Route path='/test/:type/:id' element={<TestInterface/>}/></Routes>
     </MemoryRouter>);
@@ -107,6 +107,26 @@ try {
     await until('document.querySelector(\'[data-answer-evidence="rd26-q21"]\')')
     assert.equal(await evaluate('document.querySelector(\'[data-question-number]\').dataset.questionNumber'), '21')
     console.log(`PASS: ${width}px Reading answer-sheet/source navigation, numbered highlights and responsive panes`)
+    await evaluate("localStorage.clear();sessionStorage.clear();window.show('ielts-reading-full-vol28')")
+    await until('document.querySelector(\'[aria-label="Review question 4 in passage"]\')')
+    await evaluate('document.querySelector(\'[aria-label="Review question 4 in passage"]\').click()')
+    for (const number of [4, 5, 6, 7, 8, 9, 12]) {
+      await until(`document.querySelector('[aria-label="Show evidence for question ${number}"]')`)
+      await evaluate(`document.querySelector('[aria-label="Show evidence for question ${number}"]').click()`)
+      await until(`document.querySelector('[data-answer-evidence="rd28-q${number}"]')`)
+      const restored = await evaluate(`(() => {
+        const pane=document.querySelector('#answer-evidence-pane'), marker=pane.querySelector('[data-question-number]');
+        const rect=marker.getBoundingClientRect(), header=pane.querySelector('[data-evidence-header]').getBoundingClientRect();
+        return {number:getComputedStyle(marker,'::before').content, visible:rect.top>=header.bottom-1 && rect.bottom<=pane.getBoundingClientRect().bottom+1,
+          exact:pane.querySelector('.ielts-reading-prose').textContent.trim()===window.sourcePassage,
+          missing:pane.textContent.includes('An exact evidence location is not available')};
+      })()`)
+      assert.equal(restored.number, `"${number}"`)
+      assert.equal(restored.visible, true, `${width}px Q${number}: restored source highlight is visible`)
+      assert.equal(restored.exact, true, 'the entire supplied passage remains intact')
+      assert.equal(restored.missing, false)
+    }
+    console.log(`PASS: ${width}px restored Q4-9/Q12, numbered source highlights and exact supplied passage`)
   }
   assert.deepEqual(exceptions, [])
 } finally {

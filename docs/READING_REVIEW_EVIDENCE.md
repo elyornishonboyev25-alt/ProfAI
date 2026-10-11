@@ -13,10 +13,13 @@ never inserts an answer or explanation into the passage. Existing paragraph
 locations provide explicitly labelled contextual evidence for paraphrases and
 headings. NOT GIVEN and unmentioned options have no invented answer sentence.
 
-The 30-test catalog has six questions whose source paragraphs are missing in
-the repository's existing passage and its local source `tmp/reading84.html`:
-Test 28, passage 1, questions 4–9. These remain visibly unavailable until the
-original complete passage is supplied. Do not fabricate the missing prose.
+Test 28 passage 1 is restored from the full text supplied by the user on
+2026-10-11. The body contains 10 paragraphs and 904 words. Only line endings
+and outer whitespace were normalized; the wording and punctuation are retained.
+Its SHA-256 is `a206bba0b1ff1b31340501626b2de5c6d512eb43ac85267ee0612b420f8405e0`.
+Questions 4-9 now have exact evidence in the restored paragraphs. Question 12
+also has evidence and is FALSE: chickens and goats are not part of the standard
+diet. Its earlier NOT GIVEN key relied on the incomplete source.
 
 The user authorized correcting the source conflicts. Results now recomputes
 analysis from the current catalog and the original submitted answers, including
@@ -32,14 +35,22 @@ backend attempts and an active test's saved paper are not rewritten.
 | Test 28, Q4 | garden | series of ridges | Verified against the complete external source and its answer list. |
 | Test 28, Q5 | homesteads / the homestead | houses | Verified against the complete external source and its answer list. |
 | Test 28, Q6 | B | A | The source describes fishing as more profitable than growing crops. |
+| Test 28, Q12 | NOT GIVEN | FALSE | The supplied passage explicitly excludes chickens and goats from the standard diet. |
 | Test 28, Q19 | B | F | Paragraph F describes the different rising/falling crying contours of French and German babies. |
 
 External verification for Test 28 Q4-6:
 [Traditional Farming in Zambia's Luapula Province, complete passage and answers](https://www.ieltsreading.info/blog/traditional-farming-in-zambia-s-luapula-province-answers-with-location).
-That source confirms the missing paragraphs, but they have not been copied into
-the repository. Exact highlights for Test 28 Q4-9 remain unavailable. The
-historic key-conflict guard remains for callers passing obsolete snapshots
-directly; corrected catalog questions no longer show conflict notices.
+The missing text is restored from the user's attachment rather than composed
+from answer keys or explanations. The historic key-conflict guard remains for
+callers passing obsolete snapshots directly; corrected catalog questions no
+longer show conflict notices.
+
+Coverage of the 30 full Reading tests (1,155 question objects, including grouped
+questions): 492 use exact source words, 573 use the existing source paragraph as
+context, 88 are NOT GIVEN and two ask about information that is not mentioned.
+There are no unavailable evidence locations or known key conflicts in this
+catalog. Paragraph-context highlighting is explicitly labelled; it does not
+claim that a single sentence has been manually verified for every question.
 
 Checks:
 
@@ -52,8 +63,10 @@ node scripts/validate-reading-bank.mjs
 
 The evidence suite checks every catalog question, every curated quotation,
 normalization offsets, grouped numbers, wrong submitted answers, hidden answers,
-saved/reloaded reviews and full-mock review. It also verifies all six corrected
+saved/reloaded reviews and full-mock review. It also verifies all seven corrected
 keys earn marks, obsolete keys do not, and saved Answer Sheets and bands refresh
-from stale snapshots. Browser checks use the actual
+from stale snapshots. Restored Q4-9 and Q12 are exercised in full-mock review,
+including numbered highlights and preservation of the entire supplied passage.
+Browser checks use the actual
 styles at desktop and two phone widths. Screenshots are written under ignored
 `tmp/reading-evidence-browser` and must not be committed.

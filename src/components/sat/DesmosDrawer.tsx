@@ -29,8 +29,8 @@ type Point = { x: number; y: number }
 type PanelSize = { width: number; height: number }
 
 const DESMOS_ORIGIN = 'https://www.desmos.com'
-// The official embed omits account, save and graph-library UI.
-const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/calculator?embed`
+// The official SAT calculator retains expression editing without account/save UI.
+const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/testing/college-board/graphing`
 
 function warmDesmosConnection() {
   if (document.querySelector('link[data-profai-desmos]')) return

@@ -57,7 +57,7 @@ async function main() {
     const pending = new Map()
     const send = (method, params = {}) => new Promise((resolve, reject) => {
       const requestId = ++id
-      const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, 15000)
+      const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, method === 'Page.navigate' ? 60_000 : 15_000)
       pending.set(requestId, { resolve, reject, timeout })
       socket.send(JSON.stringify({ id: requestId, method, params }))
     })

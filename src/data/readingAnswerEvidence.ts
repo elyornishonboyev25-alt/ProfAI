@@ -190,9 +190,12 @@ export const readingAnswerEvidence: Record<string, string[]> = {
   'rd28-q19': ['The melody of the German babies\' screams usually began loudly and at a high pitch and then followed a downward curve, while the French babies more often screamed with a rising melody contour.'],
 }
 
-/** Existing keys that contradict the passage; never label a false match as proof. */
+/** Obsolete keys in saved snapshots; corrected catalog keys bypass this guard. */
 export const readingEvidenceKeyConflicts: Record<string, { storedAnswer: string; sourceAnswer: string }> = {
   'rd25-q39': { storedAnswer: 'D', sourceAnswer: 'A' },
   'rd25-q40': { storedAnswer: 'C', sourceAnswer: 'D' },
+  'rd28-q4': { storedAnswer: 'garden', sourceAnswer: 'series of ridges' },
+  'rd28-q5': { storedAnswer: 'homesteads / the homestead', sourceAnswer: 'houses' },
+  'rd28-q6': { storedAnswer: 'B', sourceAnswer: 'A' },
   'rd28-q19': { storedAnswer: 'B', sourceAnswer: 'F' },
 }

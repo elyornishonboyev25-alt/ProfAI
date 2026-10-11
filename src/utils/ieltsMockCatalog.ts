@@ -13,6 +13,9 @@ import { getIeltsFullTestCatalog, getIeltsReadingUnifiedCatalog, isAvailableIelt
 import { getIeltsSpeakingFullMockCatalog } from './ieltsSpeakingCatalog'
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import type { TestResult } from '@/types/ieltsTypes'
+import { readingEvidenceKeyConflicts } from '@/data/readingAnswerEvidence'
+import { resolveIeltsTestById } from './ieltsTestCatalog'
+import { calculateBandScore, evaluateReadingAnswers } from './ieltsUtils'
 
 export type MockSectionKey = 'listening' | 'reading' | 'writing' | 'speaking'
 
@@ -205,6 +208,21 @@ function readResults(): FullMockResults {
 
 export function getFullMockResults(mockId: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
   const results = { ...readResults()[mockId] }
+  const reading = results.reading
+  if (reading?.result && Object.keys(reading.result.answers ?? {}).some(id => readingEvidenceKeyConflicts[id])) {
+    const test = resolveIeltsTestById(reading.testId)
+    if (test?.module === 'Reading') {
+      const activeIds = reading.result.detailedBreakdown?.activeSectionIds
+      const sections = test.sections.filter(section => !activeIds?.length || activeIds.includes(section.id))
+      const analysis = evaluateReadingAnswers(sections, reading.result.answers)
+      const band = analysis.summary.correctAnswers === reading.result.correctAnswers ? reading.band
+        : calculateBandScore(analysis.summary.correctAnswers, analysis.summary.totalQuestions - analysis.summary.skippedAnswers)
+      results.reading = { ...reading, band, result: {
+        ...reading.result, score: band, correctAnswers: analysis.summary.correctAnswers, totalQuestions: analysis.summary.totalQuestions,
+        detailedBreakdown: { ...reading.result.detailedBreakdown, activeSectionIds: sections.map(section => section.id), readingAnalysis: analysis },
+      } }
+    }
+  }
   // Repair previously saved, entirely unanswered objective papers as well as
   // new submissions. A blank paper must not inflate the overall mock band.
   for (const key of ['listening', 'reading'] as const) {

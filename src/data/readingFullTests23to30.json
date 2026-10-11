@@ -1805,7 +1805,7 @@
               "G. emphasizes the importance of analyzing how words were used.",
               "H. suggests that certain types of behaviors carry more meanings than others."
             ],
-            "correctAnswer": "D",
+            "correctAnswer": "A",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 36–40",
             "instruction": "Complete each sentence with the correct ending, A-H, below. Write the correct letter, A-H, in boxes 36-40 on your answer sheet.",
@@ -1826,7 +1826,7 @@
               "G. emphasizes the importance of analyzing how words were used.",
               "H. suggests that certain types of behaviors carry more meanings than others."
             ],
-            "correctAnswer": "C",
+            "correctAnswer": "D",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 36–40",
             "instruction": "Complete each sentence with the correct ending, A-H, below. Write the correct letter, A-H, in boxes 36-40 on your answer sheet.",
@@ -3100,7 +3100,7 @@
             "number": 4,
             "type": "note-completion",
             "text": "In areas without trees, crops are planted in a ___ .",
-            "correctAnswer": "garden",
+            "correctAnswer": "series of ridges",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 1–5",
             "instruction": "Complete the sentences below. Write NO MORE THAN THREE WORDS from the passage for each answer.",
@@ -3111,7 +3111,7 @@
             "number": 5,
             "type": "note-completion",
             "text": "If conditions are right, fruit trees may be planted near ___ .",
-            "correctAnswer": "homesteads / the homestead",
+            "correctAnswer": "houses",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 1–5",
             "instruction": "Complete the sentences below. Write NO MORE THAN THREE WORDS from the passage for each answer.",
@@ -3127,7 +3127,7 @@
               "B. Goats",
               "C. Oxen"
             ],
-            "correctAnswer": "B",
+            "correctAnswer": "A",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 6–9",
             "instruction": "Look at the following statements and the list of animals below. Match each statement with the correct animal, A, B, or C.",
@@ -3359,7 +3359,7 @@
               "G. Paragraph G",
               "H. Paragraph H"
             ],
-            "correctAnswer": "B",
+            "correctAnswer": "F",
             "strictAnswerMatch": true,
             "groupTitle": "Questions 14–19",
             "instruction": "Reading Passage 2 has eight paragraphs, A–H. Which paragraph contains the following information? Choose the correct letter, A–H.",

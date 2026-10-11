@@ -86,7 +86,7 @@ export default function Results() {
   const navigate = useNavigate()
   const authUser = useAuthStore((state) => state.user)
   const { result, test: storedTest, mock, from } = (location.state as ResultLocationState) || {}
-  const test = storedTest?.module === 'Listening'
+  const test = storedTest?.module === 'Listening' || storedTest?.module === 'Reading'
     ? resolveIeltsTestById(storedTest.id, result) ?? storedTest
     : storedTest
 
@@ -115,14 +115,13 @@ export default function Results() {
 
   const analysis = useMemo(() => {
     if (!result || !test) return EMPTY_ANALYSIS
-    return test.module === 'Listening'
-      ? evaluateReadingAnswers(activeSections, result.answers)
-      : result.detailedBreakdown?.readingAnalysis ?? evaluateReadingAnswers(activeSections, result.answers)
+    return evaluateReadingAnswers(activeSections, result.answers)
   }, [activeSections, result, test])
 
   const answeredCount = analysis.summary.totalQuestions - analysis.summary.skippedAnswers
   const bandScore = calculateBandScore(analysis.summary.correctAnswers, answeredCount)
-  const effectiveBandScore = Number((answeredCount > 0 && !isListeningTest && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
+  const readingScoreChanged = !isListeningTest && result?.correctAnswers !== analysis.summary.correctAnswers
+  const effectiveBandScore = Number((answeredCount > 0 && !isListeningTest && !readingScoreChanged && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
   const recommendations = useMemo(() => [
     analysis.summary.skippedAnswers > 0
       ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
@@ -164,7 +163,7 @@ export default function Results() {
 
     const persistedResultPayload: TestResult = {
       ...result,
-      ...(test.module === 'Listening' ? {
+      ...(test.module === 'Listening' || test.module === 'Reading' ? {
         score: effectiveBandScore,
         correctAnswers: analysis.summary.correctAnswers,
         totalQuestions: analysis.summary.totalQuestions,

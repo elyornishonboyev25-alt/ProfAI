@@ -13,7 +13,9 @@
 .tone-blue { --room-color: #dfeeff; --room-ink: #4e7faa; --room-soft: #f3f8ff; }
 .speaking-hub button, .hub-create-dialog button { transition: background 160ms, box-shadow 160ms, transform 160ms; }
 .speaking-hub button:disabled, .hub-create-dialog button:disabled { opacity: .5; cursor: not-allowed; }
-.speaking-hub button:focus-visible, .hub-create-dialog button:focus-visible, .speaking-hub input:focus-visible, .hub-create-dialog input:focus-visible, .hub-create-dialog textarea:focus-visible, .hub-create-dialog select:focus-visible, .speaking-hub summary:focus-visible, .hub-create-dialog summary:focus-visible { outline: 3px solid #f48c94; outline-offset: 3px; }
+.speaking-hub button:focus-visible, .hub-create-dialog button:focus-visible, .speaking-hub input:focus-visible, .hub-create-dialog input:focus-visible, .hub-create-dialog textarea:focus-visible, .hub-create-dialog select:focus-visible, .speaking-hub summary:focus-visible, .hub-create-dialog summary:focus-visible { outline: none; border-radius: 8px; box-shadow: 0 0 0 3px #80afa045; }
+.speaking-hub :where(input,textarea,select):focus-visible { box-shadow: none; }
+.hub-room-search:focus-within, .hub-chat form:focus-within { border-color: #80afa0; box-shadow: 0 0 0 3px #e7f3ed; }
 .hub-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; flex-shrink: 0; padding: .65rem 1rem; border: 1px solid var(--hub-line, #e2e7ef); border-radius: 14px; color: #344257; background: #fff; font-size: .8rem; font-weight: 750; }
 .hub-button:hover:not(:disabled) { box-shadow: 0 5px 15px #25365510; transform: translateY(-1px); }
 .hub-button.is-primary { border-color: transparent; color: #fff; background: #e63346; box-shadow: 0 5px 15px #db344a20; }
@@ -322,7 +324,8 @@
 .hub-topic-editor { margin-top: .9rem; }
 .hub-topic-editor summary { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; color: var(--room-ink); font-size: .68rem; font-weight: 700; }
 .hub-topic-editor form { display: flex; gap: .5rem; margin-top: .7rem; }
-.hub-topic-editor input { min-width: 0; flex: 1; padding: .7rem; border: 1px solid #fff; border-radius: 12px; background: #ffffffb0; font-size: .75rem; outline-color: #e97081; }
+.hub-topic-editor input { min-width: 0; flex: 1; padding: .7rem; border: 1px solid #fff; border-radius: 12px; background: #ffffffb0; font-size: .75rem; outline: none; }
+.hub-topic-editor input:focus { border-color: #80afa0; box-shadow: 0 0 0 3px #e7f3ed; }
 .hub-topic-editor button { font-size: .68rem; min-height: 40px; }
 .hub-next-partner { display: flex; margin: 1rem auto 0; color: #80629d; border-color: #dfd1ef; background: #ffffff95; }
 @media (max-width: 760px) { .hub-next-partner { margin-bottom: 1rem; } }

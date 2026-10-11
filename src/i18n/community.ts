@@ -1,6 +1,13 @@
 import { useCopy } from './interface'
 
 const copy: Record<string, [string, string]> = {
+  'Message options': ['Xabar amallari', 'Действия с сообщением'],
+  'Edit message': ['Xabarni tahrirlash', 'Редактировать сообщение'],
+  'Delete message': ['Xabarni o‘chirish', 'Удалить сообщение'],
+  'Save changes': ['Saqlash', 'Сохранить'],
+  'Edited': ['Tahrirlangan', 'Изменено'],
+  'Could not update this message. Please reconnect and try again.': ['Xabarni o‘zgartirib bo‘lmadi. Qayta ulanib, yana urinib ko‘ring.', 'Не удалось изменить сообщение. Подключитесь заново и повторите попытку.'],
+  'Message change was not confirmed. Reconnect and check the conversation before trying again.': ['Xabar o‘zgarishi tasdiqlanmadi. Qayta ulanib, yana urinishdan oldin suhbatni tekshiring.', 'Изменение сообщения не подтверждено. Подключитесь заново и проверьте чат перед повторной попыткой.'],
   'Learn together': ['Birga o‘rganamiz', 'Учимся вместе'],
   'messages': ['xabar', 'сообщений'],
   'Reply': ['Javob berish', 'Ответить'],

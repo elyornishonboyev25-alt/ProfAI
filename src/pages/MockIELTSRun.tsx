@@ -1,4 +1,5 @@
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import UiText from '@/components/common/UiText'
@@ -11,6 +12,7 @@ import {
   ChevronDown,
   Clock3,
   Headphones,
+  Maximize2,
   Lock,
   Mic2,
   PenSquare,
@@ -74,6 +76,7 @@ function resolveStatus(
 }
 
 export default function MockIELTSRun() {
+  const { enter, supported, isFullscreen } = useFullscreen()
   const text = useBillingText()
   const userId = useAuthStore((state) => state.user?.id ?? null)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
@@ -139,11 +142,12 @@ export default function MockIELTSRun() {
   const launchSection = useCallback(
     (section: MockSection) => {
       if (!section.launchPath || !mock) return
+      void enter()
       navigate(section.launchPath, {
         state: fullMockLaunchState(mock.id, section.key, from),
       })
     },
-    [from, mock, navigate],
+    [enter, from, mock, navigate],
   )
 
   if (!mock) {
@@ -187,6 +191,7 @@ export default function MockIELTSRun() {
                   {text('All mocks', 'Barcha mocklar', 'Все тесты')}
                 </button>
                 <span className="mock-run-chip">FULL MOCK {mock.index}</span>
+                {supported && !isFullscreen && <button type="button" className="mock-run-back" onClick={() => void enter()}><Maximize2 size={16} /> Full screen</button>}
               </nav>
               <p className="mock-run-eyebrow">IELTS ACADEMIC</p>
               <h1>

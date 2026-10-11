@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import {
   ArrowRight,
   BookOpen,
@@ -14,8 +15,10 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import './mock-ielts.css'
 import {
   formatMockDuration,
+  fullMockLaunchState,
   getFullMockCatalog,
   getFullMockCompletedSections,
+  getFullMockPendingSection,
   FULL_MOCK_PROGRESS_EVENT,
   MOCK_SECTION_COUNT,
   type MockSectionKey,
@@ -45,6 +48,7 @@ const FILTERS = [
 type MockFilter = (typeof FILTERS)[number]['id']
 
 function IELTSMockCatalog() {
+  const { enter } = useFullscreen()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
@@ -151,7 +155,12 @@ function IELTSMockCatalog() {
               <button
                 key={mock.id}
                 type="button"
-                onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}
+                onClick={() => {
+                  void enter()
+                  const pending = getFullMockPendingSection(mock.id)
+                  if (pending?.launchPath) navigate(pending.launchPath, { state: fullMockLaunchState(mock.id, pending.key, from ?? 'ielts') })
+                  else navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
+                }}
                 className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6"
               >
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">

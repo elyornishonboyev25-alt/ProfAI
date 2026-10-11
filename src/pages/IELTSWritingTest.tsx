@@ -1,4 +1,5 @@
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
+import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { useAuthStore } from '@/store/authStore'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMemo } from 'react'
@@ -18,6 +19,10 @@ type WritingTestNavState = {
 } | null
 
 export default function IELTSWritingTest() {
+  return <FullMockSectionGate><WritingTestContent /></FullMockSectionGate>
+}
+
+function WritingTestContent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()

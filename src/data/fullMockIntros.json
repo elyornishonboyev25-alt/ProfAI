@@ -1,0 +1,42 @@
+{
+  "listening": {
+    "title": "Listening",
+    "meta": "About 30 minutes · 4 parts · 40 questions",
+    "scenes": [
+      { "title": "Four parts. Forty questions.", "text": "Welcome to Listening. You will hear four recordings and answer forty questions. Each recording plays once." },
+      { "title": "Read, listen and answer", "text": "Read the questions before each recording. Type your answers or select an option while you listen." },
+      { "title": "Follow the word limit", "text": "Follow each question's word limit. Check your spelling, and use the question numbers to navigate." },
+      { "title": "Two minutes to check", "text": "After the final recording, you have two minutes to check your answers. Your test then submits automatically." }
+    ]
+  },
+  "reading": {
+    "title": "Reading",
+    "meta": "60 minutes · 3 passages · 40 questions",
+    "scenes": [
+      { "title": "Three passages. Sixty minutes.", "text": "Welcome to Academic Reading. You have sixty minutes to read three passages and answer forty questions." },
+      { "title": "Read and answer side by side", "text": "Read the passage on the left and answer on the right. Scroll each panel to find information." },
+      { "title": "Move between questions", "text": "Use the question numbers to move between answers. Follow the instructions and word limits carefully." },
+      { "title": "Check before time expires", "text": "Manage your time across all three passages. Check your answers before the timer ends. There is no extra transfer time." }
+    ]
+  },
+  "writing": {
+    "title": "Writing",
+    "meta": "60 minutes · Task 1 + Task 2",
+    "scenes": [
+      { "title": "Two tasks. Sixty minutes.", "text": "Welcome to Academic Writing. You have sixty minutes to complete both tasks. Type your responses in the answer areas." },
+      { "title": "Task 1 · at least 150 words", "text": "For Task One, describe the visual information in at least one hundred and fifty words. Allow about twenty minutes." },
+      { "title": "Task 2 · at least 250 words", "text": "For Task Two, write an essay of at least two hundred and fifty words. Allow about forty minutes." },
+      { "title": "Task 2 carries twice the weight", "text": "Task Two carries twice the weight of Task One. Use the word counter and check both responses before time expires." }
+    ]
+  },
+  "speaking": {
+    "title": "Speaking",
+    "meta": "11–14 minutes · 3 parts · AI examiner",
+    "scenes": [
+      { "title": "Three parts. One conversation.", "text": "Welcome to Speaking. This practice uses an AI examiner. The real IELTS interview is conducted by a human examiner." },
+      { "title": "Part 1 · familiar topics", "text": "Check your microphone. In Part One, answer questions about familiar topics, such as your studies, work, or interests." },
+      { "title": "Part 2 · your long turn", "text": "In Part Two, you have one minute to prepare. Then speak about the cue card for up to two minutes." },
+      { "title": "Part 3 · develop your ideas", "text": "In Part Three, discuss broader ideas related to the topic. Speak clearly, extend your answers, and explain your opinions." }
+    ]
+  }
+}

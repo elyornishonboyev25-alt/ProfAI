@@ -1,4 +1,5 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
 import UiText from '@/components/common/UiText'
@@ -108,6 +109,10 @@ function questionsForDay(day: SpeakingDayEntry): QuestionItem[] {
 }
 
 export default function IELTSSpeakingTest() {
+  return <FullMockSectionGate><SpeakingTestContent /></FullMockSectionGate>
+}
+
+function SpeakingTestContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { id } = useParams<{ id: string }>()

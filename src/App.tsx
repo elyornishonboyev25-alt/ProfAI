@@ -301,7 +301,12 @@ function App() {
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
-  const isTestMode = isCustomTestMode || isClassicTestMode
+  const fullMockState = location.state as { mock?: { id?: string }; reviewPayload?: unknown } | null
+  const isFullMockExam = /^\/mock\/ielts\/[^/]+$/.test(pathname) || (
+    Boolean(fullMockState?.mock?.id) && !fullMockState?.reviewPayload &&
+    (/^\/test\/(listening|reading)\//.test(pathname) || /^\/ielts\/(writing|speaking)\/test\//.test(pathname))
+  )
+  const isTestMode = isCustomTestMode || isClassicTestMode || isFullMockExam
   const isCommunityPeopleMode = pathname === '/community'
   const isLiveCommunityMode = pathname === '/community'
 
@@ -473,12 +478,12 @@ function App() {
         <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode} isVocabularyPracticeMode={isVocabularyPracticeMode}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
-              className={`flex flex-col ${isAiTutorMode || isVocabularyPracticeMode
+              className={`flex flex-col ${isFullMockExam ? 'full-mock-exam-shell' : ''} ${isAiTutorMode || isVocabularyPracticeMode
                 ? 'min-h-0 flex-1 overflow-hidden'
                 : isTestMode
                   ? location.pathname.startsWith('/results/')
                     ? 'min-h-full min-h-screen overflow-y-auto'
-                    : 'min-h-full min-h-[calc(100vh-80px)]'
+                    : isFullMockExam ? 'min-h-full min-h-screen' : 'min-h-full min-h-[calc(100vh-80px)]'
                   : 'min-h-full min-h-screen'
               }`}
             >

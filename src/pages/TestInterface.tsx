@@ -1,4 +1,5 @@
 import { accountStorageFor } from '@/utils/accountStorage'
+import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
@@ -42,6 +43,10 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function TestInterface() {
+  return <FullMockSectionGate><TestInterfaceContent /></FullMockSectionGate>
+}
+
+function TestInterfaceContent() {
   const { type, id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()

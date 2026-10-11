@@ -367,7 +367,7 @@ export async function run() {
   const calculator = document.querySelector('[role="dialog"][aria-label="Desmos Graphing Calculator"]')!
   assert.equal(calculator.getAttribute('aria-hidden'), 'false')
   const iframe = calculator.querySelector('iframe')!
-  assert.equal(iframe.getAttribute('src'), 'https://www.desmos.com/calculator')
+  assert.equal(iframe.getAttribute('src'), 'https://www.desmos.com/calculator?embed')
   assert.ok(container.querySelector('.sat-bank-run-viewport.with-desmos'))
   await click(document.querySelector('[aria-label="Return Desmos to floating window"]'))
   assert.equal(container.querySelector('.sat-bank-run-viewport.with-desmos'), null)

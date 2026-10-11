@@ -29,8 +29,8 @@ type Point = { x: number; y: number }
 type PanelSize = { width: number; height: number }
 
 const DESMOS_ORIGIN = 'https://www.desmos.com'
-// Keep the complete official calculator contained inside the SAT interface.
-const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/calculator`
+// The official embed omits account, save and graph-library UI.
+const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/calculator?embed`
 
 function warmDesmosConnection() {
   if (document.querySelector('link[data-profai-desmos]')) return
@@ -269,7 +269,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
       {workspace && docked && !expanded ? <div
         role="separator" aria-orientation="vertical" aria-label="Resize calculator panel"
         aria-valuemin={320} aria-valuemax={Math.max(320, window.innerWidth - 380)}
-        aria-valuenow={dockWidth ?? Math.round(Math.min(window.innerWidth * .44, 736))}
+        aria-valuenow={dockWidth ?? Math.round(window.innerWidth * .5)}
         tabIndex={open ? 0 : -1} className="desmos-resize-handle"
         title="Drag to resize · Arrow keys adjust width · Double-click to reset"
         onPointerDown={(event) => {

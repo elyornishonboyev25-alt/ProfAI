@@ -5,6 +5,7 @@ import { textOffsets, textRange } from '@/utils/textRanges'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import {
   ArrowLeftIcon,
   BookmarkIcon,
@@ -34,6 +35,7 @@ import { IELTSTest, TestResult, Section, Question, ListeningGroup, ListeningBloc
 
 // Components
 import SplitScreen from './SplitScreen'
+import AnswerEvidencePane from './ielts/AnswerEvidencePane'
 import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import ListeningReviewCountdown from './ListeningReviewCountdown'
@@ -71,12 +73,21 @@ interface IELTSReadingInterfaceProps {
   reviewPayload?: {
     result: TestResult
     showCorrectAnswers?: boolean
+    initialQuestionId?: string
   }
   launchPreset?: {
     mode?: 'practice' | 'simulation'
     partIndex?: number
     durationMinutes?: number
   }
+}
+
+function scrollReadingReviewQuestionIntoView(questionId: string) {
+  const pane = document.getElementById('reading-questions-pane')
+  const card = document.getElementById(`question-card-${questionId}`)
+  if (!pane || !card) return
+  const headerHeight = pane.querySelector<HTMLElement>('.sticky')?.offsetHeight ?? 0
+  pane.scrollTop += card.getBoundingClientRect().top - pane.getBoundingClientRect().top - headerHeight - 12
 }
 
 // Paragraph labels (A, B, C...) are only shown when the passage has questions
@@ -810,6 +821,38 @@ export default function IELTSReadingInterface({
     })
   }, [activeSections]);
 
+  const reviewFocusedQuestionId = sectionMeta[currentSectionIndex]?.questionIds[
+    lastActiveQuestionIndex - (sectionMeta[currentSectionIndex]?.startIndex ?? 0)
+  ]
+  const reviewFocusedQuestion = currentSection?.questions.find(question => question.id === reviewFocusedQuestionId)
+    ?? currentSection?.questions[0]
+  const reviewRouteKey = useLocation().key
+  const reviewFocusKey = `ielts-review-focus:${badgeUserId ?? 'guest'}:${test.id}:${reviewPayload?.result.date ?? ''}:${reviewRouteKey}`
+  const pendingReviewFocusRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!isReviewMode || isListening) return
+    let savedId: string | null = null
+    try { savedId = window.sessionStorage.getItem(reviewFocusKey) } catch { /* review still works without storage */ }
+    const id = savedId ?? reviewPayload?.initialQuestionId
+    const sectionIndex = activeSections.findIndex(section => section.questions.some(question => question.id === id))
+    if (sectionIndex < 0) return
+    pendingReviewFocusRef.current = id!
+    const meta = sectionMeta[sectionIndex]
+    setCurrentSectionIndex(sectionIndex)
+    setLastActiveQuestionIndex(meta.startIndex + meta.questionIds.indexOf(id!))
+    const timeout = window.setTimeout(() => scrollReadingReviewQuestionIntoView(id!), 150)
+    return () => window.clearTimeout(timeout)
+  }, [isReviewMode, isListening, reviewPayload?.initialQuestionId, reviewFocusKey, activeSections, sectionMeta])
+
+  useEffect(() => {
+    if (!isReviewMode || isListening || !reviewFocusedQuestionId) return
+    // The initial default question must not overwrite the restored selection
+    // before React has applied the section/question state updates above.
+    if (pendingReviewFocusRef.current && pendingReviewFocusRef.current !== reviewFocusedQuestionId) return
+    pendingReviewFocusRef.current = null
+    try { window.sessionStorage.setItem(reviewFocusKey, reviewFocusedQuestionId) } catch { /* optional focus persistence */ }
+  }, [isReviewMode, isListening, reviewFocusKey, reviewFocusedQuestionId])
+
   const submitPreview = useMemo(() => {
     const sections = activeSections.map((section, sectionIndex) => {
       let answered = 0
@@ -939,12 +982,21 @@ export default function IELTSReadingInterface({
     if (!isReviewMode || !reviewShowCorrectAnswers) return null
     const meta = reviewQuestionMap.get(question.id)
     if (!meta) return null
+    const evidenceAction = !isListening ? <button type="button" aria-label={`Show evidence for question ${question.number}`}
+      aria-pressed={reviewFocusedQuestion?.id === question.id}
+      onClick={() => {
+        const section = sectionMeta[currentSectionIndex]
+        setLastActiveQuestionIndex(section.startIndex + section.questionIds.indexOf(question.id))
+      }} className="mt-2 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+      View in passage
+    </button> : null
     if (meta.status === 'correct') {
       return (
         <div className={`${className} rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 shadow-[0_8px_18px_rgba(16,185,129,0.16)]`}>
           <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-700">
             Question {question.number} - Correct
           </p>
+          {evidenceAction}
         </div>
       )
     }
@@ -960,6 +1012,7 @@ export default function IELTSReadingInterface({
             {correct}
           </span>
         </p>
+        {evidenceAction}
       </div>
     )
   }
@@ -1711,6 +1764,10 @@ export default function IELTSReadingInterface({
       const localIdx = globalIndex - meta.startIndex;
       const qId = meta.questionIds[localIdx];
       if (qId) {
+        if (isReviewMode && !isListening) {
+          scrollReadingReviewQuestionIntoView(qId)
+          return
+        }
         const el = document.getElementById(`question-card-${qId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -6395,11 +6452,11 @@ export default function IELTSReadingInterface({
             <div className="flex items-center gap-3 shrink-0">
               <button type="button" onClick={handleExitTest} className="premium-back-btn-sm normal-case tracking-normal text-slate-700" title="Exit">
                 <ArrowLeftIcon className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700">Back</span>
+                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-sm font-semibold text-slate-700`}>Back</span>
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-red-600">IELTS</span>
-                <span className="ielts-exam-skill text-xl font-semibold text-slate-500">{isListening ? 'Listening' : 'Reading'}</span>
+                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-2xl font-black text-red-600`}>IELTS</span>
+                <span className={`ielts-exam-skill ${isReviewMode && !isListening ? 'text-sm sm:text-xl' : 'text-xl'} font-semibold text-slate-500`}>{isListening ? 'Listening' : 'Reading'}</span>
                 {isListening && isAudioPlaying ? (
                   <span className="ml-2 hidden items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-red-600 sm:inline-flex">
                     <SpeakerWaveIcon className="h-3.5 w-3.5" />
@@ -6465,6 +6522,8 @@ export default function IELTSReadingInterface({
                 <button
                   type="button"
                   onClick={() => setReviewShowCorrectAnswers((value) => !value)}
+                  aria-label={reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+                  aria-pressed={reviewShowCorrectAnswers}
                   className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                     reviewShowCorrectAnswers
                       ? 'border-red-300 bg-red-50 text-red-700'
@@ -6472,15 +6531,28 @@ export default function IELTSReadingInterface({
                   }`}
                 >
                   <EyeIcon className="h-4 w-4" />
-                  {reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+                  <span className={isListening ? '' : 'hidden sm:inline'}>{reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}</span>
                 </button>
               )}
             </div>
           </header>
           {listeningReviewSecondsRemaining !== null ? <ListeningReviewCountdown secondsRemaining={listeningReviewSecondsRemaining} /> : null}
-          {isReviewMode ? <div className="max-h-[30dvh] shrink-0 overflow-y-auto px-4"><ReviewPracticeLink skill={isListening ? 'listening' : 'reading'} compact /><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
-          <div className="flex-1 relative overflow-hidden" id="test-main-container">
-            {isListening ? (
+          {isReviewMode ? isListening ? <div className="max-h-[30dvh] shrink-0 overflow-y-auto px-4"><ReviewPracticeLink skill="listening" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
+            : <details className="shrink-0 border-b border-red-100 bg-white px-4 py-2">
+              <summary className="cursor-pointer text-xs font-bold text-red-700">Review resources</summary>
+              <div className="max-h-[30dvh] overflow-y-auto"><ReviewPracticeLink skill="reading" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
+            </details> : null}
+          <div className={`${isReviewMode && !isListening ? 'min-h-0' : ''} flex-1 relative overflow-hidden`} id="test-main-container" onClickCapture={event => {
+            if (!isReviewMode || isListening) return
+            const card = (event.target as HTMLElement).closest<HTMLElement>('[id^="question-card-"]')
+            const id = card?.id.slice('question-card-'.length)
+            const meta = sectionMeta[currentSectionIndex]
+            const localIndex = id ? meta?.questionIds.indexOf(id) : -1
+            if (localIndex !== undefined && localIndex >= 0) setLastActiveQuestionIndex(meta.startIndex + localIndex)
+          }}>
+            {isReviewMode && !isListening && currentSection ? (
+              <SplitScreen left={<AnswerEvidencePane section={currentSection} question={reviewFocusedQuestion} showAnswers={reviewShowCorrectAnswers} showParagraphLabels={sectionHasLabeledParagraphs(currentSection)} />} right={renderRightPanel()} fillHeight className="h-full" />
+            ) : isListening ? (
               <div className="relative h-full overflow-hidden">
                 {renderMarkTools()}
                 {renderRightPanel()}

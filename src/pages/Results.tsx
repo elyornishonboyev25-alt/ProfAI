@@ -258,13 +258,14 @@ export default function Results() {
     navigate(`/test/${testType}/${resolvedTestId}`)
   }
 
-  const activateFullReview = () => {
+  const activateFullReview = (initialQuestionId?: string) => {
     if (!resolvedTestId) return
     navigate(`/test/${testType}/${resolvedTestId}`, {
       state: {
         reviewPayload: {
           result,
-          showCorrectAnswers,
+          showCorrectAnswers: Boolean(initialQuestionId) || showCorrectAnswers,
+          initialQuestionId,
         },
         sourceTest: test,
         fromResults: true,
@@ -565,6 +566,7 @@ export default function Results() {
                     const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
                     const correctAnswer = formatCorrectAnswer(question.correctAnswer)
                     const statusBadge = questionStatusBadge(question.status)
+                    const SheetCard = isListeningTest ? 'article' : 'button'
 
                     const numberTone =
                       question.status === 'correct'
@@ -574,7 +576,7 @@ export default function Results() {
                           : 'bg-slate-100 text-slate-600 border-slate-200'
 
                     return (
-                      <article key={`sheet-${question.questionId}`} className="rounded-xl border border-red-100 bg-[#fffdfd] p-2.5">
+                      <SheetCard key={`sheet-${question.questionId}`} {...(!isListeningTest ? { type: 'button' as const, onClick: () => activateFullReview(question.questionId), 'aria-label': `Review question ${question.displayNumber} in passage` } : {})} className={`rounded-xl border border-red-100 bg-[#fffdfd] p-2.5 text-left ${!isListeningTest ? 'transition hover:border-red-300 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500' : ''}`}>
                         <div className="flex items-center justify-between gap-1">
                           <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-1.5 text-[10px] font-black ${numberTone}`}>
                             {question.displayNumber}
@@ -601,7 +603,7 @@ export default function Results() {
                              <UiText text={"Correct:"} /> {correctAnswer}
                           </p>
                         ) : null}
-                      </article>
+                      </SheetCard>
                     )
                   })}
                 </div>
@@ -626,7 +628,7 @@ export default function Results() {
                {backLabel} </button>
             <button
               type="button"
-              onClick={activateFullReview}
+              onClick={() => activateFullReview()}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100"
             >
               <Target className="h-4 w-4" />

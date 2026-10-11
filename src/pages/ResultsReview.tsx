@@ -1,3 +1,4 @@
+import IELTSReadingInterface from '@/components/IELTSReadingInterface'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
@@ -141,6 +142,11 @@ export default function ResultsReview() {
     navigate('/ielts')
   }
 
+  const readingPayload = useMemo(() => result ? {
+    result, showCorrectAnswers: state.showCorrectAnswers ?? true,
+    initialQuestionId: state.initialQuestionId ?? (state.initialPart ? activeSections[state.initialPart - 1]?.questions[0]?.id : undefined),
+  } : undefined, [result, state.showCorrectAnswers, state.initialQuestionId, state.initialPart, activeSections])
+
   const startRetake = () => {
     if (!resolvedTestId) return
     navigate(`/test/${skill}/${resolvedTestId}`)
@@ -162,6 +168,8 @@ export default function ResultsReview() {
       </div>
     )
   }
+
+  if (skill === 'reading') return <IELTSReadingInterface test={test} reviewPayload={readingPayload} onComplete={() => {}} onExit={goBackToResults} />
 
   return (
     <div className="workspace-page ielts-review-page min-h-screen">

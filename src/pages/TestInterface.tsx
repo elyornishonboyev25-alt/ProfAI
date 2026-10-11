@@ -49,6 +49,7 @@ export default function TestInterface() {
     reviewPayload?: {
       result: TestResult
       showCorrectAnswers?: boolean
+      initialQuestionId?: string
     }
     sourceTest?: IELTSTest
     fromResults?: boolean
@@ -149,7 +150,7 @@ export default function TestInterface() {
     }
 
     if (sourceTest?.id === id) {
-      setTestData(type === 'listening' ? resolveIeltsTestById(id, reviewPayload?.result) ?? sourceTest : sourceTest)
+      setTestData(type === 'listening' || (type === 'reading' && isReviewLaunch) ? resolveIeltsTestById(id, reviewPayload?.result) ?? sourceTest : sourceTest)
       setLoading(false)
       return
     }

@@ -21,6 +21,8 @@
     "validate:listening": "node scripts/validate-listening-bank.mjs",
     "test:listening-browser": "node scripts/test-listening-bank-browser.mjs",
     "test:reading-ui": "node scripts/test-reading-ui.mjs",
+    "test:reading-evidence": "node scripts/test-listening-parts-ui.mjs scripts/tests/reading-evidence-ui.tsx",
+    "test:reading-evidence-browser": "node scripts/test-reading-evidence-browser.mjs",
     "validate:sat-assets": "node scripts/validate-sat-assets.mjs",
     "validate:sat-test8": "node scripts/validate-sat-test8.mjs",
     "validate:articles": "node scripts/validate-articles.mjs",

@@ -177,3 +177,10 @@
 .shadowing-library .learning-card-action { color: #087f75; }
 .shadowing-library .learning-step-icon { color: #087f75; background: #e8f6f2; }
 .shadowing-library .learning-primary:hover, .shadowing-workspace .learning-primary:hover { background: #06695f; }
+
+.shadowing-transcript-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid #dbe7e4; border-radius: 12px; color: #087f75; background: #fff; font-size: 13px; font-weight: 650; text-align: left; }
+.shadowing-transcript-toggle:hover:not(:disabled) { background: #f3f8f7; }
+.shadowing-full-transcript { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid #dbe7e4; border-radius: 14px; background: #f8fbfa; scrollbar-gutter: stable; }
+.shadowing-full-transcript p { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 10px; padding: 10px; border-radius: 8px; color: #334e48; font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+.shadowing-full-transcript p.is-current { color: #065f54; background: #e0f3ed; }
+.shadowing-subtitle-time { padding-top: 2px; color: #718b84; font-size: 11px; font-variant-numeric: tabular-nums; }

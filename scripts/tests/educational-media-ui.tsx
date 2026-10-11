@@ -67,6 +67,7 @@ export async function run() {
     await click(container.querySelector<HTMLButtonElement>('.learning-card'))
     assert.match(container.textContent!, /Audio sections need timed English captions/)
     assert.equal(container.querySelector('button[aria-label="Play audio 1"]'), null, 'Never invent speech boundaries when captions are offline')
+    assert.equal(button('Show all subtitles')!.disabled, true, 'Missing captions never produce an invented transcript')
     assert.ok(button('Retry captions'))
     assert.equal(button('I am ready — start practice')!.disabled, false, 'Caption download failures do not block full-video recording practice')
     assert.ok(SHADOWING_CATALOG.every(item => item.durationSec <= 120))
@@ -176,6 +177,16 @@ export async function run() {
     const [full, sectionPlayer] = players
     assert.equal(full.state.rate, 1)
     assert.equal(sectionPlayer.state.rate, 1)
+    assert.equal(container.querySelector('#shadowing-full-transcript'), null, 'Full subtitles start collapsed')
+    await click(button('Show all subtitles'))
+    assert.equal(button('Hide all subtitles')!.getAttribute('aria-expanded'), 'true')
+    const transcript = container.querySelector('#shadowing-full-transcript')!
+    assert.equal(transcript.querySelectorAll('p').length, prepared.captions.length, 'Show every caption in the playable lesson')
+    assert.deepEqual([...transcript.querySelectorAll('p > span:last-child')].map(node => node.textContent), prepared.captions.map(cue => cue.text))
+    assert.equal(full.state.seeks.length, 0, 'Opening all subtitles does not restart playback')
+    await click(button('Hide all subtitles'))
+    assert.equal(container.querySelector('#shadowing-full-transcript'), null)
+
     await click(container.querySelector<HTMLButtonElement>('button[aria-label="Play video"]'))
     const fullPauses = full.state.pauses
     full.state.time = 16

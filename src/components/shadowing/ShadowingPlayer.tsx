@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Download, Headphones, Loader2, Mic, Pause, Play, RotateCcw, Share2, Square } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Download, Headphones, Loader2, Mic, Pause, Play, RotateCcw, Share2, Square } from 'lucide-react'
 import { formatClock, loadYouTubeApi, type YTPlayer } from '@/lib/youtube'
 import { shareShadowingRecording, type ShadowingVideoDetail } from '@/services/shadowing'
 import { prepareShadowingLesson } from '../../../backend/src/services/shadowingLesson'
@@ -26,6 +26,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
   const [playing, setPlaying] = useState(false)
   const [activeAudio, setActiveAudio] = useState<number | null>(null)
   const [position, setPosition] = useState(0)
+  const [showFullTranscript, setShowFullTranscript] = useState(false)
   const [audioPosition, setAudioPosition] = useState(0)
   const progressKey = `profai-shadowing:${video.youtubeId}`
   const [completed, setCompleted] = useState<Set<number>>(() => {
@@ -376,6 +377,15 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
             <div className="flex items-center justify-between gap-3 text-sm"><span className="font-semibold">{c(practice ? 'Full video practice' : 'Full video')} · {formatClock(position)} / {formatClock(duration)}</span><label className="flex items-center gap-2">{c('Speed')}<select aria-label={c('Playback speed')} value={speed} disabled={!ready.video || errors.video} onChange={event => { const value = Number(event.target.value); setSpeed(value); main.current?.setPlaybackRate(value); if (ready.audio) audio.current?.setPlaybackRate(value) }} className="rounded-lg border border-slate-200 p-1">{[0.5, 0.75, 1, 1.25].map(value => <option key={value} value={value}>{value}x</option>)}</select></label></div>
             <input type="range" aria-label={c('Video position')} min={0} max={duration} step={0.1} value={position} disabled={!ready.video || errors.video} onChange={event => { const time = Number(event.target.value); main.current?.seekTo(time, true); setPosition(time); if (playback.current.kind === 'video') playback.current.pendingSeek = false }} className="w-full accent-red-500" />
             <p className="shadowing-caption min-h-12 text-center text-sm leading-6 text-slate-800" aria-live="off">{caption?.text ?? c('English captions appear in the video when available.')}</p>
+            <button type="button" className="shadowing-transcript-toggle" aria-expanded={showFullTranscript} aria-controls="shadowing-full-transcript" disabled={!lesson.captions.length} onClick={() => setShowFullTranscript(value => !value)}>
+              {c(showFullTranscript ? 'Hide all subtitles' : 'Show all subtitles')}
+              {showFullTranscript ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+            </button>
+            {showFullTranscript && <section id="shadowing-full-transcript" className="shadowing-full-transcript" aria-label={c('Full subtitles')} tabIndex={0}>
+              {lesson.captions.map(cue => <p key={`${cue.startSec}:${cue.endSec}`} className={position >= cue.startSec && position < cue.endSec ? 'is-current' : undefined}>
+                <span className="shadowing-subtitle-time">{formatClock(cue.startSec)}</span><span>{cue.text}</span>
+              </p>)}
+            </section>}
           </div>
         </div>
         {(errors.video || errors.audio) && <button type="button" disabled={recording || requestingMicrophone} onClick={() => { playback.current.playing = false; setPlaying(false); setSpeed(1); setRetry(value => value + 1) }} className="learning-secondary"><RotateCcw size={16} />{c('Retry player')}</button>}

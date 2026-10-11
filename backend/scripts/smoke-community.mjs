@@ -171,6 +171,15 @@ try {
   await next(host, type('communityLeft'))
   assert.equal((await next(guest, type('communityInvitationCancelled'))).id, cancelled.id, 'Cancelling withdraws the invitation from the recipient')
   send(guest, { type: 'communityReply', id: cancelled.id, accept: true })
+  send(host, { type: 'communityInvite', nickname: 'Guest' })
+  const declined = await next(guest, type('communityInvitation'))
+  for (const socket of [host, guest]) socket.events = socket.events.filter(message => message.type !== 'communityLobby')
+  send(guest, { type: 'communityReply', id: declined.id, accept: false })
+  await next(host, message => message.type === 'communityNotice' && message.message.includes('declined'))
+  for (const socket of [host, guest]) {
+    const readyAgain = await next(socket, message => message.type === 'communityLobby' && message.available.includes('Host') && message.available.includes('Guest'))
+    assert.ok(readyAgain.available.includes('Guest'), 'Declining restores both learners in the live partner directory')
+  }
   send(host, { type: 'communityMatch' })
   await next(host, type('communityMatching'))
   host.close()

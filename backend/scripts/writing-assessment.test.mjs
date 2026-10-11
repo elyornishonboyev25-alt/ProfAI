@@ -11,8 +11,9 @@ const { voiceInstructions } = await import('../dist/services/realtimeCoach.servi
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
 
-const response = 'These student learns English. They study every day.'
+const response = 'These student learns English. They study every day. Regular practice gives them opportunities to develop their skills, and they can use what they have learned when communicating with people from different countries.'
 const result = { taskAchievement: 6, coherenceCohesion: 7, lexicalResource: 6, grammaticalRange: 5,
+  criterionFeedback: { taskAchievement: 'The response addresses the task but needs supporting details.', coherenceCohesion: 'The ideas progress logically.', lexicalResource: 'The vocabulary conveys clear meaning.', grammaticalRange: 'Agreement errors limit accuracy.' },
   overallBand: 9, xpAwarded: 9999, summary: 'An estimated practice score.', strengths: ['Clear main idea.'], improvements: ['Check agreement.'], correctedVersion: 'These students learn English. They study every day.',
   improvedVersion: 'These students learn English and study every day.',
   errors: [

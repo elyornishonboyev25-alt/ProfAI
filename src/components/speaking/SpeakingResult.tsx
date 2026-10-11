@@ -65,6 +65,7 @@ export default function SpeakingResult({
 }) {
   const stats = evaluation.stats
   const vocabularyTestId = speakingVocabularyTestId(modeLabel)
+  const unavailable = evaluation.source === 'offline'
 
   return (
     <div className="speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6">
@@ -80,14 +81,14 @@ export default function SpeakingResult({
       >
         <Burst count={26} play />
         <span className="soft-chip mx-auto">{modeLabel}</span>
-        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-red-600">{evaluation.assessmentMode === 'audio' ? 'Estimated Speaking Band' : 'Text Practice Estimate'}</p>
+        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-red-600">{unavailable ? 'Assessment unavailable' : evaluation.assessmentMode === 'audio' ? 'Estimated Speaking Band' : 'Text Practice Estimate'}</p>
         <div className="mt-2 flex items-center justify-center">
-          <BandGauge band={evaluation.overallBand} size={150} />
+          {unavailable ? <span className="flex h-[150px] items-center text-6xl text-slate-400">—</span> : <BandGauge band={evaluation.overallBand} size={150} />}
         </div>
-        <p className="mt-1 text-lg font-black text-slate-900">{evaluation.overallBand === 0 ? 'No assessable speech captured' : `${bandWord(evaluation.overallBand)} performance`}</p>
+        <p className="mt-1 text-lg font-black text-slate-900">{unavailable ? 'Retry assessment for your band' : evaluation.overallBand === 0 ? 'No assessable speech captured' : `${bandWord(evaluation.overallBand)} performance`}</p>
         {evaluation.source === 'offline' ? (
           <span className="mt-2 inline-block rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
-            {stats.wordCount === 0 ? 'Check your microphone and try again' : 'Offline estimate — try again for full AI grading'}
+            {stats.wordCount === 0 ? 'Check your microphone and try again' : 'Answers saved — retry grading'}
           </span>
         ) : (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
@@ -96,7 +97,8 @@ export default function SpeakingResult({
         )}
       </motion.div>
 
-      <p className="mt-3 text-center text-xs leading-5 text-slate-500">{evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and selected recordings. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
+      <p className="mt-3 text-center text-xs leading-5 text-slate-500">{unavailable ? 'No band was awarded. Your answers are available for another assessment.' : evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and recordings. Four criteria carry equal weight. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
+      <p className="mt-2 text-center"><a href="https://ielts.org/cdn/ielts-guides/ielts-speaking-band-descriptors.pdf" target="_blank" rel="noreferrer" className="text-xs font-semibold text-red-700 underline">Official IELTS Speaking descriptors</a></p>
       {!hideVocabularyReview ? <TestVocabulary testId={vocabularyTestId} variant="review" /> : null}
       <ReviewPracticeLink skill="speaking" />
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
@@ -105,7 +107,7 @@ export default function SpeakingResult({
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {CRITERIA.map(({ key, label }) => (
           <div key={key} className="surface-card flex flex-col items-center p-4">
-            {key === 'pronunciationBand' && evaluation.assessmentMode !== 'audio' ? <span className="flex h-[84px] w-[84px] items-center justify-center text-3xl text-slate-400">—</span> : <BandGauge band={evaluation[key] as number} size={84} />}
+            {unavailable || key === 'pronunciationBand' && evaluation.assessmentMode !== 'audio' ? <span className="flex h-[84px] w-[84px] items-center justify-center text-3xl text-slate-400">—</span> : <BandGauge band={evaluation[key] as number} size={84} />}
             <p className="mt-2 text-center text-xs font-semibold text-slate-600">{label}</p>
             {key === 'pronunciationBand' ? <p className="mt-1 text-center text-[10px] text-amber-700">{evaluation.assessmentMode === 'audio' ? 'Audio assessed' : 'Not assessed'}</p> : null}
           </div>

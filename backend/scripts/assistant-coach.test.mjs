@@ -105,6 +105,7 @@ test('history queries skip empty conversations before applying the account limit
 test('audio grades use equal weights and reject invented answer evidence', () => {
   const history = [{ role: 'candidate', text: 'I enjoy reading books.' }]
   const result = { fluencyBand: 6, lexicalBand: 7, grammarBand: 6, pronunciationBand: 7, summary: 'Practice estimate.', strengths: ['Clear idea'], weaknesses: ['Develop the reason'], improvementPriorities: [{ area: 'Grammar', target: 7, action: 'Extend the answer.' }], evidence: [{ criterion: 'pronunciation', answerIndex: 0, quote: 'reading books', explanation: 'Stress was clear in this sample.', exercise: 'Repeat with natural rhythm.' }] }
+  result.evidence.push(...['fluency', 'lexical', 'grammar'].map(criterion => ({ criterion, answerIndex: 0, quote: 'I enjoy reading books.', explanation: 'The answer uses a clear, relevant sentence.', exercise: 'Expand with a reason.' })))
   result.improvedAnswers = [{ answerIndex: 0, original: history[0].text, improved: 'I really enjoy reading.' }]
   assert.equal(validateAudioAssessment(JSON.stringify(result), history, [0]).overallBand, 6.5)
   assert.deepEqual(validateAudioAssessment(JSON.stringify(result), history, [0]).improvedAnswers, result.improvedAnswers)

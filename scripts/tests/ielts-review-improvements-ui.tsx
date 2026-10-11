@@ -41,12 +41,12 @@ export async function run() {
       }
     }
     await act(async () => { await i18n.changeLanguage('en') })
-    apiClient.post = (async () => ({ text: JSON.stringify(evaluation) })) as typeof apiClient.post
+    apiClient.post = (async () => (evaluation)) as typeof apiClient.post
     const checked = await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats: evaluation.stats })
     assert.deepEqual(checked.improvedAnswers, evaluation.improvedAnswers)
-    assert.equal(checked.overallBand, 4.5, 'The existing short-answer score guard still applies to original speech')
+    assert.equal(checked.overallBand, 6, 'No arbitrary word-count ceiling overrides descriptor-based assessment')
     for (const rewrites of [[], [{ ...evaluation.improvedAnswers![0], original: 'Someone else\'s answer' }], [{ ...evaluation.improvedAnswers![0], answerIndex: 2 }, evaluation.improvedAnswers![1]]]) {
-      apiClient.post = (async () => ({ text: JSON.stringify({ ...evaluation, improvedAnswers: rewrites }) })) as typeof apiClient.post
+      apiClient.post = (async () => ({ ...evaluation, improvedAnswers: rewrites })) as typeof apiClient.post
       assert.equal((await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats: evaluation.stats })).source, 'offline', 'Incomplete or mismatched rewrites cannot be saved as complete AI feedback')
     }
     for (const reviewMode of [false, true]) {

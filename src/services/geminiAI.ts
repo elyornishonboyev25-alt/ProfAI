@@ -22,6 +22,7 @@ export interface WritingEvaluation {
   coherenceCohesion: number
   lexicalResource: number
   grammaticalRange: number
+  criterionFeedback?: { taskAchievement: string; coherenceCohesion: string; lexicalResource: string; grammaticalRange: string }
   summary: string
   strengths: string[]
   improvements: string[]

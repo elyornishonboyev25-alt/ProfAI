@@ -393,14 +393,15 @@ export default function ExaminerSession({
     const version = sessionVersionRef.current
     const stats = mergeStats(answersRef.current, historyRef.current.filter((turn) => turn.role === 'candidate').map((turn) => turn.text).join('\n'))
     try {
-      const audio = [...audioAnswersRef.current].sort((a, b) => b.duration - a.duration).slice(0, 4).sort((a, b) => a.answerIndex - b.answerIndex)
-      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio })
+      const audio = [...audioAnswersRef.current].sort((a, b) => a.answerIndex - b.answerIndex)
+      const expectedAudioAnswers = historyRef.current.filter(turn => turn.role === 'candidate').flatMap((turn, index) => turn.text.trim() ? [index] : [])
+      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio, expectedAudioAnswers })
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
       // A service outage must not mark a full mock complete or award an AI band.
       // The candidate can retry grading these exact answers from the result.
-      if (result.source === 'ai' && !savedEvaluationRef.current) {
+      if (result.source === 'ai' && (config.mode !== 'full_mock' || result.assessmentMode === 'audio') && !savedEvaluationRef.current) {
         savedEvaluationRef.current = true
         try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Grading already succeeded. */ }
         onSaved(result, [...historyRef.current])
@@ -410,7 +411,7 @@ export default function ExaminerSession({
       setEvalError('Could not complete the evaluation. Please try again.')
       setPhase('result')
     }
-  }, [modeLabel, onSaved, owner, sessionKey])
+  }, [config.mode, modeLabel, onSaved, owner, sessionKey])
 
   // Core engine: process the next move, advancing across stages.
   const advance = useCallback(() => {

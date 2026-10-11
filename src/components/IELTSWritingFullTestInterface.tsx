@@ -37,6 +37,8 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useBillingText } from '@/features/billing/copy'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
+import { writingSectionBand, writingVisualContext } from '@/lib/writingScoring'
+import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useBadgeStore } from '@/store/badgeStore'
@@ -70,9 +72,7 @@ function formatTime(seconds: number): string {
 }
 
 function weightedBand(evaluations: Record<string, WritingEvaluation>, taskIds: string[]): number {
-  const task1 = evaluations[taskIds[0]]?.overallBand ?? 0
-  const task2 = evaluations[taskIds[1]]?.overallBand ?? 0
-  return Math.round(((task1 + task2 * 2) / 3) * 2) / 2
+  return writingSectionBand(evaluations[taskIds[0]], evaluations[taskIds[1]])
 }
 
 export default function IELTSWritingFullTestInterface({
@@ -259,7 +259,7 @@ export default function IELTSWritingFullTestInterface({
     try {
       const results: WritingEvaluation[] = []
       for (const task of tasks) {
-        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], task.visualContext))
+        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], writingVisualContext(task)))
       }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
@@ -512,11 +512,12 @@ export default function IELTSWritingFullTestInterface({
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{wordCounts[task.id]} words</span>
                   </div>
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <Score label="Task Response" value={evaluation.taskAchievement} />
+                    <Score label={task.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} value={evaluation.taskAchievement} />
                     <Score label="Coherence" value={evaluation.coherenceCohesion} />
                     <Score label="Vocabulary" value={evaluation.lexicalResource} />
                     <Score label="Grammar" value={evaluation.grammaticalRange} />
                   </div>
+                  <WritingScoreExplanation feedback={evaluation.criterionFeedback} taskType={task.taskType} />
                   {task.diagram ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
                       <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>

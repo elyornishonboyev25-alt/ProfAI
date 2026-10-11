@@ -18,6 +18,7 @@ import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
 import type { WritingError } from '@/services/geminiAI'
 import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
+import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
@@ -211,11 +212,12 @@ export default function WritingResultModal({
                 <Target className="h-3.5 w-3.5 text-red-500" /> Band Breakdown
               </h4>
               <div className="grid grid-cols-4 gap-3">
-                <MiniRing score={entry.taskAchievement} label="Task" />
+                <MiniRing score={entry.taskAchievement} label={entry.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} />
                 <MiniRing score={entry.coherenceCohesion} label="Coherence" />
                 <MiniRing score={entry.lexicalResource} label="Vocab" />
                 <MiniRing score={entry.grammaticalRange} label="Grammar" />
               </div>
+              <WritingScoreExplanation feedback={entry.criterionFeedback} taskType={entry.taskType} />
             </div>
 
             {/* Strengths + improvements */}

@@ -32,6 +32,8 @@ import {
   Lock,
 } from 'lucide-react'
 import { evaluateWriting, type WritingEvaluation, type WritingError } from '@/services/geminiAI'
+import { writingVisualContext } from '@/lib/writingScoring'
+import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { saveWritingAnalysis, getWritingXP } from '@/utils/writingAnalysisStorage'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -422,7 +424,7 @@ export default function IELTSWritingTestInterface({
     setEvalError(null)
 
     try {
-      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, task.visualContext)
+      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, writingVisualContext(task))
       setAiEvaluation(result)
       try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
       try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Evaluation still succeeds. */ }
@@ -809,7 +811,7 @@ export default function IELTSWritingTestInterface({
                   Band Breakdown
                 </h3>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <BandScoreRing score={ev.taskAchievement} label="Task Response" />
+                  <BandScoreRing score={ev.taskAchievement} label={task.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} />
                   <BandScoreRing score={ev.coherenceCohesion} label="Coherence" />
                   <BandScoreRing score={ev.lexicalResource} label="Vocabulary" />
                   <BandScoreRing score={ev.grammaticalRange} label="Grammar" />
@@ -821,6 +823,7 @@ export default function IELTSWritingTestInterface({
                 </div>
               </div>
 
+              <WritingScoreExplanation feedback={ev.criterionFeedback} taskType={task.taskType} />
               {/* Strengths + Improvements */}
               <details className="rounded-3xl border border-red-100 bg-white p-5 shadow-sm">
                 <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task prompt</summary>

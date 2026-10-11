@@ -51,7 +51,7 @@ export async function run() {
       return new Response(JSON.stringify({ id: 'test-session', sdp: 'v=0\r\ns=server-answer\r\n', maxMinutes: 20 }), { status: 201 })
     }
     if (String(url).endsWith('/ai/voice/end')) { ends++; return new Response(null, { status: 204 }) }
-    if (String(url).endsWith('/ai/generate')) return new Response(JSON.stringify({ text: JSON.stringify({ fluencyBand: 6, lexicalBand: 7, grammarBand: 6, pronunciationBand: 8, summary: 'Text feedback.', strengths: ['Clear idea.'], weaknesses: ['Develop reasons.'], improvementPriorities: [{ area: 'Grammar', target: 7, action: 'Use a relative clause.' }] }) }))
+    if (String(url).endsWith('/ai/speaking-audio/assess-transcript')) return new Response(JSON.stringify({ source: 'ai', assessmentMode: 'transcript', improvedAnswers: [{ answerIndex: 0, original: JSON.parse(String(options?.body)).history[0].text, improved: JSON.parse(String(options?.body)).history[0].text }], fluencyBand: 6, lexicalBand: 7, grammarBand: 6, pronunciationBand: 8, summary: 'Text feedback.', strengths: ['Clear idea.'], weaknesses: ['Develop reasons.'], improvementPriorities: [{ area: 'Grammar', target: 7, action: 'Use a relative clause.' }] }))
     throw new Error(`Unexpected request ${url}`)
   }
   const options: any = { context: { pathname: '/ai-tutor', workspace: 'ielts', language: 'uz', mode: 'coach', studyContext: '', screenContext: '', siteKnowledge: '' }, history: [...Array.from({ length: 24 }, () => ({ role: 'assistant', content: 'Long previous explanation. '.repeat(300) })), { role: 'user', content: 'Earlier question.' }],

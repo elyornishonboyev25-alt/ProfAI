@@ -150,8 +150,11 @@ export async function run() {
       if (transcriptionFails) throw new Error('offline')
       return { text: 'I study English because I want to communicate with people around the world.' }
     }
-    const candidateTexts = String(body.userMessage ?? '').split('FULL TRANSCRIPT (examiner questions + candidate answers):\n')[1]?.split('\n').filter(line => line.startsWith('Candidate: ')).map(line => line.slice('Candidate: '.length)) ?? []
-    return { text: JSON.stringify(body.purpose === 'speaking_examiner' ? { reply: 'What do you enjoy about that?' } : { ...(evaluationPayload as object), improvedAnswers: candidateTexts.flatMap((text, answerIndex) => text.trim() ? [{ answerIndex, original: text, improved: text }] : []) }) }
+    if (path.endsWith('/assess') || path.endsWith('/assess-transcript')) {
+      const candidateTexts = body.history.filter((turn: { role: string }) => turn.role === 'candidate').map((turn: { text: string }) => turn.text)
+      return { ...(evaluationPayload as object), source: 'ai', assessmentMode: path.endsWith('/assess') ? 'audio' : 'transcript', improvedAnswers: candidateTexts.flatMap((text: string, answerIndex: number) => text.trim() ? [{ answerIndex, original: text, improved: text }] : []) }
+    }
+    return { text: JSON.stringify({ reply: 'What do you enjoy about that?' }) }
   }) as typeof apiClient.post
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })

@@ -1,5 +1,10 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  "Leave Exam Mode?": "Выйти из экзаменационного режима?",
+  "Your test timer is paused. Continue in fullscreen, or leave this exam attempt.": "Таймер теста приостановлен. Продолжите в полноэкранном режиме или завершите эту попытку.",
+  "If you leave, this attempt will end and you cannot resume it, even after reloading.": "Если вы выйдете, попытка завершится и её нельзя будет продолжить даже после перезагрузки страницы.",
+  "Continue test": "Продолжить тест",
+  "Leave and end attempt": "Выйти и завершить попытку",
   'Build your Listening with podcasts': 'Развивайте Listening с подкастами',
   'Open podcasts': 'Открыть подкасты',
   'Listen once for the main idea, then use the transcript to check missed words. Listen again without the transcript.': 'Прослушайте запись для понимания основной мысли, затем проверьте пропущенные слова по тексту. Прослушайте ещё раз без текста.',

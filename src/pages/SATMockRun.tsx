@@ -57,9 +57,6 @@ import { saveSATBaseline } from '@/features/sat/baseline'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
-const FULLSCREEN_RECOVERY_SECONDS = 30
-const FULLSCREEN_RECOVERY_MS = FULLSCREEN_RECOVERY_SECONDS * 1000
-
 function formatTime(seconds: number) {
   const safeSeconds = Math.max(0, Math.floor(seconds))
   const minutes = Math.floor(safeSeconds / 60)
@@ -106,8 +103,7 @@ export default function SATMockRun() {
   const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
   const [baselineRetry, setBaselineRetry] = useState(0)
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>([])
-  const [violationDeadline, setViolationDeadline] = useState<number | null>(null)
-  const violationFrozenRef = useRef(false)
+  const [fullscreenExitOpen, setFullscreenExitOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
   const questionViewportRef = useRef<HTMLDivElement>(null)
 
@@ -128,9 +124,6 @@ export default function SATMockRun() {
   const answeredInModule = currentModule.questions.filter(
     (question) => attempt?.answers[question.id]?.trim(),
   ).length
-  const violationSeconds = violationDeadline
-    ? Math.max(0, Math.ceil((violationDeadline - now) / 1000))
-    : 0
 
   const testSeconds = attempt ? moduleSeconds(attempt, modules, now) : currentModule.durationSeconds
 
@@ -185,10 +178,44 @@ export default function SATMockRun() {
   }, [modules])
 
   const exitTest = useCallback(() => {
+    if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
+      persistUpdate((current) => pauseModule(current, modules))
+      setMoreOpen(false)
+      setFullscreenExitOpen(true)
+      return
+    }
     pauseAndSaveAttempt()
     if (fullscreenElement()) void exit()
     navigate(backPath)
-  }, [backPath, exit, navigate, pauseAndSaveAttempt])
+  }, [backPath, exit, modules, navigate, pauseAndSaveAttempt, persistUpdate])
+
+  const continueExam = useCallback(async () => {
+    await enter()
+    if (!fullscreenElement()) return
+    persistUpdate((current) => current.pausedModuleSeconds === undefined ? current : resumeModule(current, modules))
+    setNow(Date.now())
+    setFullscreenExitOpen(false)
+  }, [enter, modules, persistUpdate])
+
+  const leaveExam = useCallback(() => {
+    const current = attemptRef.current
+    if (!current || current.status !== 'active' || current.mode !== 'exam') return
+    const ended: SATAttempt = {
+      ...finishModule(current, modules),
+      status: 'terminated',
+      terminatedAt: Date.now(),
+      updatedAt: Date.now(),
+      terminationReason: 'User confirmed leaving Exam Mode.',
+    }
+    // Persist before navigation so page-exit handlers cannot save an active attempt.
+    attemptRef.current = ended
+    saveSATAttempt(ended)
+    saveSATAttemptToHistory(ended, 'exit')
+    setAttempt(ended)
+    setFullscreenExitOpen(false)
+    if (fullscreenElement()) void exit()
+    navigate(backPath)
+  }, [backPath, exit, modules, navigate])
 
   const openNotes = useCallback(() => {
     setNoteDraft(attemptRef.current?.notes[currentQuestion.id] ?? '')
@@ -294,47 +321,23 @@ export default function SATMockRun() {
   useEffect(() => {
     if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
 
-    if (!isFullscreen && !violationDeadline) {
-      violationFrozenRef.current = true
+    if (!isFullscreen && !fullscreenExitOpen) {
       persistUpdate((current) => pauseModule(current, modules))
-      setViolationDeadline(Date.now() + FULLSCREEN_RECOVERY_MS)
+      setFullscreenExitOpen(true)
       return
     }
 
-    if (isFullscreen && (violationDeadline || attempt.pausedModuleSeconds !== undefined)) {
-      setViolationDeadline(null)
-      violationFrozenRef.current = false
+    if (isFullscreen && !fullscreenExitOpen && attempt.pausedModuleSeconds !== undefined) {
       persistUpdate((current) => resumeModule(current, modules))
     }
-  }, [
-    attempt,
-    isFullscreen,
-    modules,
-    persistUpdate,
-    test.totalDurationSeconds,
-    violationDeadline,
-  ])
-
-  useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
-    if (!violationDeadline || violationSeconds > 0) return
-    setViolationDeadline(null)
-    violationFrozenRef.current = false
-    persistUpdate((current) => ({
-      ...finishModule(current, modules),
-      status: 'terminated',
-      terminatedAt: Date.now(),
-      terminationReason: 'Fullscreen recovery window expired.',
-    }))
-    if (fullscreenElement()) void exit()
-  }, [attempt, exit, modules, persistUpdate, violationDeadline, violationSeconds])
+  }, [attempt, isFullscreen, modules, persistUpdate, fullscreenExitOpen])
 
   useEffect(() => {
     if (
       !attempt ||
       attempt.status !== 'active' ||
       attempt.mode !== 'exam' ||
-      violationDeadline ||
+      fullscreenExitOpen ||
       attempt.pausedModuleSeconds !== undefined ||
       !isFullscreen
     ) return
@@ -344,7 +347,7 @@ export default function SATMockRun() {
     advanceModule,
     isFullscreen,
     testSeconds,
-    violationDeadline,
+    fullscreenExitOpen,
   ])
 
   useEffect(() => {
@@ -359,7 +362,7 @@ export default function SATMockRun() {
         formulaSheetOpen ||
         notesOpen ||
         navigatorOpen ||
-        violationDeadline
+        fullscreenExitOpen
       ) {
         return
       }
@@ -404,7 +407,7 @@ export default function SATMockRun() {
     openNotes,
     persistUpdate,
     questionIndex,
-    violationDeadline,
+    fullscreenExitOpen,
   ])
 
   if (!attempt) {
@@ -457,15 +460,11 @@ export default function SATMockRun() {
           <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">Exam integrity</p>
           <h1 className="mt-2 text-3xl font-black">Attempt ended</h1>
           <p className="mt-3 text-sm font-medium leading-6 text-white/65">
-            You did not return to fullscreen within the {FULLSCREEN_RECOVERY_SECONDS}-second recovery window. This exam attempt
-            has been locked and cannot be resumed.
+            This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again.
           </p>
           <button
             type="button"
-            onClick={() => {
-              clearSATAttempt(test.id)
-              navigate(backPath)
-            }}
+            onClick={() => navigate(backPath)}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
           >
             Return to SAT Arena
@@ -606,7 +605,7 @@ export default function SATMockRun() {
                 <button type="button" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
               </div>
               <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
-              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Exit &amp; Save</button>
+              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> {attempt.mode === 'exam' ? 'Exit test' : 'Exit & Save'}</button>
             </div>
           ) : null}
         </div>
@@ -918,7 +917,7 @@ export default function SATMockRun() {
           </motion.div>
         ) : null}
 
-        {violationDeadline ? (
+        {fullscreenExitOpen ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -928,36 +927,36 @@ export default function SATMockRun() {
             <motion.section
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="sat-exit-title"
+              aria-describedby="sat-exit-description"
               className="w-full max-w-lg text-center"
             >
-              <div
-                className="relative mx-auto flex h-40 w-40 items-center justify-center rounded-full"
-                style={{
-                  background: `conic-gradient(#ef4444 ${(violationSeconds / FULLSCREEN_RECOVERY_SECONDS) * 360}deg,rgba(255,255,255,.1) 0deg)`,
-                }}
-              >
-                <div className="absolute inset-2 rounded-full bg-slate-950" />
-                <div className="relative">
-                  <p className="text-6xl font-black tabular-nums">{violationSeconds}</p>
-                  <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/45">seconds</p>
-                </div>
+              <ShieldAlert className="mx-auto h-12 w-12 text-red-400" />
+              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Leave Exam Mode?" /></h1>
+              <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
+                <UiText text="Your test timer is paused. Continue in fullscreen, or leave this exam attempt." />
+              </p>
+              <p className="mt-4 text-sm font-bold text-red-300">
+                <UiText text="If you leave, this attempt will end and you cannot resume it, even after reloading." />
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => void continueExam()}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
+                >
+                  <ZoomIn className="h-4 w-4" /> <UiText text="Continue test" />
+                </button>
+                <button
+                  type="button"
+                  onClick={leaveExam}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/40 bg-red-500/15 px-6 py-3.5 text-sm font-black text-red-200"
+                >
+                  <X className="h-4 w-4" /> <UiText text="Leave and end attempt" />
+                </button>
               </div>
-              <ShieldAlert className="mx-auto mt-7 h-7 w-7 text-red-400" />
-              <h1 className="mt-3 text-3xl font-black">Return to fullscreen</h1>
-              <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                Your test timer is paused. Re-enter fullscreen before the countdown ends
-                to continue from this exact question.
-              </p>
-              <button
-                type="button"
-                onClick={() => void enter()}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
-              >
-                <ZoomIn className="h-4 w-4" /> Re-enter fullscreen
-              </button>
-              <p className="mt-4 text-[10px] font-bold text-red-300">
-                If time expires, this exam attempt will be terminated.
-              </p>
             </motion.section>
           </motion.div>
         ) : null}

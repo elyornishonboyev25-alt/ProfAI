@@ -1,3 +1,4 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -263,7 +264,7 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
       initial={reducedMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.025, 0.15), duration: reducedMotion ? 0 : 0.3 }}
-      className={cn('community-learner-card', featured && 'is-featured')}
+      className={cn('community-learner-card', featured && 'is-featured', learner.premium && 'is-premium-member')}
     >
       <div className="community-card-cover" aria-hidden="true"><span /><span /></div>
       <div className="community-card-topline"><span className={cn('community-availability', available ? 'is-ready' : learner.online && 'is-online')}><i />{t(available ? 'Ready to talk' : learner.online ? 'Online now' : 'Offline')}</span>{featured ? (
@@ -272,11 +273,12 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
           <span> {t('Top learner')} </span>
         </span>
       ) : <span className="community-level">{t('Level')} {learner.level}</span>}</div>
-      <div className="community-avatar-ring">
+      <div className={cn('community-avatar-ring', learner.premium && 'premium-member-avatar')}>
         <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} title={t(learner.online ? 'Online now' : 'Offline')} />
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
+      {learner.premium ? <CrownBadge size="sm" /> : null}
       <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || t('Global learner')}</p>
       <div className="community-goal-row"><span><Target size={12} />{learner.targetExam ? targetLabel(learner) : t('Open study goal')}</span>{learner.targetUniversitySlug ? <span><GraduationCap size={12} />{learner.targetUniversitySlug.replace(/-/g, ' ')}</span> : null}</div>
       <div className="community-stat-row">

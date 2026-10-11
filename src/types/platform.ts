@@ -405,6 +405,7 @@ export type LeaderboardResponse = {
 }
 
 export type LeaderboardRow = {
+  premium?: boolean
   rank: number
   previousRank: number
   rankDelta: number

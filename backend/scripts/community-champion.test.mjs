@@ -10,7 +10,7 @@ const { default: router } = await import('../dist/routes/profile.routes.js')
 const { default: express } = await import('express')
 
 function learner(id, xp, profile = { isPublic: true, showLeaderboard: true }) {
-  return { id, nickname: id, xp, profile, avatarUrl: null, currentStreak: 2, createdAt: new Date('2026-01-01'), lastActiveDate: new Date(), level: 2, _count: { skillBadges: 1 } }
+  return { role: 'USER', email: `${id}@example.test`, premiumGrant: null, billingSubscriptions: [], id, nickname: id, xp, profile, avatarUrl: null, currentStreak: 2, createdAt: new Date('2026-01-01'), lastActiveDate: new Date(), level: 2, _count: { skillBadges: 1 } }
 }
 let users = []
 // Upstream authentication now verifies that the account still exists.
@@ -62,6 +62,15 @@ test('Community crown is global, follows current earned XP, respects privacy and
     users[1].currentStreak = 5
     users[1].createdAt = new Date('2025-12-01')
     assert.equal((await request()).topLearner.nickname, 'Partner', 'Remaining ties use membership date')
+    users[1].billingSubscriptions = [{ startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + 60000) }]
+    const premiumResult = (await request()).results.find(row => row.nickname === 'Partner')
+    assert.equal(premiumResult.premium, true, 'Active subscriptions identify Premium learners')
+    assert.equal((await request()).results.find(row => row.nickname === 'Leader').premium, false)
+    for (const privateField of ['email', 'role', 'premiumGrant', 'billingSubscriptions']) {
+      assert.ok(!(privateField in premiumResult), `${privateField} stays private`)
+    }
+    users[1].billingSubscriptions[0].expiresAt = new Date(Date.now() - 1000)
+    assert.equal((await request()).results.find(row => row.nickname === 'Partner').premium, false, 'Expired plans remove Premium status')
     users = [learner('NewAccount', 0)]
     assert.equal((await request()).topLearner, null, 'No fabricated crown before XP is earned')
   } finally { await new Promise(resolve => server.close(resolve)); await prisma.$disconnect() }

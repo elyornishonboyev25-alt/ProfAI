@@ -25,7 +25,7 @@ export async function run() {
   let nextTimer = 100000
   const graceTimers = new Map<number, { fn: () => void; ms: number }>()
   window.setTimeout = ((fn: () => void, ms?: number, ...args: unknown[]) => {
-    if (captureGrace && (ms === 20000 || ms === 1000 || ms === 0)) { const id = ++nextTimer; graceTimers.set(id, { fn, ms: ms! }); return id }
+    if (captureGrace && (ms === 120000 || ms === 1000 || ms === 0)) { const id = ++nextTimer; graceTimers.set(id, { fn, ms: ms! }); return id }
     return originalWindowTimeout(fn, ms, ...args)
   }) as typeof window.setTimeout
   window.clearTimeout = id => { graceTimers.delete(id); originalClear(id) }
@@ -117,23 +117,37 @@ export async function run() {
     await enterAnswer()
     captureGrace = true
     await act(async () => element.querySelector('audio')!.dispatchEvent(new window.Event('ended')))
-    assert.equal([...graceTimers.values()][0]?.ms, 20000)
+    assert.equal([...graceTimers.values()][0]?.ms, 120000)
+    assert.equal(element.querySelector('[role="timer"]')?.textContent, '02:00')
     await unmount()
     assert.equal(graceTimers.size, 0)
-    now += 19_000
+    now += 119_000
     await mount(listeningFullTest15, 'full-mock-15')
     assert.equal([...graceTimers.values()][0]?.ms, 1000, 'Refresh keeps only the remaining grace time')
+    assert.equal(element.querySelector('[role="timer"]')?.textContent, '00:01', 'Reload restores the visible countdown')
     await act(async () => { for (const timer of graceTimers.values()) timer.fn() })
-    assert.equal(results.length, 0, 'Never submit before 20 seconds')
+    assert.equal(results.length, 0, 'Never submit before 2 minutes')
     now += 1001
     await act(async () => { for (const timer of [...graceTimers.values()]) timer.fn() })
     assert.equal(results.length, 1)
     assert.ok(Object.values(results[0].answers).includes('Preserved answer'))
     assert.equal(storage.getItem(`ielts_test_session_${listeningFullTest15.id}:mock:full-mock-15`), null, 'Submitted session stays cleared')
     assert.equal(element.querySelector('.ielts-exam-timer'), null)
-    console.log('PASS: Reload during final audio grace period: exactly original +20 seconds, latest answers, no countdown or duplicate submission')
+    console.log('PASS: Reload during final audio review: exactly original +120 seconds, restored countdown, latest answers and no duplicate submission')
     await unmount()
     captureGrace = false
+    results.length = 0
+    const expiredListeningKey = `ielts_test_session_${listeningFullTest15.id}:mock:full-mock-15`
+    storage.setItem(expiredListeningKey, JSON.stringify({
+      isTestActive: true, testMode: 'simulation', audioDone: true, audioFinishedAt: now - 121_000,
+      timestamp: now, startedAt: now - 1_800_000,
+      answers: { [listeningFullTest15.sections[0].questions[0].id]: 'Preserved answer' },
+    }))
+    await mount(listeningFullTest15, 'full-mock-15', true)
+    assert.equal(results.length, 1, 'Expired Listening review submits once on reload, including StrictMode')
+    assert.ok(Object.values(results[0].answers).includes('Preserved answer'))
+    assert.equal(storage.getItem(expiredListeningKey), null)
+    await unmount()
     results.length = 0
     const expiredKey = `ielts_test_session_${fullReadingTest.id}:mock:full-mock-1`
     storage.setItem(expiredKey, JSON.stringify({

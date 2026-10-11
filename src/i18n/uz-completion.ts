@@ -1,5 +1,14 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Listening answer review': 'Listening javoblarini tekshirish',
+  'Audio complete': 'Audio tugadi',
+  'Check your answers': 'Javoblaringizni tekshiring',
+  'Finish writing and review your answers. They will be submitted automatically when time runs out.': 'Javoblaringizni yozib tugating va tekshiring. Vaqt tugagach, ular avtomatik topshiriladi.',
+  'Time remaining': 'Qolgan vaqt',
+  '30 seconds or less remaining. Your answers will be submitted automatically.': '30 soniya yoki undan kam vaqt qoldi. Javoblaringiz avtomatik topshiriladi.',
+  'Audio complete. You have 2 minutes to check your answers.': 'Audio tugadi. Javoblaringizni tekshirish uchun 2 daqiqa vaqtingiz bor.',
+  'Audio followed by 2 minutes to check answers': 'Audio tugagach, javoblarni tekshirish uchun 2 daqiqa',
+  'Finishes 2 minutes after the audio ends': 'Audio tugaganidan 2 daqiqa keyin avtomatik topshiriladi',
   "Your test answers and results, shared recordings, XP, streaks, AI conversations, vocabulary, profile and owned classes will be permanently removed. Creating an account again starts with a new profile and empty history.": "Test javoblari va natijalaringiz, ulashilgan ovoz yozuvlari, XP, ketma-ketliklar, AI suhbatlari, lug‘at, profil va siz yaratgan sinflar butunlay o‘chiriladi. Qayta akkaunt ochsangiz, yangi profil va bo‘sh tarix bilan boshlaysiz.",
   'Previous conversation': 'Avvalgi suhbat',
   'message': 'xabar',

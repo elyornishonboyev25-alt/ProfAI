@@ -5,6 +5,7 @@ import ListeningInterface from '../../src/components/IELTSReadingInterface'
 import { MemoryRouter } from 'react-router-dom'
 import { listeningFullTest15 } from '../../src/data/listeningFullTest15'
 import type { IELTSTest, TestResult } from '../../src/types/ieltsTypes'
+import i18n from '../../src/i18n'
 
 const container = document.getElementById('root')!
 const IELTSReadingInterface = (props: React.ComponentProps<typeof ListeningInterface>) => <MemoryRouter><ListeningInterface {...props} /></MemoryRouter>
@@ -12,6 +13,7 @@ const delay = (ms: number) => act(async () => { await new Promise(resolve => set
 const base: IELTSTest = { ...listeningFullTest15, duration: 0.01 }
 
 export async function run() {
+  await i18n.changeLanguage('en')
   const originalTimeout = window.setTimeout.bind(window)
   const originalClear = window.clearTimeout.bind(window)
   const originalNow = Date.now
@@ -20,12 +22,12 @@ export async function run() {
   const deadlines = new Map<number, () => void>()
   let counter = 100000
   window.setTimeout = ((fn: () => void, ms: number, ...args: unknown[]) => {
-    if (ms === 20000) { const id = ++counter; deadlines.set(id, fn); return id }
+    if (ms === 120000) { const id = ++counter; deadlines.set(id, fn); return id }
     return originalTimeout(fn, ms, ...args)
   }) as typeof window.setTimeout
   window.clearTimeout = id => { deadlines.delete(id); originalClear(id) }
   const fire = async () => {
-    now += 20001
+    now += 120001
     await act(async () => { for (const fn of [...deadlines.values()]) fn() })
   }
   const ended = () => act(async () => { container.querySelector('audio')!.dispatchEvent(new window.Event('ended')) })
@@ -44,6 +46,7 @@ export async function run() {
       await delay(2400)
       assert.ok(!container.querySelector('.reading-toolbar')!.textContent!.match(/\d+:\d{2}/), 'Listening has no countdown')
       assert.equal(results.length, 0, 'Short nominal duration must not submit Listening')
+      assert.equal(container.querySelector('[role="timer"]'), null, 'No answer-review countdown before the audio ends')
       await click('Play')
       assert.equal(container.querySelector('[aria-label="Practice audio controls"]'), null, 'Simulation hides playback controls')
       if (playlist) {
@@ -51,20 +54,37 @@ export async function run() {
           await ended()
           assert.equal(container.querySelector('audio')!.getAttribute('src'), `/part-${i}.mp3`)
           assert.equal(deadlines.size, 0, 'Intermediate tracks must not start grace period')
+          assert.equal(container.querySelector('.listening-review-countdown'), null)
         }
       }
       await act(async () => container.querySelector('audio')!.dispatchEvent(new window.Event('error')))
       assert.equal(deadlines.size, 0, 'Audio failure must not submit')
+      assert.equal(container.querySelector('.listening-review-countdown'), null)
       await act(async () => container.querySelector('audio')!.dispatchEvent(new window.Event('canplay')))
       await ended()
       assert.equal(deadlines.size, 1)
+      assert.equal(container.querySelector('[role="timer"]')?.textContent, '02:00')
       const deadlineId = [...deadlines.keys()][0]
+      for (const [language, heading] of [['uz', 'Javoblaringizni tekshiring'], ['ru', 'Проверьте ответы'], ['en', 'Check your answers']]) {
+        await act(async () => { await i18n.changeLanguage(language) })
+        assert.equal(container.querySelector('.listening-review-countdown h2')?.textContent, heading)
+        assert.equal([...deadlines.keys()][0], deadlineId, 'Changing language must not reset the countdown')
+      }
+      now += 1000
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      assert.equal(container.querySelector('[role="timer"]')?.textContent, '01:59', 'Countdown uses elapsed time')
+      await ended()
+      assert.equal([...deadlines.keys()][0], deadlineId, 'Duplicate audio end cannot restart the countdown')
       const input = container.querySelector('input[placeholder="1"]')!
       await act(async () => {
         Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, '14 September')
         input.dispatchEvent(new window.Event('input', { bubbles: true }))
       })
-      assert.equal([...deadlines.keys()][0], deadlineId, 'Editing answers must not restart the 20 seconds')
+      assert.equal([...deadlines.keys()][0], deadlineId, 'Editing answers must not restart the 2 minutes')
+      now += 89000
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      assert.equal(container.querySelector('[role="timer"]')?.textContent, '00:30')
+      assert.ok(container.querySelector('.listening-review-countdown.is-urgent'), 'Final 30 seconds have a visible warning')
       await act(async () => deadlines.get(deadlineId)!())
       assert.equal(results.length, 0, 'No submission before the deadline')
       await fire()
@@ -80,6 +100,7 @@ export async function run() {
       await act(async () => reviewRoot.render(<IELTSReadingInterface test={test} reviewPayload={{ result: results[0], showCorrectAnswers: true }} onComplete={() => assert.fail('Review must not submit')} onExit={() => {}} />))
       await ended()
       assert.equal(deadlines.size, 0, 'Review is not a timed attempt')
+      assert.equal(container.querySelector('.listening-review-countdown'), null, 'Review playback has no answer-review countdown')
       await act(async () => reviewRoot.unmount())
     }
 
@@ -129,13 +150,26 @@ export async function run() {
     assert.equal(deadlines.size, 0, 'Leaving clears automatic submission')
 
     localStorage.clear()
+    const partialTest = { ...base, continuousAudioUrl: undefined, sections: base.sections.map((section, index) => ({ ...section, audioUrl: `/practice-part-${index}.mp3` })) }
+    const partialRoot = createRoot(container)
+    await act(async () => partialRoot.render(<IELTSReadingInterface test={partialTest} launchPreset={{ mode: 'practice', partIndex: 2 }} onComplete={() => assert.fail('Partial practice submitted early')} onExit={() => {}} />))
+    await delay(2400)
+    await click('Play')
+    assert.equal(container.querySelector('audio')?.getAttribute('src'), '/practice-part-1.mp3', 'Part selection uses the existing one-based part number')
+    await ended()
+    assert.equal(container.querySelector('[role="timer"]')?.textContent, '02:00', 'Single-part practice gets the same 2-minute review')
+    assert.equal(deadlines.size, 1)
+    await act(async () => partialRoot.unmount())
+    assert.equal(deadlines.size, 0)
+
+    localStorage.clear()
     const reading = { ...base, id: 'reading-timer-control', module: 'Reading' as const, duration: 60 }
     const readingRoot = createRoot(container)
     await act(async () => readingRoot.render(<IELTSReadingInterface test={reading} launchPreset={{ mode: 'simulation' }} onComplete={() => {}} onExit={() => {}} />))
     await delay(2400)
     assert.match(container.querySelector('.reading-toolbar')!.textContent!, /\d+:\d{2}/, 'Reading keeps its timer')
     await act(async () => readingRoot.unmount())
-    console.log('PASS: Listening practice playback controls; simulation restrictions; final audio + 20s; playlists; errors; review; unmount; Reading timer')
+    console.log('PASS: Listening practice playback controls; simulation restrictions; final audio + 120s countdown; playlists; errors; repeated end; latest answers; review; unmount; Reading timer')
   } finally {
     window.setTimeout = originalTimeout
     window.clearTimeout = originalClear

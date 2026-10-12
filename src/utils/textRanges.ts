@@ -39,7 +39,7 @@ export function textRange(container: HTMLElement, start: number, end: number): R
 }
 
 /** Measure text leaves only: element rectangles can cover several wrapped lines. */
-export function textClientRects(container: HTMLElement, range: Range): DOMRect[] {
+export function textClientRects(container: HTMLElement, range: Range, measureCharacters = false): DOMRect[] {
   const walker = document.createTreeWalker(container, window.NodeFilter.SHOW_TEXT)
   const rectangles: DOMRect[] = []
   while (walker.nextNode()) {
@@ -49,9 +49,31 @@ export function textClientRects(container: HTMLElement, range: Range): DOMRect[]
     const end = node === range.endContainer ? range.endOffset : node.textContent?.length ?? 0
     if (end <= start) continue
     const leaf = document.createRange()
-    leaf.setStart(node, start)
-    leaf.setEnd(node, end)
-    rectangles.push(...Array.from(leaf.getClientRects()).filter(rect => rect.width > 0 && rect.height > 0))
+    if (!measureCharacters) {
+      leaf.setStart(node, start)
+      leaf.setEnd(node, end)
+      rectangles.push(...Array.from(leaf.getClientRects()).filter(rect => rect.width > 0 && rect.height > 0))
+      continue
+    }
+    // Older browsers lack native CSS highlights. Measure individual characters
+    // so even an aggregated multiline range box cannot color an adjacent line.
+    let offset = start
+    const lines: DOMRect[] = []
+    for (const character of Array.from(node.textContent!.slice(start, end))) {
+      leaf.setStart(node, offset)
+      offset += character.length
+      leaf.setEnd(node, offset)
+      for (const rect of Array.from(leaf.getClientRects())) {
+        if (!rect.width || !rect.height) continue
+        const previous = lines[lines.length - 1]
+        if (previous && Math.abs(previous.top - rect.top) < 0.5 && Math.abs(previous.height - rect.height) < 0.5 &&
+          rect.left <= previous.right + 0.5 && rect.right >= previous.left - 0.5) {
+          const left = Math.min(previous.left, rect.left)
+          lines[lines.length - 1] = new window.DOMRect(left, previous.top, Math.max(previous.right, rect.right) - left, previous.height)
+        } else lines.push(rect)
+      }
+    }
+    rectangles.push(...lines)
   }
   return rectangles
 }

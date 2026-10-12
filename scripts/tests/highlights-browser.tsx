@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import '../../src/i18n'
+import SATSourceContent from '../../src/components/sat/SATSourceContent'
 import SATTextHighlights from '../../src/components/sat/SATTextHighlights'
 import ArticleReader from '../../src/pages/ArticleReader'
 import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
@@ -150,5 +151,40 @@ export async function run() {
   check(!prose.querySelector('.ielts-note') && prose.querySelector('.ielts-highlight'), 'Deleting a note retains the overlapping highlight')
   check(pane.textContent === original, 'Removing notes leaves the passage intact')
   flushSync(() => root.unmount())
+  return 'PASS'
+}
+
+// The screenshot's plain passage must never paint text on the next line.
+export async function runSATGeometry(nativePaint = true) {
+  const container = document.getElementById('root')!
+  const root = createRoot(container)
+  const text = 'Radar and sonar can detect objects or people through walls, but they are too costly for consumer use. Researchers Fadel Adib and Dina Katabi have shown, however, that there may be a comparatively ______ alternative: small changes to the Wi-Fi technology used in smartphones can give users a cheap way to count people or even identify their gestures through walls.'
+  const start = text.indexOf('however')
+  const end = start + 16
+  const stroke: HighlightStroke = { id: 'screenshot', color: 'rgba(56,189,248,0.40)', width: 0, points: [], textRange: { block: 'context', start, end, text: text.slice(start, end) } }
+  for (const zoom of [0.7, 1, 1.2, 1.6]) for (const width of [380, 672, 880]) {
+    flushSync(() => root.render(<div style={{ zoom, width, padding: 20 }}><SATTextHighlights strokes={[stroke]} enabled={false}>
+      <div data-sat-highlight-block="context"><SATSourceContent html={'<p>' + text.replace('______', '<span>______</span>') + '</p>'} className="font-serif text-[18px] font-medium leading-[1.5]" /></div>
+    </SATTextHighlights></div>))
+    await pause()
+    const block = container.querySelector<HTMLElement>('[data-sat-highlight-block]')!
+    const glyphs = Array.from({ length: end - start }, (_, i) => textRange(block, start + i, start + i + 1)!.getBoundingClientRect())
+    const paints = [...container.querySelectorAll<HTMLElement>('[data-sat-highlight-id]')].map(el => el.getBoundingClientRect())
+    check(paints.length > 0, 'Screenshot highlight is restored')
+    if (nativePaint) {
+      check(typeof CSS.highlights !== 'undefined', 'Browser supports native text highlighting')
+      const nativeHighlights = [...CSS.highlights].filter(([name]) => name.startsWith('sat-text-'))
+      check(nativeHighlights.length === 1, 'Each saved highlight uses its own native text range')
+      check([...nativeHighlights[0][1]].map(range => range.toString()).join('') === text.slice(start, end), 'Native paint contains only the selected text, never text on the following line')
+      check([...container.querySelectorAll<HTMLElement>('[data-sat-highlight-id]')].every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)'), 'Management hit areas never paint rectangles over adjacent lines')
+    } else {
+      check([...container.querySelectorAll<HTMLElement>('[data-sat-highlight-id]')].every(el => getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)'), 'Browsers without native highlights still paint saved text highlights')
+    }
+    for (const paint of paints) {
+      check(glyphs.some(glyph => Math.abs(paint.top - glyph.top) < 1 && Math.abs(paint.height - glyph.height) < 1), `Screenshot highlight paints only the selected line at width ${width}, zoom ${zoom}: ${JSON.stringify({ top: paint.top, height: paint.height, glyphs: glyphs.map(g=>({top:g.top,height:g.height})) })}`)
+    }
+  }
+  flushSync(() => root.unmount())
+  if (nativePaint) check(![...CSS.highlights.keys()].some(name => name.startsWith('sat-text-')), 'Unmount removes native highlight ranges and styles')
   return 'PASS'
 }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { textRange, textClientRects, clipTextRange, textOffsets } from '@/utils/textRanges'
@@ -24,13 +24,26 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
   children: ReactNode; strokes: HighlightStroke[]; onChange?: (strokes: HighlightStroke[]) => void; enabled?: boolean
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
+  const highlightNamespace = `sat-text-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`
+  const nativePaint = typeof window !== 'undefined' && typeof window.CSS?.highlights !== 'undefined' && typeof window.Highlight === 'function'
   const [menu, setMenu] = useState<Menu | null>(null)
   const [rectangles, setRectangles] = useState<Rectangle[]>([])
 
   useLayoutEffect(() => {
     const root = rootRef.current
     if (!root) return
+    // Let the browser paint the actual text fragments. Absolute backgrounds can
+    // cover adjacent lines when the browser's text metrics or zoom changes.
+    const stylesheet = nativePaint ? document.createElement('style') : null
+    if (stylesheet) document.head.appendChild(stylesheet)
+    const registeredNames = new Set<string>()
+    const clearNativeHighlights = () => {
+      for (const name of registeredNames) window.CSS.highlights.delete(name)
+      registeredNames.clear()
+    }
     const measure = () => {
+      clearNativeHighlights()
+      const rules: string[] = []
       const bounds = root.getBoundingClientRect()
       const scaleX = bounds.width / root.offsetWidth || 1
       const scaleY = bounds.height / root.offsetHeight || 1
@@ -44,12 +57,19 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
         const segment = stroke.textRange
         const later = strokes.slice(strokeIndex + 1).flatMap(entry => entry.textRange?.block === segment.block && rangeForHighlight(block!, entry.textRange) ? [entry.textRange] : [])
         const edges = [...new Set([segment.start, segment.end, ...later.flatMap(entry => [Math.max(segment.start, Math.min(segment.end, entry.start)), Math.max(segment.start, Math.min(segment.end, entry.end))])])].sort((a, b) => a - b)
-        const rects = edges.slice(0, -1).flatMap((start, index) => {
+        const visibleRanges = edges.slice(0, -1).flatMap((start, index) => {
           const end = edges[index + 1]
           if (later.some(entry => entry.start <= start && entry.end >= end)) return []
           const visible = textRange(block!, start, end)
-          return visible ? textClientRects(block!, visible) : []
+          return visible ? [visible] : []
         })
+        if (nativePaint && visibleRanges.length && window.CSS.supports('color', stroke.color)) {
+          const name = `${highlightNamespace}-${strokeIndex}`
+          window.CSS.highlights.set(name, new window.Highlight(...visibleRanges))
+          registeredNames.add(name)
+          rules.push(`::highlight(${name}) { background-color: ${stroke.color}; }`)
+        }
+        const rects = visibleRanges.flatMap(visible => textClientRects(block!, visible, !nativePaint))
         for (const rect of rects) {
           if (!rect.width || !rect.height) continue
           const box = { id: stroke.id, color: stroke.color,
@@ -60,6 +80,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
             existing.top === box.top && existing.width === box.width && existing.height === box.height)) next.push(box)
         }
       }
+      if (stylesheet) stylesheet.textContent = rules.join('\n')
       setRectangles(next)
     }
     measure()
@@ -70,8 +91,8 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
     root.addEventListener('scroll', measure, true)
     let disposed = false
     document.fonts?.ready.then(() => { if (!disposed) measure() })
-    return () => { disposed = true; root.removeEventListener('scroll', measure, true); observer?.disconnect(); root.removeEventListener('load', measure, true); window.removeEventListener('resize', measure) }
-  }, [children, strokes])
+    return () => { disposed = true; clearNativeHighlights(); stylesheet?.remove(); root.removeEventListener('scroll', measure, true); observer?.disconnect(); root.removeEventListener('load', measure, true); window.removeEventListener('resize', measure) }
+  }, [children, strokes, highlightNamespace, nativePaint])
 
   useLayoutEffect(() => {
     if (!enabled || !onChange) return
@@ -137,7 +158,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
       {rectangles.map((rect, index) => <span key={`${rect.id}-${index}`} data-sat-highlight-id={rect.id}
         role={enabled && onChange ? 'button' : undefined} tabIndex={enabled && onChange ? 0 : undefined}
         aria-label="Manage highlight" className={enabled && onChange ? 'cursor-text' : ''}
-        style={{ position: 'absolute', left: rect.left, top: rect.top, width: rect.width, height: rect.height, background: rect.color, borderRadius: 2 }}
+        style={{ position: 'absolute', left: rect.left, top: rect.top, width: rect.width, height: rect.height, background: nativePaint ? 'transparent' : rect.color, borderRadius: 2 }}
         onClick={event => { event.stopPropagation(); if (enabled && onChange) { const bounds = event.currentTarget.getBoundingClientRect(); setMenu({ id: rect.id, x: Math.min(window.innerWidth - 90, Math.max(90, bounds.left + bounds.width / 2)), y: Math.max(48, bounds.top - 8) }) } }}
         onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} />)}
     </div>

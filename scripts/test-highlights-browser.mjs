@@ -15,7 +15,7 @@ const WebSocket = requireBackend('ws')
 
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-highlights-browser-'))
-  const source = `import { run } from './scripts/tests/highlights-browser'; window.runHighlights = run;`
+  const source = `import { run, runSATGeometry } from './scripts/tests/highlights-browser'; window.runHighlights = run; window.runSATGeometry = runSATGeometry;`
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outdir: directory, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const styles = await Promise.all(['src/index.css', 'src/styles/ielts-exam-workspace.css'].map((file) => readFile(file, 'utf8')))
   const css = (await postcss([tailwindcss()]).process(styles[0], { from: 'src/index.css' })).css + '\n' + styles[1] + '\n' + (bundle.outputFiles.find(file => file.path.endsWith('.css'))?.text ?? '')
@@ -27,6 +27,29 @@ async function main() {
     else { res.writeHead(404); res.end() }
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  if (process.env.HIGHLIGHTS_TEST_ENGINE === 'webkit') {
+    let browser
+    try {
+      const { webkit } = await import(process.env.HIGHLIGHTS_PLAYWRIGHT_MODULE || 'playwright')
+      browser = await webkit.launch()
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } })
+      await page.goto(`http://127.0.0.1:${server.address().port}/`)
+      await page.waitForFunction(() => typeof window.runHighlights === 'function')
+      assert.equal(await page.evaluate(() => window.runSATGeometry()), 'PASS')
+      assert.equal(await page.evaluate(async () => {
+        const registry = CSS.highlights
+        Object.defineProperty(CSS, 'highlights', { configurable: true, value: undefined })
+        try { return await window.runSATGeometry(false) }
+        finally { Object.defineProperty(CSS, 'highlights', { configurable: true, value: registry }) }
+      }), 'PASS')
+      console.log('PASS: WebKit screenshot passage at 12 zoom/width combinations, native and fallback highlights')
+    } finally {
+      await browser?.close()
+      await new Promise(resolve => server.close(resolve))
+      await rm(directory, { recursive: true, force: true })
+    }
+    return
+  }
   const cache = join(homedir(), 'Library/Caches/ms-playwright')
   const candidates = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...(existsSync(cache) ? readdirSync(cache).filter(name => name.startsWith('chromium_headless_shell-')).map(name => join(cache, name, 'chrome-headless-shell-mac-arm64/chrome-headless-shell')) : [])]
   const browserPath = process.env.HIGHLIGHTS_TEST_BROWSER || candidates.find(path => existsSync(path))
@@ -79,6 +102,7 @@ async function main() {
     await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
     await until('typeof window.runHighlights === "function"')
+    assert.equal(await evaluate('window.runSATGeometry()'), 'PASS')
     const result = await evaluate('window.runHighlights()')
     assert.equal(result, 'PASS')
     console.log('PASS: real browser SAT multiline geometry, recoloring, selection through highlights, responsive layout, review; Articles offsets/overlaps/reopen; IELTS overlapping marks and notes')

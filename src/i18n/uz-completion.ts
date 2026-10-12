@@ -1,8 +1,8 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
   "Leave Exam Mode?": "Exam Mode’dan chiqasizmi?",
-  "Your test timer is paused. Continue in fullscreen, or leave this exam attempt.": "Test vaqti to‘xtatilgan. To‘liq ekranda davom eting yoki bu urinishdan chiqing.",
-  "If you leave, this attempt will end and you cannot resume it, even after reloading.": "Chiqsangiz, bu urinish tugaydi va sahifani qayta yuklasangiz ham uni davom ettira olmaysiz.",
+  "Your test timer is still running. Continue the test, or leave and discard your answers.": "Test vaqti davom etmoqda. Testni davom ettiring yoki javoblarni o‘chirib chiqing.",
+  "If you leave, your answers will be deleted and this attempt cannot be resumed.": "Chiqsangiz, javoblaringiz o‘chiriladi va bu urinishni davom ettira olmaysiz.",
   "Continue test": "Testni davom ettirish",
   "Leave and end attempt": "Chiqish va urinishni tugatish",
   'Build your Listening with podcasts': 'Podkastlar bilan Listening ko‘nikmangizni rivojlantiring',

@@ -49,6 +49,7 @@ import {
 } from '@/features/sat/practiceTest4'
 import {
   clearSATAttempt,
+  deleteSATAttemptHistoryEntry,
   loadSATAttempt,
   saveSATAttempt,
   saveSATAttemptToHistory,
@@ -89,7 +90,7 @@ export default function SATMockRun() {
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
-  const { isFullscreen, enter, exit } = useFullscreen()
+  const { isFullscreen, supported, toggle, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => {
     const saved = loadSATAttempt(test.id)
     return saved ? migrateModuleTiming(saved, modules) : null
@@ -116,7 +117,7 @@ export default function SATMockRun() {
   const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
   const [baselineRetry, setBaselineRetry] = useState(0)
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
-  const [fullscreenExitOpen, setFullscreenExitOpen] = useState(false)
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
   const questionViewportRef = useRef<HTMLDivElement>(null)
 
@@ -197,23 +198,18 @@ export default function SATMockRun() {
 
   const exitTest = useCallback(() => {
     if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
-      persistUpdate((current) => pauseModule(current, modules))
       setMoreOpen(false)
-      setFullscreenExitOpen(true)
+      setExitConfirmOpen(true)
       return
     }
     pauseAndSaveAttempt()
     if (fullscreenElement()) void exit()
     navigate(backPath)
-  }, [backPath, exit, modules, navigate, pauseAndSaveAttempt, persistUpdate])
+  }, [backPath, exit, navigate, pauseAndSaveAttempt])
 
-  const continueExam = useCallback(async () => {
-    await enter()
-    if (!fullscreenElement()) return
-    persistUpdate((current) => current.pausedModuleSeconds === undefined ? current : resumeModule(current, modules))
-    setNow(Date.now())
-    setFullscreenExitOpen(false)
-  }, [enter, modules, persistUpdate])
+  const continueExam = useCallback(() => {
+    setExitConfirmOpen(false)
+  }, [])
 
   const leaveExam = useCallback(() => {
     const current = attemptRef.current
@@ -223,17 +219,25 @@ export default function SATMockRun() {
       status: 'terminated',
       terminatedAt: Date.now(),
       updatedAt: Date.now(),
-      terminationReason: 'User confirmed leaving Exam Mode.',
+      terminationReason: 'User confirmed leaving Exam Mode and discarded answers.',
+      answers: {},
+      notes: {},
+      highlights: {},
+      flagged: [],
+      currentQuestionIndex: 0,
     }
     // Persist before navigation so page-exit handlers cannot save an active attempt.
     attemptRef.current = ended
+    clearSATAttempt(test.id)
+    deleteSATAttemptHistoryEntry(current.attemptId)
     saveSATAttempt(ended)
-    saveSATAttemptToHistory(ended, 'exit')
+    accountStorageFor().removeItem(uiKey)
+    setCheckedQuestions([])
     setAttempt(ended)
-    setFullscreenExitOpen(false)
+    setExitConfirmOpen(false)
     if (fullscreenElement()) void exit()
     navigate(backPath)
-  }, [backPath, exit, modules, navigate])
+  }, [backPath, exit, modules, navigate, test.id, uiKey])
 
   const openNotes = useCallback(() => {
     setNotesOpen(true)
@@ -304,7 +308,7 @@ export default function SATMockRun() {
 
   useEffect(() => {
     const current = attemptRef.current
-    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined || current.mode === 'exam') return
+    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined) return
     persistUpdate((value) => resumeModule(value, modules))
   }, [modules, persistUpdate])
 
@@ -329,35 +333,17 @@ export default function SATMockRun() {
   }, [pauseAndSaveAttempt])
 
   useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
-
-    if (!isFullscreen && !fullscreenExitOpen) {
-      persistUpdate((current) => pauseModule(current, modules))
-      setFullscreenExitOpen(true)
-      return
-    }
-
-    if (isFullscreen && !fullscreenExitOpen && attempt.pausedModuleSeconds !== undefined) {
-      persistUpdate((current) => resumeModule(current, modules))
-    }
-  }, [attempt, isFullscreen, modules, persistUpdate, fullscreenExitOpen])
-
-  useEffect(() => {
     if (
       !attempt ||
       attempt.status !== 'active' ||
       attempt.mode !== 'exam' ||
-      fullscreenExitOpen ||
-      attempt.pausedModuleSeconds !== undefined ||
-      !isFullscreen
+      attempt.pausedModuleSeconds !== undefined
     ) return
     if (testSeconds <= 0) advanceModule()
   }, [
     attempt,
     advanceModule,
-    isFullscreen,
     testSeconds,
-    fullscreenExitOpen,
   ])
 
   useEffect(() => {
@@ -372,7 +358,7 @@ export default function SATMockRun() {
         formulaSheetOpen ||
         notesOpen ||
         navigatorOpen ||
-        fullscreenExitOpen
+        exitConfirmOpen
       ) {
         return
       }
@@ -417,7 +403,7 @@ export default function SATMockRun() {
     openNotes,
     persistUpdate,
     questionIndex,
-    fullscreenExitOpen,
+    exitConfirmOpen,
   ])
 
   if (!attempt) {
@@ -617,6 +603,9 @@ export default function SATMockRun() {
                 <button type="button" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
               </div>
               <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
+              {supported && <button type="button" onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100">
+                <ZoomIn className="h-4 w-4" /> {isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              </button>}
               <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> {attempt.mode === 'exam' ? 'Exit test' : 'Exit & Save'}</button>
             </div>
           ) : null}
@@ -911,7 +900,7 @@ export default function SATMockRun() {
           </motion.div>
         ) : null}
 
-        {fullscreenExitOpen ? (
+        {exitConfirmOpen ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -930,15 +919,15 @@ export default function SATMockRun() {
               <ShieldAlert className="mx-auto h-12 w-12 text-red-400" />
               <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Leave Exam Mode?" /></h1>
               <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                <UiText text="Your test timer is paused. Continue in fullscreen, or leave this exam attempt." />
+                <UiText text="Your test timer is still running. Continue the test, or leave and discard your answers." />
               </p>
               <p className="mt-4 text-sm font-bold text-red-300">
-                <UiText text="If you leave, this attempt will end and you cannot resume it, even after reloading." />
+                <UiText text="If you leave, your answers will be deleted and this attempt cannot be resumed." />
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => void continueExam()}
+                  onClick={continueExam}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
                 >
                   <ZoomIn className="h-4 w-4" /> <UiText text="Continue test" />

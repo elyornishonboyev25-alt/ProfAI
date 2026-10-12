@@ -10,8 +10,9 @@ import TestInterface from '@/pages/TestInterface'
 import ReadingInterface from '@/components/IELTSReadingInterface'
 import { getIeltsReadingUnifiedCatalog } from '@/utils/ieltsTrackCatalog'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
-import { findSourceRanges, resolveAnswerEvidence, sourceBlocks } from '@/utils/answerEvidence'
+import { findSourceRanges, mergeEvidenceRanges, resolveAnswerEvidence, sourceBlocks } from '@/utils/answerEvidence'
 import { readingAnswerEvidence, readingEvidenceKeyConflicts } from '@/data/readingAnswerEvidence'
+import readingSentenceEvidence from '@/data/readingSentenceEvidence.json'
 import { parseSectionParagraphs } from '@/utils/readingReview'
 import { saveReviewState } from '@/utils/resultsReviewState'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
@@ -38,14 +39,29 @@ export async function run() {
   assert.deepEqual(grouped.ranges.map(range => range.answerIndex), [0, 1], 'each grouped blank retains its own number')
   const scoped = resolveAnswerEvidence(s({ paragraphs: [{ label: 'A', content: 'Art one.' }, { label: 'B', content: 'Art two.' }] }), q({ answerEvidence: [{ quote: 'Art', paragraphLabel: 'B' }] }))
   assert.deepEqual(scoped.ranges.map(range => range.blockId), ['paragraph-1'])
-  const multipleLocations = resolveAnswerEvidence(s({ paragraphs: ['A', 'B', 'D'].map(label => ({ label, content: `${label} source paragraph.` })) }), q({ type: 'true-false-not-given', correctAnswer: 'TRUE', location: 'Paragraphs A and B' }))
+  const multipleLocations = resolveAnswerEvidence(s({ paragraphs: ['A', 'B', 'D'].map(label => ({ label, content: `${label} source paragraph.` })) }), q({ correctAnswer: 'source', location: 'Paragraphs A and B' }))
   assert.deepEqual(multipleLocations.ranges.map(range => range.blockId), ['paragraph-0', 'paragraph-1'], 'the word and must not be interpreted as paragraph D')
+  const paragraphOnly = resolveAnswerEvidence(s({ content: 'Art is popular. Unrelated background remains here.' }), q({ type: 'true-false-not-given', correctAnswer: 'TRUE', location: 'Paragraph 1' }))
+  assert.equal(paragraphOnly.state, 'context')
+  assert.equal(paragraphOnly.ranges.length, 0, 'a paragraph location alone never highlights the whole paragraph as answer evidence')
+  const shared = mergeEvidenceRanges([
+    { blockId: 'paragraph-0', start: 0, end: 10, kind: 'answer', answerIndex: 0 },
+    { blockId: 'paragraph-0', start: 0, end: 10, kind: 'answer', answerIndex: 1 },
+  ])
+  assert.deepEqual(shared[0].answerIndices, [0, 1], 'shared evidence retains both question numbers')
+
+  const curie = resolveIeltsTestById('reading-roadmap-full-1')!.sections[0]
+  const prize = resolveAnswerEvidence(curie, curie.questions[0])
+  assert.equal(prize.ranges.length, 1)
+  assert.ok(prize.blocks[0].text.slice(prize.ranges[0].start, prize.ranges[0].end).includes('sole winner'))
+  assert.ok(prize.ranges[0].start > 0 && prize.ranges[0].end < prize.blocks[0].text.length, 'the prize evidence excludes unrelated biographical sentences')
 
   const restoredPassage = resolveIeltsTestById('ielts-reading-full-vol28')!.sections[0]
   assert.equal(createHash('sha256').update(restoredPassage.content!).digest('hex'), 'a206bba0b1ff1b31340501626b2de5c6d512eb43ac85267ee0612b420f8405e0', 'the restored passage is exactly the user-supplied text, with normalized line endings')
   assert.equal(sourceBlocks(restoredPassage).length, 10)
   assert.equal(sourceBlocks(restoredPassage).map(block => block.text).join('\n\n'), restoredPassage.content, 'review keeps all original paragraphs and punctuation')
   const seenQuotes = new Set<string>()
+  const seenSentences = new Set<string>()
   const totals: Record<string, number> = {}
   let checked = 0
   for (const card of getIeltsReadingUnifiedCatalog()) {
@@ -54,6 +70,7 @@ export async function run() {
       const evidence = resolveAnswerEvidence(section, question)
       assert.notEqual(evidence.state, 'unavailable', `${question.id}: every catalog question has evidence or a deliberate absence explanation`)
       assert.notEqual(evidence.state, 'key-conflict', `${question.id}: no current catalog key has a known source conflict`)
+      assert.notEqual(evidence.state, 'context', `${question.id}: every answerable mock question has precise evidence instead of a paragraph fallback`)
       totals[evidence.state] = (totals[evidence.state] ?? 0) + 1
       const correction = readingEvidenceKeyConflicts[question.id]
       if (correction) {
@@ -66,18 +83,29 @@ export async function run() {
         assert.equal(grade(correction.storedAnswer), 'incorrect', `${question.id}: the obsolete key no longer earns a mark`)
       }
       if (evidence.state === 'not-given' || evidence.state === 'not-mentioned' || evidence.state === 'key-conflict') assert.equal(evidence.ranges.length, 0)
+      if (Array.isArray(question.correctAnswer)) {
+        const indices = new Set(evidence.ranges.flatMap(range => range.answerIndices ?? (range.answerIndex === undefined ? [] : [range.answerIndex])))
+        assert.deepEqual([...indices].sort((a, b) => a - b), question.correctAnswer.map((_, index) => index), `${question.id}: every grouped answer retains its own evidence number`)
+      }
       for (const range of evidence.ranges) {
         const block = evidence.blocks.find(b => b.id === range.blockId)!
         assert.ok(range.start >= 0 && range.end <= block.text.length && range.end > range.start, `${question.id}: valid original offsets`)
+        assert.equal(range.kind, 'answer', `${question.id}: catalog highlights actual answer evidence`)
       }
       for (const quote of readingAnswerEvidence[question.id] ?? []) {
         assert.ok(sourceBlocks(section).some(block => findSourceRanges(block.text, quote).length), `${question.id}: reviewed quotation is present verbatim: ${quote}`)
         seenQuotes.add(question.id)
       }
+      for (const quotation of (readingSentenceEvidence as Record<string, NonNullable<Question['answerEvidence']>>)[question.id] ?? []) {
+        assert.ok(sourceBlocks(section).some(block => (!quotation.paragraphLabel || block.label === quotation.paragraphLabel)
+          && findSourceRanges(block.text, quotation.quote).length), `${question.id}: reviewed sentence occurs in the specified source paragraph`)
+        seenSentences.add(question.id)
+      }
       checked++
     }
   }
   assert.deepEqual([...seenQuotes].sort(), Object.keys(readingAnswerEvidence).sort(), 'no orphan evidence keys')
+  assert.deepEqual([...seenSentences].sort(), Object.keys(readingSentenceEvidence).sort(), 'no orphan sentence evidence keys')
   console.log(`PASS: ${checked} full-catalog questions, exact supplied passage, source offsets, reviewed quotations and seven corrected answer keys: ${JSON.stringify(totals)}`)
 
   const container = document.getElementById('root')!
@@ -144,10 +172,10 @@ export async function run() {
     await render(<MemoryRouter initialEntries={[{ pathname: `/results/${restoredTest.id}/review`, state: { initialQuestionId: 'rd28-q12' } }]}><Routes><Route path="/results/:testId/review" element={<ResultsReview />} /></Routes></MemoryRouter>)
     assert.equal(container.querySelector('.ielts-reading-prose')!.textContent!.trim(), restoredPassage.content, 'old saved attempts refresh their incomplete passage from the full catalog source')
     const restoredCard = container.querySelector('#question-card-rd28-q12')!
-    assert.ok(restoredCard.textContent!.includes('Question 12 - Wrong'))
+    assert.ok(restoredCard.querySelector('.reading-review-feedback')!.textContent!.includes('Incorrect'))
     const submittedChoice = [...restoredCard.querySelectorAll('button')].find(button => button.textContent?.trim() === 'NOT GIVEN')!
     assert.ok(submittedChoice.classList.contains('border-red-300'), 'the submitted NOT GIVEN choice remains visible as the wrong answer')
-    assert.ok(restoredCard.textContent!.includes('Correct answer: FALSE'), 'the restored source regrades Q12 without changing the submitted answer')
+    assert.ok(restoredCard.querySelector('.reading-review-feedback dd:last-of-type')!.textContent!.includes('FALSE'), 'the restored source regrades Q12 without changing the submitted answer')
     localStorage.clear(); window.sessionStorage.clear()
     await render(<MemoryRouter initialEntries={[{ pathname: `/results/${test.id}`, state: { result, test } }]}><Routes>
       <Route path="/results/:testId" element={<Results />} />

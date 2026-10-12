@@ -127,6 +127,27 @@ try {
       assert.equal(restored.missing, false)
     }
     console.log(`PASS: ${width}px restored Q4-9/Q12, numbered source highlights and exact supplied passage`)
+    await evaluate("localStorage.clear();sessionStorage.clear();window.show('reading-roadmap-full-1')")
+    await until('document.querySelector(\'[aria-label="Review question 1 in passage"]\')')
+    await evaluate('document.querySelector(\'[aria-label="Review question 1 in passage"]\').click()')
+    await until('document.querySelector(\'[data-answer-evidence="day1-q1"]\')')
+    const precise = await evaluate(`(() => {
+      const pane=document.querySelector('#answer-evidence-pane'), mark=pane.querySelector('mark'), paragraph=mark.closest('p');
+      const feedback=document.querySelector('#question-card-day1-q1 .reading-review-feedback');
+      return {text:mark.textContent,whole:mark.textContent===paragraph.textContent.trim(),
+        family: getComputedStyle(pane.querySelector('.ielts-reading-prose p')).fontFamily,
+        answers:[...feedback.querySelectorAll('dt')].map(item=>item.textContent),
+        overflow:document.documentElement.scrollWidth>innerWidth+1};
+    })()`)
+    assert.ok(precise.text.includes('sole winner of the 1911 Nobel Prize'))
+    assert.ok(!precise.text.includes('most famous woman scientist'))
+    assert.equal(precise.whole, false, 'statement evidence is a precise source sentence')
+    assert.ok(precise.family.includes('Arial'), 'review passage uses the IELTS exam font')
+    assert.deepEqual(precise.answers, ['Your answer', 'Correct answer'])
+    assert.equal(precise.overflow, false)
+    const evidenceShot = await send('Page.captureScreenshot', { format: 'png' })
+    await writeFile(join(screenshots, `${width}-sentence-evidence.png`), Buffer.from(evidenceShot.data, 'base64'))
+    console.log(`PASS: ${width}px precise statement evidence and IELTS review layout`)
   }
   assert.deepEqual(exceptions, [])
 } finally {

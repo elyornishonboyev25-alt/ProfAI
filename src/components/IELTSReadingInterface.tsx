@@ -51,6 +51,7 @@ import ListeningDiagram from './ListeningDiagram'
 import OldWaterMillDiagram from './OldWaterMillDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
 import { optionDisplayText, readingQuestionGroups } from '../utils/readingPresentation'
+import { formatCorrectAnswer, formatUserAnswer } from '../utils/readingReview'
 
 // Utils
 import {
@@ -989,21 +990,37 @@ export default function IELTSReadingInterface({
     if (!isReviewMode || !reviewShowCorrectAnswers) return null
     const meta = reviewQuestionMap.get(question.id)
     if (!meta) return null
-    const evidenceAction = !isListening ? <button type="button" aria-label={`Show evidence for question ${question.number}`}
-      aria-pressed={reviewFocusedQuestion?.id === question.id}
-      onClick={() => {
-        const section = sectionMeta[currentSectionIndex]
-        setLastActiveQuestionIndex(section.startIndex + section.questionIds.indexOf(question.id))
-      }} className="mt-2 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
-      View in passage
-    </button> : null
+    if (!isListening) {
+      const active = reviewFocusedQuestion?.id === question.id
+      const status = meta.status === 'correct' ? 'Correct' : meta.status === 'skipped' ? 'Unanswered' : 'Incorrect'
+      const tone = meta.status === 'correct' ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+        : meta.status === 'skipped' ? 'border-slate-200 bg-slate-100 text-slate-600' : 'border-red-200 bg-red-50 text-red-700'
+      return <div className={`${className} reading-review-feedback rounded-lg border ${active ? 'border-slate-300' : 'border-slate-200'} bg-slate-50 px-3 py-3`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-slate-600">Question {question.number}</span>
+          <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
+            {meta.status === 'correct' ? <CheckIcon className="h-3 w-3" /> : meta.status === 'incorrect' ? <XMarkIcon className="h-3 w-3" /> : null}{status}
+          </span>
+        </div>
+        <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs leading-5">
+          <dt className="text-slate-500">Your answer</dt><dd className="break-words font-medium text-slate-800">{formatUserAnswer(answers[question.id], question.options)}</dd>
+          <dt className="text-slate-500">Correct answer</dt><dd className="break-words font-semibold text-emerald-800">{formatCorrectAnswer(meta.correctAnswer)}</dd>
+        </dl>
+        <button type="button" aria-label={`Show evidence for question ${question.number}`} aria-pressed={active}
+          onClick={() => {
+            const section = sectionMeta[currentSectionIndex]
+            setLastActiveQuestionIndex(section.startIndex + section.questionIds.indexOf(question.id))
+          }} className={`mt-3 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 ${active ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:text-red-700'}`}>
+          <DocumentTextIcon className="h-3.5 w-3.5" />{active ? 'Evidence selected' : 'View in passage'}
+        </button>
+      </div>
+    }
     if (meta.status === 'correct') {
       return (
         <div className={`${className} rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 shadow-[0_8px_18px_rgba(16,185,129,0.16)]`}>
           <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-700">
             Question {question.number} - Correct
           </p>
-          {evidenceAction}
         </div>
       )
     }
@@ -1019,7 +1036,6 @@ export default function IELTSReadingInterface({
             {correct}
           </span>
         </p>
-        {evidenceAction}
       </div>
     )
   }
@@ -4061,8 +4077,8 @@ export default function IELTSReadingInterface({
     >
       <div className="sticky top-0 z-10 -mx-4 mb-5 flex items-center justify-between border-b border-red-100 bg-white/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
         <div>
-          <h3 className="text-lg font-black tracking-tight text-slate-900">Questions Workspace</h3>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-500">Answer panel</p>
+          <h3 className="text-lg font-bold tracking-tight text-slate-900">{isReviewMode ? 'Questions' : 'Questions Workspace'}</h3>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{isReviewMode ? 'Your answers · Review' : 'Answer panel'}</p>
         </div>
         <span className="text-xs font-semibold text-red-700 bg-red-50 px-3 py-1.5 rounded-xl border border-red-200">
           {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} of {testQuestionNumberCeiling}
@@ -6447,7 +6463,7 @@ export default function IELTSReadingInterface({
   return (
     <div
       ref={testShellRef}
-      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
+      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isReviewMode && !isListening ? 'ielts-reading-review' : ''} ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
     >
       <AnimatePresence>
         {isLaunching ? (
@@ -6475,6 +6491,7 @@ export default function IELTSReadingInterface({
               <div className="flex items-center gap-2">
                 <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-2xl font-black text-red-600`}>IELTS</span>
                 <span className={`ielts-exam-skill ${isReviewMode && !isListening ? 'text-sm sm:text-xl' : 'text-xl'} font-semibold text-slate-500`}>{isListening ? 'Listening' : 'Reading'}</span>
+                {isReviewMode && !isListening && <span data-reading-review-badge className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">Review</span>}
                 {isListening && isAudioPlaying ? (
                   <span className="ml-2 hidden items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-red-600 sm:inline-flex">
                     <SpeakerWaveIcon className="h-3.5 w-3.5" />
@@ -6499,7 +6516,7 @@ export default function IELTSReadingInterface({
                   />
                 </span>
               </div>
-            ) : isReviewMode ? (
+            ) : isReviewMode && isListening ? (
               <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 rounded-2xl border border-red-100 bg-white px-3 py-2 shadow-[0_12px_26px_rgba(220,38,38,0.15)]">
                 <span className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Review Mode</span>
               </div>

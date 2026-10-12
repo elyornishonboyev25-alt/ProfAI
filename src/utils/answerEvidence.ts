@@ -2,9 +2,10 @@ import type { Question, Section } from '@/types/ieltsTypes'
 import { parseSectionParagraphs } from './readingReview'
 import { optionDisplayText } from './readingPresentation'
 import { readingAnswerEvidence, readingEvidenceKeyConflicts } from '@/data/readingAnswerEvidence'
+import readingSentenceEvidence from '@/data/readingSentenceEvidence.json'
 
 export type EvidenceBlock = { id: string; label?: string; text: string }
-export type EvidenceRange = { blockId: string; start: number; end: number; kind: 'answer' | 'context'; answerIndex?: number }
+export type EvidenceRange = { blockId: string; start: number; end: number; kind: 'answer' | 'context'; answerIndex?: number; answerIndices?: number[] }
 export type AnswerEvidence = {
   blocks: EvidenceBlock[]
   ranges: EvidenceRange[]
@@ -82,7 +83,10 @@ export function resolveAnswerEvidence(section: Section, question: Question): Ans
     return { ...base, ranges: [], state: 'not-mentioned' }
   }
   const storedQuotes = readingAnswerEvidence[question.id]
-  const quotations: NonNullable<Question['answerEvidence']> = question.answerEvidence ?? storedQuotes?.map((quote, index) => ({ quote,
+  // Reviewed source quotations cover paraphrases, headings and statement questions.
+  // Stable question IDs also work when the passages are combined into full mocks.
+  const sentenceQuotes = (readingSentenceEvidence as Record<string, NonNullable<Question['answerEvidence']>>)[question.id]
+  const quotations: NonNullable<Question['answerEvidence']> = question.answerEvidence ?? sentenceQuotes ?? storedQuotes?.map((quote, index) => ({ quote,
     answerIndex: Array.isArray(question.correctAnswer) && storedQuotes.length === question.correctAnswer.length ? index : undefined,
   })) ?? []
   const explicit = quotations.flatMap(evidence => blocks
@@ -119,10 +123,10 @@ export function resolveAnswerEvidence(section: Section, question: Question): Ans
       return { ...base, ranges: merged, state: 'answer' }
     }
   }
-  // Published paragraph locations provide context for paraphrases, headings and
-  // TRUE/FALSE items. Do not present a keyword similarity guess as proof.
+  // A paragraph reference alone cannot identify the answer sentence. Keep the
+  // location available as context, without painting unrelated text as evidence.
   if (located.length) {
-    return { ...base, ranges: located.map(block => ({ blockId: block.id, start: 0, end: block.text.length, kind: 'context' })), state: 'context' }
+    return { ...base, ranges: [], state: 'context' }
   }
   return { ...base, ranges: [], state: 'unavailable' }
 }
@@ -131,7 +135,12 @@ export function mergeEvidenceRanges(ranges: EvidenceRange[]): EvidenceRange[] {
   const merged: EvidenceRange[] = []
   for (const range of ranges.slice().sort((a, b) => a.blockId.localeCompare(b.blockId) || a.start - b.start || b.end - a.end)) {
     const previous = merged[merged.length - 1]
-    if (previous?.blockId === range.blockId && range.start < previous.end) previous.end = Math.max(previous.end, range.end)
+    if (previous?.blockId === range.blockId && range.start < previous.end) {
+      previous.end = Math.max(previous.end, range.end)
+      const indices = [...(previous.answerIndices ?? (previous.answerIndex === undefined ? [] : [previous.answerIndex])),
+        ...(range.answerIndices ?? (range.answerIndex === undefined ? [] : [range.answerIndex]))]
+      if (indices.length) previous.answerIndices = [...new Set(indices)].sort((a, b) => a - b)
+    }
     else merged.push({ ...range })
   }
   return merged

@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { verifyAccessToken } from '../utils/jwt.js'
 import { prisma } from '../lib/prisma.js'
+import { acquireSessionUsage } from '../services/authActivity.service.js'
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
@@ -23,10 +24,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
     }
     if (payload.sid) {
-      const session = await prisma.authSession.findUnique({ where: { id: payload.sid } })
-      if (!session || session.userId !== user.id || session.endedAt || session.expiresAt <= new Date()) {
-        return res.status(401).json({ message: 'This session has ended. Please sign in again.', code: 'SESSION_EXPIRED' })
-      }
+      await acquireSessionUsage(user.id, payload.sid, req.get('X-Device-Id')?.toLowerCase() ?? '')
+    } else if (req.path !== '/activity/heartbeat') {
+      return res.status(401).json({ message: 'Please refresh your session or sign in again.', code: 'SESSION_EXPIRED' })
     }
     req.user = {
       id: user.id,

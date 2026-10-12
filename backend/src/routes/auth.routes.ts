@@ -20,7 +20,7 @@ import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
-import { AuthSessionError, createAuthSession, requestDeviceId } from '../services/authActivity.service.js'
+import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDeviceId, DEVICE_USAGE_WINDOW_MS } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
 
 const router = Router()
@@ -202,9 +202,10 @@ async function issueAuthTokens(args: {
       if (!args.deviceId.startsWith('unknown-') && current.deviceId !== args.deviceId) {
         throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign in on this device.')
       }
+      await assertDeviceAvailable(args.userId, current.deviceId, tx)
     }
     const session = args.sessionId
-      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt } })
+      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt, usageUntil: new Date(Date.now() + DEVICE_USAGE_WINDOW_MS) } })
       : await createAuthSession({ ...args, expiresAt }, tx)
     if (args.previousTokenId) {
       // Admission and rotation commit together, so rejection keeps the old token.
@@ -740,27 +741,35 @@ router.post(
 
 router.post(
   '/logout',
-  requireAuth,
+  authRateLimit,
   validateBody(logoutSchema),
   asyncHandler(async (req, res) => {
     const { refreshToken } = req.body
 
-    const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
-    if (stored?.userId === req.user!.id && stored.sessionId) {
-      const session = await prisma.authSession.findUnique({ where: { id: stored.sessionId } })
-      if (session?.userId === req.user!.id) {
-        await prisma.authSession.updateMany({ where: { deviceId: session.deviceId, userId: req.user!.id, endedAt: null }, data: { endedAt: new Date() } })
-      }
+    // A valid refresh credential can sign out its own browser even when its
+    // access token has expired and another device currently owns usage.
+    let payload
+    try { payload = verifyRefreshToken(refreshToken) } catch {
+      throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Invalid refresh token.')
     }
-    await prisma.refreshToken.updateMany({
-      where: {
-        userId: req.user!.id,
-        tokenHash: hashToken(refreshToken),
-        revokedAt: null,
-      },
-      data: {
-        revokedAt: new Date(),
-      },
+    await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${payload.sub} FOR UPDATE`
+      const stored = await tx.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
+      if (!stored || stored.userId !== payload.sub || stored.revokedAt || stored.expiresAt <= new Date()) {
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Refresh token expired or revoked.')
+      }
+      if (stored.sessionId) {
+        const session = await tx.authSession.findUnique({ where: { id: stored.sessionId } })
+        if (session?.userId === payload.sub) {
+          if (!session.deviceId.startsWith('unknown-') && session.deviceId !== req.get('X-Device-Id')?.toLowerCase()) {
+            throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign out on that device.')
+          }
+          await tx.authSession.updateMany({ where: { deviceId: session.deviceId, userId: payload.sub, endedAt: null }, data: { endedAt: new Date() } })
+        }
+      }
+      await tx.refreshToken.updateMany({
+        where: { id: stored.id, revokedAt: null }, data: { revokedAt: new Date() },
+      })
     })
 
     return res.status(204).send()

@@ -1,5 +1,8 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'This account is being used on another device. Sign out there or close the site and wait up to 2 minutes before trying again.': 'Аккаунт используется на другом устройстве. Выйдите из аккаунта там или закройте сайт и подождите до 2 минут перед повторной попыткой.',
+  'This account is already signed in on 3 devices. Sign out on another device before signing in here.': 'В аккаунт уже вошли на 3 устройствах. Выйдите из аккаунта на другом устройстве, чтобы войти здесь.',
+  'This account is being used on another device.': 'Аккаунт используется на другом устройстве.',
   "Leave Exam Mode?": "Выйти из экзаменационного режима?",
   "Your test timer is still running. Continue the test, or leave and discard your answers.": "Таймер теста продолжает работать. Продолжите тест или выйдите и удалите ответы.",
   "If you leave, your answers will be deleted and this attempt cannot be resumed.": "Если вы выйдете, ваши ответы будут удалены и эту попытку нельзя будет продолжить.",

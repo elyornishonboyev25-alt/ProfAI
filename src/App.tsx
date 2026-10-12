@@ -11,6 +11,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import AccountUsageBoundary from '@/components/auth/AccountUsageBoundary'
 import { isPublicAccountRoute } from '@/utils/accountAccess'
 import PremiumRoute from '@/components/auth/PremiumRoute'
 import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
@@ -898,4 +899,6 @@ function App() {
   )
 }
 
-export default App
+export default function VerifiedApp() {
+  return <AccountUsageBoundary><App /></AccountUsageBoundary>
+}

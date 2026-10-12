@@ -96,7 +96,7 @@ const server = await new Promise((resolve) => { const instance = app.listen(0, '
 const base = `http://127.0.0.1:${server.address().port}`
 const email = 'learner@gmail.com'
 async function post(path, body, headers = {}) {
-  const response = await realFetch(`${base}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) })
+  const response = await realFetch(`${base}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Device-Id': '11111111-1111-4111-8111-111111111111', ...headers }, body: JSON.stringify(body) })
   return { status: response.status, body: response.status === 204 ? null : await response.json() }
 }
 async function request(purpose = 'SIGN_IN') {
@@ -280,7 +280,10 @@ test('three devices can sign in; fourth is blocked for password and email code; 
   const deviceHeaders = number => ({ 'X-Device-Id': `${number}${'1'.repeat(7)}-1111-4111-8111-111111111111` })
   const first = await post('/register', { ...credentials, verificationCode: deliveredCode() }, deviceHeaders(1))
   assert.equal(first.status, 201)
-  for (const number of [2, 3]) assert.equal((await post('/login', credentials, deviceHeaders(number))).status, 200)
+  for (const number of [2, 3]) {
+    sessions.forEach(row => { row.usageUntil = new Date(0) })
+    assert.equal((await post('/login', credentials, deviceHeaders(number))).status, 200)
+  }
   const tokenCount = tokens.length
   const fourth = await post('/login', credentials, deviceHeaders(4))
   assert.equal(fourth.status, 403)
@@ -293,6 +296,7 @@ test('three devices can sign in; fourth is blocked for password and email code; 
   const emailAttempt = await post('/email/login', { email, verificationCode: deliveredCode() }, deviceHeaders(4))
   assert.equal(emailAttempt.status, 403)
   assert.equal(emailAttempt.body.code, 'DEVICE_LIMIT_REACHED')
+  sessions.forEach(row => { row.usageUntil = new Date(0) })
   const repeated = await post('/login', credentials, deviceHeaders(1))
   assert.equal(repeated.status, 200, 'Known device remains allowed at capacity')
   const auth = { ...deviceHeaders(1), Authorization: `Bearer ${repeated.body.accessToken}` }
@@ -310,7 +314,40 @@ test('refresh cannot move a session to another device; expired sessions do not o
   const first = await post('/register', { ...credentials, verificationCode: deliveredCode() }, header(1))
   assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, header(4))).body.code, 'SESSION_DEVICE_MISMATCH')
   assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, header(1))).status, 200)
-  for (const number of [2, 3]) assert.equal((await post('/login', credentials, header(number))).status, 200)
+  for (const number of [2, 3]) {
+    sessions.forEach(row => { row.usageUntil = new Date(0) })
+    assert.equal((await post('/login', credentials, header(number))).status, 200)
+  }
   sessions.filter(row => row.deviceId === header(1)['X-Device-Id']).forEach(row => { row.expiresAt = new Date(0) })
+  sessions.forEach(row => { row.usageUntil = new Date(0) })
   assert.equal((await post('/login', credentials, header(4))).status, 200)
+})
+
+test('active device blocks password, email login, restored heartbeat and refresh without interrupting the first device', async () => {
+  await request('REGISTER')
+  const credentials = { email, password: 'new-password-123' }
+  const device = number => ({ 'X-Device-Id': `${number}${'1'.repeat(7)}-1111-4111-8111-111111111111` })
+  const first = await post('/register', { ...credentials, verificationCode: deliveredCode() }, device(1))
+  const auth = (result, number) => ({ ...device(number), Authorization: `Bearer ${result.body.accessToken}` })
+  assert.equal((await post('/login', credentials, device(2))).body.code, 'ACCOUNT_IN_USE')
+  codes = []; sent = []
+  await request('SIGN_IN')
+  assert.equal((await post('/email/login', { email, verificationCode: deliveredCode() }, device(2))).body.code, 'ACCOUNT_IN_USE')
+  assert.equal(sessions.length, 1)
+  assert.equal(tokens.length, 1)
+  assert.equal((await post('/activity/heartbeat', {}, auth(first, 1))).status, 204)
+  // Going offline releases usage, while keeping this browser signed in.
+  sessions[0].usageUntil = new Date(0)
+  const second = await post('/login', credentials, device(2))
+  assert.equal(second.status, 200)
+  const tokenCount = tokens.length
+  assert.equal((await post('/refresh', { refreshToken: first.body.refreshToken }, device(1))).body.code, 'ACCOUNT_IN_USE')
+  assert.equal(tokens.length, tokenCount, 'Denied refresh does not rotate or revoke the saved token')
+  assert.equal(tokens[0].revokedAt, null)
+  assert.equal((await post('/activity/heartbeat', {}, auth(first, 1))).body.code, 'ACCOUNT_IN_USE')
+  assert.equal((await post('/logout', { refreshToken: second.body.refreshToken }, auth(first, 1))).body.code, 'SESSION_DEVICE_MISMATCH', 'Blocked device cannot sign out the active device')
+  assert.equal((await post('/logout', { refreshToken: first.body.refreshToken }, { ...device(1), Authorization: 'Bearer expired-access-token' })).status, 204, 'Blocked device can sign out itself even after its access token expires')
+  assert.equal((await post('/activity/heartbeat', {}, auth(second, 2))).status, 204)
+  assert.equal((await post('/logout', { refreshToken: second.body.refreshToken }, auth(second, 2))).status, 204)
+  assert.equal((await post('/login', credentials, device(3))).status, 200, 'Logout releases usage immediately')
 })

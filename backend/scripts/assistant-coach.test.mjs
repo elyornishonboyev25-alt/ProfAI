@@ -11,7 +11,7 @@ for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GE
 const { app } = await import('../dist/app.js')
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
-const { signAccessToken } = await import('../dist/utils/jwt.js')
+const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 const { parseAssistantReply, partialAssistantReply, boundedHistory, buildCoachPrompt, assistantContextSchema } = await import('../dist/services/assistantPolicy.js')
 const { validateAudioAssessment } = await import('../dist/services/speakingAssessment.service.js')
 const { voiceInstructions } = await import('../dist/services/realtimeCoach.service.js')
@@ -25,6 +25,12 @@ prisma.$transaction = async (operation) => operation({
   user: { findUniqueOrThrow: async () => ({ role: 'ADMIN', email: 'test@example.invalid', nickname: null }) },
   premiumGrant: { findUnique: async () => null },
 })
+installSessionFixtures(prisma)
+prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER' })
+prisma.user.findUniqueOrThrow = async () => ({ role: 'ADMIN', email: 'test@example.invalid', nickname: null })
+prisma.premiumGrant.findUnique = async () => null
+prisma.billingSubscription.findMany = async () => []
+prisma.freeTrial.findUnique = async () => null
 
 test('stream decoding preserves split Unicode and incomplete JSON escapes', async () => {
   const value = JSON.stringify({ reply: 'Salom! O‘zbekcha 😊\n“Misol”', actions: [] })
@@ -119,7 +125,7 @@ test('audio grades use equal weights and reject invented answer evidence', () =>
 test('authenticated chat streams, keeps memory private and refuses foreign threads', async (t) => {
   const nativeFetch = globalThis.fetch
   const originals = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, thread: prisma.aiConversationThread.findFirst, usage: prisma.aiUsageEvent.create }
-  prisma.user.findUnique = async () => ({ fullName: 'Test Learner', profile: null, aiPreference: null })
+  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', fullName: 'Test Learner', profile: null, aiPreference: null })
   prisma.aiMemory.findMany = async () => [{ key: 'target_score', value: 'IELTS 7.5' }]
   prisma.aiConversationThread.findFirst = async ({ where }) => where.id === 'own-thread' ? { id: where.id } : null
   prisma.aiUsageEvent.create = async ({ data }) => data
@@ -175,7 +181,7 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   let sessionConfig
   const nativeFetch = globalThis.fetch
   const originals = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, usage: prisma.aiUsageEvent.create }
-  prisma.user.findUnique = async () => ({ fullName: 'Test Learner', profile: null, aiPreference: null })
+  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', fullName: 'Test Learner', profile: null, aiPreference: null })
   prisma.aiMemory.findMany = async () => []
   prisma.aiUsageEvent.create = async ({ data }) => data
   let ended = 0

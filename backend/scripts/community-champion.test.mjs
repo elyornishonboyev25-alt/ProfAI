@@ -5,7 +5,7 @@ process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:5432/community_test
 process.env.ACCESS_TOKEN_SECRET = 'community-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET = 'community-test-refresh-secret-only'
 const { prisma } = await import('../dist/lib/prisma.js')
-const { signAccessToken } = await import('../dist/utils/jwt.js')
+const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 const { default: router } = await import('../dist/routes/profile.routes.js')
 const { default: express } = await import('express')
 
@@ -13,6 +13,8 @@ function learner(id, xp, profile = { isPublic: true, showLeaderboard: true }) {
   return { role: 'USER', email: `${id}@example.test`, premiumGrant: null, billingSubscriptions: [], id, nickname: id, xp, profile, avatarUrl: null, currentStreak: 2, createdAt: new Date('2026-01-01'), lastActiveDate: new Date(), level: 2, _count: { skillBadges: 1 } }
 }
 let users = []
+prisma.$transaction = async operation => operation(prisma)
+installSessionFixtures(prisma)
 // Upstream authentication now verifies that the account still exists.
 prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER' })
 prisma.user.findMany = async ({ where }) => users.filter(user => user.id !== where.id.not && (!where.nickname || user.nickname?.toLowerCase().includes(where.nickname.contains.toLowerCase())) && user.profile?.isPublic !== false).slice(0, 24)

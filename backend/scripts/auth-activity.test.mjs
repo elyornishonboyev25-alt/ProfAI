@@ -17,12 +17,13 @@ globalThis.prisma = {
   },
   authSession: {
     findUnique: async ({ where }) => sessions.find(row => row.id === where.id) ?? null,
+    update: async ({ where, data }) => Object.assign(sessions.find(row => row.id === where.id), data),
     create: async ({ data }) => { const row = { id: `session-${sessions.length}`, endedAt: null, ...data }; sessions.push(row); return row },
     delete: async () => {},
     updateMany: async ({ where, data }) => { calls.push({ where, data }); const row = sessions.find(row => row.id === where.id && row.userId === where.userId && !row.endedAt && row.expiresAt > new Date()); if (row) Object.assign(row, data); return { count: row ? 1 : 0 } },
     count: async ({ where }) => { calls.push({ countWhere: where }); return 3 },
     findFirst: async () => ({ loginAt: new Date('2026-10-10T01:00:00Z') }),
-    findMany: async (args) => { calls.push(args); return args.select?.deviceId ? sessions.filter(row => row.userId === args.where.userId && !row.endedAt && row.expiresAt > new Date()) : [{ id: 's1', user: learner, method: 'EMAIL_CODE' }] },
+    findMany: async (args) => { if (!args.select?.usageUntil) calls.push(args); return args.select?.deviceId ? sessions.filter(row => row.userId === args.where.userId && !row.endedAt && row.expiresAt > new Date()) : [{ id: 's1', user: learner, method: 'EMAIL_CODE' }] },
   },
   $queryRaw: async (query) => {
     calls.push(query)
@@ -42,6 +43,11 @@ const server = await new Promise(resolve => { const value = app.listen(0, '127.0
 after(() => new Promise(resolve => server.close(resolve)))
 const base = `http://127.0.0.1:${server.address().port}`
 async function request(path, user, body, sid) {
+  if (user && !sid && !path.startsWith('/activity/heartbeat')) {
+    sid = `fixture-${user.id}`
+    if (!sessions.some(row => row.id === sid)) sessions.push({ id: sid, userId: user.id,
+      deviceId: '11111111-1111-4111-8111-111111111111', endedAt: null, expiresAt: new Date(Date.now() + 86400000) })
+  }
   const response = await fetch(`${base}${path}`, { method: body ? 'POST' : 'GET', headers: {
     'Content-Type': 'application/json', 'X-Device-Id': '11111111-1111-4111-8111-111111111111',
     ...(user ? { Authorization: `Bearer ${signAccessToken({ sub: user.id, role: user.role, sid })}` } : {}),
@@ -53,7 +59,7 @@ test('activity and device details require an authenticated owner, even for ADMIN
     assert.equal((await request(path)).response.status, 401)
     assert.equal((await request(path, learner)).response.status, 403)
   }
-  assert.equal(calls.length, 0, 'Unauthorized requests never query activity')
+  assert.equal(calls.filter(call => call.sql || call.select?.method || call.countWhere).length, 0, 'Unauthorized requests never query activity')
 })
 test('owner pagination is bounded, counts serialize and search remains parameterized', async () => {
   const invalid = await request('/owner/activity?page=-1', owner)
@@ -83,6 +89,7 @@ test('history uses date and user filters and never returns token material', asyn
   assert.ok(calls.some(call => call.countWhere?.method?.not === 'RESTORED'))
 })
 test('legacy sessions adopt tracking once; heartbeat cannot touch other or ended sessions', async () => {
+  sessions = []
   const refreshToken = signRefreshToken({ sub: learner.id, tokenId: 'legacy' })
   tokens = [{ id: 'token', userId: learner.id, sessionId: null, revokedAt: null, tokenHash: hashToken(refreshToken), expiresAt: new Date(Date.now() + 86400000) }]
   assert.equal((await request('/activity/heartbeat', learner, { refreshToken })).response.status, 204)

@@ -359,6 +359,7 @@ export default function IELTSReadingInterface({
   const startedAtRef = useRef<number | null>(null)
   const deadlineRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
+  const autoListeningStartRef = useRef(false)
   const contrastClass =
     contrastMode === 'high'
       ? 'reading-contrast-high'
@@ -409,7 +410,7 @@ export default function IELTSReadingInterface({
         const hasLegacyListeningDefault = isListening && test.sections.length === 4
           && data.partsSelectionVersion !== 2
           && savedParts.length === 3 && savedParts.every((part, index) => part === index)
-        const restoredParts = hasLegacyListeningDefault
+        const restoredParts = fullMockId || hasLegacyListeningDefault
           ? sanitizeSelectedParts(undefined, test.sections.length)
           : savedParts
         personalStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
@@ -423,7 +424,7 @@ export default function IELTSReadingInterface({
         setIsTestActive(active)
         // The launch preset starts a NEW attempt only when no active session exists.
         launchPresetAppliedRef.current = active
-        setTestMode(data.testMode ?? 'simulation')
+        setTestMode(fullMockId ? 'simulation' : data.testMode ?? 'simulation')
         setSelectedParts(restoredParts)
         setCustomTime(data.customTime ?? 60)
         setContrastMode(data.contrastMode ?? 'normal')
@@ -434,7 +435,7 @@ export default function IELTSReadingInterface({
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
         startedAtRef.current = typeof data.startedAt === 'number' ? data.startedAt : null
         if (isListening) {
-          const trackCount = test.continuousAudioUrl ? 1 : (data.testMode === 'practice' ? restoredParts.length : test.sections.length)
+          const trackCount = test.continuousAudioUrl ? 1 : (!fullMockId && data.testMode === 'practice' ? restoredParts.length : test.sections.length)
           setCurrentAudioIndex(clamp(Number.isInteger(data.currentAudioIndex) ? data.currentAudioIndex : 0, 0, Math.max(0, trackCount - 1)))
           const position = Number.isFinite(data.audioCurrentTime) ? Math.max(0, data.audioCurrentTime) : 0
           pendingAudioSeekRef.current = position
@@ -642,6 +643,12 @@ export default function IELTSReadingInterface({
       })
     }
   }
+
+  useEffect(() => {
+    if (!fullMockId || !isListening || isReviewMode || !isTestActive || !autoListeningStartRef.current) return
+    autoListeningStartRef.current = false
+    startListeningAudio()
+  }, [fullMockId, isListening, isReviewMode, isTestActive])
 
   const toggleListeningAudio = () => {
     if (!isReviewMode && testMode !== 'practice') return
@@ -1493,9 +1500,9 @@ export default function IELTSReadingInterface({
       setCurrentAudioIndex(0)
       setAudioError(null)
     }
-    const effectiveMode = preset?.mode ?? testMode
+    const effectiveMode = fullMockId ? 'simulation' : preset?.mode ?? testMode
     const effectiveCustomTime = preset?.customTime ?? customTime
-    const normalizedParts = sanitizeSelectedParts(preset?.selectedParts ?? selectedParts, test.sections.length)
+    const normalizedParts = sanitizeSelectedParts(fullMockId ? undefined : preset?.selectedParts ?? selectedParts, test.sections.length)
     setTestMode(effectiveMode)
     setCustomTime(effectiveCustomTime)
     setSelectedParts(normalizedParts)
@@ -1518,15 +1525,19 @@ export default function IELTSReadingInterface({
 
     // Brief "your test will begin shortly" loader before dropping into the exam.
     setIsLaunching(true)
+    autoListeningStartRef.current = Boolean(fullMockId && isListening)
     if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
-    launchTimerRef.current = setTimeout(() => {
+    const activate = () => {
       startedAtRef.current = Date.now()
       const duration = effectiveMode === 'practice' ? effectiveCustomTime : test.duration
       deadlineRef.current = isListening || duration === -1 ? null : Date.now() + duration * 60_000
       setIsTestActive(true)
       setIsLaunching(false)
       launchTimerRef.current = null
-    }, 2200)
+    }
+    if (fullMockId) activate()
+    else launchTimerRef.current = setTimeout(activate, 2200)
+    return true
   }
 
   useEffect(() => () => {
@@ -1539,27 +1550,27 @@ export default function IELTSReadingInterface({
   }, [])
 
   useEffect(() => {
-    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || !launchPreset || startAccess?.ready === false) return
+    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || (!fullMockId && !launchPreset) || startAccess?.ready === false) return
 
-    const desiredMode = launchPreset.mode === 'practice' ? 'practice' : 'simulation'
+    const desiredMode = !fullMockId && launchPreset?.mode === 'practice' ? 'practice' : 'simulation'
     const desiredPart =
-      typeof launchPreset.partIndex === 'number'
+      typeof launchPreset?.partIndex === 'number'
         ? clamp(Math.round(launchPreset.partIndex), 1, test.sections.length)
         : undefined
     const desiredDuration =
-      typeof launchPreset.durationMinutes === 'number'
+      typeof launchPreset?.durationMinutes === 'number'
         ? clamp(Math.round(launchPreset.durationMinutes), 5, 180)
         : undefined
 
     launchPresetAppliedRef.current = true
-    handleStartTest({
+    void handleStartTest({
       mode: desiredMode,
       selectedParts: desiredMode === 'practice' && desiredPart
         ? [desiredPart - 1]
         : sanitizeSelectedParts(undefined, test.sections.length),
       customTime: desiredMode === 'practice' && desiredDuration ? desiredDuration : undefined,
-    })
-  }, [isReviewMode, isTestActive, launchPreset, test.sections.length, startAccess?.ready])
+    }).then(started => { if (!started) launchPresetAppliedRef.current = false })
+  }, [isReviewMode, isTestActive, fullMockId, launchPreset, test.sections.length, startAccess?.ready])
 
   const getCurrentTimeSpent = () => {
     const elapsedByClock = Math.max(0, (testMode === 'practice' && customTime !== -1 ? customTime : test.duration) * 60 - Math.max(0, timeRemaining))
@@ -3892,7 +3903,7 @@ export default function IELTSReadingInterface({
                     ? 'Review mode — playback and seeking are available.'
                     : practiceControls
                       ? 'Practice mode — pause or skip 10 seconds at a time.'
-                      : 'Simulation mode — the recording plays continuously.'}
+                      : fullMockId ? 'Full mock — the recording plays once, continuously.' : 'Simulation mode — the recording plays continuously.'}
                 </p>
               </div>
               <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
@@ -6446,7 +6457,14 @@ export default function IELTSReadingInterface({
           />
         ) : null}
       </AnimatePresence>
-      {!isTestActive ? renderStartScreen() : (
+      {!isTestActive ? fullMockId ? (
+        <div className="flex flex-1 items-center justify-center p-6" role="status">
+          <div className="max-w-md text-center">
+            <h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">{isListening ? 'Listening' : 'Reading'} test</span></h1>
+            {startAccess?.error ? <><p role="alert" className="mt-4 text-red-600">{startAccess.error}</p><button type="button" disabled={startAccess.busy} className="mt-4 rounded-xl bg-red-600 px-6 py-3 font-bold text-white disabled:opacity-50" onClick={() => void handleStartTest()}>Try again</button></> : <p className="mt-3 text-slate-600">Your full mock will start automatically.</p>}
+          </div>
+        </div>
+      ) : renderStartScreen() : (
         <>
           <header className="reading-toolbar ielts-exam-header bg-white/95 border-b border-red-100 min-h-16 flex items-center justify-between px-4 z-20 relative shadow-[0_10px_24px_rgba(220,38,38,0.09)] backdrop-blur-md">
             <div className="flex items-center gap-3 shrink-0">

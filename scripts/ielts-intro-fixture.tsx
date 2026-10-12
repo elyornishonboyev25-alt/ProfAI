@@ -2,6 +2,7 @@
 // no illustrative paper or recording helper is shipped in the application.
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { flushSync } from 'react-dom'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import MockIELTSRun from '../src/pages/MockIELTSRun'
 import IELTSReadingInterface from '../src/components/IELTSReadingInterface'
@@ -28,11 +29,11 @@ helpers.show = (section, review = false) => {
   const key = `ielts_test_session_${test.id}:mock:${mock.id}`
   storage.setItem(key, JSON.stringify({ isTestActive: true, testMode: 'simulation', selectedParts: test.sections.map((_, n) => n), partsSelectionVersion: 2, currentSectionIndex: 0, answers: {}, startedAt: Date.now() - 3600000, timeRemaining: section === 'reading' ? 3600 : -1, deadline: section === 'reading' ? Date.now() + 3600000 : null, timestamp: Date.now(), audioStarted: false }))
   const reviewPayload = review ? { result: { testId: test.id, date: '2026-10-12', score: 0, correctAnswers: 0, totalQuestions: 40, timeSpent: 3600, answers: {} }, showCorrectAnswers: false } : undefined
-  root.render(<MemoryRouter key={++revision}><IELTSReadingInterface test={test} fullMockId={mock.id} reviewPayload={reviewPayload} onComplete={result => {
+  flushSync(() => root.render(<MemoryRouter key={++revision}><IELTSReadingInterface test={test} fullMockId={mock.id} reviewPayload={reviewPayload} onComplete={result => {
     if (section === 'reading') saveFullMockSectionResult(mock.id, 'listening', { band: 0, testId: 'tutorial', completedAt: new Date().toISOString() })
     saveFullMockSectionResult(mock.id, section, { band: result.score, testId: test.id, completedAt: result.date, result })
     root.render(<MemoryRouter key={++revision} initialEntries={['/mock/ielts/'+mock.id]}><Routes><Route path="/mock/ielts/:mockId" element={<MockIELTSRun />} /></Routes></MemoryRouter>)
-  }} onExit={() => {}} /></MemoryRouter>)
+  }} onExit={() => {}} /></MemoryRouter>))
 }
 helpers.finishAudio = () => {
   const audio = document.querySelector('audio')!

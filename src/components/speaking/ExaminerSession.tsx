@@ -216,10 +216,12 @@ export default function ExaminerSession({
   onExit,
   onSaved,
   hideVocabularyReview = false,
+  autoStart = false,
 }: {
   config: SessionConfig
   modeLabel: string
   hideVocabularyReview?: boolean
+  autoStart?: boolean
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
@@ -285,6 +287,7 @@ export default function ExaminerSession({
   const stopPendingRef = useRef(false)
   const microphoneInterruptedRef = useRef(false)
   const beginPendingRef = useRef(false)
+  const autoStartRequestedRef = useRef(false)
   const savedEvaluationRef = useRef(false)
   const disposedRef = useRef(false)
   useActiveTest(started && phase !== 'result')
@@ -507,7 +510,7 @@ export default function ExaminerSession({
     savedEvaluationRef.current = false
     deviceVoiceRef.current = false
     setVoiceSource('connecting')
-    // Both calls must happen inside the button gesture, before getUserMedia.
+    // Unlock on launch; blocked autoplay retains the Play examiner recovery.
     playbackRef.current ??= new ExaminerPlayback()
     playbackRef.current.unlock()
     try {
@@ -605,6 +608,16 @@ export default function ExaminerSession({
       }
     })
   }, [config, advance, speakExaminer, attachMicrophone, examiner, saved, owner, audioKey, runEvaluation])
+
+  useEffect(() => {
+    if (!autoStart || autoStartRequestedRef.current) return
+    // Defer until after mount so StrictMode can cancel its trial mount cleanly.
+    const timer = window.setTimeout(() => {
+      autoStartRequestedRef.current = true
+      void beginSession()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [autoStart, beginSession])
 
   const submitAnswer = useCallback(
     (text: string, durationSec: number) => {
@@ -909,6 +922,17 @@ export default function ExaminerSession({
 
   // ── Render: pre-start gate ───────────────────────────────────────────────
   if (!started) {
+    if (autoStart) return (
+      <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12">
+        <div className="speaking-start-guide text-center" role="status">
+          <p className="speaking-eyebrow">IELTS Speaking</p>
+          <h1 className="mt-3 text-2xl font-black text-slate-900">{answerError ? 'Microphone access needed' : 'Connecting your microphone'}</h1>
+          <p className="mt-3 text-sm text-slate-600">{answerError || 'Allow microphone access to begin your Speaking test automatically.'}</p>
+          {answerError && <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : 'Try again'}</button>}
+          <button onClick={onExit} className="speaking-text-switch mt-4">Exam overview</button>
+        </div>
+      </div>
+    )
     return (
       <div className="speaking-exam speaking-exam-v2 mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <header className="speaking-session-header mb-5">

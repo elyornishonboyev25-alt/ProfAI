@@ -42,7 +42,7 @@ const css = (await postcss([tailwindcss()]).process(await readFile('src/index.cs
 const server = createServer(async (req, res) => {
   if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`); return }
   if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text); return }
-  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm(?:\?v=3)?$/)
+  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm(?:\?v=4)?$/)
   if (media) {
     const data = await readFile(resolve('public/media/ielts-intros', media[1]+'.webm'))
     res.setHeader('Content-Type', 'video/webm'); res.setHeader('Accept-Ranges', 'bytes')
@@ -81,6 +81,9 @@ try {
     const info = mediaMetadata[section]
     assert.ok(Math.abs(data.duration - info.duration) < 1, section+': media duration matches audio-derived chapters '+data.duration)
     assert.equal(info.playbackRate, 1, 'Narration is never accelerated')
+    assert.equal(info.voice, 'kokoro-bf_emma', 'All sections use the improved British English neural narration')
+    assert.equal(info.frameRate, 60)
+    assert.ok(info.renderStats.averageFps >= 50, section + ': export maintains smooth cursor cadence')
     assert.equal(info.scenes.length, catalog[section].scenes.length)
     const wordCount = catalog[section].scenes.reduce((total,scene)=>total+scene.text.split(/\s+/).length,0)
     const spokenMinutes = info.scenes.reduce((total,scene)=>total+scene.audioDuration,0)/60
@@ -88,6 +91,8 @@ try {
     assert.deepEqual([data.width,data.height],[1280,720])
     assert.ok(data.rms>.01,section+': narration must be audible')
     assert.ok(data.audioDuration>=info.duration-1,section+': complete narrated scenes are present '+JSON.stringify(data))
+    const cadence = await evaluate(`(async()=>{const video=document.querySelector('video');const seeked=new Promise(r=>video.addEventListener('seeked',r,{once:true}));video.currentTime=1;await seeked;await video.play();await new Promise(r=>setTimeout(r,500));const start=performance.now(),before=video.getVideoPlaybackQuality();await new Promise(r=>setTimeout(r,2500));video.pause();const after=video.getVideoPlaybackQuality();return{fps:(after.totalVideoFrames-before.totalVideoFrames)/((performance.now()-start)/1000),dropped:after.droppedVideoFrames-before.droppedVideoFrames}})()`)
+    assert.ok(cadence.fps >= 40, section + ': encoded video contains smooth frame cadence ' + JSON.stringify(cadence))
     const seekTime = info.scenes[2].start + 1
     await evaluate(`document.querySelector('video').currentTime=${seekTime}`)
     await until(`Math.abs(document.querySelector('video').currentTime-${seekTime})<.05 && !document.querySelector('video').seeking`)
@@ -98,6 +103,7 @@ try {
       const highlightIndex = catalog[section].scenes.findIndex(scene => scene.view === 'highlight')
       const chapter = info.scenes[highlightIndex]
       assert.equal(info.source, 'IELTSReadingInterface', 'Tutorial records the live website component')
+      assert.equal(info.cursorMotion, 'continuous-smootherstep', 'Cursor follows continuous paths independently of screenshot cadence')
       const motion = info.motionChecks.find(check => check.view === 'highlight')
       assert.ok(motion?.point && motion.stages.length === 3, 'Native cursor demonstration records all annotation stages')
       assert.ok(info.motionChecks.some(check => check.view === 'answer' && check.stages.some(stage => stage.stage === 'answered')), 'Real answer entry changes the answered count')
@@ -124,12 +130,10 @@ try {
     }
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false})
     await evaluate(`document.querySelector('video').currentTime=${data.duration-.25};document.querySelector('video').play()`)
-    await until(`document.querySelector('video').ended`)
-    assert.equal(await evaluate(`!!document.querySelector('.full-mock-intro-skip')`),false)
-    assert.equal(await evaluate('!!document.querySelector("[data-runner]")'),false)
-    await evaluate(`document.querySelector('.full-mock-intro-start').click()`)
     await until('!!document.querySelector("[data-runner]")')
-    console.log('PASS: '+section+' '+data.duration.toFixed(2)+'s, 720p, audible English track, synced captions, five responsive sizes, native ended and Start')
+    assert.equal(await evaluate(`!!document.querySelector('.full-mock-intro-skip')`),false)
+    assert.equal(await evaluate('!!document.querySelector("video")'),false)
+    console.log('PASS: '+section+' '+data.duration.toFixed(2)+'s, 720p, audible English track, synced captions, five responsive sizes, video completion automatically starts test')
   }
   await evaluate('window.showCatalog()')
   await until('!!document.querySelector("button.mock-ielts-card-open")')

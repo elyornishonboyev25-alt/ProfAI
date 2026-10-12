@@ -83,7 +83,10 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
     return () => { cancelled = true; media?.pause() }
   }, [ready])
 
+  const starting = useRef(false)
   const start = () => {
+    if (starting.current) return
+    starting.current = true
     video.current?.pause()
     try { storage.setItem(readyKey, 'started') } catch { /* Keep the in-memory gate usable. */ }
     void fullscreen.enter()
@@ -127,11 +130,11 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
         <div className="full-mock-intro-workspace">
         <section aria-label="Video instructions">
         <div className="full-mock-intro-player">
-          <video ref={video} src={`/media/ielts-intros/${section}.webm?v=3`} preload="auto" playsInline muted={muted}
+          <video ref={video} src={`/media/ielts-intros/${section}.webm?v=4`} preload="auto" playsInline muted={muted}
             aria-label={`${intro.title} instructions video with English narration`} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
             onTimeUpdate={event => setPosition(event.currentTarget.currentTime)}
             onLoadedMetadata={event => { const value = event.currentTarget.duration; if (Number.isFinite(value) && value > 0) setDuration(value) }}
-            onEnded={() => { setEnded(true); setPosition(duration); setPlaying(false) }} onError={() => { setFailed(true); setPlaying(false) }} />
+            onEnded={start} onError={() => { setFailed(true); setPlaying(false) }} />
           {failed && <div className="full-mock-intro-fallback"><strong>Video unavailable</strong><p>Read the instructions below, then start when you are ready.</p></div>}
           <div className="full-mock-intro-controls">
             <button type="button" disabled={failed} aria-label={ended ? 'Replay video' : playing ? 'Pause video' : 'Play video'} onClick={() => {
@@ -149,7 +152,7 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
         <aside className="full-mock-intro-guide" aria-label="Before starting your test">
           <h2>Test information</h2>
           <p>{intro.meta}</p>
-          <p>Watch the instructions to learn how to use the test screen. You can pause, replay or skip the video.</p>
+          <p>Watch the instructions to learn how to use the test screen. You can pause, replay or skip the video. Your test starts automatically when the video ends.</p>
           {(section === 'listening' || section === 'speaking') && <div className="full-mock-intro-sound-check">
             <h3>{section === 'listening' ? 'Headphone check' : 'Audio check'}</h3>
             <p>Make sure you can hear the narration clearly. Adjust your device volume if needed.</p>
@@ -168,7 +171,7 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
         </aside>
         </div>
         <div className="full-mock-intro-actions">
-          <span>Your test has not started. Select Start Test when you are ready.</span>
+          <span>Your test starts when the video ends. Select Start Test to begin sooner.</span>
           <div>{!ended && !failed && <button type="button" className="full-mock-intro-skip" onClick={start}>Skip video & start <SkipForward size={16} /></button>}
           <button type="button" className="full-mock-intro-start" aria-label={`Start ${intro.title}`} onClick={start}>Start Test <ArrowRight size={18} /></button></div>
         </div>

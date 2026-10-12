@@ -182,14 +182,16 @@ export async function run() {
 
   let saved: any = null
   const root = createRoot(container)
-  await act(async () => root.render(<StrictMode><ExaminerSession config={{ mode: 'full_mock', mockSeed: {
+  blockPlayback = true
+  await act(async () => root.render(<StrictMode><ExaminerSession autoStart config={{ mode: 'full_mock', mockSeed: {
     part1: ['What do you study?'],
     part2: { title: 'Describe a useful skill.', bullets: ['What it is', 'How you learned it'], followUp: 'Do you use this skill every day?' },
     part3: ['How do people learn new skills?'],
   } }} modeLabel="Speaking Mock 1" onExit={() => {}} onSaved={(result, transcript) => { saved = { result, transcript } }} /></StrictMode>))
   try {
     blockPlayback = true
-    await click('Begin speaking test')
+    await until(() => button('Play examiner'), 'Full mock automatically connects microphone and begins examiner audio')
+    assert.equal(button('Begin speaking test'), undefined, 'No second start gate after full mock instructions')
     assert.ok(button('Play examiner'), 'Autoplay block has a user gesture recovery')
     assert.equal(recorderStarts, 1, 'Only the earlier helper test recorded, never the unheard examiner question')
     blockPlayback = false

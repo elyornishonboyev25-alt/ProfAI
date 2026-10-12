@@ -35,9 +35,11 @@ export async function run() {
   const mount = async (test: IELTSTest, mockId: string, strict = false) => {
     await unmount()
     root = createRoot(element)
-    const node = <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><IELTSReadingInterface test={test} fullMockId={mockId} launchPreset={{ mode: 'simulation' }} onComplete={result => results.push(result)} onExit={() => {}} /></MemoryRouter>
+    const node = <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><IELTSReadingInterface test={test} fullMockId={mockId} onComplete={result => results.push(result)} onExit={() => {}} /></MemoryRouter>
     await act(async () => root!.render(strict ? <StrictMode>{node}</StrictMode> : node))
     await act(async () => { await new Promise(resolve => originalTimeout(resolve, 30)) })
+    assert.equal(element.textContent?.includes('Practice Mode'), false, 'Full mocks never show practice selection')
+    assert.equal(element.textContent?.includes('Simulation Mode'), false, 'Full mocks never show simulation selection')
   }
   const click = async (label: string) => {
     const button = [...element.querySelectorAll<HTMLButtonElement>('button')].find(node => node.textContent?.trim() === label)
@@ -63,7 +65,8 @@ export async function run() {
         const mockId = strict ? 'full-mock-30' : 'full-mock-15'
         const key = `ielts_test_session_${test.id}:mock:${mockId}`
         await mount(test, mockId, strict)
-        await click('Play')
+        assert.ok(element.querySelector('[aria-label="Listening audio player"]')?.textContent?.includes('Playing'), 'Fresh full mock starts its recording without a second Play step')
+        assert.equal(element.textContent?.includes('To continue, click Play.'), false)
         await enterAnswer()
         if (playlist) {
           await act(async () => element.querySelector('audio')!.dispatchEvent(new window.Event('ended')))
@@ -113,7 +116,7 @@ export async function run() {
     localStorage.clear()
     results.length = 0
     await mount(listeningFullTest15, 'full-mock-15')
-    await click('Play')
+    assert.equal(element.textContent?.includes('To continue, click Play.'), false)
     await enterAnswer()
     captureGrace = true
     await act(async () => element.querySelector('audio')!.dispatchEvent(new window.Event('ended')))

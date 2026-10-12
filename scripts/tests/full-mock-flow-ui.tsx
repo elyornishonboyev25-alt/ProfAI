@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { act } from 'react'
+import { StrictMode, act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import TestInterface from '@/pages/TestInterface'
@@ -33,14 +33,15 @@ export async function run() {
   const mount = async (pathname: string, state: unknown) => {
     if (root) await act(async () => root!.unmount())
     root = createRoot(element)
-    await act(async () => root!.render(<MemoryRouter initialEntries={[{ pathname, state }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    const tree = <MemoryRouter initialEntries={[{ pathname, state }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Location /><Routes>
         <Route path="/test/:type/:id" element={<TestInterface />} />
         <Route path="/ielts/writing/test/:id" element={<IELTSWritingTest />} />
         <Route path="/ielts/speaking/test/:id" element={<IELTSSpeakingTest />} />
         <Route path="/mock/ielts/:mockId" element={<MockIELTSRun />} />
       </Routes>
-    </MemoryRouter>))
+    </MemoryRouter>
+    await act(async () => root!.render(pathname.endsWith('/writing-full-1') ? <StrictMode>{tree}</StrictMode> : tree))
     await flush()
   }
   const click = async (label: string) => {
@@ -75,7 +76,7 @@ export async function run() {
       assert.ok(element.querySelector('.full-mock-intro'), 'Listening instructions precede the runner')
       assert.equal(element.querySelector('audio'), null, 'Test audio cannot start during the intro')
       await click('Skip video & start')
-      await click('Play')
+      assert.equal(element.textContent?.includes('To continue, click Play.'), false, 'A fresh full mock starts Listening audio automatically')
       assert.equal(element.querySelector('.ielts-exam-timer'), null)
       await submitObjective()
       assert.equal(path, mock.sections[1].launchPath, `${mock.id}: Listening → Reading`)
@@ -90,6 +91,8 @@ export async function run() {
       assert.ok(element.querySelector('.full-mock-intro'), 'Writing instructions appear before either task')
       await click('Skip video & start')
       assert.ok(element.querySelector('textarea'), 'Writing opens automatically')
+      assert.equal(element.textContent?.includes('Practice Mode'), false, 'Full mock Writing has no practice chooser, including StrictMode')
+      assert.equal(element.textContent?.includes('Simulation Mode'), false, 'Full mock Writing has no simulation chooser')
       assert.equal(element.querySelector('textarea')!.value, '', 'Old practice does not leak into the full mock')
       assert.equal(getFullMockResults(mock.id).writing, undefined, 'Expired practice cannot submit mock Writing')
       assert.equal(getFullMockSectionRedirect(mock.id, 'speaking', mock.sections[3].launchPath!), mock.sections[2].launchPath, 'Speaking is blocked until Writing finishes')

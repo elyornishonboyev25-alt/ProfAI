@@ -12,7 +12,10 @@ const WebSocket = requireBackend('ws')
 const catalog = JSON.parse(await readFile(new URL('../src/data/fullMockIntros.json', import.meta.url), 'utf8'))
 const screenDirectory = resolve(process.env.IELTS_INTRO_SCREEN_DIR || 'tmp/ielts-intro-screens')
 const screenManifest = JSON.parse(await readFile(join(screenDirectory, 'manifest.json'), 'utf8'))
-for (const key of ['listening', 'reading']) assert.equal(screenManifest[key]?.length, catalog[key].scenes.length, 'Capture every real-screen chapter before generating videos')
+for (const key of ['listening', 'reading']) {
+  assert.equal(screenManifest[key]?.length, catalog[key].scenes.length, 'Capture every real-screen chapter before generating videos')
+  assert.ok(screenManifest[key].every(chapter => chapter.motions?.length), 'Capture continuous cursor movements before generating videos')
+}
 if (process.env.IELTS_INTRO_SMOKE) for (const intro of Object.values(catalog)) intro.scenes = intro.scenes.slice(0, 1)
 const workspace = resolve('tmp')
 await mkdir(workspace, { recursive: true })
@@ -56,13 +59,16 @@ try {
     sessions.push({ key, sessionId })
   }
   await new Promise(resolve=>setTimeout(resolve,1200))
-  // Each page owns its canvas/audio graph; record independently without speeding narration up.
-  const recordings = await Promise.all(sessions.map(async ({key,sessionId}) => {
+  // Export one section at a time so competing encoders cannot drop cursor frames.
+  const recordings = []
+  for (const {key,sessionId} of sessions) {
     console.log('Recording '+key+' (natural-speed British English narration)…')
     const result=await send('Runtime.evaluate',{expression:`window.record(${JSON.stringify(key)})`,returnByValue:true,awaitPromise:true,userGesture:true},sessionId)
     assert.ok(!result.exceptionDetails,JSON.stringify(result.exceptionDetails))
-    return { key, ...result.result.value }
-  }))
+    const metadata = result.result.value
+    assert.ok(metadata.renderStats.averageFps >= 50, key + ': export must maintain smooth cursor motion')
+    recordings.push({ key, ...metadata })
+  }
   for (const { key, base64, ...metadata } of recordings) {
     const data=Buffer.from(base64,'base64')
     mediaMetadata[key] = metadata

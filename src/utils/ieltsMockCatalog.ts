@@ -310,7 +310,6 @@ export function fullMockLaunchState(mockId: string, section: MockSectionKey, fro
   return {
     entry: 'mock-ielts', from: from ?? 'mock',
     mock: { id: mockId, section },
-    launchPreset: { mode: 'simulation' as const },
     autoStart: true, timerEnabled: true,
   }
 }

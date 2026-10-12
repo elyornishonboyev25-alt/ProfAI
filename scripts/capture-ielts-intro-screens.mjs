@@ -34,28 +34,28 @@ try{
  const until=async expression=>{for(let n=0;n<80;n++){if(await evaluate(expression))return;await sleep(100)}throw new Error('Not found: '+expression)}
  await send('Emulation.setDeviceMetricsOverride',{width:1280,height:720,deviceScaleFactor:1,mobile:false})
  await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`});await until('!!window.show')
- let pointer={x:640,y:360},stage='screen',frames=[],began=0,capturing=false,clickedAt=-100
- const move=async(x,y,buttons=0)=>{const from={...pointer};for(let n=1;n<=8;n++){const f=n/8;pointer={x:from.x+(x-from.x)*f,y:from.y+(y-from.y)*f};await send('Input.dispatchMouseEvent',{type:'mouseMoved',...pointer,buttons});await sleep(35)}}
- const clickAt=async(x,y)=>{await move(x,y);clickedAt=(Date.now()-began)/1000;await send('Input.dispatchMouseEvent',{type:'mousePressed',...pointer,button:'left',clickCount:1});await sleep(80);await send('Input.dispatchMouseEvent',{type:'mouseReleased',...pointer,button:'left',clickCount:1});await sleep(350)}
- const rect=async(selector,text)=>evaluate(`(()=>{const e=[...document.querySelectorAll(${JSON.stringify(selector)})].findLast(e=>{const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.width>0&&r.height>0&&r.top>=0&&r.bottom<=720&&(hit===e||e.contains(hit))&&(${text?`e.textContent.trim()===${JSON.stringify(text)}||e.querySelector('p:first-child,span:first-child')?.textContent.trim()===${JSON.stringify(text)}`:'true'})});if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`)
- const click=async(selector,text)=>{const r=await rect(selector,text);assert.ok(r,selector+' '+text);await clickAt(r.x,r.y)}
- const part=async n=>{await click('.reading-toolbar span',`Part ${n}`);await sleep(200)}
+ let pointer={x:640,y:360},stage='screen',frames=[],motions=[],clicks=[],began=0,capturing=false,clickedAt=-100
+ const move=async(x,y,buttons=0)=>{const from={...pointer},start=(Date.now()-began)/1000,steps=24;for(let n=1;n<=steps;n++){const f=n/steps,e=f*f*f*(10+f*(-15+6*f));pointer={x:from.x+(x-from.x)*e,y:from.y+(y-from.y)*e};await send('Input.dispatchMouseEvent',{type:'mouseMoved',...pointer,buttons});await sleep(20)}if(capturing)motions.push({start,end:(Date.now()-began)/1000,from,to:{...pointer},easing:'smootherstep'})}
+ const clickAt=async(x,y)=>{await move(x,y);clickedAt=(Date.now()-began)/1000;clicks.push({time:clickedAt,...pointer});await send('Input.dispatchMouseEvent',{type:'mousePressed',...pointer,button:'left',clickCount:1});await sleep(80);await send('Input.dispatchMouseEvent',{type:'mouseReleased',...pointer,button:'left',clickCount:1});await sleep(350)}
+ const rect=async(selector,text)=>evaluate(`(()=>{const e=[...document.querySelectorAll(${JSON.stringify(selector)})].findLast(e=>{const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.width>0&&r.height>0&&r.top>=0&&r.bottom<=720&&(hit===e||e.contains(hit)||hit?.contains(e))&&(${text?`e.textContent.trim()===${JSON.stringify(text)}||e.querySelector('p:first-child,span:first-child')?.textContent.trim()===${JSON.stringify(text)}`:'true'})});if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`)
+ const click=async(selector,text)=>{let r;for(let n=0;n<30;n++){r=await rect(selector,text);if(r)break;await sleep(100)}if(!r){const shot=await send('Page.captureScreenshot',{format:'png'});await writeFile(join(output,'capture-error.png'),Buffer.from(shot.data,'base64'));await writeFile(join(output,'capture-error.txt'),await evaluate('document.body.innerText'));}assert.ok(r,selector+' '+text);await clickAt(r.x,r.y)}
+ const part=async n=>{await until(`!![...document.querySelectorAll('.reading-toolbar span')].find(e=>e.textContent.trim()===${JSON.stringify('Part ')}+${n})`);await click('.reading-toolbar span',`Part ${n}`);await sleep(200)}
  const type=async(selector,text)=>{await click(selector);for(const char of text){await send('Input.insertText',{text:char});await sleep(60)}}
  const selectText=async section=>{
   const r=await evaluate(`(()=>{const pane=document.querySelector(${JSON.stringify(section==='reading'?'#reading-passage-pane':'[data-reading-markable="1"]')});const walker=document.createTreeWalker(pane,NodeFilter.SHOW_TEXT);let node;while(node=walker.nextNode()){if(node.textContent.trim().length<45||!node.parentElement.closest(${JSON.stringify(section==='reading'?'.ielts-reading-prose':'p,h3,h2,div')}))continue;const range=document.createRange();range.setStart(node,0);range.setEnd(node,Math.min(35,node.textContent.length));const box=range.getClientRects()[0];if(box&&box.top>90&&box.bottom<600&&box.width>100){const textNode=node;window.demoSelect=count=>{const selection=window.getSelection();selection.setBaseAndExtent(textNode,0,textNode,Math.min(count,textNode.textContent.length));document.dispatchEvent(new Event('selectionchange'))};return {x:box.left+2,y:box.top+box.height/2,end:box.right-2,point:{x:box.left+8,y:box.top+3}}}}throw Error('Selectable text missing')})()`)
-  await move(r.x,r.y);await send('Input.dispatchMouseEvent',{type:'mousePressed',...pointer,button:'left',clickCount:1});stage='selecting';for(let n=1;n<=8;n++){const x=r.x+(r.end-r.x)*n/8;await send('Input.dispatchMouseEvent',{type:'mouseMoved',x,y:r.y,buttons:1});pointer={x,y:r.y};await evaluate(`window.demoSelect(${Math.round(35*n/8)})`);await sleep(100)}await sleep(600);await send('Input.dispatchMouseEvent',{type:'mouseReleased',...pointer,button:'left',clickCount:1});await evaluate('window.demoSelect(35)');await until('!!document.querySelector(\'[data-reading-selection-toolbar="1"]\')');await sleep(400);return r.point
+  await move(r.x,r.y);await send('Input.dispatchMouseEvent',{type:'mousePressed',...pointer,button:'left',clickCount:1});stage='selecting';const dragStart=(Date.now()-began)/1000,from={...pointer};for(let n=1;n<=24;n++){const x=r.x+(r.end-r.x)*n/24;await send('Input.dispatchMouseEvent',{type:'mouseMoved',x,y:r.y,buttons:1});pointer={x,y:r.y};await evaluate(`window.demoSelect(${Math.round(35*n/24)})`);await sleep(35)}motions.push({start:dragStart,end:(Date.now()-began)/1000,from,to:{...pointer},easing:'linear'});await sleep(600);await send('Input.dispatchMouseEvent',{type:'mouseReleased',...pointer,button:'left',clickCount:1});await evaluate('window.demoSelect(35)');await until('!!document.querySelector(\'[data-reading-selection-toolbar="1"]\')');await sleep(400);return r.point
  }
  const manifest=process.env.IELTS_INTRO_SCREEN_RESUME ? JSON.parse(await readFile(join(output,'manifest.json'),'utf8')) : {}
  for(const key of ['listening','reading']){
   manifest[key]??=[]
   for(const [index,scene] of catalog[key].scenes.entries()){
    if(process.env.IELTS_INTRO_SCREEN_VIEW&&scene.view!==process.env.IELTS_INTRO_SCREEN_VIEW)continue
-   if(manifest[key][index]&&!['answer','navigate'].includes(scene.view))continue
+   if(manifest[key][index]&&!process.env.IELTS_INTRO_SCREEN_VIEW)continue
    await evaluate(`window.show(${JSON.stringify(key)})`);await until('!!document.querySelector(".ielts-exam-header")');await sleep(400);if(key==='listening')await click('button','Play');await part(scene.part)
    await evaluate(`(()=>{document.getElementById('demo-pointer')?.remove();const p=document.createElement('div');p.id='demo-pointer';p.style.cssText='position:fixed;left:640px;top:360px;width:25px;height:35px;pointer-events:none;z-index:10000;filter:drop-shadow(0 1px 2px #fff)';p.innerHTML='<svg width="25" height="35" viewBox="0 0 25 35"><path d="M2 2v25l6-6 6 12 5-3-6-12h10z" fill="#171c27" stroke="white" stroke-width="1.7"/></svg>';document.body.append(p);document.onmousemove=e=>{p.style.left=e.clientX+'px';p.style.top=e.clientY+'px'};document.onmousedown=()=>{p.style.filter='drop-shadow(0 0 5px #c21d38)'};document.onmouseup=()=>{p.style.filter='drop-shadow(0 1px 2px #fff)'}})()`)
-   pointer={x:640,y:360};stage='screen';frames=[];began=Date.now();clickedAt=-100;capturing=true;let point
+   pointer={x:640,y:360};stage='screen';frames=[];motions=[];clicks=[];began=Date.now();clickedAt=-100;capturing=true;let point
    // Capture clean native frames and the real pointer trace separately. The
-   // video interpolates the trace at 24fps instead of stretching a baked cursor.
+   // video renders continuous motion segments independently of screenshot cadence.
    const capture=(async()=>{while(capturing){const time=(Date.now()-began)/1000,currentStage=stage,currentPointer={...pointer},clickTime=clickedAt;await evaluate("document.getElementById('demo-pointer').style.visibility='hidden'");const shot=await send('Page.captureScreenshot',{format:'jpeg',quality:90});const file=`${key}-${index}-${frames.length}.jpg`;await writeFile(join(output,file),Buffer.from(shot.data,'base64'));frames.push({file,time,stage:currentStage,pointer:currentPointer,clickTime});await sleep(35)}})()
    try{
     await sleep(450)
@@ -66,13 +66,13 @@ try{
     }else if(scene.view==='notes'){
      await selectText(key);await click('button','Note');await type('textarea','Check this detail');await click('button','Save note');await sleep(450);await click('[aria-label="Notes"]');await type('textarea','Check the word limit.');await move(900,380);await sleep(600)
     }else if(scene.view==='navigate'){
-     await part(2);await click('.reading-toolbar button',key==='listening'?'12':'15');await click('[title="Flag Question"]');await click('button','Review');await sleep(900);await click('button',key==='listening'?'12':'15');await sleep(600)
+     await part(2);await click('.reading-toolbar button',key==='listening'?'12':'15');await click('[title="Flag Question"]');await click('button','Review');await sleep(900);await click('button',key==='listening'?'12.':'15.');await sleep(600)
     }else if(scene.view==='answer'){
      const pane=key==='listening'?'[data-reading-markable="1"]':'#reading-questions-pane';const input=await rect(pane+' input[type="text"]');if(input)await type(pane+' input[type="text"]','Sample answer');else{const dropdown=await evaluate(`(()=>{const button=[...document.querySelectorAll(${JSON.stringify(pane+' button')})].find(e=>e.textContent.trim()==='?');if(!button)return null;const r=button.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()`);assert.ok(dropdown,'An actual answer control must be available');await clickAt(dropdown.x,dropdown.y);await click('button','A')}
      stage='answered';await until('document.querySelector(".ielts-exam-header").textContent.includes("1/40 answered")')
      await move(470,430);await send('Input.dispatchMouseEvent',{type:'mouseWheel',x:460,y:430,deltaY:180,deltaX:0});await sleep(700)
     }else if(scene.view==='timer'){
-     if(key==='listening'){await evaluate('window.finishAudio()');await until('!!document.querySelector(".listening-review-countdown")');await sleep(1200)}else{await move(635,34);await sleep(900);await part(1);await sleep(600)}
+     if(key==='listening'){await evaluate('window.finishAudio()');await until('!!document.querySelector(".listening-review-countdown")');await move(635,130);await sleep(1200)}else{await move(635,34);await sleep(900);await part(1);await sleep(600)}
     }else if(scene.view==='finish'){
      await click('button','Submit');await sleep(900);await click('button','Cancel');await sleep(600);await click('button','Submit');await sleep(450);await click('button','Submit test');await until('!!document.querySelector(".mock-run-hero")');stage='submitted';await move(700,370);await sleep(1100)
     }else if(scene.view==='review'){
@@ -84,7 +84,7 @@ try{
    }catch(error){console.error(key,scene.title,error);const shot=await send('Page.captureScreenshot',{format:'png'});await writeFile(join(output,'capture-error.png'),Buffer.from(shot.data,'base64'));throw error}finally{capturing=false;await capture}
    const duration=(Date.now()-began)/1000
    assert.ok(frames.length>=8,key+': moving capture must contain multiple real frames')
-   manifest[key][index]={view:scene.view,duration,frames,...(point?{point}:{})}
+   manifest[key][index]={view:scene.view,duration,frames,motions,clicks,...(point?{point}:{})}
    await writeFile(join(output,'manifest.json'),JSON.stringify(manifest,null,2))
    console.log(`Captured ${key}: ${scene.title} (${frames.length} moving frames)`)
   }

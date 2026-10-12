@@ -1,8 +1,10 @@
 // Original instructional illustrations using the flat computer-test workspace layout.
+import { cursorAt } from './ielts-intro-motion.mjs'
 export function renderPage(catalog, screenManifest = {}) {
   return `<meta charset="utf-8"><canvas width="1280" height="720"></canvas><script>
   const catalog=${JSON.stringify(catalog)};
   const screenManifest=${JSON.stringify(screenManifest)},screenChapters=new Map();
+  const cursorAt=${cursorAt.toString()};
   async function preloadScreen(key,index){
     const chapter=screenManifest[key]?.[index];if(!chapter)return;
     if(screenChapters.has(index))return screenChapters.get(index);
@@ -20,6 +22,12 @@ export function renderPage(catalog, screenManifest = {}) {
     const f=a===b?0:Math.max(0,Math.min(1,(progress-a[0])/(b[0]-a[0]))), ease=f*f*(3-2*f), x=a[1]+(b[1]-a[1])*ease,y=a[2]+(b[2]-a[2])*ease;
     clicks.forEach(t=>{const delta=progress-t;if(delta>=0&&delta<.045){ctx.beginPath();ctx.arc(x,y,12+delta*300,0,Math.PI*2);ctx.strokeStyle='rgba(185,30,62,'+(1-delta/.045)+')';ctx.lineWidth=3;ctx.stroke()}});
     ctx.save();ctx.translate(x,y);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,25);ctx.lineTo(7,19);ctx.lineTo(12,31);ctx.lineTo(17,28);ctx.lineTo(11,17);ctx.lineTo(22,17);ctx.closePath();ctx.fillStyle='#15191f';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  }
+  function nativePointer(chapter,time){
+    const motions=chapter.motions||[];
+    const {x,y}=cursorAt(motions,time);
+    pointer([[0,x,y]],0);
+    for(const click of chapter.clicks||[]){const delta=time-click.time;if(delta>=0&&delta<.3){ctx.beginPath();ctx.arc(click.x,click.y,12+delta*55,0,Math.PI*2);ctx.strokeStyle='rgba(194,29,56,'+(1-delta/.3)+')';ctx.lineWidth=2;ctx.stroke()}}
   }
   function toolDemo(key,scene,p){
     const reading=key==='reading', view=scene.view;
@@ -70,8 +78,8 @@ export function renderPage(catalog, screenManifest = {}) {
     const intro=catalog[key], i=Math.max(0,timeline.findLastIndex(s=>time>=s.start)), scene=intro.scenes[i], part=scene.part;
     if(screenManifest[key]){
       const chapter=screenManifest[key][i],images=screenChapters.get(i),progress=Math.min(1,(time-timeline[i].start)/(timeline[i].end-timeline[i].start));
-      if(Array.isArray(images)){const screenTime=progress*chapter.duration;const index=Math.max(0,chapter.frames.findLastIndex(f=>screenTime>=f.time));ctx.drawImage(images[index],0,0,1280,720);const a=chapter.frames[index],b=chapter.frames[Math.min(index+1,chapter.frames.length-1)];if(a.pointer&&b.pointer){const fraction=a===b?0:Math.max(0,Math.min(1,(screenTime-a.time)/(b.time-a.time)));pointer([[0,a.pointer.x,a.pointer.y],[1,b.pointer.x,b.pointer.y]],fraction);const delta=screenTime-a.clickTime;if(delta>=0&&delta<.25){ctx.beginPath();ctx.arc(a.pointer.x,a.pointer.y,13+delta*65,0,Math.PI*2);ctx.strokeStyle='rgba(194,29,56,'+(1-delta/.25)+')';ctx.lineWidth=2;ctx.stroke()}}}
-      if(progress>.65&&i+1<timeline.length&&!screenChapters.has(i+1))void preloadScreen(key,i+1);
+      if(Array.isArray(images)){const screenTime=progress*chapter.duration;const index=Math.max(0,chapter.frames.findLastIndex(f=>screenTime>=f.time));ctx.drawImage(images[index],0,0,1280,720);nativePointer(chapter,screenTime)}
+      if(i+1<timeline.length&&!screenChapters.has(i+1))void preloadScreen(key,i+1);
       for(const [n,bitmaps]of screenChapters){if(n<i&&Array.isArray(bitmaps)){bitmaps.forEach(bitmap=>bitmap.close());screenChapters.delete(n)}}
       return;
     }
@@ -132,7 +140,7 @@ export function renderPage(catalog, screenManifest = {}) {
     await preloadScreen(key,0);
     let cursor=0;const timeline=clips.map(clip=>{const start=cursor;cursor+=clip.duration+0.8;return {start,end:cursor,audioDuration:clip.duration}});const duration=cursor;
     const stream=canvas.captureStream(0),videoTrack=stream.getVideoTracks()[0];destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
-    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus',videoBitsPerSecond:1200000});const chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);const stopped=new Promise(resolve=>recorder.onstop=resolve);
+    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus',videoBitsPerSecond:2200000});const chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);const stopped=new Promise(resolve=>recorder.onstop=resolve);
     // Warm the canvas/fonts before scheduling speech: first-frame work must never
     // consume narration before MediaRecorder has begun capturing the audio track.
     frame(key,0,timeline);await document.fonts.ready;frame(key,0,timeline);
@@ -146,11 +154,12 @@ export function renderPage(catalog, screenManifest = {}) {
     clips.forEach((clip,i)=>{const source=context.createBufferSource();source.buffer=clip;source.playbackRate.value=1;source.connect(destination);source.start(start+timeline[i].start)});
     // Explicit frames and unthrottled timers also run in the other recording tabs;
     // requestAnimationFrame may suspend in a hidden tab and produce a still video.
-    const draw=()=>{frame(key,Math.min(duration,(performance.now()-began)/1000),timeline);videoTrack.requestFrame()};draw();const interval=setInterval(draw,1000/24);
+    let frameCount=0,previousFrame=began,maxFrameGap=0;
+    const draw=()=>{const now=performance.now();maxFrameGap=Math.max(maxFrameGap,now-previousFrame);previousFrame=now;frameCount++;frame(key,Math.min(duration,(now-began)/1000),timeline);videoTrack.requestFrame()};draw();const interval=setInterval(draw,1000/60);
     await new Promise(resolve=>setTimeout(resolve,duration*1000));clearInterval(interval);frame(key,duration,timeline);videoTrack.requestFrame();window.recordingState.phase='stopping';recorder.stop();stream.getTracks().forEach(track=>track.stop());await stopped;await context.close();
     window.recordingState.phase='encoding';const blob=new Blob(chunks,{type:'video/webm'});const bytes=new Uint8Array(await blob.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=8192)binary+=String.fromCharCode(...bytes.subarray(n,n+8192));const base64=btoa(binary);window.recordingState.phase='complete';
     const motionChecks=screenManifest[key]?.map((chapter,index)=>({index,view:chapter.view,point:chapter.point,stages:['selecting','highlighted','deleted','answered','submitted'].flatMap(stage=>{const frames=chapter.frames.filter(f=>f.stage===stage);if(!frames.length)return[];const frame=frames[Math.floor(frames.length/2)];return[{stage,fraction:frame.time/chapter.duration}]})})).filter(check=>check.stages.length);
-    return {base64,duration,scenes:timeline,voice:'en_GB-cori-high',playbackRate:1,...(screenManifest[key]?{source:'IELTSReadingInterface',motionChecks}:{})};
+    return {base64,duration,scenes:timeline,voice:'kokoro-bf_emma',playbackRate:1,frameRate:60,renderStats:{frameCount,averageFps:frameCount/duration,maxFrameGapMs:maxFrameGap},...(screenManifest[key]?{source:'IELTSReadingInterface',motionChecks,cursorMotion:'continuous-smootherstep'}:{})};
   };
   </script>`
 }

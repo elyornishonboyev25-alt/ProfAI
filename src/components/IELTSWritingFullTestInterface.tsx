@@ -205,27 +205,30 @@ export default function IELTSWritingFullTestInterface({
     (withTimer: boolean) => {
       setIsLaunching(true)
       if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
-      launchTimerRef.current = setTimeout(() => {
-        setTimerEnabled(withTimer)
+      const activate = () => {
+        const timed = inFullMock || withTimer
+        setTimerEnabled(timed)
         setTimeRemaining(effectiveDuration * 60)
-        deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
-        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        deadlineRef.current = timed ? Date.now() + effectiveDuration * 60_000 : null
+        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: timed, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
         autoSubmittedRef.current = false
-        setIsTimerRunning(withTimer)
+        setIsTimerRunning(timed)
         setPhase('writing')
         setIsLaunching(false)
         launchTimerRef.current = null
         setTimeout(() => textareaRef.current?.focus(), 100)
-      }, 1200)
+      }
+      if (inFullMock) activate()
+      else launchTimerRef.current = setTimeout(activate, 1200)
     },
-    [effectiveDuration, sessionKey],
+    [effectiveDuration, sessionKey, inFullMock, user?.id],
   )
 
   useEffect(() => {
-    if (autoStartHandled.current || !autoStart) return
+    if (autoStartHandled.current || (!autoStart && !inFullMock)) return
     autoStartHandled.current = true
     handleStart(autoTimerEnabled ?? true)
-  }, [autoStart, autoTimerEnabled, handleStart])
+  }, [autoStart, autoTimerEnabled, inFullMock, handleStart])
 
   const resetTest = useCallback(() => {
     setAnswers(Object.fromEntries(tasks.map((task) => [task.id, ''])))
@@ -381,6 +384,7 @@ export default function IELTSWritingFullTestInterface({
   }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
   if (phase === 'landing') {
+    if (inFullMock) return <div className="flex min-h-dvh items-center justify-center bg-white p-6 text-center" role="status"><h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">Writing test</span></h1></div>
     return (
       <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
         <AnimatedBackground />

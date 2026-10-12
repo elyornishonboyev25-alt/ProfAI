@@ -79,7 +79,7 @@
         "title": "Ready to begin",
         "part": 4,
         "view": "overview",
-        "text": "Check that you can hear clearly. The recording plays once, followed by two minutes to check your answers. Select Start Test when you are ready."
+        "text": "Check that you can hear clearly. The recording plays once, followed by two minutes to check your answers. Your Listening test will start automatically when this video ends."
       }
     ]
   },
@@ -157,7 +157,7 @@
         "title": "Ready to begin",
         "part": 3,
         "view": "overview",
-        "text": "You have sixty minutes for all three passages, with no extra transfer time. Your answers submit automatically when time expires. Select Start Test when you are ready."
+        "text": "You have sixty minutes for all three passages, with no extra transfer time. Your answers submit automatically when time expires. Your Reading test will start automatically when this video ends."
       }
     ]
   },
@@ -193,7 +193,7 @@
         "title": "Check both responses",
         "part": 2,
         "view": "review",
-        "text": "Leave time to check your organisation, spelling, and grammar. Make sure you have answered every part of each question. Your responses are submitted when the timer ends. When you are ready, select Start Test."
+        "text": "Leave time to check your organisation, spelling, and grammar. Make sure you have answered every part of each question. Your responses are submitted when the timer ends. Your Writing test will start automatically when this video ends."
       }
     ]
   },
@@ -229,7 +229,7 @@
         "title": "Ready to speak",
         "part": 3,
         "view": "review",
-        "text": "Speak clearly, at a comfortable pace. Focus on communicating your ideas, using a range of vocabulary and sentence structures. Listen carefully to the examiner and keep your microphone available throughout the practice. When you are ready, select Start Test."
+        "text": "Speak clearly, at a comfortable pace. Focus on communicating your ideas, using a range of vocabulary and sentence structures. Listen carefully to the examiner and keep your microphone available throughout the practice. Your Speaking practice will start automatically when this video ends."
       }
     ]
   }

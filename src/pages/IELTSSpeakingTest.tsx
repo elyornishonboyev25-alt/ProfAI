@@ -140,15 +140,15 @@ function SpeakingTestContent() {
   }, [id])
 
   // Brief "your test will begin shortly" loader when entering a Speaking test.
-  const [booting, setBooting] = useState(true)
+  const [booting, setBooting] = useState(!mockContext?.id)
   useEffect(() => {
-    if (!mode) {
+    if (!mode || mockContext?.id) {
       setBooting(false)
       return
     }
     const t = setTimeout(() => setBooting(false), 1900)
     return () => clearTimeout(t)
-  }, [mode])
+  }, [mode, mockContext?.id])
 
   const mockRedirect = mockContext?.id ? getFullMockSectionRedirect(mockContext.id, 'speaking', location.pathname) : null
   if (mockRedirect && mockContext) {
@@ -898,6 +898,7 @@ function FullMockRunner({
     <div className="ielts-speaking-workspace ielts-speaking-live-workspace py-4">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
+        autoStart={inFullMock}
         modeLabel={mock.title}
         onExit={onExit}
         onSaved={(analysis, transcript) => onSaved(analysis, transcript, launchMode)}

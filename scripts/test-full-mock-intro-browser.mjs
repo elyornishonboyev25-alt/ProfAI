@@ -8,6 +8,8 @@ import { join, resolve } from 'node:path'
 import { build } from 'esbuild'
 import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
+const mediaMetadata = JSON.parse(await readFile('src/data/fullMockIntroMedia.json', 'utf8'))
+const catalog = JSON.parse(await readFile('src/data/fullMockIntros.json', 'utf8'))
 const requireBackend = createRequire(new URL('../backend/package.json', import.meta.url))
 const WebSocket = requireBackend('ws')
 const directory = await mkdtemp(join(tmpdir(), 'profai-intro-browser-'))
@@ -37,9 +39,9 @@ const source = `
 const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: join(directory, 'fixture.js'), format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
 const css = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css + (bundle.outputFiles.find(file => file.path.endsWith('.css'))?.text ?? '')
 const server = createServer(async (req, res) => {
-  if (req.url === '/') { res.setHeader('Content-Type', 'text/html'); res.end(`<meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`); return }
-  if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text); return }
-  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm$/)
+  if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`); return }
+  if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text); return }
+  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm(?:\?v=2)?$/)
   if (media) {
     const data = await readFile(resolve('public/media/ielts-intros', media[1]+'.webm'))
     res.setHeader('Content-Type', 'video/webm'); res.setHeader('Accept-Ranges', 'bytes')
@@ -75,23 +77,49 @@ try {
     if(section!=='listening')await evaluate(`window.showSection('${section}')`)
     await until(`document.querySelector('video')?.getAttribute('src').includes('${section}.webm') && document.querySelector('video').readyState>=2`)
     const data=await evaluate(`(async()=>{const video=document.querySelector('video');video.pause();const context=new AudioContext();const buffer=await context.decodeAudioData(await(await fetch(video.src)).arrayBuffer());const samples=buffer.getChannelData(0);let energy=0;for(const v of samples)energy+=v*v;await context.close();return {duration:video.duration,width:video.videoWidth,height:video.videoHeight,rms:Math.sqrt(energy/samples.length),audioDuration:buffer.duration}})()`)
-    assert.ok(data.duration>=23.5&&data.duration<=24.5,section+': duration '+data.duration)
+    const info = mediaMetadata[section]
+    assert.ok(Math.abs(data.duration - info.duration) < 1, section+': media duration matches audio-derived chapters '+data.duration)
+    assert.equal(info.playbackRate, 1, 'Narration is never accelerated')
+    assert.equal(info.scenes.length, catalog[section].scenes.length)
+    const wordCount = catalog[section].scenes.reduce((total,scene)=>total+scene.text.split(/\s+/).length,0)
+    const spokenMinutes = info.scenes.reduce((total,scene)=>total+scene.audioDuration,0)/60
+    assert.ok(wordCount/spokenMinutes>=95 && wordCount/spokenMinutes<=190, section+': natural speaking speed '+wordCount/spokenMinutes)
     assert.deepEqual([data.width,data.height],[1280,720])
     assert.ok(data.rms>.01,section+': narration must be audible')
-    assert.ok(data.audioDuration>=16,section+': four narrated scenes are present '+JSON.stringify(data))
-    await evaluate(`document.querySelector('video').currentTime=13`)
-    await until('document.querySelector("video").currentTime>=13 && !document.querySelector("video").seeking')
-    assert.equal(await evaluate(`document.querySelector('.full-mock-intro-caption strong').textContent`),section==='listening'?'Follow the word limit':section==='reading'?'Move between questions':section==='writing'?'Task 2 · at least 250 words':'Part 2 · your long turn')
+    assert.ok(data.audioDuration>=info.duration-1,section+': complete narrated scenes are present '+JSON.stringify(data))
+    const seekTime = info.scenes[2].start + 1
+    await evaluate(`document.querySelector('video').currentTime=${seekTime}`)
+    await until(`Math.abs(document.querySelector('video').currentTime-${seekTime})<.05 && !document.querySelector('video').seeking`)
+    assert.equal(await evaluate(`document.querySelector('.full-mock-intro-caption strong').textContent`),catalog[section].scenes[2].title)
     const screenshot=await send('Page.captureScreenshot',{format:'png'})
     await writeFile(join(screenshots,section+'.png'),Buffer.from(screenshot.data,'base64'))
+    if (section === 'listening' || section === 'reading') {
+      const highlightIndex = catalog[section].scenes.findIndex(scene => scene.view === 'highlight')
+      const chapter = info.scenes[highlightIndex]
+      const colors = []
+      for (const [stage, fraction] of [['selecting', .25], ['highlighted', .6], ['deleted', .98]]) {
+        const time = chapter.start + (chapter.end - chapter.start) * fraction
+        await evaluate(`document.querySelector('video').currentTime=${time}`)
+        await until(`!document.querySelector('video').seeking && Math.abs(document.querySelector('video').currentTime-${time})<.05`)
+        await new Promise(resolve => setTimeout(resolve, 300))
+        colors.push(await evaluate(`(()=>{const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const context=canvas.getContext('2d');context.drawImage(document.querySelector('video'),0,0);return [...context.getImageData(55,260,1,1).data].slice(0,3)})()`))
+        const frame = await send('Page.captureScreenshot', {format:'png'})
+        await writeFile(join(screenshots,`${section}-${stage}.png`),Buffer.from(frame.data,'base64'))
+      }
+      assert.ok(colors[0][2] > colors[0][0] + 30, section+': pointer drag creates blue selection '+JSON.stringify(colors))
+      assert.ok(colors[1][0] > 200 && colors[1][1] > 150 && colors[1][2] < 150, section+': Highlight changes selection to yellow '+JSON.stringify(colors))
+      assert.ok(colors[2].every(value => value > 230), section+': Delete highlight restores plain text '+JSON.stringify(colors))
+      console.log('PASS: '+section+' native video demonstrates selection, highlight and removal')
+    }
     for(const [width,height] of [[1366,900],[920,500],[768,1024],[390,844],[320,568]]) {
       await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600})
       const layout=await evaluate(`(()=>{const button=document.querySelector('.full-mock-intro-start');button.scrollIntoView({block:'center',behavior:'instant'});const r=button.getBoundingClientRect();return {fits:document.documentElement.scrollWidth<=innerWidth+1,visible:r.top>=0&&r.bottom<=innerHeight,height:r.height}})()`)
       assert.ok(layout.fits&&layout.visible&&layout.height>=40,section+': responsive controls '+width+'x'+height+JSON.stringify(layout))
     }
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false})
-    await evaluate(`document.querySelector('video').currentTime=23.7;document.querySelector('video').play()`)
-    await until(`document.querySelector('.full-mock-intro-start').textContent.includes('Start ')`)
+    await evaluate(`document.querySelector('video').currentTime=${data.duration-.25};document.querySelector('video').play()`)
+    await until(`document.querySelector('video').ended`)
+    assert.equal(await evaluate(`!!document.querySelector('.full-mock-intro-skip')`),false)
     assert.equal(await evaluate('!!document.querySelector("[data-runner]")'),false)
     await evaluate(`document.querySelector('.full-mock-intro-start').click()`)
     await until('!!document.querySelector("[data-runner]")')

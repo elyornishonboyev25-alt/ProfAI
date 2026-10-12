@@ -1,27 +1,37 @@
 # Full mock section introductions
 
-Each section begins with an original, approximately 24-second 1280×720 video in ProfAI's IELTS design, with four animated interface scenes and a prerecorded English voice. The media files under `public/media/ielts-intros` are intentional product assets. They need no runtime TTS service or third-party embed.
+Each section begins with an original 1280×720 instructional video in a flat ProfAI computer-test workspace. British English neural narration runs at its original speed, with sentence pauses and a short gap between chapters. Duration follows the spoken instructions; there is no 24/25-second limit. `fullMockIntroMedia.json` records the actual audio-derived duration and chapter boundaries, so captions, chapter links and the player clock follow the prerecorded speech.
 
-Full Mock **Open** requests fullscreen on the document within the click gesture and opens the first unfinished section directly. Completed mocks open their results overview. Fullscreen persists across routes. The overview and section starts provide another fullscreen entry control when a browser blocks the initial request or the candidate exits. Unsupported browsers retain the immersive page layout.
+Listening explains all four recording contexts; Academic Reading explains all three passages without claiming that particular question types belong to a fixed passage. Both videos include animated cursor demonstrations of selecting text, adding/deleting highlights, changing text size and contrast, attaching notes, opening separate scratch notes, navigating parts/questions, flagging questions, reviewing answers and watching the timer. Every demonstration has corresponding English narration. Example text and questions are illustrations, not new catalog tests.
 
-`FullMockSectionGate` keeps test runners unmounted during instructions. Video completion shows **Start**; **Skip video & start** begins immediately. The candidate can pause, replay, mute, read synchronized captions or expand the complete transcript. Blocked sound autoplay shows **Enable sound**; failed media leaves written instructions and a working start button.
+The introduction has a candidate header, section tabs, information panel, headphones/audio check, navigable video chapters, playback controls, synchronized written captions, full transcript, **Skip video & start**, and **Start Test**. Video completion does not start the timed runner. The start button remains available before completion. Autoplay restrictions expose **Enable sound**; failed video retains written instructions and Start Test. Browser cache versioning prevents the earlier accelerated videos from being reused.
 
-Starting is stored per account, mock and section. Reloading a started section bypasses the intro so existing exam deadlines continue. Legacy active Reading/Listening sessions and Writing sessions also bypass it. Individual practice and saved-attempt review do not show these intros. Stale section routes still redirect to the first unfinished section.
+Full Mock **Open** requests fullscreen on the document in the click gesture and opens the first unfinished section directly. Completed mocks open their results overview. Fullscreen persists across routes; entry controls remain available when the browser blocks it or the candidate exits. Unsupported browsers retain the immersive layout.
 
-Listening's existing final-recording + two-minute answer-review deadline is unchanged. Intro playback cannot trigger it because the test audio component has not mounted. Reading, Writing and Speaking timing remains unchanged.
+`FullMockSectionGate` keeps runners unmounted during instructions: no test audio, timer or microphone starts. Starting is stored per account, mock and section. Reloading a started section bypasses the intro to preserve existing deadlines, including legacy active Reading/Listening and Writing sessions. Individual practice and saved-attempt review bypass introductions. Stale routes still redirect to the first unfinished section.
 
-## Scoring and official differences
+Listening's existing countdown starts only after the final test recording, lasts two minutes, persists its original deadline on reload and automatically submits at expiry. Earlier tracks, instruction videos and review playback do not start it. Reading, Writing and Speaking timing is unchanged.
 
-Verified on 2026-10-12 against [IELTS scoring in detail](https://ielts.org/take-a-test/your-results/ielts-scoring-in-detail) and [IELTS Academic sample tests](https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test). Existing overall scoring already averages all four bands and rounds to the nearest half band, with `.25` and `.75` rounding up. Regression tests include the three official worked examples and boundary scores. Writing continues to weight Task 2 twice as heavily as Task 1.
+## Official references and scope
 
-Public raw-score conversions can vary slightly between IELTS test versions. Writing and Speaking are AI practice estimates, not certified examiner results. The Speaking intro explicitly explains that real IELTS uses a human examiner. These are original ProfAI instructional videos, not official IELTS recordings.
+Checked on 2026-10-12 against the [official IDP computer-test startup guidance](https://ielts.idp.com/turkey/prepare/article-how-computer-delivered-ielts-works/en-gb), the [IDP familiarisation tests](https://ielts.idp.com/about/ielts-familiarisation-tests), and the live [official Academic Reading demo](https://demo-ielts.inspera.com/player/?assessmentRunId=131013388&context=exam#/section/128121930/question/128121896/scorableItem/1). The latter uses a flat header, part instructions, passage/questions side by side and bottom part/question navigation. Our tutorial demonstrates the controls available in `IELTSReadingInterface.tsx`, including the **Highlight**, **Note**, **Delete highlight**, **Display settings**, **Text size**, **Contrast**, **Notes**, **Review**, and flag controls.
 
-## Maintenance and verification
+Part descriptions follow [IELTS Academic Listening](https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-listening) and [IELTS Academic Reading](https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-reading). Real Speaking uses a human examiner; the video explicitly identifies ProfAI's AI practice examiner. These are original ProfAI instructional videos, not official IELTS media or a certified replica of every test-centre implementation.
 
-- Copy and captions: `src/data/fullMockIntros.json`.
-- Regenerate media: `node scripts/generate-ielts-intros.mjs` on Windows with an installed English SAPI voice and Microsoft Edge. Override `IELTS_INTRO_BROWSER` for another Chromium executable.
-- Flow/session/scoring regression: `npm run test:full-mocks`.
-- Native video/audio, caption synchronization, responsive controls and fullscreen: `npm run test:full-mock-intro-browser`.
-- Browser screenshots are written to ignored `tmp/full-mock-intro-browser`; they are not committed.
+Existing overall scoring averages the four bands and rounds to the nearest half band, with .25/.75 rounding upwards; Writing weights Task 2 twice as heavily. Regression checks retain official worked examples. Raw-score conversion can vary slightly by test version. AI Writing/Speaking bands remain practice estimates rather than certified examiner scores.
 
-The native browser test verifies audible audio, duration between 23.5 and 24.5 seconds, 720p frames, five viewport sizes, end/start behavior and fullscreen survival from the catalog through the overview into the intro.
+## Narration and regeneration
+
+Narration uses the portable [Piper 2023.11.14-2 Windows release](https://github.com/rhasspy/piper/releases/tag/2023.11.14-2) and [en_GB-cori-high](https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high), a UK English female neural voice trained from public-domain LibriVox recordings ([model card](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_GB/cori/high/MODEL_CARD)). This is synthetic narration, disclosed in the instruction panel. It needs no runtime API key or external video embed.
+
+1. Extract the official Windows engine into ignored `tmp/intro-voice/piper`. Download the model and `.onnx.json` configuration into `tmp/intro-voice`. If needed, supply the Microsoft Visual C++ runtime required by the engine. No engine/model binaries belong in the Git commit.
+2. Run `node scripts/generate-ielts-intros.mjs` with Microsoft Edge installed. Override `IELTS_INTRO_PIPER`, `IELTS_INTRO_VOICE`, or `IELTS_INTRO_BROWSER` for other local paths. The voice generator uses length scale 1.08, sentence silence 0.45 seconds and a single neural session. Audio is scheduled with playback rate **1**.
+3. The generator records each section in a separate Chromium page, writes the four intentional product videos under `public/media/ielts-intros`, and writes source timing metadata. `IELTS_INTRO_VOICE_DIR` can resume an interrupted working directory with unchanged copy; omit it for a clean regeneration after editing narration.
+
+## Verification
+
+- `npm run test:full-mocks`: intro isolation, chapter selection, skip/start, reload, autoplay recovery, per-account storage, all full-mock flows, saved sessions, scoring and Listening completion.
+- `npm run test:full-mock-intro-browser`: actual prerecorded duration versus chapter metadata, natural speaking rate, audible audio, 720p frames, native selection/highlight/removal animation frames, synchronized captions, five viewport sizes, native ended/start and fullscreen across routes.
+- `npx tsc --noEmit` and the production Vite build.
+
+Browser screenshots and voice-tool working files stay in ignored temporary directories.

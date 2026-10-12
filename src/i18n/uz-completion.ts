@@ -4,6 +4,7 @@ export const uzbekCompletion: Record<string, string> = {
   "Your test timer is still running. Continue the test, or leave and discard your answers.": "Test vaqti davom etmoqda. Testni davom ettiring yoki javoblarni o‘chirib chiqing.",
   "If you leave, your answers will be deleted and this attempt cannot be resumed.": "Chiqsangiz, javoblaringiz o‘chiriladi va bu urinishni davom ettira olmaysiz.",
   "Continue test": "Testni davom ettirish",
+  'Exit & Save': 'Saqlash va chiqish',
   "Leave and end attempt": "Chiqish va urinishni tugatish",
   'Build your Listening with podcasts': 'Podkastlar bilan Listening ko‘nikmangizni rivojlantiring',
   'Open podcasts': 'Podkastlarga o‘tish',

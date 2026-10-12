@@ -13,6 +13,7 @@ import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { isPublicAccountRoute } from '@/utils/accountAccess'
 import PremiumRoute from '@/components/auth/PremiumRoute'
+import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
@@ -566,7 +567,7 @@ function App() {
                         path="/sat/mock/:mockId/run"
                         element={
                           <PremiumRoute>
-                            <SATMockRun />
+                            <SATBrowserExitGuard><SATMockRun /></SATBrowserExitGuard>
                           </PremiumRoute>
                         }
                       />

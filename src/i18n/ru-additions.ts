@@ -4,6 +4,7 @@ export const russianAdditions: Record<string, string> = {
   "Your test timer is still running. Continue the test, or leave and discard your answers.": "Таймер теста продолжает работать. Продолжите тест или выйдите и удалите ответы.",
   "If you leave, your answers will be deleted and this attempt cannot be resumed.": "Если вы выйдете, ваши ответы будут удалены и эту попытку нельзя будет продолжить.",
   "Continue test": "Продолжить тест",
+  'Exit & Save': 'Сохранить и выйти',
   "Leave and end attempt": "Выйти и завершить попытку",
   'Build your Listening with podcasts': 'Развивайте Listening с подкастами',
   'Open podcasts': 'Открыть подкасты',

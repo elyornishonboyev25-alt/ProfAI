@@ -121,13 +121,13 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
         </ol>
         <div className="full-mock-intro-heading">
           <p>SECTION {index + 1} OF 4 · INSTRUCTIONS TO CANDIDATES</p>
-          <h1 ref={heading} tabIndex={-1}>{intro.title} — before you start</h1>
+          <h1 ref={heading} tabIndex={-1}>IELTS <span>{intro.title}</span><small>Instructions to candidates</small></h1>
           <span>{intro.meta}</span>
         </div>
         <div className="full-mock-intro-workspace">
         <section aria-label="Video instructions">
         <div className="full-mock-intro-player">
-          <video ref={video} src={`/media/ielts-intros/${section}.webm?v=2`} preload="auto" playsInline muted={muted}
+          <video ref={video} src={`/media/ielts-intros/${section}.webm?v=3`} preload="auto" playsInline muted={muted}
             aria-label={`${intro.title} instructions video with English narration`} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
             onTimeUpdate={event => setPosition(event.currentTarget.currentTime)}
             onLoadedMetadata={event => { const value = event.currentTarget.duration; if (Number.isFinite(value) && value > 0) setDuration(value) }}
@@ -164,7 +164,7 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
             setEnded(false)
             void video.current.play().catch(() => setPlaying(false))
           }}><span>{formatTime(mediaInfo.scenes[n].start)}</span>{item.title}</button></li>)}</ol>
-          <small>Original ProfAI walkthrough · AI-generated English narration</small>
+          <small>{section === 'listening' || section === 'reading' ? 'Recorded in the ProfAI IELTS test screen' : 'Original ProfAI walkthrough'} · AI-generated English narration</small>
         </aside>
         </div>
         <div className="full-mock-intro-actions">

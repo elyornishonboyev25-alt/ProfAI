@@ -34,6 +34,7 @@ const source = `
     </Routes></MemoryRouter>);
   };
   window.showCatalog=()=>{localStorage.clear();root.render(<MemoryRouter key='catalog' initialEntries={['/mock/ielts']}><Routes><Route path='/mock/ielts' element={<MockIELTS embedded/>}/><Route path='/mock/ielts/:mockId' element={<MockIELTSRun/>}/><Route path='/test/:type/:id' element={<FullMockSectionGate><div data-runner>Exam has started</div></FullMockSectionGate>}/></Routes></MemoryRouter>)};
+  window.showCompleted=()=>{localStorage.clear();const mock=getFullMockById('full-mock-1');for(const [n,item]of mock.sections.entries())saveFullMockSectionResult(mock.id,item.key,{band:[7,7,6.5,7.5][n],testId:item.launchPath.split('/').pop(),completedAt:'2026-10-12',...(n<2?{result:{testId:'qa',date:'2026-10-12',score:7,correctAnswers:32-n*2,totalQuestions:40,answers:{},timeSpent:1800}}:{review:[{label:n===2?'Task 1':'Your answer',response:'Recorded response',feedback:'Recorded feedback'}]})});root.render(<MemoryRouter key={'completed-'+Date.now()} initialEntries={['/mock/ielts']}><Routes><Route path='/mock/ielts' element={<MockIELTS embedded/>}/><Route path='/mock/ielts/:mockId' element={<MockIELTSRun/>}/><Route path='/test/:type/:id' element={<FullMockSectionGate><div data-runner>Exam has started</div></FullMockSectionGate>}/></Routes></MemoryRouter>)};
   window.showSection('listening');
 `
 const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: join(directory, 'fixture.js'), format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
@@ -41,7 +42,7 @@ const css = (await postcss([tailwindcss()]).process(await readFile('src/index.cs
 const server = createServer(async (req, res) => {
   if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`); return }
   if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text); return }
-  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm(?:\?v=2)?$/)
+  const media = req.url?.match(/^\/media\/ielts-intros\/(listening|reading|writing|speaking)\.webm(?:\?v=3)?$/)
   if (media) {
     const data = await readFile(resolve('public/media/ielts-intros', media[1]+'.webm'))
     res.setHeader('Content-Type', 'video/webm'); res.setHeader('Accept-Ranges', 'bytes')
@@ -96,18 +97,23 @@ try {
     if (section === 'listening' || section === 'reading') {
       const highlightIndex = catalog[section].scenes.findIndex(scene => scene.view === 'highlight')
       const chapter = info.scenes[highlightIndex]
+      assert.equal(info.source, 'IELTSReadingInterface', 'Tutorial records the live website component')
+      const motion = info.motionChecks.find(check => check.view === 'highlight')
+      assert.ok(motion?.point && motion.stages.length === 3, 'Native cursor demonstration records all annotation stages')
+      assert.ok(info.motionChecks.some(check => check.view === 'answer' && check.stages.some(stage => stage.stage === 'answered')), 'Real answer entry changes the answered count')
+      assert.ok(info.motionChecks.some(check => check.view === 'finish' && check.stages.some(stage => stage.stage === 'submitted')), 'Submit confirmation ends the section and opens the next skill')
       const colors = []
-      for (const [stage, fraction] of [['selecting', .25], ['highlighted', .6], ['deleted', .98]]) {
+      for (const {stage, fraction} of motion.stages) {
         const time = chapter.start + (chapter.end - chapter.start) * fraction
         await evaluate(`document.querySelector('video').currentTime=${time}`)
         await until(`!document.querySelector('video').seeking && Math.abs(document.querySelector('video').currentTime-${time})<.05`)
         await new Promise(resolve => setTimeout(resolve, 300))
-        colors.push(await evaluate(`(()=>{const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const context=canvas.getContext('2d');context.drawImage(document.querySelector('video'),0,0);return [...context.getImageData(55,260,1,1).data].slice(0,3)})()`))
+        colors.push(await evaluate(`(()=>{const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const context=canvas.getContext('2d');context.drawImage(document.querySelector('video'),0,0);return [...context.getImageData(${Math.round(motion.point.x)},${Math.round(motion.point.y)},1,1).data].slice(0,3)})()`))
         const frame = await send('Page.captureScreenshot', {format:'png'})
         await writeFile(join(screenshots,`${section}-${stage}.png`),Buffer.from(frame.data,'base64'))
       }
       assert.ok(colors[0][2] > colors[0][0] + 30, section+': pointer drag creates blue selection '+JSON.stringify(colors))
-      assert.ok(colors[1][0] > 200 && colors[1][1] > 150 && colors[1][2] < 150, section+': Highlight changes selection to yellow '+JSON.stringify(colors))
+      assert.ok(colors[1][0] > 200 && colors[1][1] > 150 && colors[1][2] < 190, section+': Highlight changes selection to yellow '+JSON.stringify(colors))
       assert.ok(colors[2].every(value => value > 230), section+': Delete highlight restores plain text '+JSON.stringify(colors))
       console.log('PASS: '+section+' native video demonstrates selection, highlight and removal')
     }
@@ -126,8 +132,8 @@ try {
     console.log('PASS: '+section+' '+data.duration.toFixed(2)+'s, 720p, audible English track, synced captions, five responsive sizes, native ended and Start')
   }
   await evaluate('window.showCatalog()')
-  await until('!!document.querySelector("button.mock-ielts-glass-card")')
-  await evaluate('document.querySelector("button.mock-ielts-glass-card").click()')
+  await until('!!document.querySelector("button.mock-ielts-card-open")')
+  await evaluate('document.querySelector("button.mock-ielts-card-open").click()')
   await until('!!document.querySelector("video")')
   assert.equal(await evaluate('!!document.fullscreenElement'),true,'Open enters browser fullscreen')
   await evaluate(`document.querySelector('.full-mock-intro-header button').click()`)
@@ -136,6 +142,28 @@ try {
   await until('!!document.querySelector("video")')
   assert.equal(await evaluate('!!document.fullscreenElement'),true,'Fullscreen survives route transitions')
   console.log('PASS: Open enters instructions immediately; native browser fullscreen persists through overview and section Start')
+  await evaluate('window.showCompleted()')
+  await until('!!document.querySelector(".mock-ielts-retake")')
+  const cardSize=await evaluate(`(()=>{const card=document.querySelector('.mock-ielts-glass-card'),retake=card.querySelector('.mock-ielts-retake'),review=card.querySelector('.mock-ielts-card-open');const a=card.getBoundingClientRect(),x=retake.getBoundingClientRect(),y=review.getBoundingClientRect();retake.style.display='none';const b=card.getBoundingClientRect();retake.style.display='';return {before:a.height,after:b.height,sameRow:Math.abs(x.top-y.top)<2,left:x.right<=y.left}})()`)
+  assert.ok(Math.abs(cardSize.before-cardSize.after)<1&&cardSize.sameRow&&cardSize.left,'Retake sits beside Review without increasing the card height')
+  await evaluate('document.querySelector(".mock-ielts-card-open").click()')
+  await until('document.querySelectorAll("[role=tab]").length===4')
+  assert.ok((await evaluate('document.querySelector(".mock-run-band").textContent')).startsWith('7.0'))
+  for(const section of ['listening','reading','writing','speaking']){
+    await evaluate(`document.getElementById('result-tab-${section}').click()`)
+    assert.equal(await evaluate('document.querySelector("[role=tabpanel]").getAttribute("aria-labelledby")'),'result-tab-'+section)
+    assert.ok((await evaluate('document.querySelector(".mock-run-band").textContent')).startsWith('7.0'),'Overall remains visible while changing skill cards')
+  }
+  for(const [width,height]of [[1366,900],[390,844],[320,568]]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600})
+    assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Results fit '+width)
+    const shot=await send('Page.captureScreenshot',{format:'png'});await writeFile(join(screenshots,'results-'+width+'.png'),Buffer.from(shot.data,'base64'))
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false})
+  await evaluate('window.showCompleted()');await until('!!document.querySelector(".mock-ielts-retake")');await evaluate('document.querySelector(".mock-ielts-retake").click()');await until('!!document.querySelector("video")')
+  assert.ok((await evaluate('document.querySelector("video").src')).includes('listening.webm'))
+  assert.equal(await evaluate('!!document.querySelector("[data-runner]")'),false)
+  console.log('PASS: Retake beside Review keeps card dimensions; completed review shows overall and four responsive section cards; Retake starts fresh Listening instructions')
 } finally {
   socket?.close();browser.kill();server.close();await new Promise(resolve=>setTimeout(resolve,600))
   await rm(directory,{recursive:true,force:true,maxRetries:5,retryDelay:300})

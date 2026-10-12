@@ -15,7 +15,7 @@
     "test:coach-studio": "node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",
     "test:active-test-persistence": "node scripts/test-listening-parts-ui.mjs scripts/tests/active-test-persistence.tsx",
-    "test:full-mocks": "node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-intro-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-flow-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-session-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/mock-results-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-audio-completion.tsx",
+    "test:full-mocks": "node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-intro-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-retake-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-flow-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-session-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/mock-results-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-audio-completion.tsx",
     "test:full-mock-intro-browser": "node scripts/test-full-mock-intro-browser.mjs",
     "test:community-browser": "node scripts/test-community-browser.mjs",
     "validate:reading": "node scripts/validate-reading-bank.mjs",

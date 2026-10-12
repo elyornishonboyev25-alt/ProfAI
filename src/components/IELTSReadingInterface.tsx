@@ -6853,6 +6853,7 @@ export default function IELTSReadingInterface({
                 <button
                   type="button"
                   onClick={() => setShowOptionsModal(false)}
+                  aria-label="Close display settings"
                   className="rounded-xl border border-red-100 bg-white p-2 text-slate-600 hover:bg-red-50"
                 >
                   <XMarkIcon className="h-5 w-5" />

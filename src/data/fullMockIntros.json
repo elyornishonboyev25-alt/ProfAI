@@ -13,25 +13,25 @@
         "title": "Part 1 · A conversation",
         "part": 1,
         "view": "part",
-        "text": "In Part One, you will hear a conversation between two people in an everyday social situation. For example, they might be arranging a booking or asking for information. Listen carefully for details such as names, dates, and numbers."
+        "text": "Part One is a conversation between two people in an everyday social situation. Answer questions one to ten as you listen."
       },
       {
         "title": "Part 2 · One speaker",
         "part": 2,
         "view": "part",
-        "text": "In Part Two, you will hear one person speaking about an everyday topic. This might be an introduction to a place or a talk about local facilities. Read the instructions carefully. You may need to follow a map, choose an option, or complete information."
+        "text": "Part Two has one speaker talking about an everyday topic, such as local facilities. It contains questions eleven to twenty."
       },
       {
         "title": "Part 3 · Education and training",
         "part": 3,
         "view": "part",
-        "text": "In Part Three, you will hear a conversation in an educational or training context. Students may discuss a project, sometimes with a tutor. Follow who is speaking, and listen for their opinions, choices, and reasons."
+        "text": "Part Three is a conversation about education or training, often involving students and a tutor. Answer questions twenty-one to thirty."
       },
       {
         "title": "Part 4 · An academic talk",
         "part": 4,
         "view": "part",
-        "text": "In Part Four, you will hear one person speaking about an academic subject. Follow the sequence of the talk and identify the information needed for each answer. The questions follow the order of the recording."
+        "text": "Part Four is an academic talk by one speaker. Answer questions thirty-one to forty. Follow the order of the recording."
       },
       {
         "title": "Entering your answers",
@@ -43,25 +43,25 @@
         "title": "Highlighting text",
         "part": 4,
         "view": "highlight",
-        "text": "To highlight useful information, move the pointer to the text, then click and drag across the words you want to select. Release the mouse and choose Highlight from the selection toolbar. To remove a highlight, click the marked words and select Delete highlight."
+        "text": "Let's highlight a useful phrase. Move the cursor to the text, then click and drag over the words. Release the mouse and select Highlight. The words are now marked in yellow. To remove the highlight, click those words and choose Delete highlight."
       },
       {
         "title": "Changing text size and contrast",
         "part": 4,
         "view": "display",
-        "text": "Open Display settings using the menu button in the top right corner. Choose Text size, then select Regular, Large, or Extra large. The text on screen changes to your chosen size. You can also choose Contrast to change the background and text colours. Close the settings window to continue."
+        "text": "Use Display settings in the top bar to make the screen comfortable to read. Select Text size, then choose Large. Notice how the text grows. Next, open Contrast and choose White on black. Close the window to return to your test. Your answers stay unchanged."
       },
       {
         "title": "Making notes",
         "part": 4,
         "view": "notes",
-        "text": "Select a piece of text and choose Note from the toolbar. Type a short reminder in the note window, then choose Save note. You can also use the Notes button in the top bar for separate, automatically saved scratch notes. Notes and highlights help you organise information; they are not answers."
+        "text": "You can attach a note to selected text. Drag over the phrase, choose Note, and type a short reminder. Select Save note. For separate notes, use the Notes button in the top bar. These notes save automatically. Highlights and notes are study aids; enter answers in the question fields."
       },
       {
         "title": "Navigating and reviewing answers",
         "part": 4,
         "view": "navigate",
-        "text": "Click a part tab at the bottom to move to another part. Click a question number to go directly to that question. You can flag a question to remind yourself to return to it. Open Review to see your answer status, then choose a question to return to the test and edit your answer."
+        "text": "Use the part tabs at the bottom to move around the test. Select a question number to jump to that answer. Click the flag to mark a question for later. Open Review to check answered and unanswered questions. Select a question to return to it and continue working."
       },
       {
         "title": "Watching the timer",
@@ -70,10 +70,16 @@
         "text": "For Listening, the two-minute review countdown appears only after the final audio track finishes. Keep checking your answers across all four parts while it runs. Earlier tracks do not start this countdown. Your answers are submitted automatically when the countdown reaches zero."
       },
       {
-        "title": "Checking your answers",
+        "title": "Submitting and continuing",
         "part": 4,
-        "view": "review",
-        "text": "After the final recording finishes, you have two minutes to check your answers. The review countdown will appear in the test. When it reaches zero, your answers are submitted automatically. When you are ready, select Start Test."
+        "view": "finish",
+        "text": "To finish a section, select Submit in the top bar. Read the confirmation before continuing. Cancel takes you back to your answers. Submit test ends the section. In a full mock, continue with the next skill. Your overall band and complete answer review become available after all four sections are finished."
+      },
+      {
+        "title": "Ready to begin",
+        "part": 4,
+        "view": "overview",
+        "text": "Check that you can hear clearly. The recording plays once, followed by two minutes to check your answers. Select Start Test when you are ready."
       }
     ]
   },
@@ -91,19 +97,19 @@
         "title": "Passage 1",
         "part": 1,
         "view": "part",
-        "text": "Begin with Passage One. Read the text on the left and the questions on the right. Use the title and the opening sentences to understand the subject. Then look for the specific information that each question asks you to find."
+        "text": "Passage One has its own text and questions. Read the passage on the left and answer on the right. Follow each question instruction."
       },
       {
         "title": "Passage 2",
         "part": 2,
         "view": "part",
-        "text": "Passage Two introduces a different text and a new set of questions. Read its instructions again, even if the question format looks familiar. You may be asked to identify information, match headings or features, or complete a summary."
+        "text": "Passage Two introduces a new text and new questions. Check word limits and answer choices carefully. The question types can vary."
       },
       {
         "title": "Passage 3",
         "part": 3,
         "view": "part",
-        "text": "Passage Three is another text with its own questions. Pay attention to how ideas are developed and to the writer's views or claims. Question types are not fixed to a particular passage, so always follow the instructions you see on screen."
+        "text": "Passage Three has another text and its own questions. Follow the writer’s ideas and views. You can return to any passage while time remains."
       },
       {
         "title": "Using the test screen",
@@ -115,25 +121,25 @@
         "title": "Highlighting text",
         "part": 3,
         "view": "highlight",
-        "text": "To highlight useful information, move the pointer to the text, then click and drag across the words you want to select. Release the mouse and choose Highlight from the selection toolbar. To remove a highlight, click the marked words and select Delete highlight."
+        "text": "Let's highlight a useful phrase. Move the cursor to the text, then click and drag over the words. Release the mouse and select Highlight. The words are now marked in yellow. To remove the highlight, click those words and choose Delete highlight."
       },
       {
         "title": "Changing text size and contrast",
         "part": 3,
         "view": "display",
-        "text": "Open Display settings using the menu button in the top right corner. Choose Text size, then select Regular, Large, or Extra large. The text on screen changes to your chosen size. You can also choose Contrast to change the background and text colours. Close the settings window to continue."
+        "text": "Use Display settings in the top bar to make the screen comfortable to read. Select Text size, then choose Large. Notice how the text grows. Next, open Contrast and choose White on black. Close the window to return to your test. Your answers stay unchanged."
       },
       {
         "title": "Making notes",
         "part": 3,
         "view": "notes",
-        "text": "Select a piece of text and choose Note from the toolbar. Type a short reminder in the note window, then choose Save note. You can also use the Notes button in the top bar for separate, automatically saved scratch notes. Notes and highlights help you organise information; they are not answers."
+        "text": "You can attach a note to selected text. Drag over the phrase, choose Note, and type a short reminder. Select Save note. For separate notes, use the Notes button in the top bar. These notes save automatically. Highlights and notes are study aids; enter answers in the question fields."
       },
       {
         "title": "Navigating and reviewing answers",
         "part": 3,
         "view": "navigate",
-        "text": "Click a part tab at the bottom to move to another part. Click a question number to go directly to that question. You can flag a question to remind yourself to return to it. Open Review to see your answer status, then choose a question to return to the test and edit your answer."
+        "text": "Use the part tabs at the bottom to move around the test. Select a question number to jump to that answer. Click the flag to mark a question for later. Open Review to check answered and unanswered questions. Select a question to return to it and continue working."
       },
       {
         "title": "Watching the timer",
@@ -142,10 +148,16 @@
         "text": "The Reading timer shows how much time remains for the whole test. It keeps running when you change passages, open settings, or review your answers. All three passages share these sixty minutes. Your answers are submitted automatically when time expires, with no extra transfer time."
       },
       {
-        "title": "Managing your time",
+        "title": "Submitting and continuing",
         "part": 3,
-        "view": "review",
-        "text": "Keep track of the time across all three passages. About twenty minutes per passage is a useful guide, rather than a separate time limit. Check your answers before the sixty minutes expire. When you are ready to begin, select Start Test."
+        "view": "finish",
+        "text": "To finish a section, select Submit in the top bar. Read the confirmation before continuing. Cancel takes you back to your answers. Submit test ends the section. In a full mock, continue with the next skill. Your overall band and complete answer review become available after all four sections are finished."
+      },
+      {
+        "title": "Ready to begin",
+        "part": 3,
+        "view": "overview",
+        "text": "You have sixty minutes for all three passages, with no extra transfer time. Your answers submit automatically when time expires. Select Start Test when you are ready."
       }
     ]
   },

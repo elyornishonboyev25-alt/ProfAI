@@ -58,6 +58,13 @@
   .full-mock-intro-guide { border-left: 0; padding: 12px 0; border-top: 1px solid #d8dce0; }
   .full-mock-intro-chapters { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; }
 }
+.full-mock-intro { background: linear-gradient(145deg, #fff, #fff8f9 55%, #f8f9fc); }
+.full-mock-intro-heading { border: 1px solid #eee0e4; border-radius: 16px; background: #fff; }
+.full-mock-intro-heading h1 { color: #171c27; font-weight: 850; letter-spacing: -.04em; }
+.full-mock-intro-heading h1 > span { color: #c21d38; }
+.full-mock-intro-heading h1 > small { display: block; margin: 9px 0 2px; color: #58616b; font-size: 13px; font-weight: 500; letter-spacing: normal; }
+.full-mock-intro-player { border-radius: 16px; overflow: hidden; box-shadow: 0 8px 26px #38212c08; }
+.full-mock-intro-guide { background: #ffffffb8; border: 1px solid #e8e2e5; border-radius: 16px; padding: 20px; }
 @media (max-width: 600px) {
   .full-mock-intro-header { padding: 10px 12px; gap: 6px; flex-wrap: wrap; }
   .full-mock-intro-header > span { order: -1; width: 100%; font-size: 16px; }

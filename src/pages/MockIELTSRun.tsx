@@ -1,4 +1,5 @@
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import FullMockResults from '@/components/ielts/FullMockResults'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
@@ -171,6 +172,9 @@ export default function MockIELTSRun() {
       },
     })
   }
+
+  if (allSectionsDone && overallBand !== null) return <FullMockResults mock={mock} results={sectionResults} overall={overallBand}
+    onBack={() => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })} onReview={reviewSection} />
 
   return (
     <main className="workspace-page mock-run-page">

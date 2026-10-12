@@ -1,4 +1,5 @@
 import { accountStorage } from '@/utils/accountStorage'
+import { useAuthStore } from '@/store/authStore'
 // Full Mock catalog. Each Full Mock N bundles the four IELTS sections —
 // Listening N, Reading N, Writing N, Speaking N — into one exam package, in the
 // official exam order (Listening → Reading → Writing → Speaking).
@@ -256,6 +257,41 @@ export function getFullMockOverallBand(mockId: string): number | null {
   const average = bands.reduce<number>((sum, band) => sum + (band ?? 0), 0) / MOCK_SECTION_COUNT
   // IELTS overall scores round to the nearest half band; .25 and .75 round up.
   return Math.round(average * 2) / 2
+}
+
+/** Keep the completed attempt before opening a fresh, isolated mock session. */
+export function retakeFullMock(mockId: string): boolean {
+  const mock = getFullMockById(mockId)
+  if (!mock?.fullyReady || getFullMockCompletedSections(mockId).length !== MOCK_SECTION_COUNT) return false
+  const owner = useAuthStore.getState().user?.id ?? 'guest'
+  const store = readResults()
+  const historyKey = `smarttest:full-mock-history:v1:${mockId}`
+  try {
+    const history = JSON.parse(accountStorage.getItem(historyKey) ?? '[]')
+    accountStorage.setItem(historyKey, JSON.stringify([
+      ...(Array.isArray(history) ? history : []),
+      { completedAt: new Date().toISOString(), overallBand: getFullMockOverallBand(mockId), sections: getFullMockResults(mockId) },
+    ]))
+    for (const section of mock.sections) {
+      const testId = section.launchPath?.split('/').pop()
+      accountStorage.removeItem(`profai:full-mock:intro:v1:${mockId}:${section.key}`)
+      if (section.key === 'listening' || section.key === 'reading') {
+        const key = `ielts_test_session_${testId}:mock:${mockId}`
+        accountStorage.removeItem(key)
+        accountStorage.removeItem(`${key}:paper`)
+      }
+      if (section.key === 'writing') {
+        const key = `profai:writing:draft:${owner}:${testId}:mock:${mockId}`
+        for (const suffix of ['', ':session', ':session:paper']) accountStorage.removeItem(key + suffix)
+      }
+    }
+    delete store[mockId]
+    accountStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(store))
+    const progress = readProgressStore()
+    delete progress[mockId]
+    writeProgressStore(progress)
+    return true
+  } catch { return false }
 }
 
 export function getNextFullMockSection(mockId: string, section: MockSectionKey): MockSection | null {

@@ -19,7 +19,7 @@ for (const [section, intro] of Object.entries(catalog)) {
 }
 if (requests.length) {
   console.log(`Synthesizing ${requests.length} neural narration chapters…`)
-  const result = spawnSync(executable, ['--model', model, '--json-input', '--length_scale', '1.08', '--sentence_silence', '0.45'], {
+  const result = spawnSync(executable, ['--model', model, '--json-input', '--length_scale', '1.10', '--sentence_silence', '0.55', '--noise_scale', '0.55', '--noise_w', '0.65'], {
     cwd: dirname(executable), input: requests.map(value => JSON.stringify(value)).join('\n') + '\n', encoding: 'utf8', windowsHide: true, maxBuffer: 8 * 1024 * 1024,
   })
   if (result.status !== 0) throw new Error(`Neural narration failed (${result.status}): ${result.error?.message || result.stderr}`)

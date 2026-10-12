@@ -10,6 +10,9 @@ import { resolve, join } from 'node:path'
 const requireBackend = createRequire(new URL('../backend/package.json', import.meta.url))
 const WebSocket = requireBackend('ws')
 const catalog = JSON.parse(await readFile(new URL('../src/data/fullMockIntros.json', import.meta.url), 'utf8'))
+const screenDirectory = resolve(process.env.IELTS_INTRO_SCREEN_DIR || 'tmp/ielts-intro-screens')
+const screenManifest = JSON.parse(await readFile(join(screenDirectory, 'manifest.json'), 'utf8'))
+for (const key of ['listening', 'reading']) assert.equal(screenManifest[key]?.length, catalog[key].scenes.length, 'Capture every real-screen chapter before generating videos')
 if (process.env.IELTS_INTRO_SMOKE) for (const intro of Object.values(catalog)) intro.scenes = intro.scenes.slice(0, 1)
 const workspace = resolve('tmp')
 await mkdir(workspace, { recursive: true })
@@ -17,11 +20,15 @@ const directory = process.env.IELTS_INTRO_VOICE_DIR ? resolve(process.env.IELTS_
 const output = resolve(process.env.IELTS_INTRO_SMOKE ? 'tmp/ielts-intro-smoke' : 'public/media/ielts-intros')
 await mkdir(output, { recursive: true })
 execFileSync(process.execPath, [resolve('scripts/record-ielts-intro-voice.mjs'), directory], { windowsHide: true, stdio: 'inherit' })
-const mediaMetadata = {}
+const selectedSections = process.env.IELTS_INTRO_SECTIONS ? process.env.IELTS_INTRO_SECTIONS.split(',') : Object.keys(catalog)
+for (const key of selectedSections) assert.ok(catalog[key], 'Unknown intro section: ' + key)
+const mediaMetadata = process.env.IELTS_INTRO_SECTIONS ? JSON.parse(await readFile('src/data/fullMockIntroMedia.json', 'utf8')) : {}
 const browserDirectory = await mkdtemp(join(workspace, 'ielts-intro-browser-'))
 
 const server = createServer(async (req, res) => {
-  if (req.url === '/') { res.setHeader('Content-Type', 'text/html'); res.end(renderPage(catalog)); return }
+  if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(renderPage(catalog, screenManifest)); return }
+  const screen = req.url?.match(/^\/screen\/((?:listening|reading)-\d+-\d+\.jpg)$/)
+  if (screen) { res.setHeader('Content-Type', 'image/jpeg'); res.end(await readFile(join(screenDirectory, screen[1]))); return }
   const match = req.url?.match(/^\/voice\/(listening|reading|writing|speaking)-([0-9]+)\.wav$/)
   if (match) { res.setHeader('Content-Type', 'audio/wav'); res.end(await readFile(join(directory, `${match[1]}-${match[2]}.wav`))); return }
   res.writeHead(404); res.end()
@@ -43,7 +50,7 @@ try {
   socket.on('message',data=>{const message=JSON.parse(data),call=pending.get(message.id);if(!call)return;pending.delete(message.id);message.error?call.reject(message.error):call.resolve(message.result)})
   const send=(method,params={},sessionId)=>new Promise((resolve,reject)=>{const requestId=++id;const timeout=setTimeout(()=>{pending.delete(requestId);reject(new Error(method+' timed out'))},method==='Runtime.evaluate'?300000:20000);pending.set(requestId,{resolve:value=>{clearTimeout(timeout);resolve(value)},reject:error=>{clearTimeout(timeout);reject(error)}});socket.send(JSON.stringify({id:requestId,method,params,sessionId}))})
   const sessions = []
-  for (const key of Object.keys(catalog)) {
+  for (const key of selectedSections) {
     const { targetId } = await send('Target.createTarget', { url: `http://127.0.0.1:${server.address().port}/` })
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true })
     sessions.push({ key, sessionId })

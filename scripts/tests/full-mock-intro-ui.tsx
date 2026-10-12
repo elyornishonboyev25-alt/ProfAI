@@ -41,7 +41,7 @@ export async function run() {
       const state = fullMockLaunchState(mock.id, section.key)
       await mount(section.launchPath!, state, true)
       assert.equal(mounts, 0, 'Intro must not mount any exam code, microphone, audio or timer')
-      assert.equal(element.querySelector('video')?.getAttribute('src'), `/media/ielts-intros/${section.key}.webm?v=2`)
+      assert.equal(element.querySelector('video')?.getAttribute('src'), `/media/ielts-intros/${section.key}.webm?v=3`)
       assert.equal(element.querySelectorAll('.full-mock-intro-journey li').length, 4)
       assert.equal(element.querySelector('.full-mock-intro-journey [aria-current="step"]')?.textContent?.includes(section.title), true)
       await mount(section.launchPath!, state)
@@ -82,18 +82,18 @@ export async function run() {
     assert.ok(element.querySelector('[data-runner]'), 'Saved attempt review has no introduction')
     const second = getFullMockById('full-mock-2')!
     await mount(second.sections[3].launchPath!, fullMockLaunchState(second.id, 'speaking'))
-    assert.equal(element.querySelector('video')?.getAttribute('src'), '/media/ielts-intros/listening.webm?v=2', 'Stale later section redirects to first unfinished intro')
+    assert.equal(element.querySelector('video')?.getAttribute('src'), '/media/ielts-intros/listening.webm?v=3', 'Stale later section redirects to first unfinished intro')
     await mount('/mock/ielts', null)
-    const open = element.querySelector<HTMLButtonElement>('button.mock-ielts-glass-card')!
+    const open = element.querySelector<HTMLButtonElement>('button.mock-ielts-card-open')!
     assert.ok(open)
     await act(async () => open.click())
-    assert.equal(fullscreenCalls, 5, 'Catalog Open requests fullscreen synchronously')
+    assert.equal(fullscreenCalls, 4, 'Review opens results without forcing fullscreen')
     assert.ok(element.textContent?.includes('Exam overview'), 'Completed mock Open shows results')
     await unmount()
     localStorage.clear()
     await mount('/mock/ielts', null)
-    await act(async () => element.querySelector<HTMLButtonElement>('button.mock-ielts-glass-card')!.click())
-    assert.equal(element.querySelector('video')?.getAttribute('src'), '/media/ielts-intros/listening.webm?v=2', 'Fresh mock Open goes directly to Listening instructions')
+    await act(async () => element.querySelector<HTMLButtonElement>('button.mock-ielts-card-open')!.click())
+    assert.equal(element.querySelector('video')?.getAttribute('src'), '/media/ielts-intros/listening.webm?v=3', 'Fresh mock Open goes directly to Listening instructions')
     // Official IELTS examples, including upward .25 and .75 boundaries.
     for (const [bands, expected] of [
       [[6.5, 6.5, 5, 7], 6.5], [[4, 3.5, 4, 4], 4], [[6.5, 6.5, 5.5, 6], 6],

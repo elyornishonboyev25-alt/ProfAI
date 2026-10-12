@@ -1,9 +1,16 @@
 // Original instructional illustrations using the flat computer-test workspace layout.
-export function renderPage(catalog) {
+export function renderPage(catalog, screenManifest = {}) {
   return `<meta charset="utf-8"><canvas width="1280" height="720"></canvas><script>
   const catalog=${JSON.stringify(catalog)};
+  const screenManifest=${JSON.stringify(screenManifest)},screenChapters=new Map();
+  async function preloadScreen(key,index){
+    const chapter=screenManifest[key]?.[index];if(!chapter)return;
+    if(screenChapters.has(index))return screenChapters.get(index);
+    const images=Promise.all(chapter.frames.map(async frame=>createImageBitmap(await(await fetch('/screen/'+frame.file)).blob())));
+    screenChapters.set(index,images);const bitmaps=await images;screenChapters.set(index,bitmaps);return bitmaps;
+  }
   const canvas=document.querySelector('canvas'), ctx=canvas.getContext('2d');
-  const ink='#222', muted='#58616a', red='#b91e3e', blue='#2463a5', border='#d5d8dc';
+  const ink='#171c27', muted='#58616a', red='#c21d38', blue='#c21d38', border='#e8dde1';
   function box(x,y,w,h,fill='#fff',stroke=border){ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1)}}
   function label(t,x,y,size=18,color=ink,bold=false){ctx.fillStyle=color;ctx.font=(bold?'bold ':'')+size+'px Arial';ctx.fillText(t,x,y)}
   function paragraph(text,x,y,width,size=18,color=ink){let row='',offset=0;ctx.font=size+'px Arial';for(const word of text.split(' ')){const next=row+word+' ';if(ctx.measureText(next).width>width&&row){label(row,x,y+offset,size,color);offset+=size*1.5;row=word+' '}else row=next}if(row)label(row,x,y+offset,size,color);return offset+size*1.5}
@@ -61,6 +68,13 @@ export function renderPage(catalog) {
   }
   function frame(key,time,timeline) {
     const intro=catalog[key], i=Math.max(0,timeline.findLastIndex(s=>time>=s.start)), scene=intro.scenes[i], part=scene.part;
+    if(screenManifest[key]){
+      const chapter=screenManifest[key][i],images=screenChapters.get(i),progress=Math.min(1,(time-timeline[i].start)/(timeline[i].end-timeline[i].start));
+      if(Array.isArray(images)){const screenTime=progress*chapter.duration;const index=Math.max(0,chapter.frames.findLastIndex(f=>screenTime>=f.time));ctx.drawImage(images[index],0,0,1280,720);const a=chapter.frames[index],b=chapter.frames[Math.min(index+1,chapter.frames.length-1)];if(a.pointer&&b.pointer){const fraction=a===b?0:Math.max(0,Math.min(1,(screenTime-a.time)/(b.time-a.time)));pointer([[0,a.pointer.x,a.pointer.y],[1,b.pointer.x,b.pointer.y]],fraction);const delta=screenTime-a.clickTime;if(delta>=0&&delta<.25){ctx.beginPath();ctx.arc(a.pointer.x,a.pointer.y,13+delta*65,0,Math.PI*2);ctx.strokeStyle='rgba(194,29,56,'+(1-delta/.25)+')';ctx.lineWidth=2;ctx.stroke()}}}
+      if(progress>.65&&i+1<timeline.length&&!screenChapters.has(i+1))void preloadScreen(key,i+1);
+      for(const [n,bitmaps]of screenChapters){if(n<i&&Array.isArray(bitmaps)){bitmaps.forEach(bitmap=>bitmap.close());screenChapters.delete(n)}}
+      return;
+    }
     ctx.clearRect(0,0,1280,720);box(0,0,1280,720,'#fff',null);
     box(0,0,1280,60,'#fff');label('PROFAI',26,38,25,red,true);label('IELTS Academic · '+intro.title,172,37,18,ink,true);label('Instruction preview · timer not started',807,36,16,muted);label('Help',1210,36,16,blue);
     box(20,76,1240,70,'#f0f0ee',null);label(scene.title,38,106,21,ink,true);label(intro.meta,38,134,16,muted);
@@ -115,6 +129,7 @@ export function renderPage(catalog) {
     window.recordingState={key,phase:'decoding'};
     const context=new AudioContext();await context.resume();const destination=context.createMediaStreamDestination();
     const clips=await Promise.all(catalog[key].scenes.map(async(_,i)=>context.decodeAudioData(await(await fetch('/voice/'+key+'-'+i+'.wav')).arrayBuffer())));
+    await preloadScreen(key,0);
     let cursor=0;const timeline=clips.map(clip=>{const start=cursor;cursor+=clip.duration+0.8;return {start,end:cursor,audioDuration:clip.duration}});const duration=cursor;
     const stream=canvas.captureStream(0),videoTrack=stream.getVideoTracks()[0];destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
     const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus',videoBitsPerSecond:1200000});const chunks=[];recorder.ondataavailable=e=>chunks.push(e.data);const stopped=new Promise(resolve=>recorder.onstop=resolve);
@@ -134,7 +149,8 @@ export function renderPage(catalog) {
     const draw=()=>{frame(key,Math.min(duration,(performance.now()-began)/1000),timeline);videoTrack.requestFrame()};draw();const interval=setInterval(draw,1000/24);
     await new Promise(resolve=>setTimeout(resolve,duration*1000));clearInterval(interval);frame(key,duration,timeline);videoTrack.requestFrame();window.recordingState.phase='stopping';recorder.stop();stream.getTracks().forEach(track=>track.stop());await stopped;await context.close();
     window.recordingState.phase='encoding';const blob=new Blob(chunks,{type:'video/webm'});const bytes=new Uint8Array(await blob.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=8192)binary+=String.fromCharCode(...bytes.subarray(n,n+8192));const base64=btoa(binary);window.recordingState.phase='complete';
-    return {base64,duration,scenes:timeline,voice:'en_GB-cori-high',playbackRate:1};
+    const motionChecks=screenManifest[key]?.map((chapter,index)=>({index,view:chapter.view,point:chapter.point,stages:['selecting','highlighted','deleted','answered','submitted'].flatMap(stage=>{const frames=chapter.frames.filter(f=>f.stage===stage);if(!frames.length)return[];const frame=frames[Math.floor(frames.length/2)];return[{stage,fraction:frame.time/chapter.duration}]})})).filter(check=>check.stages.length);
+    return {base64,duration,scenes:timeline,voice:'en_GB-cori-high',playbackRate:1,...(screenManifest[key]?{source:'IELTSReadingInterface',motionChecks}:{})};
   };
   </script>`
 }

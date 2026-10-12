@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { loadSATAttempt } from '@/features/sat/attemptStorage'
+import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
+import UiText from '@/components/common/UiText'
+import { useAuthStore } from '@/store/authStore'
 import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
 import './mock-ielts.css'
 import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
@@ -16,6 +18,7 @@ export default function SATSection() {
   const navigate = useNavigate()
   const { section } = useParams<{ section: string }>()
   const [search, setSearch] = useState('')
+  useAuthStore((state) => state.user?.id)
 
   if (!isTabId(section)) return <Navigate to="/sat" replace />
 
@@ -28,6 +31,9 @@ export default function SATSection() {
   const visibleTests = tests.filter((test) =>
     `${test.mockId} ${isFullMock ? 'Full Mock' : 'Practice Test'} ${test.title} ${test.badge} ${test.subtitle}`.toLowerCase().includes(query),
   )
+  const completedTestIds = new Set(loadSATAttemptHistory()
+    .filter(({ attempt }) => attempt.status === 'submitted')
+    .map(({ attempt }) => attempt.testId))
 
 
   return (
@@ -57,6 +63,7 @@ export default function SATSection() {
               <div className="relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {visibleTests.map((test) => {
                   const attempt = loadSATAttempt(test.id)
+                  const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)
                   const expectedModules = isFullMock ? 4 : 2
@@ -74,9 +81,14 @@ export default function SATSection() {
                       className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">SAT {isFullMock ? 'Full Mock' : activeTab.label} {String(test.mockId).padStart(2, '0')}</span>
-                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-                          <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} ready
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {completed ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-800" data-sat-completed>
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="Completed" />
+                          </span> : null}
+                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                            <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} ready
+                          </span>
+                        </div>
                       </div>
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>

@@ -255,9 +255,61 @@ const copy: Record<string, [string, string]> = {
   'Available to talk': ['Suhbat uchun bo‘sh', 'Готов к разговору'],
   'Top learner today': ['Bugungi top o‘quvchi', 'Лучший ученик сегодня'],
   'Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.': ['Ochiq profil va reytingga ega o‘quvchilar orasida jami XP eng ko‘p bo‘lgan yetakchi. Teng bo‘lsa, streak, keyin ro‘yxatdan o‘tish sanasi olinadi. Har 30 soniyada yangilanadi.', 'Лидер по общему XP среди учеников с открытым профилем и видимым рейтингом. При равенстве учитываются серия дней и дата регистрации. Обновляется каждые 30 секунд.'],
+
+}
+
+const speakingStudioCopy: Record<string, [string, string]> = {
+  'English speaking': ['Inglizcha suhbat', 'Разговорный английский'],
+  'Meet your speaking circle': ['Suhbatdoshlaringizni toping', 'Найдите свой круг общения'],
+  'Explore profiles, find shared goals and invite an available learner to speak.': ['Profillarni ko‘ring, umumiy maqsadlarni toping va bo‘sh suhbatdoshni taklif qiling.', 'Изучайте профили, находите общие цели и приглашайте свободного участника поговорить.'],
+  'Find speaking partners...': ['Suhbatdosh qidirish...', 'Поиск собеседников...'],
+  'Find speaking partners by nickname': ['Taxallus orqali suhbatdosh qidirish', 'Поиск собеседника по имени'],
+  'Your voice. Your speaking space.': ['Sizning ovozingiz. Sizning suhbat maydoningiz.', 'Ваш голос. Ваше пространство для общения.'],
+  'Join a conversation, practise IELTS or share your point of view in a friendly debate.': ['Suhbatga qo‘shiling, IELTS speaking mashq qiling yoki do‘stona debatda fikringizni bildiring.', 'Присоединяйтесь к беседе, практикуйте IELTS или делитесь мнением в дружеских дебатах.'],
+  'Find someone to practise with. Say hello, take turns and build confidence together.': ['Mashq uchun suhbatdosh toping. Salomlashing, navbat bilan gapiring va birga rivojlaning.', 'Найдите собеседника для практики. Познакомьтесь, говорите по очереди и обретайте уверенность вместе.'],
+  'Two ways to find your next conversation.': ['Suhbatdosh topishning ikki yo‘li.', 'Два способа найти собеседника.'],
+  'Match with the next available learner, or invite someone below. Both open a private room for two.': ['Tasodifiy bo‘sh suhbatdosh bilan ulaning yoki quyidagilardan birini taklif qiling. Ikkalasida ham ikki kishilik yopiq xona ochiladi.', 'Соединитесь со свободным участником или пригласите кого-то из списка. В обоих случаях откроется закрытая комната для двоих.'],
+  'You are listening': ['Siz tinglayapsiz', 'Вы слушаете'],
+  'Your microphone is off': ['Mikrofoningiz o‘chiq', 'Ваш микрофон выключен'],
+  'Your microphone is on': ['Mikrofoningiz yoqilgan', 'Ваш микрофон включён'],
+  'Take a seat when you are ready to speak.': ['Gapirishga tayyor bo‘lsangiz, o‘rin oling.', 'Займите место, когда будете готовы говорить.'],
+  'Take turns. Give everyone time to speak.': ['Navbat bilan gapiring. Har kimga gapirish uchun vaqt bering.', 'Говорите по очереди. Дайте каждому время высказаться.'],
+  'Add a speaker to each team to start the debate.': ['Debatni boshlash uchun har bir jamoada gapiruvchi bo‘lishi kerak.', 'Для начала дебатов в каждой команде должен быть участник.'],
+  'Teams are assigned automatically': ['Jamoa avtomatik tanlanadi', 'Команды назначаются автоматически'],
+  'Choose your speaking format, topic and room size.': ['Suhbat turi, mavzu va xona sig‘imini tanlang.', 'Выберите формат, тему и размер комнаты.'],
+  'How to start speaking': ['Suhbatni boshlash tartibi', 'Как начать общение'],
+  'Invite a learner or try random matching.': ['Suhbatdoshni taklif qiling yoki tasodifiy ulanishni sinang.', 'Пригласите участника или попробуйте случайный подбор.'],
+  'Meet in a private room': ['Yopiq xonada uchrashing', 'Встречайтесь в закрытой комнате'],
+  'An invitation starts after they accept. Random matching connects you automatically.': ['Taklif qabul qilingach xona ochiladi. Tasodifiy qidiruv avtomatik ulaydi.', 'По приглашению комната открывается после принятия. Случайный подбор соединяет автоматически.'],
+  'Start speaking': ['Gapirishni boshlang', 'Начните говорить'],
+  'Turn on your mic and use a conversation prompt.': ['Mikrofonni yoqing va suhbat yordamchisidan foydalaning.', 'Включите микрофон и воспользуйтесь подсказкой для беседы.'],
+  'Find your room': ['Xonangizni tanlang', 'Найдите свою комнату'],
+  'Choose conversation, IELTS practice or debate.': ['Oddiy suhbat, IELTS mashqi yoki debatni tanlang.', 'Выберите беседу, практику IELTS или дебаты.'],
+  'Listen first': ['Avval tinglang', 'Сначала послушайте'],
+  'Join with your microphone off. Get comfortable.': ['Mikrofon o‘chiq holda kiring. Suhbatga moslashing.', 'Войдите с выключенным микрофоном. Освойтесь.'],
+  'Take a seat, turn on your mic and take turns.': ['O‘rin oling, mikrofonni yoqing va navbat bilan gapiring.', 'Займите место, включите микрофон и говорите по очереди.'],
+  'Check your microphone': ['Mikrofonni tekshirish', 'Проверка микрофона'],
+  'Optional · 10 seconds': ['Ixtiyoriy · 10 soniya', 'Необязательно · 10 секунд'],
+  'Use headphones for clearer conversations.': ['Ovoz aniqroq bo‘lishi uchun quloqchin ishlating.', 'Используйте наушники для более чёткого звука.'],
+  'Say a few words. The meter shows your microphone input.': ['Bir necha so‘z ayting. Ko‘rsatkich mikrofon ovozini ko‘rsatadi.', 'Произнесите несколько слов. Индикатор показывает уровень микрофона.'],
+  'Allow microphone access in your browser.': ['Brauzerda mikrofonga ruxsat bering.', 'Разрешите доступ к микрофону в браузере.'],
+  'Microphone works. You are ready to speak.': ['Mikrofon ishlayapti. Suhbatga tayyorsiz.', 'Микрофон работает. Вы готовы к разговору.'],
+  'No sound detected. Check your input device and try again.': ['Ovoz aniqlanmadi. Mikrofon qurilmasini tekshirib, qayta urinib ko‘ring.', 'Звук не обнаружен. Проверьте устройство ввода и попробуйте снова.'],
+  'Test your mic before joining. The test stops automatically.': ['Kirishdan avval mikrofonni tekshiring. Tekshiruv avtomatik tugaydi.', 'Проверьте микрофон перед входом. Проверка завершится автоматически.'],
+  'Microphone input': ['Mikrofon ovozi', 'Уровень микрофона'],
+  'Stop test': ['Tekshiruvni to‘xtatish', 'Остановить проверку'],
+  'Test microphone': ['Mikrofonni tekshirish', 'Проверить микрофон'],
+  'Speaking prompts': ['Suhbat yordamchisi', 'Подсказки для общения'],
+  'Build your argument': ['Dalilingizni shakllantiring', 'Постройте аргумент'],
+  'Need something to say?': ['Nima haqida gaplashamiz?', 'О чём поговорить?'],
+  'Speak, listen, ask a follow-up.': ['Gapiring, tinglang, qo‘shimcha savol bering.', 'Говорите, слушайте, задавайте уточняющий вопрос.'],
+  'Next prompt': ['Keyingi savol', 'Следующая подсказка'],
 }
 
 export function useCommunityCopy() {
   const { language } = useCopy()
-  return (text: string) => language.startsWith('uz') ? copy[text]?.[0] ?? text : language.startsWith('ru') ? copy[text]?.[1] ?? text : text
+  return (text: string) => {
+    const entry = speakingStudioCopy[text] ?? copy[text]
+    return language.startsWith('uz') ? entry?.[0] ?? text : language.startsWith('ru') ? entry?.[1] ?? text : text
+  }
 }

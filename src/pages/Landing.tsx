@@ -231,6 +231,7 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
   const [paused, setPaused] = useState(false)
   const flipped = index % 2 === 1
   const step = feature.steps[active]
+  const timed = inView && !paused && !reducedMotion
   useEffect(() => {
     if (!inView || paused || reducedMotion) return
     const timer = window.setInterval(() => setActive(value => (value + 1) % feature.steps.length), 3800)
@@ -253,10 +254,10 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
         <p>{t(feature.body)}</p>
         <ol className="lx-steps">
           {feature.steps.map((item, stepIndex) => <li key={stepIndex}>
-            <button type="button" className={stepIndex === active ? 'is-active' : ''} aria-pressed={stepIndex === active} onClick={() => setActive(stepIndex)} onMouseEnter={() => setActive(stepIndex)}>
-              <b>{stepIndex + 1}</b>
-              <span><strong>{t(item.title)}</strong><small>{t(item.body)}</small></span>
-              {stepIndex === active && inView && !paused && !reducedMotion && <i className="lx-step-timer" key={`${active}-${stepIndex}`} />}
+            <button type="button" className={stepIndex !== active ? '' : timed ? 'is-active is-timed' : 'is-active'} aria-expanded={stepIndex === active} onClick={() => setActive(stepIndex)} onMouseEnter={() => setActive(stepIndex)}>
+              <strong>{t(item.title)}</strong>
+              <span className="lx-step-body"><span><small>{t(item.body)}</small></span></span>
+              {stepIndex === active && timed && <i className="lx-step-timer" key={active} />}
             </button>
           </li>)}
         </ol>
@@ -266,7 +267,7 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
         <BrowserFrame src={feature.image} alt={t(feature.alt)} address={feature.address} className="lx-tour-frame" style={zoom}>
           <div className="lx-hotspots" aria-hidden="true">
             {feature.steps.map((item, stepIndex) => <button key={stepIndex} type="button" tabIndex={-1} className={`lx-hotspot ${stepIndex === active ? 'is-active' : ''}`} style={{ left: `${zoomed(item.x, step.x)}%`, top: `${zoomed(item.y, step.y)}%` }} onClick={() => setActive(stepIndex)}>
-              <span>{stepIndex + 1}</span>
+              <i />
             </button>)}
             <div className={`lx-hotspot-anchor ${step.x > 58 ? 'is-left' : ''} ${step.y > 62 ? 'is-up' : ''}`} style={{ left: `${step.x}%`, top: `${step.y}%` }}>
               <motion.div key={active} className="lx-hotspot-card" initial={reducedMotion ? false : { opacity: 0, y: 8, scale: .94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .4, delay: reducedMotion ? 0 : .25, ease: EASE }}>

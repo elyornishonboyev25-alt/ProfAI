@@ -50,7 +50,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
     return (
         <div className="border-t border-red-100 bg-white p-3 backdrop-blur-xl transition-colors duration-300">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
-                <div className="mask-linear-fade flex w-full flex-1 items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                <div className="mask-linear-fade no-scrollbar flex w-full flex-1 items-center gap-3 overflow-x-auto overflow-y-hidden pb-1">
                     {sections.map((section, idx) => {
                         const isActive = idx === currentSectionIndex
                         const sectionStart = section.startIndex
@@ -101,7 +101,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 </div>
 
                                 {isActive && (
-                                    <div className="flex items-center gap-1.5 overflow-x-auto p-2">
+                                    <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto overflow-y-hidden p-2">
                                         {section.questionIds.map((questionId, localIndex) => {
                                             const globalIndex = section.startIndex + localIndex
                                             const slotCount = slotFrequency.get(questionId) ?? 1

@@ -56,6 +56,13 @@ function useCountUp(target: number, active: boolean) {
   return value
 }
 
+/** Scroll distance between two steps of a pinned chapter: whatever the section adds beyond its pinned screen. */
+function stopSize(section: HTMLElement, stops: number) {
+  if (stops < 2) return section.offsetHeight
+  const pin = section.querySelector<HTMLElement>('.lx-pin')
+  return (section.offsetHeight - (pin?.offsetHeight ?? window.innerHeight)) / (stops - 1)
+}
+
 /** Desktop wheel/keyboard paging: one gesture moves exactly one chapter, and a
  * chapter taller than the viewport scrolls natively until its edge is reached. */
 function useChapterPaging() {
@@ -71,8 +78,9 @@ function useChapterPaging() {
     const chapterTops = () => [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')].flatMap(element => {
       const top = element.getBoundingClientRect().top + window.scrollY
       const stops = Number(element.dataset.lxSteps) || 1
-      const size = element.offsetHeight / stops
-      return Array.from({ length: stops }, (_, stop) => ({ top: top + stop * size, bottom: top + (stop + 1) * size }))
+      const bottom = top + element.offsetHeight
+      const size = stopSize(element, stops)
+      return Array.from({ length: stops }, (_, stop) => ({ top: top + stop * size, bottom: stop === stops - 1 ? bottom : top + (stop + 1) * size }))
     })
     const blocked = (target: EventTarget | null) => !media.matches || document.body.style.overflow === 'hidden' ||
       (target instanceof Element && Boolean(target.closest('[role="dialog"], input, textarea, select, [contenteditable="true"]')))
@@ -260,12 +268,12 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
   const goTo = (stepIndex: number) => {
     const section = sectionRef.current
     if (!section) return
-    const top = section.getBoundingClientRect().top + window.scrollY + stepIndex * (section.offsetHeight / count)
+    const top = section.getBoundingClientRect().top + window.scrollY + stepIndex * stopSize(section, count)
     window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' })
   }
 
   return <Screen id={`tour-${feature.id}`} label={t(feature.label)} className={`lx-feature lx-pinned ${flipped ? 'is-flipped' : ''}`} sectionRef={sectionRef} steps={count}>
-    {feature.steps.slice(1).map((_, stop) => <span key={stop} className="lx-stop" style={{ top: `${(stop + 1) * 100 / count}%` }} aria-hidden="true" />)}
+    {feature.steps.slice(1).map((_, stop) => <span key={stop} className="lx-stop" style={{ top: `calc(${stop + 1} * var(--lx-step-length))` }} aria-hidden="true" />)}
     <div className="lx-pin">
       <span className="lx-feature-number" aria-hidden="true">{number}</span>
       <div ref={ref} className="lx-feature-grid">

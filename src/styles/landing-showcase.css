@@ -171,8 +171,9 @@ html.lx-snap { scroll-snap-type: y proximity; }
 .lx-chapter-chips b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #fff; font-size: 11px; background: var(--lx-red-fill); }
 
 /* Product tour chapters */
-/* Pinned chapters: the section is one screen per step tall; .lx-pin sticks while the steps advance. */
-.lx-pinned { display: block; height: calc(var(--lx-steps, 4) * 100vh); height: calc(var(--lx-steps, 4) * 100svh); min-height: 0; padding: 0; }
+/* Pinned chapters: .lx-pin sticks while the steps advance. */
+/* Each further step adds --lx-step-length of scroll, so a chapter stays well under one screen per step. */
+.lx-pinned { --lx-step-length: 40vh; --lx-step-length: 40svh; display: block; height: calc(100vh + (var(--lx-steps, 4) - 1) * var(--lx-step-length)); height: calc(100svh + (var(--lx-steps, 4) - 1) * var(--lx-step-length)); min-height: 0; padding: 0; }
 .lx-pin { position: sticky; top: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; height: 100svh; padding: 106px var(--lx-gutter) 44px; overflow: hidden; }
 .lx-stop { position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; pointer-events: none; }
 .lx-feature-number { position: absolute; z-index: 0; right: 1vw; bottom: -4vh; font-size: clamp(160px, 24vw, 380px); font-weight: 800; line-height: 1; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1.5px rgba(124, 132, 146, .2); background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0)); -webkit-background-clip: text; background-clip: text; pointer-events: none; user-select: none; }

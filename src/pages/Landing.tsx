@@ -1,6 +1,6 @@
 import LandingPlans from '@/features/billing/LandingPlans'
-import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
-import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion'
+import { type CSSProperties, type ReactNode, type Ref, useEffect, useRef, useState } from 'react'
+import { type MotionValue, motion, useInView, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Flame, Menu, Send, ShieldCheck, Sparkles, Target, X } from 'lucide-react'
@@ -67,9 +67,12 @@ function useChapterPaging() {
     let swallowMomentum = false
     let unlockTimer = 0
 
-    const chapterTops = () => [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')].map(element => {
+    // Pinned chapters contribute one stop per step, so a gesture reveals exactly one step.
+    const chapterTops = () => [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')].flatMap(element => {
       const top = element.getBoundingClientRect().top + window.scrollY
-      return { top, bottom: top + element.offsetHeight }
+      const stops = Number(element.dataset.lxSteps) || 1
+      const size = element.offsetHeight / stops
+      return Array.from({ length: stops }, (_, stop) => ({ top: top + stop * size, bottom: top + (stop + 1) * size }))
     })
     const blocked = (target: EventTarget | null) => !media.matches || document.body.style.overflow === 'hidden' ||
       (target instanceof Element && Boolean(target.closest('[role="dialog"], input, textarea, select, [contenteditable="true"]')))
@@ -136,8 +139,8 @@ function useChapterPaging() {
 }
 
 /** One full-viewport chapter. The page pages between these on larger screens. */
-function Screen({ id, label, className = '', children }: { id: string; label: string; className?: string; children: ReactNode }) {
-  return <section id={id} data-lx-screen={label} className={`lx-screen ${className}`}>{children}</section>
+function Screen({ id, label, className = '', children, sectionRef, steps }: { id: string; label: string; className?: string; children: ReactNode; sectionRef?: Ref<HTMLElement>; steps?: number }) {
+  return <section ref={sectionRef} id={id} data-lx-screen={label} data-lx-steps={steps} className={`lx-screen ${className}`} style={steps ? { '--lx-steps': steps } as CSSProperties : undefined}>{children}</section>
 }
 
 function BrowserFrame({ src, alt, address, className = '', children, eager = false, style }: { src: string; alt: string; address: string; className?: string; children?: ReactNode; eager?: boolean; style?: CSSProperties }) {
@@ -222,64 +225,77 @@ function Inside() {
   </Screen>
 }
 
+function TourStep({ title, body, index, active, progress, onSelect }: { title: string; body: string; index: number; active: boolean; progress: MotionValue<number>; onSelect: () => void }) {
+  // The rail segment fills while the page scrolls from the previous stop to this one, then stays filled.
+  const fill = useTransform(progress, value => Math.min(1, Math.max(0, value - index + 1)))
+  return <li className={active ? 'is-active' : ''}>
+    <button type="button" aria-current={active ? 'step' : undefined} onClick={onSelect}>
+      <motion.i className="lx-step-fill" style={{ scaleY: fill }} aria-hidden="true" />
+      <strong>{title}</strong>
+      <span className="lx-step-body"><span><small>{body}</small></span></span>
+    </button>
+  </li>
+}
+
+/** A pinned chapter: the screen holds still while each scroll stop reveals the next step. */
 function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; index: number; onStart: () => void }) {
   const t = useLandingText()
   const reducedMotion = useReducedMotion()
+  const sectionRef = useRef<HTMLElement>(null)
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { amount: .5 })
+  const count = feature.steps.length
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
+  const stepProgress = useTransform(scrollYProgress, value => value * (count - 1))
   const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
+  useMotionValueEvent(stepProgress, 'change', value => setActive(Math.min(count - 1, Math.max(0, Math.round(value)))))
   const flipped = index % 2 === 1
   const step = feature.steps[active]
-  const timed = inView && !paused && !reducedMotion
-  useEffect(() => {
-    if (!inView || paused || reducedMotion) return
-    const timer = window.setInterval(() => setActive(value => (value + 1) % feature.steps.length), 3800)
-    return () => window.clearInterval(timer)
-  }, [feature.steps.length, inView, paused, reducedMotion])
-  useEffect(() => { if (!inView) setActive(0) }, [inView])
   const number = String(index + 1).padStart(2, '0')
   const total = String(tourFeatures.length).padStart(2, '0')
   // The screenshot magnifies around the active hotspot; other markers follow the same transform.
   const scale = reducedMotion ? 1 : ZOOM
   const zoomed = (point: number, origin: number) => origin + (point - origin) * scale
   const zoom = { '--lx-zoom-x': `${step.x}%`, '--lx-zoom-y': `${step.y}%`, '--lx-zoom': scale } as CSSProperties
+  const goTo = (stepIndex: number) => {
+    const section = sectionRef.current
+    if (!section) return
+    const top = section.getBoundingClientRect().top + window.scrollY + stepIndex * (section.offsetHeight / count)
+    window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' })
+  }
 
-  return <Screen id={`tour-${feature.id}`} label={t(feature.label)} className={`lx-feature ${flipped ? 'is-flipped' : ''}`}>
-    <span className="lx-feature-number" aria-hidden="true">{number}</span>
-    <div ref={ref} className="lx-feature-grid" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
-      <motion.div className="lx-feature-copy" initial={reducedMotion ? false : { opacity: 0, x: flipped ? 50 : -50 }} animate={inView || reducedMotion ? { opacity: 1, x: 0 } : undefined} transition={{ duration: .85, ease: EASE }}>
-        <span className="lx-kicker"><i>{number} / {total}</i> {t(feature.kicker)}</span>
-        <h2>{t(feature.title)}</h2>
-        <p>{t(feature.body)}</p>
-        <ol className="lx-steps">
-          {feature.steps.map((item, stepIndex) => <li key={stepIndex}>
-            <button type="button" className={stepIndex !== active ? '' : timed ? 'is-active is-timed' : 'is-active'} aria-expanded={stepIndex === active} onClick={() => setActive(stepIndex)} onMouseEnter={() => setActive(stepIndex)}>
-              <strong>{t(item.title)}</strong>
-              <span className="lx-step-body"><span><small>{t(item.body)}</small></span></span>
-              {stepIndex === active && timed && <i className="lx-step-timer" key={active} />}
-            </button>
-          </li>)}
-        </ol>
-        <button type="button" className="lx-text-link" onClick={onStart}>{t(['Try it free', 'Bepul sinab ko‘ring', 'Попробовать бесплатно'])} <ArrowRight size={17} /></button>
-      </motion.div>
-      <motion.div className="lx-feature-stage" initial={reducedMotion ? false : { opacity: 0, y: 70, rotateY: flipped ? 16 : -16, rotateX: 6, scale: .92 }} animate={inView || reducedMotion ? { opacity: 1, y: 0, rotateY: 0, rotateX: 0, scale: 1 } : undefined} transition={{ duration: 1.05, ease: EASE }}>
-        <BrowserFrame src={feature.image} alt={t(feature.alt)} address={feature.address} className="lx-tour-frame" style={zoom}>
-          <div className="lx-hotspots" aria-hidden="true">
-            {feature.steps.map((item, stepIndex) => <button key={stepIndex} type="button" tabIndex={-1} className={`lx-hotspot ${stepIndex === active ? 'is-active' : ''}`} style={{ left: `${zoomed(item.x, step.x)}%`, top: `${zoomed(item.y, step.y)}%` }} onClick={() => setActive(stepIndex)}>
-              <i />
-            </button>)}
-            <div className={`lx-hotspot-anchor ${step.x > 58 ? 'is-left' : ''} ${step.y > 62 ? 'is-up' : ''}`} style={{ left: `${step.x}%`, top: `${step.y}%` }}>
-              <motion.div key={active} className="lx-hotspot-card" initial={reducedMotion ? false : { opacity: 0, y: 8, scale: .94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .4, delay: reducedMotion ? 0 : .25, ease: EASE }}>
-                <strong>{t(step.title)}</strong><small>{t(step.body)}</small>
-              </motion.div>
+  return <Screen id={`tour-${feature.id}`} label={t(feature.label)} className={`lx-feature lx-pinned ${flipped ? 'is-flipped' : ''}`} sectionRef={sectionRef} steps={count}>
+    {feature.steps.slice(1).map((_, stop) => <span key={stop} className="lx-stop" style={{ top: `${(stop + 1) * 100 / count}%` }} aria-hidden="true" />)}
+    <div className="lx-pin">
+      <span className="lx-feature-number" aria-hidden="true">{number}</span>
+      <div ref={ref} className="lx-feature-grid">
+        <motion.div className="lx-feature-copy" initial={reducedMotion ? false : { opacity: 0, x: flipped ? 50 : -50 }} animate={inView || reducedMotion ? { opacity: 1, x: 0 } : undefined} transition={{ duration: .85, ease: EASE }}>
+          <span className="lx-kicker"><i>{number} / {total}</i> {t(feature.kicker)}</span>
+          <h2>{t(feature.title)}</h2>
+          <p>{t(feature.body)}</p>
+          <ol className="lx-steps">
+            {feature.steps.map((item, stepIndex) => <TourStep key={stepIndex} title={t(item.title)} body={t(item.body)} index={stepIndex} active={stepIndex === active} progress={stepProgress} onSelect={() => goTo(stepIndex)} />)}
+          </ol>
+          <button type="button" className="lx-text-link" onClick={onStart}>{t(['Try it free', 'Bepul sinab ko‘ring', 'Попробовать бесплатно'])} <ArrowRight size={17} /></button>
+        </motion.div>
+        <motion.div className="lx-feature-stage" initial={reducedMotion ? false : { opacity: 0, y: 70, rotateY: flipped ? 16 : -16, rotateX: 6, scale: .92 }} animate={inView || reducedMotion ? { opacity: 1, y: 0, rotateY: 0, rotateX: 0, scale: 1 } : undefined} transition={{ duration: 1.05, ease: EASE }}>
+          <BrowserFrame src={feature.image} alt={t(feature.alt)} address={feature.address} className="lx-tour-frame" style={zoom}>
+            <div className="lx-hotspots" aria-hidden="true">
+              {feature.steps.map((item, stepIndex) => <button key={stepIndex} type="button" tabIndex={-1} className={`lx-hotspot ${stepIndex === active ? 'is-active' : ''}`} style={{ left: `${zoomed(item.x, step.x)}%`, top: `${zoomed(item.y, step.y)}%` }} onClick={() => goTo(stepIndex)}>
+                <i />
+              </button>)}
+              <div className={`lx-hotspot-anchor ${step.x > 58 ? 'is-left' : ''} ${step.y > 62 ? 'is-up' : ''}`} style={{ left: `${step.x}%`, top: `${step.y}%` }}>
+                <motion.div key={active} className="lx-hotspot-card" initial={reducedMotion ? false : { opacity: 0, y: 8, scale: .94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .4, delay: reducedMotion ? 0 : .25, ease: EASE }}>
+                  <strong>{t(step.title)}</strong><small>{t(step.body)}</small>
+                </motion.div>
+              </div>
             </div>
-          </div>
-        </BrowserFrame>
-        {feature.float && <motion.figure className="lx-float-shot" initial={reducedMotion ? false : { opacity: 0, y: 40, x: flipped ? -30 : 30 }} animate={inView || reducedMotion ? { opacity: 1, y: 0, x: 0 } : undefined} transition={{ duration: .9, delay: .35, ease: EASE }}>
-          <img src={feature.float.image} alt={t(feature.float.alt)} width={1800} height={1125} loading="lazy" decoding="async" />
-        </motion.figure>}
-      </motion.div>
+          </BrowserFrame>
+          {feature.float && <motion.figure className="lx-float-shot" initial={reducedMotion ? false : { opacity: 0, y: 40, x: flipped ? -30 : 30 }} animate={inView || reducedMotion ? { opacity: 1, y: 0, x: 0 } : undefined} transition={{ duration: .9, delay: .35, ease: EASE }}>
+            <img src={feature.float.image} alt={t(feature.float.alt)} width={1800} height={1125} loading="lazy" decoding="async" />
+          </motion.figure>}
+        </motion.div>
+      </div>
     </div>
   </Screen>
 }
@@ -290,12 +306,19 @@ function ScrollRail({ label }: { label: string }) {
   useEffect(() => {
     const elements = [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')]
     setScreens(elements.map(element => ({ id: element.id, label: element.dataset.lxScreen ?? '' })))
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-      if (visible) setActive(visible.target.id)
-    }, { threshold: [.35, .6] })
-    elements.forEach(element => observer.observe(element))
-    return () => observer.disconnect()
+    // Pinned chapters are several screens tall, so pick the chapter crossing the upper part of the viewport.
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const line = window.innerHeight * .45
+      const passed = elements.filter(element => element.getBoundingClientRect().top <= line)
+      const current = passed[passed.length - 1] ?? elements[0]
+      if (current) setActive(current.id)
+    }
+    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); window.cancelAnimationFrame(frame) }
   }, [label])
   return <nav className="lx-rail" aria-label={label}>
     {screens.map(screen => <a key={screen.id} href={`#${screen.id}`} className={active === screen.id ? 'is-active' : ''} aria-current={active === screen.id ? 'true' : undefined}><span>{screen.label}</span><i /></a>)}

@@ -8,6 +8,7 @@ import {
   Check,
   Clock3,
   FileSearch,
+  Flame,
   Flag,
   LibraryBig,
   Sparkles,
@@ -208,6 +209,7 @@ export default function SAT() {
         </button>
 
         <button type="button" onClick={() => navigate('/sat/question-bank')} className="mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-white/90 bg-white/75 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] backdrop-blur-xl transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">SAT Question Bank</strong><small className="mt-1 block text-xs font-semibold text-slate-500">Practice by Math or Reading & Writing, topic, skill and difficulty.</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
+        <button type="button" onClick={() => navigate('/sat/hard-questions')} className="mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-red-100 bg-gradient-to-r from-white/90 to-red-50/80 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><Flame className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">Hard Questions</strong><small className="mt-1 block text-xs font-semibold text-slate-500">100 English + 100 Math · Every topic · Instant explanations</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,.75fr)]">
           <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
             <article className={`${glassCard} p-6 sm:p-7`}>

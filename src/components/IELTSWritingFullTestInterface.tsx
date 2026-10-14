@@ -1,5 +1,7 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
@@ -24,6 +26,7 @@ import {
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
@@ -34,6 +37,8 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useBillingText } from '@/features/billing/copy'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
+import { writingSectionBand, writingVisualContext } from '@/lib/writingScoring'
+import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useBadgeStore } from '@/store/badgeStore'
@@ -44,7 +49,7 @@ import { learningCenterApi } from '@/features/learningCenter/api'
 type Props = {
   fullTest: WritingFullTest
   onExit: () => void
-  onComplete?: (band: number, summary: string, review: { label: string; response: string; feedback?: string }[]) => void
+  onComplete?: (band: number, summary: string, review: { label: string; response: string; feedback?: string; improvedVersion?: string }[]) => void
   autoStart?: boolean
   autoTimerEnabled?: boolean
   autoDurationMinutes?: number
@@ -67,9 +72,7 @@ function formatTime(seconds: number): string {
 }
 
 function weightedBand(evaluations: Record<string, WritingEvaluation>, taskIds: string[]): number {
-  const task1 = evaluations[taskIds[0]]?.overallBand ?? 0
-  const task2 = evaluations[taskIds[1]]?.overallBand ?? 0
-  return Math.round(((task1 + task2 * 2) / 3) * 2) / 2
+  return writingSectionBand(evaluations[taskIds[0]], evaluations[taskIds[1]])
 }
 
 export default function IELTSWritingFullTestInterface({
@@ -125,6 +128,7 @@ export default function IELTSWritingFullTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
+  useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
@@ -157,22 +161,26 @@ export default function IELTSWritingFullTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null }
+        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
         deadlineRef.current = timed ? parsed.deadline! : null
         setTimerEnabled(timed)
         setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
         setIsTimerRunning(timed && parsed.deadline! > Date.now())
+        setActiveTaskIndex(Math.max(0, Math.min(tasks.length - 1, parsed.activeTaskIndex ?? 0)))
+        setBookmarks(parsed.bookmarks ?? {})
         setPhase('writing')
       }
     } catch { /* Start from the launch screen. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (phase !== 'writing') return
+    saveActiveTestPaper(sessionKey, fullTest, user?.id ?? 'guest')
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
     try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
-  }, [answers, draftKey, phase])
+  }, [answers, draftKey, phase, sessionKey, fullTest, timerEnabled, activeTaskIndex, bookmarks, user?.id])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -197,27 +205,30 @@ export default function IELTSWritingFullTestInterface({
     (withTimer: boolean) => {
       setIsLaunching(true)
       if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
-      launchTimerRef.current = setTimeout(() => {
-        setTimerEnabled(withTimer)
+      const activate = () => {
+        const timed = inFullMock || withTimer
+        setTimerEnabled(timed)
         setTimeRemaining(effectiveDuration * 60)
-        deadlineRef.current = withTimer ? Date.now() + effectiveDuration * 60_000 : null
-        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: withTimer, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
+        deadlineRef.current = timed ? Date.now() + effectiveDuration * 60_000 : null
+        try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled: timed, deadline: deadlineRef.current })) } catch { /* In-memory session remains active. */ }
         autoSubmittedRef.current = false
-        setIsTimerRunning(withTimer)
+        setIsTimerRunning(timed)
         setPhase('writing')
         setIsLaunching(false)
         launchTimerRef.current = null
         setTimeout(() => textareaRef.current?.focus(), 100)
-      }, 1200)
+      }
+      if (inFullMock) activate()
+      else launchTimerRef.current = setTimeout(activate, 1200)
     },
-    [effectiveDuration, sessionKey],
+    [effectiveDuration, sessionKey, inFullMock, user?.id],
   )
 
   useEffect(() => {
-    if (autoStartHandled.current || !autoStart) return
+    if (autoStartHandled.current || (!autoStart && !inFullMock)) return
     autoStartHandled.current = true
     handleStart(autoTimerEnabled ?? true)
-  }, [autoStart, autoTimerEnabled, handleStart])
+  }, [autoStart, autoTimerEnabled, inFullMock, handleStart])
 
   const resetTest = useCallback(() => {
     setAnswers(Object.fromEntries(tasks.map((task) => [task.id, ''])))
@@ -230,7 +241,7 @@ export default function IELTSWritingFullTestInterface({
     setPhase('landing')
     autoSubmittedRef.current = false
     try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* No persisted draft. */ }
-    try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* No persisted session. */ }
+    try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* No persisted session. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
 
   const handleSubmit = useCallback(async () => {
@@ -251,12 +262,12 @@ export default function IELTSWritingFullTestInterface({
     try {
       const results: WritingEvaluation[] = []
       for (const task of tasks) {
-        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], task.visualContext))
+        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], writingVisualContext(task)))
       }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
       try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Submission still succeeds. */ }
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey) } catch { /* Submission still succeeds. */ }
+      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Submission still succeeds. */ }
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
@@ -335,6 +346,7 @@ export default function IELTSWritingFullTestInterface({
           label: `Task ${index + 1}`,
           response: answers[task.id] ?? '',
           feedback: results[index]?.summary,
+          improvedVersion: results[index]?.improvedVersion,
         })),
       )
     } catch (error) {
@@ -372,6 +384,7 @@ export default function IELTSWritingFullTestInterface({
   }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
   if (phase === 'landing') {
+    if (inFullMock) return <div className="flex min-h-dvh items-center justify-center bg-white p-6 text-center" role="status"><h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">Writing test</span></h1></div>
     return (
       <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
         <AnimatedBackground />
@@ -503,11 +516,12 @@ export default function IELTSWritingFullTestInterface({
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{wordCounts[task.id]} words</span>
                   </div>
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <Score label="Task Response" value={evaluation.taskAchievement} />
+                    <Score label={task.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} value={evaluation.taskAchievement} />
                     <Score label="Coherence" value={evaluation.coherenceCohesion} />
                     <Score label="Vocabulary" value={evaluation.lexicalResource} />
                     <Score label="Grammar" value={evaluation.grammaticalRange} />
                   </div>
+                  <WritingScoreExplanation feedback={evaluation.criterionFeedback} taskType={task.taskType} />
                   {task.diagram ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
                       <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
@@ -549,6 +563,7 @@ export default function IELTSWritingFullTestInterface({
                       </div>
                     </details>
                   ) : null}
+                  {answers[task.id]?.trim() ? <ImprovedResponse text={evaluation.improvedVersion} /> : null}
                   {evaluation.correctedVersion ? (
                     <details className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
                       <summary className="cursor-pointer text-sm font-bold text-blue-800">View corrected version</summary>

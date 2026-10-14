@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import {
   ArrowRight,
   BookOpen,
@@ -8,16 +9,20 @@ import {
   Mic2,
   PenSquare,
   Search,
+  RotateCcw,
   type LucideIcon,
 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import './mock-ielts.css'
 import {
   formatMockDuration,
+  fullMockLaunchState,
   getFullMockCatalog,
   getFullMockCompletedSections,
+  getFullMockPendingSection,
   FULL_MOCK_PROGRESS_EVENT,
   MOCK_SECTION_COUNT,
+  retakeFullMock,
   type MockSectionKey,
 } from '@/utils/ieltsMockCatalog'
 
@@ -45,6 +50,7 @@ const FILTERS = [
 type MockFilter = (typeof FILTERS)[number]['id']
 
 function IELTSMockCatalog() {
+  const { enter } = useFullscreen()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
@@ -53,6 +59,7 @@ function IELTSMockCatalog() {
   const [filter, setFilter] = useState<MockFilter>('all')
   const [search, setSearch] = useState('')
   const [progressVersion, setProgressVersion] = useState(0)
+  const [retakeError, setRetakeError] = useState('')
 
   useEffect(() => {
     const refresh = () => setProgressVersion((version) => version + 1)
@@ -148,10 +155,9 @@ function IELTSMockCatalog() {
             const inProgress = doneCount > 0 && !finished
 
             return (
-              <button
+              <article
                 key={mock.id}
-                type="button"
-                onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}
+                onClick={event => { if (!(event.target as HTMLElement).closest('button')) event.currentTarget.querySelector<HTMLButtonElement>('.mock-ielts-card-open')?.click() }}
                 className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6"
               >
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -189,17 +195,32 @@ function IELTSMockCatalog() {
                   <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span>
                 ) : null}
 
-                <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {formatMockDuration(mock.totalMinutes)} session</span>
-                  <span className="mock-ielts-glass-open inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black">{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
+                <div className="mock-ielts-card-footer mt-auto flex items-end justify-between gap-2 pt-6">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>
+                  <div className="mock-ielts-card-actions">
+                  {finished && <button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
+                    if (!retakeFullMock(mock.id)) { setRetakeError('Unable to save your previous attempt. Please try again.'); return }
+                    setRetakeError('')
+                    void enter()
+                    const first = getFullMockPendingSection(mock.id)
+                    if (first?.launchPath) navigate(first.launchPath, { state: fullMockLaunchState(mock.id, first.key, from ?? 'ielts') })
+                  }}><RotateCcw size={14} /> Retake</button>}
+                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : finished ? 'Review' : 'Open'} Full Mock ${mock.index}`} onClick={() => {
+                    if (!finished) void enter()
+                    const pending = getFullMockPendingSection(mock.id)
+                    if (pending?.launchPath) navigate(pending.launchPath, { state: fullMockLaunchState(mock.id, pending.key, from ?? 'ielts') })
+                    else navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
+                  }}>{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight size={14} /></button>
+                  </div>
                 </div>
-              </button>
+              </article>
             )
           })}
         </div>
       ) : (
         <div className="mock-ielts-glass-empty mt-5 rounded-[1.75rem] border border-dashed border-red-200 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status">No mocks found for this filter.</div>
       )}
+      {retakeError && <p role="alert" className="mt-3 text-sm text-red-700">{retakeError}</p>}
     </section>
   )
 }

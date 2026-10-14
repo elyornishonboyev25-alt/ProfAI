@@ -77,6 +77,7 @@ export type SkillBadgeRecord = {
 export type CommunityChampion = { nickname: string; avatarUrl: string | null; xp: number }
 
 export type LearnerSearchResult = {
+  premium?: boolean
   nickname: string | null
   avatarUrl: string | null
   level: number
@@ -95,6 +96,7 @@ export type LearnerSearchResult = {
 export type PublicProfilePayload = {
   profile: {
     nickname: string | null
+    premium?: boolean
     displayName: string
     avatarUrl: string | null
     level: number

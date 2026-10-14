@@ -1,4 +1,5 @@
 import { accountStorage } from '@/utils/accountStorage'
+import { useAuthStore } from '@/store/authStore'
 // Full Mock catalog. Each Full Mock N bundles the four IELTS sections —
 // Listening N, Reading N, Writing N, Speaking N — into one exam package, in the
 // official exam order (Listening → Reading → Writing → Speaking).
@@ -13,6 +14,10 @@ import { getIeltsFullTestCatalog, getIeltsReadingUnifiedCatalog, isAvailableIelt
 import { getIeltsSpeakingFullMockCatalog } from './ieltsSpeakingCatalog'
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import type { TestResult } from '@/types/ieltsTypes'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
+import { readingEvidenceKeyConflicts } from '@/data/readingAnswerEvidence'
+import { resolveIeltsTestById } from './ieltsTestCatalog'
+import { calculateBandScore, evaluateReadingAnswers } from './ieltsUtils'
 
 export type MockSectionKey = 'listening' | 'reading' | 'writing' | 'speaking'
 
@@ -185,11 +190,13 @@ export function markFullMockSectionComplete(mockId: string, section: MockSection
 
 export type FullMockSectionResult = {
   band: number
+  assessmentStatus?: 'pending' | 'graded'
+  speaking?: { evaluation: SpeakingEvaluation; transcript: ExaminerTurn[]; sessionKey?: string }
   completedAt: string
   testId: string
   result?: TestResult
   summary?: string
-  review?: { label: string; response: string; feedback?: string }[]
+  review?: { label: string; response: string; feedback?: string; improvedVersion?: string }[]
 }
 
 const RESULT_STORAGE_KEY = 'smarttest:full-mock-results:v1'
@@ -205,6 +212,21 @@ function readResults(): FullMockResults {
 
 export function getFullMockResults(mockId: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
   const results = { ...readResults()[mockId] }
+  const reading = results.reading
+  if (reading?.result && Object.keys(reading.result.answers ?? {}).some(id => readingEvidenceKeyConflicts[id])) {
+    const test = resolveIeltsTestById(reading.testId)
+    if (test?.module === 'Reading') {
+      const activeIds = reading.result.detailedBreakdown?.activeSectionIds
+      const sections = test.sections.filter(section => !activeIds?.length || activeIds.includes(section.id))
+      const analysis = evaluateReadingAnswers(sections, reading.result.answers)
+      const band = analysis.summary.correctAnswers === reading.result.correctAnswers ? reading.band
+        : calculateBandScore(analysis.summary.correctAnswers, analysis.summary.totalQuestions - analysis.summary.skippedAnswers)
+      results.reading = { ...reading, band, result: {
+        ...reading.result, score: band, correctAnswers: analysis.summary.correctAnswers, totalQuestions: analysis.summary.totalQuestions,
+        detailedBreakdown: { ...reading.result.detailedBreakdown, activeSectionIds: sections.map(section => section.id), readingAnalysis: analysis },
+      } }
+    }
+  }
   // Repair previously saved, entirely unanswered objective papers as well as
   // new submissions. A blank paper must not inflate the overall mock band.
   for (const key of ['listening', 'reading'] as const) {
@@ -233,11 +255,49 @@ export function saveFullMockSectionResult(mockId: string, section: MockSectionKe
 
 export function getFullMockOverallBand(mockId: string): number | null {
   const results = getFullMockResults(mockId)
+  if (Object.values(results).some(result => result.assessmentStatus === 'pending')) return null
   const bands = (['listening', 'reading', 'writing', 'speaking'] as const).map((key) => results[key]?.band)
   if (bands.some((band) => typeof band !== 'number' || !Number.isFinite(band))) return null
   const average = bands.reduce<number>((sum, band) => sum + (band ?? 0), 0) / MOCK_SECTION_COUNT
   // IELTS overall scores round to the nearest half band; .25 and .75 round up.
   return Math.round(average * 2) / 2
+}
+
+/** Keep the completed attempt before opening a fresh, isolated mock session. */
+export function retakeFullMock(mockId: string): boolean {
+  const mock = getFullMockById(mockId)
+  if (!mock?.fullyReady || getFullMockCompletedSections(mockId).length !== MOCK_SECTION_COUNT) return false
+  const owner = useAuthStore.getState().user?.id ?? 'guest'
+  const store = readResults()
+  const historyKey = `smarttest:full-mock-history:v1:${mockId}`
+  try {
+    const history = JSON.parse(accountStorage.getItem(historyKey) ?? '[]')
+    accountStorage.setItem(historyKey, JSON.stringify([
+      ...(Array.isArray(history) ? history : []),
+      { completedAt: new Date().toISOString(), overallBand: getFullMockOverallBand(mockId), sections: getFullMockResults(mockId) },
+    ]))
+    for (const section of mock.sections) {
+      const testId = section.launchPath?.split('/').pop()
+      accountStorage.removeItem(`profai:full-mock:intro:v1:${mockId}:${section.key}`)
+      const sessionKey = store[mockId]?.[section.key]?.speaking?.sessionKey
+      if (sessionKey) accountStorage.removeItem(sessionKey)
+      if (section.key === 'listening' || section.key === 'reading') {
+        const key = `ielts_test_session_${testId}:mock:${mockId}`
+        accountStorage.removeItem(key)
+        accountStorage.removeItem(`${key}:paper`)
+      }
+      if (section.key === 'writing') {
+        const key = `profai:writing:draft:${owner}:${testId}:mock:${mockId}`
+        for (const suffix of ['', ':session', ':session:paper']) accountStorage.removeItem(key + suffix)
+      }
+    }
+    delete store[mockId]
+    accountStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(store))
+    const progress = readProgressStore()
+    delete progress[mockId]
+    writeProgressStore(progress)
+    return true
+  } catch { return false }
 }
 
 export function getNextFullMockSection(mockId: string, section: MockSectionKey): MockSection | null {
@@ -256,7 +316,6 @@ export function fullMockLaunchState(mockId: string, section: MockSectionKey, fro
   return {
     entry: 'mock-ielts', from: from ?? 'mock',
     mock: { id: mockId, section },
-    launchPreset: { mode: 'simulation' as const },
     autoStart: true, timerEnabled: true,
   }
 }

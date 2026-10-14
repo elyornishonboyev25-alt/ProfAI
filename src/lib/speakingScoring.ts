@@ -1,9 +1,6 @@
 // Offline transcript analysis. Runs instantly in the browser with no API call.
-// Two jobs:
-//   1) Compute speech stats (fillers, words-per-minute, lexical variety) that we
-//      show to the user AND feed to the AI examiner so its scoring is grounded.
-//   2) Provide a sensible FALLBACK band estimate when the AI is unavailable
-//      (e.g. all Gemini keys hit their daily quota) so a result always appears.
+// Compute descriptive statistics for the learner. Counts and pace cannot
+// substitute for assessment against IELTS language-performance descriptors.
 
 export type SpeechStats = {
   wordCount: number
@@ -73,10 +70,6 @@ export function mergeStats(parts: SpeechStats[], transcript: string): SpeechStat
   return analyseTranscript(transcript, durationSec)
 }
 
-function clampBand(value: number): number {
-  return Math.round(Math.max(0, Math.min(9, value)) * 2) / 2
-}
-
 export type FallbackBands = {
   fluencyBand: number
   lexicalBand: number
@@ -85,56 +78,10 @@ export type FallbackBands = {
   overallBand: number
 }
 
-// Heuristic band estimate from stats alone — only used when the AI can't be reached.
-// Deliberately conservative: it rewards length, lexical variety and pace while
-// penalising heavy filler use. Real grading still comes from the AI when available.
-export function estimateBandsFromStats(stats: SpeechStats): FallbackBands {
-  const { wordCount, typeTokenRatio, fillerCount, wordsPerMinute } = stats
-  if (wordCount === 0) return { fluencyBand: 0, lexicalBand: 0, grammarBand: 0, pronunciationBand: 0, overallBand: 0 }
-
-  // Fluency: enough words at a natural pace, not too many fillers.
-  const fillerRate = wordCount ? fillerCount / wordCount : 1
-  let fluency = 5
-  if (wordCount >= 40) fluency += 0.5
-  if (wordCount >= 90) fluency += 0.5
-  if (wordsPerMinute >= 100 && wordsPerMinute <= 170) fluency += 1
-  else if (wordsPerMinute >= 80) fluency += 0.5
-  fluency -= Math.min(2, fillerRate * 18)
-
-  // Lexical resource: vocabulary variety, scaled by how much they actually said.
-  let lexical = 5
-  if (wordCount >= 30) {
-    if (typeTokenRatio >= 0.62) lexical += 1.5
-    else if (typeTokenRatio >= 0.52) lexical += 1
-    else if (typeTokenRatio >= 0.42) lexical += 0.5
-  }
-  if (wordCount >= 120) lexical += 0.5
-
-  // Grammar: proxied by sentence development & length (weak proxy, kept modest).
-  let grammar = 5
-  if (wordCount >= 50) grammar += 0.5
-  if (stats.sentenceCount >= 4 && wordCount / stats.sentenceCount >= 9) grammar += 0.5
-
-  // Pronunciation can't be measured from text — anchor near fluency.
-  const pronunciation = 0 // Not assessed: text statistics contain no pronunciation evidence.
-
-  const fluencyBand = clampBand(fluency)
-  const lexicalBand = clampBand(lexical)
-  const grammarBand = clampBand(grammar)
-  const pronunciationBand = pronunciation
-  const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand) / 3)
-
-  if (wordCount < 20) {
-    const ceiling = wordCount < 5 ? 2 : 4.5
-    const limited = (band: number) => Math.min(ceiling, band)
-    return {
-      fluencyBand: limited(fluencyBand), lexicalBand: limited(lexicalBand),
-      grammarBand: limited(grammarBand), pronunciationBand: limited(pronunciationBand),
-      overallBand: limited(overallBand),
-    }
-  }
-
-  return { fluencyBand, lexicalBand, grammarBand, pronunciationBand, overallBand }
+/** Compatibility placeholders. Statistics cannot assess IELTS descriptors.
+ * Display these as unassessed, never as a zero performance band. */
+export function estimateBandsFromStats(_stats: SpeechStats): FallbackBands {
+  return { fluencyBand: 0, lexicalBand: 0, grammarBand: 0, pronunciationBand: 0, overallBand: 0 }
 }
 
 /** Highlight filler spans in a transcript for rendering (returns segments). */

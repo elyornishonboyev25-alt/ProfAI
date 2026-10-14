@@ -9,6 +9,7 @@ import {
   BookOpen,
   CheckCircle2,
   Clock3,
+  Crown,
   Flame,
   GraduationCap,
   Mic2,
@@ -398,7 +399,10 @@ export default function Dashboard() {
                 {podium.map(({ row, place }) => {
                   return (
                     <div key={`${row.rank}-${row.fullName}`} className={place === 1 ? 'order-2 text-center' : place === 2 ? 'order-1 text-center' : 'order-3 text-center'}>
-                      <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} name={row.fullName} className="rounded-full" /></div>
+                      <div className="relative inline-flex">
+                        <div className={`dashboard-podium-avatar dashboard-podium-${place}`}><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} name={row.fullName} className="rounded-full" /></div>
+                        {row.premium ? <span role="img" aria-label="Premium" title="Premium" className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full border border-slate-200 bg-white text-amber-700"><Crown size={11} strokeWidth={1.8} aria-hidden="true" /></span> : null}
+                      </div>
                       <p className="mt-2 text-[11px] font-black text-slate-800">{place}{place === 1 ? 'st' : place === 2 ? 'nd' : 'rd'}</p>
                     </div>
                   )
@@ -411,7 +415,10 @@ export default function Dashboard() {
                     <button key={`${row.rank}-${row.fullName}`} type="button" onClick={() => navigate('/leaderboard')} className="flex w-full items-center gap-2.5 py-2.5 text-left">
                       <span className="w-4 text-center text-xs font-black text-slate-400">{row.rank}</span>
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-slate-200"><ProfileAvatar src={row.isCurrentUser ? user?.avatarUrl : row.avatarUrl} name={row.fullName} /></span>
-                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{row.fullName}</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <span className="truncate">{row.fullName}</span>
+                        {row.premium ? <span role="img" aria-label="Premium" title="Premium" className="inline-flex shrink-0 text-amber-700"><Crown size={13} strokeWidth={1.8} aria-hidden="true" /></span> : null}
+                      </span>
                       <span className="text-[10px] font-black text-slate-500">{row.totalXp.toLocaleString('en-US')} XP</span>
                     </button>
                   ))}

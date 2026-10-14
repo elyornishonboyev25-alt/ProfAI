@@ -6,6 +6,7 @@
 .desmos-panel > header { height: 56px; }
 .desmos-panel button:focus-visible, .desmos-panel a:focus-visible { outline: 3px solid #21794d; outline-offset: 2px; }
 @media (min-width: 1024px) {
+  .desmos-panel.desmos-docked:not(.desmos-expanded) { left: 50%; right: 0; width: 50vw; resize: none; }
   .desmos-panel.desmos-bank.desmos-docked:not(.desmos-expanded) { top: 103px; bottom: calc(92px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 1023px) {
@@ -19,10 +20,11 @@
 @media (min-width: 900px) {
   .desmos-panel.desmos-bank.desmos-docked:not(.desmos-expanded) {
     left: auto !important;
-    right: 12px !important;
+    right: 0 !important;
     top: 103px !important;
     bottom: var(--sat-bank-desmos-bottom, 92px) !important;
-    width: clamp(320px, var(--sat-bank-desmos-width, min(44vw, 46rem)), calc(100vw - 380px)) !important;
+    width: clamp(320px, var(--sat-bank-desmos-width, 50vw), calc(100vw - 380px)) !important;
+    resize: none;
     height: auto !important;
     max-height: none !important;
   }

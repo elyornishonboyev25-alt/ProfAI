@@ -1,5 +1,7 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Clock3, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react'
@@ -53,6 +55,9 @@ export default function TestRunner() {
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const { increment: recordAttempt } = useTestAttempts()
 
+  const owner = authUser?.id ?? 'guest'
+  const sessionKey = `profai:test-runner:${id}:${searchParams.get('assignmentId') ?? ''}`
+  const deadlineRef = useRef<number | null>(null)
   const [test, setTest] = useState<TestDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,13 +80,16 @@ export default function TestRunner() {
       setError(null)
 
       try {
-        const payload = await apiClient.get<{ test: TestDetails }>(`/tests/${id}`)
+        let saved: { test: TestDetails; answers: Record<string, string | null>; deadline: number } | null = null
+        try { saved = JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? 'null') } catch { /* Start a fresh session. */ }
+        const payload = saved?.test?.id === id ? { test: saved.test } : await apiClient.get<{ test: TestDetails }>(`/tests/${id}`)
         if (!active) return
 
         const initialAnswers = Object.fromEntries(payload.test.questions.map((question) => [question.id, null]))
         setTest(payload.test)
-        setAnswers(initialAnswers)
-        setRemainingSec(payload.test.durationSec)
+        setAnswers(saved?.answers ?? initialAnswers)
+        deadlineRef.current = saved?.deadline ?? Date.now() + payload.test.durationSec * 1000
+        setRemainingSec(Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000)))
       } catch (fetchError) {
         if (!active) return
         setError(fetchError instanceof Error ? fetchError.message : 'Unable to load test')
@@ -95,20 +103,14 @@ export default function TestRunner() {
     return () => {
       active = false
     }
-  }, [id])
+  }, [id, owner, sessionKey])
 
   useEffect(() => {
     if (!test || result) return
     if (remainingSec <= 0) return
 
     const timer = window.setInterval(() => {
-      setRemainingSec((current) => {
-        if (current <= 1) {
-          window.clearInterval(timer)
-          return 0
-        }
-        return current - 1
-      })
+      setRemainingSec(Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000)))
     }, 1000)
 
     return () => window.clearInterval(timer)
@@ -123,6 +125,12 @@ export default function TestRunner() {
       })
     }
   }, [remainingSec, test, result, loading, pushToast])
+
+  useActiveTest(Boolean(test) && !result)
+  useLayoutEffect(() => {
+    if (!test || loading || result) return
+    try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify({ test, answers, deadline: deadlineRef.current })) } catch { /* Keep the current attempt. */ }
+  }, [test, loading, result, answers, owner, sessionKey])
 
   const answeredCount = useMemo(() => Object.values(answers).filter((value) => value !== null).length, [answers])
 
@@ -144,6 +152,7 @@ export default function TestRunner() {
       })
 
       setResult(payload)
+      try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Submission already succeeded. */ }
       recordAttempt()
       updateUserProgress({
         xp: payload.totalXp ?? Math.max(0, (authUser?.xp ?? 0) + payload.xpEarned),

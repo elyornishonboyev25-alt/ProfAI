@@ -850,7 +850,7 @@
 }
 @media (min-width: 1024px) {
   .sat-bank-wrap.sat-bank-calculator-docked {
-    margin-right: calc(min(44vw, 46rem) + 12px);
+    margin-right: 50vw;
   }
   .sat-bank-calculator-docked .sat-bank-review-layout {
     grid-template-columns: 1fr;

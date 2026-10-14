@@ -2,13 +2,47 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { generateExaminerAudio, transcribeSpeakingAudio, type VoiceAudio } from '../services/speakingAudio.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { assessSpeakingAudio, speakingAssessmentSchema } from '../services/speakingAssessment.service.js'
+import { assessSpeakingAudio, assessSpeakingTranscript, generateSpeakingRewrites, speakingAssessmentSchema, speakingTranscriptSchema } from '../services/speakingAssessment.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { withStudyAccess } from '../services/billing.service.js'
 
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
 const voiceInFlight = new Map<string, Promise<VoiceAudio | null>>()
+
+router.post('/rewrites', asyncHandler(async (req, res) => {
+  const { history } = speakingTranscriptSchema.pick({ history: true }).strict().parse(req.body)
+  const controller = new AbortController()
+  const close = () => { if (!res.writableEnded) controller.abort() }
+  res.on('close', close)
+  try {
+    const improvedAnswers = await withStudyAccess(req.user!.id, 'speaking', async () => {
+      try { return await generateSpeakingRewrites(req.user!.id, history, controller.signal) }
+      catch (error) {
+        if (error instanceof AiGenerationError) throw error
+        throw new AiGenerationError(502, 'SPEAKING_REWRITE_INCOMPLETE', 'Could not improve this answer. Your original is saved; please retry.')
+      }
+    })
+    return res.json({ improvedAnswers })
+  } catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  } finally { res.off('close', close) }
+}))
+
+router.post('/assess-transcript', asyncHandler(async (req, res) => {
+  const payload = speakingTranscriptSchema.parse(req.body)
+  const controller = new AbortController()
+  const close = () => { if (!res.writableEnded) controller.abort() }
+  res.on('close', close)
+  try { return res.json(await withStudyAccess(req.user!.id, 'speaking', () => assessSpeakingTranscript(req.user!.id, payload, controller.signal))) }
+  catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  } finally { res.off('close', close) }
+}))
 
 router.post('/assess', asyncHandler(async (req, res) => {
   const payload = speakingAssessmentSchema.parse(req.body)

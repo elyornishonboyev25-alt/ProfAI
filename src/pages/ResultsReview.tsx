@@ -1,4 +1,6 @@
+import IELTSReadingInterface from '@/components/IELTSReadingInterface'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -140,6 +142,11 @@ export default function ResultsReview() {
     navigate('/ielts')
   }
 
+  const readingPayload = useMemo(() => result ? {
+    result, showCorrectAnswers: state.showCorrectAnswers ?? true,
+    initialQuestionId: state.initialQuestionId ?? (state.initialPart ? activeSections[state.initialPart - 1]?.questions[0]?.id : undefined),
+  } : undefined, [result, state.showCorrectAnswers, state.initialQuestionId, state.initialPart, activeSections])
+
   const startRetake = () => {
     if (!resolvedTestId) return
     navigate(`/test/${skill}/${resolvedTestId}`)
@@ -161,6 +168,8 @@ export default function ResultsReview() {
       </div>
     )
   }
+
+  if (skill === 'reading') return <IELTSReadingInterface test={test} reviewPayload={readingPayload} onComplete={() => {}} onExit={goBackToResults} />
 
   return (
     <div className="workspace-page ielts-review-page min-h-screen">
@@ -206,6 +215,7 @@ export default function ResultsReview() {
 
       <main className="mx-auto w-full max-w-7xl px-4 py-5 pb-8 sm:px-6">
         <TestVocabulary testId={resolvedTestId} variant="review" />
+        <ReviewPracticeLink skill={skill} />
         <section className="surface-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>

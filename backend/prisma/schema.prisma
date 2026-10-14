@@ -919,6 +919,7 @@ model AuthSession {
   ipAddress   String?
   loginAt     DateTime  @default(now())
   lastSeenAt  DateTime  @default(now())
+  usageUntil  DateTime?
   expiresAt   DateTime
   endedAt     DateTime?
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

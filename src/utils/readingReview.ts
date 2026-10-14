@@ -34,13 +34,31 @@ export function parseSectionParagraphs(section: Section): ParsedParagraph[] {
     content.matchAll(/(?:^|\n)\s*([A-Z])\.\s+([\s\S]*?)(?=(?:\n\s*[A-Z]\.\s+)|$)/g),
   )
   if (letteredParagraphs.length >= 2) {
-    return letteredParagraphs.map((match) => ({
+    const introduction = content.slice(0, letteredParagraphs[0].index).trim()
+    return [...(introduction ? [{ label: 'TEXT-1', content: introduction }] : []), ...letteredParagraphs.map((match) => ({
       label: match[1].toUpperCase(),
       content: match[2].trim(),
-    }))
+    }))]
   }
 
-  return [{ label: 'TEXT', content }]
+  const chunks = content.split(/\n\s*\n/).filter(text => text.trim())
+  const inlineLabels = chunks.map(text => text.match(/^([A-Z])\s+([\s\S]+)$/))
+  // An introduction beginning "A newborn..." is prose, not paragraph A.
+  if (inlineLabels[0]?.[1] === 'A' && inlineLabels[1]?.[1] === 'A') inlineLabels[0] = null
+  const labelled = inlineLabels.filter((match): match is RegExpMatchArray => Boolean(match))
+  if (labelled.length >= 2 && labelled.every((match, index) => match[1] === String.fromCharCode(65 + index))) {
+    const paragraphs: ParsedParagraph[] = []
+    chunks.forEach((text, index) => {
+      const match = inlineLabels[index]
+      if (match) paragraphs.push({ label: match[1], content: match[2] })
+      else if (paragraphs.length) paragraphs[paragraphs.length - 1].content += `\n\n${text}`
+      else paragraphs.push({ label: 'TEXT-1', content: text })
+    })
+    return paragraphs
+  }
+  return chunks.map((text, index) => ({
+    label: `TEXT-${index + 1}`, content: text,
+  }))
 }
 
 export function firstQuestionNumber(displayNumber: string): number {

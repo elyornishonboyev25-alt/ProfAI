@@ -11,7 +11,7 @@ async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-listening-parts-'))
   const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:5173', pretendToBeVisual: true })
   try {
-    for (const key of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'HTMLMediaElement', 'Element', 'Node', 'CustomEvent', 'Event', 'SVGElement', 'getComputedStyle', 'AbortController', 'AbortSignal']) {
+    for (const key of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'HTMLMediaElement', 'Audio', 'Element', 'Node', 'CustomEvent', 'Event', 'SVGElement', 'getComputedStyle', 'AbortController', 'AbortSignal']) {
       globalThis[key] = dom.window[key]
     }
     Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true })

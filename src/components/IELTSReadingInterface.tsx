@@ -1,6 +1,11 @@
+import { useReadingAnnotations } from '@/hooks/useReadingAnnotations'
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
+import { textOffsets, textRange } from '@/utils/textRanges'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import {
   ArrowLeftIcon,
   BookmarkIcon,
@@ -30,6 +35,7 @@ import { IELTSTest, TestResult, Section, Question, ListeningGroup, ListeningBloc
 
 // Components
 import SplitScreen from './SplitScreen'
+import AnswerEvidencePane from './ielts/AnswerEvidencePane'
 import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import ListeningReviewCountdown from './ListeningReviewCountdown'
@@ -38,12 +44,14 @@ import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import TestVocabulary from './vocab/TestVocabulary'
+import ReviewPracticeLink from './ielts/ReviewPracticeLink'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import TestLaunchOverlay from './common/TestLaunchOverlay'
 import ListeningDiagram from './ListeningDiagram'
 import OldWaterMillDiagram from './OldWaterMillDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
 import { optionDisplayText, readingQuestionGroups } from '../utils/readingPresentation'
+import { formatCorrectAnswer, formatUserAnswer } from '../utils/readingReview'
 
 // Utils
 import {
@@ -66,12 +74,21 @@ interface IELTSReadingInterfaceProps {
   reviewPayload?: {
     result: TestResult
     showCorrectAnswers?: boolean
+    initialQuestionId?: string
   }
   launchPreset?: {
     mode?: 'practice' | 'simulation'
     partIndex?: number
     durationMinutes?: number
   }
+}
+
+function scrollReadingReviewQuestionIntoView(questionId: string) {
+  const pane = document.getElementById('reading-questions-pane')
+  const card = document.getElementById(`question-card-${questionId}`)
+  if (!pane || !card) return
+  const headerHeight = pane.querySelector<HTMLElement>('.sticky')?.offsetHeight ?? 0
+  pane.scrollTop += card.getBoundingClientRect().top - pane.getBoundingClientRect().top - headerHeight - 12
 }
 
 // Paragraph labels (A, B, C...) are only shown when the passage has questions
@@ -343,6 +360,7 @@ export default function IELTSReadingInterface({
   const startedAtRef = useRef<number | null>(null)
   const deadlineRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
+  const autoListeningStartRef = useRef(false)
   const contrastClass =
     contrastMode === 'high'
       ? 'reading-contrast-high'
@@ -378,6 +396,12 @@ export default function IELTSReadingInterface({
     if (isReviewMode) return
     try {
       const savedSession = personalStorage.getItem(sessionKey)
+      if (!savedSession) {
+        for (const section of test.sections) {
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}`)
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}:scroll`)
+        }
+      }
       if (savedSession) {
         const data = JSON.parse(savedSession)
         // Before v2, practice defaulted to the three Reading parts even for
@@ -387,7 +411,7 @@ export default function IELTSReadingInterface({
         const hasLegacyListeningDefault = isListening && test.sections.length === 4
           && data.partsSelectionVersion !== 2
           && savedParts.length === 3 && savedParts.every((part, index) => part === index)
-        const restoredParts = hasLegacyListeningDefault
+        const restoredParts = fullMockId || hasLegacyListeningDefault
           ? sanitizeSelectedParts(undefined, test.sections.length)
           : savedParts
         personalStorage.setItem(sessionKey, JSON.stringify({ ...data, selectedParts: restoredParts, partsSelectionVersion: 2 }))
@@ -401,14 +425,18 @@ export default function IELTSReadingInterface({
         setIsTestActive(active)
         // The launch preset starts a NEW attempt only when no active session exists.
         launchPresetAppliedRef.current = active
-        setTestMode(data.testMode ?? 'simulation')
+        setTestMode(fullMockId ? 'simulation' : data.testMode ?? 'simulation')
         setSelectedParts(restoredParts)
         setCustomTime(data.customTime ?? 60)
+        setContrastMode(data.contrastMode ?? 'normal')
+        setTextSizeMode(data.textSizeMode ?? 'regular')
+        setReadingFont(data.readingFont ?? 'sans')
+        setShowNotes(data.showNotes === true)
         setFlaggedQuestions(data.flaggedQuestions ?? [])
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
         startedAtRef.current = typeof data.startedAt === 'number' ? data.startedAt : null
         if (isListening) {
-          const trackCount = test.continuousAudioUrl ? 1 : (data.testMode === 'practice' ? restoredParts.length : test.sections.length)
+          const trackCount = test.continuousAudioUrl ? 1 : (!fullMockId && data.testMode === 'practice' ? restoredParts.length : test.sections.length)
           setCurrentAudioIndex(clamp(Number.isInteger(data.currentAudioIndex) ? data.currentAudioIndex : 0, 0, Math.max(0, trackCount - 1)))
           const position = Number.isFinite(data.audioCurrentTime) ? Math.max(0, data.audioCurrentTime) : 0
           pendingAudioSeekRef.current = position
@@ -448,13 +476,17 @@ export default function IELTSReadingInterface({
     return () => document.removeEventListener('fullscreenchange', syncFullscreenState)
   }, [])
 
+  useActiveTest(isTestActive && !isReviewMode)
+
   // Save session on changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isReviewMode) return
     if (!isTestActive) return // Only save if the test has started
     if (submissionStartedRef.current) return
 
+    saveActiveTestPaper(sessionKey, test, badgeUserId ?? 'guest')
     const sessionData = {
+      contrastMode, textSizeMode, readingFont, showNotes,
       partsSelectionVersion: 2,
       currentSectionIndex,
       answers,
@@ -475,6 +507,7 @@ export default function IELTSReadingInterface({
     }
     try { personalStorage.setItem(sessionKey, JSON.stringify(sessionData)) } catch { /* Keep the in-memory attempt usable. */ }
   }, [
+    contrastMode, textSizeMode, readingFont, showNotes,
     currentSectionIndex,
     answers,
     timeRemaining,
@@ -496,6 +529,7 @@ export default function IELTSReadingInterface({
   // Clear session helper
   const clearSession = () => {
     personalStorage.removeItem(sessionKey)
+    clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest')
     startedAtRef.current = null
     deadlineRef.current = null
   }
@@ -533,6 +567,8 @@ export default function IELTSReadingInterface({
 
   const currentSection = activeSections[currentSectionIndex] || activeSections[0]
   const isDayOneCurieSection = currentSection?.id === 'day1-curie-p1'
+  useReadingAnnotations(testShellRef, `${sessionKey}:annotations:${currentSection.id}`, badgeUserId ?? 'guest', isTestActive && !isReviewMode)
+
   const currentPassageNumber = resolvePassageNumber(currentSection, currentSectionIndex + 1)
 
   // ---- Listening audio playlist ----
@@ -608,6 +644,12 @@ export default function IELTSReadingInterface({
       })
     }
   }
+
+  useEffect(() => {
+    if (!fullMockId || !isListening || isReviewMode || !isTestActive || !autoListeningStartRef.current) return
+    autoListeningStartRef.current = false
+    startListeningAudio()
+  }, [fullMockId, isListening, isReviewMode, isTestActive])
 
   const toggleListeningAudio = () => {
     if (!isReviewMode && testMode !== 'practice') return
@@ -787,6 +829,38 @@ export default function IELTSReadingInterface({
     })
   }, [activeSections]);
 
+  const reviewFocusedQuestionId = sectionMeta[currentSectionIndex]?.questionIds[
+    lastActiveQuestionIndex - (sectionMeta[currentSectionIndex]?.startIndex ?? 0)
+  ]
+  const reviewFocusedQuestion = currentSection?.questions.find(question => question.id === reviewFocusedQuestionId)
+    ?? currentSection?.questions[0]
+  const reviewRouteKey = useLocation().key
+  const reviewFocusKey = `ielts-review-focus:${badgeUserId ?? 'guest'}:${test.id}:${reviewPayload?.result.date ?? ''}:${reviewRouteKey}`
+  const pendingReviewFocusRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!isReviewMode || isListening) return
+    let savedId: string | null = null
+    try { savedId = window.sessionStorage.getItem(reviewFocusKey) } catch { /* review still works without storage */ }
+    const id = savedId ?? reviewPayload?.initialQuestionId
+    const sectionIndex = activeSections.findIndex(section => section.questions.some(question => question.id === id))
+    if (sectionIndex < 0) return
+    pendingReviewFocusRef.current = id!
+    const meta = sectionMeta[sectionIndex]
+    setCurrentSectionIndex(sectionIndex)
+    setLastActiveQuestionIndex(meta.startIndex + meta.questionIds.indexOf(id!))
+    const timeout = window.setTimeout(() => scrollReadingReviewQuestionIntoView(id!), 150)
+    return () => window.clearTimeout(timeout)
+  }, [isReviewMode, isListening, reviewPayload?.initialQuestionId, reviewFocusKey, activeSections, sectionMeta])
+
+  useEffect(() => {
+    if (!isReviewMode || isListening || !reviewFocusedQuestionId) return
+    // The initial default question must not overwrite the restored selection
+    // before React has applied the section/question state updates above.
+    if (pendingReviewFocusRef.current && pendingReviewFocusRef.current !== reviewFocusedQuestionId) return
+    pendingReviewFocusRef.current = null
+    try { window.sessionStorage.setItem(reviewFocusKey, reviewFocusedQuestionId) } catch { /* optional focus persistence */ }
+  }, [isReviewMode, isListening, reviewFocusKey, reviewFocusedQuestionId])
+
   const submitPreview = useMemo(() => {
     const sections = activeSections.map((section, sectionIndex) => {
       let answered = 0
@@ -916,6 +990,31 @@ export default function IELTSReadingInterface({
     if (!isReviewMode || !reviewShowCorrectAnswers) return null
     const meta = reviewQuestionMap.get(question.id)
     if (!meta) return null
+    if (!isListening) {
+      const active = reviewFocusedQuestion?.id === question.id
+      const status = meta.status === 'correct' ? 'Correct' : meta.status === 'skipped' ? 'Unanswered' : 'Incorrect'
+      const tone = meta.status === 'correct' ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+        : meta.status === 'skipped' ? 'border-slate-200 bg-slate-100 text-slate-600' : 'border-red-200 bg-red-50 text-red-700'
+      return <div className={`${className} reading-review-feedback rounded-lg border ${active ? 'border-slate-300' : 'border-slate-200'} bg-slate-50 px-3 py-3`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-slate-600">Question {question.number}</span>
+          <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
+            {meta.status === 'correct' ? <CheckIcon className="h-3 w-3" /> : meta.status === 'incorrect' ? <XMarkIcon className="h-3 w-3" /> : null}{status}
+          </span>
+        </div>
+        <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs leading-5">
+          <dt className="text-slate-500">Your answer</dt><dd className="break-words font-medium text-slate-800">{formatUserAnswer(answers[question.id], question.options)}</dd>
+          <dt className="text-slate-500">Correct answer</dt><dd className="break-words font-semibold text-emerald-800">{formatCorrectAnswer(meta.correctAnswer)}</dd>
+        </dl>
+        <button type="button" aria-label={`Show evidence for question ${question.number}`} aria-pressed={active}
+          onClick={() => {
+            const section = sectionMeta[currentSectionIndex]
+            setLastActiveQuestionIndex(section.startIndex + section.questionIds.indexOf(question.id))
+          }} className={`mt-3 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 ${active ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:text-red-700'}`}>
+          <DocumentTextIcon className="h-3.5 w-3.5" />{active ? 'Evidence selected' : 'View in passage'}
+        </button>
+      </div>
+    }
     if (meta.status === 'correct') {
       return (
         <div className={`${className} rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 shadow-[0_8px_18px_rgba(16,185,129,0.16)]`}>
@@ -1009,7 +1108,7 @@ export default function IELTSReadingInterface({
       acceptNode: (candidate) => {
         const node = candidate as Text
         const content = node.textContent ?? ''
-        if (!content.trim()) return NodeFilter.FILTER_REJECT
+        if (!content.trim() || node.parentElement?.closest('input, textarea, select, [contenteditable="true"]')) return NodeFilter.FILTER_REJECT
         try {
           return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
         } catch {
@@ -1135,15 +1234,28 @@ export default function IELTSReadingInterface({
       selectionTimerRef.current = setTimeout(publishSelection, 120)
     }
 
+    const closeFloatingTools = () => {
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current)
+      clearSelectionTools()
+      setHighlightPopover(null)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeFloatingTools()
+    }
+
     document.addEventListener('pointerdown', handlePointerDown, true)
     document.addEventListener('pointerup', handlePointerUp)
     document.addEventListener('pointercancel', handlePointerUp)
     document.addEventListener('selectionchange', handleSelectionChange)
+    document.addEventListener('scroll', closeFloatingTools, true)
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true)
       document.removeEventListener('pointerup', handlePointerUp)
       document.removeEventListener('pointercancel', handlePointerUp)
       document.removeEventListener('selectionchange', handleSelectionChange)
+      document.removeEventListener('scroll', closeFloatingTools, true)
+      document.removeEventListener('keydown', handleKeyDown)
       if (selectionTimerRef.current) {
         clearTimeout(selectionTimerRef.current)
       }
@@ -1160,6 +1272,8 @@ export default function IELTSReadingInterface({
       container.querySelectorAll<HTMLElement>('.ielts-highlight, .ielts-note'),
     ).filter((entry) => {
       if (entry === node) return true
+      // Deleting or editing a note must preserve a highlight underneath it.
+      if (entry.dataset.markType !== node.dataset.markType) return false
       if (groupId && entry.dataset.markGroup === groupId) return true
       if (entry.contains(node) || node.contains(entry)) return true
       try {
@@ -1248,12 +1362,20 @@ export default function IELTSReadingInterface({
         const touchingHighlights = collectIntersectingNodes(activeRange, markableContainer, '.ielts-highlight')
         if (touchingHighlights.length > 0) {
           workingRange = expandRangeWithNodes(activeRange, touchingHighlights)
+          const offsets = textOffsets(markableContainer, workingRange)
           unwrapNodes(touchingHighlights)
+          const restored = textRange(markableContainer, offsets.start, offsets.end)
+          if (!restored) return []
+          workingRange = restored
         }
       } else {
         const touchingNotes = collectIntersectingNodes(activeRange, markableContainer, '.ielts-note')
         if (touchingNotes.length > 0) {
+          const offsets = textOffsets(markableContainer, workingRange)
           unwrapNodes(touchingNotes)
+          const restored = textRange(markableContainer, offsets.start, offsets.end)
+          if (!restored) return []
+          workingRange = restored
         }
       }
 
@@ -1394,9 +1516,9 @@ export default function IELTSReadingInterface({
       setCurrentAudioIndex(0)
       setAudioError(null)
     }
-    const effectiveMode = preset?.mode ?? testMode
+    const effectiveMode = fullMockId ? 'simulation' : preset?.mode ?? testMode
     const effectiveCustomTime = preset?.customTime ?? customTime
-    const normalizedParts = sanitizeSelectedParts(preset?.selectedParts ?? selectedParts, test.sections.length)
+    const normalizedParts = sanitizeSelectedParts(fullMockId ? undefined : preset?.selectedParts ?? selectedParts, test.sections.length)
     setTestMode(effectiveMode)
     setCustomTime(effectiveCustomTime)
     setSelectedParts(normalizedParts)
@@ -1419,15 +1541,19 @@ export default function IELTSReadingInterface({
 
     // Brief "your test will begin shortly" loader before dropping into the exam.
     setIsLaunching(true)
+    autoListeningStartRef.current = Boolean(fullMockId && isListening)
     if (launchTimerRef.current) clearTimeout(launchTimerRef.current)
-    launchTimerRef.current = setTimeout(() => {
+    const activate = () => {
       startedAtRef.current = Date.now()
       const duration = effectiveMode === 'practice' ? effectiveCustomTime : test.duration
       deadlineRef.current = isListening || duration === -1 ? null : Date.now() + duration * 60_000
       setIsTestActive(true)
       setIsLaunching(false)
       launchTimerRef.current = null
-    }, 2200)
+    }
+    if (fullMockId) activate()
+    else launchTimerRef.current = setTimeout(activate, 2200)
+    return true
   }
 
   useEffect(() => () => {
@@ -1440,27 +1566,27 @@ export default function IELTSReadingInterface({
   }, [])
 
   useEffect(() => {
-    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || !launchPreset || startAccess?.ready === false) return
+    if (isReviewMode || isTestActive || launchPresetAppliedRef.current || (!fullMockId && !launchPreset) || startAccess?.ready === false) return
 
-    const desiredMode = launchPreset.mode === 'practice' ? 'practice' : 'simulation'
+    const desiredMode = !fullMockId && launchPreset?.mode === 'practice' ? 'practice' : 'simulation'
     const desiredPart =
-      typeof launchPreset.partIndex === 'number'
+      typeof launchPreset?.partIndex === 'number'
         ? clamp(Math.round(launchPreset.partIndex), 1, test.sections.length)
         : undefined
     const desiredDuration =
-      typeof launchPreset.durationMinutes === 'number'
+      typeof launchPreset?.durationMinutes === 'number'
         ? clamp(Math.round(launchPreset.durationMinutes), 5, 180)
         : undefined
 
     launchPresetAppliedRef.current = true
-    handleStartTest({
+    void handleStartTest({
       mode: desiredMode,
       selectedParts: desiredMode === 'practice' && desiredPart
         ? [desiredPart - 1]
         : sanitizeSelectedParts(undefined, test.sections.length),
       customTime: desiredMode === 'practice' && desiredDuration ? desiredDuration : undefined,
-    })
-  }, [isReviewMode, isTestActive, launchPreset, test.sections.length, startAccess?.ready])
+    }).then(started => { if (!started) launchPresetAppliedRef.current = false })
+  }, [isReviewMode, isTestActive, fullMockId, launchPreset, test.sections.length, startAccess?.ready])
 
   const getCurrentTimeSpent = () => {
     const elapsedByClock = Math.max(0, (testMode === 'practice' && customTime !== -1 ? customTime : test.duration) * 60 - Math.max(0, timeRemaining))
@@ -1665,6 +1791,10 @@ export default function IELTSReadingInterface({
       const localIdx = globalIndex - meta.startIndex;
       const qId = meta.questionIds[localIdx];
       if (qId) {
+        if (isReviewMode && !isListening) {
+          scrollReadingReviewQuestionIntoView(qId)
+          return
+        }
         const el = document.getElementById(`question-card-${qId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3233,6 +3363,7 @@ export default function IELTSReadingInterface({
       <div
         id="reading-passage-pane"
         data-reading-markable="1"
+        key={currentSection.id}
         onClick={handleMarkPaneClick}
         className={`reading-pane reading-content h-full overflow-y-auto border-r border-red-100 bg-gradient-to-b from-white via-red-50/30 to-white p-4 sm:p-5 lg:p-6 font-sans leading-relaxed text-slate-800 transition-colors duration-300 scrollbar-thin scrollbar-thumb-red-200 ${isDayOneCurieSection ? 'day1-reading-pane' : ''}`}
       >
@@ -3788,7 +3919,7 @@ export default function IELTSReadingInterface({
                     ? 'Review mode — playback and seeking are available.'
                     : practiceControls
                       ? 'Practice mode — pause or skip 10 seconds at a time.'
-                      : 'Simulation mode — the recording plays continuously.'}
+                      : fullMockId ? 'Full mock — the recording plays once, continuously.' : 'Simulation mode — the recording plays continuously.'}
                 </p>
               </div>
               <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
@@ -3926,6 +4057,7 @@ export default function IELTSReadingInterface({
           <div
             className="space-y-6 pb-28"
             data-reading-markable="1"
+        key={currentSection.id}
             onClick={handleMarkPaneClick}
           >
             {(currentSection?.groups ?? []).map((group, groupIndex) => renderListeningGroup(group, groupIndex))}
@@ -3939,13 +4071,14 @@ export default function IELTSReadingInterface({
     <div
       id="reading-questions-pane"
       data-reading-markable="1"
+        key={currentSection.id}
       onClick={handleMarkPaneClick}
       className="reading-pane reading-content reading-question-typography h-full overflow-y-auto border-l border-red-100 bg-white p-4 sm:p-5 lg:p-6 font-sans transition-colors duration-300 scrollbar-thin scrollbar-thumb-red-200"
     >
       <div className="sticky top-0 z-10 -mx-4 mb-5 flex items-center justify-between border-b border-red-100 bg-white/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
         <div>
-          <h3 className="text-lg font-black tracking-tight text-slate-900">Questions Workspace</h3>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-500">Answer panel</p>
+          <h3 className="text-lg font-bold tracking-tight text-slate-900">{isReviewMode ? 'Questions' : 'Questions Workspace'}</h3>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{isReviewMode ? 'Your answers · Review' : 'Answer panel'}</p>
         </div>
         <span className="text-xs font-semibold text-red-700 bg-red-50 px-3 py-1.5 rounded-xl border border-red-200">
           {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} of {testQuestionNumberCeiling}
@@ -6330,7 +6463,7 @@ export default function IELTSReadingInterface({
   return (
     <div
       ref={testShellRef}
-      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
+      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isReviewMode && !isListening ? 'ielts-reading-review' : ''} ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
     >
       <AnimatePresence>
         {isLaunching ? (
@@ -6340,17 +6473,25 @@ export default function IELTSReadingInterface({
           />
         ) : null}
       </AnimatePresence>
-      {!isTestActive ? renderStartScreen() : (
+      {!isTestActive ? fullMockId ? (
+        <div className="flex flex-1 items-center justify-center p-6" role="status">
+          <div className="max-w-md text-center">
+            <h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">{isListening ? 'Listening' : 'Reading'} test</span></h1>
+            {startAccess?.error ? <><p role="alert" className="mt-4 text-red-600">{startAccess.error}</p><button type="button" disabled={startAccess.busy} className="mt-4 rounded-xl bg-red-600 px-6 py-3 font-bold text-white disabled:opacity-50" onClick={() => void handleStartTest()}>Try again</button></> : <p className="mt-3 text-slate-600">Your full mock will start automatically.</p>}
+          </div>
+        </div>
+      ) : renderStartScreen() : (
         <>
           <header className="reading-toolbar ielts-exam-header bg-white/95 border-b border-red-100 min-h-16 flex items-center justify-between px-4 z-20 relative shadow-[0_10px_24px_rgba(220,38,38,0.09)] backdrop-blur-md">
             <div className="flex items-center gap-3 shrink-0">
               <button type="button" onClick={handleExitTest} className="premium-back-btn-sm normal-case tracking-normal text-slate-700" title="Exit">
                 <ArrowLeftIcon className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700">Back</span>
+                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-sm font-semibold text-slate-700`}>Back</span>
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-red-600">IELTS</span>
-                <span className="ielts-exam-skill text-xl font-semibold text-slate-500">{isListening ? 'Listening' : 'Reading'}</span>
+                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-2xl font-black text-red-600`}>IELTS</span>
+                <span className={`ielts-exam-skill ${isReviewMode && !isListening ? 'text-sm sm:text-xl' : 'text-xl'} font-semibold text-slate-500`}>{isListening ? 'Listening' : 'Reading'}</span>
+                {isReviewMode && !isListening && <span data-reading-review-badge className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">Review</span>}
                 {isListening && isAudioPlaying ? (
                   <span className="ml-2 hidden items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-red-600 sm:inline-flex">
                     <SpeakerWaveIcon className="h-3.5 w-3.5" />
@@ -6375,7 +6516,7 @@ export default function IELTSReadingInterface({
                   />
                 </span>
               </div>
-            ) : isReviewMode ? (
+            ) : isReviewMode && isListening ? (
               <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 rounded-2xl border border-red-100 bg-white px-3 py-2 shadow-[0_12px_26px_rgba(220,38,38,0.15)]">
                 <span className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Review Mode</span>
               </div>
@@ -6416,6 +6557,8 @@ export default function IELTSReadingInterface({
                 <button
                   type="button"
                   onClick={() => setReviewShowCorrectAnswers((value) => !value)}
+                  aria-label={reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+                  aria-pressed={reviewShowCorrectAnswers}
                   className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                     reviewShowCorrectAnswers
                       ? 'border-red-300 bg-red-50 text-red-700'
@@ -6423,15 +6566,28 @@ export default function IELTSReadingInterface({
                   }`}
                 >
                   <EyeIcon className="h-4 w-4" />
-                  {reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+                  <span className={isListening ? '' : 'hidden sm:inline'}>{reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}</span>
                 </button>
               )}
             </div>
           </header>
           {listeningReviewSecondsRemaining !== null ? <ListeningReviewCountdown secondsRemaining={listeningReviewSecondsRemaining} /> : null}
-          {isReviewMode ? <div className="shrink-0 px-4"><TestVocabulary testId={test.id} variant="review" compact /></div> : null}
-          <div className="flex-1 relative overflow-hidden" id="test-main-container">
-            {isListening ? (
+          {isReviewMode ? isListening ? <div className="max-h-[30dvh] shrink-0 overflow-y-auto px-4"><ReviewPracticeLink skill="listening" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
+            : <details className="shrink-0 border-b border-red-100 bg-white px-4 py-2">
+              <summary className="cursor-pointer text-xs font-bold text-red-700">Review resources</summary>
+              <div className="max-h-[30dvh] overflow-y-auto"><ReviewPracticeLink skill="reading" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
+            </details> : null}
+          <div className={`${isReviewMode && !isListening ? 'min-h-0' : ''} flex-1 relative overflow-hidden`} id="test-main-container" onClickCapture={event => {
+            if (!isReviewMode || isListening) return
+            const card = (event.target as HTMLElement).closest<HTMLElement>('[id^="question-card-"]')
+            const id = card?.id.slice('question-card-'.length)
+            const meta = sectionMeta[currentSectionIndex]
+            const localIndex = id ? meta?.questionIds.indexOf(id) : -1
+            if (localIndex !== undefined && localIndex >= 0) setLastActiveQuestionIndex(meta.startIndex + localIndex)
+          }}>
+            {isReviewMode && !isListening && currentSection ? (
+              <SplitScreen left={<AnswerEvidencePane section={currentSection} question={reviewFocusedQuestion} showAnswers={reviewShowCorrectAnswers} showParagraphLabels={sectionHasLabeledParagraphs(currentSection)} />} right={renderRightPanel()} fillHeight className="h-full" />
+            ) : isListening ? (
               <div className="relative h-full overflow-hidden">
                 {renderMarkTools()}
                 {renderRightPanel()}
@@ -6732,6 +6888,7 @@ export default function IELTSReadingInterface({
                 <button
                   type="button"
                   onClick={() => setShowOptionsModal(false)}
+                  aria-label="Close display settings"
                   className="rounded-xl border border-red-100 bg-white p-2 text-slate-600 hover:bg-red-50"
                 >
                   <XMarkIcon className="h-5 w-5" />

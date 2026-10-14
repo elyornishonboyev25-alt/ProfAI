@@ -9,20 +9,20 @@ async function main() {
   const catalog = JSON.parse(await readFile('backend/src/data/educationalMedia.json', 'utf8'))
   const all = []
   for (const kind of ['shadowing', 'podcasts']) {
-    assert.equal(catalog[kind].length, kind === 'podcasts' ? 300 : 22)
+    assert.equal(catalog[kind].length, kind === 'podcasts' ? 300 : 40)
     for (const item of catalog[kind]) {
       assert.match(item.youtubeId, /^[\w-]{11}$/)
       assert.equal(item.sourceUrl, `https://www.youtube.com/watch?v=${item.youtubeId}`)
-      assert.ok((kind === 'shadowing' ? ['American Film Institute', 'Jimmy Kimmel Live', 'Access Hollywood', 'Brandon Murray', 'Simon Sinek', 'TNT', 'BBC', 'The Rock', 'grazef6'] : ['BBC Learning English', 'VOA Learning English', 'Think Fast, Talk Smart', 'College Essay Guy']).includes(item.source))
+      assert.ok((kind === 'shadowing' ? ['American Film Institute', 'Jimmy Kimmel Live', 'Access Hollywood', 'Brandon Murray', 'Simon Sinek', 'TNT', 'BBC', 'The Rock', 'grazef6', 'BBC Learning English'] : ['BBC Learning English', 'VOA Learning English', 'Think Fast, Talk Smart', 'College Essay Guy']).includes(item.source))
       assert.ok(item.thumbnailUrl && item.channelUrl && item.focus && item.verifiedAt)
       assert.ok(item.durationSec > 15 && item.durationSec <= (kind === 'shadowing' ? 120 : 10800))
       assert.ok(['A2', 'B1', 'B2', 'C1'].includes(item.cefr))
       all.push(item.youtubeId)
     }
   }
-  assert.equal(new Set(all).size, 322, '322 unique videos across both libraries')
+  assert.equal(new Set(all).size, 340, '340 unique videos across both libraries')
   assert.equal(catalog.shadowing[0].youtubeId, 'sANOOw_MeK0', 'First lesson is clear natural speech by Morgan Freeman')
-  assert.ok(catalog.shadowing.every(item => ['Actors', 'Motivation'].includes(item.category)))
+  assert.ok(catalog.shadowing.every(item => ['Actors', 'Motivation', 'Pronunciation', 'Everyday English'].includes(item.category)))
   const normalizedTitles = catalog.podcasts.map(item => item.title.toLowerCase().replace(/English Rewind|6 Minute English|Real Easy English|BBC Learning English/gi, '').replace(/[^a-z0-9]/g, ''))
   assert.equal(new Set(normalizedTitles).size, 300, 'No duplicate podcast titles after series-label normalization')
   assert.equal(catalog.podcasts.slice(100).filter(item => item.source === 'BBC Learning English').length, 120)

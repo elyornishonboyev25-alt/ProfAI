@@ -1,7 +1,13 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
+import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
 import UiText from '@/components/common/UiText'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -33,7 +39,9 @@ import {
 import { useSpeechRecognition } from '@/lib/speech'
 import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
 import { transcribeAnswer } from '@/lib/speakingAudio'
-import { analyzeSpeakingResponse, type SpeakingResponseAnalysis } from '@/services/speakingAI'
+import { analyzeSpeakingResponse, evaluateSpeaking, type SpeakingResponseAnalysis, type SpeakingEvaluation, type ExaminerTurn } from '@/services/speakingAI'
+import { analyseTranscript } from '@/lib/speakingScoring'
+import SpeakingResult from '@/components/speaking/SpeakingResult'
 import ExaminerSession from '@/components/speaking/ExaminerSession'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
@@ -68,6 +76,8 @@ type AnswerState = {
   loading: boolean
   error: string | null
   revealedSample: boolean
+  durationSec?: number
+  recorded?: boolean
 }
 
 function blankAnswer(question: QuestionItem): AnswerState {
@@ -99,6 +109,10 @@ function questionsForDay(day: SpeakingDayEntry): QuestionItem[] {
 }
 
 export default function IELTSSpeakingTest() {
+  return <FullMockSectionGate><SpeakingTestContent /></FullMockSectionGate>
+}
+
+function SpeakingTestContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
@@ -126,15 +140,15 @@ export default function IELTSSpeakingTest() {
   }, [id])
 
   // Brief "your test will begin shortly" loader when entering a Speaking test.
-  const [booting, setBooting] = useState(true)
+  const [booting, setBooting] = useState(!mockContext?.id)
   useEffect(() => {
-    if (!mode) {
+    if (!mode || mockContext?.id) {
       setBooting(false)
       return
     }
     const t = setTimeout(() => setBooting(false), 1900)
     return () => clearTimeout(t)
-  }, [mode])
+  }, [mode, mockContext?.id])
 
   const mockRedirect = mockContext?.id ? getFullMockSectionRedirect(mockContext.id, 'speaking', location.pathname) : null
   if (mockRedirect && mockContext) {
@@ -159,6 +173,24 @@ export default function IELTSSpeakingTest() {
         landingReady={!booting}
         inFullMock={Boolean(mockContext?.id)}
         onExit={exitTest}
+        sessionScope={mockContext?.id}
+        onCompleted={mockContext?.id ? (analysis, transcript, sessionKey) => {
+          const graded = analysis.source === 'ai' && analysis.assessmentMode === 'audio'
+          saveFullMockSectionResult(mockContext.id, 'speaking', {
+            band: graded ? analysis.overallBand : 0,
+            assessmentStatus: graded ? 'graded' : 'pending',
+            summary: analysis.summary,
+            speaking: { evaluation: analysis, transcript, sessionKey },
+            review: transcript.map((turn, index) => ({
+              label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
+              response: turn.text,
+              improvedVersion: turn.role === 'candidate' ? analysis.improvedAnswers?.find(item => item.answerIndex === transcript.slice(0, index).filter(entry => entry.role === 'candidate').length && item.original === turn.text)?.improved : undefined,
+            })),
+            testId: mode.mock.id,
+            completedAt: new Date().toISOString(),
+          })
+          navigate('/mock/ielts/' + mockContext.id, { replace: true, state: { from: mockFrom } })
+        } : undefined}
         onSaved={(analysis, transcript, launchMode) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
@@ -220,21 +252,6 @@ export default function IELTSSpeakingTest() {
             mode: 'full_mock',
             source: 'ielts-speaking-mock',
           })
-          // When launched from a Full Mock, mark the Speaking section done only
-          // now — i.e. once the examiner grade is in.
-          if (mockContext?.id) {
-            saveFullMockSectionResult(mockContext.id, 'speaking', {
-              band: analysis.overallBand,
-              summary: analysis.summary,
-              review: transcript.map((turn) => ({
-                label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
-                response: turn.text,
-              })),
-              testId: mode.mock.id,
-              completedAt: new Date().toISOString(),
-            })
-            navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
-          }
         }}
       />
     )
@@ -264,16 +281,25 @@ export default function IELTSSpeakingTest() {
 function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit: () => void; onComplete: () => void }) {
   const recognition = useSpeechRecognition('en-US')
 
-  const items = useMemo(() => questionsForDay(day), [day])
-  const [index, setIndex] = useState(0)
-  const [answers, setAnswers] = useState<AnswerState[]>(() => items.map(blankAnswer))
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const sessionKey = `profai:speaking:day:${day.id}`
+  const [saved] = useState(() => {
+    try { return JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? 'null') as { index: number; answers: AnswerState[]; drafts: string[]; typingMode: boolean; prepLeft: number; speakLeft: number; finished: boolean; day?: SpeakingDayEntry; audioKey?: string; evaluation?: SpeakingEvaluation } | null } catch { return null }
+  })
+  const audioKey = useRef(saved?.audioKey ?? `${sessionKey}:${Date.now()}`).current
+  const items = useMemo(() => questionsForDay(saved?.day ?? day), [saved, day])
+  const [index, setIndex] = useState(Math.min(items.length - 1, saved?.index ?? 0))
+  const [answers, setAnswers] = useState<AnswerState[]>(() => saved?.answers?.length === items.length ? saved.answers.map(answer => ({ ...answer, loading: false, audioUrl: null })) : items.map(blankAnswer))
   const [recording, setRecording] = useState(false)
   const [stoppingRecording, setStoppingRecording] = useState(false)
-  const [typingMode, setTypingMode] = useState(!canRecordAudio())
-  const [drafts, setDrafts] = useState<string[]>(() => items.map(() => ''))
-  const [prepLeft, setPrepLeft] = useState(0)
-  const [speakLeft, setSpeakLeft] = useState(0)
-  const [finished, setFinished] = useState(false)
+  const [typingMode, setTypingMode] = useState(saved?.typingMode ?? !canRecordAudio())
+  const [drafts, setDrafts] = useState<string[]>(() => saved?.drafts ?? items.map(() => ''))
+  const [prepLeft, setPrepLeft] = useState(saved?.prepLeft ?? 0)
+  const [speakLeft, setSpeakLeft] = useState(saved?.speakLeft ?? 0)
+  const [finished, setFinished] = useState(saved?.finished ?? false)
+  const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(saved?.evaluation ?? null)
+  const [evaluating, setEvaluating] = useState(false)
+  useActiveTest(!finished)
 
   const audioRecorderRef = useRef<AnswerRecording | null>(null)
   const audioBlobsRef = useRef(new Map<number, Blob>())
@@ -293,10 +319,28 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       .trim()
   }, [recognition.finalTranscript, recognition.interimTranscript])
 
+  useLayoutEffect(() => {
+    const data = { day: saved?.day ?? day, audioKey, index, answers: answers.map(answer => ({ ...answer, audioUrl: null, loading: false })), drafts, typingMode, prepLeft, speakLeft, finished, evaluation }
+    try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify(data)) } catch { /* In-memory answers remain usable. */ }
+  }, [index, answers, drafts, typingMode, prepLeft, speakLeft, finished, evaluation, owner, sessionKey])
+
+  useEffect(() => {
+    let cancelled = false
+    if (saved) void Promise.all(items.map(async (_, i) => {
+      const blob = await readTestAudio(owner, `${audioKey}:${i}`)
+      if (!blob || cancelled) return
+      audioBlobsRef.current.set(i, blob)
+      const url = URL.createObjectURL(blob)
+      audioUrlsRef.current.push(url)
+      setAnswers(previous => previous.map((answer, j) => j === i ? { ...answer, audioUrl: url } : answer))
+    }))
+    return () => { cancelled = true }
+  }, [owner, sessionKey, items, saved])
+
   // Part 2 has a prep + speak window; the others don't.
   const isPart2 = day.part === 2
   useEffect(() => {
-    if (!isPart2) return
+    if (!isPart2 || saved) return
     setPrepLeft(60)
     setSpeakLeft(120)
   }, [isPart2])
@@ -336,7 +380,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       const stream = await requestSpeakingMicrophone()
       if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return }
       audioStreamRef.current = stream
-      const recorder = new AnswerRecording(stream)
+      const recorder = new AnswerRecording(stream, undefined, blob => { void saveTestAudio(owner, `${audioKey}:${index}`, blob) })
       const questionIndex = index
       recordingQuestionRef.current = questionIndex
       audioRecorderRef.current = recorder
@@ -344,7 +388,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       recognition.reset()
       latestTranscriptRef.current = ''
       recordStartRef.current = Date.now()
-      updateAnswer({ spoken: '', analysis: null, error: null }, questionIndex)
+      updateAnswer({ spoken: '', analysis: null, error: null, recorded: true }, questionIndex)
       if (isPart2) setSpeakLeft(120)
       setRecording(true)
       if (recognition.supported && canRecognizeWhileRecording()) recognition.start()
@@ -361,6 +405,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     stopPendingRef.current = true
     setStoppingRecording(true)
     const questionIndex = recordingQuestionRef.current
+    const durationSec = Math.max(0, (Date.now() - recordStartRef.current) / 1000)
     setRecording(false)
     try {
       const [blob, browserText] = await Promise.all([recorder.stop(), recognition.stop()])
@@ -380,7 +425,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       }
       if (disposedRef.current) return
       latestTranscriptRef.current = transcript
-      updateAnswer({ spoken: transcript, error: transcript ? null : 'Your recording is saved. Retry processing below, or record again if no voice is audible.' }, questionIndex)
+      updateAnswer({ spoken: transcript, durationSec, recorded: true, error: transcript ? null : 'Your recording is saved. Retry processing below, or record again if no voice is audible.' }, questionIndex)
     } finally { stopPendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
   }, [recognition, updateAnswer])
 
@@ -421,7 +466,8 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     const text = draft.trim()
     if (!text) return
     setDrafts((current) => current.map((value, position) => position === questionIndex ? '' : value))
-    updateAnswer({ spoken: text, loading: true, error: null }, questionIndex)
+    audioBlobsRef.current.delete(questionIndex)
+    updateAnswer({ spoken: text, loading: true, error: null, recorded: false, durationSec: 0, audioUrl: null }, questionIndex)
     const result = await analyzeSpeakingResponse({ part: day.part, question: question.prompt, transcript: text })
     updateAnswer({ analysis: result, loading: false }, questionIndex)
   }, [draft, day.part, index, question.prompt, updateAnswer])
@@ -456,34 +502,27 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const goPrev = () => selectQuestion(index - 1)
   const completedCount = answers.filter((item) => item.analysis?.source === 'ai').length
   const canComplete = completedCount === answers.length
-  const practiceBand = canComplete
-    ? Math.round(answers.reduce((sum, item) => sum + (item.analysis?.estimatedBand ?? 0), 0) / answers.length * 2) / 2
-    : 0
-
-  if (finished) {
-    return (
-      <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="speaking-exam-header justify-between">
-          <div><p className="speaking-eyebrow">IELTS Speaking · Practice complete</p><h1 className="mt-1 text-2xl font-black text-slate-900">{day.title}</h1></div>
-          <span className="speaking-part-pill">Part {day.part}</span>
-        </div>
-        <div className="speaking-answer-panel mt-5 p-6 text-center sm:p-8">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
-          <p className="mt-3 text-xs font-black uppercase tracking-[0.15em] text-red-600">Average practice band</p>
-          <p className="mt-1 text-6xl font-black text-slate-900">{practiceBand.toFixed(1)}</p>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">Estimated from {answers.length} transcribed responses. Pronunciation needs a human or audio based review for an accurate band.</p>
-        </div>
-        <div className="mt-5 space-y-4">
-          {answers.map((item, questionIndex) => <div key={questionIndex} className="speaking-answer-panel p-5">
-            <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="speaking-eyebrow">Question {questionIndex + 1}</p><h2 className="mt-1 font-bold text-slate-900">{item.question.prompt}</h2></div><span className="speaking-part-pill">Band ~{item.analysis?.estimatedBand.toFixed(1)}</span></div>
-            <p className="mt-3 border-l-2 border-red-200 pl-3 text-sm leading-6 text-slate-600">{item.spoken}</p>
-            {item.analysis?.suggestions.length ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900"><strong>Next step:</strong> {item.analysis.suggestions[0]}</p> : null}
-          </div>)}
-        </div>
-        <button onClick={onExit} className="arena-primary-btn mt-6 px-6 py-3"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Speaking tests</button>
-      </div>
-    )
+  const history: ExaminerTurn[] = answers.flatMap(item => [{ role: 'examiner', text: item.question.prompt }, { role: 'candidate', text: item.spoken }])
+  const finishPractice = async () => {
+    if (evaluating) return
+    setEvaluating(true)
+    try {
+      const clips = await Promise.all(answers.map(async (item, answerIndex) => {
+        if (item.recorded === false) return null
+        const blob = audioBlobsRef.current.get(answerIndex) ?? await readTestAudio(owner, `${audioKey}:${answerIndex}`).catch(() => null)
+        return blob ? { blob, answerIndex } : null
+      }))
+      const result = await evaluateSpeaking({ modeLabel: day.title, history, stats: analyseTranscript(answers.map(item => item.spoken).join('\n'), answers.reduce((total, item) => total + (item.durationSec ?? 0), 0)), audio: clips.filter((clip): clip is NonNullable<typeof clip> => !!clip), expectedAudioAnswers: answers.flatMap((item, index) => item.recorded ? [index] : []) })
+      if (disposedRef.current) return
+      setEvaluation(result)
+      setFinished(true)
+      if (result.source === 'ai') onComplete()
+    } finally { if (!disposedRef.current) setEvaluating(false) }
   }
+
+  if (evaluating) return <div className="surface-card mx-auto mt-8 max-w-2xl p-8 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /><p className="mt-3 text-sm font-semibold text-slate-700">Assessing all your answers using the IELTS criteria…</p></div>
+  if (finished && evaluation) return <SpeakingResult evaluation={evaluation} transcript={history} modeLabel={day.title} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
+  if (finished) return <div className="surface-card mx-auto mt-8 max-w-2xl p-6 text-center"><p className="text-sm text-slate-600">Your saved answers are ready for assessment using the IELTS criteria.</p><button onClick={() => void finishPractice()} className="arena-primary-btn mt-4">Assess saved answers</button></div>
 
   return (
     <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
@@ -676,12 +715,12 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           </button>
         ) : (
           <button
-            disabled={!canComplete}
-            onClick={() => { onComplete(); setFinished(true) }}
+            disabled={!canComplete || evaluating || recording || stoppingRecording}
+            onClick={() => void finishPractice()}
             className="arena-primary-btn disabled:cursor-not-allowed disabled:opacity-50"
             title={canComplete ? 'Finish test' : 'Complete every question first'}
           >
-            Finish day <CheckCircle2 className="ml-1 h-4 w-4" />
+            {evaluating ? 'Assessing your answers…' : 'Finish day'} <CheckCircle2 className="ml-1 h-4 w-4" />
           </button>
         )}
       </div>
@@ -731,17 +770,8 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
       ) : null}
 
       {/* Band 8+ template */}
-      {analysis.band8Template ? (
-        <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-          <div className="flex items-center justify-between">
-            <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
-              <Sparkles className="h-3 w-3" /> Band 8+ model answer
-            </p>
-            <CopyButton text={analysis.band8Template} />
-          </div>
-          <p className="mt-2 text-sm leading-7 text-slate-700">{analysis.band8Template}</p>
-        </div>
-      ) : null}
+      <ImprovedResponse text={analysis.band8Template} />
+      <ReviewPracticeLink skill="speaking" />
 
       {/* Issues */}
       {analysis.issues.length > 0 ? (
@@ -821,11 +851,15 @@ function FullMockRunner({
   onSaved,
   inFullMock = false,
   landingReady = true,
+  sessionScope,
+  onCompleted,
 }: {
   mock: SpeakingFullMockEntry
   onExit: () => void
   inFullMock?: boolean
   landingReady?: boolean
+  sessionScope?: string
+  onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[], launchMode: 'practice' | 'simulation') => void
 }) {
   const [launchMode, setLaunchMode] = useState<'practice' | 'simulation' | null>(inFullMock ? 'simulation' : null)
@@ -870,10 +904,13 @@ function FullMockRunner({
     <div className="ielts-speaking-workspace ielts-speaking-live-workspace py-4">
       <ExaminerSession
         config={{ mode: 'full_mock', mockSeed: seed }}
+        autoStart={inFullMock}
         modeLabel={mock.title}
         onExit={onExit}
         onSaved={(analysis, transcript) => onSaved(analysis, transcript, launchMode)}
         hideVocabularyReview={inFullMock}
+        sessionScope={sessionScope}
+        onCompleted={onCompleted}
       />
     </div>
   )

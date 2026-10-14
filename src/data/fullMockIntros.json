@@ -1,0 +1,236 @@
+{
+  "listening": {
+    "title": "Listening",
+    "meta": "About 30 minutes · 4 parts · 40 questions",
+    "scenes": [
+      {
+        "title": "Before you start",
+        "part": 1,
+        "view": "overview",
+        "text": "Welcome to your Listening test. Please put on your headphones and check that you can hear this voice clearly. There are four parts, with ten questions in each part. You will hear each recording only once."
+      },
+      {
+        "title": "Part 1 · A conversation",
+        "part": 1,
+        "view": "part",
+        "text": "Part One is a conversation between two people in an everyday social situation. Answer questions one to ten as you listen."
+      },
+      {
+        "title": "Part 2 · One speaker",
+        "part": 2,
+        "view": "part",
+        "text": "Part Two has one speaker talking about an everyday topic, such as local facilities. It contains questions eleven to twenty."
+      },
+      {
+        "title": "Part 3 · Education and training",
+        "part": 3,
+        "view": "part",
+        "text": "Part Three is a conversation about education or training, often involving students and a tutor. Answer questions twenty-one to thirty."
+      },
+      {
+        "title": "Part 4 · An academic talk",
+        "part": 4,
+        "view": "part",
+        "text": "Part Four is an academic talk by one speaker. Answer questions thirty-one to forty. Follow the order of the recording."
+      },
+      {
+        "title": "Entering your answers",
+        "part": 4,
+        "view": "answer",
+        "text": "You will have time to read the questions before listening. Type your answers or select the appropriate options as you listen. Follow the word limit for every question. Use the question numbers at the bottom to move between answers, and check your spelling."
+      },
+      {
+        "title": "Highlighting text",
+        "part": 4,
+        "view": "highlight",
+        "text": "Let's highlight a useful phrase. Move the cursor to the text, then click and drag over the words. Release the mouse and select Highlight. The words are now marked in yellow. To remove the highlight, click those words and choose Delete highlight."
+      },
+      {
+        "title": "Changing text size and contrast",
+        "part": 4,
+        "view": "display",
+        "text": "Use Display settings in the top bar to make the screen comfortable to read. Select Text size, then choose Large. Notice how the text grows. Next, open Contrast and choose White on black. Close the window to return to your test. Your answers stay unchanged."
+      },
+      {
+        "title": "Making notes",
+        "part": 4,
+        "view": "notes",
+        "text": "You can attach a note to selected text. Drag over the phrase, choose Note, and type a short reminder. Select Save note. For separate notes, use the Notes button in the top bar. These notes save automatically. Highlights and notes are study aids; enter answers in the question fields."
+      },
+      {
+        "title": "Navigating and reviewing answers",
+        "part": 4,
+        "view": "navigate",
+        "text": "Use the part tabs at the bottom to move around the test. Select a question number to jump to that answer. Click the flag to mark a question for later. Open Review to check answered and unanswered questions. Select a question to return to it and continue working."
+      },
+      {
+        "title": "Watching the timer",
+        "part": 4,
+        "view": "timer",
+        "text": "For Listening, the two-minute review countdown appears only after the final audio track finishes. Keep checking your answers across all four parts while it runs. Earlier tracks do not start this countdown. Your answers are submitted automatically when the countdown reaches zero."
+      },
+      {
+        "title": "Submitting and continuing",
+        "part": 4,
+        "view": "finish",
+        "text": "To finish a section, select Submit in the top bar. Read the confirmation before continuing. Cancel takes you back to your answers. Submit test ends the section. In a full mock, continue with the next skill. Your overall band and complete answer review become available after all four sections are finished."
+      },
+      {
+        "title": "Ready to begin",
+        "part": 4,
+        "view": "overview",
+        "text": "Check that you can hear clearly. The recording plays once, followed by two minutes to check your answers. Your Listening test will start automatically when this video ends."
+      }
+    ]
+  },
+  "reading": {
+    "title": "Reading",
+    "meta": "60 minutes · 3 passages · 40 questions",
+    "scenes": [
+      {
+        "title": "Before you start",
+        "part": 1,
+        "view": "overview",
+        "text": "Welcome to your Academic Reading test. You have sixty minutes to read three passages and answer forty questions. All three passages share the same timer. There is no extra time at the end to transfer your answers."
+      },
+      {
+        "title": "Passage 1",
+        "part": 1,
+        "view": "part",
+        "text": "Passage One has its own text and questions. Read the passage on the left and answer on the right. Follow each question instruction."
+      },
+      {
+        "title": "Passage 2",
+        "part": 2,
+        "view": "part",
+        "text": "Passage Two introduces a new text and new questions. Check word limits and answer choices carefully. The question types can vary."
+      },
+      {
+        "title": "Passage 3",
+        "part": 3,
+        "view": "part",
+        "text": "Passage Three has another text and its own questions. Follow the writer’s ideas and views. You can return to any passage while time remains."
+      },
+      {
+        "title": "Using the test screen",
+        "part": 3,
+        "view": "answer",
+        "text": "Scroll the passage and question panels separately. Enter your answers directly on screen. Use the part tabs and question numbers at the bottom to navigate. You can return to earlier answers while there is time remaining. Follow any word limits carefully."
+      },
+      {
+        "title": "Highlighting text",
+        "part": 3,
+        "view": "highlight",
+        "text": "Let's highlight a useful phrase. Move the cursor to the text, then click and drag over the words. Release the mouse and select Highlight. The words are now marked in yellow. To remove the highlight, click those words and choose Delete highlight."
+      },
+      {
+        "title": "Changing text size and contrast",
+        "part": 3,
+        "view": "display",
+        "text": "Use Display settings in the top bar to make the screen comfortable to read. Select Text size, then choose Large. Notice how the text grows. Next, open Contrast and choose White on black. Close the window to return to your test. Your answers stay unchanged."
+      },
+      {
+        "title": "Making notes",
+        "part": 3,
+        "view": "notes",
+        "text": "You can attach a note to selected text. Drag over the phrase, choose Note, and type a short reminder. Select Save note. For separate notes, use the Notes button in the top bar. These notes save automatically. Highlights and notes are study aids; enter answers in the question fields."
+      },
+      {
+        "title": "Navigating and reviewing answers",
+        "part": 3,
+        "view": "navigate",
+        "text": "Use the part tabs at the bottom to move around the test. Select a question number to jump to that answer. Click the flag to mark a question for later. Open Review to check answered and unanswered questions. Select a question to return to it and continue working."
+      },
+      {
+        "title": "Watching the timer",
+        "part": 3,
+        "view": "timer",
+        "text": "The Reading timer shows how much time remains for the whole test. It keeps running when you change passages, open settings, or review your answers. All three passages share these sixty minutes. Your answers are submitted automatically when time expires, with no extra transfer time."
+      },
+      {
+        "title": "Submitting and continuing",
+        "part": 3,
+        "view": "finish",
+        "text": "To finish a section, select Submit in the top bar. Read the confirmation before continuing. Cancel takes you back to your answers. Submit test ends the section. In a full mock, continue with the next skill. Your overall band and complete answer review become available after all four sections are finished."
+      },
+      {
+        "title": "Ready to begin",
+        "part": 3,
+        "view": "overview",
+        "text": "You have sixty minutes for all three passages, with no extra transfer time. Your answers submit automatically when time expires. Your Reading test will start automatically when this video ends."
+      }
+    ]
+  },
+  "writing": {
+    "title": "Writing",
+    "meta": "60 minutes · Task 1 + Task 2",
+    "scenes": [
+      {
+        "title": "Before you start",
+        "part": 1,
+        "view": "overview",
+        "text": "Welcome to your Academic Writing test. You have sixty minutes to complete two tasks. Read each question carefully and type your response in the answer area. Both tasks share the same timer."
+      },
+      {
+        "title": "Task 1 · Describe the information",
+        "part": 1,
+        "view": "part",
+        "text": "In Task One, describe the visual information presented in a graph, chart, table, diagram, or process. Select the main features, give an overview, and make relevant comparisons. Write at least one hundred and fifty words. Allow about twenty minutes."
+      },
+      {
+        "title": "Task 2 · Develop an argument",
+        "part": 2,
+        "view": "part",
+        "text": "In Task Two, write an essay in response to a point of view, argument, or problem. Address the question directly, organise your ideas, and support them with reasons and examples. Write at least two hundred and fifty words. Allow about forty minutes."
+      },
+      {
+        "title": "Using the answer area",
+        "part": 2,
+        "view": "answer",
+        "text": "Use the task tabs to switch between your responses. The word counter helps you check their length. You can edit both answers while time remains. Task Two carries twice as much weight as Task One in your Writing score."
+      },
+      {
+        "title": "Check both responses",
+        "part": 2,
+        "view": "review",
+        "text": "Leave time to check your organisation, spelling, and grammar. Make sure you have answered every part of each question. Your responses are submitted when the timer ends. Your Writing test will start automatically when this video ends."
+      }
+    ]
+  },
+  "speaking": {
+    "title": "Speaking",
+    "meta": "11–14 minutes · 3 parts · AI examiner",
+    "scenes": [
+      {
+        "title": "Before you start",
+        "part": 1,
+        "view": "overview",
+        "text": "Welcome to your Speaking practice. Check your microphone and find a quiet place. This mock uses an AI examiner. In the real IELTS test, the interview is conducted by a human examiner. The test has three parts and normally lasts eleven to fourteen minutes."
+      },
+      {
+        "title": "Part 1 · Introduction and interview",
+        "part": 1,
+        "view": "part",
+        "text": "In Part One, answer questions about yourself and familiar topics, such as your work, studies, home, or interests. Listen to each question and respond naturally. Give enough detail to explain your answer without memorising a speech."
+      },
+      {
+        "title": "Part 2 · The long turn",
+        "part": 2,
+        "view": "part",
+        "text": "In Part Two, you will receive a task card with a topic and points to cover. You have one minute to prepare and can make notes. Then speak for up to two minutes. Develop your ideas and use examples to support them."
+      },
+      {
+        "title": "Part 3 · A discussion",
+        "part": 3,
+        "view": "part",
+        "text": "In Part Three, discuss broader ideas connected to the topic from Part Two. Explain your opinions, compare different possibilities, and consider reasons or consequences. The examiner's questions help you explore the subject in more depth."
+      },
+      {
+        "title": "Ready to speak",
+        "part": 3,
+        "view": "review",
+        "text": "Speak clearly, at a comfortable pace. Focus on communicating your ideas, using a range of vocabulary and sentence structures. Listen carefully to the examiner and keep your microphone available throughout the practice. Your Speaking practice will start automatically when this video ends."
+      }
+    ]
+  }
+}

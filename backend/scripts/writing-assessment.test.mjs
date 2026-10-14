@@ -11,9 +11,11 @@ const { voiceInstructions } = await import('../dist/services/realtimeCoach.servi
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
 
-const response = 'These student learns English. They study every day.'
+const response = 'These student learns English. They study every day. Regular practice gives them opportunities to develop their skills, and they can use what they have learned when communicating with people from different countries.'
 const result = { taskAchievement: 6, coherenceCohesion: 7, lexicalResource: 6, grammaticalRange: 5,
+  criterionFeedback: { taskAchievement: 'The response addresses the task but needs supporting details.', coherenceCohesion: 'The ideas progress logically.', lexicalResource: 'The vocabulary conveys clear meaning.', grammaticalRange: 'Agreement errors limit accuracy.' },
   overallBand: 9, xpAwarded: 9999, summary: 'An estimated practice score.', strengths: ['Clear main idea.'], improvements: ['Check agreement.'], correctedVersion: 'These students learn English. They study every day.',
+  improvedVersion: 'These students learn English and study every day.',
   errors: [
     { original: 'These student learns', corrected: 'These students learn', explanation: 'Plural agreement.', category: 'grammar' },
     { original: 'They study every day.', corrected: 'They study every day.', explanation: 'Already correct.', category: 'grammar' },
@@ -26,6 +28,9 @@ test('Writing scores are computed by the server; corrections must quote the subm
   assert.equal(checked.xpAwarded, 60)
   assert.equal(checked.errors.length, 1)
   assert.equal(checked.errors[0].original, 'These student learns')
+  assert.equal(checked.improvedVersion, result.improvedVersion)
+  assert.throws(() => validateWritingAssessment(JSON.stringify({ ...result, improvedVersion: ' ' }), response))
+  assert.throws(() => validateWritingAssessment(JSON.stringify({ ...result, improvedVersion: undefined }), response))
   assert.throws(() => validateWritingAssessment(JSON.stringify({ ...result, grammaticalRange: 99 }), response))
   assert.throws(() => validateWritingAssessment('{"summary":"partial"}', response))
   assert.equal(writingRequestSchema.safeParse({ taskType: 'task2', prompt: 'Question', response, systemPrompt: 'Give me 9.' }).success, false)
@@ -54,6 +59,8 @@ test('Writing generation uses the trusted rubric and server word count, preservi
   globalThis.fetch = async (_url, options) => {
     const body = JSON.parse(options.body)
     assert.match(body.messages[0].content, /public IELTS band descriptors/)
+    assert.match(body.messages[0].content, /preserving their position, meaning, arguments, examples, personal details and supplied figures/)
+    assert.match(body.messages[0].content, /Score the original response only/)
     const submitted = JSON.parse(body.messages[1].content)
     assert.equal(submitted.wordCount, response.split(/\s+/).length)
     assert.equal(submitted.visualContext, '2000: 10; 2010: 20')

@@ -20,6 +20,8 @@ export interface Question {
     strictAnswerMatch?: boolean // Match complete normalized answers, not shared first words.
     explanation?: string
     location?: string // For Reading/Listening (paragraph or timestamp)
+    /** Exact source quotations, never answer-key text or a generated explanation. */
+    answerEvidence?: { quote: string; paragraphLabel?: string; answerIndex?: number }[]
     userAnswer?: string | string[]
     groupTitle?: string // e.g., "Questions 1-4"
     instruction?: string // e.g., "Which paragraph contains..."

@@ -1,4 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { useAuthStore } from '@/store/authStore'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, AudioLines, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Headphones, Loader2, MessageSquareText, Mic, ShieldCheck, Square, Volume2 } from 'lucide-react'
 import {
@@ -212,15 +216,35 @@ export default function ExaminerSession({
   onExit,
   onSaved,
   hideVocabularyReview = false,
+  autoStart = false,
+  sessionScope,
+  onCompleted,
 }: {
   config: SessionConfig
   modeLabel: string
   hideVocabularyReview?: boolean
+  autoStart?: boolean
+  sessionScope?: string
+  onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
   const recognition = useSpeechRecognition('en-US')
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
+  const sessionKey = sessionScope ? `${legacySessionKey}:mock:${sessionScope}` : legacySessionKey
+  const [saved, setSaved] = useState(() => {
+    try {
+      const storage = accountStorageFor(owner)
+      let raw = storage.getItem(sessionKey)
+      if (!raw && sessionScope) {
+        const legacy = storage.getItem(legacySessionKey)
+        if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw!); storage.removeItem(legacySessionKey) }
+      }
+      return JSON.parse(raw ?? 'null') as { phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
+  })
 
+  const [audioKey, setAudioKey] = useState(() => saved?.audioKey ?? `${sessionKey}:${Date.now()}`)
   const [phase, setPhase] = useState<Phase>('idle')
   const [started, setStarted] = useState(false)
   const [starting, setStarting] = useState(false)
@@ -245,7 +269,7 @@ export default function ExaminerSession({
   const [examinerLabel, setExaminerLabel] = useState('Examiner')
   const [logOffset, setLogOffset] = useState(0)
   const [prepNotes, setPrepNotes] = useState('')
-  const examiner = useRef(chooseExaminer(modeLabel)).current
+  const examiner = useRef(saved?.examiner ?? chooseExaminer(modeLabel)).current
 
   const stagesRef = useRef<Stage[]>([])
   const stageIdxRef = useRef(0)
@@ -275,8 +299,27 @@ export default function ExaminerSession({
   const stopPendingRef = useRef(false)
   const microphoneInterruptedRef = useRef(false)
   const beginPendingRef = useRef(false)
+  const autoStartRequestedRef = useRef(false)
   const savedEvaluationRef = useRef(false)
   const disposedRef = useRef(false)
+  useActiveTest(started && phase !== 'result')
+
+  useLayoutEffect(() => {
+    if (!started) return
+    const save = () => {
+      if (savedEvaluationRef.current && !sessionScope) {
+        try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Optional session cache. */ }
+        return
+      }
+      const data = { phase, chat, prompt: currentPrompt, activePart, cueCard, prepNotes, stages: stagesRef.current, stageIndex: stageIdxRef.current, moveIndex: moveIdxRef.current, answers: answersRef.current, history: historyRef.current, prepDeadline: prepDeadlineRef.current, speakDeadline: longTurnDeadlineRef.current, pendingDuration: pendingAnswerRef.current?.duration ?? (recording ? Math.max(0.1, (Date.now() - recordStartRef.current) / 1000) : 0), audioCount: audioAnswersRef.current.length, audioKey, examiner }
+      try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify(data)) } catch { /* Session remains active in memory. */ }
+    }
+    save()
+    const timer = window.setInterval(save, 1000)
+    window.addEventListener('pagehide', save)
+    window.addEventListener('beforeunload', save)
+    return () => { window.clearInterval(timer); window.removeEventListener('pagehide', save); window.removeEventListener('beforeunload', save) }
+  }, [started, phase, chat, currentPrompt, activePart, cueCard, prepNotes, recording, owner, sessionKey, examiner])
 
   // Cleanup speech on unmount.
   useEffect(() => {
@@ -320,14 +363,15 @@ export default function ExaminerSession({
   // Reveal the examiner's turn when playback starts. The recording phase begins
   // only after the actual audio ends, including for long Part 2 instructions.
   const speakExaminer = useCallback(
-    (text: string, next: () => void) => {
+    (text: string, next: () => void, replay = false) => {
       if (disposedRef.current) return
       const playback = playbackRef.current ?? new ExaminerPlayback()
       playbackRef.current = playback
       cancelSpeech()
       setPhase('examiner_speaking')
       setCurrentPrompt(text)
-      let shown = false
+      const lastTurn = historyRef.current[historyRef.current.length - 1]
+      let shown = replay && lastTurn?.role === 'examiner' && lastTurn.text === text
       const reveal = () => {
         if (shown) return
         shown = true
@@ -364,23 +408,31 @@ export default function ExaminerSession({
     const version = sessionVersionRef.current
     const stats = mergeStats(answersRef.current, historyRef.current.filter((turn) => turn.role === 'candidate').map((turn) => turn.text).join('\n'))
     try {
-      const audio = [...audioAnswersRef.current].sort((a, b) => b.duration - a.duration).slice(0, 4).sort((a, b) => a.answerIndex - b.answerIndex)
-      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio })
+      const audio = [...audioAnswersRef.current].sort((a, b) => a.answerIndex - b.answerIndex)
+      const expectedAudioAnswers = historyRef.current.filter(turn => turn.role === 'candidate').flatMap((turn, index) => turn.text.trim() ? [index] : [])
+      const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio, expectedAudioAnswers })
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
-      // A service outage must not mark a full mock complete or award an AI band.
-      // The candidate can retry grading these exact answers from the result.
-      if (result.source === 'ai' && !savedEvaluationRef.current) {
-        savedEvaluationRef.current = true
-        onSaved(result, [...historyRef.current])
+      // Preserve the completed recording checkpoint before navigation, including outages.
+      if (sessionScope) {
+        try {
+          const checkpoint = JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? '{}')
+          accountStorageFor(owner).setItem(sessionKey, JSON.stringify({ ...checkpoint, phase: 'result', audioKey, history: historyRef.current, answers: answersRef.current }))
+        } catch { /* In-memory review remains available. */ }
       }
+      if (result.source === 'ai' && (config.mode !== 'full_mock' || result.assessmentMode === 'audio') && !savedEvaluationRef.current) {
+        savedEvaluationRef.current = true
+        if (!sessionScope) { try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Grading already succeeded. */ } }
+        try { onSaved(result, [...historyRef.current]) } catch { /* Optional history/reward storage cannot block the completed exam report. */ }
+      }
+      onCompleted?.(result, [...historyRef.current], sessionKey)
     } catch {
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvalError('Could not complete the evaluation. Please try again.')
       setPhase('result')
     }
-  }, [modeLabel, onSaved])
+  }, [config.mode, modeLabel, onSaved, onCompleted, owner, sessionKey, sessionScope, audioKey])
 
   // Core engine: process the next move, advancing across stages.
   const advance = useCallback(() => {
@@ -476,30 +528,86 @@ export default function ExaminerSession({
     savedEvaluationRef.current = false
     deviceVoiceRef.current = false
     setVoiceSource('connecting')
-    // Both calls must happen inside the button gesture, before getUserMedia.
+    // Unlock on launch; blocked autoplay retains the Play examiner recovery.
     playbackRef.current ??= new ExaminerPlayback()
     playbackRef.current.unlock()
     try {
       voiceContextRef.current ??= createAudioContext()
       void voiceContextRef.current?.resume().catch(() => {})
     } catch { /* Recording and playback can work without audio metering. */ }
-    if (!canRecordAudio()) {
-      setAnswerError('This browser cannot record audio. Use a browser with microphone recording support.')
-      beginPendingRef.current = false
-      setStarting(false)
-      return
-    }
-    try {
-      const stream = await requestSpeakingMicrophone()
-      if (disposedRef.current) {
-        stream.getTracks().forEach((track) => track.stop())
+    if (!saved || !['evaluating', 'result'].includes(saved.phase)) {
+      if (!canRecordAudio()) {
+        setAnswerError('This browser cannot record audio. Use a browser with microphone recording support.')
+        beginPendingRef.current = false
+        setStarting(false)
         return
       }
-      attachMicrophone(stream)
-    } catch (error) {
-      setAnswerError(microphoneError(error))
+      try {
+        const stream = await requestSpeakingMicrophone()
+        if (disposedRef.current) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+        attachMicrophone(stream)
+      } catch (error) {
+        setAnswerError(microphoneError(error))
+        beginPendingRef.current = false
+        setStarting(false)
+        return
+      }
+    }
+    if (saved) {
+      stagesRef.current = saved.stages
+      stageIdxRef.current = saved.stageIndex
+      moveIdxRef.current = saved.moveIndex
+      answersRef.current = saved.answers
+      historyRef.current = saved.history
+      setChat(saved.chat)
+      setCurrentPrompt(saved.prompt)
+      setActivePart(saved.activePart)
+      setCueCard(saved.cueCard)
+      setPrepNotes(saved.prepNotes)
+      setExaminerLabel(examiner.name)
+      prepDeadlineRef.current = saved.prepDeadline
+      longTurnDeadlineRef.current = saved.speakDeadline
+      const restoredAudio = await Promise.all(saved.answers.map(async (_, answerIndex) => {
+        const blob = await readTestAudio(owner, `${audioKey}:answer:${answerIndex}`)
+        return blob ? { blob, answerIndex, duration: saved.chat.filter(turn => turn.role === 'candidate')[answerIndex]?.durationSec ?? 1 } : null
+      }))
+      audioAnswersRef.current = restoredAudio.filter((audio): audio is NonNullable<typeof audio> => audio !== null)
+      const pending = saved.pendingDuration > 0 ? await readTestAudio(owner, `${audioKey}:pending:${saved.answers.length}`) : null
+      setSaved(null)
+      if (disposedRef.current) return
       beginPendingRef.current = false
       setStarting(false)
+      setStarted(true)
+      if (pending) {
+        pendingAnswerRef.current = { blob: pending, duration: saved.pendingDuration }
+        pendingAudioUrlRef.current = URL.createObjectURL(pending)
+        setPendingAudioUrl(pendingAudioUrlRef.current)
+        captureStartedRef.current = true
+        setAnswerError('Your recording is restored. Listen to it and retry processing, or record again.')
+        setPhase('awaiting_answer')
+      } else if (saved.phase === 'preparing') {
+        setPrepLeft(Math.max(0, Math.ceil((saved.prepDeadline - Date.now()) / 1000)))
+        setPhase('preparing')
+      } else if (saved.phase === 'evaluating' || saved.phase === 'result') {
+        void runEvaluation()
+      } else if (saved.phase === 'thinking') {
+        advance()
+      } else {
+        const move = saved.stages[saved.stageIndex]?.moves[saved.moveIndex]
+        speakExaminer(saved.prompt, () => {
+          if (saved.phase === 'examiner_speaking' && move?.type === 'seed' && move.text !== saved.prompt) advance()
+          else if (saved.phase === 'examiner_speaking' && move?.type === 'cuecard' && !saved.cueCard) advance()
+          else if (saved.phase === 'examiner_speaking' && move?.type === 'cuecard') {
+            prepDeadlineRef.current = saved.prepDeadline || Date.now() + 60_000
+            setPrepLeft(Math.max(0, Math.ceil((prepDeadlineRef.current - Date.now()) / 1000)))
+            setPhase('preparing')
+          } else if (move?.type === 'closing') { moveIdxRef.current += 1; advance() }
+          else setPhase('awaiting_answer')
+        }, true)
+      }
       return
     }
     beginPendingRef.current = false
@@ -519,7 +627,17 @@ export default function ExaminerSession({
         advance()
       }
     })
-  }, [config, advance, speakExaminer, attachMicrophone, examiner])
+  }, [config, advance, speakExaminer, attachMicrophone, examiner, saved, owner, audioKey, runEvaluation])
+
+  useEffect(() => {
+    if (!autoStart || autoStartRequestedRef.current) return
+    // Defer until after mount so StrictMode can cancel its trial mount cleanly.
+    const timer = window.setTimeout(() => {
+      autoStartRequestedRef.current = true
+      void beginSession()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [autoStart, beginSession])
 
   const submitAnswer = useCallback(
     (text: string, durationSec: number) => {
@@ -574,7 +692,7 @@ export default function ExaminerSession({
       recorderRef.current = new AnswerRecording(stream, () => {
         microphoneInterruptedRef.current = true
         stopForSilenceRef.current()
-      })
+      }, blob => { void saveTestAudio(owner, `${audioKey}:pending:${answersRef.current.length}`, blob) })
     } catch {
       setAnswerError('Could not start audio capture. Check your microphone and retry.')
       return
@@ -583,12 +701,12 @@ export default function ExaminerSession({
     if (recognition.supported && canRecognizeWhileRecording()) recognition.start()
     recordStartRef.current = Date.now()
     if (cueCard) {
-      longTurnDeadlineRef.current = recordStartRef.current + 120_000
+      longTurnDeadlineRef.current ||= recordStartRef.current + 120_000
       longTurnFinishedRef.current = false
-      setSpeakLeft(120)
+      setSpeakLeft(Math.max(0, Math.ceil((longTurnDeadlineRef.current - Date.now()) / 1000)))
     }
     setRecording(true)
-    captureLimitTimerRef.current = window.setTimeout(() => stopForSilenceRef.current(), cueCard ? 120_000 : 90_000)
+    captureLimitTimerRef.current = window.setTimeout(() => stopForSilenceRef.current(), cueCard ? Math.max(0, longTurnDeadlineRef.current - Date.now()) : 90_000)
     try {
       const context = voiceContextRef.current ?? createAudioContext()
       if (!context) return
@@ -626,7 +744,7 @@ export default function ExaminerSession({
     } catch {
       // The two-minute Part 2 limit remains active even if audio metering is unavailable.
     }
-  }, [cueCard, recognition])
+  }, [cueCard, recognition, owner, audioKey])
 
   const retryMicrophone = useCallback(async () => {
     if (stopPendingRef.current || beginPendingRef.current) return
@@ -695,11 +813,12 @@ export default function ExaminerSession({
       return
     }
     setAnswerError(null)
+    if (audioBlob) void saveTestAudio(owner, `${audioKey}:answer:${answersRef.current.length}`, audioBlob)
     if (audioBlob) audioAnswersRef.current.push({ blob: audioBlob, answerIndex: answersRef.current.length, duration: durationSec })
     pendingAnswerRef.current = null
     setPendingAudioUrl(null)
     submitAnswer(text, durationSec)
-  }, [cueCard, recognition, stopAudioCapture, stopVoiceDetection, submitAnswer])
+  }, [cueCard, recognition, stopAudioCapture, stopVoiceDetection, submitAnswer, owner, audioKey])
 
   stopForSilenceRef.current = () => { void handleStopRecording() }
 
@@ -716,6 +835,7 @@ export default function ExaminerSession({
       const text = await transcribeAnswer(pending.blob, controller.signal)
       if (disposedRef.current || version !== sessionVersionRef.current) return
       if (!text) { setAnswerError('No clear words were detected. Listen to your recording and record again.'); return }
+      void saveTestAudio(owner, `${audioKey}:answer:${answersRef.current.length}`, pending.blob)
       audioAnswersRef.current.push({ blob: pending.blob, answerIndex: answersRef.current.length, duration: pending.duration })
       pendingAnswerRef.current = null
       setPendingAudioUrl(null)
@@ -725,7 +845,7 @@ export default function ExaminerSession({
     } finally {
       if (!disposedRef.current && version === sessionVersionRef.current) { stopPendingRef.current = false; setStopping(false) }
     }
-  }, [submitAnswer])
+  }, [submitAnswer, owner, audioKey])
 
   useEffect(() => {
     const interrupt = () => {
@@ -779,6 +899,9 @@ export default function ExaminerSession({
     stopPendingRef.current = false
     setRecording(false)
     setStopping(false)
+    setSaved(null)
+    setAudioKey(`${sessionKey}:${Date.now()}`)
+    try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Optional session cache. */ }
     setPhase('idle')
     setStarted(false)
     setChat([])
@@ -819,6 +942,17 @@ export default function ExaminerSession({
 
   // ── Render: pre-start gate ───────────────────────────────────────────────
   if (!started) {
+    if (autoStart) return (
+      <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12">
+        <div className="speaking-start-guide text-center" role="status">
+          <p className="speaking-eyebrow">IELTS Speaking</p>
+          <h1 className="mt-3 text-2xl font-black text-slate-900">{answerError ? 'Microphone access needed' : 'Connecting your microphone'}</h1>
+          <p className="mt-3 text-sm text-slate-600">{answerError || 'Allow microphone access to begin your Speaking test automatically.'}</p>
+          {answerError && <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : 'Try again'}</button>}
+          <button onClick={onExit} className="speaking-text-switch mt-4">Exam overview</button>
+        </div>
+      </div>
+    )
     return (
       <div className="speaking-exam speaking-exam-v2 mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <header className="speaking-session-header mb-5">
@@ -843,7 +977,7 @@ export default function ExaminerSession({
             <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong>Listen first</strong><p>Your microphone starts after the examiner finishes speaking.</p></div></div>
             <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong>Speak freely</strong><p>Recording ends after a short pause. No buttons are needed.</p></div></div>
             {answerError ? <p role="alert" className="speaking-inline-error">{answerError}</p> : null}
-            <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : 'Begin speaking test'} {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}</button>
+            <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : saved ? 'Resume speaking test' : 'Begin speaking test'} {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}</button>
             <p className="speaking-start-note">AI-generated examiner voice · practice simulation · estimated score, not an official IELTS result</p>
           </section>
         </div>

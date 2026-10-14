@@ -1,3 +1,5 @@
+import { isPremiumUser } from '@/utils/premiumAccess'
+import CrownBadge from '@/components/fx/CrownBadge'
 import { useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp, Languages } from 'lucide-react'
@@ -14,6 +16,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
   const { pathname } = useLocation()
   const user = useAuthStore(s => s.user)
   const access = useAccountAccess()
+  const premiumMember = isPremiumUser(access ? { ...user, access } : user)
   const unlimited = access?.active && access.kind === 'UNLIMITED'
   const hasGrantedAccess = access?.active && access.kind !== 'FREE'
   const { c } = useCopy()
@@ -50,9 +53,9 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         <Crown size={19} aria-hidden="true" /><span>{planLabel}</span>
       </NavLink>
       <LanguageSelector />
-      <NavLink to="/account" className="liquid-account">
-        <ProfileAvatar src={user?.avatarUrl} name={user?.fullName} className="liquid-avatar" />
-        <span><strong>{user?.fullName || 'ProfAI'}</strong><small>{c('Account settings')}</small></span><Settings size={17} />
+      <NavLink to="/account" className={`liquid-account ${premiumMember ? 'is-premium-member' : ''}`}>
+        <ProfileAvatar src={user?.avatarUrl} name={user?.fullName} className={`liquid-avatar ${premiumMember ? 'premium-member-avatar' : ''}`} />
+        <span><strong>{user?.fullName || 'ProfAI'}</strong>{premiumMember ? <CrownBadge size="sm" /> : <small>{c('Account settings')}</small>}</span><Settings size={17} />
       </NavLink>
     </div>
   </aside>

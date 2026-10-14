@@ -1,5 +1,5 @@
-import { useMemo, type ReactNode } from 'react'
-import { Bookmark, FileImage, SpellCheck2 } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { Bookmark, FileImage, Undo2 } from 'lucide-react'
 import type { HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
@@ -12,6 +12,8 @@ type Props = {
   answer: string
   onAnswer: (answer: string) => void
   strokes: HighlightStroke[]
+  eliminatedChoices?: string[]
+  onEliminatedChoicesChange?: (choices: string[]) => void
   highlightAvailable?: boolean
   onChange: (strokes: HighlightStroke[]) => void
   flagged: boolean
@@ -34,6 +36,8 @@ export default function SATQuestionCanvas({
   answer,
   onAnswer,
   strokes,
+  eliminatedChoices = [],
+  onEliminatedChoicesChange,
   highlightAvailable = true,
   onChange,
   flagged,
@@ -42,6 +46,7 @@ export default function SATQuestionCanvas({
   readOnly = false,
   practicePanel,
 }: Props) {
+  const [eliminatorOpen, setEliminatorOpen] = useState(false)
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
   const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
 
@@ -98,9 +103,18 @@ export default function SATQuestionCanvas({
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
             {readOnly ? 'Answer review' : flagged ? 'Marked for Review' : 'Mark for Review'}
           </button>
-          <span className="m-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-[#f4f4f4] text-slate-600">
-            <SpellCheck2 className="h-5 w-5" />
-          </span>
+          {!readOnly && question.kind === 'multiple-choice' && onEliminatedChoicesChange ? <button
+            type="button"
+            aria-label="Answer eliminator"
+            title="Cross out answer choices"
+            aria-pressed={eliminatorOpen}
+            onClick={() => setEliminatorOpen((open) => !open)}
+            className={`m-1.5 flex h-10 w-12 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${eliminatorOpen ? 'border-[#4053d7] bg-[#e8ecff] text-[#4053d7]' : 'border-slate-300 bg-[#f4f4f4] text-slate-600 hover:bg-white'}`}
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m6 16 6-13 6 13M8 12h8M4 19h16M4 22h16" />
+            </svg>
+          </button> : null}
         </div>
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
 
@@ -112,18 +126,22 @@ export default function SATQuestionCanvas({
           ) : <SATRichText text={task} className="break-words font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />}</div>
 
           {question.kind === 'multiple-choice' ? (
+            <>
+            {eliminatorOpen && !readOnly ? <p className="mt-3 text-xs font-semibold text-slate-600">Cross out choices you want to rule out. Use Undo to restore a choice.</p> : null}
             <div className="mt-4 space-y-2" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
               {question.choices.map((choice) => {
                 const selected = answer === choice.key
+                const eliminated = eliminatedChoices.includes(choice.key)
                 return (
+                  <div key={choice.key} className="flex items-center gap-2">
                   <button
                     type="button"
                     role="radio"
                     aria-checked={selected}
                     key={choice.key}
-                    disabled={readOnly}
+                    disabled={readOnly || eliminated}
                     onClick={() => { if (!readOnly && !window.getSelection()?.toString()) onAnswer(choice.key) }}
-                    className={`group flex w-full items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${
+                    className={`group relative flex w-full min-w-0 items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${eliminated ? 'opacity-50 after:pointer-events-none after:absolute after:inset-x-3 after:top-1/2 after:h-[2px] after:bg-slate-600' : ''} ${
                       selected
                         ? answerState === 'correct'
                           ? 'border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900'
@@ -149,9 +167,21 @@ export default function SATQuestionCanvas({
                       {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
                     </span>
                   </button>
+                  {!readOnly && onEliminatedChoicesChange && (eliminatorOpen || eliminated) ? <button
+                    type="button"
+                    aria-label={`${eliminated ? 'Restore' : 'Eliminate'} choice ${choice.key}`}
+                    title={eliminated ? `Restore choice ${choice.key}` : `Eliminate choice ${choice.key}`}
+                    aria-pressed={eliminated}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-400 text-slate-700 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+                    onClick={() => onEliminatedChoicesChange(eliminated ? eliminatedChoices.filter((key) => key !== choice.key) : [...eliminatedChoices, choice.key])}
+                  >
+                    {eliminated ? <Undo2 className="h-5 w-5" /> : <span className="relative font-serif text-base font-bold after:absolute after:-inset-x-1 after:top-1/2 after:h-[2px] after:bg-current">{choice.key}</span>}
+                  </button> : null}
+                  </div>
                 )
               })}
             </div>
+            </>
           ) : (
             <div className="mt-5">
               <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800">Enter your answer</label>

@@ -34,7 +34,7 @@ type DebateRoom = { id: string; number: number; topic: DebateTopic; members: Cli
 const waiting = new Map<string, Client[]>()
 const debateRooms = new Map<string, DebateRoom>()
 const discussionRooms = new Map<string, Client[]>()
-const discussionHistory = new Map<string, Array<{ id: string; userId: string; name: string; text: string; createdAt: string }>>()
+const discussionHistory = new Map<string, Array<{ id: string; userId: string; name: string; text: string; createdAt: string; editedAt?: string }>>()
 const clients = new Set<Client>()
 onAccountDeleted((userId) => {
   for (const client of [...clients]) {
@@ -323,6 +323,26 @@ function postDiscussion(client: Client, roomId: string, text: string) {
   }
 }
 
+async function changeDiscussion(client: Client, roomId: string, messageId: string, text: string | null, token: string, authenticate?: CommunityAuthenticator) {
+  const fail = () => send(client, { type: 'discussionActionError', roomId, messageId, message: 'Could not update this message. Please reconnect and try again.' })
+  let identity = null
+  try { identity = await authenticate?.(token) ?? null } catch { /* Report failed authentication to the sender. */ }
+  if (client.ws.readyState !== WebSocket.OPEN) return
+  const history = discussionHistory.get(roomId) ?? []
+  const message = history.find(item => item.id === messageId)
+  if (!identity || client.discussionRoom !== roomId || !message || message.userId !== identity.userId) { fail(); return }
+  if (text === null) {
+    discussionHistory.set(roomId, history.filter(item => item.id !== messageId))
+    for (const member of discussionRooms.get(roomId) ?? []) send(member, { type: 'discussionMessageDeleted', roomId, messageId })
+  } else {
+    const cleanText = text.trim().slice(0, 500)
+    if (!cleanText) { fail(); return }
+    message.text = cleanText
+    message.editedAt = new Date().toISOString()
+    for (const member of discussionRooms.get(roomId) ?? []) send(member, { type: 'discussionMessageUpdated', roomId, message })
+  }
+}
+
 function attach(server: Server, authenticate?: CommunityAuthenticator) {
   const wss = new WebSocketServer({ server, path: '/ws/speaking', maxPayload: 1_000_000 })
   attachCommunitySignaling(wss, authenticate)
@@ -354,7 +374,7 @@ function attach(server: Server, authenticate?: CommunityAuthenticator) {
     clients.add(client)
 
     ws.on('message', (raw) => {
-      let msg: { type?: string; userId?: string; name?: string; avatarUrl?: unknown; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string }
+      let msg: { type?: string; userId?: string; name?: string; avatarUrl?: unknown; part?: number; level?: string; to?: string; data?: unknown; roomId?: string; text?: string; messageId?: string; token?: string }
       try {
         msg = JSON.parse(raw.toString())
       } catch {
@@ -402,6 +422,12 @@ function attach(server: Server, authenticate?: CommunityAuthenticator) {
           break
         case 'discussionMessage':
           if (typeof msg.roomId === 'string' && typeof msg.text === 'string') postDiscussion(client, msg.roomId, msg.text)
+          break
+        case 'discussionEdit':
+        case 'discussionDelete':
+          if (typeof msg.roomId === 'string' && typeof msg.messageId === 'string' && typeof msg.token === 'string' && (msg.type === 'discussionDelete' || typeof msg.text === 'string')) {
+            void changeDiscussion(client, msg.roomId, msg.messageId, msg.type === 'discussionDelete' ? null : msg.text!, msg.token, authenticate)
+          }
           break
         case 'leaveDiscussion':
           leaveDiscussion(client)

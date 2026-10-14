@@ -7,6 +7,7 @@ import { markXpActivitySynced } from '@/lib/xpApi'
 // never expose another user's email.
 
 export type CommunitySpeaker = {
+  premium?: boolean
   id: string
   avatarUrl: string | null
   nickname: string | null
@@ -34,6 +35,7 @@ export type SpeakerSessionRow = {
 
 export type SpeakerProfilePayload = {
   profile: {
+    premium?: boolean
     id: string
     avatarUrl: string | null
     nickname: string | null

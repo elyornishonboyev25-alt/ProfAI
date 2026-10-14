@@ -11,8 +11,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import AccountUsageBoundary from '@/components/auth/AccountUsageBoundary'
 import { isPublicAccountRoute } from '@/utils/accountAccess'
 import PremiumRoute from '@/components/auth/PremiumRoute'
+import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
@@ -44,6 +46,7 @@ const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
+const SATHardQuestions = lazy(() => import('@/pages/SATHardQuestions'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
@@ -300,7 +303,12 @@ function App() {
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
-  const isTestMode = isCustomTestMode || isClassicTestMode
+  const fullMockState = location.state as { mock?: { id?: string }; reviewPayload?: unknown } | null
+  const isFullMockExam = /^\/mock\/ielts\/[^/]+$/.test(pathname) || (
+    Boolean(fullMockState?.mock?.id) && !fullMockState?.reviewPayload &&
+    (/^\/test\/(listening|reading)\//.test(pathname) || /^\/ielts\/(writing|speaking)\/test\//.test(pathname))
+  )
+  const isTestMode = isCustomTestMode || isClassicTestMode || isFullMockExam
   const isCommunityPeopleMode = pathname === '/community'
   const isLiveCommunityMode = pathname === '/community'
 
@@ -472,12 +480,12 @@ function App() {
         <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode} isVocabularyPracticeMode={isVocabularyPracticeMode}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
-              className={`flex flex-col ${isAiTutorMode || isVocabularyPracticeMode
+              className={`flex flex-col ${isFullMockExam ? 'full-mock-exam-shell' : ''} ${isAiTutorMode || isVocabularyPracticeMode
                 ? 'min-h-0 flex-1 overflow-hidden'
                 : isTestMode
                   ? location.pathname.startsWith('/results/')
                     ? 'min-h-full min-h-screen overflow-y-auto'
-                    : 'min-h-full min-h-[calc(100vh-80px)]'
+                    : isFullMockExam ? 'min-h-full min-h-screen' : 'min-h-full min-h-[calc(100vh-80px)]'
                   : 'min-h-full min-h-screen'
               }`}
             >
@@ -553,13 +561,14 @@ function App() {
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
                       <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
+                      <Route path="/sat/hard-questions" element={<AnimatedRoute><SATHardQuestions /></AnimatedRoute>} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route
                         path="/sat/mock/:mockId/run"
                         element={
                           <PremiumRoute>
-                            <SATMockRun />
+                            <SATBrowserExitGuard><SATMockRun /></SATBrowserExitGuard>
                           </PremiumRoute>
                         }
                       />
@@ -890,4 +899,6 @@ function App() {
   )
 }
 
-export default App
+export default function VerifiedApp() {
+  return <AccountUsageBoundary><App /></AccountUsageBoundary>
+}

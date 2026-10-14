@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 
 async function main() {
   const bundle = await build({
-    stdin: { contents: "export { apiClient } from './src/lib/apiClient'; export { useAuthStore } from './src/store/authStore'", resolveDir: process.cwd() },
+    stdin: { contents: "export { apiClient } from './src/lib/apiClient'; export { useAuthStore } from './src/store/authStore'; export { useAccountUsageStore } from './src/store/accountUsageStore'", resolveDir: process.cwd() },
     bundle: true, write: false, platform: 'node', format: 'cjs', tsconfig: 'tsconfig.json',
     define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' },
   })
@@ -69,6 +69,21 @@ async function main() {
   assert.equal(b.useAuthStore.getState().refreshToken, 'refresh-new')
   assert.equal(deviceIds.size, 1, 'Two tabs share one browser device across refresh requests')
   assert.match([...deviceIds][0], /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i)
+
+  for (const expiredAccess of [false, true]) {
+    seed(); rotations = 0
+    fetchHandler = async (url, options) => {
+      assert.ok(options.headers.get('X-Device-Id'), 'All authenticated requests carry the browser identity')
+      if (url.endsWith('/auth/refresh')) rotations++
+      return expiredAccess && !url.endsWith('/auth/refresh') ? json(401) : json(409, { code: 'ACCOUNT_IN_USE', message: 'Another device is active.' })
+    }
+    await assert.rejects(a.apiClient.get('/protected'), error => error.code === 'ACCOUNT_IN_USE' && error.status === 409)
+    assert.equal(a.useAuthStore.getState().refreshToken, 'refresh-old', 'Usage conflict preserves the signed-in session')
+    assert.equal(a.useAccountUsageStore.getState().status, 'blocked')
+    assert.equal(rotations, expiredAccess ? 1 : 0)
+    a.useAuthStore.getState().clearSession()
+    assert.equal(a.useAccountUsageStore.getState().status, 'checking', 'Sign-out removes the prior usage verification')
+  }
 
   for (const status of [429, 500, 503]) {
     seed()

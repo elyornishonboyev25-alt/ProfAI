@@ -10,7 +10,7 @@ process.env.REFRESH_TOKEN_SECRET = 'support-test-refresh-secret-at-least-24'
 const { default: express } = await import('express')
 const { default: router } = await import('../dist/routes/support.routes.js')
 const { prisma } = await import('../dist/lib/prisma.js')
-const { signAccessToken } = await import('../dist/utils/jwt.js')
+const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 const reports = new Map([
   ['r1', { id: 'r1', userId: 'learner-a', status: 'OPEN', category: 'BUG', description: 'Cannot review SAT mistakes', name: 'Learner A', email: 'a@example.test', pagePath: '/sat/question-bank' }],
   ['r2', { id: 'r2', userId: 'learner-a', status: 'OPEN', category: 'BUG', description: 'Review page is not opening', name: 'Learner A', email: 'a@example.test', pagePath: '/sat/question-bank' }],
@@ -21,7 +21,7 @@ const owner = signAccessToken({ sub: 'owner', role: 'USER' })
 const additionalOwner = signAccessToken({ sub: 'additional-owner', role: 'USER' })
 const other = signAccessToken({ sub: 'other', role: 'ADMIN' })
 const original = { user: prisma.user.findUnique, findMany: prisma.issueReport.findMany, findUnique: prisma.issueReport.findUnique, updateMany: prisma.issueReport.updateMany, count: prisma.issueReport.count, users: prisma.user.findMany, userCount: prisma.user.count, createNotifications: prisma.notification.createMany, notifications: prisma.notification.findMany, transaction: prisma.$transaction }
-let server, base, failWrite = false, lastReportWhere
+let server, base, failWrite = false, lastReportWhere, restoreSessions
 function matches(report, where = {}) {
   if (where.id?.in && !where.id.in.includes(report.id)) return false
   if (where.status && report.status !== where.status) return false
@@ -30,7 +30,7 @@ function matches(report, where = {}) {
   return true
 }
 before(async () => {
-  prisma.user.findUnique = async ({ where }) => ({ email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : where.id === 'additional-owner' ? ' Firdavsalimqulov998@Gmail.com ' : 'other@example.test' })
+  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : where.id === 'additional-owner' ? ' Firdavsalimqulov998@Gmail.com ' : 'other@example.test' })
   prisma.user.findMany = async () => []
   prisma.user.count = async () => 2
   prisma.issueReport.findUnique = async ({ where }) => reports.get(where.id) ?? null
@@ -50,6 +50,7 @@ before(async () => {
   }
   prisma.notification.findMany = async ({ where }) => [...notifications.values()].filter(item => item.userId === where.userId && item.metadata.kind === where.AND[0].metadata.equals && item.metadata.reportIds.includes(where.AND[1].metadata.array_contains[0]))
   prisma.$transaction = async fn => fn(prisma)
+  restoreSessions = installSessionFixtures(prisma)
   const app = express()
   app.use(express.json()); app.use('/support', router)
   app.use((error, _req, res, _next) => res.status(500).json({ message: error.message }))
@@ -57,6 +58,7 @@ before(async () => {
   base = `http://127.0.0.1:${server.address().port}/support`
 })
 after(async () => {
+  restoreSessions()
   prisma.user.findUnique = original.user; prisma.user.findMany = original.users; prisma.user.count = original.userCount
   Object.assign(prisma.issueReport, { findMany: original.findMany, findUnique: original.findUnique, updateMany: original.updateMany, count: original.count })
   Object.assign(prisma.notification, { createMany: original.createNotifications, findMany: original.notifications })

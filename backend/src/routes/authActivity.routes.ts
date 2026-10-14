@@ -7,7 +7,7 @@ import { requireOwner } from '../middleware/owner.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { hashToken, verifyAccessToken, verifyRefreshToken } from '../utils/jwt.js'
-import { createAuthSession, onlineWhere, requestDeviceId, ONLINE_WINDOW_MS } from '../services/authActivity.service.js'
+import { acquireSessionUsage, AuthSessionError, createAuthSession, onlineWhere, requestDeviceId, ONLINE_WINDOW_MS } from '../services/authActivity.service.js'
 
 const router = Router()
 const heartbeatSchema = z.object({ refreshToken: z.string().min(1).max(4096).nullable().optional() })
@@ -18,26 +18,26 @@ router.post('/activity/heartbeat', requireAuth, validateBody(heartbeatSchema), a
   // Existing signed-in clients can adopt tracking without signing out.
   if (!sessionId && req.body.refreshToken) {
     let token
-    try { token = verifyRefreshToken(req.body.refreshToken) } catch { return res.status(204).send() }
-    if (token.sub !== req.user!.id) return res.status(204).send()
+    try { token = verifyRefreshToken(req.body.refreshToken) } catch { throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Please sign in again.') }
+    if (token.sub !== req.user!.id) throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Please sign in again.')
     const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(req.body.refreshToken) } })
-    if (!stored || stored.userId !== req.user!.id || stored.revokedAt || stored.expiresAt <= new Date()) return res.status(204).send()
+    if (!stored || stored.userId !== req.user!.id || stored.revokedAt || stored.expiresAt <= new Date()) throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Please sign in again.')
     sessionId = stored.sessionId ?? undefined
     if (!sessionId) {
       sessionId = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${req.user!.id} FOR UPDATE`
+        const latest = await tx.refreshToken.findUnique({ where: { id: stored.id } })
+        if (latest?.sessionId) return latest.sessionId
         const session = await createAuthSession({ userId: req.user!.id, deviceId: requestDeviceId(req),
           userAgent: req.get('user-agent'), ipAddress: req.ip, method: 'RESTORED', expiresAt: stored.expiresAt }, tx)
         const claim = await tx.refreshToken.updateMany({ where: { id: stored.id, sessionId: null, revokedAt: null }, data: { sessionId: session.id } })
         if (claim.count) return session.id
-        await tx.authSession.delete({ where: { id: session.id } })
-        return (await tx.refreshToken.findUnique({ where: { id: stored.id } }))?.sessionId ?? undefined
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'This session has ended. Please sign in again.')
       })
     }
   }
-  if (sessionId) await prisma.authSession.updateMany({
-    where: { id: sessionId, userId: req.user!.id, endedAt: null, expiresAt: { gt: new Date() } },
-    data: { lastSeenAt: new Date() },
-  })
+  if (!sessionId) throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Please sign in again.')
+  if (!payload.sid) await acquireSessionUsage(req.user!.id, sessionId, req.get('X-Device-Id')?.toLowerCase() ?? '')
   return res.status(204).send()
 }))
 

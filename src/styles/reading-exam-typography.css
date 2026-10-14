@@ -61,3 +61,71 @@
 .reading-shell.reading-exam-typography #reading-questions-pane :is(article p, td p) span:first-child {
   font-weight: 700 !important;
 }
+
+/* The saved-attempt passage uses the same readable type as the IELTS exam. */
+.reading-shell.ielts-reading-review #answer-evidence-pane {
+  font-family: var(--reading-text-font);
+}
+.reading-shell.ielts-reading-review #answer-evidence-pane .ielts-reading-prose p {
+  max-width: 76ch;
+  font-family: var(--reading-text-font);
+  font-size: var(--reading-text-size);
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: left;
+}
+.reading-shell.ielts-reading-review .reading-toolbar {
+  border-color: #e2e8f0;
+  box-shadow: none;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane {
+  border-color: #e2e8f0;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane > .sticky {
+  border-color: #e2e8f0;
+  background: #fff;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane section {
+  border-color: #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane [id^='question-card-'] {
+  border-color: #e2e8f0;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane [id^='question-card-']:has(.reading-review-feedback button[aria-pressed='true']) {
+  border-color: #fca5a5;
+}
+.reading-shell.ielts-reading-review #reading-questions-pane .reading-review-feedback button {
+  font-size: 12px !important;
+  font-weight: 600;
+}
+.reading-shell.ielts-reading-review .reading-answer-evidence {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media (max-width: 639px) {
+  .reading-shell.ielts-reading-review .reading-toolbar {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+  .reading-shell.ielts-reading-review .reading-toolbar > div {
+    gap: 4px;
+  }
+  .reading-shell.ielts-reading-review .reading-toolbar > div:first-child > div {
+    gap: 4px;
+  }
+  .reading-shell.ielts-reading-review #reading-questions-pane {
+    padding: 1rem;
+  }
+}
+@media (max-width: 359px) {
+  .reading-shell.ielts-reading-review [data-reading-review-badge] {
+    display: none;
+  }
+}

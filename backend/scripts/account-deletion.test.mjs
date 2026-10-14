@@ -45,10 +45,11 @@ function remove(modelName, row) {
 }
 const prisma = Object.fromEntries(models.map(model => [names.get(model.name), {
   findUnique: async ({ where }) => rows[model.name].find(row => matches(row, where)) ?? null,
+  findMany: async ({ where }) => rows[model.name].filter(row => matches(row, where)),
   findFirst: async ({ where }) => rows[model.name].filter(row => matches(row, where)).at(-1) ?? null,
   create: async ({ data }) => {
     const row = { id: crypto.randomUUID(), xp: 0, level: 1, currentStreak: 0, role: 'USER', profile: null,
-      attempts: 0, consumedAt: null, createdAt: new Date(), ...data }
+      attempts: 0, consumedAt: null, createdAt: new Date(), endedAt: null, ...data }
     rows[model.name].push(row)
     return row
   },
@@ -69,11 +70,13 @@ const prisma = Object.fromEntries(models.map(model => [names.get(model.name), {
     for (const row of selected) Object.assign(row, data)
     return { count: selected.length }
   },
+  update: async ({ where, data }) => Object.assign(rows[model.name].find(row => matches(row, where)), data),
 }]))
 prisma.$transaction = async operation => {
   const snapshot = structuredClone(rows)
   try { return await operation(prisma) } catch (error) { rows = snapshot; throw error }
 }
+prisma.$queryRaw = async () => []
 const bundled = await build({
   stdin: { contents: `export { default } from './backend/src/routes/auth.routes'; export { onAccountDeleted } from './backend/src/services/accountLifecycle';`, resolveDir: process.cwd() },
   bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external',
@@ -102,9 +105,10 @@ app.use((error, _req, res, _next) => res.status(500).json({ message: error.messa
 const server = app.listen(0, '127.0.0.1')
 await new Promise(resolve => server.once('listening', resolve))
 const base = `http://127.0.0.1:${server.address().port}`
-const token = jwt.sign({ sub: owner.id, role: 'ADMIN' }, secret)
+const deviceId = '11111111-1111-4111-8111-111111111111'
+const token = jwt.sign({ sub: owner.id, role: 'ADMIN', sid: 'AuthSession-userId' }, secret)
 async function call(path, method = 'GET', body, access = token) {
-  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json',
+  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', 'X-Device-Id': deviceId,
     ...(access ? { Authorization: `Bearer ${access}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) })
   return { status: response.status, body: response.status === 204 ? null : await response.json() }
 }
@@ -118,6 +122,7 @@ function seed() {
     const fk = field.relationFromFields[0]
     rows[model.name].push({ id: `${model.name}-${fk}`, [fk]: owner.id })
   }
+  Object.assign(rows.AuthSession[0], { deviceId, endedAt: null, expiresAt: new Date(Date.now() + 86400000) })
   const attempt = rows.TestAttempt[0]
   const test = rows.Test[0]
   rows.TestQuestion.push({ id: 'question', testId: test.id })
@@ -134,15 +139,22 @@ function seed() {
   rows.PaymentRequest.push({ id: 'other-payment', userId: other.id, reviewedBy: owner.id })
   rows.PremiumGrant.push({ userId: other.id, grantedBy: owner.id })
 }
+function personalData() {
+  const data = structuredClone(rows)
+  // Authentication legitimately renews presence before route validation. All
+  // other session fields and personal data must remain unchanged on failure.
+  data.AuthSession.forEach(row => { delete row.lastSeenAt; delete row.usageUntil })
+  return data
+}
 try {
   seed()
-  const before = structuredClone(rows)
+  const before = personalData()
   assert.equal((await call('/account', 'DELETE', { email: other.email, confirmation: 'DELETE' })).status, 400)
   assert.equal((await call('/account', 'DELETE', { email, confirmation: 'WRONG' })).status, 400)
-  assert.deepEqual(rows, before, 'Invalid confirmation cannot remove any data')
+  assert.deepEqual(personalData(), before, 'Invalid confirmation cannot remove any data')
   failDeletion = true
   assert.equal((await call('/account', 'DELETE', { email, confirmation: 'DELETE' })).status, 500)
-  assert.deepEqual(rows, before, 'A failed deletion restores all data, including email-keyed records')
+  assert.deepEqual(personalData(), before, 'A failed deletion restores all data, including email-keyed records')
   assert.equal(cleaned.length, 0, 'Runtime data remains available after rollback')
   failDeletion = false
   assert.equal((await call('/account', 'DELETE', { email: email.toUpperCase(), confirmation: 'DELETE' })).status, 204)

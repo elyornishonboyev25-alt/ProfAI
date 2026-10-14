@@ -1,3 +1,4 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -126,10 +127,10 @@ export default function SpeakerProfile() {
     <Shell onBack={() => navigate(backPath)} backLabel={backLabel}>
       {/* Identity hero */}
       <Reveal>
-        <section className="premium-hero p-6 sm:p-8">
+        <section className={`premium-hero p-6 sm:p-8 ${p.premium ? 'premium-member-hero' : ''}`}>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]">
+              <div className={`${p.premium ? 'premium-member-avatar' : ''} flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]`}>
                 <ProfileAvatar src={p.avatarUrl} name={p.displayName} className="rounded-3xl" />
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -137,6 +138,7 @@ export default function SpeakerProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-3xl font-black tracking-tight text-slate-900">{p.displayName}</h1>
+                {p.premium ? <CrownBadge /> : null}
                 {isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700"> <UiText text={"YOU"} /> </span> : null}
                 {p.nickname ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-xs font-semibold text-blue-700">

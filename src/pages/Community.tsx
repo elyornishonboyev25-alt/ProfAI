@@ -1,10 +1,10 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowUpDown,
-  CircleHelp,
   Crown,
   Award,
   ArrowUpRight,
@@ -31,7 +31,6 @@ import {
 } from '@/lib/profileApi'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { cn } from '@/components/ui/utils'
-import DiscussionRoom from '@/components/community/DiscussionRoom'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import SpeakingHub from '@/components/community/SpeakingHub'
 import { useSpeakingCommunity } from '@/hooks/useSpeakingCommunity'
@@ -42,15 +41,11 @@ import '@/styles/speaking-hub.css'
 
 type ExamFilter = 'ALL' | 'IELTS' | 'SAT'
 type SmartFilter = 'sameBand' | 'sameCountry' | 'online'
-export type CommunityMode = 'people' | 'voice' | 'partner' | 'questions' | 'admissions'
-
-const COMMUNITY_MODES: CommunityMode[] = ['people', 'voice', 'partner', 'questions', 'admissions']
+export type CommunityMode = 'voice' | 'partner'
 
 const COMMUNITY_SECTIONS = [
   { id: 'voice', name: 'Voice rooms', detail: 'Conversation & team debate', icon: Mic },
   { id: 'partner', name: 'Partner', detail: 'One-to-one voice practice', icon: MessageCircleMore },
-  { id: 'questions', name: 'Hard Questions', detail: 'Ask and solve together', icon: CircleHelp },
-  { id: 'admissions', name: 'Study Abroad Lounge', detail: 'Applications and university life', icon: GraduationCap },
 ] as const
 
 function normalizeScore(value: string | number | null | undefined) {
@@ -84,7 +79,7 @@ export default function Community() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedMode = searchParams.get('mode')
-  const mode: CommunityMode = requestedMode === 'debate' ? 'voice' : COMMUNITY_MODES.includes(requestedMode as CommunityMode) ? requestedMode as CommunityMode : 'people'
+  const mode: CommunityMode = requestedMode === 'partner' || requestedMode === 'people' ? 'partner' : 'voice'
   const hub = useSpeakingCommunity(true)
   const t = useCommunityCopy()
   const [champion, setChampion] = useState<CommunityChampion | null>(null)
@@ -101,10 +96,20 @@ export default function Community() {
   const debounceRef = useRef<number | null>(null)
 
   useEffect(() => {
+    if (!hub.room || !searchParams.has('room')) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('room')
+    setSearchParams(next, { replace: true })
+  }, [hub.room, searchParams, setSearchParams])
+
+  useEffect(() => {
     if (requestedMode === 'ai') navigate('/ielts/speaking/tests?coach=1', { replace: true })
-    if (requestedMode === 'debate') setSearchParams({ mode: 'voice' }, { replace: true })
-    if (requestedMode === 'progress') setSearchParams({}, { replace: true })
-  }, [navigate, requestedMode, setSearchParams])
+    if (['debate', 'questions', 'admissions', 'progress', 'people'].includes(requestedMode ?? '')) {
+      const next = new URLSearchParams(searchParams)
+      next.set('mode', requestedMode === 'people' ? 'partner' : 'voice')
+      setSearchParams(next, { replace: true })
+    }
+  }, [navigate, requestedMode, searchParams, setSearchParams])
 
   const sameBandActive = smartFilters.includes('sameBand')
   const sameCountryActive = smartFilters.includes('sameCountry')
@@ -204,8 +209,8 @@ export default function Community() {
 
   const selectMode = (nextMode: CommunityMode) => {
     const next = new URLSearchParams(searchParams)
-    if (nextMode === 'people') next.delete('mode')
-    else next.set('mode', nextMode)
+    next.delete('room')
+    next.set('mode', nextMode)
     setSearchParams(next, { replace: true })
   }
 
@@ -217,33 +222,32 @@ export default function Community() {
           <div className="community-status" role="status"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting...')}</span><span>{hub.online} {t('online in community')}</span></div>
         </header>
         <nav className="community-main-nav" aria-label={t('Community navigation')}>
-          {([{ id: 'people', name: 'Explore', icon: Users, detail: 'Find your speaking circle' }, ...COMMUNITY_SECTIONS] as const).map(item => {
+          {COMMUNITY_SECTIONS.map(item => {
             const Icon = item.icon
             return <button type="button" key={item.id} aria-pressed={mode === item.id} className={cn(mode === item.id && 'is-active')} onClick={() => selectMode(item.id)}><span className="community-nav-icon"><Icon size={19} /></span><span><b>{t(item.name)}</b><small>{t(item.detail)}</small></span>{item.id === 'voice' || item.id === 'partner' ? <span className="community-nav-count">{item.id === 'voice' ? hub.rooms.length : hub.available.filter(name => name !== hub.selfName).length}</span> : null}</button>
           })}
         </nav>
 
-        <SpeakingHub hub={hub} invitedRoom={searchParams.get('room')} view={mode === 'partner' ? 'partner' : mode === 'voice' ? 'rooms' : 'hidden'} />
-        {!hub.room && (mode === 'questions' || mode === 'admissions') ? <section className="community-speaking-workspace"><DiscussionRoom key={mode} roomId={mode === 'questions' ? 'hard-questions' : 'study-abroad'} title={mode === 'questions' ? 'Hard Questions' : 'Study Abroad Lounge'} description={mode === 'questions' ? 'Ask difficult questions and work through answers together.' : 'A shared room for applications, scholarships, visas and university life.'} /></section> : null}
+        <SpeakingHub hub={hub} invitedRoom={searchParams.get('room')} view={searchParams.get('room') ? 'hidden' : mode === 'partner' ? 'partner' : 'rooms'} />
 
-        {mode === 'people' && !hub.room ? <section className="community-layout">
+        {mode === 'partner' && !hub.room && !searchParams.get('room') ? <section className="community-layout">
           <div className="community-feed-heading">
-            <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find your speaking circle')}</span><h1>{t('Real people.')} <em>{t('Better conversations.')}</em></h1><p>{t('Find a learner, share a goal and start speaking together.')}</p></div>
+            <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find your speaking circle')}</span><h2>{t('Meet your speaking circle')}</h2><p>{t('Explore profiles, find shared goals and invite an available learner to speak.')}</p></div>
             {champion ? <div className="hub-champion community-champion"><button type="button" className="community-champion-profile" onClick={() => navigate('/u/' + encodeURIComponent(champion.nickname), { state: { from: '/community' } })}><span className="community-champion-portrait"><ProfileAvatar src={champion.avatarUrl} name={champion.nickname} alt="" /><Crown size={15} /></span><span className="community-champion-copy"><b>{t('Top learner')}</b><strong>@{champion.nickname}</strong><small>{t('Highest earned XP')}</small></span><span className="community-champion-score"><Zap size={15} />{champion.xp.toLocaleString()}<small>XP</small><ArrowUpRight size={14} /></span></button><details><summary>{t('How it works')}</summary><p>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</p></details></div> : null}
           </div>
           <div className="community-search-bar">
-            <label className="community-search-field"><Search size={20} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Find study partners...')} aria-label={t('Find study partners by nickname')} />{loading ? <Loader2 size={18} className="animate-spin" /> : null}</label>
+            <label className="community-search-field"><Search size={20} /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Find speaking partners...')} aria-label={t('Find speaking partners by nickname')} />{loading ? <Loader2 size={18} className="animate-spin" /> : null}{query ? <button type="button" onClick={() => setQuery('')} aria-label={t('Clear search')}><X size={17} /></button> : null}</label>
             <label className="community-exam-filter"><GraduationCap size={18} /><select aria-label={t('Exam goal')} value={exam} onChange={event => setExam(event.target.value as ExamFilter)}><option value="ALL">{t('All learners')}</option><option value="IELTS">{t('IELTS learners')}</option><option value="SAT">{t('SAT learners')}</option></select></label>
           </div>
           <div className="community-filter-row">
             <div className="community-header-filters"><FilterPill active={sameBandActive} icon={Target} label={t('Same target band')} onClick={toggleBandFilter} /><FilterPill active={sameCountryActive} icon={Globe2} label={t('Same country')} onClick={toggleCountryFilter} /><FilterPill active={onlineActive} icon={Radio} label={t('Online now')} onClick={() => toggleFilter('online')} />{hasFilters ? <button type="button" className="community-clear-filters" onClick={clearFilters}><X size={14} />{t('Clear filters')}</button> : null}</div>
             <label className="community-sort"><ArrowUpDown size={15} /><select value={sort} aria-label={t('Sort learners')} onChange={event => setSort(event.target.value as 'recommended' | 'xp')}><option value="recommended">{t('Best matches')}</option><option value="xp">{t('Most XP')}</option></select></label>
           </div>
-          <div className="community-feed-meta" role="status"><span><Users size={15} />{visibleResults.length} {t('learners')}</span><span>{t('Scroll to discover more')}</span></div>
+          <div className="community-feed-meta" role="status"><span><Users size={15} />{visibleResults.length} {t('learners')}{hub.connected ? <small className="community-ready-count"><span className="hub-live-dot" />{hub.available.filter(name => name !== hub.selfName).length} {t('Ready to talk')}</small> : null}</span><span>{t('Scroll to discover more')}</span></div>
           <div className="community-card-viewport" role="region" aria-label={t('Study partner profiles')} aria-busy={loading} tabIndex={0}>
             {error ? <div className="community-error" role="alert"><p>{error}</p><button type="button" onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{t('Try again')}</button></div> : null}
             {!loading && !error && ranked.length === 0 ? <div className="community-empty"><Users size={36} /><h2>{t('No matching learners yet')}</h2><p>{t('Remove one or two filters to discover more study partners.')}</p><button type="button" onClick={clearFilters}>{t('Show all learners')}</button></div> : null}
-            <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.nickname === champion?.nickname} index={index} available={!!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} canTalk={hub.connected && !hub.room && !hub.busy && !hub.invitation && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
+            <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.nickname === champion?.nickname} index={index} available={!!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} canTalk={hub.connected && hub.publicProfile && hub.activity === 'idle' && !hub.room && !hub.busy && !hub.invitation && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
           </div>
         </section> : null}
       </div>
@@ -263,23 +267,23 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
       initial={reducedMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.025, 0.15), duration: reducedMotion ? 0 : 0.3 }}
-      className={cn('community-learner-card', featured && 'is-featured')}
+      className={cn('community-learner-card', featured && 'is-featured', learner.premium && 'is-premium-member')}
     >
       <div className="community-card-cover" aria-hidden="true"><span /><span /></div>
-      <div className="community-card-topline"><span className={cn('community-availability', available ? 'is-ready' : learner.online && 'is-online')}><i />{t(available ? 'Ready to talk' : learner.online ? 'Online now' : 'Offline')}</span><span className="community-level">{t('Level')} {learner.level}</span></div>
-      {featured ? (
+      <div className="community-card-topline"><span className={cn('community-availability', available ? 'is-ready' : learner.online && 'is-online')}><i />{t(available ? 'Ready to talk' : learner.online ? 'Online now' : 'Offline')}</span>{featured ? (
         <span className="community-top-badge">
           <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
           <span> {t('Top learner')} </span>
         </span>
-      ) : null}
-      <div className="community-avatar-ring">
+      ) : <span className="community-level">{t('Level')} {learner.level}</span>}</div>
+      <div className={cn('community-avatar-ring', learner.premium && 'premium-member-avatar')}>
         <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} title={t(learner.online ? 'Online now' : 'Offline')} />
       </div>
       <h2>@{learner.nickname ?? 'learner'}</h2>
+      {learner.premium ? <CrownBadge size="sm" /> : null}
       <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || t('Global learner')}</p>
-      <div className="community-goal-row"><span><Target size={12} />{learner.targetExam ? targetLabel(learner) : t('Open study goal')}</span>{learner.targetUniversitySlug ? <span><GraduationCap size={12} />{learner.targetUniversitySlug.replace(/-/g, ' ')}</span> : null}</div>
+      <div className="community-goal-row"><span><Target size={12} />{learner.targetExam ? targetLabel(learner) : t('Open study goal')}</span><span><Mic size={12} />{t('English speaking')}</span></div>
       <div className="community-stat-row">
         <span><Zap size={14} /><b>{learner.xp.toLocaleString()}</b><small> <UiText text={"XP earned"} /> </small></span>
         <span><Flame size={14} /><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>

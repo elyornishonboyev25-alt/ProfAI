@@ -1,3 +1,4 @@
+import { deleteAccountTestAudio } from './testAudioStorage'
 import { useAuthStore } from '@/store/authStore'
 import { belongsToAccount, forgetAccountStorage } from '@/utils/accountStorage'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
@@ -40,6 +41,7 @@ export function purgeAccountClientData(userId: string, broadcast = true) {
   if (typeof window === 'undefined') return
 
   forgetAccountStorage(userId)
+  deleteAccountTestAudio(userId)
   // Each store is independent: unavailable browser storage must not interrupt
   // cleanup or leave the session signed in after server deletion.
   for (const clear of [

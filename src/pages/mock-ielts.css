@@ -1,4 +1,9 @@
 /* Restore the mock catalog's rounded, softly tinted glass surfaces. */
+.mock-ielts-card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.mock-ielts-card-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 99px; padding: 8px 11px; font-size: 12px; font-weight: 800; min-height: 38px; }
+.mock-ielts-card-actions .mock-ielts-retake { color: #475569; border-color: #e5dbe0; }
+.mock-ielts-card-actions button:focus-visible { outline: 3px solid #fca5a5; outline-offset: 3px; }
+.mock-ielts-card-footer > span { white-space: nowrap; font-size: 11px; }
 .mock-ielts-glass {
   border: 1px solid rgba(255, 255, 255, .94);
   border-radius: 2.25rem;
@@ -43,6 +48,7 @@
 }
 
 .mock-ielts-glass-card {
+  cursor: pointer;
   border: 1px solid rgba(255, 255, 255, .95);
   border-radius: 1.75rem;
   background:

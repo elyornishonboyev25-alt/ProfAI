@@ -9,6 +9,8 @@ import { featuredTestimonials, type DisplayReview } from './featuredTestimonials
 
 const GAP = 18
 const FLOW_SPEED = 42
+// Featured learners whose profile photo should not appear publicly; their initials are shown instead.
+const HIDDEN_FEATURED_PHOTOS = new Set(['featured-muhammadali'])
 
 function initials(name: string) {
   return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toLocaleUpperCase()).join('') || '?'
@@ -25,7 +27,7 @@ function scoreChange(review: DisplayReview, c: (source: string) => string) {
 
 function ReviewAvatar({ review }: { review: DisplayReview }) {
   const [failed, setFailed] = useState(false)
-  const featured = review.id.startsWith('featured-')
+  const featured = review.id.startsWith('featured-') && !HIDDEN_FEATURED_PHOTOS.has(review.id)
   if (!featured || failed) return <span className="landing-review-avatar" aria-hidden="true">{initials(review.name)}</span>
 
   return <img

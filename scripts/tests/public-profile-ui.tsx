@@ -65,6 +65,15 @@ export async function run() {
   await act(async () => window.dispatchEvent(new Event('smarttest:profile-updated')))
   assert.ok(!container.textContent!.includes('Achievement badges'))
   assert.ok(!container.textContent!.includes('Skill averages'), 'Section privacy stays effective')
+  payload = { ...payload, profile: { ...payload.profile, premium: true, isSelf: false } }
+  await act(async () => window.dispatchEvent(new Event('smarttest:profile-updated')))
+  assert.ok(container.querySelector('.premium-identity-badge'), 'Premium is visible on another learner’s profile')
+  assert.ok(container.querySelector('.premium-member-hero'), 'Premium profiles have the gold identity treatment')
+  assert.ok(!container.textContent!.includes('private@example.test'), 'The public profile does not display an email')
+  payload = { ...payload, profile: { ...payload.profile, premium: false } }
+  await act(async () => window.dispatchEvent(new Event('smarttest:profile-updated')))
+  assert.ok(!container.querySelector('.premium-identity-badge'), 'A refreshed expired subscription removes the badge')
+  assert.ok(!container.querySelector('.premium-member-hero'), 'Free profiles keep their standard appearance')
   const storage = accountStorageFor('owner')
   const historyKey = 'smarttest-writing-analysis-v1:owner'
   storage.setItem(historyKey, JSON.stringify([{

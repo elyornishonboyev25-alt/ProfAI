@@ -697,7 +697,8 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   }
 
   if (mode === 'shadowing') {
-    cues = cues.filter(cue => cue.start >= 0 && cue.end <= MAX_SHADOWING_SECONDS)
+    cues = cues.filter(cue => cue.start >= 0 && cue.start < MAX_SHADOWING_SECONDS)
+      .map(cue => ({ ...cue, end: Math.min(cue.end, MAX_SHADOWING_SECONDS) }))
     durationSec = Math.min(durationSec || MAX_SHADOWING_SECONDS, MAX_SHADOWING_SECONDS)
   }
   const lastEnd = cues[cues.length - 1]?.end ?? 0
@@ -715,7 +716,7 @@ async function buildVideoDraft(youtubeId: string, mode: VideoImportMode): Promis
   screenContent(title, fullText)
 
   // Keep original caption starts for shadowing; pre-grouping rolling captions
-  // erases the boundaries needed by the 12–18 second lesson clips.
+  // erases the natural boundaries needed by the practice clips.
   let segments = mode === 'shadowing'
     ? cues.filter(cue => cue.text.trim() && cue.end > cue.start).map((cue, orderIndex) => ({
       orderIndex, startSec: cue.start, endSec: cue.end, text: cue.text.trim(),

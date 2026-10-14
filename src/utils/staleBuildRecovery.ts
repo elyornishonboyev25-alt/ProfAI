@@ -1,3 +1,5 @@
+import { hasActiveTest } from '@/hooks/useActiveTest'
+
 const RECOVERY_KEY = 'profai:stale-build-recovery'
 const RECOVERY_COOLDOWN_MS = 30_000
 const BUILD_BYPASS_PARAM = '__profai_build'
@@ -66,6 +68,7 @@ export function clearBuildBypassParam() {
 export async function recoverFromStaleBuild(error?: unknown, force = false) {
   if (typeof window === 'undefined') return false
   if (!force && !isStaleBuildError(error)) return false
+  if (hasActiveTest()) return false
 
   const now = Date.now()
   const previousAttempt = Number(window.sessionStorage.getItem(RECOVERY_KEY) || 0)
@@ -79,6 +82,8 @@ export async function recoverFromStaleBuild(error?: unknown, force = false) {
     recovery,
     new Promise<void>((resolve) => window.setTimeout(resolve, 1_500)),
   ])
+  // An attempt may have started while the worker update was in flight.
+  if (hasActiveTest()) return false
   reloadFromNetwork()
   return true
 }

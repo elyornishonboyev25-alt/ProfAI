@@ -1,0 +1,341 @@
+{
+  "listening": {
+    "duration": 183.61545833333335,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 12.987875,
+        "audioDuration": 12.187875
+      },
+      {
+        "start": 12.987875,
+        "end": 21.941875000000003,
+        "audioDuration": 8.154
+      },
+      {
+        "start": 21.941875000000003,
+        "end": 31.097875000000002,
+        "audioDuration": 8.356
+      },
+      {
+        "start": 31.097875000000002,
+        "end": 40.60787500000001,
+        "audioDuration": 8.71
+      },
+      {
+        "start": 40.60787500000001,
+        "end": 49.56187500000001,
+        "audioDuration": 8.154
+      },
+      {
+        "start": 49.56187500000001,
+        "end": 64.63445833333334,
+        "audioDuration": 14.272583333333333
+      },
+      {
+        "start": 64.63445833333334,
+        "end": 80.60445833333334,
+        "audioDuration": 15.17
+      },
+      {
+        "start": 80.60445833333334,
+        "end": 98.66295833333334,
+        "audioDuration": 17.2585
+      },
+      {
+        "start": 98.66295833333334,
+        "end": 118.03225,
+        "audioDuration": 18.56929166666667
+      },
+      {
+        "start": 118.03225,
+        "end": 134.82154166666666,
+        "audioDuration": 15.989291666666666
+      },
+      {
+        "start": 134.82154166666666,
+        "end": 152.3435,
+        "audioDuration": 16.721958333333333
+      },
+      {
+        "start": 152.3435,
+        "end": 172.58079166666667,
+        "audioDuration": 19.437291666666667
+      },
+      {
+        "start": 172.58079166666667,
+        "end": 183.61545833333335,
+        "audioDuration": 10.234666666666667
+      }
+    ],
+    "voice": "kokoro-bf_emma",
+    "playbackRate": 1,
+    "frameRate": 60,
+    "renderStats": {
+      "frameCount": 11047,
+      "averageFps": 60.16377978342872,
+      "maxFrameGapMs": 259.10000002384186
+    },
+    "source": "IELTSReadingInterface",
+    "motionChecks": [
+      {
+        "index": 5,
+        "view": "answer",
+        "stages": [
+          {
+            "stage": "answered",
+            "fraction": 0.7852874784225202
+          }
+        ]
+      },
+      {
+        "index": 6,
+        "view": "highlight",
+        "point": {
+          "x": 61,
+          "y": 343.984375
+        },
+        "stages": [
+          {
+            "stage": "selecting",
+            "fraction": 0.3036031464095407
+          },
+          {
+            "stage": "highlighted",
+            "fraction": 0.6742578025881756
+          },
+          {
+            "stage": "deleted",
+            "fraction": 0.9611139304744989
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "view": "notes",
+        "stages": [
+          {
+            "stage": "selecting",
+            "fraction": 0.6016963973417279
+          }
+        ]
+      },
+      {
+        "index": 11,
+        "view": "finish",
+        "stages": [
+          {
+            "stage": "submitted",
+            "fraction": 0.9221961412950136
+          }
+        ]
+      }
+    ],
+    "cursorMotion": "continuous-smootherstep"
+  },
+  "reading": {
+    "duration": 180.34866666666667,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 14.229291666666667,
+        "audioDuration": 13.429291666666666
+      },
+      {
+        "start": 14.229291666666667,
+        "end": 23.480583333333335,
+        "audioDuration": 8.451291666666666
+      },
+      {
+        "start": 23.480583333333335,
+        "end": 32.88254166666667,
+        "audioDuration": 8.601958333333334
+      },
+      {
+        "start": 32.88254166666667,
+        "end": 42.64579166666667,
+        "audioDuration": 8.96325
+      },
+      {
+        "start": 42.64579166666667,
+        "end": 59.09370833333334,
+        "audioDuration": 15.647916666666667
+      },
+      {
+        "start": 59.09370833333334,
+        "end": 75.06370833333334,
+        "audioDuration": 15.17
+      },
+      {
+        "start": 75.06370833333334,
+        "end": 93.11220833333334,
+        "audioDuration": 17.2485
+      },
+      {
+        "start": 93.11220833333334,
+        "end": 112.48150000000001,
+        "audioDuration": 18.56929166666667
+      },
+      {
+        "start": 112.48150000000001,
+        "end": 129.26079166666668,
+        "audioDuration": 15.979291666666667
+      },
+      {
+        "start": 129.26079166666668,
+        "end": 147.35141666666667,
+        "audioDuration": 17.290625
+      },
+      {
+        "start": 147.35141666666667,
+        "end": 167.58870833333333,
+        "audioDuration": 19.437291666666667
+      },
+      {
+        "start": 167.58870833333333,
+        "end": 180.34866666666667,
+        "audioDuration": 11.959958333333333
+      }
+    ],
+    "voice": "kokoro-bf_emma",
+    "playbackRate": 1,
+    "frameRate": 60,
+    "renderStats": {
+      "frameCount": 10722,
+      "averageFps": 59.45150689590164,
+      "maxFrameGapMs": 511.2000000476837
+    },
+    "source": "IELTSReadingInterface",
+    "motionChecks": [
+      {
+        "index": 4,
+        "view": "answer",
+        "stages": [
+          {
+            "stage": "answered",
+            "fraction": 0.799342105263158
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "view": "highlight",
+        "point": {
+          "x": 53.25,
+          "y": 287.25
+        },
+        "stages": [
+          {
+            "stage": "selecting",
+            "fraction": 0.3009354474888874
+          },
+          {
+            "stage": "highlighted",
+            "fraction": 0.6954156438665162
+          },
+          {
+            "stage": "deleted",
+            "fraction": 0.9564784714389969
+          }
+        ]
+      },
+      {
+        "index": 7,
+        "view": "notes",
+        "stages": [
+          {
+            "stage": "selecting",
+            "fraction": 0.585735717471516
+          }
+        ]
+      },
+      {
+        "index": 10,
+        "view": "finish",
+        "stages": [
+          {
+            "stage": "submitted",
+            "fraction": 0.9185753309518806
+          }
+        ]
+      }
+    ],
+    "cursorMotion": "continuous-smootherstep"
+  },
+  "writing": {
+    "duration": 74.89591666666666,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 13.013291666666667,
+        "audioDuration": 12.213291666666667
+      },
+      {
+        "start": 13.013291666666667,
+        "end": 29.693291666666667,
+        "audioDuration": 15.88
+      },
+      {
+        "start": 29.693291666666667,
+        "end": 46.151291666666665,
+        "audioDuration": 15.658
+      },
+      {
+        "start": 46.151291666666665,
+        "end": 60.21991666666666,
+        "audioDuration": 13.268625
+      },
+      {
+        "start": 60.21991666666666,
+        "end": 74.89591666666666,
+        "audioDuration": 13.876
+      }
+    ],
+    "voice": "kokoro-bf_emma",
+    "playbackRate": 1,
+    "frameRate": 60,
+    "renderStats": {
+      "frameCount": 4436,
+      "averageFps": 59.228863166772555,
+      "maxFrameGapMs": 364.7999999523163
+    }
+  },
+  "speaking": {
+    "duration": 80.21175000000001,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.905958333333334,
+        "audioDuration": 17.105958333333334
+      },
+      {
+        "start": 17.905958333333334,
+        "end": 32.900625000000005,
+        "audioDuration": 14.194666666666667
+      },
+      {
+        "start": 32.900625000000005,
+        "end": 46.58916666666667,
+        "audioDuration": 12.888541666666667
+      },
+      {
+        "start": 46.58916666666667,
+        "end": 61.95179166666667,
+        "audioDuration": 14.562625
+      },
+      {
+        "start": 61.95179166666667,
+        "end": 80.21175000000001,
+        "audioDuration": 17.459958333333333
+      }
+    ],
+    "voice": "kokoro-bf_emma",
+    "playbackRate": 1,
+    "frameRate": 60,
+    "renderStats": {
+      "frameCount": 5001,
+      "averageFps": 62.34747402967769,
+      "maxFrameGapMs": 87.19999992847443
+    }
+  }
+}

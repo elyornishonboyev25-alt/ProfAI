@@ -5,6 +5,7 @@ interface SplitScreenProps {
   right: ReactNode
   leftWidth?: string
   className?: string
+  fillHeight?: boolean
 }
 
 const MIN_LEFT_PERCENT = 32
@@ -18,6 +19,7 @@ export default function SplitScreen({
   left,
   right,
   className = '',
+  fillHeight = false,
 }: SplitScreenProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const leftPaneRef = useRef<HTMLDivElement>(null)
@@ -88,7 +90,7 @@ export default function SplitScreen({
   return (
     <div
       ref={containerRef}
-      className={`flex h-[calc(100vh-64px)] flex-col overflow-hidden lg:flex-row ${className}`}
+      className={`flex ${fillHeight ? 'h-full min-h-0' : 'h-[calc(100vh-64px)]'} flex-col overflow-hidden lg:flex-row ${className}`}
     >
       <div
         ref={leftPaneRef}

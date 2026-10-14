@@ -1,3 +1,4 @@
+import { accountStorageFor } from '@/utils/accountStorage'
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
@@ -149,7 +150,11 @@ export async function run() {
       if (transcriptionFails) throw new Error('offline')
       return { text: 'I study English because I want to communicate with people around the world.' }
     }
-    return { text: JSON.stringify(body.purpose === 'speaking_examiner' ? { reply: 'What do you enjoy about that?' } : evaluationPayload) }
+    if (path.endsWith('/assess') || path.endsWith('/assess-transcript')) {
+      const candidateTexts = body.history.filter((turn: { role: string }) => turn.role === 'candidate').map((turn: { text: string }) => turn.text)
+      return { ...(evaluationPayload as object), source: 'ai', assessmentMode: path.endsWith('/assess') ? 'audio' : 'transcript', improvedAnswers: candidateTexts.flatMap((text: string, answerIndex: number) => text.trim() ? [{ answerIndex, original: text, improved: text }] : []) }
+    }
+    return { text: JSON.stringify({ reply: 'What do you enjoy about that?' }) }
   }) as typeof apiClient.post
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -177,14 +182,16 @@ export async function run() {
 
   let saved: any = null
   const root = createRoot(container)
-  await act(async () => root.render(<StrictMode><ExaminerSession config={{ mode: 'full_mock', mockSeed: {
+  blockPlayback = true
+  await act(async () => root.render(<StrictMode><ExaminerSession autoStart config={{ mode: 'full_mock', mockSeed: {
     part1: ['What do you study?'],
     part2: { title: 'Describe a useful skill.', bullets: ['What it is', 'How you learned it'], followUp: 'Do you use this skill every day?' },
     part3: ['How do people learn new skills?'],
   } }} modeLabel="Speaking Mock 1" onExit={() => {}} onSaved={(result, transcript) => { saved = { result, transcript } }} /></StrictMode>))
   try {
     blockPlayback = true
-    await click('Begin speaking test')
+    await until(() => button('Play examiner'), 'Full mock automatically connects microphone and begins examiner audio')
+    assert.equal(button('Begin speaking test'), undefined, 'No second start gate after full mock instructions')
     assert.ok(button('Play examiner'), 'Autoplay block has a user gesture recovery')
     assert.equal(recorderStarts, 1, 'Only the earlier helper test recorded, never the unheard examiner question')
     blockPlayback = false
@@ -246,9 +253,26 @@ export async function run() {
   assert.match(container.textContent!, /Maya/)
   await act(async () => femaleRoot.unmount())
   console.log('PASS: Maya always uses the female neural voice')
+  const resumeKey = 'profai:speaking:examiner:Speaking Mock 2:{"mode":"part1"}'
+  const savedSession = JSON.parse(accountStorageFor('guest').getItem(resumeKey)!)
+  assert.ok(savedSession.stages.length, 'Speaking stores the exact generated question sequence')
+  const resumeRoot = createRoot(container)
+  await act(async () => resumeRoot.render(<StrictMode><ExaminerSession config={{ mode: 'part1' }} modeLabel="Speaking Mock 2" onExit={() => {}} onSaved={() => {}} /></StrictMode>))
+  try {
+    assert.ok(button('Resume speaking test'), 'Interrupted Speaking presents the saved session')
+    await click('Resume speaking test')
+    const resumed = JSON.parse(accountStorageFor('guest').getItem(resumeKey)!)
+    assert.deepEqual(resumed.stages, savedSession.stages, 'Resume must not generate a different question sequence')
+    assert.deepEqual(resumed.history, savedSession.history)
+    assert.equal(resumed.examiner.name, savedSession.examiner.name)
+    await endAudio()
+    assert.equal(JSON.parse(accountStorageFor('guest').getItem(resumeKey)!).prompt, savedSession.stages[0].moves[0].text, 'Resuming a greeting continues to the first question')
+  } finally { await act(async () => resumeRoot.unmount()) }
+  console.log('PASS: Speaking reload in StrictMode keeps its examiner, question sequence, transcript and current move')
 
   voiceFails = true
   for (const [mock, name, voiceName] of [[1, 'Alex', 'Daniel'], [2, 'Maya', 'Google UK English Female']] as const) {
+    localStorage.clear()
     const fallbackRoot = createRoot(container)
     requestedVoices = []
     await act(async () => fallbackRoot.render(<ExaminerSession config={{ mode: 'part1' }} modeLabel={`Speaking Mock ${mock}`} onExit={() => {}} onSaved={() => {}} />))
@@ -326,6 +350,7 @@ export async function run() {
     browserTranscript = 'I enjoy studying languages in my spare time.'
     transcribedFiles = []
     const starts = recognitionStarts
+    localStorage.clear()
     const desktopRoot = createRoot(container)
     await act(async () => desktopRoot.render(<ExaminerSession config={{ mode: 'part1' }} modeLabel="Speaking Mock 1" onExit={() => {}} onSaved={() => {}} />))
     try {

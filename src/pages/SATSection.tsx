@@ -1,18 +1,15 @@
-import { useState, type KeyboardEvent } from 'react'
-import { ArrowLeft, ArrowRight, BookOpenText, Calculator, CheckCircle2, Clock3, Layers3, Search } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { loadSATAttempt } from '@/features/sat/attemptStorage'
+import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
+import UiText from '@/components/common/UiText'
+import { useAuthStore } from '@/store/authStore'
 import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
 import './mock-ielts.css'
+import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
 
-const tabs = [
-  { id: 'reading-writing', label: 'Reading & Writing', detail: 'Evidence and expression', icon: BookOpenText },
-  { id: 'math', label: 'Math', detail: 'Problem solving', icon: Calculator },
-  { id: 'mocks', label: 'Full Mocks', detail: 'Both sections together', icon: Layers3 },
-] as const
-
-type TabId = (typeof tabs)[number]['id']
-
+const tabs = SAT_SECTION_TABS
+type TabId = 'mocks' | 'reading-writing' | 'math'
 function isTabId(value: string | undefined): value is TabId {
   return value === 'mocks' || isSATSection(value)
 }
@@ -21,6 +18,7 @@ export default function SATSection() {
   const navigate = useNavigate()
   const { section } = useParams<{ section: string }>()
   const [search, setSearch] = useState('')
+  useAuthStore((state) => state.user?.id)
 
   if (!isTabId(section)) return <Navigate to="/sat" replace />
 
@@ -33,36 +31,15 @@ export default function SATSection() {
   const visibleTests = tests.filter((test) =>
     `${test.mockId} ${isFullMock ? 'Full Mock' : 'Practice Test'} ${test.title} ${test.badge} ${test.subtitle}`.toLowerCase().includes(query),
   )
+  const completedTestIds = new Set(loadSATAttemptHistory()
+    .filter(({ attempt }) => attempt.status === 'submitted')
+    .map(({ attempt }) => attempt.testId))
 
-  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, tab: TabId) => {
-    const index = tabs.findIndex((item) => item.id === tab)
-    const nextIndex = event.key === 'ArrowRight' ? (index + 1) % tabs.length
-      : event.key === 'ArrowLeft' ? (index - 1 + tabs.length) % tabs.length
-        : event.key === 'Home' ? 0
-          : event.key === 'End' ? tabs.length - 1 : -1
-    if (nextIndex < 0) return
-    event.preventDefault()
-    const nextTab = tabs[nextIndex].id
-    navigate(`/sat/${nextTab}`)
-    document.getElementById(`sat-tab-${nextTab}`)?.focus()
-  }
 
   return (
     <main className="workspace-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px]">
-        <div className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
-          <div role="tablist" aria-label="SAT test sections" className="flex gap-2 overflow-x-auto">
-            {tabs.map(({ id, label, detail, icon: Icon }) => (
-              <button key={id} id={`sat-tab-${id}`} type="button" role="tab" tabIndex={section === id ? 0 : -1}
-                aria-selected={section === id} aria-controls="sat-test-panel"
-                onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => navigate(`/sat/${id}`)}
-                className={`flex min-w-[11rem] flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${section === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}>
-                <Icon className="h-5 w-5 shrink-0 text-red-600" />
-                <span><strong className="block text-sm">{label}</strong><small className="block whitespace-nowrap text-[11px] font-semibold text-slate-500">{detail}</small></span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <SATSectionTabs section={section} />
 
         <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
           <section className="mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
@@ -86,6 +63,7 @@ export default function SATSection() {
               <div className="relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {visibleTests.map((test) => {
                   const attempt = loadSATAttempt(test.id)
+                  const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)
                   const expectedModules = isFullMock ? 4 : 2
@@ -94,7 +72,7 @@ export default function SATSection() {
                   const duration = durationMinutes >= 60
                     ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60 ? ` ${durationMinutes % 60}m` : ''}`
                     : `${durationMinutes}m`
-                  const cardSections = tabs.filter((tab) => tab.id !== 'mocks' && (isFullMock || tab.id === section))
+                  const cardSections = tabs.filter((tab) => (tab.id === 'math' || tab.id === 'reading-writing') && (isFullMock || tab.id === section))
                   const destination = `/mock/sat/${test.mockId}${isFullMock ? '' : `?section=${section}`}`
                   const action = attempt?.status === 'active' ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Open'
 
@@ -103,9 +81,14 @@ export default function SATSection() {
                       className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">SAT {isFullMock ? 'Full Mock' : activeTab.label} {String(test.mockId).padStart(2, '0')}</span>
-                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-                          <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} ready
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {completed ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-800" data-sat-completed>
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="Completed" />
+                          </span> : null}
+                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                            <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} ready
+                          </span>
+                        </div>
                       </div>
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>

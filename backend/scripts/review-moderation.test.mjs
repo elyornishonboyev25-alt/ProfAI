@@ -9,11 +9,11 @@ process.env.REFRESH_TOKEN_SECRET = 'review-test-refresh-secret-at-least-24'
 const { default: express } = await import('express')
 const { default: router } = await import('../dist/routes/reviews.routes.js')
 const { prisma } = await import('../dist/lib/prisma.js')
-const { signAccessToken } = await import('../dist/utils/jwt.js')
+const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 
 const reviews = new Map()
 let nextId = 0
-let server, base
+let server, base, restoreSessions
 const owner = signAccessToken({ sub: 'owner', role: 'USER' })
 const otherAdmin = signAccessToken({ sub: 'other', role: 'ADMIN' })
 const input = { name: 'Test Learner', exam: 'IELTS', bandBefore: '5.5', bandAfter: '7.5', text: 'Focused practice helped me improve.' }
@@ -34,8 +34,9 @@ before(async () => {
     return { count: review ? 1 : 0 }
   }
   prisma.review.deleteMany = async ({ where }) => ({ count: reviews.delete(where.id) ? 1 : 0 })
-  prisma.user.findUnique = async ({ where }) => ({ email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : 'other@example.com' })
-  prisma.$transaction = async operations => Promise.all(operations)
+  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : 'other@example.com' })
+  prisma.$transaction = async operations => typeof operations === 'function' ? operations(prisma) : Promise.all(operations)
+  restoreSessions = installSessionFixtures(prisma)
   const app = express()
   app.use(express.json())
   app.use('/reviews', router)
@@ -44,6 +45,7 @@ before(async () => {
 })
 
 after(async () => {
+  restoreSessions()
   Object.assign(prisma.review, { create: originals.create, findMany: originals.findMany, count: originals.count, updateMany: originals.updateMany, deleteMany: originals.deleteMany })
   prisma.user.findUnique = originals.user
   prisma.$transaction = originals.transaction

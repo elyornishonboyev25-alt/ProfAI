@@ -125,9 +125,8 @@ export async function run() {
   assert.equal(container.querySelector('.sat-bank-hero'), null)
   const questions = SAT_TEST_CATALOG[1].modules[0].questions.slice(0, 4)
   await click(
-    container.querySelector(
-      `button[role="radio"]:nth-child(${questions[0].correctAnswer.charCodeAt(0) - 64})`,
-    ),
+    [...container.querySelectorAll<HTMLButtonElement>('button[role="radio"]')]
+      .find((node) => node.textContent?.trim().startsWith(questions[0].correctAnswer)),
   )
   await click(button('Mark for Review'))
   assert.ok(button('Marked for Review'))
@@ -368,7 +367,7 @@ export async function run() {
   const calculator = document.querySelector('[role="dialog"][aria-label="Desmos Graphing Calculator"]')!
   assert.equal(calculator.getAttribute('aria-hidden'), 'false')
   const iframe = calculator.querySelector('iframe')!
-  assert.equal(iframe.getAttribute('src'), 'https://www.desmos.com/calculator')
+  assert.equal(iframe.getAttribute('src'), 'https://www.desmos.com/testing/college-board/graphing')
   assert.ok(container.querySelector('.sat-bank-run-viewport.with-desmos'))
   await click(document.querySelector('[aria-label="Return Desmos to floating window"]'))
   assert.equal(container.querySelector('.sat-bank-run-viewport.with-desmos'), null)

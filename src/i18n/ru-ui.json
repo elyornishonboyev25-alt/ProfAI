@@ -1,4 +1,5 @@
 {
+  "This account is already signed in on 3 devices. Sign out on another device before signing in here.": "В этот аккаунт уже выполнен вход на 3 устройствах. Выйдите из аккаунта на другом устройстве, чтобы войти здесь.",
   "Your university plan": "Ваш план поступления",
   "Your shortlist": "Избранные университеты",
   "Keep your strongest options together, open their profiles and remove choices as your plan becomes clearer.": "Сохраните лучшие варианты, изучайте их профили и обновляйте список по мере уточнения плана.",
@@ -648,5 +649,21 @@
   "Practice IELTS and SAT. Review your results. Build your next chapter.": "Практикуйте IELTS и SAT. Анализируйте результаты. Начните следующую главу.",
   "Listening, Reading, Writing and Speaking.": "Аудирование, чтение, письмо и устная речь.",
   "Reading & Writing and Math.": "Чтение и письмо, математика.",
-  "Your practice, results and saved work. All in one place.": "Практика, результаты и сохранённые работы. Всё в одном месте."
+  "Your practice, results and saved work. All in one place.": "Практика, результаты и сохранённые работы. Всё в одном месте.",
+  "Short, clear English for pronunciation, rhythm and everyday conversations.": "Короткие и понятные видео для произношения, ритма речи и повседневных разговоров.",
+  "No audio was captured. Please record again.": "Звук не записан. Попробуйте записать ещё раз.",
+  "Recording failed. Please try again.": "Не удалось записать звук. Попробуйте ещё раз.",
+  "Recording": "Идёт запись",
+  "Download recording": "Скачать запись",
+  "Practice progress": "Прогресс практики",
+  "Sections follow natural speech pauses, so their lengths vary.": "Фрагменты следуют естественным паузам, поэтому их длина различается.",
+  "Replay section": "Повторить фрагмент",
+  "Next section": "Следующий фрагмент",
+  "Pronunciation": "Произношение",
+  "Everyday English": "Повседневный английский",
+  "Clear sounds and natural sentence stress": "Чёткие звуки и естественное ударение в предложениях",
+  "Useful phrases and conversational rhythm": "Полезные фразы и разговорный ритм",
+  "Show all subtitles": "Показать все субтитры",
+  "Hide all subtitles": "Скрыть все субтитры",
+  "Full subtitles": "Полные субтитры"
 }

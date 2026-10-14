@@ -109,9 +109,10 @@ export async function run() {
   }
   saveReviewState(source.id, { test: staleTest, result })
   const reviewRoot = createRoot(container)
-  await act(async () => reviewRoot.render(<MemoryRouter initialEntries={[`/review/${source.id}`]}><Routes><Route path="/review/:testId" element={<ResultsReview />} /></Routes></MemoryRouter>))
+  await act(async () => reviewRoot.render(<MemoryRouter initialEntries={[{ pathname: `/review/${source.id}`, key: 'refresh-stale-prompts', state: { initialQuestionId: 'rd26-q19' } }]}><Routes><Route path="/review/:testId" element={<ResultsReview />} /></Routes></MemoryRouter>))
   assert.ok(!container.textContent!.includes('OBSOLETE REPEATED SUMMARY'), 'saved test snapshots and old analysis prompts use corrected catalog text')
-  assert.ok(compact(container.textContent!).includes(compact(source.sections[1].questions.find(q => q.number === 19)!.text)), 'saved review renders the individual question sentence')
+  assert.ok(container.querySelector('#question-card-rd26-q19'), 'saved review opens the selected question part')
+  assert.ok(compact(container.textContent!).includes(compact(source.sections[1].questions.find(q => q.number === 19)!.text.replace(/_+/g, ''))), 'saved review renders the individual question sentence around its inline input')
   await act(async () => reviewRoot.unmount())
   console.log('PASS: ResultsReview refreshes stale stored prompts while retaining answers')
 }

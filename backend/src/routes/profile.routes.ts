@@ -20,6 +20,7 @@ import {
   XP_REWARD_POLICY,
   type XpRewardSource,
 } from '../services/xpRewards.service.js'
+import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdentity.js'
 import { TEST_XP_POLICY } from '../services/gamification.service.js'
 
 const router = Router()
@@ -1576,7 +1577,7 @@ router.get(
     })
     const users = await prisma.user.findMany({
       where: { id: { in: grouped.map((g) => g.userId) } },
-      select: { id: true, nickname: true, fullName: true, avatarUrl: true, lastActiveDate: true, currentStreak: true },
+      select: { ...premiumIdentitySelect, id: true, nickname: true, fullName: true, avatarUrl: true, lastActiveDate: true, currentStreak: true },
     })
     const speakers = grouped
       .map((g) => {
@@ -1585,6 +1586,7 @@ router.get(
         return {
           id: u.id,
           nickname: u.nickname,
+          premium: hasPremiumIdentity(u),
           displayName: u.nickname ?? u.fullName,
           avatarUrl: u.avatarUrl ?? null,
           online: isOnline(u.lastActiveDate),
@@ -1610,6 +1612,7 @@ router.get(
     const user = await prisma.user.findFirst({
       where: { nickname: { equals: nickname, mode: 'insensitive' } },
       select: {
+        ...premiumIdentitySelect,
         id: true, nickname: true, fullName: true, avatarUrl: true, lastActiveDate: true,
         currentStreak: true, longestStreak: true, level: true, xp: true, createdAt: true,
       },
@@ -1634,6 +1637,7 @@ router.get(
       profile: {
         id: user.id,
         nickname: user.nickname,
+        premium: hasPremiumIdentity(user),
         displayName: user.nickname ?? user.fullName,
         avatarUrl: user.avatarUrl ?? null,
         online: isOnline(user.lastActiveDate),
@@ -2000,6 +2004,7 @@ router.get(
         OR: [{ profile: { is: null } }, { profile: { isPublic: true } }],
       },
       select: {
+        ...premiumIdentitySelect,
         id: true,
         nickname: true,
         avatarUrl: true,
@@ -2037,6 +2042,7 @@ router.get(
       topLearner: champion ? { nickname: champion.nickname, avatarUrl: champion.avatarUrl, xp: champion.xp } : null,
       results: users.map((u) => ({
         nickname: u.nickname,
+        premium: hasPremiumIdentity(u),
         avatarUrl: u.avatarUrl ?? null,
         level: u.level,
         xp: u.xp,
@@ -2062,6 +2068,7 @@ router.get(
     const user = await prisma.user.findFirst({
       where: { nickname: { equals: nickname, mode: 'insensitive' } },
       select: {
+        ...premiumIdentitySelect,
         id: true,
         nickname: true,
         avatarUrl: true,
@@ -2114,6 +2121,7 @@ router.get(
     return res.json({
       profile: {
         nickname: user.nickname,
+        premium: hasPremiumIdentity(user),
         displayName: user.nickname ?? 'Learner',
         avatarUrl: user.avatarUrl ?? null,
         level: user.level,

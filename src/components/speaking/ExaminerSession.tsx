@@ -217,19 +217,31 @@ export default function ExaminerSession({
   onSaved,
   hideVocabularyReview = false,
   autoStart = false,
+  sessionScope,
+  onCompleted,
 }: {
   config: SessionConfig
   modeLabel: string
   hideVocabularyReview?: boolean
   autoStart?: boolean
+  sessionScope?: string
+  onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
   const recognition = useSpeechRecognition('en-US')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
-  const sessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
+  const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
+  const sessionKey = sessionScope ? `${legacySessionKey}:mock:${sessionScope}` : legacySessionKey
   const [saved, setSaved] = useState(() => {
-    try { return JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? 'null') as { phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
+    try {
+      const storage = accountStorageFor(owner)
+      let raw = storage.getItem(sessionKey)
+      if (!raw && sessionScope) {
+        const legacy = storage.getItem(legacySessionKey)
+        if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw!); storage.removeItem(legacySessionKey) }
+      }
+      return JSON.parse(raw ?? 'null') as { phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
   })
 
   const [audioKey, setAudioKey] = useState(() => saved?.audioKey ?? `${sessionKey}:${Date.now()}`)
@@ -295,7 +307,7 @@ export default function ExaminerSession({
   useLayoutEffect(() => {
     if (!started) return
     const save = () => {
-      if (savedEvaluationRef.current) {
+      if (savedEvaluationRef.current && !sessionScope) {
         try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Optional session cache. */ }
         return
       }
@@ -402,19 +414,25 @@ export default function ExaminerSession({
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
-      // A service outage must not mark a full mock complete or award an AI band.
-      // The candidate can retry grading these exact answers from the result.
+      // Preserve the completed recording checkpoint before navigation, including outages.
+      if (sessionScope) {
+        try {
+          const checkpoint = JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? '{}')
+          accountStorageFor(owner).setItem(sessionKey, JSON.stringify({ ...checkpoint, phase: 'result', audioKey, history: historyRef.current, answers: answersRef.current }))
+        } catch { /* In-memory review remains available. */ }
+      }
       if (result.source === 'ai' && (config.mode !== 'full_mock' || result.assessmentMode === 'audio') && !savedEvaluationRef.current) {
         savedEvaluationRef.current = true
-        try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Grading already succeeded. */ }
-        onSaved(result, [...historyRef.current])
+        if (!sessionScope) { try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Grading already succeeded. */ } }
+        try { onSaved(result, [...historyRef.current]) } catch { /* Optional history/reward storage cannot block the completed exam report. */ }
       }
+      onCompleted?.(result, [...historyRef.current], sessionKey)
     } catch {
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvalError('Could not complete the evaluation. Please try again.')
       setPhase('result')
     }
-  }, [config.mode, modeLabel, onSaved, owner, sessionKey])
+  }, [config.mode, modeLabel, onSaved, onCompleted, owner, sessionKey, sessionScope, audioKey])
 
   // Core engine: process the next move, advancing across stages.
   const advance = useCallback(() => {
@@ -517,24 +535,26 @@ export default function ExaminerSession({
       voiceContextRef.current ??= createAudioContext()
       void voiceContextRef.current?.resume().catch(() => {})
     } catch { /* Recording and playback can work without audio metering. */ }
-    if (!canRecordAudio()) {
-      setAnswerError('This browser cannot record audio. Use a browser with microphone recording support.')
-      beginPendingRef.current = false
-      setStarting(false)
-      return
-    }
-    try {
-      const stream = await requestSpeakingMicrophone()
-      if (disposedRef.current) {
-        stream.getTracks().forEach((track) => track.stop())
+    if (!saved || !['evaluating', 'result'].includes(saved.phase)) {
+      if (!canRecordAudio()) {
+        setAnswerError('This browser cannot record audio. Use a browser with microphone recording support.')
+        beginPendingRef.current = false
+        setStarting(false)
         return
       }
-      attachMicrophone(stream)
-    } catch (error) {
-      setAnswerError(microphoneError(error))
-      beginPendingRef.current = false
-      setStarting(false)
-      return
+      try {
+        const stream = await requestSpeakingMicrophone()
+        if (disposedRef.current) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+        attachMicrophone(stream)
+      } catch (error) {
+        setAnswerError(microphoneError(error))
+        beginPendingRef.current = false
+        setStarting(false)
+        return
+      }
     }
     if (saved) {
       stagesRef.current = saved.stages

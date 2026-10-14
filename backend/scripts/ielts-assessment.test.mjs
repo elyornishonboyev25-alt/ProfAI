@@ -10,6 +10,7 @@ const { validateWritingAssessment } = await import('../dist/services/writingAsse
 const { validateAudioAssessment, speakingAssessmentSchema, assessSpeakingAudio, assessSpeakingTranscript } = await import('../dist/services/speakingAssessment.service.js')
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+const { validateSpeakingRewrites } = await import('../dist/services/speakingRewrites.js')
 
 const answer = 'Although I used to prefer studying alone, working with my classmates has helped me understand difficult topics because we can explain our different approaches to each other.'
 const writing = {
@@ -48,6 +49,38 @@ test('each Speaking score needs grounded evidence; text cannot fabricate acousti
   assert.throws(() => validateAudioAssessment(JSON.stringify(speaking), history, [1]))
   const textEvidence = speaking.evidence.filter(item => item.criterion !== 'pronunciation')
   assert.throws(() => validateAudioAssessment(JSON.stringify({ ...speaking, evidence: textEvidence.map(item => ({ ...item, quote: '' })) }), history, []))
+})
+
+test('missing Speaking coaching does not discard grounded scores; rewrites tolerate whitespace and order only', () => {
+  const partial = validateAudioAssessment(JSON.stringify({ ...speaking, improvedAnswers: [speaking.improvedAnswers[0]] }), history, [0])
+  assert.equal(partial.overallBand, 8.5)
+  assert.equal(partial.improvedAnswers.length, 1)
+  const candidates = [{ text: 'I like\nreading.' }, { text: '' }, { text: 'At home.' }]
+  const rewrites = [{ answerIndex: 2, original: 'At home.', improved: 'I read at home.' }, { answerIndex: 0, original: 'I like reading.', improved: 'I enjoy reading.' }]
+  assert.deepEqual(validateSpeakingRewrites(rewrites, candidates).map(item => [item.answerIndex, item.original]), [[0, 'I like\nreading.'], [2, 'At home.']])
+  assert.throws(() => validateSpeakingRewrites([{ ...rewrites[0], original: 'Someone else.' }, rewrites[1]], candidates))
+  assert.throws(() => validateSpeakingRewrites([rewrites[0], rewrites[0], rewrites[1]], candidates))
+})
+
+test('missing improved answers are repaired in small batches without changing the audio band', async (t) => {
+  const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-repair-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  let calls = 0
+  globalThis.fetch = async (_url, options) => {
+    calls++
+    const body = JSON.parse(options.body)
+    const submitted = JSON.parse(body.contents[0].parts[0].text)
+    const output = calls === 1 ? { ...speaking, improvedAnswers: [] } : { improvedAnswers: submitted.history.map((turn, answerIndex) => ({ answerIndex, original: turn.text, improved: `Improved: ${turn.text}` })) }
+    if (calls > 1) assert.ok(submitted.history.length <= 4, 'Long mocks use bounded coaching batches')
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(output) }] } }] })
+  }
+  t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
+  const result = await assessSpeakingAudio('repair-user', speakingAssessmentSchema.parse({ modeLabel: 'Full Mock', history, durationSec: 200, audio }))
+  assert.equal(result.overallBand, 8.5)
+  assert.equal(result.improvedAnswers.length, 6)
+  assert.deepEqual(result.improvedAnswers.map(item => item.answerIndex), [0, 1, 2, 3, 4, 5])
+  assert.equal(calls, 3)
 })
 
 test('all six recordings reach the provider; transcript scores exclude missing pronunciation', async (t) => {

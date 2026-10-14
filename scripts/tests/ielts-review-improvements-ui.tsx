@@ -47,7 +47,9 @@ export async function run() {
     assert.equal(checked.overallBand, 6, 'No arbitrary word-count ceiling overrides descriptor-based assessment')
     for (const rewrites of [[], [{ ...evaluation.improvedAnswers![0], original: 'Someone else\'s answer' }], [{ ...evaluation.improvedAnswers![0], answerIndex: 2 }, evaluation.improvedAnswers![1]]]) {
       apiClient.post = (async () => ({ ...evaluation, improvedAnswers: rewrites })) as typeof apiClient.post
-      assert.equal((await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats: evaluation.stats })).source, 'offline', 'Incomplete or mismatched rewrites cannot be saved as complete AI feedback')
+      const graded = await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats: evaluation.stats })
+      assert.equal(graded.source, 'ai', 'Missing coaching must not discard a valid assessment')
+      assert.equal(graded.improvedAnswers?.some(item => item.original === "Someone else's answer"), false, 'Mismatched coaching is discarded independently')
     }
     for (const reviewMode of [false, true]) {
       await render(<SpeakingResult evaluation={evaluation} transcript={history} modeLabel="Speaking Mock 1" reviewMode={reviewMode} onRetry={() => {}} onExit={() => {}} />)

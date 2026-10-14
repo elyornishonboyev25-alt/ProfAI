@@ -173,6 +173,24 @@ function SpeakingTestContent() {
         landingReady={!booting}
         inFullMock={Boolean(mockContext?.id)}
         onExit={exitTest}
+        sessionScope={mockContext?.id}
+        onCompleted={mockContext?.id ? (analysis, transcript, sessionKey) => {
+          const graded = analysis.source === 'ai' && analysis.assessmentMode === 'audio'
+          saveFullMockSectionResult(mockContext.id, 'speaking', {
+            band: graded ? analysis.overallBand : 0,
+            assessmentStatus: graded ? 'graded' : 'pending',
+            summary: analysis.summary,
+            speaking: { evaluation: analysis, transcript, sessionKey },
+            review: transcript.map((turn, index) => ({
+              label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
+              response: turn.text,
+              improvedVersion: turn.role === 'candidate' ? analysis.improvedAnswers?.find(item => item.answerIndex === transcript.slice(0, index).filter(entry => entry.role === 'candidate').length && item.original === turn.text)?.improved : undefined,
+            })),
+            testId: mode.mock.id,
+            completedAt: new Date().toISOString(),
+          })
+          navigate('/mock/ielts/' + mockContext.id, { replace: true, state: { from: mockFrom } })
+        } : undefined}
         onSaved={(analysis, transcript, launchMode) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
@@ -234,22 +252,6 @@ function SpeakingTestContent() {
             mode: 'full_mock',
             source: 'ielts-speaking-mock',
           })
-          // When launched from a Full Mock, mark the Speaking section done only
-          // now — i.e. once the examiner grade is in.
-          if (mockContext?.id) {
-            saveFullMockSectionResult(mockContext.id, 'speaking', {
-              band: analysis.overallBand,
-              summary: analysis.summary,
-              review: transcript.map((turn, index) => ({
-                label: turn.role === 'candidate' ? 'Your answer' : 'Examiner',
-                response: turn.text,
-                improvedVersion: turn.role === 'candidate' ? analysis.improvedAnswers?.find((item) => item.answerIndex === transcript.slice(0, index).filter((entry) => entry.role === 'candidate').length && item.original === turn.text)?.improved : undefined,
-              })),
-              testId: mode.mock.id,
-              completedAt: new Date().toISOString(),
-            })
-            navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
-          }
         }}
       />
     )
@@ -849,11 +851,15 @@ function FullMockRunner({
   onSaved,
   inFullMock = false,
   landingReady = true,
+  sessionScope,
+  onCompleted,
 }: {
   mock: SpeakingFullMockEntry
   onExit: () => void
   inFullMock?: boolean
   landingReady?: boolean
+  sessionScope?: string
+  onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[], launchMode: 'practice' | 'simulation') => void
 }) {
   const [launchMode, setLaunchMode] = useState<'practice' | 'simulation' | null>(inFullMock ? 'simulation' : null)
@@ -903,6 +909,8 @@ function FullMockRunner({
         onExit={onExit}
         onSaved={(analysis, transcript) => onSaved(analysis, transcript, launchMode)}
         hideVocabularyReview={inFullMock}
+        sessionScope={sessionScope}
+        onCompleted={onCompleted}
       />
     </div>
   )

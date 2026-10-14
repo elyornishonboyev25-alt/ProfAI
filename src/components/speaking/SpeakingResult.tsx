@@ -53,6 +53,8 @@ export default function SpeakingResult({
   onRegrade,
   onExit,
   hideVocabularyReview = false,
+  embedded = false,
+  onImprovedAnswers,
 }: {
   evaluation: SpeakingEvaluation
   modeLabel: string
@@ -62,19 +64,21 @@ export default function SpeakingResult({
   onRegrade?: () => void
   onExit: () => void
   hideVocabularyReview?: boolean
+  embedded?: boolean
+  onImprovedAnswers?: (answers: NonNullable<SpeakingEvaluation['improvedAnswers']>) => void
 }) {
   const stats = evaluation.stats
   const vocabularyTestId = speakingVocabularyTestId(modeLabel)
   const unavailable = evaluation.source === 'offline'
 
   return (
-    <div className="speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6">
-      <button onClick={onExit} className="premium-back-btn mb-4">
+    <div className={embedded ? 'speaking-result-embedded' : 'speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6'}>
+      {!embedded && <button onClick={onExit} className="premium-back-btn mb-4">
         <ArrowLeft className="h-3.5 w-3.5" /> {reviewMode ? 'Close review' : 'Back to Speaking Hub'}
-      </button>
+      </button>}
 
       {/* Overall band hero */}
-      <motion.div
+      {!embedded && <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-[2rem] border border-red-100 bg-gradient-to-br from-white via-red-50/40 to-rose-50/60 p-6 text-center shadow-[0_24px_60px_rgba(220,38,38,0.14)] sm:p-8"
@@ -95,12 +99,12 @@ export default function SpeakingResult({
             <Sparkles className="h-3 w-3" /> {evaluation.assessmentMode === 'audio' ? 'AI audio assessment' : 'AI feedback on text'}
           </span>
         )}
-      </motion.div>
+      </motion.div>}
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">{unavailable ? 'No band was awarded. Your answers are available for another assessment.' : evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and recordings. Four criteria carry equal weight. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
       <p className="mt-2 text-center"><a href="https://ielts.org/cdn/ielts-guides/ielts-speaking-band-descriptors.pdf" target="_blank" rel="noreferrer" className="text-xs font-semibold text-red-700 underline">Official IELTS Speaking descriptors</a></p>
       {!hideVocabularyReview ? <TestVocabulary testId={vocabularyTestId} variant="review" /> : null}
-      <ReviewPracticeLink skill="speaking" />
+      {!embedded && <ReviewPracticeLink skill="speaking" />}
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}
@@ -185,7 +189,7 @@ export default function SpeakingResult({
                 <p className="text-xs font-black uppercase tracking-wide text-red-600">Question {index + 1}</p>
                 <p className="mt-1 font-semibold leading-6 text-slate-800">{question?.text || 'Examiner question'}</p>
                 <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text || 'No clear speech captured for this question.'}</p>
-                {turn.text.trim() ? <ImprovedResponse text={evaluation.improvedAnswers?.find((item) => item.answerIndex === index && item.original === turn.text)?.improved} /> : null}
+                {turn.text.trim() ? <ImprovedResponse text={evaluation.improvedAnswers?.find((item) => item.answerIndex === index && item.original === turn.text)?.improved} speakingAnswer={turn.text} onImproved={improved => onImprovedAnswers?.([...(evaluation.improvedAnswers ?? []).filter(item => item.answerIndex !== index), { answerIndex: index, original: turn.text, improved }].sort((a, b) => a.answerIndex - b.answerIndex))} /> : null}
               </div>
             })}
           </div>
@@ -211,14 +215,14 @@ export default function SpeakingResult({
       ) : null}
 
       {/* Actions */}
-      <div className="mt-6 flex flex-wrap gap-3">
+      {!embedded && <div className="mt-6 flex flex-wrap gap-3">
         {!reviewMode ? <button onClick={onRetry} className="arena-primary-btn cta-sheen px-6 py-3">
           <RotateCcw className="mr-2 h-4 w-4" /> Practice again
         </button> : null}
         <button onClick={onExit} className="arena-secondary-btn px-6 py-3">
           {reviewMode ? 'Close review' : 'Back to Speaking Hub'}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

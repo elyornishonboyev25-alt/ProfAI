@@ -14,6 +14,7 @@ import { getIeltsFullTestCatalog, getIeltsReadingUnifiedCatalog, isAvailableIelt
 import { getIeltsSpeakingFullMockCatalog } from './ieltsSpeakingCatalog'
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import type { TestResult } from '@/types/ieltsTypes'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { readingEvidenceKeyConflicts } from '@/data/readingAnswerEvidence'
 import { resolveIeltsTestById } from './ieltsTestCatalog'
 import { calculateBandScore, evaluateReadingAnswers } from './ieltsUtils'
@@ -189,6 +190,8 @@ export function markFullMockSectionComplete(mockId: string, section: MockSection
 
 export type FullMockSectionResult = {
   band: number
+  assessmentStatus?: 'pending' | 'graded'
+  speaking?: { evaluation: SpeakingEvaluation; transcript: ExaminerTurn[]; sessionKey?: string }
   completedAt: string
   testId: string
   result?: TestResult
@@ -252,6 +255,7 @@ export function saveFullMockSectionResult(mockId: string, section: MockSectionKe
 
 export function getFullMockOverallBand(mockId: string): number | null {
   const results = getFullMockResults(mockId)
+  if (Object.values(results).some(result => result.assessmentStatus === 'pending')) return null
   const bands = (['listening', 'reading', 'writing', 'speaking'] as const).map((key) => results[key]?.band)
   if (bands.some((band) => typeof band !== 'number' || !Number.isFinite(band))) return null
   const average = bands.reduce<number>((sum, band) => sum + (band ?? 0), 0) / MOCK_SECTION_COUNT
@@ -275,6 +279,8 @@ export function retakeFullMock(mockId: string): boolean {
     for (const section of mock.sections) {
       const testId = section.launchPath?.split('/').pop()
       accountStorage.removeItem(`profai:full-mock:intro:v1:${mockId}:${section.key}`)
+      const sessionKey = store[mockId]?.[section.key]?.speaking?.sessionKey
+      if (sessionKey) accountStorage.removeItem(sessionKey)
       if (section.key === 'listening' || section.key === 'reading') {
         const key = `ielts_test_session_${testId}:mock:${mockId}`
         accountStorage.removeItem(key)

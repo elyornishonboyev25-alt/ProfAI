@@ -27,6 +27,14 @@
 .full-mock-result-card .mock-run-skill-band { display: block; text-align: left; font-size: 38px; margin: 22px 0 15px; }
 .full-mock-result-card .mock-run-skill-band small { margin-top: 6px; font-size: 10px; font-weight: 500; color: #748092; }
 .full-mock-result-card .full-mock-result-meta { font-size: 11px; color: #626f82; }
+.full-mock-result-review { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #f0dce1; color: #a21b33; font-size: 12px; font-weight: 750; }
+.full-mock-assessment-notice { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin: 24px 0; padding: 20px; border: 1px solid #f5d899; border-radius: 16px; background: #fffbf1; }
+.full-mock-assessment-notice h3 { font-size: 15px; font-weight: 800; color: #835718; }
+.full-mock-assessment-notice p { margin-top: 6px; font-size: 13px; line-height: 1.7; color: #776345; }
+.full-mock-assessment-error { margin: 16px 0; color: #b4233a; font-size: 13px; line-height: 1.7; }
+.full-mock-assessment-notice button:disabled { opacity: .6; cursor: wait; }
+.speaking-result-embedded { min-width: 0; }
+.speaking-result-embedded p { overflow-wrap: anywhere; }
 .full-mock-result-detail { margin-top: 20px; padding: 28px; border: 1px solid #e1e5eb; border-radius: 20px; background: #fff; }
 .full-mock-result-detail > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid #eceef2; padding-bottom: 20px; }
 .full-mock-result-detail h2 { font-size: 26px; font-weight: 800; margin: 0; }

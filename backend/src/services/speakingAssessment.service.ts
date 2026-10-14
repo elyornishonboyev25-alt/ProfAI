@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { AiGenerationError, generateAiText } from './aiProvider.service.js'
-import { improvedAnswersSchema, SPEAKING_REWRITE_INSTRUCTIONS, validateSpeakingRewrites } from './speakingRewrites.js'
+import { collectSpeakingRewrites, SPEAKING_REWRITE_INSTRUCTIONS, validateSpeakingRewrites } from './speakingRewrites.js'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION, roundIeltsBand } from './ieltsAssessmentPolicy.js'
 
 export const speakingAssessmentSchema = z.object({
@@ -13,7 +13,7 @@ export const speakingTranscriptSchema = speakingAssessmentSchema.omit({ audio: t
 
 const band = z.number().min(0).max(9)
 const resultSchema = z.object({
-  improvedAnswers: improvedAnswersSchema,
+  improvedAnswers: z.unknown().optional(),
   fluencyBand: band, lexicalBand: band, grammarBand: band, pronunciationBand: band,
   summary: z.string().trim().min(1).max(2500),
   strengths: z.array(z.string().trim().min(1).max(800)).max(5),
@@ -26,7 +26,7 @@ const halfBand = roundIeltsBand
 export function validateAudioAssessment(raw: string, history: z.infer<typeof speakingAssessmentSchema>['history'], audioIndices?: number[]) {
   const result = resultSchema.parse(JSON.parse(raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')))
   const candidates = history.filter((turn) => turn.role === 'candidate')
-  const improvedAnswers = validateSpeakingRewrites(result.improvedAnswers, candidates)
+  const improvedAnswers = collectSpeakingRewrites(result.improvedAnswers, candidates)
   const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, ' ').trim()
   const evidence = result.evidence.filter((item) => item.answerIndex < candidates.length && (item.criterion !== 'pronunciation' || !audioIndices || audioIndices.includes(item.answerIndex)) && (item.quote.trim() ? normalize(candidates[item.answerIndex].text).includes(normalize(item.quote)) : !!audioIndices?.includes(item.answerIndex) && ['fluency', 'pronunciation'].includes(item.criterion)))
   if (!evidence.length) throw new Error('No grounded assessment evidence.')
@@ -55,7 +55,7 @@ Return one complete JSON object with fluencyBand, lexicalBand, grammarBand, pron
 ${SPEAKING_REWRITE_INSTRUCTIONS}`,
     userMessage: JSON.stringify({ modeLabel: request.modeLabel, history: request.history, durationSec: request.durationSec, recordingOrder: audio.map((clip) => ({ answerIndex: clip.answerIndex, transcript: candidates[clip.answerIndex].text })) }), maxOutputTokens: 16384,
   })
-  try { return validateAudioAssessment(generated.text, request.history, audio.map((clip) => clip.answerIndex)) }
+  try { return await completeRewrites(userId, validateAudioAssessment(generated.text, request.history, audio.map((clip) => clip.answerIndex)), request.history, signal) }
   catch { throw new AiGenerationError(502, 'SPEAKING_RESULT_INCOMPLETE', 'Speaking feedback was incomplete. Your recordings are safe; retry the evaluation.') }
 }
 
@@ -72,9 +72,40 @@ ${SPEAKING_REWRITE_INSTRUCTIONS}`,
     userMessage: JSON.stringify({ modeLabel, history, durationSec }),
   })
   try {
-    const result = validateAudioAssessment(generated.text, history, [])
+    const result = await completeRewrites(userId, validateAudioAssessment(generated.text, history, []), history, signal)
     return { ...result, assessmentMode: 'transcript' as const, pronunciationBand: 0, overallBand: halfBand((result.fluencyBand + result.lexicalBand + result.grammarBand) / 3) }
   } catch { throw new AiGenerationError(502, 'SPEAKING_RESULT_INCOMPLETE', 'Speaking feedback was incomplete. Your answers are safe; retry the evaluation.') }
+}
+
+export async function generateSpeakingRewrites(userId: string, history: z.infer<typeof speakingTranscriptSchema>['history'], signal?: AbortSignal) {
+  const candidates = history.filter(turn => turn.role === 'candidate')
+  if (!candidates.some(turn => turn.text.trim())) throw new Error('There are no answers to improve.')
+  // Small batches prevent long mock transcripts from truncating the JSON response.
+  const chunks = Array.from({ length: Math.ceil(candidates.length / 4) }, (_, index) => ({ offset: index * 4, turns: candidates.slice(index * 4, index * 4 + 4) }))
+  const answers = [] as ReturnType<typeof validateSpeakingRewrites>
+  for (const { offset, turns } of chunks) {
+    if (!turns.some(turn => turn.text.trim())) continue
+    const generated = await generateAiText({ userId, purpose: 'speaking_evaluation', signal,
+      systemPrompt: `You are an English speaking coach. Return ONLY JSON with improvedAnswers. ${SPEAKING_REWRITE_INSTRUCTIONS}`,
+      userMessage: JSON.stringify({ history: turns.map(turn => ({ role: 'candidate', text: turn.text })) }), maxOutputTokens: 8192,
+    })
+    const parsed = JSON.parse(generated.text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''))
+    answers.push(...validateSpeakingRewrites(parsed.improvedAnswers, turns).map(item => ({ ...item, answerIndex: item.answerIndex + offset })))
+  }
+  return answers
+}
+
+async function completeRewrites(userId: string, result: ReturnType<typeof validateAudioAssessment>, history: z.infer<typeof speakingTranscriptSchema>['history'], signal?: AbortSignal) {
+  const candidates = history.filter(turn => turn.role === 'candidate')
+  const missing = candidates.flatMap((turn, answerIndex) => turn.text.trim() && !result.improvedAnswers.some(item => item.answerIndex === answerIndex) ? [{ ...turn, role: 'candidate' as const, answerIndex }] : [])
+  if (missing.length) {
+    try {
+      const repairSignal = AbortSignal.any([AbortSignal.timeout(20_000), ...(signal ? [signal] : [])])
+      const repaired = await generateSpeakingRewrites(userId, missing, repairSignal)
+      result.improvedAnswers = [...result.improvedAnswers, ...repaired.map(item => ({ ...item, answerIndex: missing[item.answerIndex].answerIndex }))].sort((a, b) => a.answerIndex - b.answerIndex)
+    } catch { /* Grounded scoring remains valid; missing coaching can be retried separately. */ }
+  }
+  return result
 }
 
 export async function assessSpeakingText(userId: string, transcript: string, taskLabel: string) {

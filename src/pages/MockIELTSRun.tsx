@@ -26,8 +26,11 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Reveal } from '@/components/fx'
 import { useBillingText } from '@/features/billing/copy'
 import './mock-ielts-run.css'
+import { regradeFullMockSpeaking } from '@/services/fullMockSpeakingReview'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
+import { useSpeakingStore } from '@/store/speakingStore'
+import { markSpeakingTestCompleted } from '@/utils/ieltsSpeakingCatalog'
 import {
   formatMockDuration,
   fullMockLaunchState,
@@ -36,6 +39,7 @@ import {
   getFullMockCompletedSections,
   getFullMockOverallBand,
   getFullMockResults,
+  saveFullMockSectionResult,
   MOCK_SECTION_COUNT,
   type FullMockEntry,
   type MockSection,
@@ -173,8 +177,34 @@ export default function MockIELTSRun() {
     })
   }
 
-  if (allSectionsDone && overallBand !== null) return <FullMockResults mock={mock} results={sectionResults} overall={overallBand}
-    onBack={() => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })} onReview={reviewSection} />
+  if (allSectionsDone) return <FullMockResults key={`${userId}:${mock.id}`} mock={mock} results={sectionResults} overall={overallBand}
+    onBack={() => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })} onReview={reviewSection}
+    onRegrade={async () => {
+      const saved = sectionResults.speaking
+      if (!saved?.speaking) throw new Error('No saved Speaking answers were found.')
+      const evaluation = await regradeFullMockSpeaking(userId ?? 'guest', saved)
+      if ((useAuthStore.getState().user?.id ?? null) !== userId || getFullMockResults(mock.id).speaking?.completedAt !== saved.completedAt) return
+      const current = getFullMockResults(mock.id).speaking!
+      if (current.assessmentStatus === 'graded') return
+      const existing = current.speaking?.evaluation.improvedAnswers ?? []
+      evaluation.improvedAnswers = [...existing.filter(item => !evaluation.improvedAnswers?.some(answer => answer.answerIndex === item.answerIndex)), ...(evaluation.improvedAnswers ?? [])].sort((a, b) => a.answerIndex - b.answerIndex)
+      let answerIndex = 0
+      saveFullMockSectionResult(mock.id, 'speaking', { ...saved, band: evaluation.overallBand, assessmentStatus: 'graded', summary: evaluation.summary,
+        speaking: { ...saved.speaking, evaluation },
+        review: saved.speaking.transcript.map(turn => {
+          const index = turn.role === 'candidate' ? answerIndex++ : -1
+          return { label: turn.role === 'candidate' ? 'Your answer' : 'Examiner', response: turn.text,
+            improvedVersion: index >= 0 ? evaluation.improvedAnswers?.find(item => item.answerIndex === index && item.original === turn.text)?.improved : undefined }
+        }),
+      })
+      try {
+        markSpeakingTestCompleted(saved.testId, userId ?? undefined)
+        useSpeakingStore.getState().addSession({ userId, modeLabel: `Speaking Full Mock ${mock.index}`, kind: 'examiner', date: saved.completedAt,
+          overallBand: evaluation.overallBand, fluencyBand: evaluation.fluencyBand, lexicalBand: evaluation.lexicalBand, grammarBand: evaluation.grammarBand, pronunciationBand: evaluation.pronunciationBand,
+          durationSec: evaluation.stats.durationSec, wordCount: evaluation.stats.wordCount, fillerCount: evaluation.stats.fillerCount, summary: evaluation.summary, evaluation, transcript: saved.speaking.transcript,
+        })
+      } catch { /* The saved exam report remains available if optional history storage is full. */ }
+    }} />
 
   return (
     <main className="workspace-page mock-run-page">

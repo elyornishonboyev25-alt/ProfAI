@@ -7,7 +7,7 @@ import { callGeminiAPI, extractJSON } from './geminiAI'
 import type { SpeechStats } from '@/lib/speakingScoring'
 import { estimateBandsFromStats } from '@/lib/speakingScoring'
 import { apiClient } from '@/lib/apiClient'
-import { validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
+import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
 
 async function speakingGeneration(system: string, message: string, tokens: number, purpose: 'speaking_examiner' | 'speaking_evaluation'): Promise<string> {
@@ -219,7 +219,7 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
       !response.summary?.trim() || !Array.isArray(response.strengths) || !response.strengths.every(item => typeof item === 'string' && item.trim()) ||
       !Array.isArray(response.weaknesses) || !response.weaknesses.every(item => typeof item === 'string' && item.trim()) ||
       !Array.isArray(response.improvementPriorities) || !response.improvementPriorities.every(item => item && typeof item.area === 'string' && item.area.trim() && typeof item.action === 'string' && item.action.trim() && typeof item.target === 'number' && Number.isFinite(item.target) && item.target >= 0 && item.target <= 9)) throw new Error('Incomplete Speaking assessment.')
-    const improvedAnswers = validateSpeakingRewrites(response.improvedAnswers, params.history.filter(turn => turn.role === 'candidate'))
+    const improvedAnswers = collectSpeakingRewrites(response.improvedAnswers, params.history.filter(turn => turn.role === 'candidate'))
     const fluencyBand = clampBand(response.fluencyBand), lexicalBand = clampBand(response.lexicalBand), grammarBand = clampBand(response.grammarBand)
     const pronunciationBand = assessmentMode === 'audio' ? clampBand(response.pronunciationBand) : 0
     const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / (assessmentMode === 'audio' ? 4 : 3))
@@ -227,6 +227,11 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
   } catch {
     return offlineEvaluation(params)
   }
+}
+
+export async function improveSpeakingAnswer(text: string): Promise<string> {
+  const response = await apiClient.post<{ improvedAnswers: SpeakingEvaluation['improvedAnswers'] }>('/ai/speaking-audio/rewrites', { history: [{ role: 'candidate', text }] }, { signal: AbortSignal.timeout(90000) })
+  return validateSpeakingRewrites(response.improvedAnswers, [{ text }])[0].improved
 }
 
 // Per-answer coaching; whole-test scoring uses the trusted server assessment.

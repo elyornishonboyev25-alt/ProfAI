@@ -440,6 +440,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                             answer={review.result.answer ?? ''}
                             onAnswer={() => {}}
                             strokes={review.result.highlights ?? []}
+                            eliminatedChoices={review.result.eliminatedChoices ?? []}
                             highlightAvailable={false}
                             onChange={() => {}}
                             flagged={review.result.flagged ?? false}

@@ -1,3 +1,4 @@
+import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdentity.js'
 import { onAccountDeleted } from './accountLifecycle.js'
 import { Difficulty, LeaderboardPeriod, type Prisma, type TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
@@ -29,6 +30,7 @@ export type RankBreakdown = {
 }
 
 type LeaderboardRowCore = {
+  premium: boolean
   rank: number
   previousRank: number
   rankDelta: number
@@ -647,6 +649,7 @@ export async function generateLeaderboard(params: {
     where: useCanonicalXp ? {} : { id: { in: attemptUserIds } },
     select: {
       id: true,
+      ...premiumIdentitySelect,
       fullName: true,
       nickname: true,
       avatarUrl: true,
@@ -757,6 +760,7 @@ export async function generateLeaderboard(params: {
       rankTrend: rankDelta > 0 ? 'up' : rankDelta < 0 ? 'down' : 'same',
       userId: row.userId,
       fullName: row.fullName,
+      premium: hasPremiumIdentity(userMap.get(row.userId)!),
       avatarUrl: row.avatarUrl,
       totalXp: row.totalXp,
       testsCompleted: row.testsCompleted,

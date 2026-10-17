@@ -1,3 +1,6 @@
+import { readActiveTestPaper } from '@/utils/activeTestPaper'
+import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
+import { useAuthStore } from '@/store/authStore'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
@@ -16,13 +19,25 @@ type WritingTestNavState = {
 } | null
 
 export default function IELTSWritingTest() {
+  return <FullMockSectionGate><WritingTestContent /></FullMockSectionGate>
+}
+
+function WritingTestContent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const navState = location.state as WritingTestNavState
 
-  const task = useMemo(() => (id ? getWritingTaskById(id) : null), [id])
-  const fullTest = useMemo(() => (id ? getWritingFullTestById(id) : null), [id])
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const task = useMemo(() => {
+    const candidate = id ? getWritingTaskById(id) : null
+    return candidate ? readActiveTestPaper<typeof candidate>(`profai:writing:draft:${owner}:${id}:session`, owner) ?? candidate : null
+  }, [id, owner])
+  const fullTest = useMemo(() => {
+    const candidate = id ? getWritingFullTestById(id) : null
+    const key = `profai:writing:draft:${owner}:${id}${navState?.mock?.id ? `:mock:${navState.mock.id}` : ''}:session`
+    return candidate ? readActiveTestPaper<typeof candidate>(key, owner) ?? candidate : null
+  }, [id, owner, navState?.mock?.id])
 
   const mockRedirect = navState?.mock?.id ? getFullMockSectionRedirect(navState.mock.id, 'writing', location.pathname) : null
   if (mockRedirect && navState?.mock) {

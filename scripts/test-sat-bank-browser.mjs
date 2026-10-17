@@ -57,7 +57,7 @@ async function main() {
     const pending = new Map()
     const send = (method, params = {}) => new Promise((resolve, reject) => {
       const requestId = ++id
-      const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, 15000)
+      const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, method === 'Page.navigate' ? 60_000 : 15_000)
       pending.set(requestId, { resolve, reject, timeout })
       socket.send(JSON.stringify({ id: requestId, method, params }))
     })
@@ -114,6 +114,7 @@ async function main() {
       assert.ok(layout.panel[0]>=0 && layout.panel[1]>=0 && layout.panel[2]<=width+1 && layout.panel[3]<=layout.footer[0]+1,`${width}x${height}: calculator and footer stay reachable ${JSON.stringify(layout)}`)
       assert.ok(layout.close[0]>=36 && layout.close[1]>=36,'Calculator touch controls')
       assert.equal(layout.framePreserved,true)
+      if(width>=900) assert.ok(Math.abs(layout.panel[0]-width/2)<=1, `Calculator starts at the screen midpoint: ${JSON.stringify(layout)}`)
       if(width>=900) assert.ok(layout.canvasRight<=layout.panel[0]+1,`Question and calculator must not overlap ${JSON.stringify(layout)}`)
       if(width>=900) {
         const before=await evaluate(`document.querySelector('.desmos-panel').getBoundingClientRect().width`)

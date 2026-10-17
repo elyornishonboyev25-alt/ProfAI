@@ -1,3 +1,6 @@
+import { isPremiumUser } from '@/utils/premiumAccess'
+import { useAccountAccess } from '@/features/billing/useAccountAccess'
+import CrownBadge from '@/components/fx/CrownBadge'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -254,6 +257,8 @@ export default function AccountProfile() {
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
+  const access = useAccountAccess()
+  const premiumMember = isPremiumUser(access ? { ...user, access } : user)
   const setUserNickname = useAuthStore((state) => state.setUserNickname)
   const setUserAvatar = useAuthStore((state) => state.setUserAvatar)
   const setUserFullName = useAuthStore((state) => state.setUserFullName)
@@ -559,7 +564,7 @@ export default function AccountProfile() {
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickAvatar} />
 
       <Reveal>
-        <section className="premium-hero account-profile-hero p-6 sm:p-9">
+        <section className={`premium-hero account-profile-hero p-6 sm:p-9 ${premiumMember ? 'premium-member-hero' : ''}`}>
           <div className="premium-top-controls">
             <span className="premium-top-chip">
               <Sparkles className="h-3.5 w-3.5" />
@@ -578,7 +583,7 @@ export default function AccountProfile() {
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="account-profile-avatar-frame relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]">
+                <div className={`${premiumMember ? 'premium-member-avatar' : ''} account-profile-avatar-frame relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]`}>
                   <ProfileAvatar src={avatarUrl} name={user?.fullName} alt="Profile" className="profile-avatar-media--hero" />
                 </div>
                 <button
@@ -599,6 +604,7 @@ export default function AccountProfile() {
 
             {/* Identity */}
             <div className="min-w-0 text-center lg:text-left">
+              {premiumMember ? <CrownBadge className="mb-3" /> : null}
               {editingName ? (
                 <form onSubmit={saveName} className="mx-auto max-w-lg lg:mx-0" onKeyDown={(event) => {
                   if (event.key === 'Escape' && !savingName) {

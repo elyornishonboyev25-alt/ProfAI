@@ -8,7 +8,7 @@ export default defineConfig({
     satVocabularyPlugin(),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: 'script-defer',
       includeAssets: ['logo.svg'],
       workbox: {
@@ -18,10 +18,10 @@ export default defineConfig({
         globPatterns: ['logo.svg', 'assets/index-*.css'],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
-        // injectRegister is explicitly deferred, so these autoUpdate defaults
-        // need to be explicit as well.
-        skipWaiting: true,
-        clientsClaim: true,
+        // Let existing tabs finish using their current worker and assets.
+        // The next document can activate the new deployment.
+        skipWaiting: false,
+        clientsClaim: false,
         importScripts: ['/sw-cleanup.js'],
       },
       manifest: {

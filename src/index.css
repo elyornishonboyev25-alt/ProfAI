@@ -2961,7 +2961,7 @@ html[data-motion='minimal'] .dashboard-loader-learning {
 .ielts-highlight,
 .ielts-note {
   border-radius: 0.2em;
-  padding: 0.02em 0.04em;
+  padding: 0;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   box-shadow: none;

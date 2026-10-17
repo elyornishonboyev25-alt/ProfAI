@@ -14,6 +14,7 @@ export type Result = {
   setId?: string
   flagged?: boolean
   highlights?: HighlightStroke[]
+  eliminatedChoices?: string[]
 }
 // Older sets have no highlights. Ignore malformed annotations without losing answers.
 function readHighlights(value: unknown): HighlightStroke[] {
@@ -98,12 +99,14 @@ allQuestions.forEach((row) => {
 })
 
 export type BankSession = {
+  questions?: Record<string, QuestionRow>
   id: string
   keys: string[]
   index: number
   answers: Record<string, string>
   flagged: string[]
   highlights: Record<string, HighlightStroke[]>
+  eliminatedChoices?: Record<string, string[]>
   createdAt: string
 }
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`
@@ -113,7 +116,7 @@ export function loadBankSession(userId: string): BankSession | null {
     if (!data || typeof data.id !== 'string' || !data.id ||
       typeof data.createdAt !== 'string' || !Number.isFinite(Date.parse(data.createdAt)) ||
       !Array.isArray(data.keys) || !data.keys.length || data.keys.length > 30 ||
-      !data.keys.every((key: unknown) => typeof key === 'string' && reviewQuestions.has(key)) ||
+      !data.keys.every((key: unknown) => typeof key === 'string' && (reviewQuestions.has(key) || data.questions?.[key]?.question?.id)) ||
       new Set(data.keys).size !== data.keys.length ||
       !Number.isInteger(data.index) || data.index < 0 || data.index >= data.keys.length ||
       !data.answers || typeof data.answers !== 'object' || Array.isArray(data.answers) ||
@@ -130,7 +133,10 @@ export function loadBankSession(userId: string): BankSession | null {
   }
 }
 export function saveBankSession(userId: string, session: BankSession) {
-  accountStorageFor(userId ?? 'guest').setItem(sessionKey(userId), JSON.stringify(session))
+  accountStorageFor(userId ?? 'guest').setItem(sessionKey(userId), JSON.stringify({ ...session, questions: session.questions ?? Object.fromEntries(session.keys.flatMap(key => {
+    const row = reviewQuestions.get(key)
+    return row ? [[key, row]] : []
+  })) }))
 }
 export function clearBankSession(userId: string, id: string) {
   if (loadBankSession(userId)?.id === id) accountStorageFor(userId ?? 'guest').removeItem(sessionKey(userId))

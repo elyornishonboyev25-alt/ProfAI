@@ -13,30 +13,32 @@
     button { cursor: pointer; }
     button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
     .app { min-height: 100vh; }
-    .days { position: fixed; inset: 0 auto 0 0; width: 178px; padding: 64px 22px; border-right: 1px solid var(--line); overflow-y: auto; }
-    .day { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 43px; padding: 10px 11px; margin-bottom: 6px; border: 0; border-radius: 3px; background: none; font-size: 13px; font-weight: 600; text-align: left; }
+    .days { position: fixed; inset: 0 auto 0 0; width: 140px; padding: 50px 18px; border-right: 1px solid var(--line); overflow-y: auto; }
+    .day { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 8px; margin-bottom: 5px; border: 0; border-radius: 3px; background: none; font-size: 12px; font-weight: 600; text-align: left; }
     .day:hover { background: #f6f6f6; }
     .day[aria-current="page"] { font-weight: 700; background: #f1f1f1; }
-    .day small { font-size: 11px; font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
-    main { margin-left: 178px; padding: 64px 72px 100px; }
-    .sheet { max-width: 980px; margin: 0 auto; }
-    .heading { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 0 0 27px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
-    h1 { font-size: 25px; font-weight: 700; letter-spacing: -.7px; margin: 0; }
-    h1 small { font-size: 13px; font-weight: 600; letter-spacing: 0; margin-left: 10px; color: #555; }
-    .summary { display: flex; align-items: center; gap: 22px; }
-    .counts { font-size: 12px; font-weight: 600; color: #444; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .counts strong { color: var(--ink); font-weight: 750; }
-    .progress { height: 2px; background: var(--line); margin-top: 9px; overflow: hidden; }
+    .day small { font-size: 10px; font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
+    main { margin-left: 140px; padding: 50px 48px 80px; }
+    .sheet { max-width: 760px; margin: 0 auto; }
+    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -.5px; margin: 0; white-space: nowrap; }
+    h1 small { font-size: 11px; font-weight: 600; letter-spacing: 0; margin-left: 8px; color: #555; }
+    .summary { display: flex; align-items: center; gap: 18px; }
+    .counts { display: flex; gap: 15px; font-size: 11px; font-weight: 500; color: #555; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .counts strong { margin-left: 4px; color: var(--ink); font-size: 12px; font-weight: 750; }
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
+    .percentage { min-width: 29px; font-size: 10px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+    .progress { flex: 1; height: 2px; background: var(--line); overflow: hidden; }
     .progress-fill { display: block; height: 100%; width: 0; background: var(--ink); transition: width .4s ease; }
-    .history { width: 64px; height: 28px; }
+    .history { width: 48px; height: 24px; }
     .history[hidden] { display: none; }
-    .task { display: flex; align-items: flex-start; gap: 17px; padding: 16px 0; }
-    .check { appearance: none; -webkit-appearance: none; flex: 0 0 21px; width: 21px; height: 21px; border: 1.7px solid var(--ink); border-radius: 3px; background: white; margin: 7px 0 0; cursor: pointer; transition: background .15s, transform .2s; }
+    .task { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+    .check { appearance: none; -webkit-appearance: none; flex: 0 0 17px; width: 17px; height: 17px; border: 1.4px solid var(--ink); border-radius: 2px; background: white; margin: 6px 0 0; cursor: pointer; transition: background .15s, transform .2s; }
     .check:checked { background: var(--ink); transform: rotate(-4deg); }
-    .check:checked::after { content: ''; display: block; width: 5px; height: 10px; margin: 2px 0 0 6px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .check:checked::after { content: ''; display: block; width: 4px; height: 8px; margin: 1px 0 0 4px; border: solid white; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
     .check:disabled { cursor: default; }
     .writing { position: relative; flex: 1; min-width: 0; }
-    .text, .mirror { font-family: inherit; font-size: 22px; font-weight: 650; line-height: 1.6; letter-spacing: -.25px; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .text, .mirror { font-family: inherit; font-size: 18px; font-weight: 650; line-height: 1.6; letter-spacing: -.2px; overflow-wrap: anywhere; white-space: pre-wrap; }
     .text { display: block; width: 100%; border: 0; padding: 0; resize: none; background: transparent; outline: none; overflow: hidden; border-radius: 0; }
     .text::placeholder { color: #777; font-weight: 600; }
     .writing:focus-within::after { content: ''; position: absolute; bottom: 0; left: 0; width: 24px; height: 1px; background: #bbb; }
@@ -44,12 +46,12 @@
     .mirror span { background: linear-gradient(var(--ink), var(--ink)) left 57% / 0% 2px no-repeat; box-decoration-break: clone; -webkit-box-decoration-break: clone; transition: background-size .4s cubic-bezier(.2,.7,.3,1); }
     .completed .mirror span { background-size: 100% 2px; }
     .completed .text { color: #666; }
-    .add { display: inline-flex; align-items: center; gap: 11px; margin: 18px 0 0 1px; padding: 10px 0; border: 0; background: transparent; font-size: 13px; font-weight: 650; color: #555; }
+    .add { display: inline-flex; align-items: center; gap: 9px; margin: 15px 0 0 1px; padding: 9px 0; border: 0; background: transparent; font-size: 11px; font-weight: 650; color: #555; }
     .add:hover { color: var(--ink); }
-    .add svg { width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+    .add svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.7; fill: none; }
     .error { position: fixed; bottom: 20px; left: 210px; right: 32px; margin: 0; font-size: 12px; padding: 12px 16px; background: white; border: 1px solid var(--ink); }
     .desktop-only { display: none; }
-    @media (max-width: 1190px) { .days { width: 156px; padding-inline: 15px; } main { margin-left: 156px; padding-inline: 44px; } }
+    @media (max-width: 1190px) { main { padding-inline: 36px; } }
     @media (max-width: 1023px) { .app { display: none; } .desktop-only { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 30px; text-align: center; font-size: 15px; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
   </style>
@@ -64,8 +66,8 @@
           <div class="summary">
             <svg class="history" id="history" viewBox="0 0 64 28" role="img" aria-label="Kunlik rejalar grafigi" hidden></svg>
             <div>
-              <div class="counts" aria-live="polite"><strong id="total">0</strong> reja <span aria-hidden="true">/</span> <strong id="done">0</strong> bajarildi</div>
-              <div class="progress" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="progress-fill" id="progress-fill"></span></div>
+              <div class="counts" aria-live="polite" aria-atomic="true"><span>Jami <strong id="total">0</strong></span><span>Bajarildi <strong id="done">0</strong></span><span>Qoldi <strong id="remaining">0</strong></span></div>
+              <div class="progress-row"><div class="progress" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="progress-fill" id="progress-fill"></span></div><span class="percentage" id="percentage" aria-hidden="true">0%</span></div>
             </div>
           </div>
         </header>
@@ -155,7 +157,8 @@
       }
       function updateSummary() {
         const {total, done} = counts(selected), percent = total ? Math.round(done / total * 100) : 0;
-        $('total').textContent = total; $('done').textContent = done;
+        $('total').textContent = total; $('done').textContent = done; $('remaining').textContent = total - done;
+        $('percentage').textContent = `${percent}%`;
         $('progress-fill').style.width = `${percent}%`;
         $('progress').setAttribute('aria-valuenow', percent);
         $('progress').setAttribute('aria-valuetext', `${total} rejadan ${done} tasi bajarilgan — ${percent}%`);

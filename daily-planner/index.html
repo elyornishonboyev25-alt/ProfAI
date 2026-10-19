@@ -20,19 +20,52 @@
     .day small { font-size: 10px; font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
     main { margin-left: 140px; padding: 50px 48px 80px; }
     .sheet { max-width: 760px; margin: 0 auto; }
-    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; border-bottom: 1px solid var(--line); }
     h1 { font-size: 20px; font-weight: 700; letter-spacing: -.5px; margin: 0; white-space: nowrap; }
     h1 small { font-size: 11px; font-weight: 600; letter-spacing: 0; margin-left: 8px; color: #555; }
-    .summary { display: flex; align-items: center; gap: 18px; }
-    .counts { display: flex; gap: 15px; font-size: 11px; font-weight: 500; color: #555; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .counts strong { margin-left: 4px; color: var(--ink); font-size: 12px; font-weight: 750; }
-    .progress-row { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
-    .percentage { min-width: 29px; font-size: 10px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
-    .progress { flex: 1; height: 2px; background: var(--line); overflow: hidden; }
-    .progress-fill { display: block; height: 100%; width: 0; background: var(--ink); transition: width .4s ease; }
-    .history { width: 48px; height: 24px; }
-    .history[hidden] { display: none; }
-    .task { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+    .analytics { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1fr); gap: 30px; padding: 25px 0; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .completion { display: flex; align-items: center; gap: 21px; }
+    .ring { position: relative; width: 96px; height: 96px; flex: 0 0 96px; }
+    .ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 7; }
+    .ring-track { stroke: #ebebeb; }
+    .ring-value { stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 226.195; stroke-dashoffset: 226.195; transition: stroke-dashoffset .45s ease; }
+    .percentage { position: absolute; inset: 0; display: grid; place-items: center; font-size: 23px; font-weight: 750; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+    .legend { flex: 1; display: grid; gap: 11px; }
+    .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .legend-label { display: flex; align-items: center; gap: 7px; color: #555; font-size: 11px; }
+    .legend-label i { width: 7px; height: 7px; background: var(--ink); border-radius: 50%; }
+    .legend-row:last-child i { background: #ebebeb; border: 1px solid #ccc; }
+    .legend-row strong { font-size: 17px; line-height: 1; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+    .history { min-width: 0; border-left: 1px solid var(--line); padding-left: 28px; }
+    .history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
+    .history-heading h2 { font-size: 11px; font-weight: 650; margin: 0; }
+    .history-heading span { color: #666; font-size: 10px; }
+    .history-plot { display: flex; height: 100px; position: relative; }
+    .chart-axis { flex: 0 0 22px; display: flex; flex-direction: column; justify-content: space-between; height: 77px; padding-bottom: 2px; color: #777; font-size: 9px; font-variant-numeric: tabular-nums; }
+    .bars { flex: 1; min-width: 0; display: flex; justify-content: space-around; background: repeating-linear-gradient(to top, transparent 0, transparent 34px, #eee 34px, #eee 35px); background-size: 100% 70px; background-repeat: no-repeat; background-position: 0 5px; }
+    .bar { position: relative; display: flex; align-items: center; flex-direction: column; justify-content: flex-end; flex: 1; min-width: 0; height: 100px; border: 0; padding: 0; background: transparent; }
+    .bar:focus-visible { outline-offset: 1px; }
+    .bar-column { display: flex; align-items: flex-end; position: relative; width: 18px; min-height: 1px; background: #e8e8e8; border-radius: 2px 2px 0 0; }
+    .bar-fill { display: block; width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; transition: height .3s; }
+    .bar-label { height: 25px; padding-top: 9px; font-size: 9px; white-space: nowrap; color: #666; }
+    .bar[aria-current="date"] .bar-label { color: var(--ink); font-weight: 700; }
+    .chart-tooltip { position: absolute; bottom: 108px; z-index: 5; width: 148px; padding: 11px 12px; border: 1px solid var(--ink); border-radius: 4px; background: var(--ink); color: white; text-align: left; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .15s, transform .15s; }
+    .bar:first-child .chart-tooltip { left: 0; }
+    .bar:last-child .chart-tooltip { right: 0; }
+    .bar:hover .chart-tooltip, .bar:focus-visible .chart-tooltip { opacity: 1; transform: translateY(0); }
+    .chart-tooltip strong { display: block; margin-bottom: 5px; font-size: 11px; }
+    .chart-tooltip span { display: block; font-size: 10px; line-height: 1.7; }
+    .chart-tooltip b { display: block; margin-top: 5px; font-size: 18px; font-weight: 700; }
+    .task { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+    .drag-handle { flex: 0 0 24px; width: 24px; height: 28px; margin-top: 1px; border: 0; background: transparent; padding: 6px; color: #777; opacity: 0; cursor: grab; touch-action: none; transition: opacity .15s; }
+    .drag-handle svg { width: 12px; height: 16px; fill: currentColor; }
+    .task:hover .drag-handle, .task:focus-within .drag-handle { opacity: 1; }
+    .task.drag-placeholder { opacity: .2; }
+    .drag-ghost { position: fixed; z-index: 10; margin: 0; padding-inline: 12px; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 8px 24px #00000012; pointer-events: none; }
+    .drag-ghost .drag-handle { opacity: 1; }
+    body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
     .check { appearance: none; -webkit-appearance: none; flex: 0 0 17px; width: 17px; height: 17px; border: 1.4px solid var(--ink); border-radius: 2px; background: white; margin: 6px 0 0; cursor: pointer; transition: background .15s, transform .2s; }
     .check:checked { background: var(--ink); transform: rotate(-4deg); }
     .check:checked::after { content: ''; display: block; width: 4px; height: 8px; margin: 1px 0 0 4px; border: solid white; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
@@ -63,19 +96,23 @@
       <div class="sheet">
         <header class="heading">
           <h1><span id="date"></span><small id="year"></small></h1>
-          <div class="summary">
-            <svg class="history" id="history" viewBox="0 0 64 28" role="img" aria-label="Kunlik rejalar grafigi" hidden></svg>
-            <div>
-              <div class="counts" aria-live="polite" aria-atomic="true"><span>Jami <strong id="total">0</strong></span><span>Bajarildi <strong id="done">0</strong></span><span>Qoldi <strong id="remaining">0</strong></span></div>
-              <div class="progress-row"><div class="progress" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="progress-fill" id="progress-fill"></span></div><span class="percentage" id="percentage" aria-hidden="true">0%</span></div>
-            </div>
-          </div>
         </header>
+        <section class="analytics" aria-label="Rejalarning bajarilish grafigi">
+          <div class="completion">
+            <div class="ring" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><svg viewBox="0 0 88 88" aria-hidden="true"><circle class="ring-track" cx="44" cy="44" r="36"/><circle class="ring-value" id="ring-value" cx="44" cy="44" r="36"/></svg><span class="percentage" id="percentage" aria-hidden="true">0%</span></div>
+            <div class="legend" aria-live="polite" aria-atomic="true"><div class="legend-row"><span class="legend-label">Jami rejalar</span><strong id="total">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilangan</span><strong id="done">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilanmagan</span><strong id="remaining">0</strong></div></div>
+          </div>
+          <div class="history" aria-label="Kunlar bo‘yicha bajarilgan rejalar">
+            <div class="history-heading"><h2>Kunlar bo‘yicha</h2><span id="history-range"></span></div>
+            <div class="history-plot"><div class="chart-axis" aria-hidden="true"><span id="axis-max">0</span><span id="axis-mid">0</span><span>0</span></div><div class="bars" id="history-bars"></div></div>
+          </div>
+        </section>
         <div id="tasks" aria-label="Kunlik rejalar"></div>
         <button class="add" id="add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Reja qo‘shish</button>
       </div>
     </main>
     <p class="error" id="error" role="alert" hidden></p>
+    <div class="sr-only" id="reorder-status" role="status" aria-live="polite"></div>
   </div>
   <p class="desktop-only">Kompyuterda oching.</p>
   <script>
@@ -92,6 +129,7 @@
       const validDay = key => typeof key === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(key) && !Number.isNaN(parseDay(key).getTime()) && localDay(parseDay(key)) === key;
       const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       let today = localDay(), selected = today, notebook, storageUnreadable = false;
+      let drag = null, press = null, chartSignature = '';
       function showError(message) { $('error').textContent = message; $('error').hidden = false; }
       function validate(value) {
         if (!value || value.version !== 1 || !validDay(value.started) || !value.days || typeof value.days !== 'object' || Array.isArray(value.days)) throw new Error('Invalid notebook');
@@ -145,25 +183,95 @@
       }
       function renderHistory() {
         const dates = [];
-        for (let offset = 6; offset >= 0; offset--) { const date = parseDay(today); date.setDate(date.getDate() - offset); const key = localDay(date); if (key >= notebook.started) dates.push(key); }
-        const graph = $('history'); graph.toggleAttribute('hidden', dates.length < 2);
-        if (dates.length < 2) return;
-        const max = Math.max(1, ...dates.map(key => counts(key).total)), slot = 64 / dates.length;
-        graph.innerHTML = dates.map((key, i) => {
-          const {total, done} = counts(key), height = total / max * 25, filled = done / max * 25, x = i * slot + (slot - 5) / 2;
-          return `<g><title>${formatDay(key)}: ${total} reja, ${done} bajarilgan</title><rect x="${x}" y="${28 - height}" width="5" height="${Math.max(1, height)}" fill="#e8e8e8"/><rect x="${x}" y="${28 - filled}" width="5" height="${filled}" fill="#111"/></g>`;
-        }).join('');
-        graph.setAttribute('aria-label', dates.map(key => { const {total, done} = counts(key); return `${formatDay(key)}: ${total} reja, ${done} bajarilgan`; }).join('; '));
+        for (let offset = 6; offset >= 0; offset--) {
+          const date = parseDay(today); date.setDate(date.getDate() - offset);
+          const key = localDay(date); if (key >= notebook.started) dates.push(key);
+        }
+        const series = dates.map(key => ({key, ...counts(key)}));
+        const signature = JSON.stringify([selected, series]);
+        if (signature === chartSignature) return;
+        chartSignature = signature;
+        const max = Math.max(2, Math.ceil(Math.max(...series.map(item => item.total)) / 2) * 2);
+        $('axis-max').textContent = max; $('axis-mid').textContent = max / 2;
+        $('history-range').textContent = dates.length === 1 ? 'Bugun' : `Oxirgi ${dates.length} kun`;
+        const yesterday = parseDay(today); yesterday.setDate(yesterday.getDate() - 1);
+        $('history-bars').replaceChildren(...series.map(({key, total, done}) => {
+          const percent = total ? Math.round(done / total * 100) : 0;
+          const button = document.createElement('button'); button.className = 'bar'; button.dataset.day = key;
+          if (key === selected) button.setAttribute('aria-current', 'date');
+          button.setAttribute('aria-label', `${formatDay(key)}, ${parseDay(key).getFullYear()}: ${total} rejadan ${done} belgilangan, ${total - done} belgilanmagan, ${percent}%`);
+          const column = document.createElement('span'); column.className = 'bar-column'; column.style.height = `${total / max * 70}px`;
+          const fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.height = `${total ? done / total * 100 : 0}%`; column.append(fill);
+          const label = document.createElement('span'); label.className = 'bar-label';
+          label.textContent = key === today ? 'Bugun' : key === localDay(yesterday) ? 'Kecha' : `${parseDay(key).getDate()}/${parseDay(key).getMonth() + 1}`;
+          const tooltip = document.createElement('span'); tooltip.className = 'chart-tooltip'; tooltip.setAttribute('aria-hidden', 'true');
+          tooltip.innerHTML = `<strong>${formatDay(key)}, ${parseDay(key).getFullYear()}</strong><span>${done} / ${total} belgilangan</span><span>${total - done} ta belgilanmagan</span><b>${percent}%</b>`;
+          button.append(column, label, tooltip);
+          button.onclick = () => { selectDay(key); save(); };
+          return button;
+        }));
       }
       function updateSummary() {
         const {total, done} = counts(selected), percent = total ? Math.round(done / total * 100) : 0;
         $('total').textContent = total; $('done').textContent = done; $('remaining').textContent = total - done;
         $('percentage').textContent = `${percent}%`;
-        $('progress-fill').style.width = `${percent}%`;
+        $('ring-value').style.strokeDashoffset = 226.195 * (1 - (total ? done / total : 0));
         $('progress').setAttribute('aria-valuenow', percent);
         $('progress').setAttribute('aria-valuetext', `${total} rejadan ${done} tasi bajarilgan — ${percent}%`);
         renderDays(); renderHistory();
       }
+      function clearPress() { if (press) clearTimeout(press.timer); press = null; }
+      function moveDrag() {
+        if (!drag) return;
+        drag.ghost.style.top = `${drag.y - drag.offset}px`;
+        const others = Array.from($('tasks').children).filter(row => row !== drag.row);
+        const next = others.find(row => { const rect = row.getBoundingClientRect(); return drag.y < rect.top + rect.height / 2; });
+        if (next !== drag.row.nextElementSibling) $('tasks').insertBefore(drag.row, next || null);
+      }
+      function startDrag(row, pointerId, y, capture) {
+        if (drag || !row.isConnected) return;
+        clearPress();
+        const rect = row.getBoundingClientRect(), ghost = row.cloneNode(true);
+        ghost.classList.add('drag-ghost'); ghost.classList.remove('drag-placeholder'); ghost.setAttribute('aria-hidden', 'true');
+        ghost.style.width = `${rect.width}px`; ghost.style.left = `${rect.left}px`; ghost.style.top = `${rect.top}px`;
+        ghost.querySelectorAll('input,textarea,button').forEach(element => { element.tabIndex = -1; });
+        document.body.append(ghost);
+        drag = {row, ghost, pointerId, capture, y, offset: y - rect.top, key: selected, order: tasks().map(task => task.id), frame: 0};
+        row.classList.add('drag-placeholder'); document.body.classList.add('is-dragging');
+        document.activeElement?.blur(); window.getSelection()?.removeAllRanges();
+        try { capture.setPointerCapture(pointerId); } catch {}
+        const scroll = () => {
+          if (!drag) return;
+          const speed = drag.y < 65 ? -Math.ceil((65 - drag.y) / 5) : drag.y > innerHeight - 65 ? Math.ceil((drag.y - innerHeight + 65) / 5) : 0;
+          if (speed) { window.scrollBy(0, speed); moveDrag(); }
+          drag.frame = requestAnimationFrame(scroll);
+        };
+        drag.frame = requestAnimationFrame(scroll);
+      }
+      function finishDrag(cancel = false) {
+        clearPress(); if (!drag) return;
+        const state = drag; drag = null; cancelAnimationFrame(state.frame);
+        state.ghost.remove(); state.row.classList.remove('drag-placeholder'); document.body.classList.remove('is-dragging');
+        try { if (state.capture.hasPointerCapture(state.pointerId)) state.capture.releasePointerCapture(state.pointerId); } catch {}
+        if (cancel || selected !== state.key) {
+          const rows = new Map(Array.from($('tasks').children).map(row => [row.dataset.id, row]));
+          state.order.forEach(id => { const row = rows.get(id); if (row) $('tasks').append(row); });
+          return;
+        }
+        const byId = new Map(tasks().map(task => [task.id, task]));
+        notebook.days[selected].tasks = Array.from($('tasks').children).map(row => byId.get(row.dataset.id));
+        save();
+        $('reorder-status').textContent = `Reja ${tasks().findIndex(task => task.id === state.row.dataset.id) + 1}-o‘ringa ko‘chirildi.`;
+      }
+      document.addEventListener('pointermove', event => {
+        if (press && press.pointerId === event.pointerId && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) clearPress();
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        event.preventDefault(); drag.y = event.clientY; moveDrag();
+      }, {passive: false});
+      document.addEventListener('pointerup', event => { if (press?.pointerId === event.pointerId) clearPress(); if (drag?.pointerId === event.pointerId) finishDrag(); });
+      document.addEventListener('pointercancel', () => finishDrag(true));
+      document.addEventListener('keydown', event => { if (event.key === 'Escape' && (drag || press)) { event.preventDefault(); finishDrag(true); } });
+      window.addEventListener('blur', () => finishDrag(true));
       function resize(input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; }
       function pasteTasks(event, task, input) {
         const text = event.clipboardData?.getData('text/plain');
@@ -187,6 +295,23 @@
         const input = document.createElement('textarea'); input.className = 'text'; input.rows = 1; input.maxLength = 10000; input.value = task.text; input.placeholder = 'Reja yozing…'; input.spellcheck = false; input.setAttribute('aria-label', 'Reja matni');
         const mirror = document.createElement('div'); mirror.className = 'mirror'; mirror.setAttribute('aria-hidden', 'true');
         const strike = document.createElement('span'); strike.textContent = task.text; mirror.append(strike);
+        const handle = document.createElement('button'); handle.className = 'drag-handle'; handle.type = 'button';
+        handle.setAttribute('aria-label', 'Reja tartibini o‘zgartirish'); handle.title = 'Sudrab ko‘chiring · ↑ ↓ bilan tartiblang';
+        handle.innerHTML = '<svg viewBox="0 0 12 16" aria-hidden="true"><circle cx="3" cy="3" r="1"/><circle cx="9" cy="3" r="1"/><circle cx="3" cy="8" r="1"/><circle cx="9" cy="8" r="1"/><circle cx="3" cy="13" r="1"/><circle cx="9" cy="13" r="1"/></svg>';
+        row.addEventListener('pointerdown', event => {
+          if (event.button !== 0 || event.target.closest('.check')) return;
+          if (event.target.closest('.drag-handle')) { event.preventDefault(); startDrag(row, event.pointerId, event.clientY, handle); return; }
+          clearPress();
+          press = {pointerId: event.pointerId, x: event.clientX, y: event.clientY, timer: setTimeout(() => startDrag(row, event.pointerId, event.clientY, row), 330)};
+        });
+        handle.addEventListener('keydown', event => {
+          if (!['ArrowUp', 'ArrowDown'].includes(event.key) || drag) return;
+          event.preventDefault(); const index = tasks().indexOf(task), target = index + (event.key === 'ArrowUp' ? -1 : 1);
+          if (target < 0 || target >= tasks().length) return;
+          tasks().splice(index, 1); tasks().splice(target, 0, task); save(); renderTasks();
+          Array.from($('tasks').children).find(element => element.dataset.id === task.id).querySelector('.drag-handle').focus();
+          $('reorder-status').textContent = `Reja ${target + 1}-o‘ringa ko‘chirildi.`;
+        });
         input.addEventListener('input', () => {
           task.text = input.value; strike.textContent = task.text;
           if (!task.text.trim()) { task.done = false; checkbox.checked = false; row.classList.remove('completed'); }
@@ -202,7 +327,7 @@
           }
         });
         checkbox.addEventListener('change', () => { task.done = checkbox.checked; row.classList.toggle('completed', task.done); save(); updateSummary(); });
-        writing.append(mirror, input); row.append(checkbox, writing); return row;
+        writing.append(mirror, input); row.append(checkbox, writing, handle); return row;
       }
       function renderTasks() {
         if (!tasks().length) tasks().push({id: uid(), text: '', done: false});
@@ -222,6 +347,7 @@
         save(); renderTasks(); focusTask(task.id);
       }
       function selectDay(key) {
+        finishDrag(true);
         ensureDay(key); selected = key;
         $('date').textContent = formatDay(selected); $('year').textContent = parseDay(selected).getFullYear();
         renderTasks(); updateSummary();
@@ -238,6 +364,7 @@
       window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => document.querySelectorAll('.text').forEach(resize), 100); });
       window.addEventListener('storage', event => {
         if (event.key !== STORAGE_KEY || !event.newValue) return;
+        finishDrag(true);
         try { notebook = validate(JSON.parse(event.newValue)); ensureDay(today); selectDay(notebook.days[selected] ? selected : today); }
         catch { showError('Boshqa oynadagi o‘zgarishlar ochilmadi.'); }
       });

@@ -18,52 +18,47 @@
     .day:hover { background: #f6f6f6; }
     .day[aria-current="page"] { font-weight: 700; background: #f1f1f1; }
     .day small { font-size: 10px; font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
-    main { margin-left: 140px; padding: 50px 48px 80px; }
-    .sheet { max-width: 760px; margin: 0 auto; }
-    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; border-bottom: 1px solid var(--line); }
+    main { margin-left: 140px; padding: 50px 44px 32px; }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 760px) 264px; gap: clamp(36px, 4vw, 72px); max-width: 1180px; margin: 0 auto; align-items: start; }
+    .sheet { min-width: 0; }
+    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
     h1 { font-size: 20px; font-weight: 700; letter-spacing: -.5px; margin: 0; white-space: nowrap; }
     h1 small { font-size: 11px; font-weight: 600; letter-spacing: 0; margin-left: 8px; color: #555; }
-    .analytics { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1fr); gap: 30px; padding: 25px 0; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
-    .completion { display: flex; align-items: center; gap: 21px; }
-    .ring { position: relative; width: 96px; height: 96px; flex: 0 0 96px; }
+    .analytics { position: sticky; top: 50px; padding: 4px 0 0 28px; border-left: 1px solid var(--line); min-width: 0; }
+    .completion { display: flex; flex-direction: column; align-items: stretch; gap: 23px; }
+    .ring { position: relative; width: 116px; height: 116px; flex: 0 0 116px; margin: 0 auto; }
     .ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring circle { fill: none; stroke-width: 7; }
     .ring-track { stroke: #ebebeb; }
     .ring-value { stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 226.195; stroke-dashoffset: 226.195; transition: stroke-dashoffset .45s ease; }
     .percentage { position: absolute; inset: 0; display: grid; place-items: center; font-size: 23px; font-weight: 750; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
-    .legend { flex: 1; display: grid; gap: 11px; }
+    .legend { display: grid; gap: 12px; }
     .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
     .legend-label { display: flex; align-items: center; gap: 7px; color: #555; font-size: 11px; }
     .legend-label i { width: 7px; height: 7px; background: var(--ink); border-radius: 50%; }
     .legend-row:last-child i { background: #ebebeb; border: 1px solid #ccc; }
     .legend-row strong { font-size: 17px; line-height: 1; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
-    .history { min-width: 0; border-left: 1px solid var(--line); padding-left: 28px; }
+    .history { min-width: 0; border-top: 1px solid var(--line); padding-top: 23px; margin-top: 26px; }
     .history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
     .history-heading h2 { font-size: 11px; font-weight: 650; margin: 0; }
     .history-heading span { color: #666; font-size: 10px; }
     .history-plot { display: flex; height: 100px; position: relative; }
     .chart-axis { flex: 0 0 22px; display: flex; flex-direction: column; justify-content: space-between; height: 77px; padding-bottom: 2px; color: #777; font-size: 9px; font-variant-numeric: tabular-nums; }
     .bars { flex: 1; min-width: 0; display: flex; justify-content: space-around; background: repeating-linear-gradient(to top, transparent 0, transparent 34px, #eee 34px, #eee 35px); background-size: 100% 70px; background-repeat: no-repeat; background-position: 0 5px; }
-    .bar { position: relative; display: flex; align-items: center; flex-direction: column; justify-content: flex-end; flex: 1; min-width: 0; height: 100px; border: 0; padding: 0; background: transparent; }
+    .bar { display: flex; align-items: center; flex-direction: column; justify-content: flex-end; flex: 1; min-width: 0; height: 100px; border: 0; padding: 0; background: transparent; }
     .bar:focus-visible { outline-offset: 1px; }
     .bar-column { display: flex; align-items: flex-end; position: relative; width: 18px; min-height: 1px; background: #e8e8e8; border-radius: 2px 2px 0 0; }
     .bar-fill { display: block; width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; transition: height .3s; }
     .bar-label { height: 25px; padding-top: 9px; font-size: 9px; white-space: nowrap; color: #666; }
     .bar[aria-current="date"] .bar-label { color: var(--ink); font-weight: 700; }
-    .chart-tooltip { position: absolute; bottom: 108px; z-index: 5; width: 148px; padding: 11px 12px; border: 1px solid var(--ink); border-radius: 4px; background: var(--ink); color: white; text-align: left; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .15s, transform .15s; }
-    .bar:first-child .chart-tooltip { left: 0; }
-    .bar:last-child .chart-tooltip { right: 0; }
-    .bar:hover .chart-tooltip, .bar:focus-visible .chart-tooltip { opacity: 1; transform: translateY(0); }
+    .chart-tooltip { position: absolute; bottom: 108px; left: 50%; z-index: 5; width: 148px; padding: 11px 12px; border: 1px solid var(--ink); border-radius: 4px; background: var(--ink); color: white; text-align: left; pointer-events: none; opacity: 0; transform: translate(-50%, 4px); transition: opacity .15s, transform .15s; }
+    .bar:hover .chart-tooltip, .bar:focus-visible .chart-tooltip { opacity: 1; transform: translate(-50%, 0); }
     .chart-tooltip strong { display: block; margin-bottom: 5px; font-size: 11px; }
     .chart-tooltip span { display: block; font-size: 10px; line-height: 1.7; }
     .chart-tooltip b { display: block; margin-top: 5px; font-size: 18px; font-weight: 700; }
     .task { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
-    .drag-handle { flex: 0 0 24px; width: 24px; height: 28px; margin-top: 1px; border: 0; background: transparent; padding: 6px; color: #777; opacity: 0; cursor: grab; touch-action: none; transition: opacity .15s; }
-    .drag-handle svg { width: 12px; height: 16px; fill: currentColor; }
-    .task:hover .drag-handle, .task:focus-within .drag-handle { opacity: 1; }
     .task.drag-placeholder { opacity: .2; }
     .drag-ghost { position: fixed; z-index: 10; margin: 0; padding-inline: 12px; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 8px 24px #00000012; pointer-events: none; }
-    .drag-ghost .drag-handle { opacity: 1; }
     body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
     .check { appearance: none; -webkit-appearance: none; flex: 0 0 17px; width: 17px; height: 17px; border: 1.4px solid var(--ink); border-radius: 2px; background: white; margin: 6px 0 0; cursor: pointer; transition: background .15s, transform .2s; }
@@ -84,7 +79,8 @@
     .add svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.7; fill: none; }
     .error { position: fixed; bottom: 20px; left: 210px; right: 32px; margin: 0; font-size: 12px; padding: 12px 16px; background: white; border: 1px solid var(--ink); }
     .desktop-only { display: none; }
-    @media (max-width: 1190px) { main { padding-inline: 36px; } }
+    @media (max-width: 1190px) { main { padding-inline: 30px; } .workspace-grid { grid-template-columns: minmax(0, 1fr) 224px; gap: 30px; } .analytics { padding-left: 22px; } .bar-label { font-size: 8px; } .bar-column { width: 14px; } }
+    @media (max-height: 600px) { main { padding-top: 30px; padding-bottom: 24px; } .days { padding-top: 30px; } .analytics { top: 30px; } .ring { width: 84px; height: 84px; flex-basis: 84px; } .completion { gap: 14px; } .legend { gap: 9px; } .history { margin-top: 18px; padding-top: 17px; } }
     @media (max-width: 1023px) { .app { display: none; } .desktop-only { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 30px; text-align: center; font-size: 15px; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
   </style>
@@ -93,11 +89,15 @@
   <div class="app">
     <nav class="days" id="days" aria-label="Kunlar"></nav>
     <main>
+      <div class="workspace-grid">
       <div class="sheet">
         <header class="heading">
           <h1><span id="date"></span><small id="year"></small></h1>
         </header>
-        <section class="analytics" aria-label="Rejalarning bajarilish grafigi">
+        <div id="tasks" aria-label="Kunlik rejalar"></div>
+        <button class="add" id="add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Reja qo‘shish</button>
+      </div>
+        <aside class="analytics" aria-label="Rejalarning bajarilish grafigi">
           <div class="completion">
             <div class="ring" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><svg viewBox="0 0 88 88" aria-hidden="true"><circle class="ring-track" cx="44" cy="44" r="36"/><circle class="ring-value" id="ring-value" cx="44" cy="44" r="36"/></svg><span class="percentage" id="percentage" aria-hidden="true">0%</span></div>
             <div class="legend" aria-live="polite" aria-atomic="true"><div class="legend-row"><span class="legend-label">Jami rejalar</span><strong id="total">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilangan</span><strong id="done">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilanmagan</span><strong id="remaining">0</strong></div></div>
@@ -106,9 +106,7 @@
             <div class="history-heading"><h2>Kunlar bo‘yicha</h2><span id="history-range"></span></div>
             <div class="history-plot"><div class="chart-axis" aria-hidden="true"><span id="axis-max">0</span><span id="axis-mid">0</span><span>0</span></div><div class="bars" id="history-bars"></div></div>
           </div>
-        </section>
-        <div id="tasks" aria-label="Kunlik rejalar"></div>
-        <button class="add" id="add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Reja qo‘shish</button>
+        </aside>
       </div>
     </main>
     <p class="error" id="error" role="alert" hidden></p>
@@ -295,21 +293,17 @@
         const input = document.createElement('textarea'); input.className = 'text'; input.rows = 1; input.maxLength = 10000; input.value = task.text; input.placeholder = 'Reja yozing…'; input.spellcheck = false; input.setAttribute('aria-label', 'Reja matni');
         const mirror = document.createElement('div'); mirror.className = 'mirror'; mirror.setAttribute('aria-hidden', 'true');
         const strike = document.createElement('span'); strike.textContent = task.text; mirror.append(strike);
-        const handle = document.createElement('button'); handle.className = 'drag-handle'; handle.type = 'button';
-        handle.setAttribute('aria-label', 'Reja tartibini o‘zgartirish'); handle.title = 'Sudrab ko‘chiring · ↑ ↓ bilan tartiblang';
-        handle.innerHTML = '<svg viewBox="0 0 12 16" aria-hidden="true"><circle cx="3" cy="3" r="1"/><circle cx="9" cy="3" r="1"/><circle cx="3" cy="8" r="1"/><circle cx="9" cy="8" r="1"/><circle cx="3" cy="13" r="1"/><circle cx="9" cy="13" r="1"/></svg>';
         row.addEventListener('pointerdown', event => {
           if (event.button !== 0 || event.target.closest('.check')) return;
-          if (event.target.closest('.drag-handle')) { event.preventDefault(); startDrag(row, event.pointerId, event.clientY, handle); return; }
           clearPress();
           press = {pointerId: event.pointerId, x: event.clientX, y: event.clientY, timer: setTimeout(() => startDrag(row, event.pointerId, event.clientY, row), 330)};
         });
-        handle.addEventListener('keydown', event => {
-          if (!['ArrowUp', 'ArrowDown'].includes(event.key) || drag) return;
+        input.addEventListener('keydown', event => {
+          if (!event.altKey || !['ArrowUp', 'ArrowDown'].includes(event.key) || drag) return;
           event.preventDefault(); const index = tasks().indexOf(task), target = index + (event.key === 'ArrowUp' ? -1 : 1);
           if (target < 0 || target >= tasks().length) return;
           tasks().splice(index, 1); tasks().splice(target, 0, task); save(); renderTasks();
-          Array.from($('tasks').children).find(element => element.dataset.id === task.id).querySelector('.drag-handle').focus();
+          focusTask(task.id);
           $('reorder-status').textContent = `Reja ${target + 1}-o‘ringa ko‘chirildi.`;
         });
         input.addEventListener('input', () => {
@@ -327,7 +321,7 @@
           }
         });
         checkbox.addEventListener('change', () => { task.done = checkbox.checked; row.classList.toggle('completed', task.done); save(); updateSummary(); });
-        writing.append(mirror, input); row.append(checkbox, writing, handle); return row;
+        writing.append(mirror, input); row.append(checkbox, writing); return row;
       }
       function renderTasks() {
         if (!tasks().length) tasks().push({id: uid(), text: '', done: false});

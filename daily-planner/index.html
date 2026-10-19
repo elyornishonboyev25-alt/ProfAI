@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="KUN. — oq qog‘ozdek sodda, shaxsiy kunlik rejalaringiz uchun raqamli daftar.">
+  <title>KUN. — Shaxsiy reja daftari</title>
+  <style>
+    :root { color-scheme: light; --ink: #111; --paper: #fff; --muted: #636363; --line: #e8e8e8; --hand: 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', cursive; --sans: 'Segoe UI', Arial, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button { border: 0; background: none; }
+    button:disabled { cursor: default; }
+    button, a, input, textarea { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
+    svg { display: block; flex-shrink: 0; }
+    .icon { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .app { min-width: 1024px; min-height: 100vh; }
+    .sidebar { width: 248px; position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; border-right: 1px solid var(--line); background: white; z-index: 3; padding: 36px 23px 22px; }
+    .brand { display: flex; align-items: baseline; gap: 11px; padding: 0 12px; }
+    .brand-name { font-size: 44px; font-weight: 950; letter-spacing: -4px; line-height: 1; }
+    .brand-tag { font-size: 10px; letter-spacing: 2.2px; font-weight: 600; }
+    .sidebar-intro { color: var(--muted); font-size: 12px; padding: 0 12px; margin: 17px 0 38px; }
+    .nav-today { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 15px; border: 1px solid var(--ink); border-radius: 5px; font-weight: 650; text-align: left; }
+    .nav-today.active { background: var(--ink); color: white; }
+    .nav-today .small-arrow { margin-left: auto; font-size: 18px; }
+    .archive-label { display: flex; justify-content: space-between; padding: 0 12px; font-size: 10px; font-weight: 700; letter-spacing: 1.6px; margin: 37px 0 18px; }
+    .archive-label span:last-child { color: var(--muted); letter-spacing: 0; }
+    .archive-list { overflow-y: auto; flex: 1; min-height: 80px; }
+    .archive-month { padding: 9px 12px; color: var(--muted); font-size: 11px; }
+    .archive-day { width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; padding: 12px; border-radius: 4px; margin-bottom: 3px; }
+    .archive-day:hover, .archive-day.active { background: #f3f3f3; }
+    .archive-day.active { outline: 1px solid #ccc; outline-offset: -1px; }
+    .archive-date { font-size: 22px; font-weight: 700; letter-spacing: -1px; min-width: 29px; }
+    .archive-day-copy { flex: 1; }
+    .archive-day-copy strong { font-size: 12px; font-weight: 600; display: block; }
+    .archive-day-copy small { display: block; font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .archive-dot { width: 6px; height: 6px; border: 1px solid #999; border-radius: 50%; }
+    .archive-dot.complete { background: var(--ink); border-color: var(--ink); }
+    .archive-empty { padding: 8px 12px; font-size: 12px; line-height: 1.9; color: var(--muted); }
+    .archive-empty svg { margin: 2px 0 16px; width: 56px; height: 53px; }
+    .sidebar-bottom { padding: 20px 11px 0; }
+    .sidebar-quote { font-family: var(--hand); font-size: 17px; font-weight: 700; transform: rotate(-4deg); line-height: 1.7; margin: 0 0 28px; }
+    .sidebar-total { border-top: 1px solid var(--line); padding: 18px 0; display: flex; align-items: center; gap: 10px; }
+    .sidebar-total strong { font-size: 24px; letter-spacing: -1px; }
+    .sidebar-total span { color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .backup-links { display: flex; justify-content: space-between; }
+    .backup-links button { font-size: 10px; color: var(--muted); padding: 5px 0; display: flex; align-items: center; gap: 5px; }
+    .backup-links button:hover { color: var(--ink); text-decoration: underline; }
+    .backup-links .icon { width: 13px; height: 13px; }
+    .workspace { margin-left: 248px; }
+    .topbar { height: 78px; display: flex; justify-content: space-between; align-items: center; padding: 0 46px; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 13px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 22px; }
+    .save-status { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+    .save-status::before { content: ''; height: 5px; width: 5px; border-radius: 50%; background: var(--ink); }
+    .icon-button { padding: 7px; border: 1px solid var(--line); border-radius: 4px; }
+    .icon-button:hover { border-color: var(--ink); }
+    .content { max-width: 1500px; margin: 0 auto; padding: 40px 46px 22px; }
+    .page-hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+    .eyebrow { font-size: 10px; letter-spacing: 2px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .eyebrow::before { content: ''; height: 1px; width: 22px; background: var(--ink); }
+    h1 { font-size: clamp(40px, 3.8vw, 60px); font-weight: 800; line-height: 1.1; letter-spacing: -2.6px; margin: 18px 0 10px; }
+    .hero-subtitle { color: var(--muted); font-size: 13px; margin: 0; }
+    .hero-subtitle strong { font-weight: 600; color: var(--ink); }
+    .hero-note { width: 235px; margin: 0 24px 0 0; padding-top: 9px; font-family: var(--hand); font-size: 17px; font-weight: 700; transform: rotate(-5deg); line-height: 1.7; }
+    .hero-note svg { width: 96px; height: 36px; margin: 7px 0 0 26px; }
+    .overview { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); padding: 23px 0; margin-bottom: 36px; }
+    .metric { padding: 0 25px; border-right: 1px solid var(--line); display: flex; align-items: center; gap: 15px; }
+    .metric:first-child { padding-left: 0; }
+    .metric:last-child { border: 0; }
+    .metric-number { font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -2px; min-width: 47px; font-variant-numeric: tabular-nums; }
+    .metric-label { font-size: 11px; color: var(--muted); line-height: 1.7; }
+    .metric-label strong { display: block; color: var(--ink); font-size: 12px; font-weight: 600; }
+    .main-grid { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 36px; }
+    .plans-panel { min-width: 0; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    h2 { font-size: 18px; letter-spacing: -.4px; font-weight: 700; margin: 0; }
+    .section-title { display: flex; align-items: center; gap: 10px; }
+    .section-title .icon { height: 18px; width: 18px; }
+    .add-button { background: var(--ink); color: white; border: 1px solid var(--ink); border-radius: 4px; padding: 10px 13px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 7px; transition: transform .2s; }
+    .add-button:hover { transform: translateY(-2px); }
+    .add-button .icon { width: 14px; height: 14px; }
+    .filters { display: flex; gap: 22px; margin-top: 19px; border-bottom: 1px solid var(--line); }
+    .filter { position: relative; padding: 10px 0 13px; color: var(--muted); font-size: 11px; }
+    .filter span { font-size: 10px; margin-left: 5px; }
+    .filter.active { color: var(--ink); font-weight: 650; }
+    .filter.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--ink); }
+    .paper { position: relative; min-height: 357px; padding: 11px 0 0; }
+    .task { position: relative; display: flex; gap: 13px; align-items: flex-start; border-bottom: 1px solid var(--line); padding: 21px 4px 18px; min-height: 72px; animation: row-in .25s ease-out; }
+    .task-checkbox { appearance: none; -webkit-appearance: none; height: 21px; width: 21px; flex: 0 0 21px; border: 1.8px solid var(--ink); border-radius: 3px 4px 2px 4px; margin: 5px 0 0; background: white; cursor: pointer; transition: background .2s, transform .2s; }
+    .task-checkbox:checked { background: var(--ink); transform: rotate(-5deg); }
+    .task-checkbox:checked::after { content: ''; display: block; height: 10px; width: 5px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); margin: 2px 0 0 6px; }
+    .task-checkbox:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+    .task-text { width: 100%; min-height: 33px; resize: none; border: 0; background: transparent; outline: none; padding: 0; font-family: var(--hand); font-size: 18px; line-height: 1.85; font-weight: 700; overflow: hidden; display: block; }
+    .task-text::placeholder { color: #777; font-weight: 400; font-size: 16px; }
+    .task-body { min-width: 0; flex: 1; position: relative; }
+    .task-mirror { font-family: var(--hand); font-size: 18px; line-height: 1.85; font-weight: 700; overflow-wrap: anywhere; white-space: pre-wrap; position: absolute; inset: 0; pointer-events: none; color: transparent; }
+    .task-mirror span { background-image: linear-gradient(var(--ink), var(--ink)); background-size: 0% 2px; background-position: left 57%; background-repeat: no-repeat; box-decoration-break: clone; -webkit-box-decoration-break: clone; transition: background-size .42s cubic-bezier(.2,.7,.3,1); }
+    .task.completed .task-mirror span { background-size: 100% 2px; }
+    .task.completed .task-text { color: #777; }
+    .delete-task { padding: 7px 3px; color: #777; opacity: 0; transition: opacity .2s; margin-top: 2px; }
+    .delete-task .icon { width: 15px; height: 15px; }
+    .task:hover .delete-task, .task:focus-within .delete-task { opacity: 1; }
+    .delete-task:hover { color: var(--ink); }
+    .empty-guide { text-align: center; padding: 30px 24px 20px; }
+    .empty-guide svg { height: 84px; width: 124px; margin: 0 auto 14px; }
+    .empty-guide h3 { font-family: var(--hand); font-size: 21px; margin: 0 0 10px; font-weight: 700; letter-spacing: -.7px; transform: rotate(-2deg); }
+    .empty-guide p { color: var(--muted); font-size: 12px; line-height: 1.9; margin: 0; }
+    .filter-empty { text-align: center; padding: 75px 15px; color: var(--muted); line-height: 1.8; font-size: 13px; }
+    .paper-lines { height: 90px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 44px, var(--line) 44px, var(--line) 45px); }
+    .writing-hint { display: flex; gap: 13px; flex-wrap: wrap; color: var(--muted); font-size: 10px; border-top: 1px solid var(--line); padding-top: 16px; line-height: 1.9; margin-top: 14px; }
+    kbd { font-family: var(--sans); font-size: 9px; border: 1px solid #d5d5d5; border-bottom-width: 2px; border-radius: 3px; padding: 2px 5px; margin-right: 4px; background: white; }
+    .insights { border-left: 1px solid var(--line); padding-left: 28px; }
+    .insights h2 { font-size: 13px; letter-spacing: 0; }
+    .progress-heading { display: flex; justify-content: space-between; align-items: center; }
+    .tiny-tag { font-size: 9px; padding: 4px 7px; border: 1px solid #d5d5d5; border-radius: 3px; }
+    .ring-wrap { position: relative; width: 168px; height: 168px; margin: 22px auto 14px; }
+    .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track { stroke: #ededed; fill: none; stroke-width: 9; }
+    .ring-value { stroke: var(--ink); fill: none; stroke-width: 9; stroke-linecap: round; stroke-dasharray: 427.26; stroke-dashoffset: 427.26; transition: stroke-dashoffset .65s cubic-bezier(.2,.7,.3,1); }
+    .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-percent { font-size: 38px; letter-spacing: -2px; font-weight: 750; }
+    .ring-percent small { font-size: 19px; margin-left: 1px; }
+    .ring-caption { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .progress-copy { font-size: 11px; color: var(--muted); text-align: center; margin: 0 0 19px; line-height: 1.8; min-height: 40px; }
+    .legend { display: flex; justify-content: center; gap: 17px; font-size: 10px; color: var(--muted); }
+    .legend span { display: flex; gap: 5px; align-items: center; }
+    .legend i { width: 6px; height: 6px; background: var(--ink); display: inline-block; border-radius: 1px; }
+    .legend .remaining { background: #ededed; border: 1px solid #ccc; }
+    .chart-section { margin-top: 29px; padding-top: 23px; border-top: 1px solid var(--line); }
+    .chart-subtitle { color: var(--muted); font-size: 10px; margin: 7px 0 20px; }
+    .chart { width: 100%; height: 133px; display: block; overflow: visible; }
+    .chart text { font-family: var(--sans); fill: var(--muted); font-size: 9px; }
+    .chart .bar-done { fill: var(--ink); }
+    .chart .bar-total { fill: #ededed; }
+    .chart-note { font-size: 10px; color: var(--muted); line-height: 1.8; margin: 15px 0 0; }
+    .milestone { border: 1px dashed #bcbcbc; border-radius: 4px; padding: 15px 13px; margin-top: 24px; display: flex; align-items: center; gap: 11px; }
+    .milestone .icon { width: 23px; height: 23px; }
+    .milestone strong { display: block; font-size: 11px; font-weight: 650; }
+    .milestone small { display: block; font-size: 10px; color: var(--muted); margin-top: 4px; }
+    .footer { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 18px; display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .footer-note { font-family: var(--hand); font-size: 12px; font-weight: 700; color: var(--ink); transform: rotate(-2deg); }
+    .toast { position: fixed; bottom: 27px; left: calc(50% + 90px); transform: translate(-50%, 18px); padding: 13px 20px; color: white; background: var(--ink); border: 1px solid white; border-radius: 5px; z-index: 20; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; font-size: 12px; max-width: 540px; line-height: 1.6; }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    .toast button { color: white; text-decoration: underline; margin-left: 15px; font-size: 12px; font-weight: 650; }
+    dialog { border: 1px solid var(--ink); border-radius: 7px; padding: 30px; width: 470px; max-width: 90vw; }
+    dialog::backdrop { background: #0005; }
+    dialog h2 { margin-bottom: 18px; font-size: 23px; }
+    dialog p { color: var(--muted); line-height: 1.9; font-size: 13px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    .secondary-button { padding: 10px 13px; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; }
+    .desktop-only { display: none; }
+    .focus-mode .sidebar, .focus-mode .insights, .focus-mode .overview, .focus-mode .hero-note { display: none; }
+    .focus-mode .workspace { margin-left: 0; }
+    .focus-mode .main-grid { grid-template-columns: 1fr; }
+    .focus-mode .content { max-width: 900px; }
+    .focus-mode .toast { left: 50%; }
+    @keyframes row-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+    @media (min-width: 1600px) { .content { padding-top: 55px; } .page-hero { margin-bottom: 40px; } .paper { min-height: 430px; } .main-grid { grid-template-columns: minmax(0,1fr) 300px; gap: 50px; } .insights { padding-left: 36px; } }
+    @media (max-width: 1190px) and (min-width: 1024px) { .sidebar { width: 216px; padding-inline: 17px; } .workspace { margin-left: 216px; } .topbar { padding-inline: 28px; } .content { padding-inline: 28px; } .main-grid { grid-template-columns: minmax(0,1fr) 230px; gap: 24px; } .insights { padding-left: 22px; } .hero-note { width: 185px; font-size: 15px; margin-right: 0; } .metric { padding-inline: 17px; gap: 10px; } .metric-label { font-size: 10px; } .metric-number { font-size: 35px; } .filters { gap: 15px; } }
+    @media (max-width: 1023px) { .app { display: none; } .desktop-only { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 36px; text-align: center; } .desktop-only .brand-name { margin-bottom: 35px; } .desktop-only h1 { font-size: 30px; letter-spacing: -1px; margin-top: 25px; } .desktop-only p { color: var(--muted); font-size: 14px; line-height: 1.8; max-width: 320px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+    @media print { .sidebar, .topbar, .insights, .add-button, .filters, .delete-task, .writing-hint, .toast, dialog { display: none !important; } .app { display: block; min-width: 0; } .desktop-only { display: none; } .workspace { margin: 0; } .main-grid { display: block; } .content { padding: 20px; } .task-text { color: black !important; } }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v15h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4zM12 5v15"/></symbol>
+    <symbol id="i-focus" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 16v5h16v-5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7a2.8 2.8 0 0 0-4-4L5 15zM5 15l4 4"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></symbol>
+  </svg>
+  <div class="app" id="app">
+    <aside class="sidebar" aria-label="Kunlar va arxiv">
+      <div class="brand"><span class="brand-name">KUN.</span><span class="brand-tag">SHAXSIY DAFTAR</span></div>
+      <p class="sidebar-intro">Katta maqsadlar. Kichik qadamlar.</p>
+      <button class="nav-today active" id="today-button"><svg class="icon"><use href="#i-sun"/></svg> Bugungi sahifa <span class="small-arrow">↗</span></button>
+      <div class="archive-label"><span>KUNLAR ARXIVI</span><span id="archive-count">00</span></div>
+      <nav class="archive-list" id="archive-list" aria-label="Oldingi kunlar"></nav>
+      <div class="sidebar-bottom">
+        <p class="sidebar-quote">Bir kun emas,<br>har kuni.</p>
+        <div class="sidebar-total"><strong id="all-completed">0</strong><span>bajarilgan reja<br>daftar boshlanganidan beri</span></div>
+        <div class="backup-links">
+          <button id="export-button" title="Barcha kunlarni JSON faylga saqlash"><svg class="icon"><use href="#i-download"/></svg> Zaxira nusxa</button>
+          <button id="import-button" title="Zaxira fayldan tiklash"><svg class="icon"><use href="#i-upload"/></svg> Tiklash</button>
+        </div>
+      </div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><svg class="icon"><use href="#i-book"/></svg><span>Mening daftarim</span><span>/</span><strong id="breadcrumb-day">Bugun</strong></div>
+        <div class="top-actions"><span class="save-status" id="save-status" role="status">Shu brauzerda saqlanadi</span><button class="icon-button" id="focus-button" aria-label="Diqqat rejimini yoqish" aria-pressed="false" title="Diqqat rejimi (Ctrl + Shift + F)"><svg class="icon"><use href="#i-focus"/></svg></button><button class="icon-button" id="help-button" aria-label="Daftar haqida" title="Daftar haqida"><span style="display:block;width:18px;font-weight:700">?</span></button></div>
+      </header>
+      <div class="content">
+        <section class="page-hero" aria-label="Kun sarlavhasi">
+          <div><div class="eyebrow" id="page-number">SAHIFA 001</div><h1 id="day-heading"></h1><p class="hero-subtitle"><strong id="weekday"></strong><span id="hero-message"> — bugun uchun bir yaxshi niyat.</span></p></div>
+          <div class="hero-note">Bugunni yoz.<br>Ertangni o‘zgartir.<svg viewBox="0 0 110 40" fill="none" aria-hidden="true"><path d="M98 5C82 29 54 27 20 22M31 14l-13 8 13 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </section>
+        <section class="overview" aria-label="Tanlangan kun statistikasi" aria-live="polite">
+          <div class="metric"><span class="metric-number" id="total-count">00</span><div class="metric-label"><strong>Jami rejalar</strong>Bugun uchun yozilgan</div></div>
+          <div class="metric"><span class="metric-number" id="done-count">00</span><div class="metric-label"><strong>Bajarildi</strong>Kichik g‘alabalaringiz</div></div>
+          <div class="metric"><span class="metric-number" id="remaining-count">00</span><div class="metric-label"><strong>Jarayonda</strong>Navbatdagi qadamlar</div></div>
+        </section>
+        <div class="main-grid">
+          <section class="plans-panel" aria-labelledby="plans-heading">
+            <div class="section-header"><div class="section-title"><svg class="icon"><use href="#i-pen"/></svg><h2 id="plans-heading">Bugungi rejalar</h2></div><button class="add-button" id="add-button"><svg class="icon"><use href="#i-plus"/></svg> Reja yozish</button></div>
+            <div class="filters" role="group" aria-label="Rejalarni saralash">
+              <button class="filter active" data-filter="all" aria-pressed="true">Barchasi <span id="filter-all">0</span></button>
+              <button class="filter" data-filter="active" aria-pressed="false">Jarayonda <span id="filter-active">0</span></button>
+              <button class="filter" data-filter="done" aria-pressed="false">Bajarilgan <span id="filter-done">0</span></button>
+            </div>
+            <div class="paper" id="paper"><div id="task-list"></div><div id="empty-state"></div></div>
+            <div class="writing-hint"><span><kbd>Enter ↵</kbd> yangi reja</span><span><kbd>Shift + Enter</kbd> yangi qator</span><span>☑ belgilash — kichik g‘alaba</span></div>
+          </section>
+          <aside class="insights" aria-label="Bajarilish grafiklari">
+            <div class="progress-heading"><h2>Kun qanday o‘tyapti?</h2><span class="tiny-tag" id="progress-tag">BUGUN</span></div>
+            <div class="ring-wrap" role="img" aria-label="Bajarilish: 0 foiz" id="progress-ring"><svg viewBox="0 0 168 168" aria-hidden="true"><circle class="ring-track" cx="84" cy="84" r="68"/><circle class="ring-value" id="ring-value" cx="84" cy="84" r="68"/></svg><div class="ring-center"><div class="ring-percent"><span id="percentage">0</span><small>%</small></div><span class="ring-caption">rejalar bajarildi</span></div></div>
+            <p class="progress-copy" id="progress-copy">Har bir yaxshi kun<br>bitta rejadan boshlanadi.</p>
+            <div class="legend"><span><i></i>Bajarilgan</span><span><i class="remaining"></i>Qolgan</span></div>
+            <section class="chart-section" aria-labelledby="chart-heading"><h2 id="chart-heading">Qadamlaringiz</h2><p class="chart-subtitle" id="chart-subtitle">Daftaringizning birinchi kuni</p><svg class="chart" id="history-chart" viewBox="0 0 240 133" role="img" aria-label="Kunlar bo‘yicha yozilgan va bajarilgan rejalar"></svg><p class="chart-note" id="chart-note">Yangi kun, yangi sahifa.<br>O‘sishingiz shu yerda ko‘rinadi.</p></section>
+            <div class="milestone"><svg class="icon"><use href="#i-spark"/></svg><div><strong id="milestone-title">Boshlashning o‘zi — bir qadam.</strong><small id="milestone-copy">Birinchi rejangizni yozing.</small></div></div>
+          </aside>
+        </div>
+        <footer class="footer"><span id="started-label"></span><span class="footer-note">Kamroq shovqin. Ko‘proq harakat.</span></footer>
+      </div>
+    </main>
+  </div>
+  <div class="desktop-only"><span class="brand-name">KUN.</span><svg class="icon" style="width:60px;height:60px;stroke-width:1" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8m-4-4v4"/></svg><h1>Bu daftar katta ekran uchun.</h1><p>Ilovani kompyuterda oching. Qulay yozish uchun kamida 1024 px kenglikdagi oyna kerak.</p></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <input type="file" id="import-file" accept="application/json,.json" hidden>
+  <dialog id="help-dialog" aria-labelledby="help-title"><h2 id="help-title">O‘zingiz uchun bir sahifa.</h2><p>Rejangizni yozing va <kbd>Enter</kbd> bosing — keyingi reja uchun joy ochiladi. Bajarilgach, yonidagi katakni belgilang. Rejani o‘zgartirish uchun uning matniga bosing.</p><p>Har kuni yangi sahifa ochiladi. Oldingi sahifalar chapdagi arxivda qoladi. Ilova internet talab qilmaydi; ma’lumotlar faqat shu brauzer va shu kompyuterda saqlanadi. Brauzer ma’lumotlarini tozalashdan oldin <strong>“Zaxira nusxa”</strong> tugmasi bilan ularni saqlab oling.</p><p><kbd>Ctrl + Shift + F</kbd> — diqqat rejimi.<br><kbd>Ctrl + Z</kbd> — matn tahririni bekor qilish.</p><div class="dialog-actions"><button class="add-button" id="close-help">Tushunarli ↗</button></div></dialog>
+  <dialog id="import-dialog" aria-labelledby="import-title"><h2 id="import-title">Daftarni qayta tiklash</h2><p id="import-description"></p><p>Joriy daftaringiz shu zaxira bilan almashtiriladi. Avval hozirgi rejalarni “Zaxira nusxa” orqali saqlab olishingiz mumkin.</p><div class="dialog-actions"><button class="secondary-button" id="cancel-import">Bekor qilish</button><button class="add-button" id="confirm-import">Tiklash</button></div></dialog>
+  <script>
+    (() => {
+      'use strict';
+      const STORAGE_KEY = 'kun-notebook-v1';
+      const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+      const WEEKDAYS = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+      const $ = id => document.getElementById(id);
+      const pad = n => String(n).padStart(2, '0');
+      const localDay = (date = new Date()) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const parseDay = key => new Date(`${key}T12:00:00`);
+      const formatDay = key => { const d = parseDay(key); return `${d.getDate()}-${MONTHS[d.getMonth()]}`; };
+      const dayDistance = (a, b) => Math.round((Date.UTC(...a.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0))) - Date.UTC(...b.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)))) / 86400000);
+      const validDay = key => typeof key === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(key) && !Number.isNaN(parseDay(key).getTime()) && localDay(parseDay(key)) === key;
+      const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const escapeHtml = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+      let today = localDay(), selected = today, filter = 'all', toastTimer, pendingImport = null, lastDeleted = null;
+      let storageAvailable = true, storageUnreadable = false, initialNotice = '';
+      function validateNotebook(value) {
+        if (!value || value.version !== 1 || !validDay(value.started) || !value.days || typeof value.days !== 'object' || Array.isArray(value.days)) throw new Error('Invalid notebook');
+        const result = { version: 1, started: value.started, days: {} };
+        const entries = Object.entries(value.days);
+        if (entries.length > 10000) throw new Error('Too many days');
+        for (const [key, day] of entries) {
+          if (!validDay(key) || key < value.started || !day || !Array.isArray(day.tasks) || day.tasks.length > 2000) throw new Error('Invalid day');
+          const ids = new Set();
+          result.days[key] = { tasks: day.tasks.map(task => {
+            if (!task || typeof task.id !== 'string' || !task.id || ids.has(task.id) || typeof task.text !== 'string' || task.text.length > 10000 || typeof task.done !== 'boolean') throw new Error('Invalid task');
+            ids.add(task.id);
+            return { id: task.id, text: task.text, done: task.done };
+          }) };
+        }
+        return result;
+      }
+      let notebook;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        notebook = saved ? validateNotebook(JSON.parse(saved)) : { version: 1, started: today, days: {} };
+      } catch (error) {
+        storageAvailable = false;
+        storageUnreadable = true;
+        notebook = { version: 1, started: today, days: {} };
+        initialNotice = 'Saqlangan daftarni o‘qib bo‘lmadi. Asl nusxa saqlab qolindi. Hozirgi ishni zaxiraga yuklab oling.';
+      }
+      // A restored backup from a later date must still allow the current local day.
+      if (today < notebook.started) notebook.started = today;
+      function ensureDay(key) { if (!notebook.days[key]) notebook.days[key] = { tasks: [] }; }
+      ensureDay(today);
+      const tasks = () => notebook.days[selected].tasks;
+      const nonempty = items => items.filter(task => task.text.trim());
+      function counts(key) { const items = nonempty(notebook.days[key]?.tasks || []); return { total: items.length, done: items.filter(t => t.done).length }; }
+      function persist() {
+        if (storageUnreadable) { $('save-status').textContent = 'Vaqtincha xotirada · zaxira oling'; return; }
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(notebook));
+          storageAvailable = true;
+          $('save-status').textContent = 'Barcha o‘zgarishlar saqlandi';
+        } catch (error) {
+          if (storageAvailable) toast('Brauzer saqlashga ruxsat bermadi yoki xotira to‘ldi. “Zaxira nusxa” orqali rejalarni saqlang.', null, 9000);
+          storageAvailable = false;
+          $('save-status').textContent = 'Saqlanmadi · zaxira oling';
+        }
+      }
+      function toast(message, action = null, duration = 3500) {
+        clearTimeout(toastTimer);
+        const element = $('toast'); element.replaceChildren(document.createTextNode(message));
+        if (action) { const button = document.createElement('button'); button.textContent = 'Qaytarish'; button.onclick = action; element.append(button); }
+        element.classList.add('visible'); toastTimer = setTimeout(() => element.classList.remove('visible'), duration);
+      }
+      function updateHeader() {
+        const isToday = selected === today;
+        $('day-heading').textContent = `${formatDay(selected)}, ${parseDay(selected).getFullYear()}`;
+        $('weekday').textContent = WEEKDAYS[parseDay(selected).getDay()];
+        $('page-number').textContent = `SAHIFA ${String(dayDistance(selected, notebook.started) + 1).padStart(3, '0')} ${isToday ? ' / BUGUN' : ' / ARXIV'}`;
+        $('breadcrumb-day').textContent = isToday ? 'Bugungi sahifa' : formatDay(selected);
+        $('hero-message').textContent = isToday ? ' — bugun uchun bir yaxshi niyat.' : ' — bu kunning qadamlari shu yerda.';
+        $('plans-heading').textContent = isToday ? 'Bugungi rejalar' : 'Shu kungi rejalar';
+        document.querySelectorAll('.metric-label')[0].lastChild.textContent = isToday ? 'Bugun uchun yozilgan' : 'Shu kun uchun yozilgan';
+        $('progress-tag').textContent = isToday ? 'BUGUN' : 'ARXIV';
+        $('today-button').classList.toggle('active', isToday);
+        $('today-button').setAttribute('aria-current', isToday ? 'page' : 'false');
+        $('started-label').textContent = `Daftar ochilgan: ${formatDay(notebook.started)}, ${parseDay(notebook.started).getFullYear()}`;
+      }
+      function renderArchive() {
+        const keys = Object.keys(notebook.days).filter(key => key >= notebook.started && key < today).sort().reverse();
+        $('archive-count').textContent = pad(keys.length);
+        const nav = $('archive-list'); nav.replaceChildren();
+        if (!keys.length) {
+          nav.innerHTML = '<div class="archive-empty"><svg viewBox="0 0 60 56" fill="none" aria-hidden="true"><path d="M11 8l35-2 3 43-36 2zM18 17l21-1m-20 8 19-1m-19 8 13-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 15 5 48l7 1M38 42c9-8 14-6 15-1m-5-4 5 4 2-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Yangi daftar. Birinchi sahifa.<br>Oldingi kunlaringiz ertadan<br>shu yerda jamlanadi.</div>';
+        }
+        let month = '';
+        for (const key of keys) {
+          const date = parseDay(key), stats = counts(key);
+          if (key.slice(0, 7) !== month) { month = key.slice(0, 7); const label = document.createElement('div'); label.className = 'archive-month'; label.textContent = `${MONTHS[date.getMonth()]} ${date.getFullYear()}`; nav.append(label); }
+          const button = document.createElement('button'); button.className = `archive-day${selected === key ? ' active' : ''}`;
+          if (selected === key) button.setAttribute('aria-current', 'page');
+          button.innerHTML = `<span class="archive-date">${pad(date.getDate())}</span><span class="archive-day-copy"><strong>${WEEKDAYS[date.getDay()]}</strong><small>${stats.done} / ${stats.total} bajarilgan</small></span><span class="archive-dot${stats.total && stats.done === stats.total ? ' complete' : ''}"></span>`;
+          button.onclick = () => selectDay(key); nav.append(button);
+        }
+        $('all-completed').textContent = Object.keys(notebook.days).filter(k => k <= today).reduce((sum, key) => sum + counts(key).done, 0);
+      }
+      function renderChart() {
+        const daysSinceStart = dayDistance(today, notebook.started) + 1;
+        const length = Math.min(7, Math.max(1, daysSinceStart));
+        const dates = Array.from({length}, (_, index) => { const d = parseDay(today); d.setDate(d.getDate() - length + index + 1); return localDay(d); });
+        const series = dates.map(key => ({key, ...counts(key)}));
+        const max = Math.max(4, ...series.map(item => item.total));
+        const slot = 202 / length, barWidth = Math.min(26, slot * .48);
+        let svg = '<path d="M27 8H236M27 52H236M27 96H236" stroke="#e8e8e8" stroke-width="1" stroke-dasharray="2 4"/>';
+        svg += `<text x="0" y="12">${max}</text><text x="0" y="56">${Math.round(max / 2)}</text><text x="0" y="100">0</text>`;
+        for (let index = 0; index < series.length; index++) {
+          const item = series[index], x = 30 + slot * index + (slot - barWidth) / 2;
+          const height = item.total / max * 84, doneHeight = item.done / max * 84;
+          svg += `<g><title>${formatDay(item.key)}: ${item.total} reja, ${item.done} bajarilgan</title><rect class="bar-total" x="${x}" y="${96 - height}" width="${barWidth}" height="${Math.max(height, 1)}" rx="2"/><rect class="bar-done" x="${x}" y="${96 - doneHeight}" width="${barWidth}" height="${doneHeight}" rx="2"/><text x="${x + barWidth / 2}" y="119" text-anchor="middle"${item.key === today ? ' style="fill:#111;font-weight:700"' : ''}>${item.key === today ? 'Bugun' : `${parseDay(item.key).getDate()}/${parseDay(item.key).getMonth() + 1}`}</text></g>`;
+        }
+        $('history-chart').innerHTML = svg;
+        $('history-chart').setAttribute('aria-label', series.map(item => `${formatDay(item.key)}: ${item.total} reja, ${item.done} bajarilgan`).join('; '));
+        $('chart-subtitle').textContent = daysSinceStart === 1 ? 'Daftaringizning birinchi kuni' : `Oxirgi ${length} kun · rejalar soni`;
+        $('chart-note').innerHTML = daysSinceStart === 1 ? 'Yangi kun, yangi sahifa.<br>O‘sishingiz shu yerda ko‘rinadi.' : 'Har bir ustun — bir kun.<br>Qora qismi — bajarilgan rejalar.';
+      }
+      function updateStats() {
+        const {total, done} = counts(selected), remaining = total - done, percentage = total ? Math.round(done / total * 100) : 0;
+        $('total-count').textContent = pad(total); $('done-count').textContent = pad(done); $('remaining-count').textContent = pad(remaining);
+        $('filter-all').textContent = total; $('filter-active').textContent = remaining; $('filter-done').textContent = done;
+        $('percentage').textContent = percentage;
+        $('ring-value').style.strokeDashoffset = 427.26 * (1 - percentage / 100);
+        $('progress-ring').setAttribute('aria-label', `Bajarilish: ${percentage} foiz, ${total} rejadan ${done} tasi bajarilgan`);
+        $('progress-copy').textContent = !total ? 'Har bir yaxshi kun bitta rejadan boshlanadi.' : done === total ? 'Hammasi bajarildi. O‘zingiz bilan faxrlaning!' : done ? `${total} rejadan ${done} tasi bajarildi. Yaxshi ketayapsiz!` : 'Rejalar tayyor. Endi birinchi qadamni tashlang.';
+        $('milestone-title').textContent = !total ? 'Boshlashning o‘zi — bir qadam.' : done === total ? 'Bugunning barcha rejalari bajarildi!' : done ? 'Har bir belgi — kichik g‘alaba.' : 'Niyatlar qog‘ozga tushdi.';
+        $('milestone-copy').textContent = !total ? 'Birinchi rejangizni yozing.' : done === total ? 'O‘zingizga dam olishga ruxsat bering.' : done ? `Yana ${remaining} qadam qoldi. Davom eting.` : 'Bittasidan boshlash kifoya.';
+        renderArchive(); renderChart();
+      }
+      function resizeInput(input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; }
+      function matchesFilter(task) { return filter === 'all' || !task.text.trim() || (filter === 'done' ? task.done : !task.done); }
+      function createTaskRow(task) {
+        const row = document.createElement('div'); row.className = `task${task.done ? ' completed' : ''}`; row.dataset.id = task.id;
+        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'task-checkbox'; checkbox.checked = task.done; checkbox.disabled = !task.text.trim(); checkbox.setAttribute('aria-label', 'Maqsad bajarildi');
+        const body = document.createElement('div'); body.className = 'task-body';
+        const input = document.createElement('textarea'); input.className = 'task-text'; input.rows = 1; input.maxLength = 10000; input.placeholder = 'Yana bir yaxshi reja…'; input.value = task.text; input.setAttribute('aria-label', 'Reja matni'); input.spellcheck = false;
+        const mirror = document.createElement('div'); mirror.className = 'task-mirror'; mirror.setAttribute('aria-hidden', 'true'); const strike = document.createElement('span'); strike.textContent = task.text; mirror.append(strike); body.append(mirror, input);
+        const remove = document.createElement('button'); remove.className = 'delete-task'; remove.setAttribute('aria-label', 'Rejani o‘chirish'); remove.title = 'Rejani o‘chirish'; remove.innerHTML = '<svg class="icon"><use href="#i-close"/></svg>';
+        input.addEventListener('input', () => {
+          task.text = input.value; strike.textContent = task.text;
+          if (!task.text.trim()) { task.done = false; checkbox.checked = false; row.classList.remove('completed'); }
+          checkbox.disabled = !task.text.trim(); resizeInput(input); persist(); updateStats(); updateEmptyState();
+        });
+        input.addEventListener('keydown', event => {
+          if (event.isComposing) return;
+          if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (task.text.trim()) addTask(task.id); else input.focus(); }
+          if (event.key === 'Backspace' && input.value === '' && tasks().length > 1) {
+            event.preventDefault(); const index = tasks().indexOf(task), previous = tasks()[index - 1] || tasks()[index + 1];
+            notebook.days[selected].tasks.splice(index, 1); persist(); renderTasks(); focusTask(previous.id);
+          }
+        });
+        checkbox.addEventListener('change', () => {
+          task.done = checkbox.checked; row.classList.toggle('completed', task.done); persist(); updateStats();
+          if (task.done && counts(selected).done === counts(selected).total) toast('Barcha rejalar bajarildi. Bugun zo‘r ish qildingiz! ✦');
+          if (filter !== 'all') setTimeout(() => { if (row.isConnected && !matchesFilter(task)) renderTasks(); }, 460);
+        });
+        remove.onclick = () => deleteTask(task.id);
+        row.append(checkbox, body, remove); return row;
+      }
+      function updateEmptyState() {
+        const total = counts(selected).total, visible = tasks().filter(matchesFilter);
+        if (!total) {
+          $('empty-state').innerHTML = '<div class="empty-guide"><svg viewBox="0 0 135 90" fill="none" aria-hidden="true"><path d="M35 16l48-3 4 61-50 3zM44 30l26-2m-25 13 18-1m-17 13 10-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="m67 55 29-35 8 7-29 35-11 6zM93 24l8 7M67 55l8 7" fill="white" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m107 52 9 3m-12 5 5 6M22 28l-8-4m8 13-9 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><h3>Bugun nimalarni uddalaymiz?</h3><p>Yuqoriga birinchi rejangizni yozing.<br>Katta o‘zgarishlar kichik qadamlardan boshlanadi.</p></div>';
+        } else if (!visible.length) {
+          $('empty-state').innerHTML = `<div class="filter-empty">${filter === 'done' ? 'Hozircha bajarilgan reja yo‘q.<br>Birinchi kichik g‘alaba sizni kutyapti.' : 'Barcha rejalar bajarilgan.<br>Bugun uchun o‘zingizga rahmat ayting.'}</div>`;
+        } else $('empty-state').innerHTML = '<div class="paper-lines" aria-hidden="true"></div>';
+      }
+      function renderTasks() {
+        const list = $('task-list'); list.replaceChildren();
+        // Keep an immediately writable first line, without counting it as a plan.
+        if (!tasks().length && filter === 'all') tasks().push({id: uid(), text: '', done: false});
+        tasks().filter(matchesFilter).forEach(task => list.append(createTaskRow(task)));
+        list.querySelectorAll('textarea').forEach(resizeInput); updateEmptyState();
+        document.querySelectorAll('[data-filter]').forEach(button => { const active = button.dataset.filter === filter; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+      }
+      function focusTask(id) { const row = Array.from($('task-list').children).find(element => element.dataset.id === id); if (row) { const input = row.querySelector('textarea'); input.focus(); input.selectionStart = input.selectionEnd = input.value.length; } }
+      function addTask(afterId = null) {
+        filter = 'all';
+        const index = afterId ? tasks().findIndex(task => task.id === afterId) + 1 : tasks().length;
+        const existing = tasks()[index];
+        if (existing && !existing.text.trim()) { renderTasks(); focusTask(existing.id); return; }
+        if (!afterId) { const blank = tasks().find(task => !task.text.trim()); if (blank) { renderTasks(); focusTask(blank.id); return; } }
+        if (tasks().length >= 2000) { toast('Bir kun uchun 2000 ta reja chegarasiga yetdingiz.'); return; }
+        const task = {id: uid(), text: '', done: false}; tasks().splice(index, 0, task); persist(); renderTasks(); focusTask(task.id);
+      }
+      function deleteTask(id) {
+        const index = tasks().findIndex(task => task.id === id); if (index < 0) return;
+        lastDeleted = {key: selected, index, task: tasks()[index]}; tasks().splice(index, 1); persist(); renderTasks(); updateStats();
+        toast('Reja o‘chirildi.', () => { if (!lastDeleted) return; const {key, index, task} = lastDeleted; notebook.days[key].tasks.splice(index, 0, task); lastDeleted = null; persist(); if (selected === key) renderTasks(); updateStats(); $('toast').classList.remove('visible'); }, 6500);
+      }
+      function selectDay(key) { ensureDay(key); selected = key; filter = 'all'; updateHeader(); renderTasks(); updateStats(); }
+      function checkNewDay() {
+        const current = localDay();
+        if (current !== today) {
+          today = current; if (today < notebook.started) notebook.started = today; ensureDay(today); selected = today; filter = 'all'; persist(); updateHeader(); renderTasks(); updateStats(); toast('Yangi kun, yangi sahifa. Xayrli kun!');
+        }
+      }
+      $('today-button').onclick = () => { checkNewDay(); selectDay(today); };
+      $('add-button').onclick = () => addTask();
+      document.querySelectorAll('[data-filter]').forEach(button => button.onclick = () => { filter = button.dataset.filter; renderTasks(); });
+      function toggleFocus() { const active = $('app').classList.toggle('focus-mode'); $('focus-button').setAttribute('aria-pressed', String(active)); $('focus-button').setAttribute('aria-label', active ? 'Diqqat rejimini o‘chirish' : 'Diqqat rejimini yoqish'); requestAnimationFrame(() => document.querySelectorAll('.task-text').forEach(resizeInput)); }
+      $('focus-button').onclick = toggleFocus;
+      document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'f') { event.preventDefault(); toggleFocus(); } });
+      $('help-button').onclick = () => $('help-dialog').showModal(); $('close-help').onclick = () => $('help-dialog').close();
+      document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close(); } }));
+      $('export-button').onclick = () => {
+        const blob = new Blob([JSON.stringify(notebook, null, 2)], {type: 'application/json'}), url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.href = url; link.download = `KUN-daftar-${today}.json`; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000); toast('Daftaringiz zaxira faylga yuklandi.');
+      };
+      $('import-button').onclick = () => $('import-file').click();
+      $('import-file').addEventListener('change', async event => {
+        const file = event.target.files[0]; event.target.value = ''; if (!file) return;
+        try {
+          if (file.size > 10 * 1024 * 1024) throw new Error('File too large');
+          pendingImport = validateNotebook(JSON.parse(await file.text()));
+          if (pendingImport.started > today || Object.keys(pendingImport.days).some(key => key > today)) throw new Error('Future dates');
+          $('import-description').textContent = `Zaxirada ${Object.keys(pendingImport.days).length} kun va ${Object.values(pendingImport.days).reduce((sum, day) => sum + nonempty(day.tasks).length, 0)} ta reja bor.`;
+          $('import-dialog').showModal();
+        } catch (error) { pendingImport = null; toast('Bu fayl KUN. zaxirasiga mos kelmaydi. To‘g‘ri JSON zaxira faylini tanlang.', null, 6000); }
+      });
+      $('cancel-import').onclick = () => { pendingImport = null; $('import-dialog').close(); };
+      $('confirm-import').onclick = () => { if (!pendingImport) return; notebook = pendingImport; pendingImport = null; storageUnreadable = false; lastDeleted = null; ensureDay(today); selected = today; filter = 'all'; persist(); updateHeader(); renderTasks(); updateStats(); $('import-dialog').close(); toast(storageAvailable ? 'Daftaringiz tiklandi.' : 'Daftar ochildi, lekin brauzerga saqlanmadi. Zaxira faylni saqlab qo‘ying.', null, 6000); };
+      window.addEventListener('focus', checkNewDay);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewDay(); });
+      setInterval(checkNewDay, 15000);
+      let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => document.querySelectorAll('.task-text').forEach(resizeInput), 100); });
+      // Avoid a stale tab silently overwriting a newer notebook from another window.
+      window.addEventListener('storage', event => {
+        if (event.key !== STORAGE_KEY || !event.newValue) return;
+        try { notebook = validateNotebook(JSON.parse(event.newValue)); ensureDay(today); if (!notebook.days[selected]) selected = today; updateHeader(); renderTasks(); updateStats(); toast('Daftar boshqa oynadagi o‘zgarishlar bilan yangilandi.'); } catch (error) { toast('Boshqa oynadagi ma’lumotni o‘qib bo‘lmadi.'); }
+      });
+      updateHeader(); renderTasks(); updateStats(); persist();
+      if (initialNotice) toast(initialNotice, null, 10000);
+    })();
+  </script>
+</body>
+</html>

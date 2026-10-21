@@ -4,6 +4,7 @@ import UiText from './UiText'
 
 type ErrorBoundaryProps = {
   children: React.ReactNode
+  fallback?: React.ReactNode
 }
 
 type ErrorBoundaryState = {
@@ -33,6 +34,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   override render() {
     if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback
       return (
         <div className="mx-auto my-16 w-full max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
           <h2 className="text-2xl font-semibold text-red-700">

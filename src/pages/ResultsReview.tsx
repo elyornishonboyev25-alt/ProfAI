@@ -2,6 +2,7 @@ import IELTSReadingInterface from '@/components/IELTSReadingInterface'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
+import ResultBoundary from '@/components/ielts/ResultBoundary'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, RotateCcw } from 'lucide-react'
@@ -46,6 +47,10 @@ const EMPTY_ANALYSIS: ReadingAnalysisReport = {
 }
 
 export default function ResultsReview() {
+  return <ResultBoundary><ResultsReviewContent /></ResultBoundary>
+}
+
+function ResultsReviewContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { testId } = useParams<{ testId: string }>()

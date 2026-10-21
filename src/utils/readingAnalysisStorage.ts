@@ -77,6 +77,10 @@ function getStorageKey(userId?: string): string {
   return `smarttest-reading-analysis-history-${HISTORY_VERSION}:${owner}`
 }
 
+function compactResult(result: TestResult): TestResult {
+  return { ...result, detailedBreakdown: { activeSectionIds: result.detailedBreakdown?.activeSectionIds ?? [] } }
+}
+
 function safeParseHistory(value: string | null): ReadingAnalysisHistoryEntry[] {
   if (!value) return []
 
@@ -120,6 +124,7 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
   const storageKey = getStorageKey(input.userId)
   const current = safeParseHistory(accountStorageFor(input.userId ?? 'guest').getItem(storageKey))
   const withoutSameAttempt = current.filter((entry) => entry.attemptKey !== input.attemptKey)
+    .map(entry => ({ ...entry, resultPayload: compactResult(entry.resultPayload) }))
 
   const nextEntry: ReadingAnalysisHistoryEntry = {
     attemptKey: input.attemptKey,
@@ -147,7 +152,9 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
     focusAreas: input.focusAreas.slice(0, 4),
     incorrectQuestions: input.incorrectQuestions.slice(0, 16),
     questionResults: input.questionResults,
-    resultPayload: input.resultPayload,
+    // Question feedback is already stored above. Avoid retaining it again in
+    // readingAnalysis and in each section's questions inside every history row.
+    resultPayload: compactResult(input.resultPayload),
   }
 
   const merged = [nextEntry, ...withoutSameAttempt]

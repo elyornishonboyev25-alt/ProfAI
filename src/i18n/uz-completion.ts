@@ -1,5 +1,8 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Your saved result': 'Saqlangan natijangiz',
+  'Download result': 'Natijani yuklab olish',
+  'Detailed review is temporarily unavailable. You can still view and download your submitted answers.': 'Batafsil tahlil vaqtincha ochilmayapti. Topshirgan javoblaringizni ko‘rishingiz va yuklab olishingiz mumkin.',
   'This account is being used on another device. Sign out there or close the site and wait up to 2 minutes before trying again.': 'Bu akkaunt boshqa qurilmada ishlatilmoqda. O‘sha qurilmada akkauntdan chiqing yoki saytni yopib, 2 daqiqagacha kuting va qayta urinib ko‘ring.',
   'This account is already signed in on 3 devices. Sign out on another device before signing in here.': 'Bu akkauntga allaqachon 3 ta qurilma kirgan. Bu yerda kirishdan oldin boshqa qurilmada akkauntdan chiqing.',
   'This account is being used on another device.': 'Bu akkaunt boshqa qurilmada ishlatilmoqda.',

@@ -2,6 +2,8 @@ import { accountStorageFor } from '@/utils/accountStorage'
 import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
+import ResultBoundary from '@/components/ielts/ResultBoundary'
+import { downloadTestResult } from '@/utils/downloadTestResult'
 import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -83,6 +85,10 @@ function formatSpentTime(value: number): string {
 }
 
 export default function Results() {
+  return <ResultBoundary><ResultsContent /></ResultBoundary>
+}
+
+function ResultsContent() {
   const location = useLocation()
   const navigate = useNavigate()
   const { testId } = useParams<{ testId: string }>()
@@ -549,6 +555,9 @@ export default function Results() {
                   className="arena-primary-btn mt-4 justify-center py-2.5 text-sm"
                 >
                   <Share2 className="mr-2 h-4 w-4" /> {sharingResult ? 'Creating secure link…' : 'Share result'}
+                </button>
+                <button type="button" className="mt-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold" onClick={() => downloadTestResult(result)}>
+                  <UiText text="Download result" />
                 </button>
               </aside>
             </Reveal>

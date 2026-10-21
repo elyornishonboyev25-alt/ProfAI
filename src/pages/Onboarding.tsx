@@ -1,3 +1,4 @@
+import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import { accountStorage } from '@/utils/accountStorage'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
@@ -120,12 +121,6 @@ const STEP_META: { id: StepId; label: string; eyebrow: string; title: string; hi
   { id: 6, label: 'Review', eyebrow: 'Almost there', title: 'Review your goals', hint: 'Confirm your details and save your learning profile.' },
 ]
 
-const PLAN_GENERATION_STEPS = [
-  'Checking your exam goals',
-  'Saving your account details',
-  'Updating your learning preferences',
-  'Opening your dashboard',
-]
 
 function saveToAccountProfile(firstName: string, lastName: string, targetExam: ExamTarget) {
   try {
@@ -177,7 +172,6 @@ export default function Onboarding() {
   const [currentSatScore, setCurrentSatScore] = useState<number | null>(null)
   const [targetSatScore, setTargetSatScore] = useState(1450)
   const [stage, setStage] = useState<'idle' | 'generating' | 'success'>('idle')
-  const [messageIndex, setMessageIndex] = useState(0)
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState('')
@@ -250,16 +244,6 @@ export default function Onboarding() {
     }
   }, [step])
 
-  useEffect(() => {
-    if (stage !== 'generating') {
-      setMessageIndex(0)
-      return
-    }
-    const id = window.setInterval(() => {
-      setMessageIndex((current) => (current + 1) % PLAN_GENERATION_STEPS.length)
-    }, 520)
-    return () => window.clearInterval(id)
-  }, [stage])
 
   const selectedExamDate = targetExam === 'SAT' ? satExamDate : targetExam === 'IELTS' ? ieltsExamDate : [ieltsExamDate, satExamDate].filter(Boolean).sort()[0] ?? ''
   const dateBasedDays = useMemo(() => {
@@ -1048,63 +1032,7 @@ export default function Onboarding() {
             </div>
           </div>
 
-          {/* Generation overlay */}
-          <AnimatePresence>
-            {stage !== 'idle' ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 backdrop-blur-xl"
-              >
-                <motion.div
-                  initial={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.94 }}
-                  animate={minimalMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="mx-5 w-full max-w-md rounded-[2rem] border border-blue-100 bg-white p-7 text-center shadow-[0_36px_90px_rgba(30,64,175,0.22)]"
-                >
-                  <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
-                    {stage === 'generating' ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-                          className="absolute inset-0 rounded-full bg-[conic-gradient(from_90deg,rgba(37,99,235,0),rgba(37,99,235,0.16),rgba(37,99,235,0.95),rgba(251,146,60,0.75),rgba(37,99,235,0))] p-[3px]"
-                        >
-                          <div className="h-full w-full rounded-full bg-white" />
-                        </motion.div>
-                        <Sparkles className="relative h-8 w-8 text-blue-600" />
-                      </>
-                    ) : (
-                      <motion.div
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                        className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_20px_38px_rgba(16,185,129,0.32)]"
-                      >
-                        <CheckCircle2 className="h-10 w-10" />
-                      </motion.div>
-                    )}
-                  </div>
-                  <p className="mt-4 text-2xl font-black text-slate-900">
-                    {stage === 'generating' ? 'Saving your profile...' : 'Profile saved'}
-                  </p>
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={`${stage}-${messageIndex}`}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.22 }}
-                      className="mt-2 text-sm leading-6 text-slate-500"
-                    >
-                      {stage === 'generating' ? PLAN_GENERATION_STEPS[messageIndex] : 'Taking you to your dashboard now.'}
-                    </motion.p>
-                  </AnimatePresence>
-                </motion.div>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+          {stage !== 'idle' && <TestLaunchOverlay title="Saving your profile" />}
         </motion.div>
       </div>
     </div>

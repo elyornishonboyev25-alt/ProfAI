@@ -41,16 +41,26 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
         }
       }
     })
+    const scrollPanes = Array.from(shell.current.querySelectorAll<HTMLElement>('.reading-pane'))
     let scroll: { top: number; left: number }[] = []
     try { scroll = JSON.parse(storage.getItem(`${key}:scroll`) ?? '[]') } catch { /* Optional viewport cache. */ }
-    containers.forEach((container, index) => {
+    scrollPanes.forEach((container, index) => {
       container.scrollTop = scroll[index]?.top ?? 0
       container.scrollLeft = scroll[index]?.left ?? 0
     })
     const saveScroll = () => {
-      try { storage.setItem(`${key}:scroll`, JSON.stringify(containers.map(container => ({ top: container.scrollTop, left: container.scrollLeft })))) } catch { /* Keep the viewport usable. */ }
+      try { storage.setItem(`${key}:scroll`, JSON.stringify(scrollPanes.map(container => ({ top: container.scrollTop, left: container.scrollLeft })))) } catch { /* Keep the viewport usable. */ }
     }
-    containers.forEach(container => container.addEventListener('scroll', saveScroll, { passive: true }))
+    // Never serialize account data on every scroll frame. Flush the final position
+    // when leaving so a reload or section change still restores the exact viewport.
+    let scrollTimer: number | undefined
+    const scheduleScroll = () => {
+      if (scrollTimer !== undefined) return
+      scrollTimer = window.setTimeout(() => { scrollTimer = undefined; saveScroll() }, 180)
+    }
+    const flushScroll = () => { window.clearTimeout(scrollTimer); scrollTimer = undefined; saveScroll() }
+    scrollPanes.forEach(container => container.addEventListener('scroll', scheduleScroll, { passive: true }))
+    window.addEventListener('pagehide', flushScroll)
     const save = () => {
       const marks = containers.map(container => Array.from(container.querySelectorAll<HTMLElement>('[data-reading-mark="1"]')).map(node => {
         const range = document.createRange()
@@ -67,7 +77,9 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
       // Consume pending edits before switching to another section.
       if (observer.takeRecords().length) save()
       observer.disconnect()
-      containers.forEach(container => container.removeEventListener('scroll', saveScroll))
+      flushScroll()
+      scrollPanes.forEach(container => container.removeEventListener('scroll', scheduleScroll))
+      window.removeEventListener('pagehide', flushScroll)
       window.removeEventListener('pagehide', save)
       window.removeEventListener('beforeunload', save)
     }

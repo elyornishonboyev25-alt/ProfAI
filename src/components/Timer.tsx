@@ -23,6 +23,7 @@ export default function Timer({
 }: TimerProps) {
   const [displayTime, setDisplayTime] = useState(timeLeft)
   const liveTimeRef = useRef(timeLeft)
+  const deadlineRef = useRef<number | null>(timeLeft > 0 ? Date.now() + timeLeft * 1000 : null)
   const setTimeLeftRef = useRef(setTimeLeft)
   const onTimeUpRef = useRef(onTimeUp)
 
@@ -31,6 +32,7 @@ export default function Timer({
 
   useEffect(() => {
     liveTimeRef.current = timeLeft
+    deadlineRef.current = timeLeft > 0 ? Date.now() + timeLeft * 1000 : null
     setDisplayTime(timeLeft)
   }, [timeLeft])
 
@@ -38,8 +40,11 @@ export default function Timer({
     if (!isActive || liveTimeRef.current <= 0) return
 
     const syncEvery = Math.max(1, Math.round(syncIntervalSeconds))
-    const timer = window.setInterval(() => {
-      const newTime = Math.max(0, liveTimeRef.current - 1)
+    deadlineRef.current = Date.now() + liveTimeRef.current * 1000
+    let finished = false
+    const tick = () => {
+      const newTime = Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000))
+      if (finished || newTime === liveTimeRef.current) return
       liveTimeRef.current = newTime
       setDisplayTime(newTime)
 
@@ -47,12 +52,16 @@ export default function Timer({
         setTimeLeftRef.current(newTime)
       }
       if (newTime <= 0) {
+        finished = true
         window.clearInterval(timer)
         onTimeUpRef.current?.()
       }
-    }, 1000)
+    }
+    const timer = window.setInterval(tick, 1000)
+    document.addEventListener('visibilitychange', tick)
+    window.addEventListener('focus', tick)
 
-    return () => window.clearInterval(timer)
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', tick); window.removeEventListener('focus', tick) }
   }, [isActive, syncIntervalSeconds])
 
   const formatTime = (seconds: number) => {
@@ -65,7 +74,7 @@ export default function Timer({
 
   if (variant === 'readingCompact') {
     return (
-      <span className={`font-mono text-base font-semibold tracking-[0.08em] ${isLowTime ? 'text-red-600' : 'text-slate-700'}`}>
+      <span role="timer" aria-live="off" className={`font-mono text-base font-semibold tabular-nums ${isLowTime ? 'text-red-600' : 'text-slate-700'}`}>
         {displayTime === -1 ? 'Unlimited' : formatTime(displayTime)}
       </span>
     )
@@ -75,7 +84,7 @@ export default function Timer({
     <div className={`
       flex items-center space-x-2 px-4 py-2 rounded-lg font-mono font-semibold transition-colors
       ${isLowTime
-        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse'
+        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
       }
     `}>

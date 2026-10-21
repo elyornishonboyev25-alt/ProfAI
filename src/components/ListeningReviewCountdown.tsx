@@ -3,7 +3,7 @@ import { useCopy } from '@/i18n/interface'
 import { LISTENING_REVIEW_SECONDS } from '@/hooks/useListeningAutoSubmit'
 import '@/styles/listening-review-countdown.css'
 
-export default function ListeningReviewCountdown({ secondsRemaining }: { secondsRemaining: number }) {
+export default function ListeningReviewCountdown({ secondsRemaining, showTime = true, onToggleTime }: { secondsRemaining: number; showTime?: boolean; onToggleTime?: () => void }) {
   const { c } = useCopy()
   const urgent = secondsRemaining <= 30
   const time = `${String(Math.floor(secondsRemaining / 60)).padStart(2, '0')}:${String(secondsRemaining % 60).padStart(2, '0')}`
@@ -26,8 +26,8 @@ export default function ListeningReviewCountdown({ secondsRemaining }: { seconds
           </p>
         </div>
         <div className="listening-review-countdown__clock">
-          <ClockIcon aria-hidden="true" />
-          <div>
+          {onToggleTime ? <button type="button" className="ielts-clock-toggle" onClick={onToggleTime} aria-label={showTime ? 'Hide time' : 'Show time'} title={showTime ? 'Hide time' : 'Show time'} aria-pressed={!showTime}><ClockIcon aria-hidden="true" /></button> : <ClockIcon aria-hidden="true" />}
+          <div hidden={!showTime}>
             <span className="listening-review-countdown__time" role="timer" aria-live="off" aria-label={c('Time remaining')}>{time}</span>
             <span className="listening-review-countdown__label">{c('Time remaining')}</span>
           </div>

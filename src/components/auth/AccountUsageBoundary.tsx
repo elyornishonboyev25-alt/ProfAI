@@ -12,6 +12,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
   const usage = useAccountUsageStore()
   const [retry, setRetry] = useState(0)
   const [signingOut, setSigningOut] = useState(false)
+  const [verifiedOwner, setVerifiedOwner] = useState<string>()
   const { i18n } = useTranslation()
   const text = accountUsageText(i18n.language)
 
@@ -22,8 +23,8 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     const check = async () => {
       if (running || document.hidden || useAuthStore.getState().user?.id !== owner) return
       running = true
-      // Use the request start time so a delayed response cannot extend access
-      // past the server's lease. Stop offline usage before that lease expires.
+      // Revalidate silently; a request or a failed connection must never unmount
+      // an admitted workspace and discard its live inputs or audio element.
       const startedAt = Date.now()
       const requestController = new AbortController()
       const abort = () => requestController.abort()
@@ -33,6 +34,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
         await apiClient.post('/auth/activity/heartbeat', { refreshToken: useAuthStore.getState().refreshToken }, { expectedUserId: owner, signal: requestController.signal })
         if (!controller.signal.aborted && useAuthStore.getState().user?.id === owner) {
           useAccountUsageStore.getState().setUsage(owner, 'active', startedAt + 90_000)
+          setVerifiedOwner(owner)
         }
       } catch (error) {
         if (controller.signal.aborted) return
@@ -47,13 +49,20 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
       }
     }
     void check()
-    const timer = window.setInterval(() => { void check() }, 30_000)
+    const timer = window.setInterval(() => {
+      const current = useAccountUsageStore.getState()
+      if (current.owner !== owner || current.status !== 'active' || current.validUntil - Date.now() < 60_000) void check()
+    }, 5_000)
     const expiry = window.setInterval(() => {
       const current = useAccountUsageStore.getState()
-      if (current.owner === owner && current.status === 'active' && current.validUntil <= Date.now()) current.setUsage(owner, 'unavailable')
+      if (!document.hidden && current.owner === owner && current.status === 'active' && current.validUntil <= Date.now()) {
+        current.setUsage(owner, 'unavailable')
+        void check()
+      }
     }, 1000)
     document.addEventListener('visibilitychange', check)
     window.addEventListener('online', check)
+    window.addEventListener('focus', check)
     return () => {
       running = false
       controller.abort()
@@ -61,6 +70,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
       window.clearInterval(expiry)
       document.removeEventListener('visibilitychange', check)
       window.removeEventListener('online', check)
+      window.removeEventListener('focus', check)
     }
   }, [owner, hydrated, retry])
 
@@ -79,18 +89,31 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
   if (!hydrated) return <BrandPageLoader label={text.checking} />
   if (!owner) return <>{children}</>
   const status = usage.owner === owner ? usage.status : 'checking'
-  if (status === 'active' && usage.validUntil > Date.now()) return <>{children}</>
-  if (status === 'checking') return <BrandPageLoader label={text.checking} />
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
-      <section className="max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900" role="alert">
+  const admitted = verifiedOwner === owner
+  const valid = status === 'active' && usage.validUntil > Date.now()
+  const panel = (
+    <main className="account-usage-screen">
+      <section className="account-usage-panel" role="alert">
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{status === 'blocked' ? text.blocked : text.unavailable}</h1>
         <p className="mt-4 text-slate-600 dark:text-slate-300">{status === 'blocked' ? text.explanation : text.reconnect}</p>
         <div className="mt-6 flex justify-center gap-3">
-          <button className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white" onClick={() => setRetry(value => value + 1)}>{text.retry}</button>
+          <button className="account-usage-retry" onClick={() => setRetry(value => value + 1)}>{text.retry}</button>
           <button className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 dark:text-slate-200" disabled={signingOut} onClick={() => { void logout() }}>{text.logout}</button>
         </div>
       </section>
     </main>
   )
+  if (!admitted) {
+    if (status === 'blocked') return panel
+    return <div className="account-usage-initial"><BrandPageLoader label={text.checking} />
+      {status === 'unavailable' && <button type="button" className="account-usage-initial-retry" onClick={() => setRetry(value => value + 1)}>{text.retry}</button>}
+    </div>
+  }
+  return <>
+    <div className="account-usage-frame" ref={node => node?.toggleAttribute('inert', !valid)} aria-hidden={!valid || undefined}>{children}</div>
+    {!valid && (status === 'blocked' ? <div className="account-usage-overlay">{panel}</div> :
+      <div className="account-usage-reconnecting" role="status" aria-label={text.checking}>
+        <div className="account-usage-connection-note"><img src="/logo.svg" alt="" width="24" height="24" /><button type="button" onClick={() => setRetry(value => value + 1)}>{text.retry}</button></div>
+      </div>)}
+  </>
 }

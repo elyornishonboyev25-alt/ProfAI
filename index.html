@@ -78,13 +78,14 @@
     </script>
 
     <style>
-      html,body{margin:0;background:#fff}
-      #profai-boot{min-height:100dvh;display:grid;place-items:center;background:#fff;font-family:system-ui,sans-serif;color:#253044}
-      .profai-boot-card{text-align:center}
-      .profai-boot-logo{display:block;width:48px;height:48px;margin:0 auto}
-      .profai-boot-title,.profai-boot-track{display:none}
-      .profai-boot-copy{display:none;max-width:280px;margin:20px auto 0;font-size:13px;line-height:1.6;color:#647084}
-      .profai-boot-retry{display:none;margin:16px auto 0;padding:10px 18px;border:1px solid #dfe3e8;border-radius:8px;background:#fff;color:#253044;font:600 13px system-ui,sans-serif;cursor:pointer}
+      #profai-boot{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 18% 20%,rgba(248,113,113,.18),transparent 30%),radial-gradient(circle at 82% 76%,rgba(251,146,60,.14),transparent 30%),#f8fafc;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#0f172a}
+      .profai-boot-card{width:min(84vw,390px);padding:36px;border:1px solid rgba(255,255,255,.95);border-radius:32px;background:rgba(255,255,255,.78);box-shadow:0 28px 80px rgba(127,29,29,.14);backdrop-filter:blur(22px);text-align:center}
+      .profai-boot-logo{width:84px;height:84px;filter:drop-shadow(0 18px 24px rgba(220,38,38,.25));animation:profaiFloat 2.4s ease-in-out infinite}
+      .profai-boot-title{margin:18px 0 4px;font-size:17px;font-weight:900}.profai-boot-copy{margin:0;font-size:12px;color:#64748b}
+      .profai-boot-track{height:6px;margin-top:24px;overflow:hidden;border-radius:999px;background:#e2e8f0}.profai-boot-bar{width:44%;height:100%;border-radius:999px;background:linear-gradient(90deg,#991b1b,#ef4444,#fb7185);animation:profaiLoad 1.4s ease-in-out infinite}
+      .profai-boot-retry{display:none;margin:18px auto 0;padding:10px 18px;border:0;border-radius:999px;background:#dc2626;color:#fff;font:700 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;cursor:pointer}
+      @keyframes profaiFloat{50%{transform:translateY(-8px) rotate(1.5deg)}}@keyframes profaiLoad{from{transform:translateX(-115%)}to{transform:translateX(265%)}}
+      @media(prefers-reduced-motion:reduce){.profai-boot-logo,.profai-boot-bar{animation:none}}
     </style>
     <script>
       // The boot screen is plain HTML and remains visible when an older service
@@ -106,7 +107,7 @@
         function showRetry() {
           var copy = document.querySelector('#profai-boot .profai-boot-copy');
           var button = document.getElementById('profai-boot-retry');
-          if (copy) { copy.textContent = 'We could not open the page. Please try again.'; copy.style.display = 'block'; }
+          if (copy) copy.textContent = 'Loading was interrupted. Please try again.';
           if (button) button.style.display = 'block';
         }
 

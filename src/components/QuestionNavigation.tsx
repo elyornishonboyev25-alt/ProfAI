@@ -48,7 +48,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
         [sections])
 
     return (
-        <div className="ielts-question-nav border-t border-red-100 bg-white p-3 backdrop-blur-xl transition-colors duration-300">
+        <div className="border-t border-red-100 bg-white p-3 backdrop-blur-xl transition-colors duration-300">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
                 <div className="mask-linear-fade no-scrollbar flex w-full flex-1 items-center gap-3 overflow-x-auto overflow-y-hidden pb-1">
                     {sections.map((section, idx) => {
@@ -78,14 +78,14 @@ const QuestionNavigation = memo(function QuestionNavigation({
                             <div
                                 key={section.id}
                                 className={`
-                                    flex shrink-0 items-center overflow-hidden rounded-lg border
+                                    flex shrink-0 cursor-pointer items-center overflow-hidden rounded-xl border transition-all duration-300 ease-in-out
                                     ${isActive
-                                        ? 'flex-grow border-slate-300 bg-white'
+                                        ? 'flex-grow border-red-400 bg-white shadow-[0_10px_22px_rgba(220,38,38,0.12)] ring-1 ring-red-500/20'
                                         : 'w-auto border-red-100 text-slate-500 hover:bg-red-50/60'}
                                 `}
                                 onClick={() => !isActive && onSectionChange(idx)}
                             >
-                                <button type="button" onClick={() => onSectionChange(idx)} aria-label={`Part ${section.partNumber}`} aria-pressed={isActive} className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
+                                <div className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
                                     <span className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
                                         Part {section.partNumber}
                                     </span>
@@ -98,7 +98,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                             {flaggedInSection}
                                         </span>
                                     ) : null}
-                                </button>
+                                </div>
 
                                 {isActive && (
                                     <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto overflow-y-hidden p-2">
@@ -122,21 +122,22 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                             return (
                                                 <button type="button"
                                                     key={`${questionId}-${localIndex}`}
-                                                    aria-label={`Question ${questionNumber}${isAnswered ? ", answered" : ""}${isFlagged ? ", flagged" : ""}`}
-                                                    aria-current={isCurrent ? "step" : undefined}
                                                     onClick={(event) => {
                                                         event.stopPropagation()
                                                         onNavigate(globalIndex)
                                                     }}
                                                     className={`
-                                                        ielts-nav-question relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-all
+                                                        relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-all
                                                         ${isCurrent
-                                                            ? 'border-red-600 bg-red-600 text-white'
+                                                            ? 'z-10 scale-110 border-red-600 bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_8px_20px_rgba(220,38,38,0.26)]'
                                                             : isAnswered
                                                                 ? 'border-red-200 bg-red-50 text-red-600'
                                                                 : 'border-red-100 bg-white text-slate-500 hover:border-red-300'}
                                                     `}
                                                 >
+                                                    {isCurrent && (
+                                                        <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-full bg-red-400/40 [animation-duration:1.6s]" />
+                                                    )}
                                                     {questionNumber}
                                                     {isFlagged && (
                                                         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-white bg-amber-500" />
@@ -159,7 +160,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 ? 'border-amber-200 bg-amber-50 text-amber-600'
                                 : 'border-red-100 bg-white text-slate-400 hover:bg-red-50 hover:text-red-500'
                                 }`}
-                            title="Flag Question" aria-label="Flag Question" aria-pressed={flagged.includes(currentQuestionIndex)}
+                            title="Flag Question"
                         >
                             <FlagIcon className="h-4 w-4" />
                         </button>
@@ -167,7 +168,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
 
                     <button type="button"
                         onClick={() => onNavigate(Math.max(0, currentQuestionIndex - 1))}
-                        aria-label="Previous question" disabled={currentQuestionIndex === 0}
+                        disabled={currentQuestionIndex === 0}
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-white text-slate-600 shadow-sm hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <ChevronLeftIcon className="h-4 w-4" />
@@ -175,7 +176,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
 
                     <button type="button"
                         onClick={() => onNavigate(Math.min(totalQuestions - 1, currentQuestionIndex + 1))}
-                        aria-label="Next question" disabled={currentQuestionIndex >= totalQuestions - 1}
+                        disabled={currentQuestionIndex >= totalQuestions - 1}
                         className="flex h-9 items-center gap-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(220,38,38,0.3)] transition-colors hover:from-red-500 hover:to-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <span>Next</span>

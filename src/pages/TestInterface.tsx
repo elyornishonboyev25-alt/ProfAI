@@ -1,7 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
-import BrandPageLoader from '@/components/common/BrandPageLoader'
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
@@ -134,8 +133,7 @@ function TestInterfaceContent() {
     }
 
     if (!isReviewLaunch) {
-      const part = launchPreset?.partIndex ? clamp(Math.round(launchPreset.partIndex), 1, type === 'reading' ? 3 : 4) : null
-      const key = `ielts_test_session_${id}${mockContext?.id ? `:mock:${mockContext.id}` : part ? `:part:${part}` : ''}`
+      const key = `ielts_test_session_${id}${mockContext?.id ? `:mock:${mockContext.id}` : ''}`
       const randomSession = id === 'random' ? accountStorageFor().getItem('ielts_test_route_reading_random') : null
       const saved = readActiveTestPaper<IELTSTest>(randomSession ?? key)
       if (saved && (saved.id === id || id === 'random')) {
@@ -205,7 +203,7 @@ function TestInterfaceContent() {
     }
     setTestData(foundTest ?? null)
     setLoading(false)
-  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type, isReviewLaunch, mockContext?.id, launchPreset?.partIndex])
+  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type, isReviewLaunch, mockContext?.id])
 
   const handleComplete = (results: unknown) => {
     // Inside a Full Mock, a section counts as done only when its test is actually
@@ -277,7 +275,11 @@ function TestInterfaceContent() {
   }
 
   if (loading || loadedRoute !== `${type}:${id}`) {
-    return <BrandPageLoader />
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    )
   }
 
   if (trackTestComingSoon) {
@@ -326,7 +328,7 @@ function TestInterfaceContent() {
   if (type === 'reading') {
     return (
       <IELTSReadingInterface
-        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${launchPreset?.partIndex ?? 'all'}:${isReviewLaunch ? 'review' : 'attempt'}`}
+        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${isReviewLaunch ? 'review' : 'attempt'}`}
         test={testData}
         fullMockId={mockContext?.id}
         onComplete={handleComplete}
@@ -349,7 +351,7 @@ function TestInterfaceContent() {
     // header, navigation) with an added non-controllable audio playlist.
     return (
       <IELTSReadingInterface
-        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${launchPreset?.partIndex ?? 'all'}:${isReviewLaunch ? 'review' : 'attempt'}`}
+        key={`${type}:${id}:${mockContext?.id ?? 'standalone'}:${isReviewLaunch ? 'review' : 'attempt'}`}
         test={testData}
         fullMockId={mockContext?.id}
         startAccess={isReviewLaunch ? undefined : listeningAccess}

@@ -1,0 +1,66 @@
+/* A continuous reading surface for bank practice and saved review. */
+.sat-exam-canvas.sat-bank-canvas {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: transparent;
+  text-align: left;
+}
+.sat-bank-canvas .sat-question-source {
+  border: 0;
+  padding: 8px 0 24px;
+}
+.sat-bank-canvas .sat-question-source > div,
+.sat-bank-canvas .sat-question-body {
+  max-width: none;
+  margin: 0;
+}
+.sat-bank-canvas .sat-question-panel { background: transparent; }
+.sat-bank-canvas .sat-question-toolbar {
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 16px;
+  background: transparent;
+}
+.sat-bank-canvas .sat-question-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #edf0f8;
+  color: #4053a4;
+  font: 750 15px/1 system-ui, sans-serif;
+}
+.sat-bank-canvas button.sat-question-bookmark {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  font: 650 13px/1.4 system-ui, sans-serif;
+  text-align: left;
+}
+.sat-bank-canvas .sat-question-toolbar > button:last-child:not(.sat-question-bookmark) { margin-left: auto; }
+.sat-bank-canvas .sat-question-body { padding: 0; }
+.sat-bank-canvas button[role='radio'] {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 58px;
+  border-width: 2px;
+  border-color: #dde3ed;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 16px;
+  text-align: left;
+}
+.sat-bank-canvas button[role='radio']:not(:disabled):hover { border-color: #9ba9d6; background: #f7f8ff; }
+.sat-bank-canvas button[role='radio'][aria-checked='true'] { border-color: #4053d7; background: #edf1ff; }
+.sat-bank-canvas button[role='radio'][aria-checked='true'][class*='border-emerald'] { border-color: #059669; background: #ecfdf5; }
+.sat-bank-canvas button[role='radio'][aria-checked='true'][class*='border-red'] { border-color: #dc2626; background: #fef2f2; }
+.sat-bank-canvas button[role='radio'] > span:last-child { font-weight: 500; }
+.sat-bank-canvas button:disabled { opacity: 1; }
+.sat-bank-canvas button[role='radio']:disabled[class*='opacity-50'] { opacity: .5; }
+@media (max-width: 640px) {
+  .sat-bank-canvas button[role='radio'] { padding: 12px; gap: 10px; }
+}

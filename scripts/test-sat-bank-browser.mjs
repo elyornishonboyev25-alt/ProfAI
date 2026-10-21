@@ -19,7 +19,7 @@ async function main() {
     import Bank from './src/pages/SATQuestionBank'; import Run from './src/pages/SATQuestionBankRun';
     import {useAuthStore} from './src/store/authStore';
     useAuthStore.setState({user:null});
-    window.fullscreenRequests=0;
+    window.fullscreenRequests=0; window.confirm=()=>true;
     document.documentElement.requestFullscreen=async()=>{window.fullscreenRequests++};
     function Location(){const l=useLocation();return <output data-location>{l.pathname}{l.search}</output>}
     createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/sat/question-bank?section=math&count=4']}>
@@ -28,7 +28,7 @@ async function main() {
   `
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.css': 'empty' } })
   const base = await readFile('src/index.css', 'utf8')
-  const extras = await Promise.all(['src/pages/SATQuestionBank.css', 'src/pages/SATQuestionBankRun.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/sat-exam-layout.css', 'src/components/sat/SATSourceContent.css'].map(file=>readFile(file,'utf8')))
+  const extras = await Promise.all(['src/pages/SATQuestionBank.css', 'src/pages/SATQuestionBankRun.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/sat-exam-layout.css', 'src/components/sat/SATSourceContent.css', 'src/components/sat/SATQuestionCanvas.css'].map(file=>readFile(file,'utf8')))
   const css = (await postcss([tailwindcss()]).process(base, {from:'src/index.css'})).css + '\n' + extras.join('\n')
   const server = createServer(async (req,res)=>{
     if(req.url==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`)}
@@ -89,6 +89,29 @@ async function main() {
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
     await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`})
     await until(`document.body?.innerText.includes('Start 4 questions')`)
+    const selectOption = async (label, option) => {
+      await clickLabel(label)
+      await evaluate(`[...document.querySelectorAll('[role="option"]')].find(node=>node.textContent.trim()===${JSON.stringify(option)}).click()`)
+    }
+    for (const width of [1366, 390]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<1024})
+      for (const [label, count] of [['Section', 2], ['Domain / topic', 5], ['Skill / question type', 10]]) {
+        await clickLabel(label)
+        assert.equal(await evaluate(`document.querySelectorAll('[role="option"]').length`), count)
+        const menu = await evaluate(`(()=>{const trigger=document.querySelector('[aria-label="${label}"][role="combobox"]'); const list=document.querySelector('[role="listbox"]'); list.scrollIntoView({block:'nearest'}); const r=list.getBoundingClientRect(); return {height:trigger.getBoundingClientRect().height, option: list.firstElementChild.getBoundingClientRect().height,left:r.left,right:r.right,menuHeight:r.height}})()`)
+        assert.ok(menu.height>=52 && menu.option>=48, 'Readable controls and touch targets')
+        assert.ok(menu.left>=0 && menu.right<=width && menu.menuHeight<=302, 'Bounded menu without horizontal overflow')
+        await evaluate(`document.querySelector('[aria-label="${label}"][role="combobox"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`)
+        assert.equal(await evaluate(`document.querySelector('[role="listbox"]')===null`),true)
+      }
+    }
+    await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
+    await selectOption('Domain / topic','Algebra')
+    await clickLabel('Skill / question type')
+    assert.equal(await evaluate(`document.querySelectorAll('[role="option"]').length`), 4)
+    await selectOption('Section','Reading & Writing')
+    assert.equal(await evaluate(`document.querySelector('[aria-label="Domain / topic"]').textContent`),'All domains')
+    await selectOption('Section','Math')
     await clickText('Start 4 questions')
     await until(`!!document.querySelector('.sat-bank-run')`)
     assert.equal(await evaluate('window.fullscreenRequests'),1)
@@ -150,11 +173,35 @@ async function main() {
     await clickText('Resume practice')
     await until(`!!document.querySelector('[role="radio"][aria-checked="true"]')`)
     assert.equal(await evaluate(`document.querySelector('[aria-pressed="true"]').textContent.includes('Marked for Review')`),true)
+    await clickLabel('Save and exit practice')
+    await until(`document.body?.innerText.includes('Resume practice')`)
+    await selectOption('Section','Reading & Writing')
+    await selectOption('Questions in set','4')
+    await clickText('Start 4 questions')
+    await until(`!!document.querySelector('.sat-question-source')`)
+    for (const width of [1366, 390]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<1024})
+      const layout=await evaluate(`(()=>{const source=document.querySelector('.sat-question-source'); const panel=document.querySelector('.sat-question-panel'); const answer=document.querySelector('[role="radio"]');return {sourceBottom:source.getBoundingClientRect().bottom,panelTop:panel.getBoundingClientRect().top,border:getComputedStyle(source).borderRightWidth,align:getComputedStyle(answer).justifyContent,textAlign:getComputedStyle(answer).textAlign,overflow:document.documentElement.scrollWidth>innerWidth}})()`)
+      assert.ok(layout.sourceBottom<=layout.panelTop, 'Passage and question follow one another')
+      assert.equal(layout.border,'0px')
+      assert.equal(layout.align,'flex-start')
+      assert.equal(layout.textAlign,'left')
+      assert.equal(layout.overflow,false)
+      const shot=await send('Page.captureScreenshot',{format:'png'})
+      await writeFile(join(screenshots,`reading-${width}.png`),Buffer.from(shot.data,'base64'))
+    }
+    await evaluate(`document.querySelector('[role="radio"]').click()`)
+    for(let index=0;index<3;index++) await clickText('Next')
+    await clickText('Finish set')
+    await until(`!!document.querySelector('.sat-bank-question')`)
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.sat-bank-question')).borderRightWidth`),'0px')
+    assert.equal(await evaluate(`!!document.querySelector('.sat-bank-canvas')`),true)
     // Retain review screenshots outside the repo; no generated artifacts in commits.
     const destination=resolve(process.env.SAT_TEST_SCREENSHOTS || '/tmp/profai-sat-bank-screenshots')
     await mkdir(destination,{recursive:true})
     for(const [width,height] of [[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]) await writeFile(join(destination,`${width}x${height}.png`),await readFile(join(screenshots,`${width}x${height}.png`)))
-    console.log(`PASS saved answers and marks resume; screenshots: ${destination}`)
+    for(const width of [1366,390]) await writeFile(join(destination,`reading-${width}.png`),await readFile(join(screenshots,`reading-${width}.png`)))
+    console.log(`PASS comfortable filters, grouped topics, continuous Reading layout, saved review; saved answers and marks resume; screenshots: ${destination}`)
     await send('Browser.close').catch(()=>{})
   } finally {
     socket?.close();browser.kill();await exited

@@ -8,6 +8,8 @@ import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../sr
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
+import { allQuestions } from '../../src/features/sat/bankPractice'
+import { bankDomain, bankSkill } from '../../src/features/sat/bankTopics'
 import { accountStorageFor } from '../../src/utils/accountStorage'
 
 const storage = accountStorageFor('guest')
@@ -29,7 +31,7 @@ function Location() {
     </>
   )
 }
-async function render(path = '/sat/question-bank') {
+async function render(path = '/sat/question-bank?section=reading-writing') {
   if (root) await act(async () => root.unmount())
   root = createRoot(container)
   await act(async () =>
@@ -61,14 +63,11 @@ async function click(node: HTMLElement | null | undefined) {
   await act(async () => node.click())
 }
 async function change(label: string, value: string) {
-  const node = [...container.querySelectorAll('label')]
-    .find((node) => node.firstChild?.textContent === label)
-    ?.querySelector('select')
-  assert.ok(node, `Expected ${label} select`)
-  await act(async () => {
-    node.value = value
-    node.dispatchEvent(new Event('change', { bubbles: true }))
-  })
+  const node = container.querySelector<HTMLButtonElement>(`[role="combobox"][aria-label="${label}"]`)
+  await click(node)
+  const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')]
+    .find(node => node.textContent?.trim() === ({ all: { 'Domain / topic': 'All domains', 'Skill / question type': 'All skills', Difficulty: 'All levels', Progress: 'All questions' }[label], math: 'Math', 'reading-writing': 'Reading & Writing', unanswered: 'Not attempted', incorrect: 'Previously incorrect', marked: 'Marked for Review' }[value] ?? value))
+  await click(option)
 }
 async function highlight(block: string, color: string) {
   const element = container.querySelector(`[data-sat-highlight-block="${block}"]`)!
@@ -94,7 +93,31 @@ export async function run() {
   localStorage.clear()
   await act(async () => useAuthStore.setState({ user: null }))
   const key = 'profai:sat:question-bank:guest:v1'
-  await render()
+  await render('/sat/question-bank')
+  // Core topic groups cover every source label; changing sections resets dependent filters.
+  assert.equal(container.querySelector('[aria-label="Section"]')!.textContent, 'Math')
+  await click(container.querySelector('[aria-label="Section"]'))
+  assert.deepEqual([...container.querySelectorAll('[role="option"]')].map(node => node.textContent), ['Math', 'Reading & Writing'])
+  await act(async () => document.dispatchEvent(new window.Event('pointerdown', { bubbles: true })))
+  assert.equal(container.querySelector('[role="listbox"]'), null)
+  for (const section of ['math', 'reading-writing']) {
+    const rows = allQuestions.filter(row => row.question.section === section)
+    assert.equal(new Set(rows.map(row => bankDomain(row.question.domain))).size, 4)
+    assert.ok(new Set(rows.map(row => bankSkill(row.question))).size <= 10)
+  }
+  await change('Domain / topic', 'Problem-Solving and Data Analysis')
+  assert.equal(matching(), allQuestions.filter(row => row.question.section === 'math' &&
+    bankDomain(row.question.domain) === 'Problem-Solving and Data Analysis').length,
+  'Both source spellings of the data-analysis domain remain available')
+  await change('Skill / question type', 'Ratios & percentages')
+  assert.equal(matching(), allQuestions.filter(row => row.question.section === 'math' &&
+    bankSkill(row.question) === 'Ratios & percentages').length)
+  await click(button('Reset filters'))
+  await click(container.querySelector('[aria-label="Difficulty"]'))
+  await act(async () => container.querySelector('[aria-label="Difficulty"]')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true })))
+  await act(async () => container.querySelector('[aria-label="Difficulty"]')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
+  assert.equal(container.querySelector('[aria-label="Difficulty"]')!.textContent, 'Hard')
+  await change('Difficulty', 'all')
   // Desmos is discoverable from the bank setup before a Math set starts.
   await click(document.querySelector('[aria-label="Open Desmos calculator"]'))
   assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
@@ -104,7 +127,7 @@ export async function run() {
   await change('Section', 'math')
   await click(document.querySelector('[aria-label="Open Desmos calculator"]'))
   await click(document.querySelector('[aria-label="Close Desmos"]'))
-  await change('Section', 'all')
+  await change('Section', 'reading-writing')
   await click(
     [...container.querySelectorAll('button')].find((node) =>
       node.textContent?.trim().startsWith('History & review'),
@@ -114,12 +137,14 @@ export async function run() {
   await click(button('Build a question set'))
   await change('Questions in set', '4')
   const initialSetItem = window.Storage.prototype.setItem
-  window.Storage.prototype.setItem = () => { throw new Error('quota') }
+  window.Storage.prototype.setItem = function (key, value) {
+    if (this === localStorage && key.includes(':question-bank:')) throw new Error('quota')
+    return initialSetItem.call(this, key, value)
+  }
   await click(button('Start 4 questions'))
-  assert.match(path(), /^\/sat\/question-bank$/)
-  assert.match(container.querySelector('[role="alert"]')!.textContent!, /could not be started/)
+  // Account storage retains the new session when local storage is full.
+  assert.match(path(), /\/sat\/question-bank\/run\//)
   window.Storage.prototype.setItem = initialSetItem
-  await click(button('Start 4 questions'))
   assert.match(path(), /\/sat\/question-bank\/run\//)
   assert.ok(container.querySelector('.sat-bank-run'))
   assert.equal(container.querySelector('.sat-bank-hero'), null)
@@ -169,19 +194,15 @@ export async function run() {
   await click(button('Next'))
   await click(button('Next'))
   await click(button('Next'))
-  // Saving failures must preserve the session rather than claiming success.
+  // Quota fallback must preserve the completed answers and saved review.
   const originalSetItem = window.Storage.prototype.setItem
-  window.Storage.prototype.setItem = () => {
-    throw new Error('quota')
+  window.Storage.prototype.setItem = function (key, value) {
+    if (this === localStorage && key.includes(':question-bank:')) throw new Error('quota')
+    return originalSetItem.call(this, key, value)
   }
   await click(button('Finish set'))
-  assert.match(
-    container.querySelector('[role="alert"]')!.textContent!,
-    /could not be saved/,
-  )
-  assert.ok(button('Finish set'))
+  assert.match(path(), /view=history&review=/)
   window.Storage.prototype.setItem = originalSetItem
-  await click(button('Finish set'))
   assert.match(text(), /1 of 4 correct/)
   assert.match(text(), /Question 1/)
   assert.match(text(), /Explanation/)
@@ -243,8 +264,10 @@ export async function run() {
 
   // Saved marks can build another practice set and be removed.
   await render()
+  await change('Progress', 'incorrect')
+  assert.equal(matching(), 1, 'Skipped answers are separate from previously incorrect answers')
   await change('Progress', 'marked')
-  await click(button('Start 1 questions'))
+  await click(button('Start 1 question'))
   assert.ok(button('Marked for Review'))
   await click(button('Marked for Review'))
   assert.equal(button('Mark for Review')?.getAttribute('aria-pressed'), 'false')
@@ -311,7 +334,7 @@ export async function run() {
   const other = createSATAttempt(secondTest.id, secondTest.modules, 'practice')
   other.answers[second.id] = second.choices.find(choice => choice.key !== second.correctAnswer)!.key
   saveSATAttemptToHistory(other, 'exit')
-  await render('/sat/question-bank?status=unanswered')
+  await render('/sat/question-bank?section=reading-writing&status=unanswered')
   assert.equal(matching(), total - 2, 'Same position in another test has separate progress')
   await change('Progress', 'incorrect')
   assert.equal(matching(), 1)
@@ -322,8 +345,8 @@ export async function run() {
   localStorage.clear()
   const submitted = { ...active, status: 'submitted', submittedAt: Date.now() }
   storage.setItem(`profai:sat:${firstTest.id}:attempt:v1`, JSON.stringify(submitted))
-  await render('/sat/question-bank?status=unanswered')
-  assert.equal(matching(), total - firstTest.questionCount)
+  await render('/sat/question-bank?section=reading-writing&status=unanswered')
+  assert.equal(matching(), total - firstTest.modules.filter(module => module.section === 'reading-writing').reduce((sum, module) => sum + module.questions.length, 0))
   assert.equal(JSON.parse(storage.getItem('profai:sat:attempt-history:v1')!).length, 1)
 
   // Section and retired allocations match the same source question in today's bank.
@@ -339,19 +362,19 @@ export async function run() {
   const legacyAttempt = createSATAttempt(retired.id, retired.modules, 'practice')
   legacyAttempt.answers[legacyQuestion.id] = legacyQuestion.correctAnswer
   saveSATAttemptToHistory(legacyAttempt, 'exit')
-  await render('/sat/question-bank?status=unanswered')
-  assert.equal(matching(), total - 1)
+  await render('/sat/question-bank?section=math&status=unanswered')
+  assert.equal(matching(), allQuestions.filter(row => row.question.section === 'math').length - 1)
   const sectionAttempt = createSATAttempt(sectionTest.id, sectionTest.modules, 'practice')
   sectionAttempt.answers[shared.id] = shared.choices.find(choice => choice.key !== shared.correctAnswer)!.key
   sectionAttempt.updatedAt = legacyAttempt.updatedAt + 1000
   saveSATAttemptToHistory(sectionAttempt, 'exit')
-  await render('/sat/question-bank?status=incorrect')
+  await render('/sat/question-bank?section=math&status=incorrect')
   assert.equal(matching(), 1, 'Newest answer across allocations determines mistakes')
 
   // Previous bank results used a shorter positional key. Keep their review and progress.
   localStorage.clear()
   storage.setItem(key, JSON.stringify([{ ...saved[0], key: `${first.section}:${first.id}` }]))
-  await render('/sat/question-bank?status=unanswered')
+  await render('/sat/question-bank?section=reading-writing&status=unanswered')
   assert.equal(matching(), total - 1)
   await render('/sat/question-bank?view=history')
   await click(container.querySelector('.sat-bank-history-card'))
@@ -420,6 +443,6 @@ export async function run() {
   assert.match(text(), /This practice set is unavailable/)
   await act(async () => root.unmount())
   console.log(
-    'SAT question bank: saved answers, failed-save recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
+    'SAT question bank: saved answers, storage-quota recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
   )
 }

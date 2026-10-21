@@ -164,6 +164,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         <div className="sat-bank-run-meta"><span>{difficulty(current.question.difficulty)} · {current.question.skill}</span><span>Question {session.index + 1} of {session.keys.length}</span></div>
         {!math ? <p className="mx-auto mb-4 max-w-[1400px] text-xs text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p> : null}
         <SATQuestionCanvas
+          practiceLayout
           key={current.key}
           question={{ ...current.question, number: session.index + 1 }}
           answer={session.answers[current.key] ?? ''}

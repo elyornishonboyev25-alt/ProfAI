@@ -22,6 +22,8 @@ export const uzbekCompletion: Record<string, string> = {
   'Your ideas and meaning, with clearer structure, vocabulary and grammar.': 'O‘z fikrlaringiz va mazmuningiz saqlangan, tuzilish, lug‘at va grammatikasi yaxshilangan javob.',
   'Compare this with your original answer, then try expressing the same ideas yourself.': 'Buni asl javobingiz bilan solishtiring, so‘ng shu fikrlarni o‘zingiz qayta ifodalab ko‘ring.',
   'An improved version is unavailable for this attempt. Your original answer is preserved.': 'Bu urinish uchun yaxshilangan javob mavjud emas. Asl javobingiz saqlangan.',
+  'Open the listening test and submit at least one attempt.': 'Listening testini oching va kamida bir marta topshiring.',
+  'Return to Listening Tests': 'Listening testlariga qaytish',
   'Listening answer review': 'Listening javoblarini tekshirish',
   'Audio complete': 'Audio tugadi',
   'Check your answers': 'Javoblaringizni tekshiring',

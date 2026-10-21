@@ -52,15 +52,18 @@ export default function ResultsReview() {
   const user = useAuthStore((state) => state.user)
 
   const state = (location.state as ReviewLocationState) || {}
-  const sessionState = useMemo(() => (testId ? loadReviewState(testId) : null), [testId])
+  const sessionState = useMemo(() => (testId ? loadReviewState(testId) : null), [testId, user?.id])
   const fallbackEntry = useMemo(
-    () => getReadingAnalysisHistory(user?.id).find((entry) => entry.testId === testId),
+    () => {
+      try { return getReadingAnalysisHistory(user?.id).find((entry) => entry.testId === testId) }
+      catch { return undefined }
+    },
     [testId, user?.id],
   )
 
   const result = state.result ?? sessionState?.result ?? fallbackEntry?.resultPayload
   const storedTest = state.test ?? sessionState?.test
-  const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '')
+  const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '', result)
   // Stable question IDs allow saved answers to use corrected prompts and keys.
   const test = catalogTest ?? storedTest ?? undefined
   const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''

@@ -528,8 +528,8 @@ export default function IELTSReadingInterface({
 
   // Clear session helper
   const clearSession = () => {
-    personalStorage.removeItem(sessionKey)
-    clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest')
+    try { personalStorage.removeItem(sessionKey) } catch { /* Submission remains usable when storage is unavailable. */ }
+    try { clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest') } catch { /* Keep the submitted result available. */ }
     startedAtRef.current = null
     deadlineRef.current = null
   }

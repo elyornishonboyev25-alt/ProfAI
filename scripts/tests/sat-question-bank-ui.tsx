@@ -118,15 +118,15 @@ export async function run() {
   await act(async () => container.querySelector('[aria-label="Difficulty"]')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
   assert.equal(container.querySelector('[aria-label="Difficulty"]')!.textContent, 'Hard')
   await change('Difficulty', 'all')
-  // Desmos is discoverable from the bank setup before a Math set starts.
-  await click(document.querySelector('[aria-label="Open Desmos calculator"]'))
-  assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
+  // Setup has no calculator; Math practice and saved review retain Desmos.
+  assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  assert.equal(document.querySelector('iframe'), null)
   await change('Section', 'reading-writing')
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
   assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
   await change('Section', 'math')
-  await click(document.querySelector('[aria-label="Open Desmos calculator"]'))
-  await click(document.querySelector('[aria-label="Close Desmos"]'))
+  assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
+  assert.equal(document.querySelector('iframe'), null)
   await change('Section', 'reading-writing')
   await click(
     [...container.querySelectorAll('button')].find((node) =>

@@ -278,9 +278,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       setError('Your practice could not be started. Free up browser storage and try again.')
     }
   }
-  const mathVisible = historyView
-    ? review?.row?.question.section === 'math'
-    : section !== 'reading-writing'
+  const mathVisible = historyView && review?.row?.question.section === 'math'
   useEffect(() => {
     setCalculatorOpen(false)
   }, [mathVisible, historyView, reviewId])
@@ -609,7 +607,6 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               <div className="sat-bank-panel-title">
                 <h2>Build a question set</h2>
                 <span role="status" aria-live="polite">{filtered.length} matching</span>
-                {calculatorButton}
               </div>
               {activeSet ? (
                 <div className="sat-bank-resume" role="status">

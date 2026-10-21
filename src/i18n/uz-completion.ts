@@ -1,5 +1,7 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Open the listening test and submit at least one attempt.': 'Listening testini oching va kamida bir marta topshiring.',
+  'Return to Listening Tests': 'Listening testlariga qaytish',
   'Listening answer review': 'Listening javoblarini tekshirish',
   'Audio complete': 'Audio tugadi',
   'Check your answers': 'Javoblaringizni tekshiring',

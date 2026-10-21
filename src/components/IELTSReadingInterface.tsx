@@ -495,7 +495,7 @@ export default function IELTSReadingInterface({
 
   // Clear session helper
   const clearSession = () => {
-    personalStorage.removeItem(sessionKey)
+    try { personalStorage.removeItem(sessionKey) } catch { /* Submission remains usable when storage is unavailable. */ }
     startedAtRef.current = null
     deadlineRef.current = null
   }

@@ -3,8 +3,6 @@ import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
 import UiText from '@/components/common/UiText'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
-import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -771,7 +769,6 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
 
       {/* Band 8+ template */}
       <ImprovedResponse text={analysis.band8Template} />
-      <ReviewPracticeLink skill="speaking" />
 
       {/* Issues */}
       {analysis.issues.length > 0 ? (
@@ -883,7 +880,6 @@ function FullMockRunner({
             <h1 className="mt-3 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">{mock.title}</h1>
             <p className="mt-4 text-sm text-slate-600"><UiText text="Practise with purpose. Simulate with confidence." /></p>
           </motion.header>
-          <TestVocabulary testId={mock.id} variant="reminder" ready={landingReady} />
           <div className="grid gap-6 md:grid-cols-2">
             {(['practice', 'simulation'] as const).map((mode) => (
               <motion.section key={mode} initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={landingReady ? { opacity: 1, y: 0 } : reducedMotion ? undefined : { opacity: 0, y: 18 }} transition={{ duration: 0.45, delay: mode === 'practice' ? 0.05 : 0.12 }} whileHover={allowHoverMotion ? { y: -4 } : undefined} className={`flex flex-col rounded-3xl border p-6 shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] sm:p-9 ${mode === 'practice' ? 'border-red-100 bg-white' : 'border-red-200 bg-rose-50/70'}`}>
@@ -891,7 +887,6 @@ function FullMockRunner({
                 <h2 className="text-2xl font-bold text-slate-900"><UiText text={mode === 'practice' ? 'Practice Mode' : 'Simulation Mode'} /></h2>
                 <p className="mb-7 mt-3 flex-1 text-sm leading-6 text-slate-600"><UiText text={mode === 'practice' ? 'Prepare with this test’s vocabulary, then practise all three parts with the AI examiner.' : 'Complete all three parts with the AI examiner. Explore this test’s vocabulary in your review after finishing.'} /></p>
                 <button type="button" onClick={() => setLaunchMode(mode)} className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"><UiText text={mode === 'practice' ? 'Start Practice' : 'Launch Final Simulation'} /></button>
-                {mode === 'practice' ? <TestVocabulary testId={mock.id} variant="link" ready={landingReady} /> : null}
               </motion.section>
             ))}
           </div>

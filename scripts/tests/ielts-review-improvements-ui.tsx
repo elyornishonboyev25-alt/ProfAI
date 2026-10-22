@@ -53,7 +53,8 @@ export async function run() {
     }
     for (const reviewMode of [false, true]) {
       await render(<SpeakingResult evaluation={evaluation} transcript={history} modeLabel="Speaking Mock 1" reviewMode={reviewMode} onRetry={() => {}} onExit={() => {}} />)
-      assert.ok(container.querySelector('a[href="/shadowing-lab"]'))
+      assert.equal(container.querySelector('a[href="/shadowing-lab"]'), null, 'Speaking feedback has no practice-resource promotion')
+      assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Speaking feedback has no vocabulary promotion')
       assert.ok(container.querySelector('details[open]'))
       for (const answer of evaluation.improvedAnswers!) assert.ok(container.textContent!.includes(answer.improved))
       assert.equal(container.querySelectorAll('section').length, 2, 'No rewrite is fabricated for empty speech')

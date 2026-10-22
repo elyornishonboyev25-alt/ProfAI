@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle2, Headphones, Mic2, PenSquare, Trophy } from 'lucide-react'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
-import ReviewPracticeLink from './ReviewPracticeLink'
 import ImprovedResponse from './ImprovedResponse'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
 import { getFullMockResults, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
@@ -75,8 +73,6 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
             if (!current || current.completedAt !== saved.completedAt) return
             saveFullMockSectionResult(mock.id, selected, { ...current, review: current.review?.map((response, position) => position === index ? { ...response, improvedVersion } : response) })
           }} />}</div>)}</div></details>}
-          <TestVocabulary testId={saved.testId} skill={selected} variant="review" compact />
-          {selected !== 'writing' && <ReviewPracticeLink skill={selected} />}
         </div>
       </section>
       <footer>Overall is the average of the four skill bands, rounded to the nearest half band. Writing Task 2 carries twice the weight of Task 1. Listening and Reading use answer keys; Writing and Speaking use AI assessment against IELTS criteria. These are practice estimates.</footer>

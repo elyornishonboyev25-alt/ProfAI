@@ -21,7 +21,6 @@ import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
@@ -148,7 +147,6 @@ export default function WritingResultModal({
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
-            {entry.fullTest ? <TestVocabulary testId={entry.fullTest.id} variant="review" /> : null}
             {/* Score hero */}
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/50 p-5">
               <div className="flex flex-col items-center">

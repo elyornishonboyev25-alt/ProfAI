@@ -25,7 +25,6 @@ import {
 
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
@@ -406,7 +405,6 @@ export default function IELTSWritingFullTestInterface({
             </p>
           </motion.div>
 
-          {!inFullMock ? <TestVocabulary testId={fullTest.id} variant="reminder" /> : null}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <ModeCard
               icon={<Lightbulb className="h-8 w-8" />}
@@ -415,7 +413,6 @@ export default function IELTSWritingFullTestInterface({
               description="Write at your own pace without time pressure. Perfect for learning structure and vocabulary."
               features={['Unlimited writing time', 'Task 1: 150+ words · Task 2: 250+ words']}
               buttonLabel="Start Practice"
-              vocabularyTestId={!inFullMock ? fullTest.id : undefined}
               onClick={() => handleStart(false)}
             />
             <ModeCard
@@ -500,7 +497,6 @@ export default function IELTSWritingFullTestInterface({
             </div>
           </div>
 
-          {!inFullMock ? <TestVocabulary testId={fullTest.id} variant="review" /> : null}
           <div className="mt-5 space-y-5">
             {tasks.map((task, index) => {
               const evaluation = evaluations[task.id]
@@ -748,7 +744,7 @@ export default function IELTSWritingFullTestInterface({
   )
 }
 
-function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, simulation = false, onClick, vocabularyTestId }: { icon: React.ReactNode; title: string; eyebrow: string; description: string; features: string[]; buttonLabel: string; simulation?: boolean; onClick: () => void; vocabularyTestId?: string }) {
+function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, simulation = false, onClick }: { icon: React.ReactNode; title: string; eyebrow: string; description: string; features: string[]; buttonLabel: string; simulation?: boolean; onClick: () => void }) {
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   return (
     <motion.div initial={reducedMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: simulation ? 0.12 : 0.06 }} whileHover={allowHoverMotion ? { y: -5 } : undefined} className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white/95 p-6 text-left shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)] backdrop-blur-xl transition-all duration-300 sm:p-10 ${simulation ? 'border-red-200' : 'border-red-100'}`}>
@@ -771,7 +767,6 @@ function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, si
           ))}
         </ul>
         <button type="button" onClick={onClick} className={`flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-4 text-center text-sm font-bold text-white shadow-lg transition-all ${simulation ? 'shadow-red-500/20 group-hover:scale-[1.02]' : 'border border-red-500 shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500'}`}>{buttonLabel}</button>
-        {vocabularyTestId ? <TestVocabulary testId={vocabularyTestId} variant="link" /> : null}
       </div>
     </motion.div>
   )

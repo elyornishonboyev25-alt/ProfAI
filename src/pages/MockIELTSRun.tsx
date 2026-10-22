@@ -1,7 +1,5 @@
-import TestVocabulary from '@/components/vocab/TestVocabulary'
 import FullMockResults from '@/components/ielts/FullMockResults'
 import { useFullscreen } from '@/hooks/useFullscreen'
-import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -424,8 +422,6 @@ export default function MockIELTSRun() {
                 </div>
                 {allSectionsDone && saved && (
                   <div className="mock-run-section-review">
-                    <TestVocabulary testId={saved.testId} skill={section.key} variant="review" compact />
-                    {section.key !== 'writing' ? <ReviewPracticeLink skill={section.key} /> : null}
                     {!!saved.review?.length && (
                       <details open>
                         <summary>

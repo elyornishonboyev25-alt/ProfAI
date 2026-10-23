@@ -118,7 +118,11 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
               {skill.topics.map((topic) => <li key={topic}>{topic}</li>)}
             </ul>
           </div>
-          <ProgressRing band={score} />
+          {score === null ? (
+            <span className="flex min-h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/50 px-3 text-center text-sm font-bold leading-5 text-red-700">
+              {`Start your first ${skill.title.replace('IELTS ', '')} test`}
+            </span>
+          ) : <ProgressRing band={score} />}
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-4">

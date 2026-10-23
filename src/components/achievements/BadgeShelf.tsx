@@ -134,16 +134,16 @@ export default function BadgeShelf() {
               <button
                 onClick={() => void togglePin(badge)}
                 disabled={busyId === badge.id || badge.id.startsWith('local-')}
-                className="achievement-btn achievement-btn--red"
+                className={`achievement-btn achievement-btn--grow ${badge.pinned ? 'achievement-btn--pinned' : 'achievement-btn--red'}`}
                 aria-pressed={badge.pinned}
               >
                 {busyId === badge.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Star className={`h-3.5 w-3.5 ${badge.pinned ? 'fill-current' : ''}`} />}
-                {badge.id.startsWith('local-') ? 'Syncing' : badge.pinned ? 'Unpin' : 'Pin'}
+                {badge.id.startsWith('local-') ? 'Syncing' : badge.pinned ? 'Unpin' : 'Pin to profile'}
               </button>
               <button
                 onClick={() => void removeBadge(badge)}
                 disabled={busyId === badge.id || badge.id.startsWith('local-')}
-                className="achievement-btn !w-11 !px-0 hover:text-red-600"
+                className="achievement-btn achievement-btn--icon"
                 aria-label="Remove badge"
                 title="Remove badge"
               >

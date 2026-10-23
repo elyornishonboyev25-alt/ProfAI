@@ -3,7 +3,7 @@ import { apiClient } from '@/lib/apiClient'
 type CredentialHandler = (credential: string) => Promise<void> | void
 export type GoogleIdentity = {
   initialize: (options: { client_id: string; callback: (response: { credential: string }) => void; ux_mode: 'popup'; auto_select: boolean; context: 'use'; itp_support: boolean; use_fedcm_for_button: boolean; button_auto_select: boolean }) => void
-  renderButton: (parent: HTMLElement, options: { locale: string; type: 'standard'; theme: 'outline'; size: 'large'; text: 'continue_with'; shape: 'pill'; logo_alignment: 'left'; width: number }) => void
+  renderButton: (parent: HTMLElement, options: { locale: string; type: 'standard'; theme: 'outline'; size: 'large'; text: 'continue_with'; shape: 'pill' | 'rectangular'; logo_alignment: 'left'; width: number }) => void
   prompt: () => void
   cancel: () => void
 }

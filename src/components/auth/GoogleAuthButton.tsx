@@ -36,7 +36,7 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
         const width = Math.max(200, Math.min(400, Math.floor(parent.clientWidth || 300)))
         if (width === lastWidth) return
         lastWidth = width; parent.replaceChildren()
-        connection.api.renderButton(parent, { locale: language === 'ru' ? 'ru' : 'en', type: 'standard', theme: 'outline', size: 'large', shape: 'pill', logo_alignment: 'left', text: 'continue_with', width })
+        connection.api.renderButton(parent, { locale: language === 'ru' ? 'ru' : 'en', type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular', logo_alignment: 'left', text: 'continue_with', width })
       }
       render()
       if (typeof ResizeObserver !== 'undefined' && container.current) { observer = new ResizeObserver(render); observer.observe(container.current) }

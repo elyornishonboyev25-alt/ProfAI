@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ShieldCheck, Sparkles } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { apiClient } from '@/lib/apiClient'
 import { useToastStore, type ToastState } from '@/store/toastStore'
@@ -44,11 +44,10 @@ export default function Login() {
             <Link to="/login" state={location.state} aria-current={!createMode ? 'page' : undefined} className={!createMode ? 'is-active' : ''}>{c('Sign in')}</Link>
             <Link to="/register" state={location.state} aria-current={createMode ? 'page' : undefined} className={createMode ? 'is-active' : ''}>{c('Create account')}</Link>
           </nav>
-          <div className="auth-cinema-intro"><span><Sparkles size={15} />{c(createMode ? 'YOUR NEXT CHAPTER STARTS HERE' : 'PICK UP WHERE YOU LEFT OFF')}</span><h1>{c(createMode ? 'Create your account.' : 'Welcome back.')}</h1><p>{c('Enter your Gmail. We will send a one-time code to open your account.')}</p></div>
+          <div className="auth-cinema-intro"><h1>{c(createMode ? 'Create your account.' : 'Welcome back.')}</h1><p>{c('Enter your Gmail. We will send a one-time code to open your account.')}</p></div>
           <EmailCodeForm initialEmail={initialEmail} intent={createMode ? 'create-account' : 'sign-in'} onAuthenticated={finishEmail} />
           <div className="auth-cinema-divider"><span />{c('or continue with')}<span /></div>
           <GoogleAuthButton mode={createMode ? 'signup' : 'signin'} onCredential={googleSignIn} />
-          <p className="auth-access-account-note">{c('Already have an account? Use the same Gmail. Your results, classes and progress stay with you.')}</p>
           <p className="auth-cinema-privacy"><ShieldCheck size={15} />{c('Your Gmail password is never requested.')}</p>
         </div>
       </section>

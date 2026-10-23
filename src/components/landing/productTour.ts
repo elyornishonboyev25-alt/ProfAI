@@ -18,7 +18,7 @@ export type TourFeature = {
 
 export const tourFeatures: TourFeature[] = [
   {
-    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard.webp', address: 'ivygoo.com/dashboard',
+    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard-ivygoo.jpg', address: 'ivygoo.com/dashboard',
     label: ['Dashboard', 'Boshqaruv paneli', 'Панель'],
     kicker: ['YOUR COMMAND CENTER', 'SIZNING BOSHQARUV MARKAZINGIZ', 'ВАШ ЦЕНТР УПРАВЛЕНИЯ'],
     title: ['See your whole preparation on one screen.', 'Butun tayyorgarligingiz bitta ekranda.', 'Вся подготовка на одном экране.'],
@@ -88,7 +88,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'mocks', route: '/ielts', image: '/assets/landing/mock.webp', address: 'ivygoo.com/mock/ielts',
+    id: 'mocks', route: '/ielts', image: '/assets/landing/mock-ivygoo.jpg', address: 'ivygoo.com/mock/ielts',
     label: ['Full mocks', 'To‘liq mocklar', 'Полные пробники'],
     kicker: ['IELTS FULL MOCK EXAMS', 'IELTS TO‘LIQ MOCK IMTIHONLAR', 'ПОЛНЫЕ ПРОБНЫЕ IELTS'],
     title: ['Thirty full mocks. Four skills. One sitting.', '30 ta to‘liq mock. 4 ko‘nikma. Bir o‘tirishda.', '30 полных пробников. 4 навыка. Один подход.'],
@@ -103,7 +103,7 @@ export const tourFeatures: TourFeature[] = [
   },
   {
     id: 'sat', route: '/sat', image: '/assets/landing/sat-run.webp', address: 'ivygoo.com/sat/mock',
-    float: { image: '/assets/landing/sat-arena.webp', alt: ['SAT Arena with full mocks and question bank', 'To‘liq mocklar va savollar banki bilan SAT Arena', 'SAT Arena с пробниками и банком вопросов'] },
+    float: { image: '/assets/landing/sat-arena-ivygoo.jpg', alt: ['SAT Arena with full mocks and question bank', 'To‘liq mocklar va savollar banki bilan SAT Arena', 'SAT Arena с пробниками и банком вопросов'] },
     label: ['Digital SAT', 'Digital SAT', 'Digital SAT'],
     kicker: ['DIGITAL SAT', 'DIGITAL SAT', 'DIGITAL SAT'],
     title: ['A Bluebook-style runner for the real thing.', 'Haqiqiy imtihon uchun Bluebook uslubidagi muhit.', 'Среда в стиле Bluebook для настоящего экзамена.'],
@@ -117,7 +117,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'vocabulary', route: '/register', image: '/assets/landing/vocab.webp', address: 'ivygoo.com/vocabulary',
+    id: 'vocabulary', route: '/register', image: '/assets/landing/vocab-ivygoo.jpg', address: 'ivygoo.com/vocabulary',
     label: ['Vocabulary', 'Lug‘at', 'Словарь'],
     kicker: ['VOCABULARY ARENA', 'LUG‘AT ARENASI', 'АРЕНА СЛОВАРЯ'],
     title: ['Thousands of words, learned in context.', 'Minglab so‘zlar — kontekst ichida.', 'Тысячи слов — в контексте.'],
@@ -131,7 +131,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'nova', route: '/register', image: '/assets/landing/aitutor.webp', address: 'ivygoo.com/ai-tutor',
+    id: 'nova', route: '/register', image: '/assets/landing/aitutor-ivygoo.jpg', address: 'ivygoo.com/ai-tutor',
     label: ['Nova AI coach', 'Nova AI murabbiy', 'AI-коуч Nova'],
     kicker: ['NOVA · AI COACH', 'NOVA · AI MURABBIY', 'NOVA · AI-КОУЧ'],
     title: ['Ask anything. Hear the answer.', 'Istalgan savolni bering. Javobni eshiting.', 'Спросите что угодно. Услышьте ответ.'],
@@ -145,8 +145,8 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'listen-speak', route: '/register', image: '/assets/landing/podcast.webp', address: 'ivygoo.com/podcast',
-    float: { image: '/assets/landing/shadowing.webp', alt: ['Shadowing lab for listening, repeating and recording', 'Tinglash, takrorlash va yozib olish uchun Shadowing lab', 'Shadowing lab: слушайте, повторяйте и записывайте'] },
+    id: 'listen-speak', route: '/register', image: '/assets/landing/podcast-ivygoo.jpg', address: 'ivygoo.com/podcast',
+    float: { image: '/assets/landing/shadowing-ivygoo.jpg', alt: ['Shadowing lab for listening, repeating and recording', 'Tinglash, takrorlash va yozib olish uchun Shadowing lab', 'Shadowing lab: слушайте, повторяйте и записывайте'] },
     label: ['Podcasts & shadowing', 'Podkast va shadowing', 'Подкасты и шэдоуинг'],
     kicker: ['PODCASTS & SHADOWING', 'PODKAST VA SHADOWING', 'ПОДКАСТЫ И ШЭДОУИНГ'],
     title: ['Train your ear. Then train your voice.', 'Avval qulog‘ingizni, keyin ovozingizni charxlang.', 'Тренируйте слух. Затем — голос.'],
@@ -160,7 +160,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'admissions', route: '/register', image: '/assets/landing/universities.webp', address: 'ivygoo.com/admission',
+    id: 'admissions', route: '/register', image: '/assets/landing/universities-ivygoo.jpg', address: 'ivygoo.com/admission',
     label: ['Admissions', 'Qabul', 'Поступление'],
     kicker: ['UNIVERSITY ADMISSIONS', 'UNIVERSITETGA QABUL', 'ПОСТУПЛЕНИЕ В УНИВЕРСИТЕТ'],
     title: ['From your score to your shortlist.', 'Balingizdan — universitetlar ro‘yxatigacha.', 'От балла — к списку университетов.'],

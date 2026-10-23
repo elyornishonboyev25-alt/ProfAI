@@ -65,6 +65,7 @@ export type DashboardOverview = {
   }>
   miniLeaderboard: Array<{
     rank: number
+    premium?: boolean
     fullName: string
     avatarUrl?: string | null
     totalXp: number
@@ -405,6 +406,7 @@ export type LeaderboardResponse = {
 }
 
 export type LeaderboardRow = {
+  premium?: boolean
   rank: number
   previousRank: number
   rankDelta: number

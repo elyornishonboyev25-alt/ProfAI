@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
 export const russianInterface: Record<string, string> = {
-  "Score before using ProfAI": "Балл до использования ProfAI",
-  "Score after using ProfAI": "Балл после использования ProfAI",
+  "Score before using Ivygoo": "Балл до использования Ivygoo",
+  "Score after using Ivygoo": "Балл после использования Ivygoo",
   "Your comment will appear on the site after the owner reviews and approves it.": "Ваш комментарий появится на сайте после проверки и одобрения владельцем.",
   'Unlimited': 'Безлимитный',
   'Current plan': 'Текущий тариф',

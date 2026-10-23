@@ -37,14 +37,14 @@ export class AnswerRecording {
   private result: Promise<Blob>
   private stopping = false
 
-  constructor(stream: MediaStream, onError?: () => void) {
+  constructor(stream: MediaStream, onError?: () => void, onChunk?: (blob: Blob) => void) {
     const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
       .find((type) => MediaRecorder.isTypeSupported(type))
     const options = { audioBitsPerSecond: 96_000, ...(mimeType ? { mimeType } : {}) }
     try { this.recorder = new MediaRecorder(stream, options) }
     catch { this.recorder = new MediaRecorder(stream) }
     this.result = new Promise((resolve) => {
-      this.recorder.ondataavailable = (event) => { if (event.data.size) this.chunks.push(event.data) }
+      this.recorder.ondataavailable = (event) => { if (event.data.size) { this.chunks.push(event.data); onChunk?.(this.blob()) } }
       this.recorder.onstop = () => resolve(this.blob())
     })
     this.recorder.onerror = () => onError?.()

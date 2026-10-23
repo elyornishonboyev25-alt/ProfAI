@@ -306,7 +306,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
         <header className="admission-hub-nav">
           <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
             <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
-            <span className="admission-hub-wordmark">Prof<span>AI</span></span>
+            <span className="admission-hub-wordmark">Ivy<span>goo</span></span>
             <span className="admission-hub-divider" aria-hidden="true" />
             <span className="admission-hub-title">Admission Hub</span>
           </button>

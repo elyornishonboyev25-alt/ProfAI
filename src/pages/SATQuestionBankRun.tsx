@@ -1,3 +1,4 @@
+import { useActiveTest } from '@/hooks/useActiveTest'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, Check, ChevronDown, FileText, Maximize2, Minimize2, X } from 'lucide-react'
@@ -25,6 +26,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     const saved = loadBankSession(userId)
     return saved?.id === setId ? saved : null
   })
+  useActiveTest(Boolean(session))
   const [error, setError] = useState('')
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
@@ -34,7 +36,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   const viewport = useRef<HTMLDivElement>(null)
   const navigatorButton = useRef<HTMLButtonElement>(null)
   const navigatorClose = useRef<HTMLButtonElement>(null)
-  const current = session ? reviewQuestions.get(session.keys[session.index]) : undefined
+  const findQuestion = (key: string) => session?.questions?.[key] ?? reviewQuestions.get(key)
+  const current = session ? findQuestion(session.keys[session.index]) : undefined
   const math = current?.question.section === 'math'
   const answered = session?.keys.filter((key) => session.answers[key]?.trim()).length ?? 0
   useEffect(() => {
@@ -103,12 +106,13 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     if (!session) return
     const at = new Date().toISOString()
     const results: Result[] = session.keys.map((key) => {
-      const question = reviewQuestions.get(key)!.question
+      const question = findQuestion(key)!.question
       return {
         key, section: question.section, domain: question.domain, skill: question.skill,
         correct: isSATAnswerCorrect(question, session.answers[key]),
         answer: session.answers[key]?.trim() ?? '', flagged: session.flagged.includes(key),
         highlights: session.highlights[key] ?? [],
+        eliminatedChoices: session.eliminatedChoices?.[key] ?? [],
         at, setId: session.id,
       }
     })
@@ -160,11 +164,18 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         <div className="sat-bank-run-meta"><span>{difficulty(current.question.difficulty)} · {current.question.skill}</span><span>Question {session.index + 1} of {session.keys.length}</span></div>
         {!math ? <p className="mx-auto mb-4 max-w-[1400px] text-xs text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p> : null}
         <SATQuestionCanvas
+          practiceLayout
           key={current.key}
           question={{ ...current.question, number: session.index + 1 }}
           answer={session.answers[current.key] ?? ''}
           onAnswer={(answer) => update({ ...session, answers: { ...session.answers, [current.key]: answer } })}
           strokes={session.highlights[current.key] ?? []}
+          eliminatedChoices={session.eliminatedChoices?.[current.key] ?? []}
+          onEliminatedChoicesChange={(choices) => update({
+            ...session,
+            eliminatedChoices: { ...session.eliminatedChoices, [current.key]: choices },
+            answers: { ...session.answers, [current.key]: choices.includes(session.answers[current.key]) ? '' : session.answers[current.key] ?? '' },
+          })}
           highlightAvailable={!math}
           onChange={(strokes) => update({ ...session, highlights: { ...session.highlights, [current.key]: strokes } })}
           flagged={session.flagged.includes(current.key)}

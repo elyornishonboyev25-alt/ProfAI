@@ -1,3 +1,6 @@
+import { accountStorageFor } from '@/utils/accountStorage'
+import { useActiveTest } from '@/hooks/useActiveTest'
+import { readActiveTestPaper, saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import {
   useCallback,
@@ -33,6 +36,8 @@ import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
+import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
+import { readSATNotes } from '@/features/sat/notes'
 import SATRichText from '@/components/sat/SATRichText'
 import SATSourceContent from '@/components/sat/SATSourceContent'
 import '@/components/sat/sat-exam-layout.css'
@@ -44,6 +49,7 @@ import {
 } from '@/features/sat/practiceTest4'
 import {
   clearSATAttempt,
+  deleteSATAttemptHistoryEntry,
   loadSATAttempt,
   saveSATAttempt,
   saveSATAttemptToHistory,
@@ -56,9 +62,6 @@ import { syncSATAttemptResult } from '@/features/sat/resultSync'
 import { saveSATBaseline } from '@/features/sat/baseline'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
-
-const FULLSCREEN_RECOVERY_SECONDS = 30
-const FULLSCREEN_RECOVERY_MS = FULLSCREEN_RECOVERY_SECONDS * 1000
 
 function formatTime(seconds: number) {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -77,39 +80,51 @@ export default function SATMockRun() {
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
-  const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
+  const test = useMemo(() => {
+    const candidate = getSATSectionTest(mockId, section)
+    return readActiveTestPaper<typeof candidate>(`profai:sat:${candidate.id}:attempt:v1`) ?? candidate
+  }, [mockId, section])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
   const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const backPath = section ? `/sat/${section}` : '/sat'
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
-  const { isFullscreen, enter, exit } = useFullscreen()
+  const { isFullscreen, supported, toggle, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => {
     const saved = loadSATAttempt(test.id)
     return saved ? migrateModuleTiming(saved, modules) : null
   })
+  useActiveTest(attempt?.status === 'active')
   const [now, setNow] = useState(Date.now())
-  const [timerVisible, setTimerVisible] = useState(true)
+  const uiKey = `profai:sat:${test.id}:workspace`
+  const [savedUi] = useState(() => {
+    try { return JSON.parse(accountStorageFor().getItem(uiKey) ?? '{}') as { attemptId?: string; timerVisible?: boolean; zoom?: number; checkedQuestions?: string[] } } catch { return {} }
+  })
+  const sameAttempt = savedUi.attemptId === attempt?.attemptId
+  const [timerVisible, setTimerVisible] = useState(sameAttempt ? savedUi.timerVisible ?? true : true)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
-  const [noteDraft, setNoteDraft] = useState('')
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const [calculatorDocked, setCalculatorDocked] = useState(false)
   const [formulaSheetOpen, setFormulaSheetOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(sameAttempt ? savedUi.zoom ?? 1 : 1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
   const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
   const [baselineRetry, setBaselineRetry] = useState(0)
-  const [checkedQuestions, setCheckedQuestions] = useState<string[]>([])
-  const [violationDeadline, setViolationDeadline] = useState<number | null>(null)
-  const violationFrozenRef = useRef(false)
+  const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
   const questionViewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!attempt) return
+    try { accountStorageFor().setItem(uiKey, JSON.stringify({ attemptId: attempt.attemptId, timerVisible, zoom, checkedQuestions })) } catch { /* Keep the current workspace usable. */ }
+  }, [attempt?.attemptId, timerVisible, zoom, checkedQuestions, uiKey])
 
   const moduleIndex = attempt?.currentModuleIndex ?? 0
   const currentModule = modules[moduleIndex] ?? modules[0]
@@ -128,9 +143,6 @@ export default function SATMockRun() {
   const answeredInModule = currentModule.questions.filter(
     (question) => attempt?.answers[question.id]?.trim(),
   ).length
-  const violationSeconds = violationDeadline
-    ? Math.max(0, Math.ceil((violationDeadline - now) / 1000))
-    : 0
 
   const testSeconds = attempt ? moduleSeconds(attempt, modules, now) : currentModule.durationSeconds
 
@@ -185,26 +197,52 @@ export default function SATMockRun() {
   }, [modules])
 
   const exitTest = useCallback(() => {
+    if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
+      setMoreOpen(false)
+      setExitConfirmOpen(true)
+      return
+    }
     pauseAndSaveAttempt()
     if (fullscreenElement()) void exit()
     navigate(backPath)
   }, [backPath, exit, navigate, pauseAndSaveAttempt])
 
-  const openNotes = useCallback(() => {
-    setNoteDraft(attemptRef.current?.notes[currentQuestion.id] ?? '')
-    setNotesOpen(true)
-  }, [currentQuestion.id])
+  const continueExam = useCallback(() => {
+    setExitConfirmOpen(false)
+  }, [])
 
-  const saveNote = useCallback(() => {
-    persistUpdate((current) => {
-      const notes = { ...current.notes }
-      const trimmedNote = noteDraft.trim()
-      if (trimmedNote) notes[currentQuestion.id] = trimmedNote
-      else delete notes[currentQuestion.id]
-      return { ...current, notes }
-    })
-    setNotesOpen(false)
-  }, [currentQuestion.id, noteDraft, persistUpdate])
+  const leaveExam = useCallback(() => {
+    const current = attemptRef.current
+    if (!current || current.status !== 'active' || current.mode !== 'exam') return
+    const ended: SATAttempt = {
+      ...finishModule(current, modules),
+      status: 'terminated',
+      terminatedAt: Date.now(),
+      updatedAt: Date.now(),
+      terminationReason: 'User confirmed leaving Exam Mode and discarded answers.',
+      answers: {},
+      notes: {},
+      highlights: {},
+      flagged: [],
+      currentQuestionIndex: 0,
+    }
+    // Persist before navigation so page-exit handlers cannot save an active attempt.
+    attemptRef.current = ended
+    clearSATAttempt(test.id)
+    deleteSATAttemptHistoryEntry(current.attemptId)
+    saveSATAttempt(ended)
+    accountStorageFor().removeItem(uiKey)
+    setCheckedQuestions([])
+    setAttempt(ended)
+    setExitConfirmOpen(false)
+    if (fullscreenElement()) void exit()
+    navigate(backPath)
+  }, [backPath, exit, modules, navigate, test.id, uiKey])
+
+  const openNotes = useCallback(() => {
+    setNotesOpen(true)
+    setToolsOpen(false)
+  }, [])
 
   const submitAttempt = useCallback(() => {
     persistUpdate((current) => ({
@@ -262,12 +300,15 @@ export default function SATMockRun() {
   }, [moduleIndex, modules.length])
 
   useEffect(() => {
-    if (attempt) saveSATAttempt(attempt)
-  }, [attempt])
+    if (attempt) {
+      saveSATAttempt(attempt)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
+    }
+  }, [attempt, test])
 
   useEffect(() => {
     const current = attemptRef.current
-    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined || current.mode === 'exam') return
+    if (!current || current.status !== 'active' || current.pausedModuleSeconds === undefined) return
     persistUpdate((value) => resumeModule(value, modules))
   }, [modules, persistUpdate])
 
@@ -292,59 +333,17 @@ export default function SATMockRun() {
   }, [pauseAndSaveAttempt])
 
   useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
-
-    if (!isFullscreen && !violationDeadline) {
-      violationFrozenRef.current = true
-      persistUpdate((current) => pauseModule(current, modules))
-      setViolationDeadline(Date.now() + FULLSCREEN_RECOVERY_MS)
-      return
-    }
-
-    if (isFullscreen && (violationDeadline || attempt.pausedModuleSeconds !== undefined)) {
-      setViolationDeadline(null)
-      violationFrozenRef.current = false
-      persistUpdate((current) => resumeModule(current, modules))
-    }
-  }, [
-    attempt,
-    isFullscreen,
-    modules,
-    persistUpdate,
-    test.totalDurationSeconds,
-    violationDeadline,
-  ])
-
-  useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.mode !== 'exam') return
-    if (!violationDeadline || violationSeconds > 0) return
-    setViolationDeadline(null)
-    violationFrozenRef.current = false
-    persistUpdate((current) => ({
-      ...finishModule(current, modules),
-      status: 'terminated',
-      terminatedAt: Date.now(),
-      terminationReason: 'Fullscreen recovery window expired.',
-    }))
-    if (fullscreenElement()) void exit()
-  }, [attempt, exit, modules, persistUpdate, violationDeadline, violationSeconds])
-
-  useEffect(() => {
     if (
       !attempt ||
       attempt.status !== 'active' ||
       attempt.mode !== 'exam' ||
-      violationDeadline ||
-      attempt.pausedModuleSeconds !== undefined ||
-      !isFullscreen
+      attempt.pausedModuleSeconds !== undefined
     ) return
     if (testSeconds <= 0) advanceModule()
   }, [
     attempt,
     advanceModule,
-    isFullscreen,
     testSeconds,
-    violationDeadline,
   ])
 
   useEffect(() => {
@@ -359,7 +358,7 @@ export default function SATMockRun() {
         formulaSheetOpen ||
         notesOpen ||
         navigatorOpen ||
-        violationDeadline
+        exitConfirmOpen
       ) {
         return
       }
@@ -404,7 +403,7 @@ export default function SATMockRun() {
     openNotes,
     persistUpdate,
     questionIndex,
-    violationDeadline,
+    exitConfirmOpen,
   ])
 
   if (!attempt) {
@@ -457,15 +456,11 @@ export default function SATMockRun() {
           <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">Exam integrity</p>
           <h1 className="mt-2 text-3xl font-black">Attempt ended</h1>
           <p className="mt-3 text-sm font-medium leading-6 text-white/65">
-            You did not return to fullscreen within the {FULLSCREEN_RECOVERY_SECONDS}-second recovery window. This exam attempt
-            has been locked and cannot be resumed.
+            This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again.
           </p>
           <button
             type="button"
-            onClick={() => {
-              clearSATAttempt(test.id)
-              navigate(backPath)
-            }}
+            onClick={() => navigate(backPath)}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
           >
             Return to SAT Arena
@@ -501,7 +496,7 @@ export default function SATMockRun() {
   const sectionNumber = currentModule.section === 'reading-writing' ? 1 : 2
   const moduleNumber = currentModule.id.endsWith('1') ? 1 : 2
   const sectionTitle = currentModule.section === 'reading-writing' ? 'Reading and Writing' : 'Math'
-  const learnerName = user?.fullName || 'ProfAI Student'
+  const learnerName = user?.fullName || 'Ivygoo Student'
 
   return (
     <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
@@ -567,6 +562,7 @@ export default function SATMockRun() {
             </button>
             <button
               type="button"
+              aria-label="Highlights & Notes" aria-expanded={toolsOpen}
               onClick={() => { setToolsOpen((open) => !open); setMoreOpen(false) }}
               className="flex items-center gap-2 px-2 py-2 font-serif text-sm font-bold text-slate-700 sm:text-base"
             >
@@ -582,18 +578,19 @@ export default function SATMockRun() {
           </div>
 
           {toolsOpen ? (
-            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
+            <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 max-h-[calc(100dvh-8rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-black">Highlights & Notes</p>
-                <button type="button" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
+                <button type="button" aria-label="Close highlights and notes" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p>
               <div className="mt-3 flex items-center gap-2">
                 <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
                 <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
               </div>
-              <button type="button" onClick={() => { openNotes(); setToolsOpen(false) }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
-                <NotebookPen className="h-4 w-4" /> {attempt.notes[currentQuestion.id] ? 'Edit note' : 'Add note'}
+              <div className="mt-3 max-h-[min(18rem,40dvh)] overflow-y-auto"><SATNoteList value={attempt.notes[currentQuestion.id]} /></div>
+              <button type="button" onClick={openNotes} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
+                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? `Manage notes (${readSATNotes(attempt.notes[currentQuestion.id]).length})` : 'Add note'}
               </button>
             </div>
           ) : null}
@@ -606,14 +603,17 @@ export default function SATMockRun() {
                 <button type="button" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
               </div>
               <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
-              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Exit &amp; Save</button>
+              {supported && <button type="button" onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100">
+                <ZoomIn className="h-4 w-4" /> {isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              </button>}
+              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> {attempt.mode === 'exam' ? 'Exit test' : 'Exit & Save'}</button>
             </div>
           ) : null}
         </div>
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
       </header>
 
-      <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[calc(min(44vw,46rem)+0.75rem)]' : ''}`}>
+      <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[50vw]' : ''}`}>
         <div
           className="origin-top-left"
           style={{ zoom } as CSSProperties}
@@ -623,6 +623,12 @@ export default function SATMockRun() {
           answer={currentAnswer}
           onAnswer={updateAnswer}
           strokes={currentStrokes}
+          eliminatedChoices={attempt.eliminatedChoices?.[currentQuestion.id] ?? []}
+          onEliminatedChoicesChange={(choices) => persistUpdate((current) => ({
+            ...current,
+            eliminatedChoices: { ...current.eliminatedChoices, [currentQuestion.id]: choices },
+            answers: { ...current.answers, [currentQuestion.id]: choices.includes(current.answers[currentQuestion.id]) ? '' : current.answers[currentQuestion.id] ?? '' },
+          }))}
           onChange={changeHighlights}
           flagged={isFlagged}
           answerState={practiceChecked ? (practiceCorrect ? 'correct' : 'incorrect') : undefined}
@@ -816,47 +822,23 @@ export default function SATMockRun() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 30, opacity: 0 }}
-              className="w-full max-w-lg rounded-2xl border border-slate-300 bg-white p-5 shadow-2xl"
+              className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-300 bg-white p-5 shadow-2xl"
               role="dialog"
               aria-modal="true"
               aria-labelledby="sat-note-title"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private note</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private notes</p>
                   <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold">Question {currentQuestion.number}</h2>
                 </div>
-                <button type="button" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
+                <button type="button" aria-label="Close notes" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <textarea
-                autoFocus
-                value={noteDraft}
-                onChange={(event) => setNoteDraft(event.target.value)}
-                placeholder="Write your reasoning, a formula to revisit, or why an option felt tempting..."
-                className="mt-4 min-h-44 w-full resize-y rounded-xl border-2 border-slate-400 bg-slate-50 p-4 text-sm font-medium leading-6 outline-none focus:border-[#4053d7] focus:bg-white focus:ring-4 focus:ring-indigo-100"
-              />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNoteDraft('')
-                    persistUpdate((current) => {
-                      const notes = { ...current.notes }
-                      delete notes[currentQuestion.id]
-                      return { ...current, notes }
-                    })
-                    setNotesOpen(false)
-                  }}
-                  disabled={!attempt.notes[currentQuestion.id]}
-                  className="rounded-full px-4 py-2.5 text-[11px] font-black text-red-700 disabled:invisible"
-                >
-                  Delete note
-                </button>
-                <button type="button" onClick={saveNote} className="rounded-full bg-black px-5 py-2.5 text-[11px] font-black text-white">
-                   <UiText text={"Save note"} /> </button>
-              </div>
+              <SATNotes key={currentQuestion.id} value={attempt.notes[currentQuestion.id]} onChange={notes => {
+                persistUpdate(current => ({ ...current, notes: { ...current.notes, [currentQuestion.id]: notes } }))
+              }} />
             </motion.section>
           </motion.div>
         ) : null}
@@ -918,7 +900,7 @@ export default function SATMockRun() {
           </motion.div>
         ) : null}
 
-        {violationDeadline ? (
+        {exitConfirmOpen ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -928,36 +910,36 @@ export default function SATMockRun() {
             <motion.section
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="sat-exit-title"
+              aria-describedby="sat-exit-description"
               className="w-full max-w-lg text-center"
             >
-              <div
-                className="relative mx-auto flex h-40 w-40 items-center justify-center rounded-full"
-                style={{
-                  background: `conic-gradient(#ef4444 ${(violationSeconds / FULLSCREEN_RECOVERY_SECONDS) * 360}deg,rgba(255,255,255,.1) 0deg)`,
-                }}
-              >
-                <div className="absolute inset-2 rounded-full bg-slate-950" />
-                <div className="relative">
-                  <p className="text-6xl font-black tabular-nums">{violationSeconds}</p>
-                  <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/45">seconds</p>
-                </div>
+              <ShieldAlert className="mx-auto h-12 w-12 text-red-400" />
+              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Leave Exam Mode?" /></h1>
+              <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
+                <UiText text="Your test timer is still running. Continue the test, or leave and discard your answers." />
+              </p>
+              <p className="mt-4 text-sm font-bold text-red-300">
+                <UiText text="If you leave, your answers will be deleted and this attempt cannot be resumed." />
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={continueExam}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
+                >
+                  <ZoomIn className="h-4 w-4" /> <UiText text="Continue test" />
+                </button>
+                <button
+                  type="button"
+                  onClick={leaveExam}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/40 bg-red-500/15 px-6 py-3.5 text-sm font-black text-red-200"
+                >
+                  <X className="h-4 w-4" /> <UiText text="Leave and end attempt" />
+                </button>
               </div>
-              <ShieldAlert className="mx-auto mt-7 h-7 w-7 text-red-400" />
-              <h1 className="mt-3 text-3xl font-black">Return to fullscreen</h1>
-              <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                Your test timer is paused. Re-enter fullscreen before the countdown ends
-                to continue from this exact question.
-              </p>
-              <button
-                type="button"
-                onClick={() => void enter()}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
-              >
-                <ZoomIn className="h-4 w-4" /> Re-enter fullscreen
-              </button>
-              <p className="mt-4 text-[10px] font-bold text-red-300">
-                If time expires, this exam attempt will be terminated.
-              </p>
             </motion.section>
           </motion.div>
         ) : null}

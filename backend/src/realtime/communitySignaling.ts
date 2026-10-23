@@ -21,11 +21,16 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
   const summary = (room: Room) => ({ id: room.id, title: room.title, topic: room.topic, kind: room.kind, level: room.level, capacity: room.capacity, maxParticipants: room.private ? room.capacity : 16, private: room.private, hostId: room.hostId, members: room.members.map(person), createdAt: room.createdAt, debate: room.debate })
   const invited = (member: Member) => [...invites.values()].some(i => i.expiresAt > Date.now() && (i.from.userId === member.userId || i.to.userId === member.userId))
   const occupied = (member: Member) => [...members].some(m => m.userId === member.userId && (m.roomId || queue.has(m))) || invited(member)
+  const activity = (member: Member) => {
+    const sessions = [...members].filter(m => m.userId === member.userId)
+    const activeRoom = sessions.map(m => rooms.get(m.roomId ?? '')).find(Boolean)
+    return activeRoom ? 'room' : sessions.some(m => queue.has(m)) ? 'matching' : invited(member) ? 'invitation' : 'idle'
+  }
   const lobby = () => {
     const people = [...members].filter(m => m.public && m.ws.readyState === WebSocket.OPEN)
     const availablePeople = [...new Map(people.filter(m => !occupied(m)).map(m => [m.userId, { name: m.name, avatarUrl: m.avatarUrl }])).values()]
     const payload = { type: 'communityLobby', rooms: [...rooms.values()].filter(r => !r.private).map(summary), online: [...new Set(people.map(m => m.userId))].length, available: availablePeople.map(m => m.name), availablePeople }
-    members.forEach(m => send(m, payload))
+    members.forEach(m => send(m, { ...payload, activity: activity(m), publicProfile: m.public }))
   }
   const update = (room: Room) => {
     room.members.forEach(m => send(m, { type: 'communityRoom', room: summary(room), selfId: m.id, messages: room.messages }))
@@ -147,6 +152,14 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           break
         }
         case 'communityLeave': leave(member); send(member, { type: 'communityLeft' }); lobby(); break
+        case 'communityReset':
+          // An explicit recovery action clears this account's sessions, including other tabs.
+          for (const session of members) if (session.userId === member.userId) {
+            leave(session)
+            send(session, { type: 'communityLeft', reset: true })
+          }
+          lobby()
+          break
         case 'communitySignal': {
           const target = room?.members.find(m => m.id === data.to && m !== member)
           if (target) send(target, { type: 'communitySignal', from: member.id, data: data.data })
@@ -206,7 +219,8 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
         }
         case 'communityInvite': {
           for (const [id, invite] of invites) if (invite.expiresAt < Date.now()) invites.delete(id)
-          if (!member.public || member.roomId) { error(member, 'Leave your current room before inviting a partner.'); break }
+          if (!member.public) { error(member, 'Enable your public profile to find a speaking partner.'); break }
+          if (member.roomId) { error(member, 'Leave your current room before inviting a partner.'); break }
           if (occupied(member)) { error(member, 'You already have a pending invitation. Please wait for a reply.'); break }
           const target = [...members].find(m => m.public && m.ws.readyState === WebSocket.OPEN && m.name === data.nickname && m.userId !== member!.userId && !occupied(m))
           if (!target) { error(member, 'This learner is no longer available for a call.'); break }
@@ -218,7 +232,9 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           break
         }
         case 'communityMatch': {
-          if (!member.public || occupied(member)) { error(member, 'Leave your room or pending invitation before finding a partner.'); break }
+          if (!member.public) { error(member, 'Enable your public profile to find a speaking partner.'); break }
+          if (queue.has(member)) { send(member, { type: 'communityMatching' }); break }
+          if (occupied(member)) { error(member, 'Leave your room or pending invitation before finding a partner.'); lobby(); break }
           const candidates = [...queue].filter(m => members.has(m) && m.ws.readyState === WebSocket.OPEN && m.public && !m.roomId && m.userId !== member!.userId)
           const partner = candidates[Math.floor(Math.random() * candidates.length)]
           if (!partner) { queue.add(member); send(member, { type: 'communityMatching' }); lobby(); break }

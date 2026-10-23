@@ -12,6 +12,8 @@ import '../../src/i18n'
 export async function run() {
   const container = document.getElementById('root')!
   const root = createRoot(container)
+  globalThis.sessionStorage = window.sessionStorage
+  sessionStorage.clear()
   const originalPost = apiClient.post
   const calls: Array<{ path: string; body: Record<string, unknown>; auth?: boolean }> = []
   let failVerification = false
@@ -19,7 +21,7 @@ export async function run() {
   const session = { user: { id: 'registration-user', onboardingCompleted: false }, accessToken: 'access', refreshToken: 'refresh' }
   apiClient.post = (async (path: string, body: Record<string, unknown>, options?: { auth?: boolean }) => {
     calls.push({ path, body, auth: options?.auth })
-    if (path === '/auth/register' && failVerification) throw new ApiError('The verification code is incorrect.', 400, 'CODE_INVALID')
+    if (path === '/auth/email/login' && failVerification) throw new ApiError('The verification code is incorrect.', 400, 'CODE_INVALID')
     return path === '/auth/verification/request' ? {} : session
   }) as typeof apiClient.post
   const input = async (id: string, value: string) => {
@@ -36,31 +38,34 @@ export async function run() {
   }
   try {
     await renderForm('create-account')
-    assert.doesNotMatch(container.textContent!, /nickname|target score|current score/i)
-    await input('auth-code-email', 'learner@gmail.com')
-    await input('auth-create-password', 'account-password-123')
-    await input('auth-confirm-password', 'different-password')
+    assert.equal(container.querySelector('input[type="password"]'), null, 'No password is requested for a new account')
+    await input('auth-code-email', 'learner@example.com')
     await submit()
-    assert.equal(calls.length, 0, 'Mismatched passwords cannot send a verification email')
-    assert.match(container.querySelector('[role="alert"]')!.textContent!, /do not match/)
-    await input('auth-confirm-password', 'account-password-123')
+    assert.equal(calls.length, 0, 'Only Gmail addresses can request a code')
+    await input('auth-code-email', 'Learner@GMAIL.com')
     await submit()
-    assert.deepEqual(calls[0], { path: '/auth/verification/request', body: { email: 'learner@gmail.com', purpose: 'REGISTER' }, auth: false })
-    assert.equal(calls[0].body.password, undefined, 'Sending a code does not send the password')
+    assert.deepEqual(calls[0], { path: '/auth/verification/request', body: { email: 'learner@gmail.com', purpose: 'SIGN_IN' }, auth: false })
+    assert.equal(calls[0].body.password, undefined)
+    const deadline = JSON.parse(sessionStorage.getItem('ivygoo:email-code-challenge')!).expiresAt
+    await act(async () => root.render(<MemoryRouter><EmailCodeForm key="reload" onAuthenticated={async () => { authenticated++ }} /></MemoryRouter>))
+    assert.ok(container.querySelector('#auth-verification-code'), 'Reload restores the code step without sending another email')
+    assert.equal(JSON.parse(sessionStorage.getItem('ivygoo:email-code-challenge')!).expiresAt, deadline, 'Reload preserves the original code deadline')
+    assert.equal(calls.length, 1)
     await input('auth-verification-code', '12')
     await submit()
-    assert.equal(calls.length, 1, 'Incomplete code cannot create an account')
+    assert.equal(calls.length, 1, 'An incomplete code is never submitted')
     await input('auth-verification-code', '123456')
     failVerification = true
     await submit()
-    assert.equal(authenticated, 0, 'Rejected verification cannot create a session')
-    assert.equal(container.querySelector<HTMLInputElement>('#auth-create-password')!.value, 'account-password-123')
+    assert.equal(authenticated, 0, 'Rejected codes cannot create a session')
+    assert.ok(container.querySelector('[role="alert"]'))
     failVerification = false
     await submit()
-    assert.deepEqual(calls.at(-1), { path: '/auth/register', body: { email: 'learner@gmail.com', verificationCode: '123456', password: 'account-password-123' }, auth: false })
+    assert.deepEqual(calls.at(-1), { path: '/auth/email/login', body: { email: 'learner@gmail.com', verificationCode: '123456' }, auth: false })
     assert.equal(authenticated, 1)
+    assert.equal(sessionStorage.getItem('ivygoo:email-code-challenge'), null, 'A successful sign-in clears the pending challenge')
     await renderForm('sign-in')
-    assert.equal(container.querySelector('#auth-create-password'), null)
+    assert.equal(container.querySelector('input[type="password"]'), null)
     await input('auth-code-email', 'learner@gmail.com')
     await submit()
     assert.equal(calls.at(-1)!.body.purpose, 'SIGN_IN')

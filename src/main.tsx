@@ -7,16 +7,19 @@ import MotionRuntime from './components/MotionRuntime.tsx'
 import AnalyticsRuntime from './components/analytics/AnalyticsRuntime.tsx'
 import './i18n/index.ts'
 import './index.css'
+import './styles/premium-identity.css'
 import './styles/liquid.css'
 import './styles/liquid-completion.css'
 import './styles/workspace-refinement.css'
 import './styles/ielts-exam-workspace.css'
+import './styles/ivygoo-glass.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 
 if (typeof window !== 'undefined') {
   try { document.documentElement.dataset.effects = localStorage.getItem('profai-effects') === 'reduced' ? 'reduced' : 'full' } catch { /* Optional preference. */ }
-  window.addEventListener('vite:preloadError', () => {
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault()
     void recoverFromStaleBuild(new Error('vite:preloadError'))
   })
   startBuildFreshnessMonitor()

@@ -21,7 +21,7 @@ export default function Button({
   onClick,
   type = 'button'
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none'
+  const baseClasses = `ivygoo-button ivygoo-button-${variant} ` + 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none'
 
   const variantClasses = {
     primary: 'bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] text-white shadow-[0_10px_26px_rgba(239,68,68,0.38)] hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(239,68,68,0.48)] focus:ring-red-400',

@@ -35,21 +35,21 @@ export function describeRelevantSiteKnowledge(message: string): string {
     return [
       `INTERNAL UNIVERSITY CATALOG (${QS_EDITION}):`,
       `${universities.length.toLocaleString('en-US')} university profiles are available, including the complete QS 2027 ranking. Search can match university name, abbreviation or catalog slug.`,
-      'No exact catalog match was found for the learner’s wording. Do not invent a profile or requirement. Say when the requested university is not yet in ProfAI’s catalog and offer general guidance or the closest listed match.',
+      'No exact catalog match was found for the learner’s wording. Do not invent a profile or requirement. Say when the requested university is not yet in Ivygoo’s catalog and offer general guidance or the closest listed match.',
     ].join('\n')
   }
 
   return matches.slice(0, 3).map((university) => {
     const requirements = university.admission?.bachelor?.length
       ? university.admission.bachelor.map((item) => `${item.label}: ${item.value}`).join(', ')
-      : 'No entry scores stored in ProfAI'
+      : 'No entry scores stored in Ivygoo'
     const living = university.costOfLiving
     const livingAmount = living
       ? `${living.amount}${living.maxAmount ? `–${living.maxAmount}` : ''} ${living.currency} per ${living.period}`
       : null
 
     return [
-      `PROFAI CATALOG RECORD — ${university.name}`,
+      `IVYGOO CATALOG RECORD — ${university.name}`,
       `Edition: ${QS_EDITION}; ${typeof university.rank === 'number' ? `rank ${formatUniversityRank(university, '#')}` : 'no QS rank listed'}; ${typeof university.overallScore === 'number' ? `overall ${university.overallScore}/100` : 'no overall score listed'}.`,
       `Location: ${university.city}, ${university.country}; type: ${university.type}${typeof university.founded === 'number' ? `; founded: ${university.founded}` : ''}.`,
       `Profile: ${university.about}`,
@@ -57,7 +57,7 @@ export function describeRelevantSiteKnowledge(message: string): string {
       university.admission?.note ? `Catalog note: ${university.admission.note}` : '',
       livingAmount ? `Official published student-cost figure: ${livingAmount}. ${living?.label}. Includes: ${living?.includes.join(', ')}. ${living?.note ?? ''} Source: ${living?.sourceUrl}` : '',
       university.website ? `Official website: ${university.website}` : 'No official university website has been added to this catalog profile.',
-      'Accuracy rule: present these as ProfAI catalog data, not a guaranteed current offer. Requirements vary by programme and cycle; explicitly recommend confirming consequential details on the official website. Never add a deadline, acceptance rate, tuition, scholarship or score that is absent above.',
+      'Accuracy rule: present these as Ivygoo catalog data, not a guaranteed current offer. Requirements vary by programme and cycle; explicitly recommend confirming consequential details on the official website. Never add a deadline, acceptance rate, tuition, scholarship or score that is absent above.',
     ].filter(Boolean).join('\n')
   }).join('\n\n')
 }

@@ -121,3 +121,66 @@
   .learning-pagination { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .learning-primary, .learning-card, .learning-topics button { transition: none; } }
+
+/* Shadowing studio: a calm reading surface and compact, focused practice clips. */
+.shadowing-library .learning-hero { background: radial-gradient(ellipse at 88% 15%, #d8f3ee 0, transparent 55%), linear-gradient(115deg, #fff 30%, #f1f7ff); border-color: #e1ebe9; }
+.shadowing-library .learning-hero h1 span, .shadowing-library .learning-eyebrow, .shadowing-library .learning-card-category { color: #087f75; }
+.shadowing-library .learning-primary { background: #087f75; box-shadow: 0 8px 24px #087f7520; }
+.shadowing-library .learning-card { border-radius: 22px; }
+.shadowing-library .learning-card:hover { border-color: #99d5cc; box-shadow: 0 14px 32px #174d4610; }
+.shadowing-library .learning-card-play svg { background: #087f75ed; }
+.shadowing-library .learning-topics button.is-active { background: #e7f6f2; border-color: #b4dcd3; color: #087f75; }
+.shadowing-workspace { color: #24364a; }
+.shadowing-heading { padding: 22px 26px; border: 1px solid #dfebe8; border-radius: 22px; background: linear-gradient(120deg, #fff, #edf8f5); }
+.shadowing-heading h1 { margin-top: 10px; font-size: clamp(20px, 2.2vw, 28px); letter-spacing: -.025em; line-height: 1.4; }
+.shadowing-workspace .learning-eyebrow { color: #087f75; }
+.shadowing-layout { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+.shadowing-layout > section { min-width: 0; }
+.shadowing-main { position: sticky; top: 20px; }
+.shadowing-caption { margin-top: 12px; padding: 18px; border-radius: 14px; background: #f3f8f7; color: #294f47; font-size: 17px; line-height: 1.8; }
+.shadowing-workspace .learning-primary { background: #087f75; box-shadow: 0 6px 18px #087f7520; }
+.shadowing-workspace .learning-secondary { border: 1px solid #dbe7e4; color: #345b53; }
+.shadowing-workspace button:disabled { cursor: not-allowed; opacity: .45; }
+.shadowing-completion { height: 5px; margin: 0 0 18px; border-radius: 8px; background: #e9f1ee; overflow: hidden; }
+.shadowing-completion > span { display: block; height: 100%; background: #139b85; transition: width .2s; }
+.shadowing-phrase { position: relative; transition: border-color .18s, background .18s; padding: 16px; }
+.shadowing-phrase.border-red-300 { border-color: #81cbbc; background: #effaf6; }
+.shadowing-phrase .bg-red-600 { background: #087f75; }
+.shadowing-phrase .bg-red-500 { background: #139b85; }
+.shadowing-phrase .bg-red-100 { background: #d9f0e9; }
+.shadowing-phrase > p { font-size: 15px; line-height: 1.85; }
+.shadowing-phrase-preview:not(.is-selected) { display: none; }
+.shadowing-phrase-preview.is-selected { margin-bottom: 16px; }
+.shadowing-phrase-actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 12px; }
+.shadowing-phrase-actions button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 7px 10px; background: #fff; color: #087f75; border: 1px solid #c6e5dc; border-radius: 10px; font-size: 12px; font-weight: 650; }
+.shadowing-record-status { display: flex; align-items: center; gap: 8px; color: #be3450; font-size: 13px; font-weight: 700; }
+.shadowing-record-status > span { width: 8px; height: 8px; border-radius: 50%; background: #e54562; }
+.shadowing-workspace input[type='range'] { accent-color: #087f75; min-height: 24px; }
+.shadowing-workspace :is(button,a,select,input):focus-visible, .shadowing-library :is(button,a,select):focus-visible { outline-color: #087f75; }
+.shadowing-record-panel audio { margin-block: 12px; }
+.shadowing-record-panel .learning-secondary { margin-right: 8px; margin-bottom: 8px; }
+@media (max-width: 1023px) {
+  .shadowing-layout { grid-template-columns: minmax(0, 1fr); }
+  .shadowing-main { position: static; }
+}
+@media (max-width: 600px) {
+  .shadowing-heading { padding: 18px; }
+  .shadowing-caption { padding: 14px; font-size: 16px; }
+  .shadowing-record-panel .learning-primary { width: 100%; }
+  .shadowing-library .learning-method { grid-template-columns: 1fr; }
+  .shadowing-library .learning-method > div { flex-direction: row; align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shadowing-phrase, .shadowing-completion > span { transition: none; }
+}
+.shadowing-library .learning-count { color: #087f75; border-color: #c9e7df; background: #edf8f5; }
+.shadowing-library .learning-card-action { color: #087f75; }
+.shadowing-library .learning-step-icon { color: #087f75; background: #e8f6f2; }
+.shadowing-library .learning-primary:hover, .shadowing-workspace .learning-primary:hover { background: #06695f; }
+
+.shadowing-transcript-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid #dbe7e4; border-radius: 12px; color: #087f75; background: #fff; font-size: 13px; font-weight: 650; text-align: left; }
+.shadowing-transcript-toggle:hover:not(:disabled) { background: #f3f8f7; }
+.shadowing-full-transcript { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid #dbe7e4; border-radius: 14px; background: #f8fbfa; scrollbar-gutter: stable; }
+.shadowing-full-transcript p { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 10px; padding: 10px; border-radius: 8px; color: #334e48; font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+.shadowing-full-transcript p.is-current { color: #065f54; background: #e0f3ed; }
+.shadowing-subtitle-time { padding-top: 2px; color: #718b84; font-size: 11px; font-variant-numeric: tabular-nums; }

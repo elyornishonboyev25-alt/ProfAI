@@ -14,6 +14,7 @@ const bundle = await build({
 const module = { exports: {} }
 const errors = []
 vm.runInNewContext(bundle.outputFiles[0].text, { module, exports: module.exports, require,
+  setInterval, clearInterval, setTimeout, clearTimeout,
   console: { error: (...args) => errors.push(args) } })
 const { attachSpeakingSignaling, clearDeletedAccountRuntimeData, onAccountDeleted } = module.exports
 const server = createServer()

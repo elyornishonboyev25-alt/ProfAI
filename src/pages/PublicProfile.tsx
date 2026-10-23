@@ -1,3 +1,4 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -171,10 +172,10 @@ export default function PublicProfile() {
     <Shell {...shellBack}>
       {/* Identity hero */}
       <Reveal>
-        <section className="premium-hero p-6 sm:p-8">
+        <section className={`premium-hero p-6 sm:p-8 ${p.premium ? 'premium-member-hero' : ''}`}>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]">
+              <div className={`${p.premium ? 'premium-member-avatar' : ''} flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_16px_36px_rgba(37,99,235,0.32)]`}>
                 <ProfileAvatar src={p.avatarUrl} name={p.displayName} alt="" />
               </div>
               <span className={`absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-white ${p.online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -185,6 +186,7 @@ export default function PublicProfile() {
                   <AtSign className="h-6 w-6 text-blue-500" />
                   {p.nickname}
                 </h1>
+                {p.premium ? <CrownBadge /> : null}
                 {p.isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700"> <UiText text={"YOU"} /> </span> : null}
               </div>
               <p className="mt-1 text-sm font-semibold text-slate-500">

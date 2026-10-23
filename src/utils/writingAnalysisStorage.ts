@@ -21,11 +21,13 @@ export interface WritingAnalysisEntry {
   coherenceCohesion: number
   lexicalResource: number
   grammaticalRange: number
+  criterionFeedback?: WritingEvaluation['criterionFeedback']
   summary: string
   strengths: string[]
   improvements: string[]
   errors: WritingError[]
   correctedVersion: string
+  improvedVersion?: string
   xpAwarded: number
   fullTest?: { id: string; overallBand: number }
   taskSnapshot?: WritingTask
@@ -86,11 +88,13 @@ export function saveWritingAnalysis(
     coherenceCohesion: evaluation.coherenceCohesion,
     lexicalResource: evaluation.lexicalResource,
     grammaticalRange: evaluation.grammaticalRange,
+    criterionFeedback: evaluation.criterionFeedback,
     summary: evaluation.summary,
     strengths: evaluation.strengths,
     improvements: evaluation.improvements,
     errors: evaluation.errors,
     correctedVersion: evaluation.correctedVersion,
+    improvedVersion: evaluation.improvedVersion,
     xpAwarded: evaluation.xpAwarded,
     fullTest,
     taskSnapshot,

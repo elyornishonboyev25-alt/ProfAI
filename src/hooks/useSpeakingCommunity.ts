@@ -11,6 +11,7 @@ type Invitation = { id: string; from: SpeakingMember; expiresAt: number }
 export type RoomDraft = { title: string; topic: string; kind: string; level: string; capacity: number; private: boolean }
 
 export function useSpeakingCommunity(enabled: boolean) {
+  const accountId = useAuthStore(state => state.user?.id)
   const [connected, setConnected] = useState(false)
   const [rooms, setRooms] = useState<SpeakingRoom[]>([])
   const [online, setOnline] = useState(0)
@@ -28,6 +29,8 @@ export function useSpeakingCommunity(enabled: boolean) {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [matching, setMatching] = useState(false)
+  const [activity, setActivity] = useState<'idle' | 'room' | 'matching' | 'invitation'>('idle')
+  const [publicProfile, setPublicProfile] = useState(true)
   const socketRef = useRef<WebSocket | null>(null)
   const localRef = useRef<MediaStream | null>(null)
   const peersRef = useRef(new Map<string, { voice: VoiceConnection; ready: Promise<void>; chain: Promise<void> }>())
@@ -74,6 +77,7 @@ export function useSpeakingCommunity(enabled: boolean) {
     let disposed = false
     let retry = 0
     let attempts = 0
+    let handshakeTimer = 0
     const addPeer = (member: SpeakingMember, isCaller: boolean) => {
       if (!localRef.current || peersRef.current.has(member.id)) return
       try {
@@ -108,14 +112,15 @@ export function useSpeakingCommunity(enabled: boolean) {
         return
       }
       socketRef.current = socket
+      handshakeTimer = window.setTimeout(() => socket.close(), 12_000)
       socket.onopen = () => { if (!disposed) socket.send(JSON.stringify({ type: 'communityHello', token: useAuthStore.getState().accessToken })) }
       socket.onmessage = event => {
         if (disposed) return
         let message
         try { message = JSON.parse(event.data) } catch { return }
         switch (message.type) {
-          case 'communityReady': setConnected(true); setSelfId(message.selfId); setSelfName(message.name ?? ''); setError(''); attempts = 0; break
-          case 'communityLobby': setRooms(message.rooms); setOnline(message.online); setAvailable(message.available); setAvailablePeople(message.availablePeople ?? []); break
+          case 'communityReady': window.clearTimeout(handshakeTimer); setConnected(true); setSelfId(message.selfId); setSelfName(message.name ?? ''); setError(''); attempts = 0; break
+          case 'communityLobby': setRooms(message.rooms); setOnline(message.online); setAvailable(message.available); setAvailablePeople(message.availablePeople ?? []); setActivity(message.activity ?? 'idle'); setPublicProfile(message.publicProfile !== false); break
           case 'communityJoined':
             if (!localRef.current) { send({ type: 'communityLeave' }); break }
             window.clearTimeout(timeoutRef.current)
@@ -155,6 +160,7 @@ export function useSpeakingCommunity(enabled: boolean) {
           case 'communityChat': setMessages(current => [...current, message.message].slice(-80)); break
           case 'communityLeft':
             leavingRef.current = false
+            if (message.reset) nextPartnerRef.current = false
             stopMedia()
             if (message.message) setNotice(message.message)
             if (nextPartnerRef.current) { nextPartnerRef.current = false; void beginRoomRequest({ type: 'communityMatch' }) }
@@ -168,11 +174,14 @@ export function useSpeakingCommunity(enabled: boolean) {
       }
       socket.onerror = () => { if (!disposed) setError('Connection interrupted. Reconnecting to speaking rooms…') }
       socket.onclose = () => {
+        window.clearTimeout(handshakeTimer)
         if (disposed) return
         setConnected(false)
         setAvailable([])
         setAvailablePeople([])
         setRooms([])
+        setOnline(0)
+        setActivity('idle')
         setInvitation(null)
         nextPartnerRef.current = false
         leavingRef.current = false
@@ -184,12 +193,23 @@ export function useSpeakingCommunity(enabled: boolean) {
     return () => {
       disposed = true
       window.clearTimeout(retry)
+      window.clearTimeout(handshakeTimer)
       socketRef.current?.close()
       socketRef.current = null
       setConnected(false)
+      setInvitation(null)
+      setAvailable([])
+      setAvailablePeople([])
+      setRooms([])
+      setOnline(0)
+      setActivity('idle')
+      setSelfId('')
+      setSelfName('')
+      nextPartnerRef.current = false
+      leavingRef.current = false
       stopMedia()
     }
-  }, [enabled, send, stopMedia, releaseMicrophone])
+  }, [accountId, enabled, send, stopMedia, releaseMicrophone])
 
   useEffect(() => {
     if (!invitation) return
@@ -262,7 +282,8 @@ export function useSpeakingCommunity(enabled: boolean) {
     send({ type: 'communityState', muted: next.muted, hand: next.hand, side: next.side })
   }
   return {
-    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, error, notice, busy, matching,
+    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, error, notice, busy, matching, activity, publicProfile,
+    resetActivity: () => { nextPartnerRef.current = false; setError(''); setNotice(''); send({ type: 'communityReset' }) },
     clearError: () => setError(''),
     create: (draft: RoomDraft) => beginRoomRequest({ type: 'communityCreate', ...draft }),
     join: (roomId: string) => beginRoomRequest({ type: 'communityJoin', roomId, listen: true }),

@@ -95,7 +95,7 @@ export default function SharedResult() {
           <TriangleAlert className="mx-auto h-11 w-11 text-indigo-600" />
           <h1 className="mt-4 text-2xl font-black text-slate-950">This result is unavailable</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">The link may be incomplete or the result may no longer exist.</p>
-          <Link to="/" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-black text-white">Explore ProfAI <ArrowRight className="h-4 w-4" /></Link>
+          <Link to="/" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-black text-white">Explore Ivygoo <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </main>
     )
@@ -115,7 +115,7 @@ export default function SharedResult() {
                 <ProfileAvatar src={result.user.avatarUrl} name={learnerName} alt="" className="h-12 w-12 rounded-2xl border border-white shadow-md" />
                 <div>
                   <p className="font-black text-slate-950">{learnerName}</p>
-                  <p className="text-xs font-semibold text-slate-500">Shared from ProfAI</p>
+                  <p className="text-xs font-semibold text-slate-500">Shared from Ivygoo</p>
                 </div>
               </div>
               <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[0.98] tracking-[-0.045em] text-slate-950 sm:text-6xl">

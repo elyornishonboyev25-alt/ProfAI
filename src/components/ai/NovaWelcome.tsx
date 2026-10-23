@@ -26,7 +26,7 @@ export default function NovaWelcome({ preferredName }: { preferredName: string |
       <CoachMascot state={state} level={level} size={240}/>
       <span className="nova-showcase-voice" aria-hidden="true"><span/><span/><span/><span/><span/></span>
     </button>
-    <span className="nova-welcome-name">Nova <span>· ProfAI</span></span>
+    <span className="nova-welcome-name">Nova <span>· Ivygoo</span></span>
     <h2>{preferredName ? `${preferredName}, ` : ''}{text.welcome}</h2>
     {state !== 'idle' ? <p className="nova-live-state" role="status">{text[state]}</p> : null}
     <div className="nova-subjects" role="group" aria-label={text.focus}>

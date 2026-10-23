@@ -343,7 +343,7 @@ export function useAiTutor() {
   const dispatchAction = useCallback(
     (action: GeminiChatAction, snapshot?: StudySnapshot) => {
       if (action.type === 'save_word' && action.payload?.term && action.payload.definition) {
-        addSavedWord({ term: action.payload.term, definition: action.payload.definition, example: action.payload.example ?? '', synonym: action.payload.synonym ?? '', context: action.payload.context ?? 'speaking', source: 'ai', origin: 'ProfAI Coach' })
+        addSavedWord({ term: action.payload.term, definition: action.payload.definition, example: action.payload.example ?? '', synonym: action.payload.synonym ?? '', context: action.payload.context ?? 'speaking', source: 'ai', origin: 'Ivygoo Coach' })
         return
       }
       if (action.type === 'navigate' && action.target) {

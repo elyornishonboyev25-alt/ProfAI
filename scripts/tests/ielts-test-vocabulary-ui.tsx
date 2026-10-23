@@ -109,25 +109,20 @@ export async function run() {
   for (const skill of ['listening', 'reading'] as const) {
     const test = resolveIeltsTestById(catalogs[skill][0])!
     await render(<IELTSReadingInterface test={test} onComplete={() => {}} onExit={() => {}} />)
-    assert.ok(reminder(), `${skill}: reminder is visible after entering the launch screen`)
-    assert.equal(link().getAttribute('href'), withVocabularyReturnTo(getIeltsTestVocabulary(test.id)!.href, getIeltsVocabularyTestPath(test.id, skill)))
-    assert.equal(link().target, '_blank')
-    await act(async () => link().dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true })))
-    assert.doesNotMatch(container.textContent!, /Practice Setup/, 'Vocabulary click must not launch practice')
+    assert.equal(container.querySelector('[data-test-vocabulary]'), null, `${skill}: preparation has no vocabulary promotion`)
     await render(<IELTSReadingInterface test={test} onComplete={() => {}} onExit={() => {}} reviewPayload={{ result: { testId: test.id, answers: {}, score: 0, totalQuestions: 40, correctAnswers: 0, completedAt: new Date().toISOString() } as never }} />)
     assert.equal(reminder(), null)
-    assert.ok(container.querySelector('[data-test-vocabulary="review"]'))
+    assert.equal(container.querySelector('[data-test-vocabulary]'), null, `${skill}: review has no vocabulary promotion`)
+    assert.doesNotMatch(container.textContent!, /Build your (Listening|Reading)/, 'Review has no practice-resource banner')
   }
   const writing = getWritingFullTestCatalog()[0]
   await render(<IELTSWritingFullTestInterface fullTest={writing} onExit={() => {}} />)
-  assert.ok(reminder(), 'Writing reminder is visible after entering the launch screen')
-  assert.ok(link())
+  assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Writing preparation has no vocabulary promotion')
   assert.equal(container.querySelector('button a'), null, 'Vocabulary links cannot nest inside mode buttons')
   await render(<Routes><Route path="/speaking/:id" element={<IELTSSpeakingTest />} /></Routes>, '/speaking/speaking-full-1')
   await wait(2700)
   await wait(700)
-  assert.ok(reminder(), 'Speaking reminder appears after the preparation screen finishes')
-  assert.ok(link())
+  assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Speaking preparation has no vocabulary promotion')
   await click([...container.querySelectorAll('button')].find((button) => button.textContent === 'Launch Final Simulation')!)
   assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Simulation preflight must not show vocabulary')
   console.log('PASS: all four skill launch screens and objective review')
@@ -186,8 +181,8 @@ export async function run() {
     await act(async () => saveFullMockSectionResult(mock.id, section.key, { testId, band: 6, summary: 'Completed', completedAt: new Date().toISOString() }))
     await render(<Routes><Route path="/mock/:mockId" element={<MockIELTSRun />} /></Routes>, `/mock/${mock.id}`)
     const reviews = container.querySelectorAll('[data-test-vocabulary="review"]')
-    assert.equal(reviews.length, section.key === 'speaking' ? 4 : 0, 'Full mock vocabulary unlocks only after all four sections')
+    assert.equal(reviews.length, 0, 'Full mock review has no vocabulary promotions')
   }
-  console.log('PASS: full mock review unlocks vocabulary after the entire exam')
+  console.log('PASS: full mock review stays focused on saved responses without vocabulary promotions')
   if (root) await act(async () => root!.unmount())
 }

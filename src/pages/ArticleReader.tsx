@@ -1,3 +1,4 @@
+import { textOffsets, clipTextRange } from '@/utils/textRanges'
 import UiText from '@/components/common/UiText'
 import '@/styles/articlesArena.css'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -69,7 +70,7 @@ const THEME_SURFACE: Record<ReaderTheme, string> = {
   dark: 'bg-[#0f141c] text-slate-200',
 }
 
-type SelectionSegment = { blockIndex: number; text: string }
+type SelectionSegment = { blockIndex: number; text: string; start: number; end: number }
 
 type SelectionState = {
   segments: SelectionSegment[]
@@ -93,8 +94,8 @@ function renderRichText(
 
   const matches: Match[] = []
   for (const h of highlights) {
-    const idx = text.indexOf(h.text)
-    if (idx !== -1) {
+    const idx = h.start ?? text.indexOf(h.text)
+    if (idx >= 0 && text.slice(idx, h.end ?? idx + h.text.length) === h.text) {
       matches.push({ start: idx, end: idx + h.text.length, kind: 'highlight', highlight: h })
     }
   }
@@ -120,27 +121,29 @@ function renderRichText(
   }
 
   if (matches.length === 0) return text
-  matches.sort((a, b) => a.start - b.start || (a.kind === 'highlight' ? -1 : 1))
-
+  // Partition overlaps rather than dropping a whole highlight or vocabulary term.
+  const boundaries = [...new Set([0, text.length, ...matches.filter(match => match.kind === 'highlight' || !matches.some(other => other.kind === 'highlight' && other.start < match.end && other.end > match.start)).flatMap(match => [match.start, match.end])])].sort((a, b) => a - b)
   const out: ReactNode[] = []
-  let cursor = 0
   let key = 0
-  for (const match of matches) {
-    if (match.start < cursor) continue
-    if (match.start > cursor) out.push(text.slice(cursor, match.start))
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    const start = boundaries[i]
+    const end = boundaries[i + 1]
+    const covering = matches.filter(match => match.start <= start && match.end >= end)
+    const match = [...covering].reverse().find(match => match.kind === 'highlight') ?? covering[0]
+    if (!match) { out.push(text.slice(start, end)); continue }
     if (match.kind === 'highlight') {
       out.push(
         <mark
           key={`hl-${match.highlight.id}-${key++}`}
           onClick={(event) => {
             event.stopPropagation()
-            onMarkClick(match.highlight.id, event.currentTarget)
+            if (!window.getSelection()?.toString()) onMarkClick(match.highlight.id, event.currentTarget)
           }}
           title="Highlightni boshqarish"
           style={{ backgroundColor: HIGHLIGHT_BG[match.highlight.color], color: 'inherit' }}
-          className="cursor-pointer rounded px-0.5 [box-decoration-break:clone]"
+          className="cursor-text rounded-sm [box-decoration-break:clone] [-webkit-box-decoration-break:clone]"
         >
-          {text.slice(match.start, match.end)}
+          {text.slice(start, end)}
         </mark>,
       )
     } else {
@@ -155,13 +158,11 @@ function renderRichText(
           className="article-vocab-word rounded-sm font-semibold text-red-700 underline decoration-red-300 decoration-dotted underline-offset-4 transition hover:bg-red-50 hover:text-red-800"
           title="AI explanation"
         >
-          {text.slice(match.start, match.end)}
+          {text.slice(start, end)}
         </button>,
       )
     }
-    cursor = match.end
   }
-  if (cursor < text.length) out.push(text.slice(cursor))
   return out
 }
 
@@ -261,14 +262,11 @@ export default function ArticleReader() {
     let sentence = ''
     for (const el of blockEls) {
       if (!range.intersectsNode(el)) continue
-      const isStart = el.contains(range.startContainer)
-      const isEnd = el.contains(range.endContainer)
-      const clip = range.cloneRange()
-      if (!isStart) clip.setStart(el, 0)
-      if (!isEnd) clip.setEnd(el, el.childNodes.length)
-      const text = clip.toString().replace(/\s+/g, ' ').trim()
-      if (text.length < 1) continue
-      segments.push({ blockIndex: Number(el.dataset.blockIndex), text })
+      const clip = clipTextRange(el, range)
+      if (!clip) continue
+      const text = clip.toString()
+      if (!text.trim()) continue
+      segments.push({ blockIndex: Number(el.dataset.blockIndex), text, ...textOffsets(el, clip) })
       if (!sentence) sentence = (el.textContent ?? '').replace(/\s+/g, ' ').trim()
     }
     if (segments.length === 0) {
@@ -287,7 +285,9 @@ export default function ArticleReader() {
   }, [])
 
   useEffect(() => {
-    const onUp = () => window.setTimeout(captureSelection, 10)
+    let timer = 0
+    const onUp = () => { window.clearTimeout(timer); timer = window.setTimeout(captureSelection, 120) }
+    const close = () => { window.clearTimeout(timer); setSelection(null); setHlMenu(null) }
     const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement | null
       // Keep the remove-popover open while it (or a highlight mark) is being interacted with.
@@ -295,11 +295,16 @@ export default function ArticleReader() {
       if (target?.closest('[data-selection-toolbar]')) return
       setSelection(null)
     }
+    document.addEventListener('selectionchange', onUp)
+    document.addEventListener('scroll', close, true)
     document.addEventListener('mouseup', onUp)
     document.addEventListener('touchend', onUp)
     document.addEventListener('mousedown', onDown)
     document.addEventListener('touchstart', onDown)
     return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('selectionchange', onUp)
+      document.removeEventListener('scroll', close, true)
       document.removeEventListener('mouseup', onUp)
       document.removeEventListener('touchend', onUp)
       document.removeEventListener('mousedown', onDown)
@@ -317,7 +322,7 @@ export default function ArticleReader() {
   const onHighlight = (color: HighlightColor) => {
     if (!selection) return
     // One highlight per touched block so multi-paragraph selections persist correctly.
-    selection.segments.forEach((seg) => addHighlight(slug, seg.blockIndex, seg.text, color))
+    selection.segments.forEach((seg) => addHighlight(slug, seg.blockIndex, seg.text, color, { start: seg.start, end: seg.end }))
     setSelection(null)
     window.getSelection()?.removeAllRanges()
   }
@@ -396,10 +401,10 @@ export default function ArticleReader() {
           <main className="min-w-0 space-y-5">
             <header className="article-reader-glass article-reader-header-glass flex min-h-[7rem] items-center justify-between gap-5 rounded-[2.35rem] px-5 py-4 sm:px-8 lg:px-10">
               <div className="flex min-w-0 items-center gap-5 lg:gap-10">
-                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="ProfAI home">
+                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="Ivygoo home">
                   <img src="/logo.svg" alt="" className="h-14 w-14 drop-shadow-[0_12px_18px_rgba(220,38,38,0.32)] sm:h-[4.6rem] sm:w-[4.6rem]" />
                   <span className="hidden text-[2.55rem] font-black tracking-[-0.05em] text-slate-900 sm:inline">
-                    Prof<span className="text-red-600">AI</span>
+                    Ivy<span className="text-red-600">goo</span>
                   </span>
                 </Link>
 

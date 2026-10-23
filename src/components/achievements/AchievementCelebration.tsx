@@ -61,9 +61,9 @@ export default function AchievementCelebration() {
   const gap = next === null ? 0 : Math.max(0, next - current.band)
 
   const share = async () => {
-    const message = `I unlocked ${meta.title} · Tier ${tier} with ${meta.group === 'IELTS' ? 'band' : 'score'} ${formatAchievementScore(current.track, current.band)} on ProfAI.`
+    const message = `I unlocked ${meta.title} · Tier ${tier} with ${meta.group === 'IELTS' ? 'band' : 'score'} ${formatAchievementScore(current.track, current.band)} on Ivygoo.`
     try {
-      if (navigator.share) await navigator.share({ title: 'ProfAI Achievement', text: message, url: window.location.origin })
+      if (navigator.share) await navigator.share({ title: 'Ivygoo Achievement', text: message, url: window.location.origin })
       else {
         await navigator.clipboard.writeText(`${message} ${window.location.origin}`)
         pushToast({ type: 'success', title: 'Copied', message: 'Achievement link is ready to share.' })
@@ -89,7 +89,7 @@ export default function AchievementCelebration() {
           className="achievement-dialog relative my-auto w-full max-w-[600px] overflow-hidden rounded-[2rem] border border-white/65 px-5 pb-7 pt-8 text-center text-white sm:px-11">
           <div style={{ backgroundColor: GLOW[tier] }} className="pointer-events-none absolute left-1/2 top-28 h-72 w-72 -translate-x-1/2 rounded-full opacity-30 blur-[65px]" />
           <button type="button" onClick={dismiss} aria-label="Close achievement" className="absolute right-4 top-4 z-10 rounded-full border border-white/30 bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"><X className="h-4 w-4" /></button>
-          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-white/85">ProfAI Honors</p>
+          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-white/85">Ivygoo Honors</p>
           <h2 className="relative mt-2 text-[clamp(1.8rem,5.5vw,3rem)] font-black leading-tight tracking-[-.05em] drop-shadow-[0_3px_12px_rgba(0,0,0,.3)]">Achievement Unlocked!</h2>
           <motion.div className="relative mx-auto mt-1 flex justify-center drop-shadow-[0_18px_22px_rgba(0,0,0,.32)]"
             initial={minimalMotion ? undefined : { scale: .5, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}

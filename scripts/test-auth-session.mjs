@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 
 async function main() {
   const bundle = await build({
-    stdin: { contents: "export { apiClient } from './src/lib/apiClient'; export { useAuthStore } from './src/store/authStore'", resolveDir: process.cwd() },
+    stdin: { contents: "export { apiClient } from './src/lib/apiClient'; export { useAuthStore } from './src/store/authStore'; export { useAccountUsageStore } from './src/store/accountUsageStore'", resolveDir: process.cwd() },
     bundle: true, write: false, platform: 'node', format: 'cjs', tsconfig: 'tsconfig.json',
     define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' },
   })
@@ -36,6 +36,45 @@ async function main() {
   const json = (status, body = {}) => new Response(JSON.stringify(body), { status })
   const deferred = () => { let resolve; const promise = new Promise((r) => { resolve = r }); return { promise, resolve } }
   const seed = () => { a.useAuthStore.getState().setSession(session('old')); b.useAuthStore.getState().setSession(session('old')) }
+
+  // A background tab can write progress before its storage event arrives.
+  // Such writes must not restore revoked credentials or undo a logout.
+  for (const update of [
+    client => client.useAuthStore.getState().updateUserProgress({ xp: 50 }),
+    client => client.useAuthStore.setState(state => ({ user: { ...state.user, fullName: 'Updated' } })),
+    client => client.useAuthStore.setState({ user: { ...client.useAuthStore.getState().user, nickname: 'Updated' } }),
+  ]) {
+    seed()
+    a.useAuthStore.getState().setSession(session('new'))
+    update(b)
+    assert.equal(JSON.parse(values.get('smart-test-pro-auth-v2')).state.refreshToken, 'refresh-new', 'Stale profile writes preserve rotated credentials')
+    assert.equal(b.useAuthStore.getState().refreshToken, 'refresh-new')
+    const updated = b.useAuthStore.getState().user
+    assert.ok(updated.xp === 50 || updated.fullName === 'Updated' || updated.nickname === 'Updated', 'Same-account updates still apply')
+    fetchHandler = async (url, options) => {
+      assert.ok(!url.endsWith('/auth/refresh'), 'The revoked token must never be submitted again')
+      assert.equal(options.headers.get('Authorization'), 'Bearer access-new')
+      return json(200, { ok: true })
+    }
+    assert.equal((await b.apiClient.get('/protected')).ok, true)
+    assert.equal(tab().useAuthStore.getState().refreshToken, 'refresh-new', 'Reload restores the current session')
+
+    seed()
+    b.useAccountUsageStore.getState().setUsage('learner', 'active')
+    a.useAuthStore.getState().clearSession()
+    update(b)
+    assert.equal(JSON.parse(values.get('smart-test-pro-auth-v2')).state.user, null, 'Stale profile writes cannot undo logout')
+    assert.equal(b.useAuthStore.getState().user, null)
+    assert.equal(b.useAccountUsageStore.getState().status, 'checking', 'Cross-tab logout resets device usage')
+
+    seed()
+    a.useAuthStore.getState().setSession({ ...session('other'), user: { id: 'other', role: 'USER', fullName: 'Other' } })
+    update(b)
+    assert.equal(b.useAuthStore.getState().user.id, 'other')
+    assert.equal(b.useAuthStore.getState().user.fullName, 'Other', 'Old account updates cannot modify the next account')
+    assert.equal(b.useAuthStore.getState().user.xp, undefined)
+    assert.equal(b.useAuthStore.getState().user.nickname, undefined)
+  }
 
   seed()
   let rotations = 0
@@ -69,6 +108,21 @@ async function main() {
   assert.equal(b.useAuthStore.getState().refreshToken, 'refresh-new')
   assert.equal(deviceIds.size, 1, 'Two tabs share one browser device across refresh requests')
   assert.match([...deviceIds][0], /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i)
+
+  for (const expiredAccess of [false, true]) {
+    seed(); rotations = 0
+    fetchHandler = async (url, options) => {
+      assert.ok(options.headers.get('X-Device-Id'), 'All authenticated requests carry the browser identity')
+      if (url.endsWith('/auth/refresh')) rotations++
+      return expiredAccess && !url.endsWith('/auth/refresh') ? json(401) : json(409, { code: 'ACCOUNT_IN_USE', message: 'Another device is active.' })
+    }
+    await assert.rejects(a.apiClient.get('/protected'), error => error.code === 'ACCOUNT_IN_USE' && error.status === 409)
+    assert.equal(a.useAuthStore.getState().refreshToken, 'refresh-old', 'Usage conflict preserves the signed-in session')
+    assert.equal(a.useAccountUsageStore.getState().status, 'blocked')
+    assert.equal(rotations, expiredAccess ? 1 : 0)
+    a.useAuthStore.getState().clearSession()
+    assert.equal(a.useAccountUsageStore.getState().status, 'checking', 'Sign-out removes the prior usage verification')
+  }
 
   for (const status of [429, 500, 503]) {
     seed()

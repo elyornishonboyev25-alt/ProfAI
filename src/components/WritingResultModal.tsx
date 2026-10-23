@@ -18,9 +18,10 @@ import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
 import type { WritingError } from '@/services/geminiAI'
 import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
+import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
+import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -146,7 +147,6 @@ export default function WritingResultModal({
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
-            {entry.fullTest ? <TestVocabulary testId={entry.fullTest.id} variant="review" /> : null}
             {/* Score hero */}
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/50 p-5">
               <div className="flex flex-col items-center">
@@ -210,11 +210,12 @@ export default function WritingResultModal({
                 <Target className="h-3.5 w-3.5 text-red-500" /> Band Breakdown
               </h4>
               <div className="grid grid-cols-4 gap-3">
-                <MiniRing score={entry.taskAchievement} label="Task" />
+                <MiniRing score={entry.taskAchievement} label={entry.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} />
                 <MiniRing score={entry.coherenceCohesion} label="Coherence" />
                 <MiniRing score={entry.lexicalResource} label="Vocab" />
                 <MiniRing score={entry.grammaticalRange} label="Grammar" />
               </div>
+              <WritingScoreExplanation feedback={entry.criterionFeedback} taskType={entry.taskType} />
             </div>
 
             {/* Strengths + improvements */}
@@ -260,6 +261,7 @@ export default function WritingResultModal({
             )}
 
             {/* Corrected version */}
+            {entry.studentResponse.trim() ? <ImprovedResponse text={entry.improvedVersion} /> : null}
             {entry.correctedVersion && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between mb-2">

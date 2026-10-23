@@ -127,7 +127,7 @@ export async function run() {
     const result = { testId: listeningFullTest3.id, answers: saved, correctAnswers: 4, totalQuestions: 40, score: 2, date: new Date().toISOString(), timeSpent: 100 } as TestResult
     const legacy = JSON.parse(JSON.stringify(listeningFullTest3))
     legacy.sections[2].groups[1].blocks = [
-      { kind: 'image', src: 'https://www.profai.uz/images/ielts-listening/test3-old-water-mill.svg?v=old', caption: 'Old water-mill' },
+      { kind: 'image', src: 'https://ivygoo.com/images/ielts-listening/test3-old-water-mill.svg?v=old', caption: 'Old water-mill' },
       { kind: 'grid', columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G'], rows: [27, 28, 29, 30].map(blank => ({ blank, label: `Location ${blank}` })) },
     ]
     const review = createRoot(container)

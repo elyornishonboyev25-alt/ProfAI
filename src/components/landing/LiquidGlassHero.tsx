@@ -13,7 +13,7 @@ const SKILL_TILES = [
 ] as const
 
 /**
- * The "Dashboard" band-score composition from the ProfAI landing concept — one
+ * The "Dashboard" band-score composition from the Ivygoo landing concept — one
  * tilted liquid-glass panel with an animated 7.5 Overall Band ring, and four
  * frosted skill tiles hugging the panel's left/right edges (each with its own
  * drop shadow so it hovers above the glass), plus small red glow dots.

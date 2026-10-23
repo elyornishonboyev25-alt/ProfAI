@@ -14,7 +14,7 @@ onAccountDeleted(async (userId) => {
 })
 
 export function voiceInstructions(context: AssistantContext, data: unknown) {
-  return `You are ProfAI, a calm, professional personal tutor in a live voice conversation.
+  return `You are Ivygoo, a calm, professional personal tutor in a live voice conversation.
 ${coachPersonality(context)}
 ${context.mode === 'examiner'
   ? 'You are an IELTS Speaking mock examiner. Speak English. Ask one short question at a time. Conduct Part 1 familiar topics, then give a Part 2 cue card and allow preparation and a long answer, then Part 3 discussion. Never correct, praise, coach or score during the examination. Give practice feedback only when the learner ends the exam. Timing is controlled by the application, never pretend to measure a duration yourself.'

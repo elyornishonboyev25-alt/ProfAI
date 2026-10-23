@@ -18,7 +18,7 @@ export default function AITutor() {
       <header className="coach-studio-header">
         <div className="nova-studio-brand">
           <button type="button" className="nova-header-avatar" onClick={openTalk} aria-label={text.voice}><CoachMascot state={voiceState} level={voiceLevel} size={64}/></button>
-          <div><span className="coach-studio-eyebrow">ProfAI / AI</span><h1>Nova <span>ProfAI Coach</span></h1></div>
+          <div><span className="coach-studio-eyebrow">Ivygoo / AI</span><h1>Nova <span>Ivygoo Coach</span></h1></div>
         </div>
         <button type="button" onClick={openTalk} className="coach-primary-button" aria-label={text.voice}><Mic2 size={17}/><span>{text.voice}</span></button>
       </header>

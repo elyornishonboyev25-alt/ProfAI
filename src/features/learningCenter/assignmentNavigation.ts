@@ -2,10 +2,10 @@ import { learningCenterApi } from './api'
 
 export function assignmentDestination(route: string, assignmentId?: string) {
   if (!route.startsWith('/') || route.startsWith('//') || route.includes('\\')) {
-    throw new Error('This assignment needs a valid ProfAI destination. Please contact your teacher.')
+    throw new Error('This assignment needs a valid Ivygoo destination. Please contact your teacher.')
   }
   const destination = new URL(route, window.location.origin)
-  if (destination.origin !== window.location.origin) throw new Error('Please use a local ProfAI destination.')
+  if (destination.origin !== window.location.origin) throw new Error('Please use a local Ivygoo destination.')
   if (assignmentId) destination.searchParams.set('assignmentId', assignmentId)
   return destination.pathname + destination.search + destination.hash
 }

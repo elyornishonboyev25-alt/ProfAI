@@ -63,8 +63,8 @@ const DEFAULT_ANSWERS: Answers = {
 const STEP_META: Array<{ id: StepId; short: string; title: string; description: string; icon: ComponentType<{ className?: string }> }> = [
   { id: 1, short: 'Direction', title: 'Define your university direction', description: 'Tell us where you are applying from, what you want to study and where you are considering.', icon: Globe2 },
   { id: 2, short: 'Academics', title: 'Map your academic foundation', description: 'Use a broad grade band so your readiness preview stays useful across different school systems.', icon: GraduationCap },
-  { id: 3, short: 'Tests', title: 'Set your exam direction', description: 'Add a current baseline when you have one. If you do not, ProfAI will make baseline testing a priority.', icon: TestTube2 },
-  { id: 4, short: 'Funding', title: 'Make the plan financially realistic', description: 'Your annual budget direction helps ProfAI prioritize the right research questions—not make admission promises.', icon: DollarSign },
+  { id: 3, short: 'Tests', title: 'Set your exam direction', description: 'Add a current baseline when you have one. If you do not, Ivygoo will make baseline testing a priority.', icon: TestTube2 },
+  { id: 4, short: 'Funding', title: 'Make the plan financially realistic', description: 'Your annual budget direction helps Ivygoo prioritize the right research questions—not make admission promises.', icon: DollarSign },
   { id: 5, short: 'Timeline', title: 'Turn your goal into an actionable pace', description: 'Your current application stage and weekly capacity determine what should happen first.', icon: Clock3 },
 ]
 
@@ -283,7 +283,7 @@ export default function GuestDiagnostic() {
 
       <header className="relative z-20 px-3 pt-3 sm:px-6 sm:pt-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between rounded-[1.55rem] border border-white/85 bg-white/58 px-3.5 py-3 shadow-[0_20px_55px_rgba(15,23,42,0.1)] backdrop-blur-2xl sm:px-5">
-          <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2.5 rounded-xl"><BrandMark size={42} /><span className="text-xl font-black tracking-[-.04em]">Prof<span className="text-red-500">AI</span></span></button>
+          <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2.5 rounded-xl"><BrandMark size={42} /><span className="text-xl font-black tracking-[-.04em]">Ivy<span className="text-red-500">goo</span></span></button>
           <div className="hidden items-center gap-2 text-xs font-bold text-slate-500 sm:flex"><ShieldCheck className="h-4 w-4 text-emerald-600" /> Private guest assessment</div>
           <button type="button" onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-600 hover:bg-white/70"><X className="h-4 w-4" /> <span className="hidden sm:inline">Exit</span></button>
         </div>

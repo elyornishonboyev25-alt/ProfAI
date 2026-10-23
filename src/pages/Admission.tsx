@@ -88,7 +88,7 @@ export default function Admission() {
                 </div>
                 <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
                 <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore ProfAI’s complete QS 2027 catalog with ranking context, university profiles and official links
+                  Explore Ivygoo’s complete QS 2027 catalog with ranking context, university profiles and official links
                   where available. Confirm current programme requirements directly with each institution.
                 </p>
 
@@ -223,7 +223,7 @@ export default function Admission() {
                 <h2 className="premium-section-title mt-4">
                    <UiText text={"Plan your"} /> <span className="arena-title-accent-red"> <UiText text={"university application"} /> </span>  <UiText text={"journey"} /> </h2>
                 <p className="premium-section-subtitle max-w-3xl">
-                  Use guided lessons and ProfAI’s current university catalog to structure your research and next steps.
+                  Use guided lessons and Ivygoo’s current university catalog to structure your research and next steps.
                   University details can change, so consequential requirements should always be confirmed on the
                   institution’s official website. Catalog ranking context: {QS_EDITION}.
                 </p>

@@ -1,4 +1,4 @@
-import { accountStorageFor } from '@/utils/accountStorage'
+import { ACCOUNT_DATA_EVENT, accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -15,9 +15,8 @@ import {
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
-import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
-import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
+import { useSpeakingStore } from '@/store/speakingStore'
+import { getIeltsHubScores } from '@/utils/ieltsHubScores'
 import { loadActivityLog, loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import {
@@ -27,8 +26,6 @@ import {
 } from '@/components/visuals/ArenaVisuals'
 
 type SkillId = 'listening' | 'reading' | 'writing' | 'speaking'
-type SkillScore = Record<SkillId, number>
-
 const DAY_MS = 86_400_000
 const SKILLS: Array<{
   id: SkillId
@@ -80,14 +77,10 @@ function saveExam(date: string, time: string, userId?: string) {
   saveOnboardingProfile({ ...profile, ieltsExamDate: date, daysToExam: Math.max(0, Math.ceil(distance / DAY_MS)) }, userId)
 }
 
-function validBand(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 9 ? value : 0
-}
+function formatBand(value: number | null) { return value === null ? '—' : value.toFixed(1) }
 
-function formatBand(value: number) { return value > 0 ? value.toFixed(1) : '—' }
-
-function ProgressRing({ band, label = 'Band' }: { band: number; label?: string }) {
-  const percent = Math.round((band / 9) * 100)
+function ProgressRing({ band, label = 'Band' }: { band: number | null; label?: string }) {
+  const percent = Math.round(((band ?? 0) / 9) * 100)
   const radius = 45
   const circumference = Math.PI * 2 * radius
   return (
@@ -105,7 +98,7 @@ function ProgressRing({ band, label = 'Band' }: { band: number; label?: string }
   )
 }
 
-function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number; onOpen: () => void }) {
+function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number | null; onOpen: () => void }) {
   return (
     <button
       type="button"
@@ -154,21 +147,24 @@ export default function IELTS() {
   const [draftDate, setDraftDate] = useState(examDate)
   const [draftTime, setDraftTime] = useState(examTime)
   const [now, setNow] = useState(Date.now())
+  const [scoreRevision, setScoreRevision] = useState(0)
   const entry = location.state as { entry?: string; from?: string } | null
   const fromMock = entry?.entry === 'mock-ielts'
 
-  const scores = useMemo<SkillScore>(() => {
-    const objective = getReadingAnalysisHistory(user?.id)
-    const listening = objective.find((item) => `${item.testId} ${item.testTitle}`.toLowerCase().includes('listening'))
-    const reading = objective.find((item) => !`${item.testId} ${item.testTitle}`.toLowerCase().includes('listening'))
-    const writing = getWritingAnalysisHistory(user?.id)[0]
-    const userSpeaking = selectUserSessions(speakingSessions, user?.id ?? null)
-    const speaking = userSpeaking[userSpeaking.length - 1]
-    return { listening: validBand(listening?.bandScore), reading: validBand(reading?.bandScore), writing: validBand(writing?.overallBand), speaking: validBand(speaking?.overallBand) }
-  }, [speakingSessions, user?.id])
+  useEffect(() => {
+    const refresh = () => setScoreRevision((revision) => revision + 1)
+    window.addEventListener(ACCOUNT_DATA_EVENT, refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener(ACCOUNT_DATA_EVENT, refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [])
 
-  const completed = Object.values(scores).filter(Boolean)
-  const overall = completed.length ? Math.round((completed.reduce((sum, value) => sum + value, 0) / completed.length) * 2) / 2 : 0
+  const scores = useMemo(() => getIeltsHubScores(user?.id, speakingSessions), [speakingSessions, user?.id, scoreRevision])
+
+  const completed = Object.values(scores).filter((value): value is number => value !== null)
+  const overall = completed.length ? Math.round((completed.reduce((sum, value) => sum + value, 0) / completed.length) * 2) / 2 : null
   const profile = loadOnboardingProfile(user?.id)
   const target = profile?.targetIeltsScore ?? 8
   const activity = loadActivityLog(user?.id)
@@ -222,7 +218,7 @@ export default function IELTS() {
                 <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Overall band</p><p className="mt-2 text-4xl font-black text-slate-900">{formatBand(overall)}</p><p className="mt-1 text-xs font-semibold text-slate-500">{completed.length}/4 skills scored</p></div>
                 <ProgressRing band={overall} label="Overall" />
               </div>
-              <div className="mt-5 space-y-3">{SKILLS.map((skill) => <div key={skill.id} className="grid grid-cols-[5rem_1fr_2rem] items-center gap-2 text-xs font-bold"><span className="text-slate-600">{skill.title.replace('IELTS ', '')}</span><span className="h-2 overflow-hidden rounded-full bg-slate-200"><i className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(scores[skill.id] / 9) * 100}%` }} /></span><b className="text-right text-slate-900">{formatBand(scores[skill.id])}</b></div>)}</div>
+              <div className="mt-5 space-y-3">{SKILLS.map((skill) => <div key={skill.id} className="grid grid-cols-[5rem_1fr_2rem] items-center gap-2 text-xs font-bold"><span className="text-slate-600">{skill.title.replace('IELTS ', '')}</span><span className="h-2 overflow-hidden rounded-full bg-slate-200"><i className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${((scores[skill.id] ?? 0) / 9) * 100}%` }} /></span><b className="text-right text-slate-900">{formatBand(scores[skill.id])}</b></div>)}</div>
             </article>
 
             <article className={`${GLASS} p-6`}>

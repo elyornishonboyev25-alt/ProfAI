@@ -1,4 +1,4 @@
-import { accountStorage } from '@/utils/accountStorage'
+import { accountStorage, accountStorageFor } from '@/utils/accountStorage'
 // Full Mock catalog. Each Full Mock N bundles the four IELTS sections —
 // Listening N, Reading N, Writing N, Speaking N — into one exam package, in the
 // official exam order (Listening → Reading → Writing → Speaking).
@@ -195,16 +195,17 @@ export type FullMockSectionResult = {
 const RESULT_STORAGE_KEY = 'smarttest:full-mock-results:v1'
 type FullMockResults = Record<string, Partial<Record<MockSectionKey, FullMockSectionResult>>>
 
-function readResults(): FullMockResults {
+function readResults(userId?: string): FullMockResults {
   if (typeof window === 'undefined') return {}
   try {
-    const parsed = JSON.parse(accountStorage.getItem(RESULT_STORAGE_KEY) ?? '{}')
+    const storage = userId === undefined ? accountStorage : accountStorageFor(userId)
+    const parsed = JSON.parse(storage.getItem(RESULT_STORAGE_KEY) ?? '{}')
     return parsed && typeof parsed === 'object' ? parsed as FullMockResults : {}
   } catch { return {} }
 }
 
-export function getFullMockResults(mockId: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
-  const results = { ...readResults()[mockId] }
+export function getFullMockResults(mockId: string, userId?: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
+  const results = { ...readResults(userId)[mockId] }
   // Repair previously saved, entirely unanswered objective papers as well as
   // new submissions. A blank paper must not inflate the overall mock band.
   for (const key of ['listening', 'reading'] as const) {
